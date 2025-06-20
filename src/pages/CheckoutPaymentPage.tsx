@@ -461,16 +461,8 @@ const CheckoutPaymentPage = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navigation cartItemCount={items.length} />
-
-      {/* Testing Mode Banner */}
-      <div className="bg-yellow-500 text-black px-4 py-2 text-center font-semibold flex items-center justify-center gap-2 relative z-50">
-        <AlertTriangle className="w-5 h-5" />
-        <span className="text-sm sm:text-base">
-          ⚠️ TESTING MODE: This website is currently in testing phase. Payments are for testing only.
-        </span>
-      </div>
       
-      <main className="flex-grow pt-24 pb-16 px-4 sm:px-6 lg:px-8">
+      <main className="flex-grow pt-20 pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-3xl font-bold">Checkout</h1>
@@ -619,6 +611,14 @@ const CheckoutPaymentPage = () => {
           </div>
         </div>
       </main>
+
+      {/* Testing Mode Badge - Floating */}
+      <div className="fixed bottom-4 right-4 bg-yellow-500 text-black px-3 py-2 rounded-lg shadow-lg font-semibold flex items-center gap-2 z-50 text-xs sm:text-sm max-w-xs">
+        <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+        <span className="leading-tight">
+          ⚠️ TESTING MODE: Payments are for testing only.
+        </span>
+      </div>
       
       <Footer />
     </div>
