@@ -1,0 +1,189 @@
+/* Import Inter font from Google Fonts instead of rsms.me */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light Blue, Pink, Green & White Color Scheme */
+    --background: 0 0% 100%; /* Pure white */
+    --foreground: 220 20% 25%; /* Soft dark blue-gray for text */
+    
+    --card: 0 0% 100%; /* Pure white cards */
+    --card-foreground: 220 20% 25%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 25%;
+    
+    /* Light Blue Primary */
+    --primary: 200 100% 75%; /* Light blue */
+    --primary-foreground: 220 30% 15%; /* Dark blue-gray text */
+    
+    /* Light Pink Secondary */
+    --secondary: 320 60% 85%; /* Light pink */
+    --secondary-foreground: 320 30% 25%; /* Dark pink text */
+    
+    /* Light muted tones */
+    --muted: 210 40% 96%; /* Very light blue-gray */
+    --muted-foreground: 220 15% 45%; /* Medium blue-gray */
+    
+    /* Light Green Accent */
+    --accent: 140 50% 80%; /* Light green */
+    --accent-foreground: 140 40% 25%; /* Dark green text */
+    
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    
+    /* Light borders and inputs */
+    --border: 200 30% 90%; /* Light blue-gray borders */
+    --input: 200 30% 95%; /* Very light blue input backgrounds */
+    --ring: 200 100% 60%; /* Light blue focus rings */
+    
+    --radius: 0.75rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+  
+  html {
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+    scroll-behavior: smooth;
+    font-family: 'Inter', sans-serif;
+  }
+  
+  body {
+    @apply bg-background text-foreground antialiased;
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    @apply bg-primary/10 text-primary;
+  }
+}
+
+@layer components {
+  .glass {
+    @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-sm;
+  }
+  
+  .button-hover {
+    @apply transition-all duration-300 ease-out-expo hover:opacity-80;
+  }
+  
+  .section-padding {
+    @apply py-16 sm:py-24 px-4 sm:px-6 md:px-8;
+  }
+  
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .fade-mask {
+    mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+  }
+  
+  .subtle-shadow {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+  }
+  
+  .hover-lift {
+    @apply transition-transform duration-300 ease-smooth hover:-translate-y-1;
+  }
+}
+
+@layer utilities {
+  .ease-out-expo {
+    transition-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+  }
+  
+  .ease-smooth {
+    transition-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+  }
+  
+  /* Custom animations for the magical shop page */
+  .line-clamp-1 {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+/* Custom keyframes for shop page animations */
+@keyframes gradient-shift {
+  0%, 100% { 
+    background-position: 0% 50%; 
+  }
+  50% { 
+    background-position: 100% 50%; 
+  }
+}
+
+@keyframes spin-slow {
+  from { 
+    transform: rotate(0deg); 
+  }
+  to { 
+    transform: rotate(360deg); 
+  }
+}
+
+@keyframes reverse-spin {
+  from { 
+    transform: rotate(360deg); 
+  }
+  to { 
+    transform: rotate(0deg); 
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(59, 130, 246, 0.6);
+  }
+}
+
+/* Utility classes for shop page */
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient-shift 3s ease infinite;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 20s linear infinite;
+}
+
+.animate-reverse-spin {
+  animation: reverse-spin 25s linear infinite;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
+}

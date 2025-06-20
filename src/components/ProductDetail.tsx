@@ -1,0 +1,346 @@
+import React, { useState } from 'react';
+import { ShoppingCart, Heart, Share2, Minus, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
+import { useCurrency } from '@/contexts/CurrencyContext';
+
+type ProductDetailProps = {
+  product: {
+    _id: string;
+    title: string;
+    price: number;
+    discount: number;
+    images: string[];
+    description: string;
+    details: string[];
+    careInstructions?: string[];
+    category: string;
+    isNewArrival?: boolean;
+    isFeatured?: boolean;
+  };
+  onAddToCart: (item: {
+    id: string;
+    productId: string;
+    title: string;
+    price: number;
+    originalPrice: number;
+    image: string;
+    quantity: number;
+  }) => void;
+};
+
+const ProductDetail = ({ product, onAddToCart }: ProductDetailProps) => {
+  const [quantity, setQuantity] = useState(1);
+  const [selectedImage, setSelectedImage] = useState(0);
+  const { toast } = useToast();
+  const { formatPrice, convertPrice } = useCurrency();
+
+  // Debug log to check properties
+  console.log(`Product Detail ${product.title}:`, {
+    isNewArrival: product.isNewArrival,
+    isFeatured: product.isFeatured,
+    discount: product.discount
+  });
+
+  // Calculate prices in base currency (INR)
+  const originalPrice = product.price;
+  const discountedPrice = product.discount
+    ? product.price * (1 - product.discount / 100)
+    : originalPrice;
+
+  // ✅ Ensure image URL is absolute
+  const imageUrl = product.images[selectedImage]?.startsWith("/")
+    ? `${import.meta.env.VITE_API_URL.replace("/api", "")}${product.images[selectedImage]}`
+    : product.images[selectedImage] || "/images/placeholder.jpg"; 
+
+  // Image Navigation
+  const prevImage = () => {
+    setSelectedImage((prev) => (prev === 0 ? product.images.length - 1 : prev - 1));
+  };
+
+  const nextImage = () => {
+    setSelectedImage((prev) => (prev === product.images.length - 1 ? 0 : prev + 1));
+  };
+
+  const incrementQuantity = () => setQuantity((prev) => prev + 1);
+  const decrementQuantity = () => quantity > 1 && setQuantity((prev) => prev - 1);
+
+  const handleAddToCart = () => {
+    onAddToCart({
+      id: product._id,
+      productId: product._id,
+      title: product.title,
+      price: discountedPrice,
+      originalPrice: originalPrice,
+      image: imageUrl,
+      quantity
+    });
+    toast({
+      title: "Added to cart",
+      description: `${quantity} × ${product.title} added to your cart`,
+      duration: 3000,
+    });
+  };
+
+  const handleAddToWishlist = () => {
+    try {
+      // Better image URL handling
+      let imageUrl = "/images/placeholder.jpg";
+      
+      if (product.images && product.images.length > 0) {
+        const rawImageUrl = product.images[0];
+        
+        if (rawImageUrl.startsWith("http")) {
+          // Full URL, use as is
+          imageUrl = rawImageUrl;
+        } else if (rawImageUrl.startsWith("/")) {
+          // Relative URL, need to add base URL
+          const baseUrl = import.meta.env.VITE_API_URL || "";
+          const cleanBaseUrl = baseUrl.endsWith("/api") 
+            ? baseUrl.substring(0, baseUrl.length - 4) 
+            : baseUrl;
+            
+          imageUrl = `${cleanBaseUrl}${rawImageUrl}`;
+        }
+      }
+      
+      // Create wishlist item with proper ID
+      const wishlistItem = {
+        id: String(product._id),
+        title: product.title,
+        image: imageUrl,
+        price: product.price
+      };
+      
+      console.log("Adding to wishlist from ProductDetail:", wishlistItem);
+      
+      // Get existing wishlist with error handling
+      let existingWishlist = [];
+      try {
+        const wishlistStr = localStorage.getItem("wishlist");
+        existingWishlist = wishlistStr ? JSON.parse(wishlistStr) : [];
+        if (!Array.isArray(existingWishlist)) {
+          console.error("Wishlist is not an array, resetting");
+          existingWishlist = [];
+        }
+      } catch (error) {
+        console.error("Error parsing wishlist:", error);
+        existingWishlist = [];
+      }
+      
+      // Check if already exists
+      if (existingWishlist.some(item => item.id === String(product._id))) {
+        toast({
+          title: "Already in wishlist",
+          description: "This product is already in your wishlist",
+          duration: 3000,
+        });
+        return;
+      }
+      
+      // Add new item and save directly
+      const updatedWishlist = [...existingWishlist, wishlistItem];
+      localStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
+      
+      // Trigger storage event for Navigation to update count
+      window.dispatchEvent(new Event('storage'));
+      
+      toast({
+        title: "Added to wishlist",
+        description: `${product.title} has been added to your wishlist`,
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error("Error adding to wishlist:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add to wishlist",
+        variant: "destructive",
+        duration: 3000,
+      });
+    }
+  };
+
+  return (
+    <section className="pt-24 pb-16 px-6 md:px-8 animate-fade-in">
+      <div className="max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+          {/* Product Images */}
+          <div className="relative space-y-4">
+            <div className="relative pb-[100%] bg-secondary/20 overflow-hidden rounded-lg shadow-md">
+              <img
+                src={imageUrl}
+                alt={product.title}
+                className="absolute inset-0 w-full h-full object-cover transition-all duration-500 ease-smooth rounded-lg"
+              />
+
+              {/* Badges for new and featured products */}
+              <div className="absolute top-3 left-3 flex flex-col gap-1">
+                {(product.isNewArrival || (product as {isNew?: boolean}).isNew) && (
+                  <span className="bg-primary text-white text-sm px-3 py-1 rounded-md font-medium">
+                    New
+                  </span>
+                )}
+                {product.isFeatured && (
+                  <span className="bg-amber-500 text-white text-sm px-3 py-1 rounded-md font-medium">
+                    Featured
+                  </span>
+                )}
+              </div>
+              
+              {product.discount > 0 && (
+                <span className="absolute bottom-3 right-3 bg-red-500 text-white text-sm px-3 py-1 rounded-md font-medium">
+                  {product.discount}% Off
+                </span>
+              )}
+
+              {/* Left Arrow */}
+              <button
+                onClick={prevImage}
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition-all"
+              >
+                <ChevronLeft size={24} />
+              </button>
+
+              {/* Right Arrow */}
+              <button
+                onClick={nextImage}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition-all"
+              >
+                <ChevronRight size={24} />
+              </button>
+            </div>
+
+            {/* Thumbnail Gallery */}
+            <div className="flex gap-3 justify-center">
+              {product.images.map((image, index) => {
+                const thumbUrl = image.startsWith("/")
+                  ? `${import.meta.env.VITE_API_URL.replace("/api", "")}${image}`
+                  : image || "/images/placeholder.jpg";
+
+                return (
+                  <button
+                    key={index}
+                    onClick={() => setSelectedImage(index)}
+                    className={cn(
+                      "w-16 h-16 relative overflow-hidden rounded-md shadow-md transition-all duration-300 ease-smooth",
+                      selectedImage === index
+                        ? "ring-2 ring-primary ring-offset-2"
+                        : "opacity-70 hover:opacity-100"
+                    )}
+                  >
+                    <img
+                      src={thumbUrl}
+                      alt={`${product.title} view ${index + 1}`}
+                      className="w-full h-full object-cover rounded-md"
+                    />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Product Info */}
+          <div className="flex flex-col">
+            <div className="pb-6 mb-6 border-b">
+              <div className="text-sm text-muted-foreground mb-2">{product.category}</div>
+              <h1 className="text-3xl md:text-4xl font-semibold tracking-tight mb-4">{product.title}</h1>
+
+              {/* Pricing with Discounted Price */}
+              <div className="text-xl font-semibold mb-6">
+                <span className="text-primary font-bold">{formatPrice(convertPrice(discountedPrice))}</span>
+                {product.discount && (
+                  <span className="text-muted-foreground line-through ml-2">
+                    {formatPrice(convertPrice(originalPrice))}
+                  </span>
+                )}
+              </div>
+
+              <p className="text-muted-foreground mb-6">{product.description}</p>
+
+              {/* Quantity Selector */}
+              <div className="flex items-center mb-6">
+                <span className="text-sm mr-4">Quantity</span>
+                <div className="flex items-center h-10 border rounded-md overflow-hidden shadow-md">
+                  <button
+                    onClick={decrementQuantity}
+                    disabled={quantity <= 1}
+                    className="w-10 h-full flex items-center justify-center text-muted-foreground hover:bg-secondary transition-colors duration-200 disabled:opacity-50 rounded-md"
+                  >
+                    <Minus size={16} />
+                  </button>
+                  <span className="w-12 text-center">{quantity}</span>
+                  <button
+                    onClick={incrementQuantity}
+                    className="w-10 h-full flex items-center justify-center text-muted-foreground hover:bg-secondary transition-colors duration-200 rounded-md"
+                  >
+                    <Plus size={16} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button
+                  onClick={handleAddToCart}
+                  className="flex-1 h-12 bg-primary text-primary-foreground flex items-center justify-center gap-2 rounded-md hover-lift subtle-shadow"
+                >
+                  <ShoppingCart size={18} />
+                  <span>Add to Cart</span>
+                </button>
+                <button
+                  onClick={handleAddToWishlist}
+                  className="h-12 px-6 border border-muted flex items-center justify-center gap-2 rounded-md hover:bg-secondary transition-colors duration-300"
+                >
+                  <Heart size={18} />
+                  <span className="hidden sm:inline">Wishlist</span>
+                </button>
+                <button className="h-12 px-6 border border-muted flex items-center justify-center rounded-md hover:bg-secondary transition-colors duration-300">
+                  <Share2 size={18} />
+                </button>
+              </div>
+            </div>
+
+            {/* Product Details */}
+            <div className="mb-6">
+              <h3 className="text-lg font-medium mb-4 text-blue-700 flex items-center gap-2">
+                📋 Product Details
+              </h3>
+              <div className="space-y-3">
+                {product.details.map((detail, index) => (
+                  <div key={index} className="bg-blue-50 p-3 rounded-lg border-l-4 border-blue-500">
+                    <div className="flex items-start gap-3">
+                      <span className="text-blue-600 text-sm">🔸</span>
+                      <p className="text-blue-800 text-sm font-medium">{detail}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Care Instructions */}
+            {product.careInstructions && product.careInstructions.length > 0 && (
+              <div>
+                <h3 className="text-lg font-medium mb-4 text-green-700 flex items-center gap-2">
+                  🌿 Care Instructions
+                </h3>
+                <div className="space-y-3">
+                  {product.careInstructions.map((instruction, index) => (
+                    <div key={index} className="bg-green-50 p-3 rounded-lg border-l-4 border-green-500">
+                      <div className="flex items-start gap-3">
+                        <span className="text-green-600 text-sm">💡</span>
+                        <p className="text-green-800 text-sm font-medium">{instruction}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default ProductDetail;
