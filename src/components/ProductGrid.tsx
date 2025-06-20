@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { Heart, Eye, ShoppingBag, Star, Sparkles, ExternalLink } from "lucide-react";
@@ -99,6 +99,7 @@ const ProductGrid = ({ products, title, subtitle, className, loading }: ProductG
 const ProductCard = ({ product, index }: { product: Product; index: number }) => {
   const { formatPrice, convertPrice } = useCurrency();
   const { addItem } = useCart();
+  const navigate = useNavigate();
   const [wishlist, setWishlist] = useState(() => {
     try {
       const wishlistStr = localStorage.getItem("wishlist");
@@ -116,10 +117,10 @@ const ProductCard = ({ product, index }: { product: Product; index: number }) =>
   
   const isInWishlist = wishlist.includes(product._id);
 
-  // Handle product click with new tab functionality
+  // Handle product click with same-tab navigation
   const handleProductClick = (productId: string) => {
     const productUrl = `/product/${productId}`;
-    window.open(productUrl, '_blank');
+    navigate(productUrl);
   };
 
   // Handle add to cart
@@ -169,7 +170,7 @@ const ProductCard = ({ product, index }: { product: Product; index: number }) =>
         if (rawImageUrl.startsWith("http")) {
           imageUrl = rawImageUrl;
         } else if (rawImageUrl.startsWith("/")) {
-          const baseUrl = import.meta.env.VITE_API_URL || "";
+          const baseUrl = import.meta.env.VITE_UPLOADS_URL || "";
           const cleanBaseUrl = baseUrl.endsWith("/api") 
             ? baseUrl.substring(0, baseUrl.length - 4) 
             : baseUrl;
@@ -257,7 +258,7 @@ const ProductCard = ({ product, index }: { product: Product; index: number }) =>
       <div className="relative aspect-[4/5] overflow-hidden">
         <img
           src={product.images?.[0]?.startsWith("/") 
-            ? `${import.meta.env.VITE_API_URL.replace(/\/api$/, "")}${product.images[0]}`
+                            ? product.images[0]
             : product.images?.[0] || '/images/placeholder.svg'
           }
           alt={product.title}
