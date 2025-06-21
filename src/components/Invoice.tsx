@@ -186,13 +186,13 @@ const Invoice: React.FC<InvoiceProps> = ({ order, isAdmin = false }) => {
           />
           <div>
             <h1 className="text-2xl font-bold text-gray-800">Spring Blossoms Florist</h1>
-            <div className="text-sm text-gray-600 mt-1">
+            <div className="text-sm text-center text-gray-600 space-y-1">
               <p>Door No. 12-2-786/A & B, Najam Centre, Pillar No. 32,</p>
               <p>Rethi Bowli, Mehdipatnam, Hyderabad, Telangana 500028</p>
               <p>GSTIN: 36ABCDE1234F1Z5</p>
-              <p>Phone: +91 8978412570</p>
-              <p>Email: support@springblossoms.com</p>
-              <p>Website: www.springblossomsflorist.com</p>
+              <p>Phone: 9849589710</p>
+              <p>Email: 2006sbf@gmail.com</p>
+              <p>Website: www.sbflorist.com</p>
             </div>
           </div>
         </div>
@@ -400,8 +400,8 @@ const Invoice: React.FC<InvoiceProps> = ({ order, isAdmin = false }) => {
         <p className="font-semibold text-gray-800">Thank you for your business! We appreciate your order.</p>
         <p>
           For any questions regarding your order or our products, please don't hesitate to contact us via email at{' '}
-          <span className="font-semibold">support@springblossoms.com</span> or call us at{' '}
-          <span className="font-semibold">+91 8978412570</span> during our business hours (Monday - Saturday, 9 AM - 6 PM IST).
+          <span className="font-semibold">2006sbf@gmail.com</span> or call us at{' '}
+          <span className="font-semibold">9849589710</span> during our business hours (Monday - Saturday, 9 AM - 6 PM IST).
         </p>
         <p className="text-xs">
           Terms and conditions apply. For our return and refund policy, please visit www.springblossomsflorist.com/returns.
