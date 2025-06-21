@@ -10,6 +10,7 @@ import api from "@/services/api";
 import { Search, Filter, Grid3X3, List, Star, Heart, Eye, ExternalLink, Sparkles, Leaf, Gift, ShoppingBag, X } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { toast } from "sonner";
+import { getImageUrl } from "@/config";
 
 const ShopPage = () => {
   const { category } = useParams<{ category: string }>();
@@ -131,7 +132,7 @@ const ShopPage = () => {
   };
 
   // Quick View Modal Component - Mobile Responsive
-  const QuickViewModal = ({ product, onClose }) => {
+  const QuickViewModal = ({ product, onClose }: { product: any; onClose: () => void }) => {
     if (!product) return null;
 
     return (
@@ -145,12 +146,7 @@ const ShopPage = () => {
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <img 
-              src={product.images?.[0]?.startsWith('http') 
-                ? product.images[0] 
-                : product.images?.[0] 
-                  ? `https://sbf-backend.onrender.com${product.images[0]}`
-                  : '/images/placeholder.svg'
-              }
+              src={getImageUrl(product.images?.[0])}
               alt={product.title}
               className="w-full h-48 sm:h-64 object-cover rounded-lg"
             />

@@ -8,6 +8,8 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    // Enable SPA fallback for development
+    historyApiFallback: true,
   },
   plugins: [
     react(),
@@ -18,5 +20,20 @@ export default defineConfig(({ mode }) => ({
     alias: {
       "@": fileURLToPath(new URL('./src', import.meta.url)),
     },
+  },
+  // Ensure SPA routing works in production build
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: undefined,
+      },
+    },
+  },
+  // Preview server settings for production testing
+  preview: {
+    port: 8080,
+    host: "::",
+    // Enable SPA fallback for preview mode
+    historyApiFallback: true,
   },
 }));

@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ImageIcon } from 'lucide-react';
 import api from '@/services/api';
+import { getImageUrl as getImageUrlFromConfig } from '@/config';
 
 interface Product {
   _id: string;
@@ -179,22 +180,8 @@ export default function OrderDetailsModal({ isOpen, onClose, order, onStatusUpda
 
   if (!localOrder) return null;
 
-  const getImageUrl = (imagePath: string | undefined) => {
-    if (!imagePath) return "/images/placeholder.jpg";
-    
-    // Handle different possible image path formats
-    if (imagePath.startsWith('http')) {
-      return imagePath;
-    }
-    
-    // Construct the full URL using the API base URL
-    const baseUrl = import.meta.env.VITE_UPLOADS_URL || "";
-    
-    // Ensure the path starts with /
-    const cleanPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
-    
-    return `${baseUrl}${cleanPath}`;
-  };
+  // Use the centralized image URL utility function
+  const getImageUrl = getImageUrlFromConfig;
 
   const orderStatuses = [
     { value: 'pending', label: 'Pending' },

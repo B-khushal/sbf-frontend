@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { toast } from "sonner";
 import useCart from "@/hooks/use-cart";
+import { getImageUrl } from "@/config";
 
 type WishlistItem = {
   id: string;
@@ -161,12 +162,8 @@ const ProductCard = ({ product, index }: { product: Product; index: number }) =>
   // Handle wishlist toggle with localStorage persistence
   const handleWishlistToggle = (productId: string) => {
     try {
-              // Handle image URL for Render deployment
-        const imageUrl = product.images?.[0]?.startsWith('http') 
-          ? product.images[0] 
-          : product.images?.[0] 
-            ? `https://sbf-backend.onrender.com${product.images[0]}`
-            : "/images/placeholder.jpg";
+      // Use the utility function for consistent image URL construction
+      const imageUrl = getImageUrl(product.images?.[0]);
       
       // Create wishlist item
       const wishlistItem = {
@@ -247,12 +244,7 @@ const ProductCard = ({ product, index }: { product: Product; index: number }) =>
       {/* Image Container */}
       <div className="relative aspect-[4/5] overflow-hidden">
         <img
-          src={product.images?.[0]?.startsWith('http') 
-            ? product.images[0] 
-            : product.images?.[0] 
-              ? `https://sbf-backend.onrender.com${product.images[0]}`
-              : '/images/placeholder.svg'
-          }
+          src={getImageUrl(product.images?.[0])}
           alt={product.title}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         />

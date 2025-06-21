@@ -384,7 +384,7 @@ const CheckoutPaymentPage = () => {
                   console.error('Error during redirect:', redirectError);
                   // Fallback if the redirect fails
                   alert('Payment successful! Please click OK to continue to the confirmation page.');
-                  window.location.href = '/checkout/confirmation';
+                  navigate('/checkout/confirmation');
                 }
               }
             }

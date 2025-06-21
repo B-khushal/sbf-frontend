@@ -13,6 +13,7 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import api from "@/services/api";
 import { useNavigate } from "react-router-dom";
 import { ProductData } from "@/services/productService";
+import { getImageUrl } from "@/config";
 
 type Product = ProductData & {
   _id: string;
@@ -460,12 +461,8 @@ const AdminProducts: React.FC = () => {
                     ? convertPrice(product.price * (1 - product.discount / 100))
                     : convertPrice(product.price);
 
-                  // Construct the proper image URL for backend
-                  const imageUrl = product.images?.length 
-                    ? (product.images[0].startsWith('http') 
-                        ? product.images[0] 
-                        : `https://sbf-backend.onrender.com${product.images[0]}`)
-                    : "/images/placeholder.jpg"; 
+                  // Construct the proper image URL using utility function
+                  const imageUrl = getImageUrl(product.images?.[0]); 
 
                   return (
                     <TableRow 

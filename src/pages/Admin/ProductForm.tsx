@@ -16,6 +16,7 @@ import { Loader2, Trash2, ArrowLeft, Upload, Image as ImageIcon, Plus, X } from 
 import api from '../../services/api';
 import axios from 'axios'; // Keep for axios.isAxiosError
 import ProductFeaturesToggle from '@/components/ui/ProductFeaturesToggle';
+import { getImageUrl } from '@/config';
 
 type FormErrors = Partial<Record<keyof ProductData, string>>;
 
@@ -864,10 +865,7 @@ const ProductForm = () => {
                 {image && (
                   <div className="mt-2">
                     <img
-                      src={image?.startsWith('http') 
-                        ? image 
-                        : `https://sbf-backend.onrender.com${image}`
-                      }
+                      src={getImageUrl(image)}
                       alt={`Preview ${index}`}
                       className="h-20 w-20 object-cover rounded-md"
                     />

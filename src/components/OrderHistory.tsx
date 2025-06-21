@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Order, getOrders } from '@/services/orderService';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,11 +7,13 @@ import { Badge } from '@/components/ui/badge';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { format } from 'date-fns';
 import { ImageIcon, RefreshCw } from 'lucide-react';
+import { getImageUrl as getImageUrlFromConfig } from '@/config';
 
 const OrderHistory = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const { formatPrice, convertPrice, currency } = useCurrency();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -51,22 +54,8 @@ const OrderHistory = () => {
     }
   };
 
-  const getImageUrl = (imagePath: string | undefined) => {
-    if (!imagePath) return "/images/placeholder.jpg";
-    
-    // Handle different possible image path formats
-    if (imagePath.startsWith('http')) {
-      return imagePath;
-    }
-    
-    // Construct the full URL using the API base URL
-    const baseUrl = import.meta.env.VITE_UPLOADS_URL || "";
-    
-    // Ensure the path starts with /
-    const cleanPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
-    
-    return `${baseUrl}${cleanPath}`;
-  };
+  // Use the centralized image URL utility function
+  const getImageUrl = getImageUrlFromConfig;
 
   const getStatusColor = (status: Order['status']) => {
     switch (status) {
@@ -103,7 +92,7 @@ const OrderHistory = () => {
           <h3 className="font-bold text-gray-800 mb-2">No Orders Yet</h3>
           <p className="text-gray-600 mb-4">You haven't placed any orders yet</p>
           <Button 
-            onClick={() => window.location.href = '/shop'}
+            onClick={() => navigate('/shop')}
             className="bg-gradient-to-r from-primary to-secondary text-white rounded-xl"
           >
             Start Shopping

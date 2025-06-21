@@ -3,6 +3,7 @@ import { ShoppingCart, Heart, Share2, Minus, Plus, ChevronLeft, ChevronRight } f
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import { getImageUrl } from '@/config';
 
 type ProductDetailProps = {
   product: {
@@ -48,12 +49,8 @@ const ProductDetail = ({ product, onAddToCart }: ProductDetailProps) => {
     ? product.price * (1 - product.discount / 100)
     : originalPrice;
 
-  // Handle image URL for Render deployment
-  const imageUrl = product.images[selectedImage]?.startsWith('http') 
-    ? product.images[selectedImage] 
-    : product.images[selectedImage] 
-      ? `https://sbf-backend.onrender.com${product.images[selectedImage]}`
-      : "/images/placeholder.jpg"; 
+  // Handle image URL using utility function
+  const imageUrl = getImageUrl(product.images[selectedImage]); 
 
   // Image Navigation
   const prevImage = () => {
@@ -86,25 +83,8 @@ const ProductDetail = ({ product, onAddToCart }: ProductDetailProps) => {
 
   const handleAddToWishlist = () => {
     try {
-      // Better image URL handling
-      let imageUrl = "/images/placeholder.jpg";
-      
-      if (product.images && product.images.length > 0) {
-        const rawImageUrl = product.images[0];
-        
-        if (rawImageUrl.startsWith("http")) {
-          // Full URL, use as is
-          imageUrl = rawImageUrl;
-        } else if (rawImageUrl.startsWith("/")) {
-          // Relative URL, need to add base URL
-          const baseUrl = import.meta.env.VITE_UPLOADS_URL || "";
-          const cleanBaseUrl = baseUrl.endsWith("/api") 
-            ? baseUrl.substring(0, baseUrl.length - 4) 
-            : baseUrl;
-            
-          imageUrl = `${cleanBaseUrl}${rawImageUrl}`;
-        }
-      }
+      // Use utility function for consistent image URL construction
+      const imageUrl = getImageUrl(product.images?.[0]);
       
       // Create wishlist item with proper ID
       const wishlistItem = {
@@ -160,6 +140,52 @@ const ProductDetail = ({ product, onAddToCart }: ProductDetailProps) => {
         variant: "destructive",
         duration: 3000,
       });
+    }
+  };
+
+  const handleShare = async () => {
+    const shareData = {
+      title: `${product.title} - SBF Florist`,
+      text: `Check out this beautiful ${product.title} from SBF Florist! ${formatPrice(convertPrice(discountedPrice))}`,
+      url: window.location.href,
+    };
+
+    try {
+      // Check if Web Share API is supported
+      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+        toast({
+          title: "Shared successfully",
+          description: "Product shared successfully!",
+          duration: 3000,
+        });
+      } else {
+        // Fallback: Copy to clipboard
+        await navigator.clipboard.writeText(`${shareData.title}\n${shareData.text}\n${shareData.url}`);
+        toast({
+          title: "Link copied",
+          description: "Product link copied to clipboard!",
+          duration: 3000,
+        });
+      }
+    } catch (error) {
+      console.error("Error sharing:", error);
+      // Final fallback: Copy URL only
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        toast({
+          title: "Link copied",
+          description: "Product link copied to clipboard!",
+          duration: 3000,
+        });
+      } catch (clipboardError) {
+        toast({
+          title: "Share failed",
+          description: "Unable to share or copy link. Please copy the URL manually.",
+          variant: "destructive",
+          duration: 3000,
+        });
+      }
     }
   };
 
@@ -227,12 +253,7 @@ const ProductDetail = ({ product, onAddToCart }: ProductDetailProps) => {
                   )}
                 >
                   <img
-                    src={image?.startsWith('http') 
-                      ? image 
-                      : image 
-                        ? `https://sbf-backend.onrender.com${image}`
-                        : "/images/placeholder.jpg"
-                    }
+                    src={getImageUrl(image)}
                     alt={`${product.title} view ${index + 1}`}
                     className="w-full h-full object-cover rounded-md"
                   />
@@ -296,8 +317,13 @@ const ProductDetail = ({ product, onAddToCart }: ProductDetailProps) => {
                   <Heart size={18} />
                   <span className="hidden sm:inline">Wishlist</span>
                 </button>
-                <button className="h-12 px-6 border border-muted flex items-center justify-center rounded-md hover:bg-secondary transition-colors duration-300">
+                <button 
+                  onClick={handleShare}
+                  className="h-12 px-6 border border-muted flex items-center justify-center gap-2 rounded-md hover:bg-secondary transition-colors duration-300"
+                  title="Share this product"
+                >
                   <Share2 size={18} />
+                  <span className="hidden sm:inline">Share</span>
                 </button>
               </div>
             </div>

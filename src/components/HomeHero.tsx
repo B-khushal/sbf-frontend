@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -105,12 +106,12 @@ const HomeHero = () => {
                 <p className="text-xl md:text-2xl text-white/80 mb-8 max-w-2xl mx-auto">
                   {slide.subtitle}
                 </p>
-                <a
-                  href={slide.ctaLink}
+                <Link
+                  to={slide.ctaLink}
                   className="inline-block px-8 py-3.5 bg-white/95 text-primary text-sm font-medium tracking-wide hover:bg-white transition-all rounded-md shadow-md"
                 >
                   {slide.ctaText}
-                </a>
+                </Link>
               </div>
             ))}
           </div>

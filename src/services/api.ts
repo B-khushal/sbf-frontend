@@ -82,7 +82,11 @@ api.interceptors.response.use(
       
       // Redirect to login page if not already there
       if (!window.location.pathname.includes('/login')) {
-        window.location.href = '/login';
+        // Use programmatic navigation instead of window.location
+        if (typeof window !== 'undefined' && window.history) {
+          window.history.pushState({}, '', '/login');
+          window.dispatchEvent(new PopStateEvent('popstate'));
+        }
       }
     }
     
