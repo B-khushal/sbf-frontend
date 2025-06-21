@@ -161,22 +161,8 @@ const ProductCard = ({ product, index }: { product: Product; index: number }) =>
   // Handle wishlist toggle with localStorage persistence
   const handleWishlistToggle = (productId: string) => {
     try {
-      // Better image URL handling
-      let imageUrl = "/images/placeholder.jpg";
-      
-      if (product.images && product.images.length > 0) {
-        const rawImageUrl = product.images[0];
-        
-        if (rawImageUrl.startsWith("http")) {
-          imageUrl = rawImageUrl;
-        } else if (rawImageUrl.startsWith("/")) {
-          const baseUrl = import.meta.env.VITE_UPLOADS_URL || "";
-          const cleanBaseUrl = baseUrl.endsWith("/api") 
-            ? baseUrl.substring(0, baseUrl.length - 4) 
-            : baseUrl;
-          imageUrl = `${cleanBaseUrl}${rawImageUrl}`;
-        }
-      }
+      // Simple image URL handling - let nginx proxy handle it
+      const imageUrl = product.images?.[0] || "/images/placeholder.jpg";
       
       // Create wishlist item
       const wishlistItem = {
@@ -257,10 +243,7 @@ const ProductCard = ({ product, index }: { product: Product; index: number }) =>
       {/* Image Container */}
       <div className="relative aspect-[4/5] overflow-hidden">
         <img
-          src={product.images?.[0]?.startsWith("/") 
-                            ? product.images[0]
-            : product.images?.[0] || '/images/placeholder.svg'
-          }
+          src={product.images?.[0] || '/images/placeholder.svg'}
           alt={product.title}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
