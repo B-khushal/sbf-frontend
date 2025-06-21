@@ -13,9 +13,9 @@ import productService from '@/services/productService';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Loader2, Trash2, ArrowLeft, Upload, Image as ImageIcon, Plus, X } from 'lucide-react';
-import axios from 'axios';
+import api from '../../services/api';
+import axios from 'axios'; // Keep for axios.isAxiosError
 import ProductFeaturesToggle from '@/components/ui/ProductFeaturesToggle';
-import api from '@/services/api'; // wherever your `api.ts` is
 
 type FormErrors = Partial<Record<keyof ProductData, string>>;
 
@@ -178,16 +178,33 @@ const ProductForm = () => {
   };
 
   const getAuthToken = () => {
+    // Try userData first (from our recent changes)
     const userData = localStorage.getItem('userData') || sessionStorage.getItem('userData');
-    if (!userData) return null;
-    
-    try {
-      const parsed = JSON.parse(userData);
-      return parsed.token;
-    } catch (err) {
-      console.error('Error parsing user data:', err);
-      return null;
+    if (userData) {
+      try {
+        const parsed = JSON.parse(userData);
+        if (parsed.token) return parsed.token;
+      } catch (err) {
+        console.error('Error parsing userData:', err);
+      }
     }
+    
+    // Fall back to user (from the existing auth system)
+    const user = localStorage.getItem('user');
+    if (user) {
+      try {
+        const parsed = JSON.parse(user);
+        if (parsed.token) return parsed.token;
+      } catch (err) {
+        console.error('Error parsing user data:', err);
+      }
+    }
+    
+    // Finally, try direct token storage
+    const token = localStorage.getItem('token');
+    if (token) return token;
+    
+    return null;
   };
 
   useEffect(() => {
@@ -297,11 +314,11 @@ const ProductForm = () => {
     formData.append('image', file);
 
     try {
-      const token = getAuthToken();
-      const response = await axios.post('https://sbf-backend.onrender.com/api/uploads', formData, {
+      console.log('Uploading image to backend...');
+      
+      const response = await api.post('/uploads', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
-          Authorization: token ? `Bearer ${token}` : '',
         },
         onUploadProgress: (progressEvent) => {
           if (progressEvent.total) {
@@ -316,7 +333,7 @@ const ProductForm = () => {
       });
 
       return response.data.imageUrl;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Upload error:', error);
       setUploadProgress(prev => {
         const newProgress = [...prev];
@@ -324,9 +341,20 @@ const ProductForm = () => {
         return newProgress;
       });
       
+      let errorMessage = "Failed to upload image. Please try again.";
+      
+      if (error.response?.status === 401) {
+        errorMessage = "Authentication failed. Please log in again.";
+        setTimeout(() => navigate('/login'), 2000);
+      } else if (error.response?.status === 403) {
+        errorMessage = "You don't have permission to upload images.";
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      
       toast({
         title: "Upload Failed",
-        description: "Failed to upload image. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
       return null;
