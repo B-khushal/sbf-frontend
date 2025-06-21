@@ -800,7 +800,7 @@ const CheckoutShippingPage = () => {
 <div className="space-y-4 max-h-80 overflow-y-auto mb-4">
   {items.map((item) => {
     const imageUrl = item.image?.startsWith("/")
-      ? `${import.meta.env.VITE_API_URL.replace(/\/api$/, "")}${item.image}`
+                      ? item.image
       : item.image;
 
     return (

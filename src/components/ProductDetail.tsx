@@ -48,10 +48,12 @@ const ProductDetail = ({ product, onAddToCart }: ProductDetailProps) => {
     ? product.price * (1 - product.discount / 100)
     : originalPrice;
 
-  // ✅ Ensure image URL is absolute
-  const imageUrl = product.images[selectedImage]?.startsWith("/")
-    ? `${import.meta.env.VITE_API_URL.replace("/api", "")}${product.images[selectedImage]}`
-    : product.images[selectedImage] || "/images/placeholder.jpg"; 
+  // Handle image URL for Render deployment
+  const imageUrl = product.images[selectedImage]?.startsWith('http') 
+    ? product.images[selectedImage] 
+    : product.images[selectedImage] 
+      ? `https://sbf-backend.onrender.com${product.images[selectedImage]}`
+      : "/images/placeholder.jpg"; 
 
   // Image Navigation
   const prevImage = () => {
@@ -95,7 +97,7 @@ const ProductDetail = ({ product, onAddToCart }: ProductDetailProps) => {
           imageUrl = rawImageUrl;
         } else if (rawImageUrl.startsWith("/")) {
           // Relative URL, need to add base URL
-          const baseUrl = import.meta.env.VITE_API_URL || "";
+          const baseUrl = import.meta.env.VITE_UPLOADS_URL || "";
           const cleanBaseUrl = baseUrl.endsWith("/api") 
             ? baseUrl.substring(0, baseUrl.length - 4) 
             : baseUrl;
@@ -213,30 +215,29 @@ const ProductDetail = ({ product, onAddToCart }: ProductDetailProps) => {
 
             {/* Thumbnail Gallery */}
             <div className="flex gap-3 justify-center">
-              {product.images.map((image, index) => {
-                const thumbUrl = image.startsWith("/")
-                  ? `${import.meta.env.VITE_API_URL.replace("/api", "")}${image}`
-                  : image || "/images/placeholder.jpg";
-
-                return (
-                  <button
-                    key={index}
-                    onClick={() => setSelectedImage(index)}
-                    className={cn(
-                      "w-16 h-16 relative overflow-hidden rounded-md shadow-md transition-all duration-300 ease-smooth",
-                      selectedImage === index
-                        ? "ring-2 ring-primary ring-offset-2"
-                        : "opacity-70 hover:opacity-100"
-                    )}
-                  >
-                    <img
-                      src={thumbUrl}
-                      alt={`${product.title} view ${index + 1}`}
-                      className="w-full h-full object-cover rounded-md"
-                    />
-                  </button>
-                );
-              })}
+              {product.images.map((image, index) => (
+                <button
+                  key={index}
+                  onClick={() => setSelectedImage(index)}
+                  className={cn(
+                    "w-16 h-16 relative overflow-hidden rounded-md shadow-md transition-all duration-300 ease-smooth",
+                    selectedImage === index
+                      ? "ring-2 ring-primary ring-offset-2"
+                      : "opacity-70 hover:opacity-100"
+                  )}
+                >
+                  <img
+                    src={image?.startsWith('http') 
+                      ? image 
+                      : image 
+                        ? `https://sbf-backend.onrender.com${image}`
+                        : "/images/placeholder.jpg"
+                    }
+                    alt={`${product.title} view ${index + 1}`}
+                    className="w-full h-full object-cover rounded-md"
+                  />
+                </button>
+              ))}
             </div>
           </div>
 

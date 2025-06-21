@@ -1,0 +1,15 @@
+# Redirect all requests to index.html for client-side routing
+# This ensures that React Router can handle all routes on the frontend
+
+# Handle SPA routing - redirect all non-file requests to index.html
+/*    /index.html   200
+
+# Optional: Handle specific API calls if you have external APIs
+# /api/*  https://your-backend-api.com/api/:splat  200
+
+# Optional: Handle specific file extensions that should not be redirected
+# *.js    /  404
+# *.css   /  404
+# *.png   /  404
+# *.jpg   /  404
+# *.svg   /  404 

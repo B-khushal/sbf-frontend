@@ -411,7 +411,7 @@ const CheckoutConfirmationPage = () => {
     if (!imagePath) return '/images/placeholder.jpg';
     
     return imagePath.startsWith("/")
-      ? `${import.meta.env.VITE_API_URL.replace(/\/api$/, "")}${imagePath}`
+                      ? imagePath
       : imagePath;
   };
 

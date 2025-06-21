@@ -462,7 +462,7 @@ const AdminProducts: React.FC = () => {
 
                   // Ensure the image URL is absolute
                   const imageUrl = product.images?.length 
-                    ? `${import.meta.env.VITE_API_URL.replace("/api", "")}${product.images[0]}`
+                    ? product.images[0]
                     : "/images/placeholder.jpg"; 
 
                   return (

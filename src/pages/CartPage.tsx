@@ -68,17 +68,9 @@ const CartPage: React.FC = () => {
       </div>
 
       <Navigation cartItemCount={items.length} />
-
-      {/* Testing Mode Banner */}
-      <div className="bg-yellow-500 text-black px-4 py-2 text-center font-semibold flex items-center justify-center gap-2 relative z-50">
-        <AlertTriangle className="w-5 h-5" />
-        <span className="text-sm sm:text-base">
-          ⚠️ TESTING MODE: This website is currently in testing phase. Orders may not be processed.
-        </span>
-      </div>
       
       <motion.main 
-        className="relative flex-1 pt-24 z-10"
+        className="relative flex-1 pt-20 z-10"
         initial="hidden"
         animate="visible"
         variants={containerVariants}
@@ -170,7 +162,7 @@ const CartPage: React.FC = () => {
                     <div className="space-y-4 sm:space-y-6">
                       {items.map((item, index) => {
                         const imageUrl = item.image?.startsWith("/")
-                          ? `${import.meta.env.VITE_API_URL.replace(/\/api$/, "")}${item.image}`
+                          ? item.image
                           : item.image;
 
                         return (
@@ -324,8 +316,16 @@ const CartPage: React.FC = () => {
             </div>
           )}
         </div>
-      </motion.main>
-      
+            </motion.main>
+
+      {/* Testing Mode Badge - Floating */}
+      <div className="fixed bottom-4 right-4 bg-yellow-500 text-black px-3 py-2 rounded-lg shadow-lg font-semibold flex items-center gap-2 z-50 text-xs sm:text-sm max-w-xs">
+        <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+        <span className="leading-tight">
+          ⚠️ TESTING MODE: Orders may not be processed.
+        </span>
+      </div>
+
       <Footer />
     </div>
   );

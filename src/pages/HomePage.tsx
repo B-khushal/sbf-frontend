@@ -252,14 +252,6 @@ const HomePage = () => {
       
       <Navigation cartItemCount={itemCount} />
 
-      {/* Testing Mode Banner */}
-      <div className="bg-yellow-500 text-black px-4 py-2 text-center font-semibold flex items-center justify-center gap-2 relative z-50">
-        <AlertTriangle className="w-5 h-5" />
-        <span className="text-sm sm:text-base">
-          ⚠️ TESTING MODE: This website is currently in testing phase. Orders may not be processed.
-        </span>
-      </div>
-
       <motion.main 
         className="relative flex-1 mt-16 z-10"
         initial="hidden"
@@ -290,6 +282,14 @@ const HomePage = () => {
       </motion.main>
 
       <Footer />
+
+      {/* Testing Mode Badge - Floating */}
+      <div className="fixed bottom-4 right-4 bg-yellow-500 text-black px-3 py-2 rounded-lg shadow-lg font-semibold flex items-center gap-2 z-50 text-xs sm:text-sm max-w-xs">
+        <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+        <span className="leading-tight">
+          ⚠️ TESTING MODE: Orders may not be processed.
+        </span>
+      </div>
 
       <Cart items={items} isOpen={isCartOpen} onClose={closeCart} onUpdateQuantity={updateItemQuantity} onRemoveItem={removeItem} />
     </div>

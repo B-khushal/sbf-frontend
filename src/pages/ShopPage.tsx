@@ -119,10 +119,10 @@ const ShopPage = () => {
     addItem,
   } = useCart();
 
-  // Handle category click with new tab functionality
+  // Handle category click with same-tab navigation
   const handleCategoryClick = (categoryName: string) => {
     const categoryUrl = `/shop/${categoryName}`;
-    window.open(categoryUrl, '_blank');
+    navigate(categoryUrl);
   };
 
   // Handle quick view
@@ -145,9 +145,11 @@ const ShopPage = () => {
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <img 
-              src={product.images?.[0]?.startsWith("/") 
-                ? `${import.meta.env.VITE_API_URL.replace(/\/api$/, "")}${product.images[0]}`
-                : product.images?.[0] || '/images/placeholder.svg'
+              src={product.images?.[0]?.startsWith('http') 
+                ? product.images[0] 
+                : product.images?.[0] 
+                  ? `https://sbf-backend.onrender.com${product.images[0]}`
+                  : '/images/placeholder.svg'
               }
               alt={product.title}
               className="w-full h-48 sm:h-64 object-cover rounded-lg"
@@ -423,7 +425,7 @@ const ShopPage = () => {
               <div className="text-center">
                 <div className="inline-flex items-center gap-2 text-sm text-gray-600 mb-4">
                   <button 
-                    onClick={() => window.open('/shop', '_blank')}
+                    onClick={() => navigate('/shop')}
                     className="hover:text-primary transition-colors"
                   >
                     Shop

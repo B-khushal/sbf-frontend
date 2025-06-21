@@ -60,7 +60,7 @@ const OrderHistory = () => {
     }
     
     // Construct the full URL using the API base URL
-    const baseUrl = import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:5000";
+    const baseUrl = import.meta.env.VITE_UPLOADS_URL || "";
     
     // Ensure the path starts with /
     const cleanPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;

@@ -1,69 +1,123 @@
-# Welcome to your Lovable project
+# SBF Florist - Frontend
 
-## Project info
+A modern, responsive e-commerce platform for SBF Florist, built with React, TypeScript, and Tailwind CSS.
 
-**URL**: https://lovable.dev/projects/144d36de-2831-49a6-9371-07aabb4e7dd3
+## 🚀 Live Demo
 
-## How can I edit this code?
+- **Frontend**: https://www.sbflorist.in
+- **Backend API**: https://sbf-backend.onrender.com
 
-There are several ways of editing your application.
+## 📦 Repositories
 
-**Use Lovable**
+- **Frontend**: [https://github.com/B-khushal/sbf-frontend](https://github.com/B-khushal/sbf-frontend)
+- **Backend**: [https://github.com/B-khushal/sbf-backend](https://github.com/B-khushal/sbf-backend)
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/144d36de-2831-49a6-9371-07aabb4e7dd3) and start prompting.
+## 🛠️ Development Setup
 
-Changes made via Lovable will be committed automatically to this repo.
+### Prerequisites
 
-**Use your preferred IDE**
+- Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+### Getting Started
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+# Step 1: Clone the repository
+git clone https://github.com/B-khushal/sbf-frontend.git
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Step 2: Navigate to the project directory
+cd sbf-frontend
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Step 3: Install dependencies
+npm install
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Step 4: Create environment file
+cp .env.example .env
+
+# Step 5: Configure environment variables (see Environment Configuration below)
+
+# Step 6: Start the development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## 🌍 Environment Configuration
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Create a `.env` file in the root directory with the following variables:
 
-**Use GitHub Codespaces**
+```env
+# API Configuration
+VITE_API_URL=https://sbf-backend.onrender.com/api
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+# Upload/Image Configuration  
+VITE_UPLOADS_URL=https://sbf-backend.onrender.com/uploads
 
-## What technologies are used for this project?
+# App Configuration
+VITE_APP_NAME=SBF Florist
+VITE_APP_VERSION=1.0.0
+```
 
-This project is built with .
+### Local Development
+For local development, use:
+```env
+VITE_API_URL=http://localhost:5000/api
+VITE_UPLOADS_URL=http://localhost:5000/uploads
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## 🛠️ Tech Stack
 
-## How can I deploy this project?
+This project is built with modern web technologies:
 
-Simply open [Lovable](https://lovable.dev/projects/144d36de-2831-49a6-9371-07aabb4e7dd3) and click on Share -> Publish.
+- **⚡ Vite** - Fast build tool and dev server
+- **🔷 TypeScript** - Type safety and better developer experience
+- **⚛️ React** - UI library with hooks and modern patterns
+- **🎨 Tailwind CSS** - Utility-first CSS framework
+- **🧩 shadcn-ui** - High-quality accessible components
+- **📱 Responsive Design** - Mobile-first approach
+- **🔒 Authentication** - JWT-based user authentication
+- **🛒 E-commerce Features** - Cart, checkout, orders, admin panel
 
-## I want to use a custom domain - is that possible?
+## 🚀 Deployment
 
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+### Frontend (Render Static Site)
+1. Connect your GitHub repository to Render
+2. Set the build command: `npm run build`
+3. Set the publish directory: `dist`
+4. Add environment variables in Render dashboard
+5. Deploy!
+
+### Environment Variables for Production
+```env
+VITE_API_URL=https://sbf-backend.onrender.com/api
+VITE_UPLOADS_URL=https://sbf-backend.onrender.com/uploads
+```
+
+## 📁 Project Structure
+
+```
+src/
+├── components/        # Reusable UI components
+├── pages/            # Page components and routes
+├── contexts/         # React context providers
+├── hooks/            # Custom React hooks
+├── services/         # API services and external integrations
+├── utils/            # Utility functions
+├── types/            # TypeScript type definitions
+└── styles/           # Global styles and Tailwind config
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/new-feature`
+3. Commit your changes: `git commit -am 'Add new feature'`
+4. Push to the branch: `git push origin feature/new-feature`
+5. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+## 🔗 Related Links
+
+- **Backend Repository**: [https://github.com/B-khushal/sbf-backend](https://github.com/B-khushal/sbf-backend)
+- **Live Website**: [https://www.sbflorist.in](https://www.sbflorist.in)
+- **API Documentation**: [https://sbf-backend.onrender.com/health](https://sbf-backend.onrender.com/health)

@@ -298,7 +298,7 @@ const ProductForm = () => {
 
     try {
       const token = getAuthToken();
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}/upload`, formData, {
+      const response = await axios.post('https://sbf-backend.onrender.com/api/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: token ? `Bearer ${token}` : '',
@@ -805,7 +805,10 @@ const ProductForm = () => {
                 {image && (
                   <div className="mt-2">
                     <img
-                      src={`${import.meta.env.VITE_UPLOADS_URL}${image}`}
+                      src={image?.startsWith('http') 
+                        ? image 
+                        : `https://sbf-backend.onrender.com${image}`
+                      }
                       alt={`Preview ${index}`}
                       className="h-20 w-20 object-cover rounded-md"
                     />

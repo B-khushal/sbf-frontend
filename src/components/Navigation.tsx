@@ -262,10 +262,7 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                             <div className="w-12 h-12 bg-gradient-to-br from-bloom-pink-200 to-bloom-blue-200 rounded-xl flex-shrink-0 overflow-hidden shadow-md">
                               {suggestion.image ? (
                                 <img 
-                                  src={suggestion.image.startsWith('/') 
-                                    ? `${import.meta.env.VITE_API_URL.replace('/api', '')}${suggestion.image}`
-                                    : suggestion.image
-                                  } 
+                                  src={suggestion.image} 
                                   alt={suggestion.title}
                                   className="w-full h-full object-cover"
                                 />
@@ -536,10 +533,7 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                       <div className="w-12 h-12 bg-gradient-to-br from-bloom-pink-200 to-bloom-blue-200 rounded-xl flex-shrink-0 overflow-hidden shadow-md">
                         {suggestion.image ? (
                           <img 
-                            src={suggestion.image.startsWith('/') 
-                              ? `${import.meta.env.VITE_API_URL.replace('/api', '')}${suggestion.image}`
-                              : suggestion.image
-                            } 
+                            src={suggestion.image} 
                             alt={suggestion.title}
                             className="w-full h-full object-cover"
                           />
