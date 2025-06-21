@@ -48,10 +48,8 @@ const ProductDetail = ({ product, onAddToCart }: ProductDetailProps) => {
     ? product.price * (1 - product.discount / 100)
     : originalPrice;
 
-  // ✅ Ensure image URL is absolute
-  const imageUrl = product.images[selectedImage]?.startsWith("/")
-    ? `${import.meta.env.VITE_API_URL.replace("/api", "")}${product.images[selectedImage]}`
-    : product.images[selectedImage] || "/images/placeholder.jpg"; 
+  // Simple image URL handling - let nginx proxy handle it
+  const imageUrl = product.images[selectedImage] || "/images/placeholder.jpg"; 
 
   // Image Navigation
   const prevImage = () => {
@@ -95,7 +93,7 @@ const ProductDetail = ({ product, onAddToCart }: ProductDetailProps) => {
           imageUrl = rawImageUrl;
         } else if (rawImageUrl.startsWith("/")) {
           // Relative URL, need to add base URL
-          const baseUrl = import.meta.env.VITE_API_URL || "";
+          const baseUrl = import.meta.env.VITE_UPLOADS_URL || "";
           const cleanBaseUrl = baseUrl.endsWith("/api") 
             ? baseUrl.substring(0, baseUrl.length - 4) 
             : baseUrl;
@@ -213,30 +211,24 @@ const ProductDetail = ({ product, onAddToCart }: ProductDetailProps) => {
 
             {/* Thumbnail Gallery */}
             <div className="flex gap-3 justify-center">
-              {product.images.map((image, index) => {
-                const thumbUrl = image.startsWith("/")
-                  ? `${import.meta.env.VITE_API_URL.replace("/api", "")}${image}`
-                  : image || "/images/placeholder.jpg";
-
-                return (
-                  <button
-                    key={index}
-                    onClick={() => setSelectedImage(index)}
-                    className={cn(
-                      "w-16 h-16 relative overflow-hidden rounded-md shadow-md transition-all duration-300 ease-smooth",
-                      selectedImage === index
-                        ? "ring-2 ring-primary ring-offset-2"
-                        : "opacity-70 hover:opacity-100"
-                    )}
-                  >
-                    <img
-                      src={thumbUrl}
-                      alt={`${product.title} view ${index + 1}`}
-                      className="w-full h-full object-cover rounded-md"
-                    />
-                  </button>
-                );
-              })}
+              {product.images.map((image, index) => (
+                <button
+                  key={index}
+                  onClick={() => setSelectedImage(index)}
+                  className={cn(
+                    "w-16 h-16 relative overflow-hidden rounded-md shadow-md transition-all duration-300 ease-smooth",
+                    selectedImage === index
+                      ? "ring-2 ring-primary ring-offset-2"
+                      : "opacity-70 hover:opacity-100"
+                  )}
+                >
+                  <img
+                    src={image || "/images/placeholder.jpg"}
+                    alt={`${product.title} view ${index + 1}`}
+                    className="w-full h-full object-cover rounded-md"
+                  />
+                </button>
+              ))}
             </div>
           </div>
 
@@ -283,7 +275,7 @@ const ProductDetail = ({ product, onAddToCart }: ProductDetailProps) => {
               <div className="flex flex-col sm:flex-row gap-4">
                 <button
                   onClick={handleAddToCart}
-                  className="flex-1 h-14 bg-primary text-primary-foreground flex items-center justify-center gap-2 rounded-md hover-lift subtle-shadow"
+                  className="flex-1 h-12 bg-primary text-primary-foreground flex items-center justify-center gap-2 rounded-md hover-lift subtle-shadow"
                 >
                   <ShoppingCart size={18} />
                   <span>Add to Cart</span>
