@@ -156,6 +156,33 @@ const AdminNavbar = () => {
     }
   };
 
+  const handleCorsTest = async () => {
+    try {
+      console.log('Testing CORS connection...');
+      
+      // Test direct fetch to backend
+      const response = await fetch('https://sbf-backend.onrender.com/cors-test', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('CORS test successful:', data);
+        alert(`CORS Test Successful!\n\nOrigin: ${data.origin}\nMessage: ${data.message}\nTimestamp: ${data.timestamp}`);
+      } else {
+        console.error('CORS test failed:', response.status, response.statusText);
+        alert(`CORS Test Failed!\n\nStatus: ${response.status}\nStatus Text: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error('CORS test error:', error);
+      alert(`CORS Test Error!\n\nError: ${error.message}\n\nThis indicates a CORS policy issue. The backend server may need to be redeployed with updated CORS configuration.`);
+    }
+  };
+
   return (
     <nav className="border-b">
       <div className="flex h-16 items-center px-4">
@@ -258,6 +285,15 @@ const AdminNavbar = () => {
             className="text-xs"
           >
             🔍 Debug
+          </Button>
+
+          <Button
+            onClick={handleCorsTest}
+            variant="outline"
+            size="sm"
+            className="text-xs"
+          >
+            🌐 CORS
           </Button>
 
           {/* Sync Button */}
