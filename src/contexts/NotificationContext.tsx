@@ -211,6 +211,17 @@ export const NotificationProvider: React.FC<{children: ReactNode}> = ({ children
           lastNotificationCheck.current = new Date().toISOString();
         }
         
+        // Connection successful - reset retry counter and show success message if was previously offline
+        if (connectionRetries > 0) {
+          console.log('Backend connection restored after', connectionRetries, 'retries');
+          toast({
+            title: "Connection Restored! 🎉",
+            description: "Successfully reconnected to backend server. Notifications are now live.",
+            duration: 4000,
+          });
+        }
+        
+        setConnectionRetries(0);
         setIsConnected(true);
       } catch (error) {
         console.error('Failed to fetch notifications from API:', error);
@@ -454,6 +465,9 @@ export const NotificationProvider: React.FC<{children: ReactNode}> = ({ children
         // Update localStorage with synced notifications
         localStorage.setItem('admin_notifications', JSON.stringify(formattedNotifications));
         
+        // Reset retry counter since sync was successful
+        setConnectionRetries(0);
+        
         toast({
           title: "Notifications Synced",
           description: `Successfully synced ${apiNotifications.length} notifications from server`,
@@ -463,6 +477,9 @@ export const NotificationProvider: React.FC<{children: ReactNode}> = ({ children
         console.log('No notifications found on server');
         setIsConnected(true);
         setLastSyncTime(new Date().toISOString());
+        
+        // Reset retry counter since connection was successful
+        setConnectionRetries(0);
         
         toast({
           title: "Sync Complete", 

@@ -119,7 +119,11 @@ const AdminNavbar = () => {
           {/* Connection Status */}
           <div className="flex items-center gap-2">
             {isConnected ? (
-              <div className="flex items-center gap-1 text-green-600">
+              <div 
+                className="flex items-center gap-1 text-green-600 cursor-pointer"
+                onClick={() => setShowDebugInfo(!showDebugInfo)}
+                title="Click for connection info"
+              >
                 <Wifi className="h-4 w-4" />
                 <span className="text-xs font-medium">Online</span>
               </div>
@@ -134,29 +138,53 @@ const AdminNavbar = () => {
               </div>
             )}
             
-            {/* Debug Info Popup */}
-            {showDebugInfo && !isConnected && (
+            {/* Debug/Info Popup */}
+            {showDebugInfo && (
               <div className="absolute top-16 right-4 bg-white border rounded-lg shadow-lg p-4 z-50 w-80">
                 <div className="text-sm space-y-2">
-                  <div className="font-semibold text-red-600">Connection Debug Info</div>
-                  <div><strong>Status:</strong> Backend Unavailable</div>
-                  <div><strong>Issue:</strong> CORS Policy Error</div>
-                  <div><strong>Solution:</strong> Backend needs redeployment</div>
-                  <div><strong>Backend URL:</strong> https://sbf-backend.onrender.com</div>
-                  <div><strong>Current Mode:</strong> Offline (localStorage)</div>
-                  <div><strong>Notifications:</strong> {notifications.length} loaded locally</div>
-                  {lastSyncTime && (
-                    <div><strong>Last Sync:</strong> {formatDistanceToNow(new Date(lastSyncTime), { addSuffix: true })}</div>
+                  {isConnected ? (
+                    <>
+                      <div className="font-semibold text-green-600">✅ Connection Active</div>
+                      <div><strong>Status:</strong> Backend Online</div>
+                      <div><strong>Backend URL:</strong> https://sbf-backend.onrender.com</div>
+                      <div><strong>Mode:</strong> Live (MongoDB + API)</div>
+                      <div><strong>Notifications:</strong> {notifications.length} loaded</div>
+                      {lastSyncTime && (
+                        <div><strong>Last Sync:</strong> {formatDistanceToNow(new Date(lastSyncTime), { addSuffix: true })}</div>
+                      )}
+                      <div className="pt-2 border-t">
+                        <div className="text-xs text-gray-600">
+                          <strong>Features Available:</strong><br/>
+                          ✅ Real-time order notifications<br/>
+                          ✅ Cross-device synchronization<br/>
+                          ✅ API test notifications<br/>
+                          ✅ MongoDB persistence
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="font-semibold text-red-600">❌ Connection Debug Info</div>
+                      <div><strong>Status:</strong> Backend Unavailable</div>
+                      <div><strong>Issue:</strong> CORS Policy Error</div>
+                      <div><strong>Solution:</strong> Backend needs redeployment</div>
+                      <div><strong>Backend URL:</strong> https://sbf-backend.onrender.com</div>
+                      <div><strong>Current Mode:</strong> Offline (localStorage)</div>
+                      <div><strong>Notifications:</strong> {notifications.length} loaded locally</div>
+                      {lastSyncTime && (
+                        <div><strong>Last Sync:</strong> {formatDistanceToNow(new Date(lastSyncTime), { addSuffix: true })}</div>
+                      )}
+                      <div className="pt-2 border-t">
+                        <div className="text-xs text-gray-600">
+                          <strong>Steps to fix:</strong><br/>
+                          1. Go to Render Dashboard<br/>
+                          2. Redeploy sbf-backend service<br/>
+                          3. Wait for deployment to complete<br/>
+                          4. Click "Sync" button to reconnect
+                        </div>
+                      </div>
+                    </>
                   )}
-                  <div className="pt-2 border-t">
-                    <div className="text-xs text-gray-600">
-                      <strong>Steps to fix:</strong><br/>
-                      1. Go to Render Dashboard<br/>
-                      2. Redeploy sbf-backend service<br/>
-                      3. Wait for deployment to complete<br/>
-                      4. Click "Sync" button to reconnect
-                    </div>
-                  </div>
                   <Button
                     size="sm"
                     onClick={() => setShowDebugInfo(false)}
