@@ -78,8 +78,17 @@ const ProductPage = () => {
     image: string;
     quantity: number;
   }) => {
-    addItem(item);
-    setTimeout(() => openCart(), 300);
+    try {
+      const success = addItem(item, item.quantity);
+      if (success) {
+        setTimeout(() => openCart(), 300);
+      }
+      // If success is false, the addItem function already showed an error toast
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      // Re-throw the error so ProductDetail can handle it
+      throw error;
+    }
   };
 
   if (loading) {

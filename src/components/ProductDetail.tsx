@@ -3,6 +3,7 @@ import { ShoppingCart, Heart, Share2, Minus, Plus, ChevronLeft, ChevronRight } f
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import { useAuth } from '@/hooks/use-auth';
 import { getImageUrl } from '@/config';
 import ContactModal from '@/components/ui/ContactModal';
 import useCart from '@/hooks/use-cart';
@@ -37,6 +38,7 @@ const ProductDetail = ({ product, onAddToCart }: ProductDetailProps) => {
   const [selectedImage, setSelectedImage] = useState(0);
   const { toast } = useToast();
   const { formatPrice, convertPrice } = useCurrency();
+  const { user } = useAuth();
   const { showContactModal, contactModalProduct, closeContactModal } = useCart();
 
   // Debug log to check properties
@@ -80,20 +82,52 @@ const ProductDetail = ({ product, onAddToCart }: ProductDetailProps) => {
   const decrementQuantity = () => quantity > 1 && setQuantity((prev) => prev - 1);
 
   const handleAddToCart = () => {
-    onAddToCart({
-      id: product._id,
-      productId: product._id,
-      title: product.title,
-      price: discountedPrice,
-      originalPrice: originalPrice,
-      image: imageUrl,
-      quantity
-    });
-    toast({
-      title: "Added to cart",
-      description: `${quantity} × ${product.title} added to your cart`,
-      duration: 3000,
-    });
+    // Check authentication first
+    if (!user) {
+      toast({
+        title: "Please log in",
+        description: "You need to be logged in to add items to cart",
+        variant: "destructive",
+        duration: 4000,
+      });
+      return;
+    }
+
+    try {
+      onAddToCart({
+        id: product._id,
+        productId: product._id,
+        title: product.title,
+        price: discountedPrice,
+        originalPrice: originalPrice,
+        image: imageUrl,
+        quantity
+      });
+      toast({
+        title: "Added to cart",
+        description: `${quantity} × ${product.title} added to your cart`,
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to add to cart';
+      
+      if (errorMessage.includes('log in')) {
+        toast({
+          title: "Please log in",
+          description: "You need to be logged in to add items to cart",
+          variant: "destructive",
+          duration: 4000,
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive",
+          duration: 3000,
+        });
+      }
+    }
   };
 
   const handleAddToWishlist = () => {
