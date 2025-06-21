@@ -16,10 +16,42 @@ const api = axios.create({
 // Add a request interceptor to include the auth token in requests
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    // Try multiple token sources like in ProductForm
+    let token = localStorage.getItem('token');
+    
+    if (!token) {
+      // Try userData
+      const userData = localStorage.getItem('userData') || sessionStorage.getItem('userData');
+      if (userData) {
+        try {
+          const parsed = JSON.parse(userData);
+          if (parsed.token) token = parsed.token;
+        } catch (err) {
+          console.error('Error parsing userData in interceptor:', err);
+        }
+      }
+    }
+    
+    if (!token) {
+      // Try user
+      const user = localStorage.getItem('user');
+      if (user) {
+        try {
+          const parsed = JSON.parse(user);
+          if (parsed.token) token = parsed.token;
+        } catch (err) {
+          console.error('Error parsing user in interceptor:', err);
+        }
+      }
+    }
+    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('API Interceptor: Added token to request', config.url);
+    } else {
+      console.log('API Interceptor: No token found for request', config.url);
     }
+    
     return config;
   },
   (error) => {

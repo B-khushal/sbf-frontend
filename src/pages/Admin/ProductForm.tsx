@@ -314,7 +314,38 @@ const ProductForm = () => {
     formData.append('image', file);
 
     try {
-      console.log('Uploading image to backend...');
+      // Debug authentication state
+      const token = getAuthToken();
+      const userData = localStorage.getItem('userData') || sessionStorage.getItem('userData');
+      const user = localStorage.getItem('user');
+      
+      console.log('=== UPLOAD DEBUG INFO ===');
+      console.log('Token exists:', !!token);
+      console.log('Token preview:', token ? token.substring(0, 20) + '...' : 'None');
+      console.log('UserData exists:', !!userData);
+      console.log('User exists:', !!user);
+      
+      if (userData) {
+        try {
+          const parsed = JSON.parse(userData);
+          console.log('UserData role:', parsed.role);
+          console.log('UserData has token:', !!parsed.token);
+        } catch (e) {
+          console.log('Error parsing userData:', e);
+        }
+      }
+      
+      if (user) {
+        try {
+          const parsed = JSON.parse(user);
+          console.log('User role:', parsed.role);
+          console.log('User has token:', !!parsed.token);
+        } catch (e) {
+          console.log('Error parsing user:', e);
+        }
+      }
+      
+      console.log('========================');
       
       const response = await api.post('/uploads', formData, {
         headers: {
