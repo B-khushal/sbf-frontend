@@ -311,8 +311,8 @@ const ProductForm = () => {
       return null;
     }
 
-    const formData = new FormData();
-    formData.append('image', file);
+    const uploadFormData = new FormData();
+    uploadFormData.append('image', file);
 
     try {
       // Debug authentication state
@@ -321,6 +321,9 @@ const ProductForm = () => {
       const user = localStorage.getItem('user');
       
       console.log('=== UPLOAD DEBUG INFO ===');
+      console.log('File name:', file.name);
+      console.log('File size:', file.size);
+      console.log('File type:', file.type);
       console.log('Token exists:', !!token);
       console.log('Token preview:', token ? token.substring(0, 20) + '...' : 'None');
       console.log('UserData exists:', !!userData);
@@ -348,7 +351,7 @@ const ProductForm = () => {
       
       console.log('========================');
       
-      const response = await api.post('/uploads', formData, {
+      const response = await api.post('/uploads', uploadFormData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -364,9 +367,27 @@ const ProductForm = () => {
         }
       });
 
-      return response.data.imageUrl;
+      console.log('✅ Upload successful:', response.data);
+      
+      const imageUrl = response.data.imageUrl;
+      
+      // Validate the returned URL
+      if (!imageUrl) {
+        throw new Error('No image URL returned from server');
+      }
+      
+      console.log('📸 Image URL received:', imageUrl);
+      
+      // Show success toast
+      toast({
+        title: "Upload Successful",
+        description: `Image uploaded successfully: ${file.name}`,
+        variant: "default",
+      });
+
+      return imageUrl;
     } catch (error: any) {
-      console.error('Upload error:', error);
+      console.error('❌ Upload error:', error);
       setUploadProgress(prev => {
         const newProgress = [...prev];
         newProgress[index] = 0;
@@ -377,11 +398,17 @@ const ProductForm = () => {
       
       if (error.response?.status === 401) {
         errorMessage = "Authentication failed. Please log in again.";
+        console.error('🔐 Authentication error - redirecting to login');
         setTimeout(() => navigate('/login'), 2000);
       } else if (error.response?.status === 403) {
         errorMessage = "You don't have permission to upload images.";
+        console.error('🚫 Permission denied for upload');
       } else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
+        console.error('📝 Server error message:', error.response.data.message);
+      } else if (error.message) {
+        errorMessage = error.message;
+        console.error('💥 Error message:', error.message);
       }
       
       toast({
@@ -397,18 +424,42 @@ const ProductForm = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    console.log('🎯 Starting file upload for index:', index);
+    console.log('📁 File selected:', file.name);
+
     setIsUploading(true);
     const imageUrl = await uploadImage(file, index);
     
     if (imageUrl) {
+      console.log('🔄 Updating form data with new image URL:', imageUrl);
+      
       setFormData(prev => {
         const newImages = [...prev.images];
         newImages[index] = imageUrl;
+        
+        console.log('📋 Updated images array:', newImages);
+        
         return { ...prev, images: newImages };
       });
+      
+      console.log('✅ Form state updated successfully');
+      
+      // Clear any previous errors for images
+      if (errors.images) {
+        setErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors.images;
+          return newErrors;
+        });
+      }
+    } else {
+      console.log('❌ Upload failed, form state not updated');
     }
     
     setIsUploading(false);
+    
+    // Clear the file input to allow re-uploading the same file
+    e.target.value = '';
   };
 
   const addImageField = () => {
