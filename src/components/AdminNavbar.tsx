@@ -25,6 +25,7 @@ const AdminNavbar = () => {
   } = useNotification();
   const [isOpen, setIsOpen] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [showDebugInfo, setShowDebugInfo] = useState(false);
 
   useEffect(() => {
     // Fetch notifications when component mounts
@@ -52,13 +53,62 @@ const AdminNavbar = () => {
 
   const handleTestNotification = async () => {
     try {
-      const response = await api.post('/notifications/test');
-      console.log('Test notification created:', response.data);
-      
-      // Trigger sync to show the new notification
-      await syncNotifications();
+      if (isConnected) {
+        // If online, try to create via API
+        const response = await api.post('/notifications/test');
+        console.log('Test notification created:', response.data);
+        
+        // Trigger sync to show the new notification
+        await syncNotifications();
+      } else {
+        // If offline, create a local test notification
+        const testNotification = {
+          id: `test-${Date.now()}`,
+          type: 'order' as const,
+          title: '🧪 Test Order Notification',
+          message: `Sample order #TEST-${Date.now().toString().slice(-6)} placed for testing. Amount: ₹1,299`,
+          createdAt: new Date().toISOString(),
+          isRead: false
+        };
+        
+        // Add to localStorage
+        const existingNotifications = localStorage.getItem('admin_notifications');
+        const notifications = existingNotifications ? JSON.parse(existingNotifications) : [];
+        notifications.unshift(testNotification);
+        localStorage.setItem('admin_notifications', JSON.stringify(notifications));
+        
+        // Trigger a storage event to update the context
+        window.dispatchEvent(new StorageEvent('storage', {
+          key: 'admin_notifications',
+          newValue: JSON.stringify(notifications),
+          oldValue: existingNotifications
+        }));
+        
+        console.log('Test notification created in offline mode');
+      }
     } catch (error) {
       console.error('Failed to create test notification:', error);
+      
+      // Fallback to offline mode even if API call fails
+      const testNotification = {
+        id: `test-fallback-${Date.now()}`,
+        type: 'order' as const,
+        title: '🧪 Test Notification (Offline)',
+        message: `Offline test notification created at ${new Date().toLocaleString()}`,
+        createdAt: new Date().toISOString(),
+        isRead: false
+      };
+      
+      const existingNotifications = localStorage.getItem('admin_notifications');
+      const notifications = existingNotifications ? JSON.parse(existingNotifications) : [];
+      notifications.unshift(testNotification);
+      localStorage.setItem('admin_notifications', JSON.stringify(notifications));
+      
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'admin_notifications',
+        newValue: JSON.stringify(notifications),
+        oldValue: existingNotifications
+      }));
     }
   };
 
@@ -74,9 +124,47 @@ const AdminNavbar = () => {
                 <span className="text-xs font-medium">Online</span>
               </div>
             ) : (
-              <div className="flex items-center gap-1 text-orange-600">
+              <div 
+                className="flex items-center gap-1 text-orange-600 cursor-pointer"
+                onClick={() => setShowDebugInfo(!showDebugInfo)}
+                title="Click for debug info"
+              >
                 <WifiOff className="h-4 w-4" />
                 <span className="text-xs font-medium">Offline</span>
+              </div>
+            )}
+            
+            {/* Debug Info Popup */}
+            {showDebugInfo && !isConnected && (
+              <div className="absolute top-16 right-4 bg-white border rounded-lg shadow-lg p-4 z-50 w-80">
+                <div className="text-sm space-y-2">
+                  <div className="font-semibold text-red-600">Connection Debug Info</div>
+                  <div><strong>Status:</strong> Backend Unavailable</div>
+                  <div><strong>Issue:</strong> CORS Policy Error</div>
+                  <div><strong>Solution:</strong> Backend needs redeployment</div>
+                  <div><strong>Backend URL:</strong> https://sbf-backend.onrender.com</div>
+                  <div><strong>Current Mode:</strong> Offline (localStorage)</div>
+                  <div><strong>Notifications:</strong> {notifications.length} loaded locally</div>
+                  {lastSyncTime && (
+                    <div><strong>Last Sync:</strong> {formatDistanceToNow(new Date(lastSyncTime), { addSuffix: true })}</div>
+                  )}
+                  <div className="pt-2 border-t">
+                    <div className="text-xs text-gray-600">
+                      <strong>Steps to fix:</strong><br/>
+                      1. Go to Render Dashboard<br/>
+                      2. Redeploy sbf-backend service<br/>
+                      3. Wait for deployment to complete<br/>
+                      4. Click "Sync" button to reconnect
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={() => setShowDebugInfo(false)}
+                    className="w-full mt-2"
+                  >
+                    Close
+                  </Button>
+                </div>
               </div>
             )}
           </div>

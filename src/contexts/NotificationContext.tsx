@@ -41,9 +41,12 @@ export const NotificationProvider: React.FC<{children: ReactNode}> = ({ children
   const [isConnected, setIsConnected] = useState(false);
   const [enableSounds, setEnableSounds] = useState(true);
   const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
+  const [connectionRetries, setConnectionRetries] = useState(0);
   const pollingInterval = useRef<NodeJS.Timeout | null>(null);
   const lastNotificationCheck = useRef<string>(new Date().toISOString());
   const { toast } = useToast();
+
+  const MAX_RETRIES = 3;
 
   // Helper function to check if user is admin
   const isAdminUser = () => {
@@ -88,6 +91,33 @@ export const NotificationProvider: React.FC<{children: ReactNode}> = ({ children
           const parsedNotifications = JSON.parse(storedNotifications) as NotificationItem[];
           setNotifications(parsedNotifications);
           console.log('NotificationContext: Loaded notifications from localStorage');
+          
+          // If we have stored notifications, show a toast about offline mode
+          if (parsedNotifications.length > 0) {
+            setTimeout(() => {
+              toast({
+                title: "Offline Mode",
+                description: `Loaded ${parsedNotifications.length} notifications from local storage. Backend connection will be retried automatically.`,
+                duration: 5000,
+              });
+            }, 1000);
+          }
+        } else {
+          // If no stored notifications and user is admin, create a welcome notification
+          if (isAdminUser()) {
+            const welcomeNotification: NotificationItem = {
+              id: `welcome-${Date.now()}`,
+              type: 'system',
+              title: '👋 Welcome to SBF Admin',
+              message: 'Notification system is ready. Order notifications will appear here when customers place orders.',
+              createdAt: new Date().toISOString(),
+              isRead: false
+            };
+            
+            setNotifications([welcomeNotification]);
+            localStorage.setItem('admin_notifications', JSON.stringify([welcomeNotification]));
+            console.log('Created welcome notification for new admin');
+          }
         }
       } catch (error) {
         console.error('NotificationContext: Error loading notifications from localStorage', error);
@@ -185,6 +215,34 @@ export const NotificationProvider: React.FC<{children: ReactNode}> = ({ children
       } catch (error) {
         console.error('Failed to fetch notifications from API:', error);
         setIsConnected(false);
+        
+        // Increment retry counter
+        setConnectionRetries(prev => prev + 1);
+        
+        // Show user-friendly error message based on error type
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        if (errorMessage.includes('CORS') || errorMessage.includes('Access-Control-Allow-Origin')) {
+          console.log('CORS error detected - backend needs to be redeployed with updated CORS configuration');
+          
+          // Show CORS error toast only once every 10 retries to avoid spam
+          if (connectionRetries % 10 === 0) {
+            toast({
+              title: "Backend Connection Issue",
+              description: "The backend server needs to be redeployed. Using offline mode until connection is restored.",
+              duration: 8000,
+            });
+          }
+        } else if (errorMessage.includes('ERR_NETWORK') || errorMessage.includes('ERR_FAILED')) {
+          console.log('Network error detected - backend might be down or restarting');
+          
+          if (connectionRetries % 10 === 0) {
+            toast({
+              title: "Server Unavailable", 
+              description: "Backend server is temporarily unavailable. Retrying connection...",
+              duration: 5000,
+            });
+          }
+        }
         
         // Fallback: Load notifications from localStorage if API fails
         try {
