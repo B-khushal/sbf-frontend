@@ -1,11 +1,14 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, Phone, Instagram, Facebook, Twitter } from 'lucide-react';
+import { Mail, Phone, Instagram, Facebook, Twitter, MessageCircle } from 'lucide-react';
 import { useSettings } from '@/contexts/SettingsContext';
 
 const Footer = () => {
   const { footerSettings, loading } = useSettings();
+
+  // WhatsApp contact number
+  const whatsappNumber = "994968322";
+  const whatsappUrl = `https://wa.me/91${whatsappNumber}?text=Hello! I'm interested in your flower arrangements.`;
 
   if (loading) {
     return (
@@ -32,6 +35,19 @@ const Footer = () => {
               {footerSettings.description}
             </p>
             <div className="flex space-x-4">
+              {/* WhatsApp Link */}
+              <a 
+                href={whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 flex items-center justify-center text-muted-foreground hover:text-green-500 transition-colors duration-300 bg-green-50 hover:bg-green-100 rounded-full"
+                aria-label="WhatsApp"
+                title="Chat with us on WhatsApp"
+              >
+                <MessageCircle size={18} />
+              </a>
+              
+              {/* Existing Social Links */}
               {footerSettings.socialLinks
                 .filter(link => link.enabled)
                 .map((link) => {
@@ -119,6 +135,18 @@ const Footer = () => {
                   className="text-muted-foreground hover:text-primary transition-colors duration-200"
                 >
                   {footerSettings.contactInfo.phone}
+                </a>
+              </li>
+              {/* Additional WhatsApp Contact */}
+              <li className="flex items-start">
+                <MessageCircle size={16} className="mr-2 mt-0.5 text-green-600" />
+                <a 
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-muted-foreground hover:text-green-600 transition-colors duration-200"
+                >
+                  +91 {whatsappNumber} (WhatsApp)
                 </a>
               </li>
               <li className="pt-2">

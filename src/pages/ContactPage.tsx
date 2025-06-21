@@ -313,8 +313,27 @@ const ContactPage: React.FC = () => {
                       </div>
                     </div>
                     
+                    {/* WhatsApp Contact */}
                     <div className="flex items-start gap-4">
                       <div className="w-14 h-14 bg-gradient-to-r from-green-400 to-green-600 rounded-2xl flex items-center justify-center shrink-0">
+                        <MessageCircle className="w-7 h-7 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-800 mb-2">💬 WhatsApp</h3>
+                        <a 
+                          href="https://wa.me/91994968322?text=Hello! I'm interested in your flower arrangements."
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-green-600 hover:text-green-700 text-lg font-semibold transition-colors"
+                        >
+                          +91 994968322
+                        </a>
+                        <p className="text-sm text-gray-500">Chat with us instantly</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start gap-4">
+                      <div className="w-14 h-14 bg-gradient-to-r from-indigo-400 to-indigo-600 rounded-2xl flex items-center justify-center shrink-0">
                         <Mail className="w-7 h-7 text-white" />
                       </div>
                       <div>

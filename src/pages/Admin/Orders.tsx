@@ -369,12 +369,45 @@ const AdminOrders = () => {
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
+      case 'order_placed': return 'outline';
+      case 'received': return 'secondary';
+      case 'being_made': return 'default';
+      case 'out_for_delivery': return 'secondary';
+      case 'delivered': return 'default';
+      case 'cancelled': return 'destructive';
+      // Legacy status support
       case 'pending': return 'outline';
       case 'processing': return 'default';
       case 'completed': return 'secondary';
-      case 'delivered': return 'default';
-      case 'cancelled': return 'destructive';
       default: return 'outline';
+    }
+  };
+
+  const getStatusDisplayName = (status: string) => {
+    switch (status) {
+      case 'order_placed': return 'Order Placed';
+      case 'received': return 'Received';
+      case 'being_made': return 'Being Made';
+      case 'out_for_delivery': return 'Out for Delivery';
+      case 'delivered': return 'Delivered';
+      case 'cancelled': return 'Cancelled';
+      // Legacy status support
+      case 'pending': return 'Pending';
+      case 'processing': return 'Processing';
+      case 'completed': return 'Completed';
+      default: return status;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'order_placed': return 'text-blue-600 bg-blue-50';
+      case 'received': return 'text-purple-600 bg-purple-50';
+      case 'being_made': return 'text-orange-600 bg-orange-50';
+      case 'out_for_delivery': return 'text-indigo-600 bg-indigo-50';
+      case 'delivered': return 'text-green-600 bg-green-50';
+      case 'cancelled': return 'text-red-600 bg-red-50';
+      default: return 'text-gray-600 bg-gray-50';
     }
   };
 
@@ -608,9 +641,10 @@ const AdminOrders = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="processing">Processing</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="order_placed">Order Placed</SelectItem>
+                <SelectItem value="received">Received</SelectItem>
+                <SelectItem value="being_made">Being Made</SelectItem>
+                <SelectItem value="out_for_delivery">Out for Delivery</SelectItem>
                 <SelectItem value="delivered">Delivered</SelectItem>
                 <SelectItem value="cancelled">Cancelled</SelectItem>
               </SelectContent>
@@ -802,13 +836,14 @@ const AdminOrders = () => {
                             >
                               <SelectTrigger className="w-32">
                                 <Badge variant={getStatusBadgeVariant(order.status)}>
-                                  {order.status}
+                                  {getStatusDisplayName(order.status)}
                                 </Badge>
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="pending">Pending</SelectItem>
-                                <SelectItem value="processing">Processing</SelectItem>
-                                <SelectItem value="completed">Completed</SelectItem>
+                                <SelectItem value="order_placed">Order Placed</SelectItem>
+                                <SelectItem value="received">Received</SelectItem>
+                                <SelectItem value="being_made">Being Made</SelectItem>
+                                <SelectItem value="out_for_delivery">Out for Delivery</SelectItem>
                                 <SelectItem value="delivered">Delivered</SelectItem>
                                 <SelectItem value="cancelled">Cancelled</SelectItem>
                               </SelectContent>

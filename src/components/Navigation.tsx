@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, Search, ShoppingCart, User, X, Heart, Sparkles, TrendingUp } from 'lucide-react';
+import { Menu, Search, ShoppingCart, User, X, Heart, Sparkles, TrendingUp, DollarSign, Store } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
@@ -320,7 +320,7 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
         </div>
         
         {/* Actions */}
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2">
           {/* Currency Converter - Desktop */}
           {headerSettings.showCurrencyConverter && (
             <CurrencyConverter className="hidden md:block" />
@@ -333,12 +333,43 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
             </Button>
           </Link>
 
-          {/* Mobile Currency Converter */}
-          {headerSettings.showCurrencyConverter && (
-            <div className="md:hidden">
-              <CurrencyConverter />
-            </div>
-          )}
+          {/* Mobile Navigation Icons */}
+          <div className="md:hidden flex items-center space-x-1">
+            {/* Shop Icon - Mobile */}
+            <Link to="/shop">
+              <Button variant="ghost" size="icon" aria-label="Shop" className="text-pink-600 transition-colors hover:text-green-600">
+                <Store className="h-5 w-5" />
+              </Button>
+            </Link>
+
+            {/* Wishlist Icon - Mobile */}
+            {headerSettings.showWishlist && (
+              <Link to="/wishlist">
+                <Button variant="ghost" size="icon" aria-label="Wishlist" className="text-pink-600 transition-colors hover:text-green-600 relative">
+                  <Heart className="h-5 w-5" />
+                  {wishlistCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                      {wishlistCount}
+                    </span>
+                  )}
+                </Button>
+              </Link>
+            )}
+
+            {/* Account Icon - Mobile */}
+            <Link to="/profile">
+              <Button variant="ghost" size="icon" aria-label="Account" className="text-pink-600 transition-colors hover:text-green-600">
+                <User className="h-5 w-5" />
+              </Button>
+            </Link>
+
+            {/* Currency Converter - Mobile with Dollar Sign Icon */}
+            {headerSettings.showCurrencyConverter && (
+              <div className="relative">
+                <CurrencyConverter />
+              </div>
+            )}
+          </div>
 
           {/* Mobile Search Icon */}
           <Button 
@@ -351,7 +382,7 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
             <Search className="h-5 w-5" />
           </Button>
 
-          {/* Wishlist Icon */}
+          {/* Wishlist Icon - Desktop */}
           {headerSettings.showWishlist && (
             <Link to="/wishlist" className="hidden md:block">
               <Button variant="ghost" size="icon" aria-label="Wishlist" className="text-pink-600 transition-colors hover:text-green-600 relative">
@@ -441,33 +472,6 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                       {item.label}
                     </Link>
                   ))}
-                  
-                  {/* Wishlist in mobile sidebar */}
-                  {headerSettings.showWishlist && (
-                    <Link
-                      to="/wishlist"
-                      className="px-4 py-2 text-lg text-muted-foreground flex items-center gap-2"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <Heart className="h-4 w-4" />
-                      <span>Wishlist</span>
-                      {wishlistCount > 0 && (
-                        <span className="ml-auto bg-primary text-primary-foreground text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                          {wishlistCount}
-                        </span>
-                      )}
-                    </Link>
-                  )}
-
-                  {/* Account in mobile sidebar */}
-                  <Link
-                    to="/profile"
-                    className="px-4 py-2 text-lg text-muted-foreground flex items-center gap-2"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <User className="h-4 w-4" />
-                    <span>Account</span>
-                  </Link>
                 </nav>
               </div>
             </SheetContent>

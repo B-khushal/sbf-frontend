@@ -37,7 +37,13 @@ export interface Order {
   currency?: string;
   currencyRate?: number;
   originalCurrency?: string;
-  status: 'pending' | 'processing' | 'completed' | 'cancelled';
+  status: 'order_placed' | 'received' | 'being_made' | 'out_for_delivery' | 'delivered' | 'cancelled';
+  trackingHistory?: {
+    status: 'order_placed' | 'received' | 'being_made' | 'out_for_delivery' | 'delivered' | 'cancelled';
+    timestamp: string;
+    message?: string;
+    updatedBy?: string;
+  }[];
   createdAt: string;
 }
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowRightLeft } from 'lucide-react';
+import { ArrowRightLeft, DollarSign } from 'lucide-react';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { 
   DropdownMenu, 
@@ -20,10 +20,18 @@ const CurrencyConverter: React.FC<{ className?: string }> = ({ className }) => {
           <Button 
             variant="outline" 
             size="sm" 
-            className="flex items-center gap-1 h-8"
+            className="flex items-center gap-1 h-8 md:h-8"
           >
-            <span className="font-medium">{currency === 'INR' ? '₹ INR' : '$ USD'}</span>
-            <ArrowRightLeft size={14} />
+            {/* Mobile view - show only DollarSign icon */}
+            <span className="md:hidden">
+              <DollarSign size={16} className="text-pink-600" />
+            </span>
+            
+            {/* Desktop view - show currency text and ArrowRightLeft icon */}
+            <span className="hidden md:flex items-center gap-1">
+              <span className="font-medium">{currency === 'INR' ? '₹ INR' : '$ USD'}</span>
+              <ArrowRightLeft size={14} />
+            </span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">

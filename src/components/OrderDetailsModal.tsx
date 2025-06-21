@@ -21,6 +21,7 @@ import {
 import { ImageIcon } from 'lucide-react';
 import api from '@/services/api';
 import { getImageUrl as getImageUrlFromConfig } from '@/config';
+import OrderTracking from './OrderTracking';
 
 interface Product {
   _id: string;
@@ -78,9 +79,8 @@ interface Order {
   shippingDetails: ShippingDetails;
   items: OrderItem[];
   totalAmount: number;
-
   shippingFee?: number;
-  status: 'pending' | 'processing' | 'completed' | 'cancelled';
+  status: 'order_placed' | 'received' | 'being_made' | 'out_for_delivery' | 'delivered' | 'cancelled';
   paymentDetails: PaymentDetails;
   createdAt: string;
   notes?: string;
@@ -88,6 +88,12 @@ interface Order {
   currency?: string;
   currencyRate?: number;
   originalCurrency?: string;
+  trackingHistory?: {
+    status: 'order_placed' | 'received' | 'being_made' | 'out_for_delivery' | 'delivered' | 'cancelled';
+    timestamp: string;
+    message?: string;
+    updatedBy?: string;
+  }[];
 }
 
 interface OrderDetailsModalProps {
@@ -184,18 +190,31 @@ export default function OrderDetailsModal({ isOpen, onClose, order, onStatusUpda
   const getImageUrl = getImageUrlFromConfig;
 
   const orderStatuses = [
-    { value: 'pending', label: 'Pending' },
-    { value: 'processing', label: 'Processing' },
-    { value: 'completed', label: 'Completed' },
+    { value: 'order_placed', label: 'Order Placed' },
+    { value: 'received', label: 'Received' },
+    { value: 'being_made', label: 'Being Made' },
+    { value: 'out_for_delivery', label: 'Out for Delivery' },
+    { value: 'delivered', label: 'Delivered' },
     { value: 'cancelled', label: 'Cancelled' },
   ];
 
   const getStatusBadgeVariant = (status: Order['status']) => {
     switch (status) {
-      case 'completed':
-        return 'success';
+      case 'order_placed':
+        return 'outline';
+      case 'received':
+        return 'secondary';
+      case 'being_made':
+        return 'default';
+      case 'out_for_delivery':
+        return 'secondary';
+      case 'delivered':
+        return 'default';
       case 'cancelled':
         return 'destructive';
+      // Legacy status support
+      case 'completed':
+        return 'success';
       case 'processing':
         return 'secondary';
       default:
@@ -357,6 +376,13 @@ export default function OrderDetailsModal({ isOpen, onClose, order, onStatusUpda
               </Card>
             )}
           </div>
+
+          {/* Order Tracking */}
+          <OrderTracking 
+            currentStatus={localOrder.status}
+            trackingHistory={localOrder.trackingHistory}
+            className="mb-6"
+          />
 
           {/* Order Items */}
           <div>

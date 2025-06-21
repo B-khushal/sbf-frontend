@@ -35,7 +35,11 @@ const ProductPage = () => {
   const actualId = id || productId;
 
   useEffect(() => {
-    if (!actualId) return;
+    // If no valid ID is provided, redirect to shop immediately
+    if (!actualId || actualId.trim() === '') {
+      navigate('/shop', { replace: true });
+      return;
+    }
 
     const fetchProduct = async () => {
       try {
@@ -54,7 +58,8 @@ const ProductPage = () => {
         );
       } catch (error) {
         console.error("Error fetching product:", error);
-        navigate('/not-found');
+        // Redirect to shop instead of showing not found
+        navigate('/shop', { replace: true });
       } finally {
         setLoading(false);
       }
@@ -81,8 +86,10 @@ const ProductPage = () => {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
+  // If no product and not loading, redirect to shop (this should rarely happen due to the redirect in useEffect)
   if (!product) {
-    return <div className="min-h-screen flex items-center justify-center">Product not found</div>;
+    navigate('/shop', { replace: true });
+    return null;
   }
 
   return (

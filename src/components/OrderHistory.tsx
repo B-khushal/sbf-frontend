@@ -8,6 +8,7 @@ import { useCurrency } from '@/contexts/CurrencyContext';
 import { format } from 'date-fns';
 import { ImageIcon, RefreshCw } from 'lucide-react';
 import { getImageUrl as getImageUrlFromConfig } from '@/config';
+import OrderTracking from './OrderTracking';
 
 const OrderHistory = () => {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -59,15 +60,51 @@ const OrderHistory = () => {
 
   const getStatusColor = (status: Order['status']) => {
     switch (status) {
-      case 'completed':
       case 'delivered':
         return 'bg-green-100 text-green-800';
-      case 'processing':
+      case 'out_for_delivery':
+        return 'bg-indigo-100 text-indigo-800';
+      case 'being_made':
+        return 'bg-orange-100 text-orange-800';
+      case 'received':
+        return 'bg-purple-100 text-purple-800';
+      case 'order_placed':
         return 'bg-blue-100 text-blue-800';
       case 'cancelled':
         return 'bg-red-100 text-red-800';
+      // Legacy status support
+      case 'completed':
+        return 'bg-green-100 text-green-800';
+      case 'processing':
+        return 'bg-blue-100 text-blue-800';
       default:
         return 'bg-yellow-100 text-yellow-800';
+    }
+  };
+
+  const getStatusDisplayName = (status: Order['status']) => {
+    switch (status) {
+      case 'order_placed':
+        return 'Order Placed';
+      case 'received':
+        return 'Received';
+      case 'being_made':
+        return 'Being Made';
+      case 'out_for_delivery':
+        return 'Out for Delivery';
+      case 'delivered':
+        return 'Delivered';
+      case 'cancelled':
+        return 'Cancelled';
+      // Legacy status support
+      case 'pending':
+        return 'Pending';
+      case 'processing':
+        return 'Processing';
+      case 'completed':
+        return 'Completed';
+      default:
+        return status.charAt(0).toUpperCase() + status.slice(1);
     }
   };
 
@@ -115,7 +152,7 @@ const OrderHistory = () => {
                 </p>
               </div>
               <Badge className={getStatusColor(order.status)}>
-                {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                {getStatusDisplayName(order.status)}
               </Badge>
             </div>
 
@@ -156,6 +193,15 @@ const OrderHistory = () => {
                   </div>
                 );
               })}
+            </div>
+
+            {/* Order Tracking */}
+            <div className="mt-6">
+              <OrderTracking 
+                currentStatus={order.status}
+                trackingHistory={order.trackingHistory}
+                className="bg-white/30 backdrop-blur-sm"
+              />
             </div>
 
             <div className="mt-6 pt-4 border-t border-gray-200">

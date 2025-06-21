@@ -14,6 +14,7 @@ import ProductForm from '@/pages/Admin/ProductForm';
 import TermsPage from "@/pages/TermsPage";
 import ShippingPage from "./pages/ShippingPrivacy";
 import PrivacyPage from "./pages/PrivacyPage";
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 // Pages
 import HomePage from "./pages/HomePage";
@@ -52,26 +53,14 @@ const ContactPage = lazy(() => import('./pages/ContactPage'));
 const queryClient = new QueryClient();
 
 const App = () => {
-  // Log auth state for debugging
-  const isAuthenticated = localStorage.getItem('isAuthenticated');
-  const user = localStorage.getItem('user');
-  
-  console.log('App mounted, auth state:', { 
-    isAuthenticated,
-    hasUser: !!user,
-    user: user ? JSON.parse(user) : null
-  });
-  
   // Check for order data in sessionStorage and restore it
   useEffect(() => {
     try {
       // Check if we're on the confirmation page
       if (window.location.pathname === '/checkout/confirmation') {
-        console.log('App: On confirmation page, checking for backup order data');
         const backupOrder = sessionStorage.getItem('backup_order');
         
         if (backupOrder && !localStorage.getItem('lastOrder')) {
-          console.log('App: Found backup order data, restoring to localStorage');
           localStorage.setItem('lastOrder', backupOrder);
         }
       }
@@ -81,84 +70,93 @@ const App = () => {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || "your-google-client-id"}>
-        <AuthProvider>
-          <CurrencyProvider>
-            <SettingsProvider>
-              <NotificationProvider>
-                <TooltipProvider>
-                <Toaster />
-                <Sonner />
-                <BrowserRouter>
-                <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
-                  <Routes>
-                    <Route path="/" element={<HomePage />} />
-                    <Route path="/shop" element={<ShopPage />} />
-                    <Route path="/shop/:category" element={<ShopPage />} />
-                    <Route path="/product/:id" element={<ProductPage />} />
-                    <Route path="/products/:productId" element={<ProductPage />} />
-                    <Route path="/cart" element={<CartPage />} />
-                    <Route path="/about" element={<AboutPage />} />
-                    <Route path="/wishlist" element={<WishlistPage />} />
-                    <Route path="/contact" element={<ContactPage />} />
-                    <Route path="/terms" element={<TermsPage />} />
-                    <Route path="/shipping" element={<ShippingPage />} />
-                    <Route path="/privacy" element={<PrivacyPage/>} />
-                    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                    
-                    {/* Checkout Routes */}
-                    <Route path="/checkout/shipping" element={
-                      <ProtectedRoute>
-                        <CheckoutShippingPage />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/checkout/payment" element={
-                      <ProtectedRoute>
-                        <CheckoutPaymentPage />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/checkout/confirmation" element={
-                      <CheckoutConfirmationPage />
-                    } />
-                    
-                    {/* Auth Routes */}
-                    <Route path="/login" element={<LoginPage />} />
-                    <Route path="/signup" element={<SignupPage />} />
-                    <Route path="/profile" element={
-                      <ProtectedRoute>
-                        <ProfilePage />
-                      </ProtectedRoute>
-                    } />
-                    
-                    {/* Admin Panel Routes - Protected */}
-                    <Route path="/admin" element={
-                      <ProtectedRoute requiredRole="admin">
-                        <AdminDashboard />
-                      </ProtectedRoute>
-                    }>
-                      <Route index element={<AdminDashboardHome />} />
-                      <Route path="products" element={<AdminProducts />} />
-                      <Route path="products/new" element={<ProductForm />} />
-                      <Route path="products/edit/:id" element={<ProductForm />} />
-                      <Route path="orders" element={<AdminOrders />} />
-                      <Route path="users" element={<AdminUsers />} />
-                      <Route path="analytics" element={<Analytics />} />
-                      <Route path="settings" element={<AdminSettingsPage />} />
-                      <Route path="/admin/orders/:orderId" element={<OrderDetailsPage />} />
-                    </Route>
-                    
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </Suspense>
-              </BrowserRouter>
-                            </TooltipProvider>
-              </NotificationProvider>
-            </SettingsProvider>
-          </CurrencyProvider>
-        </AuthProvider>
-    </GoogleOAuthProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || "your-google-client-id"}>
+          <AuthProvider>
+            <CurrencyProvider>
+              <SettingsProvider>
+                <NotificationProvider>
+                  <TooltipProvider>
+                  <Toaster />
+                  <Sonner />
+                  <BrowserRouter>
+                  <Suspense fallback={
+                    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-bloom-blue-50 via-bloom-pink-50 to-bloom-green-50">
+                      <div className="text-center">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                        <p className="text-gray-600 text-lg">Loading...</p>
+                      </div>
+                    </div>
+                  }>
+                    <Routes>
+                      <Route path="/" element={<HomePage />} />
+                      <Route path="/shop" element={<ShopPage />} />
+                      <Route path="/shop/:category" element={<ShopPage />} />
+                      <Route path="/product/:id" element={<ProductPage />} />
+                      <Route path="/products/:productId" element={<ProductPage />} />
+                      <Route path="/cart" element={<CartPage />} />
+                      <Route path="/about" element={<AboutPage />} />
+                      <Route path="/wishlist" element={<WishlistPage />} />
+                      <Route path="/contact" element={<ContactPage />} />
+                      <Route path="/terms" element={<TermsPage />} />
+                      <Route path="/shipping" element={<ShippingPage />} />
+                      <Route path="/privacy" element={<PrivacyPage/>} />
+                      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                      
+                      {/* Checkout Routes */}
+                      <Route path="/checkout/shipping" element={
+                        <ProtectedRoute>
+                          <CheckoutShippingPage />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/checkout/payment" element={
+                        <ProtectedRoute>
+                          <CheckoutPaymentPage />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/checkout/confirmation" element={
+                        <CheckoutConfirmationPage />
+                      } />
+                      
+                      {/* Auth Routes */}
+                      <Route path="/login" element={<LoginPage />} />
+                      <Route path="/signup" element={<SignupPage />} />
+                      <Route path="/profile" element={
+                        <ProtectedRoute>
+                          <ProfilePage />
+                        </ProtectedRoute>
+                      } />
+                      
+                      {/* Admin Panel Routes - Protected */}
+                      <Route path="/admin" element={
+                        <ProtectedRoute requiredRole="admin">
+                          <AdminDashboard />
+                        </ProtectedRoute>
+                      }>
+                        <Route index element={<AdminDashboardHome />} />
+                        <Route path="products" element={<AdminProducts />} />
+                        <Route path="products/new" element={<ProductForm />} />
+                        <Route path="products/edit/:id" element={<ProductForm />} />
+                        <Route path="orders" element={<AdminOrders />} />
+                        <Route path="users" element={<AdminUsers />} />
+                        <Route path="analytics" element={<Analytics />} />
+                        <Route path="settings" element={<AdminSettingsPage />} />
+                        <Route path="/admin/orders/:orderId" element={<OrderDetailsPage />} />
+                      </Route>
+                      
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </Suspense>
+                </BrowserRouter>
+                              </TooltipProvider>
+                </NotificationProvider>
+              </SettingsProvider>
+            </CurrencyProvider>
+          </AuthProvider>
+      </GoogleOAuthProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 };
 
