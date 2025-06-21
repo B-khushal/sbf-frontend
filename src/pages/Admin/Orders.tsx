@@ -107,17 +107,22 @@ const AdminOrders = () => {
     // Always convert and display in the current selected currency
     let finalAmount = amount;
     
+    console.log('DisplayOrderPrice:', { amount, orderCurrency, orderRate, currentCurrency: currency });
+    
     if (orderCurrency && orderCurrency !== currency) {
       // Order is in different currency, need to convert
       if (orderCurrency === 'INR' && currency !== 'INR') {
         // Convert from INR to selected currency (e.g., INR 1000 → USD 11.62)
         finalAmount = convertPrice(amount);
       } else if (orderCurrency !== 'INR' && currency === 'INR') {
-        // Convert from foreign currency to INR (e.g., USD 32 → INR 2752)
+        // Convert from foreign currency to INR (e.g., USD 32 → INR 2770.415)
         if (orderRate) {
-          finalAmount = amount / orderRate; // Convert to INR
+          // orderRate is the rate when the order was placed (e.g., USD rate = 0.01162)
+          // To convert USD to INR: USD amount ÷ USD rate = INR amount
+          // So $32 ÷ 0.01162 = ₹2753.44
+          finalAmount = amount / orderRate;
         } else {
-          // Fallback: use standard rate
+          // Fallback: use current USD to INR rate
           finalAmount = amount / 0.01162; // USD to INR
         }
       } else if (orderCurrency !== 'INR' && currency !== 'INR') {
@@ -131,6 +136,8 @@ const AdminOrders = () => {
       // No order currency specified, assume INR and convert
       finalAmount = convertPrice(amount);
     }
+    
+    console.log('Final amount after conversion:', finalAmount);
     
     // Format in the current selected currency with correct symbol
     return formatPriceWithCurrency(finalAmount, currency);
@@ -824,7 +831,12 @@ const AdminOrders = () => {
                               <div className="font-semibold">
                                 {displayOrderPrice(order.totalAmount, order.currency, order.currencyRate)}
                               </div>
-                              <div className="text-xs text-gray-500">
+                              {order.currency && order.currency !== currency && (
+                                <div className="text-xs text-gray-500">
+                                  Originally {formatPriceWithCurrency(order.totalAmount, order.currency)}
+                                </div>
+                              )}
+                              <div className="text-xs text-gray-400">
                                 Showing in {currency}
                               </div>
                             </div>

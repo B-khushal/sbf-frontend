@@ -202,7 +202,7 @@ const CheckoutPaymentPage = () => {
         amount: response.data.amount,
         currency: response.data.currency,
         name: 'SBF Store',
-        description: `Purchase from SBF Store${currency !== 'INR' ? ` (${formatPrice(total)} paid as ${new Intl.NumberFormat('en-IN', {style: 'currency', currency: 'INR'}).format(razorpayAmount)})` : ''}`,
+        description: `Purchase from SBF Store${currency !== 'INR' ? ` (Order total: ${formatPrice(total)} in ${currency})` : ''}`,
         order_id: response.data.id,
         handler: async (response: {
           razorpay_order_id: string;
@@ -276,7 +276,7 @@ const CheckoutPaymentPage = () => {
                 addNotification({
                   type: 'order',
                   title: 'New Order Received',
-                  message: `Order #${orderResponse.data.order.orderNumber} has been placed. Total amount: ${formatPrice(convertPrice(orderResponse.data.order.totalAmount))}`,
+                  message: `Order #${orderResponse.data.order.orderNumber} has been placed. Total amount: ${formatPrice(total)}`,
                 });
 
                 // Store order details for confirmation page
