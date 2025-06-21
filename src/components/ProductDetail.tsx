@@ -283,7 +283,7 @@ const ProductDetail = ({ product, onAddToCart }: ProductDetailProps) => {
               <div className="flex flex-col sm:flex-row gap-4">
                 <button
                   onClick={handleAddToCart}
-                  className="flex-1 h-12 bg-primary text-primary-foreground flex items-center justify-center gap-2 rounded-md hover-lift subtle-shadow"
+                  className="flex-1 h-14 bg-primary text-primary-foreground flex items-center justify-center gap-2 rounded-md hover-lift subtle-shadow"
                 >
                   <ShoppingCart size={18} />
                   <span>Add to Cart</span>
