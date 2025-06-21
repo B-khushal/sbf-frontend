@@ -298,7 +298,7 @@ const ProductForm = () => {
 
     try {
       const token = getAuthToken();
-      const response = await axios.post('https://sbf-backend.onrender.com/api/upload', formData, {
+      const response = await axios.post('https://sbf-backend.onrender.com/api/uploads', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: token ? `Bearer ${token}` : '',
