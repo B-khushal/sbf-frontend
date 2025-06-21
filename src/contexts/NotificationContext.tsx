@@ -92,15 +92,9 @@ export const NotificationProvider: React.FC<{children: ReactNode}> = ({ children
           setNotifications(parsedNotifications);
           console.log('NotificationContext: Loaded notifications from localStorage');
           
-          // If we have stored notifications, show a toast about offline mode
+          // Notifications loaded from storage (removed offline mode toast)
           if (parsedNotifications.length > 0) {
-            setTimeout(() => {
-              toast({
-                title: "Offline Mode",
-                description: `Loaded ${parsedNotifications.length} notifications from local storage. Backend connection will be retried automatically.`,
-                duration: 5000,
-              });
-            }, 1000);
+            console.log(`Loaded ${parsedNotifications.length} notifications from local storage`);
           }
         } else {
           // If no stored notifications and user is admin, create a welcome notification
@@ -499,11 +493,7 @@ export const NotificationProvider: React.FC<{children: ReactNode}> = ({ children
           setNotifications(localNotifications);
           setLastSyncTime(new Date().toISOString());
           
-          toast({
-            title: "Offline Mode",
-            description: `Loaded ${localNotifications.length} notifications from local storage`,
-            duration: 3000,
-          });
+          console.log(`Fallback: Loaded ${localNotifications.length} notifications from local storage`);
         } else {
           toast({
             title: "Sync Failed",
