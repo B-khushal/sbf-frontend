@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, ArrowRight, ShoppingBag, Truck, Clock, Download } from 'lucide-react';
+import { Check, ArrowRight, ShoppingBag, Truck, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import Navigation from '@/components/Navigation';
@@ -8,10 +8,8 @@ import Footer from '@/components/Footer';
 import useCart from '@/hooks/use-cart';
 import { TimeSlot } from '@/components/TimeSlotSelector';
 import { useCurrency } from '@/contexts/CurrencyContext';
-import Invoice from '@/components/Invoice';
-import { generatePDF } from '@/utils/pdfGenerator';
 import { useToast } from '@/hooks/use-toast';
-import { Order, InvoiceOrder } from '@/types/invoice';
+import { Order } from '@/types/invoice';
 import { useAuth } from '@/hooks/use-auth';
 import { Navigate } from 'react-router-dom';
 import { useNotification } from '@/contexts/NotificationContext';
@@ -81,7 +79,6 @@ const CheckoutConfirmationPage = () => {
     }
   };
   const { toast } = useToast();
-  const invoiceRef = useRef<HTMLDivElement>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isAuthChecking, setIsAuthChecking] = useState<boolean>(true);
   
@@ -295,93 +292,7 @@ const CheckoutConfirmationPage = () => {
     navigate('/shop');
   };
 
-  const transformOrderForInvoice = (order: Order): InvoiceOrder => {
-    return {
-      id: order.id,
-      orderNumber: order.orderNumber,
-      date: order.date,
-      createdAt: order.createdAt || order.date || new Date().toISOString(),
-      shippingDetails: {
-        firstName: order.shipping.firstName,
-        lastName: order.shipping.lastName,
-        email: order.shipping.email,
-        phone: order.shipping.phone,
-        address: order.shipping.address,
-        apartment: order.shipping.apartment || '',
-        city: order.shipping.city,
-        state: order.shipping.state,
-        zipCode: order.shipping.zipCode,
-        notes: order.shipping.notes || '',
-        deliveryOption: order.shipping.deliveryOption || 'self',
-        timeSlot: order.shipping.timeSlot,
-        deliveryDate: order.shipping.deliveryDate || new Date().toISOString(),
-        giftMessage: order.shipping.giftMessage || '',
-        receiverFirstName: order.shipping.receiverFirstName || '',
-        receiverLastName: order.shipping.receiverLastName || '',
-        receiverEmail: order.shipping.receiverEmail || '',
-        receiverPhone: order.shipping.receiverPhone || '',
-        receiverAddress: order.shipping.receiverAddress || '',
-        receiverApartment: order.shipping.receiverApartment || '',
-        receiverCity: order.shipping.receiverCity || '',
-        receiverState: order.shipping.receiverState || '',
-        receiverZipCode: order.shipping.receiverZipCode || ''
-      },
-      items: order.items.map(item => ({
-        product: {
-          id: item.id,
-          name: item.title,
-          price: item.price,
-          image: item.image,
-          images: [item.image || ''],
-          discount: item.product?.discount
-        },
-        quantity: item.quantity,
-        price: item.price,
-        finalPrice: item.price * item.quantity
-      })),
-      totalAmount: order.total,
-      shippingFee: order.deliveryFee,
-      status: order.status || 'completed',
-      paymentDetails: {
-        method: order.payment.method,
-        status: order.payment.status || 'completed',
-        transactionId: order.payment.paymentId
-      }
-    };
-  };
 
-  const handleDownloadInvoice = async () => {
-    if (!invoiceRef.current || !order) return;
-
-    // Ensure the order has valid dates before generating invoice
-    try {
-      const invoiceOrder = transformOrderForInvoice(order);
-      const success = await generatePDF(
-        invoiceRef.current,
-        `invoice-${order.orderNumber}.pdf`
-      );
-
-      if (success) {
-        toast({
-          title: "Success",
-          description: "Invoice downloaded successfully!",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: "Failed to download invoice. Please try again.",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error('Error generating invoice:', error);
-      toast({
-        title: "Error",
-        description: "Failed to generate invoice. Please try again later.",
-        variant: "destructive",
-      });
-    }
-  };
 
   if (!order) {
     console.log('CheckoutConfirmationPage: Order data not available yet, showing loading screen');
@@ -502,21 +413,9 @@ const CheckoutConfirmationPage = () => {
             <p className="mt-2">
               A confirmation email has been sent to {order.shipping.email}
             </p>
-            <Button
-              onClick={handleDownloadInvoice}
-              variant="outline"
-              className="mt-4 gap-2"
-            >
-              <Download size={16} />
-              Download Invoice
-            </Button>
-          </div>
-
-          {/* Hidden invoice for PDF generation */}
-          <div className="hidden">
-            <div ref={invoiceRef}>
-              <Invoice order={transformOrderForInvoice(order)} />
-            </div>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Your invoice will be sent to your email once your order is delivered.
+            </p>
           </div>
           
           <Card className="mb-8">
