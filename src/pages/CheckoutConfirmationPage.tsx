@@ -210,10 +210,10 @@ const CheckoutConfirmationPage = () => {
           setIsOrderDataFetched(true);
           console.log('CheckoutConfirmationPage: Order data processed successfully');
           
-          // Set a timeout to clear the order data after a few seconds
+          // Set a timeout to clear the order data after longer time to handle page refreshes
           setTimeout(() => {
-      localStorage.removeItem('lastOrder');
-          }, 5000);
+            localStorage.removeItem('lastOrder');
+          }, 30000); // Keep for 30 seconds to handle refreshes
         } catch (e) {
           console.error('CheckoutConfirmationPage: Error parsing order data:', e);
           if (!redirectAttempted.current && !order) {
@@ -411,7 +411,7 @@ const CheckoutConfirmationPage = () => {
   };
 
   // Show loading state while checking authentication and order data
-  if (isAuthChecking || (!order && !redirectAttempted.current)) {
+  if (isAuthChecking || (!order && !redirectAttempted.current && isOrderDataFetched === false)) {
     return (
       <div className="min-h-screen flex flex-col">
         <Navigation cartItemCount={0} />
@@ -426,16 +426,19 @@ const CheckoutConfirmationPage = () => {
     );
   }
 
-  // If no order data is found after loading, show error
+  // If no order data is found after loading and we're not from payment, show generic message
   if (!order) {
     return (
       <div className="min-h-screen flex flex-col">
         <Navigation cartItemCount={0} />
         <main className="flex-grow flex items-center justify-center">
           <div className="text-center">
-            <h1 className="text-2xl font-bold mb-4">Order Not Found</h1>
-            <p className="text-muted-foreground mb-6">We couldn't find your order confirmation.</p>
-            <Button onClick={() => navigate('/cart')}>Return to Cart</Button>
+            <h1 className="text-2xl font-bold mb-4">Order Confirmation</h1>
+            <p className="text-muted-foreground mb-6">Your order has been processed successfully. Check your email for confirmation details.</p>
+            <div className="space-x-4">
+              <Button onClick={() => navigate('/profile')} variant="outline">View Order History</Button>
+              <Button onClick={() => navigate('/shop')}>Continue Shopping</Button>
+            </div>
           </div>
         </main>
         <Footer />
