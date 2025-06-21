@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, BellRing, X, Trash2 } from 'lucide-react';
+import { Bell, BellRing, X, Trash2, RefreshCw, Wifi, WifiOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -10,10 +10,21 @@ import {
 import { useNotification } from '@/contexts/NotificationContext';
 import { formatDistanceToNow } from 'date-fns';
 import { getNotifications } from '@/services/notificationService';
+import api from '@/services/api';
 
 const AdminNavbar = () => {
-  const { notifications, unreadCount, markAsRead, markAllAsRead, clearNotification } = useNotification();
+  const { 
+    notifications, 
+    unreadCount, 
+    markAsRead, 
+    markAllAsRead, 
+    clearNotification, 
+    isConnected,
+    syncNotifications,
+    lastSyncTime
+  } = useNotification();
   const [isOpen, setIsOpen] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
     // Fetch notifications when component mounts
@@ -28,10 +39,70 @@ const AdminNavbar = () => {
     fetchNotifications();
   }, []);
 
+  const handleSync = async () => {
+    setIsSyncing(true);
+    try {
+      await syncNotifications();
+    } catch (error) {
+      console.error('Manual sync failed:', error);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const handleTestNotification = async () => {
+    try {
+      const response = await api.post('/notifications/test');
+      console.log('Test notification created:', response.data);
+      
+      // Trigger sync to show the new notification
+      await syncNotifications();
+    } catch (error) {
+      console.error('Failed to create test notification:', error);
+    }
+  };
+
   return (
     <nav className="border-b">
       <div className="flex h-16 items-center px-4">
         <div className="ml-auto flex items-center space-x-4">
+          {/* Connection Status */}
+          <div className="flex items-center gap-2">
+            {isConnected ? (
+              <div className="flex items-center gap-1 text-green-600">
+                <Wifi className="h-4 w-4" />
+                <span className="text-xs font-medium">Online</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1 text-orange-600">
+                <WifiOff className="h-4 w-4" />
+                <span className="text-xs font-medium">Offline</span>
+              </div>
+            )}
+          </div>
+
+          {/* Test Notification Button (for debugging) */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleTestNotification}
+            className="text-xs"
+          >
+            Test
+          </Button>
+
+          {/* Sync Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleSync}
+            disabled={isSyncing}
+            className="text-xs"
+          >
+            <RefreshCw className={`h-4 w-4 mr-1 ${isSyncing ? 'animate-spin' : ''}`} />
+            {isSyncing ? 'Syncing...' : 'Sync'}
+          </Button>
+
           <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="relative">
@@ -49,7 +120,14 @@ const AdminNavbar = () => {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-80">
               <div className="flex items-center justify-between p-2 border-b">
-                <h3 className="font-medium">Notifications</h3>
+                <div className="flex flex-col">
+                  <h3 className="font-medium">Notifications</h3>
+                  {lastSyncTime && (
+                    <span className="text-xs text-muted-foreground">
+                      Last sync: {formatDistanceToNow(new Date(lastSyncTime), { addSuffix: true })}
+                    </span>
+                  )}
+                </div>
                 <div className="flex items-center gap-2">
                   {unreadCount > 0 && (
                     <Button

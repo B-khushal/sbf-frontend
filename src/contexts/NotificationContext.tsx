@@ -30,6 +30,8 @@ interface NotificationContextType {
   clearNotification: (id: string) => void;
   enableSounds: boolean;
   toggleSounds: () => void;
+  syncNotifications: () => Promise<void>;
+  lastSyncTime: string | null;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -38,6 +40,7 @@ export const NotificationProvider: React.FC<{children: ReactNode}> = ({ children
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [enableSounds, setEnableSounds] = useState(true);
+  const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
   const pollingInterval = useRef<NodeJS.Timeout | null>(null);
   const lastNotificationCheck = useRef<string>(new Date().toISOString());
   const { toast } = useToast();
@@ -128,12 +131,12 @@ export const NotificationProvider: React.FC<{children: ReactNode}> = ({ children
       }
 
       try {
-        setIsConnected(true);
+        console.log('Fetching notifications from API...');
         const response = await api.get(`/notifications?since=${lastNotificationCheck.current}`);
         const newNotifications = response.data.notifications || [];
         
         if (newNotifications.length > 0) {
-          console.log(`Received ${newNotifications.length} new notifications`);
+          console.log(`Received ${newNotifications.length} new notifications from API`);
           
           // Add new notifications
           newNotifications.forEach((notification: NotificationItem) => {
@@ -143,7 +146,7 @@ export const NotificationProvider: React.FC<{children: ReactNode}> = ({ children
               title: notification.title,
               message: notification.message,
               createdAt: notification.createdAt || new Date().toISOString(),
-              isRead: false
+              isRead: notification.isRead || false
             };
             
             // Check if notification already exists
@@ -180,8 +183,58 @@ export const NotificationProvider: React.FC<{children: ReactNode}> = ({ children
         
         setIsConnected(true);
       } catch (error) {
-        console.error('Failed to fetch notifications:', error);
+        console.error('Failed to fetch notifications from API:', error);
         setIsConnected(false);
+        
+        // Fallback: Load notifications from localStorage if API fails
+        try {
+          const storedNotifications = localStorage.getItem('admin_notifications');
+          if (storedNotifications) {
+            const localNotifications = JSON.parse(storedNotifications) as NotificationItem[];
+            
+            // Check for new notifications since last check that might be in localStorage
+            const newLocalNotifications = localNotifications.filter(n => 
+              new Date(n.createdAt) > new Date(lastNotificationCheck.current)
+            );
+            
+            if (newLocalNotifications.length > 0) {
+              console.log(`Found ${newLocalNotifications.length} new notifications in localStorage`);
+              
+              newLocalNotifications.forEach((notification) => {
+                setNotifications(prev => {
+                  const exists = prev.some(n => n.id === notification.id);
+                  if (!exists) {
+                    // Play sound for new notifications (admin only)
+                    if (enableSounds && isAdminUser() && (notification.type === 'order' || notification.title.toLowerCase().includes('order'))) {
+                      setTimeout(() => playNotificationSound(notification.type), 100);
+                    }
+                    
+                    // Show toast notification (admin only)
+                    if (isAdminUser()) {
+                      try {
+                        toast({
+                          title: notification.title,
+                          description: notification.message,
+                          duration: 5000,
+                        });
+                      } catch (toastError) {
+                        console.error('Error showing toast:', toastError);
+                      }
+                    }
+                    
+                    return [notification, ...prev];
+                  }
+                  return prev;
+                });
+              });
+              
+              // Update last check time
+              lastNotificationCheck.current = new Date().toISOString();
+            }
+          }
+        } catch (localStorageError) {
+          console.error('Error loading notifications from localStorage:', localStorageError);
+        }
       }
     };
 
@@ -190,6 +243,7 @@ export const NotificationProvider: React.FC<{children: ReactNode}> = ({ children
       if (isAdminUser()) {
         fetchNewNotifications(); // Initial fetch
         pollingInterval.current = setInterval(fetchNewNotifications, 5000);
+        console.log('Started notification polling for admin user');
       }
     };
 
@@ -198,6 +252,7 @@ export const NotificationProvider: React.FC<{children: ReactNode}> = ({ children
       if (pollingInterval.current) {
         clearInterval(pollingInterval.current);
         pollingInterval.current = null;
+        console.log('Stopped notification polling');
       }
     };
 
@@ -308,6 +363,90 @@ export const NotificationProvider: React.FC<{children: ReactNode}> = ({ children
     setNotifications(prev => prev.filter(notification => notification.id !== id));
   };
 
+  // Manual sync function for debugging and force refresh
+  const syncNotifications = async () => {
+    if (!isAdminUser()) {
+      console.log('Sync skipped: User is not admin');
+      return;
+    }
+
+    console.log('Manual notification sync initiated...');
+    
+    try {
+      // Try to fetch from API first
+      const response = await api.get('/notifications');
+      const apiNotifications = response.data.notifications || [];
+      
+      if (apiNotifications.length > 0) {
+        console.log(`Synced ${apiNotifications.length} notifications from API`);
+        
+        const formattedNotifications: NotificationItem[] = apiNotifications.map((n: any) => ({
+          id: n.id || `api-${Date.now()}-${Math.random()}`,
+          type: n.type || 'system',
+          title: n.title,
+          message: n.message,
+          createdAt: n.createdAt || new Date().toISOString(),
+          isRead: n.isRead || false
+        }));
+        
+        setNotifications(formattedNotifications);
+        setIsConnected(true);
+        setLastSyncTime(new Date().toISOString());
+        
+        // Update localStorage with synced notifications
+        localStorage.setItem('admin_notifications', JSON.stringify(formattedNotifications));
+        
+        toast({
+          title: "Notifications Synced",
+          description: `Successfully synced ${apiNotifications.length} notifications from server`,
+          duration: 3000,
+        });
+      } else {
+        console.log('No notifications found on server');
+        setIsConnected(true);
+        setLastSyncTime(new Date().toISOString());
+        
+        toast({
+          title: "Sync Complete", 
+          description: "No new notifications found on server",
+          duration: 3000,
+        });
+      }
+    } catch (apiError) {
+      console.error('API sync failed, falling back to localStorage:', apiError);
+      setIsConnected(false);
+      
+      // Fallback to localStorage
+      try {
+        const storedNotifications = localStorage.getItem('admin_notifications');
+        if (storedNotifications) {
+          const localNotifications = JSON.parse(storedNotifications) as NotificationItem[];
+          setNotifications(localNotifications);
+          setLastSyncTime(new Date().toISOString());
+          
+          toast({
+            title: "Offline Mode",
+            description: `Loaded ${localNotifications.length} notifications from local storage`,
+            duration: 3000,
+          });
+        } else {
+          toast({
+            title: "Sync Failed",
+            description: "Cannot connect to server and no local notifications found",
+            duration: 5000,
+          });
+        }
+      } catch (localError) {
+        console.error('localStorage fallback failed:', localError);
+        toast({
+          title: "Error",
+          description: "Failed to load notifications from both server and local storage",
+          duration: 5000,
+        });
+      }
+    }
+  };
+
   return (
     <NotificationContext.Provider
       value={{
@@ -320,7 +459,9 @@ export const NotificationProvider: React.FC<{children: ReactNode}> = ({ children
         clearNotifications,
         clearNotification,
         enableSounds,
-        toggleSounds
+        toggleSounds,
+        syncNotifications,
+        lastSyncTime
       }}
     >
       {children}
