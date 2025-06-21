@@ -145,10 +145,7 @@ const ShopPage = () => {
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <img 
-              src={product.images?.[0]?.startsWith("/") 
-                ? product.images[0]
-                : product.images?.[0] || '/images/placeholder.svg'
-              }
+              src={product.images?.[0] || '/images/placeholder.svg'}
               alt={product.title}
               className="w-full h-48 sm:h-64 object-cover rounded-lg"
             />
