@@ -213,7 +213,7 @@ const CartItem = ({
             onChange={(e) => onUpdateQuantity(item.id, parseInt(e.target.value))}
             className="text-sm h-8 px-2 border rounded-md bg-background mr-3"
           >
-            {[1,2,3,4,5,6,7,8,9,10].map((num) => (
+            {[1,2,3,4,5].map((num) => (
               <option key={num} value={num}>
                 {num}
               </option>

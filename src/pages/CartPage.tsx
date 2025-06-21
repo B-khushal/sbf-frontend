@@ -8,6 +8,7 @@ import { Trash2, ShoppingCart, Plus, Minus, ArrowRight, Info, Sparkles, AlertTri
 import { Button } from '@/components/ui/button';
 import useCart from '@/hooks/use-cart';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import ContactModal from '@/components/ui/ContactModal';
 
 // Animation variants
 const containerVariants = {
@@ -35,7 +36,7 @@ const itemVariants = {
 
 const CartPage: React.FC = () => {
   const navigate = useNavigate();
-  const { items, updateItemQuantity, removeItem } = useCart();
+  const { items, updateItemQuantity, removeItem, showContactModal, contactModalProduct, closeContactModal } = useCart();
   const { formatPrice, convertPrice } = useCurrency();
   
   // Intersection observer for animations
@@ -214,9 +215,10 @@ const CartPage: React.FC = () => {
                                     <span className="w-8 sm:w-12 text-center font-bold text-gray-800 text-sm sm:text-base">{item.quantity}</span>
                                     <motion.button
                                       onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-                                      className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-primary to-secondary text-white rounded-full flex items-center justify-center hover:shadow-lg transition-all text-sm"
-                                      whileHover={{ scale: 1.1 }}
-                                      whileTap={{ scale: 0.9 }}
+                                      className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-primary to-secondary text-white rounded-full flex items-center justify-center hover:shadow-lg transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                                      whileHover={{ scale: item.quantity >= 5 ? 1 : 1.1 }}
+                                      whileTap={{ scale: item.quantity >= 5 ? 1 : 0.9 }}
+                                      disabled={item.quantity >= 5}
                                     >
                                       <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
                                     </motion.button>
@@ -327,6 +329,13 @@ const CartPage: React.FC = () => {
       </div>
 
       <Footer />
+
+      {/* Contact Modal */}
+      <ContactModal 
+        isOpen={showContactModal}
+        onClose={closeContactModal}
+        productTitle={contactModalProduct}
+      />
     </div>
   );
 };

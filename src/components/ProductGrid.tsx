@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { toast } from "sonner";
 import useCart from "@/hooks/use-cart";
 import { getImageUrl } from "@/config";
+import ContactModal from "@/components/ui/ContactModal";
 
 type WishlistItem = {
   id: string;
@@ -70,6 +71,8 @@ type ProductGridProps = {
 };
 
 const ProductGrid = ({ products, title, subtitle, className, loading }: ProductGridProps) => {
+  const { showContactModal, contactModalProduct, closeContactModal } = useCart();
+
   return (
     <section className={cn("py-16 px-6 md:px-8", className)}>
       {(title || subtitle) && (
@@ -93,6 +96,13 @@ const ProductGrid = ({ products, title, subtitle, className, loading }: ProductG
           ))}
         </div>
       )}
+
+      {/* Contact Modal */}
+      <ContactModal 
+        isOpen={showContactModal}
+        onClose={closeContactModal}
+        productTitle={contactModalProduct}
+      />
     </section>
   );
 };

@@ -11,6 +11,7 @@ import { Search, Filter, Grid3X3, List, Star, Heart, Eye, ExternalLink, Sparkles
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { toast } from "sonner";
 import { getImageUrl } from "@/config";
+import ContactModal from "@/components/ui/ContactModal";
 
 const ShopPage = () => {
   const { category } = useParams<{ category: string }>();
@@ -118,6 +119,9 @@ const ShopPage = () => {
     updateItemQuantity,
     removeItem,
     addItem,
+    showContactModal,
+    contactModalProduct,
+    closeContactModal,
   } = useCart();
 
   // Handle category click with same-tab navigation
@@ -590,6 +594,13 @@ const ShopPage = () => {
           items={items}
           onUpdateQuantity={updateItemQuantity}
           onRemoveItem={removeItem}
+        />
+
+        {/* Contact Modal */}
+        <ContactModal 
+          isOpen={showContactModal}
+          onClose={closeContactModal}
+          productTitle={contactModalProduct}
         />
       </main>
       

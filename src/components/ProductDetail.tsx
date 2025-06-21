@@ -4,6 +4,8 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { getImageUrl } from '@/config';
+import ContactModal from '@/components/ui/ContactModal';
+import useCart from '@/hooks/use-cart';
 
 type ProductDetailProps = {
   product: {
@@ -35,6 +37,7 @@ const ProductDetail = ({ product, onAddToCart }: ProductDetailProps) => {
   const [selectedImage, setSelectedImage] = useState(0);
   const { toast } = useToast();
   const { formatPrice, convertPrice } = useCurrency();
+  const { showContactModal, contactModalProduct, closeContactModal } = useCart();
 
   // Debug log to check properties
   console.log(`Product Detail ${product.title}:`, {
@@ -61,7 +64,19 @@ const ProductDetail = ({ product, onAddToCart }: ProductDetailProps) => {
     setSelectedImage((prev) => (prev === product.images.length - 1 ? 0 : prev + 1));
   };
 
-  const incrementQuantity = () => setQuantity((prev) => prev + 1);
+  const incrementQuantity = () => {
+    if (quantity >= 5) {
+      toast({
+        title: "Quantity Limit Reached",
+        description: "Maximum 5 items allowed per product. Contact us for bulk orders.",
+        variant: "destructive",
+        duration: 4000,
+      });
+      return;
+    }
+    setQuantity((prev) => prev + 1);
+  };
+  
   const decrementQuantity = () => quantity > 1 && setQuantity((prev) => prev - 1);
 
   const handleAddToCart = () => {
@@ -366,6 +381,13 @@ const ProductDetail = ({ product, onAddToCart }: ProductDetailProps) => {
           </div>
         </div>
       </div>
+
+      {/* Contact Modal */}
+      <ContactModal 
+        isOpen={showContactModal}
+        onClose={closeContactModal}
+        productTitle={contactModalProduct}
+      />
     </section>
   );
 };

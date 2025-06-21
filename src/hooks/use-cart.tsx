@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
 
 export type CartItem = {
   id: string;
@@ -13,6 +14,7 @@ export type CartItem = {
 
 const useCart = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [items, setItems] = useState<CartItem[]>(() => {
     if (!user) return [];
     
@@ -21,6 +23,8 @@ const useCart = () => {
   });
   
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [showContactModal, setShowContactModal] = useState(false);
+  const [contactModalProduct, setContactModalProduct] = useState<string>('');
   
   // Update localStorage when cart changes or user changes
   useEffect(() => {
@@ -41,14 +45,29 @@ const useCart = () => {
       throw new Error('Please log in to add items to cart');
     }
     
+    const existingItem = items.find(i => i.id === item.id);
+    const currentQuantity = existingItem ? existingItem.quantity : 0;
+    const newTotalQuantity = currentQuantity + quantity;
+    
+    // Check if adding this quantity would exceed the limit of 5
+    if (newTotalQuantity > 5) {
+      setContactModalProduct(item.title);
+      setShowContactModal(true);
+      toast({
+        title: "Quantity Limit Reached",
+        description: `Maximum 5 items allowed per product. Contact us for bulk orders.`,
+        variant: "destructive",
+        duration: 4000,
+      });
+      return false; // Return failure indicator
+    }
+    
     setItems(prevItems => {
-      const existingItem = prevItems.find(i => i.id === item.id);
-      
       if (existingItem) {
         // Update quantity of existing item
         return prevItems.map(i => 
           i.id === item.id 
-            ? { ...i, quantity: i.quantity + quantity } 
+            ? { ...i, quantity: newTotalQuantity } 
             : i
         );
       } else {
@@ -66,6 +85,22 @@ const useCart = () => {
   
   const updateItemQuantity = (id: string, quantity: number) => {
     if (!user) return;
+    
+    // Check if the new quantity exceeds the limit of 5
+    if (quantity > 5) {
+      const item = items.find(i => i.id === id);
+      if (item) {
+        setContactModalProduct(item.title);
+        setShowContactModal(true);
+        toast({
+          title: "Quantity Limit Reached",
+          description: `Maximum 5 items allowed per product. Contact us for bulk orders.`,
+          variant: "destructive",
+          duration: 4000,
+        });
+      }
+      return;
+    }
     
     setItems(prevItems => 
       prevItems.map(item => 
@@ -96,6 +131,11 @@ const useCart = () => {
   const toggleCart = () => {
     setIsCartOpen(prev => !prev);
   };
+
+  const closeContactModal = () => {
+    setShowContactModal(false);
+    setContactModalProduct('');
+  };
   
   const itemCount = items.reduce((total, item) => total + item.quantity, 0);
   
@@ -109,6 +149,8 @@ const useCart = () => {
     itemCount,
     subtotal,
     isCartOpen,
+    showContactModal,
+    contactModalProduct,
     addItem,
     updateItemQuantity,
     removeItem,
@@ -116,6 +158,7 @@ const useCart = () => {
     openCart,
     closeCart,
     toggleCart,
+    closeContactModal,
   };
 };
 
