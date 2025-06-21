@@ -89,26 +89,70 @@ const AdminNavbar = () => {
     } catch (error) {
       console.error('Failed to create test notification:', error);
       
-      // Fallback to offline mode even if API call fails
-      const testNotification = {
-        id: `test-fallback-${Date.now()}`,
-        type: 'order' as const,
-        title: '🧪 Test Notification (Offline)',
-        message: `Offline test notification created at ${new Date().toLocaleString()}`,
-        createdAt: new Date().toISOString(),
-        isRead: false
-      };
+      // Check if it's a 403 error (admin permission issue)
+      if (error.response?.status === 403) {
+        console.log('403 Error - Checking user admin status...');
+        
+        // Debug user status
+        try {
+          const debugResponse = await api.get('/notifications/debug/user');
+          console.log('User debug info:', debugResponse.data);
+          
+          const userRole = debugResponse.data.user.role;
+          const confirmPromote = confirm(`Admin Permission Issue:\n\nCurrent Role: ${userRole}\nRequired: admin\n\nWould you like to promote this account to admin?`);
+          
+          if (confirmPromote) {
+            try {
+              const promoteResponse = await api.post('/notifications/debug/make-admin');
+              console.log('User promoted to admin:', promoteResponse.data);
+              alert('Account promoted to admin successfully! Please refresh the page and try again.');
+              
+              // Refresh the page to reload user data
+              window.location.reload();
+            } catch (promoteError) {
+              console.error('Failed to promote user:', promoteError);
+              alert('Failed to promote user to admin. Please check console for details.');
+            }
+          }
+        } catch (debugError) {
+          console.error('Failed to get debug info:', debugError);
+          alert('403 Forbidden: Admin access required. Please check your account permissions.');
+        }
+      } else {
+        // Fallback to offline mode for other errors
+        const testNotification = {
+          id: `test-fallback-${Date.now()}`,
+          type: 'order' as const,
+          title: '🧪 Test Notification (Offline)',
+          message: `Offline test notification created at ${new Date().toLocaleString()}`,
+          createdAt: new Date().toISOString(),
+          isRead: false
+        };
+        
+        const existingNotifications = localStorage.getItem('admin_notifications');
+        const notifications = existingNotifications ? JSON.parse(existingNotifications) : [];
+        notifications.unshift(testNotification);
+        localStorage.setItem('admin_notifications', JSON.stringify(notifications));
+        
+        window.dispatchEvent(new StorageEvent('storage', {
+          key: 'admin_notifications',
+          newValue: JSON.stringify(notifications),
+          oldValue: existingNotifications
+        }));
+      }
+    }
+  };
+
+  const handleCheckAdminStatus = async () => {
+    try {
+      const response = await api.get('/notifications/debug/user');
+      console.log('User admin status:', response.data);
       
-      const existingNotifications = localStorage.getItem('admin_notifications');
-      const notifications = existingNotifications ? JSON.parse(existingNotifications) : [];
-      notifications.unshift(testNotification);
-      localStorage.setItem('admin_notifications', JSON.stringify(notifications));
-      
-      window.dispatchEvent(new StorageEvent('storage', {
-        key: 'admin_notifications',
-        newValue: JSON.stringify(notifications),
-        oldValue: existingNotifications
-      }));
+      const data = response.data;
+      alert(`User Admin Status:\n\nEmail: ${data.user.email}\nRole: ${data.user.role}\nIs Admin: ${data.isAdminByRole}\n\nAdmin Check Passes: ${data.middleware.adminCheckPasses}`);
+    } catch (error) {
+      console.error('Failed to check admin status:', error);
+      alert('Failed to check admin status. Please check console for details.');
     }
   };
 
@@ -199,12 +243,21 @@ const AdminNavbar = () => {
 
           {/* Test Notification Button (for debugging) */}
           <Button
-            variant="ghost"
-            size="sm"
             onClick={handleTestNotification}
+            variant="outline"
+            size="sm"
             className="text-xs"
           >
-            Test
+            🧪 Test
+          </Button>
+
+          <Button
+            onClick={handleCheckAdminStatus}
+            variant="outline"
+            size="sm"
+            className="text-xs"
+          >
+            🔍 Debug
           </Button>
 
           {/* Sync Button */}
