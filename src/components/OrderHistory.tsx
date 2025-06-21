@@ -165,7 +165,7 @@ const OrderHistory = () => {
                     <div className="h-16 w-16 bg-gray-100 rounded-xl relative overflow-hidden flex-shrink-0 border border-gray-200">
                       <img
                         src={imageUrl}
-                        alt={item.product.name}
+                        alt={item.product.title}
                         className="w-full h-full object-cover"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
@@ -177,7 +177,7 @@ const OrderHistory = () => {
                       </div>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-gray-800 truncate">{item.product.name}</h4>
+                      <h4 className="font-semibold text-gray-800 truncate">{item.product.title}</h4>
                       <div className="text-gray-600 text-sm">
                         {displayOrderPrice(item.price, order.currency, order.currencyRate)} × {item.quantity}
                       </div>

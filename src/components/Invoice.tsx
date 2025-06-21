@@ -37,6 +37,7 @@ interface InvoiceProps {
       product: {
         id?: string;
         name: string;
+        title: string;
         images?: string[];
         image?: string;
         price: number;
@@ -295,7 +296,7 @@ const Invoice: React.FC<InvoiceProps> = ({ order, isAdmin = false }) => {
               {order.items.map((item, index) => (
                 <tr key={index} className="hover:bg-gray-50">
                   <td className="border border-gray-300 px-4 py-3">
-                    <div className="font-medium">{item.product.name}</div>
+                    <div className="font-medium">{item.product.title}</div>
                   </td>
                   <td className="border border-gray-300 px-4 py-3 text-sm text-gray-600">
                     A beautiful arrangement of fresh flowers, elegantly prepared for your special occasion.

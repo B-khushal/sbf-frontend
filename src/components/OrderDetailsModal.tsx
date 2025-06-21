@@ -30,6 +30,7 @@ interface Product {
   images: string[];
   sku?: string;
   discount?: number;
+  title: string;
 }
 
 interface GiftDetails {
@@ -412,7 +413,7 @@ export default function OrderDetailsModal({ isOpen, onClose, order, onStatusUpda
                           <div className="relative w-20 h-20 rounded-lg overflow-hidden border bg-muted">
                             <img
                               src={getImageUrl(item.product.images?.[0])}
-                              alt={item.product.name}
+                              alt={item.product.title}
                               className="w-full h-full object-cover"
                               onError={(e) => {
                                 const target = e.target as HTMLImageElement;
@@ -421,7 +422,7 @@ export default function OrderDetailsModal({ isOpen, onClose, order, onStatusUpda
                             />
                           </div>
                           <div>
-                            <div className="font-medium">{item.product.name}</div>
+                            <div className="font-medium">{item.product.title}</div>
                             {item.product.sku && (
                               <div className="text-sm text-muted-foreground">
                                 SKU: {item.product.sku}
