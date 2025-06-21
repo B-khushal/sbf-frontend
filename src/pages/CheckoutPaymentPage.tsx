@@ -376,11 +376,9 @@ const CheckoutPaymentPage = () => {
                     console.log('Checking from_payment flag before redirect:', sessionStorage.getItem('from_payment'));
                     console.log('Checking order data before redirect:', localStorage.getItem('lastOrder') ? 'present' : 'missing');
                     
-                    // Use window.location.replace for most reliable redirect
-                    const timestamp = Date.now();
-                    const confirmationUrl = `${window.location.origin}/checkout/confirmation?auth=true&order=true&t=${timestamp}&from=payment`;
-                    console.log('Navigating to:', confirmationUrl);
-                    window.location.replace(confirmationUrl);
+                    // Use navigate for cleaner routing
+                    console.log('Navigating to confirmation page...');
+                    navigate('/checkout/confirmation?order=true&from=payment');
                   }, 500);
                 } catch (redirectError) {
                   console.error('Error during redirect:', redirectError);

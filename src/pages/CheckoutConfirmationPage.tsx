@@ -227,16 +227,11 @@ const CheckoutConfirmationPage = () => {
         redirectAttempted.current = true;
         sessionStorage.setItem('confirmation_visited', 'true'); // Set flag to prevent further refreshes
         window.location.reload();
-      } else if ((!isAuthenticated || isAuthChecking) && !redirectAttempted.current && !order) {
-        // If no order and not authenticated, redirect to login
-        console.log('CheckoutConfirmationPage: No order found and not authenticated, redirecting to login');
-        redirectAttempted.current = true;
-        navigate('/login', { state: { redirect: '/checkout/confirmation' } });
-      } else if (!redirectAttempted.current && !order) {
-        // If authenticated but no order, redirect to cart
+      } else if (!isAuthChecking && !redirectAttempted.current && !order && !hasOrderParam) {
+        // Only redirect if we're not checking auth, haven't already tried, no order, and no order param
         console.log('CheckoutConfirmationPage: No order found, redirecting to cart');
         redirectAttempted.current = true;
-      navigate('/cart');
+        navigate('/cart');
       }
     }
     
@@ -414,6 +409,39 @@ const CheckoutConfirmationPage = () => {
                       ? imagePath
       : imagePath;
   };
+
+  // Show loading state while checking authentication and order data
+  if (isAuthChecking || (!order && !redirectAttempted.current)) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navigation cartItemCount={0} />
+        <main className="flex-grow flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading your order confirmation...</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // If no order data is found after loading, show error
+  if (!order) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navigation cartItemCount={0} />
+        <main className="flex-grow flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4">Order Not Found</h1>
+            <p className="text-muted-foreground mb-6">We couldn't find your order confirmation.</p>
+            <Button onClick={() => navigate('/cart')}>Return to Cart</Button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
