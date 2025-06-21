@@ -4,20 +4,28 @@ export const UPLOADS_URL = import.meta.env.VITE_UPLOADS_URL || 'https://sbf-back
 
 // Utility function to construct proper image URLs
 export const getImageUrl = (imagePath: string | undefined): string => {
-  if (!imagePath) return '/images/placeholder.jpg';
+  if (!imagePath) {
+    return '/images/placeholder.jpg';
+  }
   
   // If it's already a full URL, return as is
   if (imagePath.startsWith('http')) {
     return imagePath;
   }
   
-  // If it's a relative path, construct the full URL
-  if (imagePath.startsWith('/')) {
-    return `${UPLOADS_URL}${imagePath}`;
+  // The upload route returns paths like "/uploads/image-123456.jpg"
+  // We need to construct the full URL with the backend domain
+  let finalUrl: string;
+  if (imagePath.startsWith('/uploads/')) {
+    finalUrl = `${UPLOADS_URL}${imagePath}`;
+  } else if (imagePath.startsWith('/')) {
+    finalUrl = `${UPLOADS_URL}${imagePath}`;
+  } else {
+    // If no leading slash, assume it's just the filename and add /uploads/
+    finalUrl = `${UPLOADS_URL}/uploads/${imagePath}`;
   }
   
-  // If it doesn't start with /, add it
-  return `${UPLOADS_URL}/${imagePath}`;
+  return finalUrl;
 };
 
 // Other configuration constants can be added here

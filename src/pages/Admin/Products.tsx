@@ -462,7 +462,7 @@ const AdminProducts: React.FC = () => {
                     : convertPrice(product.price);
 
                   // Construct the proper image URL using utility function
-                  const imageUrl = getImageUrl(product.images?.[0]); 
+                  const imageUrl = getImageUrl(product.images?.[0]);
 
                   return (
                     <TableRow 
@@ -520,9 +520,42 @@ const AdminProducts: React.FC = () => {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <img src={imageUrl} 
-                        alt={product.title} 
-                        className="h-16 w-16 object-cover rounded" />
+                        <div className="relative w-16 h-16 rounded overflow-hidden border bg-muted">
+                          {product.images?.[0] ? (
+                            <img 
+                              src={imageUrl} 
+                              alt={product.title} 
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                // Try different URL constructions if the first one fails
+                                if (!target.src.includes('placeholder')) {
+                                  if (product.images?.[0]?.startsWith('/uploads/')) {
+                                    target.src = `https://sbf-backend.onrender.com${product.images[0]}`;
+                                  } else if (product.images?.[0] && !product.images[0].startsWith('http')) {
+                                    target.src = `https://sbf-backend.onrender.com/uploads/${product.images[0]}`;
+                                  } else {
+                                    target.src = "/images/placeholder.jpg";
+                                  }
+                                } else {
+                                  // Already tried alternatives, show placeholder icon
+                                  target.style.display = 'none';
+                                  const parent = target.parentElement;
+                                  if (parent && !parent.querySelector('.fallback-icon')) {
+                                    const fallback = document.createElement('div');
+                                    fallback.className = 'fallback-icon absolute inset-0 flex items-center justify-center bg-gray-100';
+                                    fallback.innerHTML = '<svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>';
+                                    parent.appendChild(fallback);
+                                  }
+                                }
+                              }}
+                            />
+                          ) : (
+                            <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                              <Package className="h-6 w-6 text-gray-400" />
+                            </div>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1">
