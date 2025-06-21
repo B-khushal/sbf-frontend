@@ -460,9 +460,11 @@ const AdminProducts: React.FC = () => {
                     ? convertPrice(product.price * (1 - product.discount / 100))
                     : convertPrice(product.price);
 
-                  // Ensure the image URL is absolute
+                  // Construct the proper image URL for backend
                   const imageUrl = product.images?.length 
-                    ? product.images[0]
+                    ? (product.images[0].startsWith('http') 
+                        ? product.images[0] 
+                        : `https://sbf-backend.onrender.com${product.images[0]}`)
                     : "/images/placeholder.jpg"; 
 
                   return (
