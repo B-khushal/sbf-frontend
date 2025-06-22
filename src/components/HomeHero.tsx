@@ -62,8 +62,8 @@ const HomeHero = () => {
   }, [currentSlide, isTransitioning]);
 
   return (
-    <section className="relative w-full h-[70vh] sm:h-[50vh] md:h-[70vh] max-h-[800px] mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="relative w-full h-full overflow-hidden rounded-xl shadow-lg">
+    <section className="relative w-full h-[100vh] sm:h-[90vh] md:h-[85vh] lg:h-[90vh] xl:h-[95vh] max-h-[900px] pt-16 md:pt-20">
+      <div className="relative w-full h-full overflow-hidden rounded-xl shadow-2xl mx-4 sm:mx-6 lg:mx-8">
         {/* Background Slides */}
         {heroSlides.map((slide, index) => (
           <div
@@ -82,13 +82,13 @@ const HomeHero = () => {
                 transition: 'transform 10s ease-out',
               }}
             />
-            <div className="absolute inset-0 bg-black/20" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/20 to-black/10" />
           </div>
         ))}
         
         {/* Content */}
-        <div className="relative h-full flex items-center justify-center">
-          <div className="max-w-4xl w-full text-center text-white px-4">
+        <div className="relative h-full flex items-center justify-center z-10">
+          <div className="max-w-4xl w-full text-center text-white px-4 sm:px-6 lg:px-8">
             {heroSlides.map((slide, index) => (
               <div
                 key={slide.id}
@@ -100,17 +100,20 @@ const HomeHero = () => {
                 )}
                 aria-hidden={index !== currentSlide}
               >
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-light mb-4 tracking-tight">
+                <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 tracking-tight drop-shadow-lg">
                   {slide.title}
                 </h1>
-                <p className="text-xl md:text-2xl text-white/80 mb-8 max-w-2xl mx-auto">
+                <p className="text-lg sm:text-xl md:text-2xl text-white/90 mb-8 max-w-2xl mx-auto leading-relaxed drop-shadow-md">
                   {slide.subtitle}
                 </p>
                 <Link
                   to={slide.ctaLink}
-                  className="inline-block px-8 py-3.5 bg-white/95 text-primary text-sm font-medium tracking-wide hover:bg-white transition-all rounded-md shadow-md"
+                  className="inline-flex items-center px-8 py-4 bg-white/95 hover:bg-white text-gray-900 text-sm font-semibold tracking-wide transition-all duration-300 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 hover:-translate-y-1"
                 >
                   {slide.ctaText}
+                  <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
                 </Link>
               </div>
             ))}
@@ -118,16 +121,16 @@ const HomeHero = () => {
         </div>
         
         {/* Navigation Controls */}
-        <div className="absolute bottom-8 left-0 right-0 flex justify-center space-x-3 z-10">
+        <div className="absolute bottom-6 sm:bottom-8 left-0 right-0 flex justify-center space-x-3 z-20">
           {heroSlides.map((_, index) => (
             <button
               key={index}
               onClick={() => setCurrentSlide(index)}
               className={cn(
-                "w-3 h-3 rounded-full transition-all duration-300 ease-smooth",
+                "w-3 h-3 rounded-full transition-all duration-300 ease-smooth hover:scale-110",
                 index === currentSlide 
-                  ? "bg-white scale-100" 
-                  : "bg-white/40 scale-90 hover:bg-white/60"
+                  ? "bg-white scale-110 shadow-lg" 
+                  : "bg-white/50 scale-90 hover:bg-white/70"
               )}
               aria-label={`Go to slide ${index + 1}`}
             />
@@ -137,17 +140,17 @@ const HomeHero = () => {
         {/* Arrow Controls */}
         <button
           onClick={goToPrevSlide}
-          className="absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center text-white bg-black/20 backdrop-blur-sm rounded-full hover:bg-black/30 transition-all duration-300 ease-smooth"
+          className="absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center text-white bg-black/30 backdrop-blur-sm rounded-full hover:bg-black/50 transition-all duration-300 ease-smooth z-20 hover:scale-110"
           aria-label="Previous slide"
         >
-          <ChevronLeft size={20} />
+          <ChevronLeft size={24} />
         </button>
         <button
           onClick={goToNextSlide}
-          className="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center text-white bg-black/20 backdrop-blur-sm rounded-full hover:bg-black/30 transition-all duration-300 ease-smooth"
+          className="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center text-white bg-black/30 backdrop-blur-sm rounded-full hover:bg-black/50 transition-all duration-300 ease-smooth z-20 hover:scale-110"
           aria-label="Next slide"
         >
-          <ChevronRight size={20} />
+          <ChevronRight size={24} />
         </button>
       </div>
     </section>

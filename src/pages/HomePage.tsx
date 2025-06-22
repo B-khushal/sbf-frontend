@@ -263,31 +263,32 @@ const HomePage = () => {
       <Navigation />
       <CategoryMenu />
       
-      {error && (
-        <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
-          <div className="flex items-center">
-            <AlertTriangle className="h-5 w-5 text-red-400 mr-2" />
-            <p className="text-red-800">{error}</p>
+      {/* Main Content with proper top spacing */}
+      <main className="relative z-10">
+        {error && (
+          <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-4 mt-20">
+            <div className="flex items-center">
+              <AlertTriangle className="h-5 w-5 text-red-400 mr-2" />
+              <p className="text-red-800">{error}</p>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Render sections based on settings */}
-      {!settingsLoading && homeSections?.map((section, index) => (
-        <React.Fragment key={section.id || index}>
-          {renderSection(section, index)}
-        </React.Fragment>
-      ))}
+        {/* Render sections based on settings */}
+        {!settingsLoading && homeSections?.map((section, index) => (
+          <React.Fragment key={section.id || index}>
+            {renderSection(section, index)}
+          </React.Fragment>
+        ))}
+      </main>
 
-      {isCartOpen && (
-        <Cart
-          items={items}
-          itemCount={itemCount}
-          onClose={closeCart}
-          onUpdateQuantity={updateItemQuantity}
-          onRemoveItem={removeItem}
-        />
-      )}
+      <Cart
+        items={items}
+        isOpen={isCartOpen}
+        onClose={closeCart}
+        onUpdateQuantity={updateItemQuantity}
+        onRemoveItem={removeItem}
+      />
 
       <Footer />
     </motion.div>
