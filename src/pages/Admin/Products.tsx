@@ -461,8 +461,8 @@ const AdminProducts: React.FC = () => {
                     ? convertPrice(product.price * (1 - product.discount / 100))
                     : convertPrice(product.price);
 
-                  // Construct the proper image URL using utility function with cache busting
-                  const imageUrl = getImageUrl(product.images?.[0], { bustCache: true });
+                  // Construct the proper image URL using utility function with minimal cache busting
+                  const imageUrl = getImageUrl(product.images?.[0], { bustCache: false });
 
                   return (
                     <TableRow 

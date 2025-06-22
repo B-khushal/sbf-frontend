@@ -150,7 +150,7 @@ const ShopPage = () => {
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <img 
-              src={getSquareImageUrl(product.images?.[0], 500, true)}
+              src={getSquareImageUrl(product.images?.[0], 500, false)}
               alt={product.title}
               className="w-full h-48 sm:h-64 object-cover rounded-lg"
               onError={(e) => {
@@ -158,12 +158,14 @@ const ShopPage = () => {
                 // Try different URL constructions if the first one fails
                 if (!target.src.includes('placeholder')) {
                   if (product.images?.[0]?.startsWith('/uploads/')) {
-                    target.src = `https://sbf-backend.onrender.com${product.images[0]}?_t=${Date.now()}`;
+                    target.src = `https://sbf-backend.onrender.com${product.images[0]}`;
                   } else if (product.images?.[0] && !product.images[0].startsWith('http')) {
-                    target.src = `https://sbf-backend.onrender.com/uploads/${product.images[0]}?_t=${Date.now()}`;
+                    target.src = `https://sbf-backend.onrender.com/uploads/${product.images[0]}`;
                   } else {
-                    target.src = "/images/placeholder.jpg";
+                    target.src = "/images/placeholder.svg";
                   }
+                } else if (!target.src.includes('placeholder.svg')) {
+                  target.src = "/images/placeholder.svg";
                 }
               }}
             />

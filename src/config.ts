@@ -16,19 +16,18 @@ export const getImageUrl = (imagePath: string | undefined, options?: {
     return '/images/placeholder.jpg';
   }
   
-  // If it's already a full Cloudinary URL, apply transformations if needed
+  // If it's already a full Cloudinary URL, apply simplified transformations if needed
   if (imagePath.startsWith('https://res.cloudinary.com')) {
     // Check if transformations are already applied
-    if (imagePath.includes('/c_scale,w_1000/') || imagePath.includes('/q_auto/') || imagePath.includes('/f_auto/')) {
-      // Add cache busting for updated images
-      const url = new URL(imagePath);
+    if (imagePath.includes('/c_scale') || imagePath.includes('/q_auto') || imagePath.includes('/f_auto')) {
+      // Add cache busting for updated images if needed
       if (options?.bustCache) {
-        url.searchParams.set('_t', Date.now().toString());
+        return imagePath + `?_t=${Date.now()}`;
       }
-      return url.toString();
+      return imagePath;
     }
     
-    // Apply transformations to existing Cloudinary URL
+    // Apply simple transformations to existing Cloudinary URL
     const baseUrl = imagePath.split('/upload/')[0] + '/upload/';
     const imagePart = imagePath.split('/upload/')[1];
     
@@ -40,19 +39,17 @@ export const getImageUrl = (imagePath: string | undefined, options?: {
       if (options?.height) transform += `,h_${options.height}`;
       transformations.push(transform);
     } else {
-      transformations.push('c_scale,w_1000'); // Default width scaling
+      transformations.push('c_scale,w_800'); // Default width scaling (reduced from 1000)
     }
     
-    transformations.push('q_' + (options?.quality || 'auto')); // Quality optimization
-    transformations.push('f_' + (options?.format || 'auto')); // Format optimization
+    transformations.push('q_auto'); // Quality optimization
+    transformations.push('f_auto'); // Format optimization
     
-    let finalUrl = `${baseUrl}${transformations.join('/')}/${imagePart}`;
+    let finalUrl = `${baseUrl}${transformations.join(',')}/${imagePart}`;
     
     // Add cache busting for updated images
     if (options?.bustCache) {
-      const url = new URL(finalUrl);
-      url.searchParams.set('_t', Date.now().toString());
-      finalUrl = url.toString();
+      finalUrl += `?_t=${Date.now()}`;
     }
     
     return finalUrl;
@@ -114,32 +111,29 @@ export const getProductImageUrl = (imagePath: string | undefined, width: number 
   });
 };
 
-// Generate square images with AI generative fill for consistent product grid display
+// Generate square images with simplified transformations for consistent product grid display
 export const getSquareImageUrl = (imagePath: string | undefined, size: number = 400, bustCache: boolean = false): string => {
   if (!imagePath) {
-    return '/images/placeholder.jpg';
+    return '/images/placeholder.svg';
   }
   
-  // If it's already a full Cloudinary URL, apply generative fill transformations
+  // If it's already a full Cloudinary URL, apply simplified transformations
   if (imagePath.startsWith('https://res.cloudinary.com')) {
     const baseUrl = imagePath.split('/upload/')[0] + '/upload/';
     const imagePart = imagePath.split('/upload/')[1];
     
-    // Apply generative fill transformations for square aspect ratio
+    // Apply simplified transformations for square aspect ratio
     const transformations = [
-      'ar_1:1,g_center,b_gen_fill,c_pad', // Generative fill with 1:1 aspect ratio
-      `w_${size},h_${size},c_scale`,       // Scale to desired size
-      'q_auto:best',                       // Best quality
-      'f_auto'                            // Auto format
+      `c_fill,w_${size},h_${size}`,  // Fill and crop to square
+      'q_auto',                       // Auto quality
+      'f_auto'                       // Auto format
     ];
     
-    let finalUrl = `${baseUrl}${transformations.join('/')}/${imagePart}`;
+    let finalUrl = `${baseUrl}${transformations.join(',')}/${imagePart}`;
     
     // Add cache busting for updated images
     if (bustCache) {
-      const url = new URL(finalUrl);
-      url.searchParams.set('_t', Date.now().toString());
-      finalUrl = url.toString();
+      finalUrl += `?_t=${Date.now()}`;
     }
     
     return finalUrl;
@@ -194,6 +188,29 @@ export const getEnhancedProductImageUrl = (
   
   // For non-Cloudinary URLs, fall back to regular optimization
   return getImageUrl(imagePath, { width, height: height, crop: 'scale' });
+};
+
+// Cache busting utility for when images are updated
+export const addCacheBuster = (url: string): string => {
+  const separator = url.includes('?') ? '&' : '?';
+  return `${url}${separator}_t=${Date.now()}`;
+};
+
+// Get image URL with optional cache busting for updated products
+export const getImageUrlWithCacheBuster = (imagePath: string | undefined, options?: {
+  width?: number;
+  height?: number;
+  crop?: string;
+  forceCacheBust?: boolean;
+}): string => {
+  const baseUrl = getImageUrl(imagePath, {
+    width: options?.width,
+    height: options?.height,
+    crop: options?.crop,
+    bustCache: false
+  });
+  
+  return options?.forceCacheBust ? addCacheBuster(baseUrl) : baseUrl;
 };
 
 // Other configuration constants can be added here

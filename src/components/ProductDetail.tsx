@@ -55,7 +55,7 @@ const ProductDetail = ({ product, onAddToCart }: ProductDetailProps) => {
     : originalPrice;
 
   // Handle image URL using utility function with optimization for product detail view
-  const imageUrl = getProductImageUrl(product.images[selectedImage], 800, true); 
+  const imageUrl = getProductImageUrl(product.images[selectedImage], 800, false); 
 
   // Image Navigation
   const prevImage = () => {
@@ -302,7 +302,7 @@ const ProductDetail = ({ product, onAddToCart }: ProductDetailProps) => {
                   )}
                 >
                   <img
-                    src={getImageUrl(image, { bustCache: true })}
+                    src={getImageUrl(image, { bustCache: false })}
                     alt={`${product.title} view ${index + 1}`}
                     className="w-full h-full object-cover rounded-md"
                   />
