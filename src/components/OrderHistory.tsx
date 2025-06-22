@@ -98,7 +98,7 @@ const OrderHistory = () => {
 
   const getCardStyling = (status: Order['status']) => {
     if (status === 'delivered') {
-      return 'bg-green-50/80 backdrop-blur-sm border-green-200/50 shadow-green-100/50 hover:shadow-green-200/50';
+      return 'bg-green-100 backdrop-blur-sm border-green-300 shadow-lg hover:shadow-xl';
     }
     return 'bg-white/70 backdrop-blur-sm border border-white/20 shadow-lg hover:shadow-xl';
   };
@@ -171,8 +171,7 @@ const OrderHistory = () => {
             key={order._id} 
             className={cn(
               getCardStyling(order.status),
-              "transition-all duration-300",
-              isDelivered && "ring-2 ring-green-200/50"
+              "transition-all duration-300"
             )}
           >
             <CardContent className="p-6">
@@ -203,7 +202,7 @@ const OrderHistory = () => {
                   return (
                     <div key={item.product._id} className={cn(
                       "flex items-center gap-4 rounded-xl p-4",
-                      isDelivered ? "bg-green-50/50" : "bg-white/50"
+                      isDelivered ? "bg-green-50" : "bg-white/50"
                     )}>
                       <div className="h-16 w-16 bg-gray-100 rounded-xl relative overflow-hidden flex-shrink-0 border border-gray-200">
                         <img
@@ -238,14 +237,14 @@ const OrderHistory = () => {
                 })}
               </div>
 
-              {/* Mobile Track Order Dropdown Button */}
-              <div className="mt-6 md:hidden">
+              {/* Track Order Dropdown Button - Available on ALL screen sizes */}
+              <div className="mt-6">
                 <Button
                   variant="outline"
                   onClick={() => toggleOrderExpansion(order._id)}
                   className={cn(
                     "w-full flex items-center justify-between",
-                    isDelivered && "border-green-300 text-green-700 hover:bg-green-50"
+                    isDelivered && "border-green-400 text-green-700 hover:bg-green-50 bg-green-50"
                   )}
                 >
                   <span>Track Order</span>
@@ -257,23 +256,19 @@ const OrderHistory = () => {
                 </Button>
               </div>
 
-              {/* Order Tracking - Always visible on desktop, collapsible on mobile */}
-              <div className={cn(
-                "mt-6",
-                // Desktop: always visible
-                "hidden md:block",
-                // Mobile: show only when expanded
-                isExpanded && "block md:block"
-              )}>
-                <OrderTracking 
-                  currentStatus={order.status}
-                  trackingHistory={order.trackingHistory}
-                  className={cn(
-                    "backdrop-blur-sm",
-                    isDelivered ? "bg-green-50/30" : "bg-white/30"
-                  )}
-                />
-              </div>
+              {/* Order Tracking - Collapsible on ALL screen sizes */}
+              {isExpanded && (
+                <div className="mt-6">
+                  <OrderTracking 
+                    currentStatus={order.status}
+                    trackingHistory={order.trackingHistory}
+                    className={cn(
+                      "backdrop-blur-sm",
+                      isDelivered ? "bg-green-50" : "bg-white/30"
+                    )}
+                  />
+                </div>
+              )}
 
               <div className="mt-6 pt-4 border-t border-gray-200">
                 <div className="flex justify-between items-start">
