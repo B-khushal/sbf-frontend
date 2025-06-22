@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useAuth } from '@/hooks/use-auth';
-import { getImageUrl } from '@/config';
+import { getImageUrl, getProductImageUrl } from '@/config';
 import ContactModal from '@/components/ui/ContactModal';
 import useCart from '@/hooks/use-cart';
 
@@ -54,8 +54,8 @@ const ProductDetail = ({ product, onAddToCart }: ProductDetailProps) => {
     ? product.price * (1 - product.discount / 100)
     : originalPrice;
 
-  // Handle image URL using utility function
-  const imageUrl = getImageUrl(product.images[selectedImage]); 
+  // Handle image URL using utility function with optimization for product detail view
+  const imageUrl = getProductImageUrl(product.images[selectedImage], 800); 
 
   // Image Navigation
   const prevImage = () => {

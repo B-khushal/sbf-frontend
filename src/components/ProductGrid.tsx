@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { toast } from "sonner";
 import useCart from "@/hooks/use-cart";
-import { getImageUrl } from "@/config";
+import { getImageUrl, getThumbnailUrl } from "@/config";
 import ContactModal from "@/components/ui/ContactModal";
 
 type WishlistItem = {
@@ -254,7 +254,7 @@ const ProductCard = ({ product, index }: { product: Product; index: number }) =>
       {/* Image Container */}
       <div className="relative aspect-[4/5] overflow-hidden">
         <img
-          src={getImageUrl(product.images?.[0])}
+          src={getThumbnailUrl(product.images?.[0], 400)}
           alt={product.title}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
