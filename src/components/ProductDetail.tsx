@@ -55,7 +55,7 @@ const ProductDetail = ({ product, onAddToCart }: ProductDetailProps) => {
     : originalPrice;
 
   // Handle image URL using utility function with optimization for product detail view
-  const imageUrl = getProductImageUrl(product.images[selectedImage], 800); 
+  const imageUrl = getProductImageUrl(product.images[selectedImage], 800, true); 
 
   // Image Navigation
   const prevImage = () => {
@@ -133,7 +133,7 @@ const ProductDetail = ({ product, onAddToCart }: ProductDetailProps) => {
   const handleAddToWishlist = () => {
     try {
       // Use utility function for consistent image URL construction
-      const imageUrl = getImageUrl(product.images?.[0]);
+      const imageUrl = getImageUrl(product.images?.[0], { bustCache: true });
       
       // Create wishlist item with proper ID
       const wishlistItem = {
@@ -302,7 +302,7 @@ const ProductDetail = ({ product, onAddToCart }: ProductDetailProps) => {
                   )}
                 >
                   <img
-                    src={getImageUrl(image)}
+                    src={getImageUrl(image, { bustCache: true })}
                     alt={`${product.title} view ${index + 1}`}
                     className="w-full h-full object-cover rounded-md"
                   />

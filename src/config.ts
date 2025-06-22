@@ -10,6 +10,7 @@ export const getImageUrl = (imagePath: string | undefined, options?: {
   crop?: string;
   quality?: string;
   format?: string;
+  bustCache?: boolean;
 }): string => {
   if (!imagePath) {
     return '/images/placeholder.jpg';
@@ -19,7 +20,12 @@ export const getImageUrl = (imagePath: string | undefined, options?: {
   if (imagePath.startsWith('https://res.cloudinary.com')) {
     // Check if transformations are already applied
     if (imagePath.includes('/c_scale,w_1000/') || imagePath.includes('/q_auto/') || imagePath.includes('/f_auto/')) {
-      return imagePath; // Already optimized
+      // Add cache busting for updated images
+      const url = new URL(imagePath);
+      if (options?.bustCache) {
+        url.searchParams.set('_t', Date.now().toString());
+      }
+      return url.toString();
     }
     
     // Apply transformations to existing Cloudinary URL
@@ -40,11 +46,25 @@ export const getImageUrl = (imagePath: string | undefined, options?: {
     transformations.push('q_' + (options?.quality || 'auto')); // Quality optimization
     transformations.push('f_' + (options?.format || 'auto')); // Format optimization
     
-    return `${baseUrl}${transformations.join('/')}/${imagePart}`;
+    let finalUrl = `${baseUrl}${transformations.join('/')}/${imagePart}`;
+    
+    // Add cache busting for updated images
+    if (options?.bustCache) {
+      const url = new URL(finalUrl);
+      url.searchParams.set('_t', Date.now().toString());
+      finalUrl = url.toString();
+    }
+    
+    return finalUrl;
   }
   
-  // If it's already a full URL (non-Cloudinary), return as is
+  // If it's already a full URL (non-Cloudinary), return as is with optional cache busting
   if (imagePath.startsWith('http')) {
+    if (options?.bustCache) {
+      const url = new URL(imagePath);
+      url.searchParams.set('_t', Date.now().toString());
+      return url.toString();
+    }
     return imagePath;
   }
   
@@ -61,32 +81,41 @@ export const getImageUrl = (imagePath: string | undefined, options?: {
     finalUrl = `${UPLOADS_URL}/uploads/${imagePath}`;
   }
   
+  // Add cache busting for updated images
+  if (options?.bustCache) {
+    const url = new URL(finalUrl);
+    url.searchParams.set('_t', Date.now().toString());
+    finalUrl = url.toString();
+  }
+  
   return finalUrl;
 };
 
 // Generate thumbnail URLs for product listings
-export const getThumbnailUrl = (imagePath: string | undefined, size: number = 300): string => {
+export const getThumbnailUrl = (imagePath: string | undefined, size: number = 300, bustCache: boolean = false): string => {
   return getImageUrl(imagePath, {
     width: size,
     height: size,
     crop: 'fill',
     quality: 'auto',
-    format: 'auto'
+    format: 'auto',
+    bustCache
   });
 };
 
 // Generate optimized URLs for product detail pages
-export const getProductImageUrl = (imagePath: string | undefined, width: number = 800): string => {
+export const getProductImageUrl = (imagePath: string | undefined, width: number = 800, bustCache: boolean = false): string => {
   return getImageUrl(imagePath, {
     width: width,
     crop: 'scale',
     quality: 'auto',
-    format: 'auto'
+    format: 'auto',
+    bustCache
   });
 };
 
 // Generate square images with AI generative fill for consistent product grid display
-export const getSquareImageUrl = (imagePath: string | undefined, size: number = 400): string => {
+export const getSquareImageUrl = (imagePath: string | undefined, size: number = 400, bustCache: boolean = false): string => {
   if (!imagePath) {
     return '/images/placeholder.jpg';
   }
@@ -104,11 +133,20 @@ export const getSquareImageUrl = (imagePath: string | undefined, size: number = 
       'f_auto'                            // Auto format
     ];
     
-    return `${baseUrl}${transformations.join('/')}/${imagePart}`;
+    let finalUrl = `${baseUrl}${transformations.join('/')}/${imagePart}`;
+    
+    // Add cache busting for updated images
+    if (bustCache) {
+      const url = new URL(finalUrl);
+      url.searchParams.set('_t', Date.now().toString());
+      finalUrl = url.toString();
+    }
+    
+    return finalUrl;
   }
   
   // For non-Cloudinary URLs, fall back to regular thumbnail
-  return getThumbnailUrl(imagePath, size);
+  return getThumbnailUrl(imagePath, size, bustCache);
 };
 
 // Generate enhanced product images with optional generative fill

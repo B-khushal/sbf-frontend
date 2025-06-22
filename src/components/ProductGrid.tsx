@@ -254,9 +254,22 @@ const ProductCard = ({ product, index }: { product: Product; index: number }) =>
       {/* Image Container */}
       <div className="relative aspect-square overflow-hidden">
         <img
-          src={getSquareImageUrl(product.images?.[0], 400)}
+          src={getSquareImageUrl(product.images?.[0], 400, true)}
           alt={product.title}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            // Try different URL constructions if the first one fails
+            if (!target.src.includes('placeholder')) {
+              if (product.images?.[0]?.startsWith('/uploads/')) {
+                target.src = `https://sbf-backend.onrender.com${product.images[0]}?_t=${Date.now()}`;
+              } else if (product.images?.[0] && !product.images[0].startsWith('http')) {
+                target.src = `https://sbf-backend.onrender.com/uploads/${product.images[0]}?_t=${Date.now()}`;
+              } else {
+                target.src = "/images/placeholder.jpg";
+              }
+            }
+          }}
         />
         
         {/* Simple overlay on hover */}
