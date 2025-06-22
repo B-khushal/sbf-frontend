@@ -6,8 +6,9 @@ import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { MapPin, Phone, Mail, Clock, Info, Send, MessageCircle, Sparkles } from 'lucide-react';
+import { MapPin, Phone, Mail, Clock, Info, Send, MessageCircle, Sparkles, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { submitContactForm, openWhatsApp, openEmail, callPhone, openGoogleMaps } from '@/services/contactService';
 
 // Animation variants
 const containerVariants = {
@@ -53,6 +54,7 @@ const ContactPage: React.FC = () => {
     email: '',
     message: ''
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Intersection observer hooks for scroll animations
   const [formRef, formInView] = useInView({
@@ -72,19 +74,56 @@ const ContactPage: React.FC = () => {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // This would be connected to an actual form submission in production
-    toast({
-      title: "Message Sent! 🌸",
-      description: "We've received your message and will get back to you soon!",
-    });
-    setFormData({
-      firstName: '',
-      lastName: '',
-      email: '',
-      message: ''
-    });
+    
+    // Validation
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.message) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await submitContactForm(formData);
+      
+      toast({
+        title: "Message Sent! 🌸",
+        description: response.message || "We've received your message and will get back to you soon!",
+      });
+      
+      // Reset form
+      setFormData({
+        firstName: '',
+        lastName: '',
+        email: '',
+        message: ''
+      });
+    } catch (error: any) {
+      toast({
+        title: "Message Failed",
+        description: error.message || "Failed to send message. Please try again or contact us directly.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -247,10 +286,20 @@ const ContactPage: React.FC = () => {
                   >
                     <Button 
                       type="submit" 
-                      className="w-full h-14 bg-gradient-to-r from-primary via-secondary to-accent text-white font-bold text-lg rounded-2xl hover:shadow-2xl transition-all duration-300"
+                      disabled={isSubmitting}
+                      className="w-full h-14 bg-gradient-to-r from-primary via-secondary to-accent text-white font-bold text-lg rounded-2xl hover:shadow-2xl transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed"
                     >
-                      <Send className="w-5 h-5 mr-2" />
-                      Send Message 🌸
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                          Sending...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-5 h-5 mr-2" />
+                          Send Message 🌸
+                        </>
+                      )}
                     </Button>
                   </motion.div>
                 </form>
@@ -285,14 +334,23 @@ const ContactPage: React.FC = () => {
                     <div className="w-14 h-14 bg-gradient-to-r from-red-400 to-red-600 rounded-2xl flex items-center justify-center shrink-0">
                       <MapPin className="w-7 h-7 text-white" />
                     </div>
-                    <div>
+                    <div className="flex-1">
                       <h3 className="text-xl font-bold text-gray-800 mb-2">📍 Our Location</h3>
-                      <p className="text-gray-600 leading-relaxed">
+                      <p className="text-gray-600 leading-relaxed mb-3">
                       Door No. 12-2-786/A & B, Najam Centre,<br />
                        Pillar No. 32,Rethi Bowli, Mehdipatnam,<br />
                         Hyderabad, Telangana 500028<br />
                         <span className="text-sm text-primary font-semibold">Near Tolichihocki, HITEC City </span>
                       </p>
+                      <Button
+                        onClick={openGoogleMaps}
+                        variant="outline"
+                        size="sm"
+                        className="text-red-600 border-red-200 hover:bg-red-50"
+                      >
+                        <MapPin className="w-4 h-4 mr-2" />
+                        View on Maps
+                      </Button>
                     </div>
                   </div>
                 </motion.div>
@@ -306,10 +364,19 @@ const ContactPage: React.FC = () => {
                       <div className="w-14 h-14 bg-gradient-to-r from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center shrink-0">
                         <Phone className="w-7 h-7 text-white" />
                       </div>
-                      <div>
+                      <div className="flex-1">
                         <h3 className="text-xl font-bold text-gray-800 mb-2">📞 Phone</h3>
-                        <p className="text-gray-600 text-lg">+91 9849589710</p>
-                        <p className="text-sm text-gray-500">Available during business hours</p>
+                        <p className="text-gray-600 text-lg mb-1">+91 9849589710</p>
+                        <p className="text-sm text-gray-500 mb-3">Available during business hours</p>
+                        <Button
+                          onClick={callPhone}
+                          variant="outline"
+                          size="sm"
+                          className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                        >
+                          <Phone className="w-4 h-4 mr-2" />
+                          Call Now
+                        </Button>
                       </div>
                     </div>
                     
@@ -318,17 +385,19 @@ const ContactPage: React.FC = () => {
                       <div className="w-14 h-14 bg-gradient-to-r from-green-400 to-green-600 rounded-2xl flex items-center justify-center shrink-0">
                         <MessageCircle className="w-7 h-7 text-white" />
                       </div>
-                      <div>
+                      <div className="flex-1">
                         <h3 className="text-xl font-bold text-gray-800 mb-2">💬 WhatsApp</h3>
-                        <a 
-                          href="https://wa.me/9949683222?text=Hello! I'm interested in your flower arrangements."
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-green-600 hover:text-green-700 text-lg font-semibold transition-colors"
+                        <p className="text-green-600 text-lg font-semibold mb-1">9949683222</p>
+                        <p className="text-sm text-gray-500 mb-3">Chat with us instantly</p>
+                        <Button
+                          onClick={() => openWhatsApp("Hello! I'm interested in your flower arrangements.")}
+                          variant="outline"
+                          size="sm"
+                          className="text-green-600 border-green-200 hover:bg-green-50"
                         >
-                          9949683222
-                        </a>
-                        <p className="text-sm text-gray-500">Chat with us instantly</p>
+                          <MessageCircle className="w-4 h-4 mr-2" />
+                          Chat on WhatsApp
+                        </Button>
                       </div>
                     </div>
                     
@@ -336,10 +405,19 @@ const ContactPage: React.FC = () => {
                       <div className="w-14 h-14 bg-gradient-to-r from-indigo-400 to-indigo-600 rounded-2xl flex items-center justify-center shrink-0">
                         <Mail className="w-7 h-7 text-white" />
                       </div>
-                      <div>
+                      <div className="flex-1">
                         <h3 className="text-xl font-bold text-gray-800 mb-2">✉️ Email</h3>
-                        <p className="text-gray-600 text-lg">2006sbf@gmail.com</p>
-                        <p className="text-sm text-gray-500">We reply within 24 hours</p>
+                        <p className="text-gray-600 text-lg mb-1">2006sbf@gmail.com</p>
+                        <p className="text-sm text-gray-500 mb-3">We reply within 24 hours</p>
+                        <Button
+                          onClick={() => openEmail("Inquiry - Spring Blossoms Florist")}
+                          variant="outline"
+                          size="sm"
+                          className="text-indigo-600 border-indigo-200 hover:bg-indigo-50"
+                        >
+                          <Mail className="w-4 h-4 mr-2" />
+                          Send Email
+                        </Button>
                       </div>
                     </div>
                     
