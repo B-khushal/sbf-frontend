@@ -49,7 +49,10 @@ const NotificationHistoryModal: React.FC<NotificationHistoryModalProps> = ({
       const notificationsResponse = await getNotifications(undefined, true, sessionId);
       const statsResponse = await getNotificationStats();
       
-      setNotifications(notificationsResponse.notifications || []);
+      console.log('Notification history response:', notificationsResponse);
+      
+      // Fix: getNotifications returns the notifications array directly, not wrapped
+      setNotifications(Array.isArray(notificationsResponse) ? notificationsResponse : []);
       setStats(statsResponse);
     } catch (error) {
       console.error('Error fetching notification history:', error);

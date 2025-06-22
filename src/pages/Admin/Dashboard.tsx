@@ -126,7 +126,7 @@ const AdminDashboardHome: React.FC = () => {
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [sessionId, setSessionId] = useState<string>('');
   const { formatPrice, convertPrice, currency, setCurrency } = useCurrency();
-  const { notifications, unreadCount, markAllAsRead, isConnected, enableSounds, toggleSounds, addNotification } = useNotification();
+  const { notifications, unreadCount, markAllAsRead, clearReadNotifications, isConnected, enableSounds, toggleSounds, addNotification } = useNotification();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -267,11 +267,10 @@ const AdminDashboardHome: React.FC = () => {
 
   const handleClearReadNotifications = async () => {
     try {
-      await clearReadNotifications(sessionId);
-      toast({
-        title: "Read Notifications Cleared",
-        description: "Read notifications have been hidden until next login"
-      });
+      // Use the context function instead of direct API call
+      if (clearReadNotifications) {
+        await clearReadNotifications();
+      }
       
       // Refresh notifications to reflect the changes
       fetchDashboardData();

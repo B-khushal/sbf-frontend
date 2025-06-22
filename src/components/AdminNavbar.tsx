@@ -18,7 +18,8 @@ const AdminNavbar = () => {
     unreadCount, 
     markAsRead, 
     markAllAsRead, 
-    clearNotification, 
+    clearNotification,
+    clearReadNotifications,
     isConnected,
     syncNotifications,
     lastSyncTime
@@ -338,7 +339,7 @@ const AdminNavbar = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => markAllAsRead()}
+                      onClick={async () => await markAllAsRead()}
                     >
                       Mark all as read
                     </Button>
@@ -347,9 +348,11 @@ const AdminNavbar = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => {
-                        // Clear read notifications
-                        notifications.filter(n => n.isRead).forEach(n => clearNotification(n.id));
+                      onClick={async () => {
+                        // Use the backend-integrated clear function
+                        if (clearReadNotifications) {
+                          await clearReadNotifications();
+                        }
                       }}
                       className="text-destructive hover:text-destructive"
                     >
@@ -401,7 +404,7 @@ const AdminNavbar = () => {
                             variant="ghost"
                             size="sm"
                             className="self-start"
-                            onClick={() => markAsRead(notification.id)}
+                            onClick={async () => await markAsRead(notification.id)}
                           >
                             Mark as read
                           </Button>

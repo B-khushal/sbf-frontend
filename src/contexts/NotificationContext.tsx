@@ -2,6 +2,7 @@ import React, { createContext, useState, useContext, useEffect, ReactNode, useRe
 import { playNotificationSound } from '@/utils/notificationSound';
 import { useToast } from '@/hooks/use-toast';
 import api from '@/services/api';
+import { getSessionId } from '@/utils/sessionManager';
 
 export interface NotificationItem {
   id: string;
@@ -24,9 +25,10 @@ interface NotificationContextType {
   unreadCount: number;
   isConnected: boolean;
   addNotification: (notification: NotificationItem | NotificationData) => void;
-  markAsRead: (id: string) => void;
-  markAllAsRead: () => void;
+  markAsRead: (id: string) => Promise<void>;
+  markAllAsRead: () => Promise<void>;
   clearNotifications: () => void;
+  clearReadNotifications: () => Promise<void>;
   clearNotification: (id: string) => void;
   enableSounds: boolean;
   toggleSounds: () => void;
@@ -455,27 +457,122 @@ export const NotificationProvider: React.FC<{children: ReactNode}> = ({ children
   };
   
   // Mark a notification as read
-  const markAsRead = (id: string) => {
-    setNotifications(prev =>
-      prev.map(notification =>
-        notification.id === id 
-          ? { ...notification, isRead: true } 
-          : notification
-      )
-    );
+  const markAsRead = async (id: string) => {
+    try {
+      // Call backend API
+      await api.put(`/notifications/${id}/read`);
+      
+      // Update local state
+      setNotifications(prev =>
+        prev.map(notification =>
+          notification.id === id 
+            ? { ...notification, isRead: true } 
+            : notification
+        )
+      );
+      
+      // Update localStorage
+      const storedNotifications = localStorage.getItem('admin_notifications');
+      if (storedNotifications) {
+        try {
+          const adminNotifications = JSON.parse(storedNotifications);
+          const updatedNotifications = adminNotifications.map((n: NotificationItem) =>
+            n.id === id ? { ...n, isRead: true } : n
+          );
+          localStorage.setItem('admin_notifications', JSON.stringify(updatedNotifications));
+        } catch (localStorageError) {
+          console.error('Error updating localStorage after marking as read:', localStorageError);
+        }
+      }
+      
+      console.log(`✅ Notification ${id} marked as read`);
+    } catch (error) {
+      console.error(`❌ Error marking notification ${id} as read:`, error);
+      // Don't show toast for individual read errors to avoid spam
+    }
   };
 
   // Mark all notifications as read
-  const markAllAsRead = () => {
-    setNotifications(prev =>
-      prev.map(notification => ({ ...notification, isRead: true }))
-    );
+  const markAllAsRead = async () => {
+    try {
+      // Call backend API
+      await api.put('/notifications/read-all');
+      
+      // Update local state
+      setNotifications(prev =>
+        prev.map(notification => ({ ...notification, isRead: true }))
+      );
+      
+      // Update localStorage
+      const storedNotifications = localStorage.getItem('admin_notifications');
+      if (storedNotifications) {
+        try {
+          const adminNotifications = JSON.parse(storedNotifications);
+          const updatedNotifications = adminNotifications.map((n: NotificationItem) => ({
+            ...n,
+            isRead: true
+          }));
+          localStorage.setItem('admin_notifications', JSON.stringify(updatedNotifications));
+        } catch (localStorageError) {
+          console.error('Error updating localStorage after marking all as read:', localStorageError);
+        }
+      }
+      
+      console.log('✅ All notifications marked as read');
+    } catch (error) {
+      console.error('❌ Error marking all notifications as read:', error);
+      toast({
+        title: "Error",
+        description: "Failed to mark all notifications as read",
+        variant: "destructive"
+      });
+    }
   };
   
   // Clear all notifications
   const clearNotifications = () => {
     setNotifications([]);
     localStorage.removeItem('admin_notifications');
+  };
+  
+  // Clear read notifications (backend integrated)
+  const clearReadNotifications = async () => {
+    try {
+      const sessionId = getSessionId(); // Use proper session ID
+      
+      // Call backend API
+      await api.delete('/notifications/read', { 
+        data: { sessionId } 
+      });
+      
+      // Remove read notifications from local state
+      setNotifications(prev => prev.filter(notification => !notification.isRead));
+      
+      // Update localStorage to remove read notifications
+      const storedNotifications = localStorage.getItem('admin_notifications');
+      if (storedNotifications) {
+        try {
+          const adminNotifications = JSON.parse(storedNotifications);
+          const unreadNotifications = adminNotifications.filter((n: NotificationItem) => !n.isRead);
+          localStorage.setItem('admin_notifications', JSON.stringify(unreadNotifications));
+        } catch (localStorageError) {
+          console.error('Error updating localStorage after clearing read notifications:', localStorageError);
+        }
+      }
+      
+      console.log('✅ Read notifications cleared');
+      toast({
+        title: "Success",
+        description: "Read notifications have been cleared",
+      });
+    } catch (error) {
+      console.error('❌ Error clearing read notifications:', error);
+      toast({
+        title: "Error",
+        description: "Failed to clear read notifications",
+        variant: "destructive"
+      });
+    }
   };
 
   // Clear a specific notification
@@ -576,10 +673,11 @@ export const NotificationProvider: React.FC<{children: ReactNode}> = ({ children
         unreadCount,
         isConnected,
         addNotification, 
-        markAsRead,
-        markAllAsRead,
-        clearNotifications,
-        clearNotification,
+              markAsRead,
+      markAllAsRead,
+      clearNotifications,
+      clearReadNotifications,
+      clearNotification,
         enableSounds,
         toggleSounds,
         syncNotifications,
