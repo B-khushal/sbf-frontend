@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import api from '@/services/api';
 
 interface Offer {
   _id: string;
@@ -20,8 +21,7 @@ export const useOfferPopup = () => {
   useEffect(() => {
     const fetchActiveOffers = async () => {
       try {
-        const response = await fetch('/api/offers/active');
-        const offers = await response.json();
+        const { data: offers } = await api.get('/offers/active');
 
         if (offers && offers.length > 0) {
           // Check if we should show this offer

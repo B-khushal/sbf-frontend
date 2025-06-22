@@ -8,6 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { format } from 'date-fns';
 import { CalendarIcon, Plus, Trash2, Power } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import api from '@/services/api';
 
 interface Offer {
   _id: string;
@@ -39,8 +40,7 @@ const OffersManager = () => {
   // Fetch offers
   const fetchOffers = async () => {
     try {
-      const response = await fetch('/api/offers/all');
-      const data = await response.json();
+      const { data } = await api.get('/offers/all');
       setOffers(data);
     } catch (error) {
       toast({
@@ -61,16 +61,11 @@ const OffersManager = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const url = isEditing ? `/api/offers/${currentOffer._id}` : '/api/offers';
-      const method = isEditing ? 'PUT' : 'POST';
-
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(currentOffer)
-      });
-
-      if (!response.ok) throw new Error('Failed to save offer');
+      if (isEditing) {
+        await api.put(`/offers/${currentOffer._id}`, currentOffer);
+      } else {
+        await api.post('/offers', currentOffer);
+      }
 
       toast({
         title: 'Success',
@@ -97,12 +92,7 @@ const OffersManager = () => {
   // Toggle offer status
   const toggleOfferStatus = async (offerId: string) => {
     try {
-      const response = await fetch(`/api/offers/${offerId}/toggle`, {
-        method: 'PATCH'
-      });
-
-      if (!response.ok) throw new Error('Failed to toggle offer status');
-
+      await api.patch(`/offers/${offerId}/toggle`);
       fetchOffers();
       toast({
         title: 'Success',
@@ -122,12 +112,7 @@ const OffersManager = () => {
     if (!window.confirm('Are you sure you want to delete this offer?')) return;
 
     try {
-      const response = await fetch(`/api/offers/${offerId}`, {
-        method: 'DELETE'
-      });
-
-      if (!response.ok) throw new Error('Failed to delete offer');
-
+      await api.delete(`/offers/${offerId}`);
       fetchOffers();
       toast({
         title: 'Success',
