@@ -146,7 +146,7 @@ const Footer = () => {
                   rel="noopener noreferrer"
                   className="text-muted-foreground hover:text-green-600 transition-colors duration-200"
                 >
-                  +91 {whatsappNumber} (WhatsApp)
+                   {whatsappNumber} WhatsApp
                 </a>
               </li>
               <li className="pt-2">
