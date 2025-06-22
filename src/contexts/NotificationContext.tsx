@@ -157,18 +157,30 @@ export const NotificationProvider: React.FC<{children: ReactNode}> = ({ children
       try {
         console.log('Fetching notifications from API...');
         const response = await api.get(`/notifications?since=${lastNotificationCheck.current}`);
+        
+        // Validate response structure
+        if (!response.data || typeof response.data !== 'object') {
+          throw new Error('Invalid response format from notifications API');
+        }
+        
         const newNotifications = response.data.notifications || [];
         
         if (newNotifications.length > 0) {
           console.log(`Received ${newNotifications.length} new notifications from API`);
           
           // Add new notifications
-          newNotifications.forEach((notification: NotificationItem) => {
+          newNotifications.forEach((notification: any) => {
+            // Validate notification data
+            if (!notification || typeof notification !== 'object') {
+              console.warn('Invalid notification object received:', notification);
+              return;
+            }
+            
             const completeNotification: NotificationItem = {
               id: notification.id || `notification-${Date.now()}-${Math.random()}`,
               type: notification.type || 'system',
-              title: notification.title,
-              message: notification.message,
+              title: notification.title || 'Untitled Notification',
+              message: notification.message || 'No message available',
               createdAt: notification.createdAt || new Date().toISOString(),
               isRead: notification.isRead || false
             };
@@ -178,20 +190,28 @@ export const NotificationProvider: React.FC<{children: ReactNode}> = ({ children
               const exists = prev.some(n => n.id === completeNotification.id);
               if (!exists) {
                  // Play sound for new notifications (admin only)
-                 if (enableSounds && isAdminUser() && (notification.type === 'order' || notification.title.toLowerCase().includes('order'))) {
-                   setTimeout(() => playNotificationSound(notification.type), 100);
+                 if (enableSounds && isAdminUser() && (notification.type === 'order' || completeNotification.title.toLowerCase().includes('order'))) {
+                   try {
+                     setTimeout(() => playNotificationSound(notification.type || 'default'), 100);
+                   } catch (soundError) {
+                     console.error('Error playing notification sound:', soundError);
+                   }
                  }
                 
                 // Show toast notification (admin only)
                 if (isAdminUser()) {
                   try {
+                    // Ensure toast properties are valid
+                    const safeTitle = completeNotification.title || 'New Notification';
+                    const safeMessage = completeNotification.message || 'You have a new notification';
+                    
                     toast({
-                      title: completeNotification.title,
-                      description: completeNotification.message,
+                      title: safeTitle,
+                      description: safeMessage,
                       duration: 5000,
                     });
                   } catch (toastError) {
-                    console.error('Error showing toast:', toastError);
+                    console.error('Error showing toast notification:', toastError);
                   }
                 }
                 
@@ -264,24 +284,38 @@ export const NotificationProvider: React.FC<{children: ReactNode}> = ({ children
               console.log(`Found ${newLocalNotifications.length} new notifications in localStorage`);
               
               newLocalNotifications.forEach((notification) => {
+                // Validate notification from localStorage
+                if (!notification || typeof notification !== 'object' || !notification.id) {
+                  console.warn('Invalid notification in localStorage:', notification);
+                  return;
+                }
+                
                 setNotifications(prev => {
                   const exists = prev.some(n => n.id === notification.id);
                   if (!exists) {
                     // Play sound for new notifications (admin only)
-                    if (enableSounds && isAdminUser() && (notification.type === 'order' || notification.title.toLowerCase().includes('order'))) {
-                      setTimeout(() => playNotificationSound(notification.type), 100);
+                    if (enableSounds && isAdminUser() && (notification.type === 'order' || notification.title?.toLowerCase().includes('order'))) {
+                      try {
+                        setTimeout(() => playNotificationSound(notification.type || 'default'), 100);
+                      } catch (soundError) {
+                        console.error('Error playing notification sound from localStorage:', soundError);
+                      }
                     }
                     
                     // Show toast notification (admin only)
                     if (isAdminUser()) {
                       try {
+                        // Ensure toast properties are valid
+                        const safeTitle = notification.title || 'New Notification';
+                        const safeMessage = notification.message || 'You have a new notification';
+                        
                         toast({
-                          title: notification.title,
-                          description: notification.message,
+                          title: safeTitle,
+                          description: safeMessage,
                           duration: 5000,
                         });
                       } catch (toastError) {
-                        console.error('Error showing toast:', toastError);
+                        console.error('Error showing toast notification from localStorage:', toastError);
                       }
                     }
                     
@@ -354,11 +388,30 @@ export const NotificationProvider: React.FC<{children: ReactNode}> = ({ children
         // ALWAYS store notification to admin localStorage (even if current user is not admin)
         try {
           const existingNotifications = localStorage.getItem('admin_notifications');
-          const adminNotifications = existingNotifications ? JSON.parse(existingNotifications) : [];
+          let adminNotifications = [];
+          
+          if (existingNotifications) {
+            try {
+              adminNotifications = JSON.parse(existingNotifications);
+              // Validate parsed data is an array
+              if (!Array.isArray(adminNotifications)) {
+                console.warn('Invalid admin_notifications format in localStorage, resetting to empty array');
+                adminNotifications = [];
+              }
+            } catch (parseError) {
+              console.error('Error parsing admin_notifications from localStorage:', parseError);
+              adminNotifications = [];
+            }
+          }
+          
           const notificationExists = adminNotifications.some((n: NotificationItem) => n.id === completeNotification.id);
           
           if (!notificationExists) {
             adminNotifications.unshift(completeNotification);
+            // Limit to 100 notifications to prevent localStorage from growing too large
+            if (adminNotifications.length > 100) {
+              adminNotifications = adminNotifications.slice(0, 100);
+            }
             localStorage.setItem('admin_notifications', JSON.stringify(adminNotifications));
             console.log('Notification saved to admin localStorage:', completeNotification.title);
           }
@@ -368,7 +421,11 @@ export const NotificationProvider: React.FC<{children: ReactNode}> = ({ children
         
         // Play sound for order notifications (admin only)
         if (enableSounds && isAdminUser() && (completeNotification.type === 'order' || completeNotification.title.toLowerCase().includes('order'))) {
-          setTimeout(() => playNotificationSound(completeNotification.type), 100);
+          try {
+            setTimeout(() => playNotificationSound(completeNotification.type), 100);
+          } catch (soundError) {
+            console.error('Error playing notification sound for new notification:', soundError);
+          }
         }
         
         // Show toast notification (admin only)
