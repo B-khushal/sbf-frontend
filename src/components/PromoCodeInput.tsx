@@ -6,6 +6,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Tag, X, Check, AlertCircle } from 'lucide-react';
 import { validatePromoCode, type PromoCodeValidationResult } from '@/services/promoCodeService';
 import { useToast } from '@/hooks/use-toast';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface PromoCodeInputProps {
   orderAmount: number;
@@ -38,6 +39,7 @@ const PromoCodeInput: React.FC<PromoCodeInputProps> = ({
   } | null>(null);
   
   const { toast } = useToast();
+  const { formatPrice, convertPrice } = useCurrency();
 
   const handleApplyPromoCode = async () => {
     if (!promoCode.trim()) {
@@ -62,14 +64,14 @@ const PromoCodeInput: React.FC<PromoCodeInputProps> = ({
       if (result.success && result.data) {
         setValidationMessage({
           type: 'success',
-          message: `Promo code applied! You saved ₹${result.data.discount.amount}`
+          message: `Promo code applied! You saved ${formatPrice(convertPrice(result.data.discount.amount))}`
         });
         
         onPromoCodeApplied(result);
         
         toast({
           title: "Promo code applied!",
-          description: `You saved ₹${result.data.discount.amount} with code ${promoCode.toUpperCase()}`,
+          description: `You saved ${formatPrice(convertPrice(result.data.discount.amount))} with code ${promoCode.toUpperCase()}`,
         });
       } else {
         setValidationMessage({
@@ -116,7 +118,7 @@ const PromoCodeInput: React.FC<PromoCodeInputProps> = ({
                 Promo code "{appliedPromoCode.code}" applied
               </p>
               <p className="text-sm text-green-600">
-                You saved ₹{appliedPromoCode.discount}
+                You saved {formatPrice(convertPrice(appliedPromoCode.discount))}
               </p>
             </div>
           </div>
@@ -133,11 +135,11 @@ const PromoCodeInput: React.FC<PromoCodeInputProps> = ({
         
         <div className="flex justify-between items-center text-sm">
           <span className="text-muted-foreground">Original total:</span>
-          <span className="line-through">₹{orderAmount}</span>
+          <span className="line-through">{formatPrice(convertPrice(orderAmount))}</span>
         </div>
         <div className="flex justify-between items-center font-medium text-lg">
           <span>Final total:</span>
-          <span className="text-green-600">₹{appliedPromoCode.finalAmount}</span>
+          <span className="text-green-600">{formatPrice(convertPrice(appliedPromoCode.finalAmount))}</span>
         </div>
       </div>
     );

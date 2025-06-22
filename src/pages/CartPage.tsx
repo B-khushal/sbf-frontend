@@ -62,8 +62,8 @@ const CartPage: React.FC = () => {
     0
   );
 
-  // Calculate final total with promo code discount
-  const finalTotal = appliedPromoCode ? appliedPromoCode.finalAmount : subtotal;
+  // Calculate final total with promo code discount (apply discount to original INR amount, then convert)
+  const finalTotal = appliedPromoCode ? (subtotal - appliedPromoCode.discount) : subtotal;
   
   const handleCheckout = () => {
     // Save promo code info to localStorage for checkout process
@@ -79,27 +79,20 @@ const CartPage: React.FC = () => {
     if (newQuantity < 1) return;
     updateItemQuantity(itemId, newQuantity);
     
-    // Recalculate promo code if applied when quantity changes
+    // Clear promo code when cart changes to avoid incorrect calculations
+    // User will need to re-apply promo code with new cart total
     if (appliedPromoCode) {
-      const newSubtotal = items.reduce((total, item) => {
-        const quantity = item.id === itemId ? newQuantity : item.quantity;
-        return total + item.price * quantity;
-      }, 0);
-      
-      // Update the applied promo code amounts
-      setAppliedPromoCode(prev => prev ? {
-        ...prev,
-        finalAmount: newSubtotal - prev.discount
-      } : null);
+      setAppliedPromoCode(null);
+      localStorage.removeItem('appliedPromoCode');
     }
   };
 
   const handlePromoCodeApplied = (validationResult: PromoCodeValidationResult) => {
     if (validationResult.success && validationResult.data) {
       setAppliedPromoCode({
-        code: validationResult.data.code,
-        discount: validationResult.data.discount.amount,
-        finalAmount: validationResult.data.finalAmount
+        code: validationResult.data.promoCode.code,
+        discount: validationResult.data.discount.amount, // This is in INR from backend
+        finalAmount: validationResult.data.order.finalAmount // This is in INR from backend
       });
     }
   };
@@ -329,7 +322,7 @@ const CartPage: React.FC = () => {
                       {/* Promo Code Section */}
                       <div className="border-t border-gray-200 pt-3 sm:pt-4 mt-3 sm:mt-4">
                         <PromoCodeInput
-                          orderAmount={convertPrice(subtotal)}
+                          orderAmount={subtotal}
                           orderItems={items}
                           onPromoCodeApplied={handlePromoCodeApplied}
                           onPromoCodeRemoved={handlePromoCodeRemoved}

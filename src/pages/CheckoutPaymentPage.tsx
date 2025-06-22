@@ -156,9 +156,9 @@ const CheckoutPaymentPage = () => {
   const handlePromoCodeApplied = (validationResult: PromoCodeValidationResult) => {
     if (validationResult.success && validationResult.data) {
       const promoData = {
-        code: validationResult.data.code,
-        discount: validationResult.data.discount.amount,
-        finalAmount: validationResult.data.finalAmount
+        code: validationResult.data.promoCode.code,
+        discount: validationResult.data.discount.amount, // INR amount from backend
+        finalAmount: validationResult.data.order.finalAmount // INR amount from backend
       };
       setAppliedPromoCode(promoData);
       localStorage.setItem('appliedPromoCode', JSON.stringify(promoData));
@@ -187,7 +187,7 @@ const CheckoutPaymentPage = () => {
       const convertedSubtotal = convertPrice(subtotal);
       // Apply delivery fee for midnight delivery
       const deliveryFee = shippingInfo.timeSlot === 'midnight' ? convertPrice(midnightDeliveryFee) : 0;
-      // Apply promo code discount if available
+      // Apply promo code discount if available (discount is already in INR, so convert it)
       const promoDiscount = appliedPromoCode ? convertPrice(appliedPromoCode.discount) : 0;
       // Calculate total with subtotal, delivery fee, and promo discount
       const total = convertedSubtotal + deliveryFee - promoDiscount;
@@ -293,7 +293,7 @@ const CheckoutPaymentPage = () => {
                 deliveryFee: deliveryFee,
                 promoCode: appliedPromoCode ? {
                   code: appliedPromoCode.code,
-                  discount: promoDiscount
+                  discount: appliedPromoCode.discount // Send INR amount to backend
                 } : null,
                 deliveryType: shippingInfo.timeSlot === 'midnight' ? 'midnight' : 'standard'
               };
@@ -642,7 +642,7 @@ const CheckoutPaymentPage = () => {
                     {/* Promo Code Section */}
                     <div className="border-t pt-4 mt-4">
                       <PromoCodeInput
-                        orderAmount={convertPrice(subtotal)}
+                        orderAmount={subtotal}
                         orderItems={items}
                         onPromoCodeApplied={handlePromoCodeApplied}
                         onPromoCodeRemoved={handlePromoCodeRemoved}
@@ -654,11 +654,8 @@ const CheckoutPaymentPage = () => {
                       <span>Total</span>
                       <span>
                         {formatPrice(
-                          convertPrice(
-                            subtotal + 
-                            (shippingInfo.timeSlot === 'midnight' ? midnightDeliveryFee : 0) - 
-                            (appliedPromoCode ? appliedPromoCode.discount : 0)
-                          )
+                          convertPrice(subtotal + (shippingInfo.timeSlot === 'midnight' ? midnightDeliveryFee : 0)) - 
+                          (appliedPromoCode ? convertPrice(appliedPromoCode.discount) : 0)
                         )}
                       </span>
                     </div>
