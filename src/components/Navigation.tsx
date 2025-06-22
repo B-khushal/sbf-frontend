@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, Search, ShoppingCart, User, X, Heart, Sparkles, TrendingUp, DollarSign, Store } from 'lucide-react';
+import { Menu, Search, ShoppingCart, User, X, Heart, Sparkles, TrendingUp, DollarSign, Store, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
@@ -9,6 +9,9 @@ import { Input } from '@/components/ui/input';
 import api from '@/services/api';
 import useCart from '@/hooks/use-cart';
 import { useSettings } from '@/contexts/SettingsContext';
+import { useAuth } from '@/hooks/use-auth';
+import { useGmailLogin } from '@/hooks/use-gmail-login';
+import GmailLoginDialog from '@/components/ui/GmailLoginDialog';
 
 interface NavItem {
   href: string;
@@ -64,6 +67,8 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { isGmailDialogOpen, closeGmailDialog, handleGmailLogin, triggerGoogleLogin } = useGmailLogin();
 
   // Get wishlist count directly from localStorage
   useEffect(() => {
@@ -365,6 +370,25 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
               </Button>
             </Link>
           )}
+
+          {/* User Authentication */}
+          {!user ? (
+            <Button 
+              onClick={triggerGoogleLogin}
+              variant="outline" 
+              size="sm"
+              className="hidden md:flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 hover:from-blue-600 hover:to-blue-700 transition-all duration-300"
+            >
+              <LogIn className="h-4 w-4" />
+              Sign In
+            </Button>
+          ) : (
+            <Link to="/profile">
+              <Button variant="ghost" size="icon" aria-label="User Profile" className="text-pink-600 transition-colors hover:text-green-600">
+                <User className="h-5 w-5" />
+              </Button>
+            </Link>
+          )}
           
           {/* Desktop Sidebar Trigger */}
           <Sheet>
@@ -534,12 +558,42 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                       {item.label}
                     </Link>
                   ))}
+                  
+                  {/* Mobile Authentication */}
+                  {!user ? (
+                    <Button 
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        triggerGoogleLogin();
+                      }}
+                      className="mx-4 mt-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 transition-all duration-300"
+                    >
+                      <LogIn className="h-4 w-4 mr-2" />
+                      Sign In with Google
+                    </Button>
+                  ) : (
+                    <Link
+                      to="/profile"
+                      className="px-4 py-3 text-lg rounded-lg transition-colors text-muted-foreground hover:bg-bloom-pink-50 hover:text-bloom-blue-600"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <User className="h-5 w-5 mr-2 inline" />
+                      Profile
+                    </Link>
+                  )}
                 </nav>
               </div>
             </SheetContent>
           </Sheet>
         </div>
       </div>
+
+      {/* Gmail Login Dialog */}
+      <GmailLoginDialog
+        isOpen={isGmailDialogOpen}
+        onClose={closeGmailDialog}
+        onGmailLogin={handleGmailLogin}
+      />
     </header>
   );
 };

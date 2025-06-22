@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import useCart from "@/hooks/use-cart";
 import { useAuth } from "@/hooks/use-auth";
 import { getImageUrl } from "@/config";
+import { useGmailLogin } from "@/hooks/use-gmail-login";
+import GmailLoginDialog from "@/components/ui/GmailLoginDialog";
 
 export type Product = {
   _id: string;
@@ -87,6 +89,7 @@ const ProductCard = ({ product }: { product: Product }) => {
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   const { user } = useAuth();
+  const { isGmailDialogOpen, closeGmailDialog, handleGmailLogin, triggerGoogleLogin } = useGmailLogin();
 
   // Load wishlist from localStorage
   useEffect(() => {
@@ -123,18 +126,13 @@ const ProductCard = ({ product }: { product: Product }) => {
     
     if (!user) {
       toast.error("Please login first to add items to your cart", {
-        description: "You'll be redirected to the login page",
+        description: "Sign in with Google to continue shopping",
         duration: 3000,
       });
-      // Redirect to login page with current page as redirect path
+      // Show Google login popup
       setTimeout(() => {
-        navigate('/login', { 
-          state: { 
-            redirect: window.location.pathname,
-            message: "Please login to add items to your cart"
-          } 
-        });
-      }, 1500);
+        triggerGoogleLogin();
+      }, 800);
       return;
     }
     
@@ -180,18 +178,13 @@ const ProductCard = ({ product }: { product: Product }) => {
     
     if (!user) {
       toast.error("Please login first to add items to your wishlist", {
-        description: "You'll be redirected to the login page",
+        description: "Sign in with Google to save your favorites",
         duration: 3000,
       });
-      // Redirect to login page with current page as redirect path
+      // Show Google login popup
       setTimeout(() => {
-        navigate('/login', { 
-          state: { 
-            redirect: window.location.pathname,
-            message: "Please login to manage your wishlist"
-          } 
-        });
-      }, 1500);
+        triggerGoogleLogin();
+      }, 800);
       return;
     }
     
@@ -417,6 +410,13 @@ const ProductCard = ({ product }: { product: Product }) => {
           </Button>
         </div>
       </div>
+
+      {/* Gmail Login Dialog */}
+      <GmailLoginDialog
+        isOpen={isGmailDialogOpen}
+        onClose={closeGmailDialog}
+        onGmailLogin={handleGmailLogin}
+      />
     </div>
   );
 };
