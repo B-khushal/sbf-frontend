@@ -1,4 +1,5 @@
 // API Configuration - Using direct backend URL for Render deployment
+//export const API_URL = import.meta.env.VITE_API_URL || 'https://sbf-backend.onrender.com/api';
 export const API_URL = import.meta.env.VITE_API_URL || 'https://sbf-backend.onrender.com/api';
 export const UPLOADS_URL = import.meta.env.VITE_UPLOADS_URL || 'https://sbf-backend.onrender.com';
 
@@ -8,11 +9,12 @@ export const getImageUrl = (imagePath: string | undefined): string => {
     return '/images/placeholder.jpg';
   }
   
-  // If it's already a full URL, return as is
+  // If it's already a full URL (like Cloudinary URLs), return as is
   if (imagePath.startsWith('http')) {
     return imagePath;
   }
   
+  // For backward compatibility with local uploads
   // The upload route returns paths like "/uploads/image-123456.jpg"
   // We need to construct the full URL with the backend domain
   let finalUrl: string;
