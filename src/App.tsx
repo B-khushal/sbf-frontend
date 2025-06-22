@@ -37,7 +37,7 @@ import OrderDetailsPage from "./pages/Admin/OrderDetailsPage";
 import AdminSettingsPage from "./pages/AdminSettingsPage";
 import Analytics from "./pages/Admin/Analytics";
 import PromoCodes from "./pages/Admin/PromoCodes";
-
+import OffersManager from "./pages/Admin/OffersManager";
 
 // Checkout Pages
 import CheckoutShippingPage from "./pages/CheckoutShippingPage";
@@ -143,6 +143,7 @@ const App = () => {
                         <Route path="users" element={<AdminUsers />} />
                         <Route path="analytics" element={<Analytics />} />
                         <Route path="promocodes" element={<PromoCodes />} />
+                        <Route path="offers" element={<OffersManager />} />
                         <Route path="settings" element={<AdminSettingsPage />} />
                         <Route path="/admin/orders/:orderId" element={<OrderDetailsPage />} />
                       </Route>

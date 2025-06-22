@@ -3,7 +3,7 @@ import { useNavigate, Link, Outlet } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { BarChart, Users, ShoppingBag, Package, Settings, LogOut, Menu, TrendingUp, ChevronLeft, ChevronRight, Tag } from 'lucide-react';
+import { BarChart, Users, ShoppingBag, Package, Settings, LogOut, Menu, TrendingUp, ChevronLeft, ChevronRight, Tag, Gift } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 import AdminNavbar from '@/components/AdminNavbar';
@@ -162,6 +162,16 @@ const AdminDashboard: React.FC = () => {
         >
           <Tag className={`h-5 w-5 text-muted-foreground ${isCollapsed ? '' : 'mr-3'}`} />
           {!isCollapsed && 'Promo Codes'}
+        </Link>
+        <Link 
+          to="/admin/offers" 
+          className={`flex items-center p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 ${
+            isCollapsed ? 'justify-center' : ''
+          }`}
+          title={isCollapsed ? 'Offers' : ''}
+        >
+          <Gift className={`h-5 w-5 text-muted-foreground ${isCollapsed ? '' : 'mr-3'}`} />
+          {!isCollapsed && 'Offers'}
         </Link>
         <Link 
           to="/admin/settings" 
