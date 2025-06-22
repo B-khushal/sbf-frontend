@@ -297,13 +297,6 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
           {headerSettings.showCurrencyConverter && (
             <CurrencyConverter className="hidden md:block" />
           )}
-          
-          {/* Account - Desktop only */}
-          <Link to="/profile" className="hidden md:block">
-            <Button variant="ghost" size="icon" aria-label="Account" className="text-pink-600 transition-colors hover:text-green-600">
-              <User className="h-5 w-5 hover:text-green-600" />
-            </Button>
-          </Link>
 
           {/* Mobile Navigation Icons */}
           <div className="md:hidden flex items-center space-x-1">
@@ -311,27 +304,6 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
             <Link to="/shop">
               <Button variant="ghost" size="icon" aria-label="Shop" className="text-pink-600 transition-colors hover:text-green-600">
                 <Store className="h-5 w-5" />
-              </Button>
-            </Link>
-
-            {/* Wishlist Icon - Mobile */}
-            {headerSettings.showWishlist && (
-              <Link to="/wishlist">
-                <Button variant="ghost" size="icon" aria-label="Wishlist" className="text-pink-600 transition-colors hover:text-green-600 relative">
-                  <Heart className="h-5 w-5" />
-                  {wishlistCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                      {wishlistCount}
-                    </span>
-                  )}
-                </Button>
-              </Link>
-            )}
-
-            {/* Account Icon - Mobile */}
-            <Link to="/profile">
-              <Button variant="ghost" size="icon" aria-label="Account" className="text-pink-600 transition-colors hover:text-green-600">
-                <User className="h-5 w-5" />
               </Button>
             </Link>
 
@@ -343,9 +315,9 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
             )}
           </div>
 
-          {/* Wishlist Icon - Desktop */}
+          {/* Wishlist Icon - Desktop & Mobile */}
           {headerSettings.showWishlist && (
-            <Link to="/wishlist" className="hidden md:block">
+            <Link to="/wishlist">
               <Button variant="ghost" size="icon" aria-label="Wishlist" className="text-pink-600 transition-colors hover:text-green-600 relative">
                 <Heart className="h-5 w-5" />
                 {wishlistCount > 0 && (
@@ -388,6 +360,19 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                 <User className="h-5 w-5" />
               </Button>
             </Link>
+          )}
+
+          {/* Mobile Sign In Button */}
+          {!user && (
+            <Button 
+              onClick={triggerGoogleLogin}
+              variant="outline" 
+              size="sm"
+              className="md:hidden flex items-center gap-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 hover:from-blue-600 hover:to-blue-700 transition-all duration-300 px-2 py-1 text-xs"
+            >
+              <LogIn className="h-3 w-3" />
+              Sign In
+            </Button>
           )}
           
           {/* Desktop Sidebar Trigger */}
