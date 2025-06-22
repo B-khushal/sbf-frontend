@@ -217,7 +217,7 @@ const ProductCard = ({ product }: { product: Product }) => {
       onClick={handleCardClick}
     >
       {/* Image Container */}
-      <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="relative aspect-[4/3] sm:aspect-[3/2] overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
         {/* Image Loading Skeleton */}
         {!isImageLoaded && (
           <div className="absolute inset-0 bg-gradient-to-br from-gray-200 via-gray-100 to-gray-200 animate-pulse" />
@@ -274,26 +274,6 @@ const ProductCard = ({ product }: { product: Product }) => {
           </Button>
         </div>
 
-        {/* Hover Actions - Appear on hover */}
-        <div className="absolute inset-x-2 sm:inset-x-4 bottom-2 sm:bottom-4 flex gap-1 sm:gap-2 opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
-          <Button
-            size="sm"
-            className="flex-1 bg-white/95 text-gray-900 hover:bg-white shadow-lg backdrop-blur-sm border border-gray-200 hover:border-primary/30 transition-all duration-300 text-xs sm:text-sm"
-            onClick={handleViewDetails}
-          >
-            <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-            <span className="hidden sm:inline">Quick</span> View
-          </Button>
-          <Button
-            size="sm"
-            className="flex-1 bg-gradient-to-r from-primary to-primary/80 text-white hover:from-primary/90 hover:to-primary/70 shadow-lg transition-all duration-300 hover:scale-105 text-xs sm:text-sm"
-            onClick={handleAddToCart}
-          >
-            <ShoppingBag className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-            <span className="hidden sm:inline">Add to</span> Cart
-          </Button>
-        </div>
-
         {/* Gradient Overlay on hover */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
       </div>
@@ -310,7 +290,7 @@ const ProductCard = ({ product }: { product: Product }) => {
         </div>
         
         {/* Price Section */}
-        <div className="flex items-center gap-2 mb-2 sm:mb-3">
+        <div className="flex items-center gap-2 mb-3 sm:mb-4">
           <div className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">
             {formatPrice(convertPrice(discountedPrice))}
           </div>
@@ -322,7 +302,7 @@ const ProductCard = ({ product }: { product: Product }) => {
         </div>
 
         {/* Rating Stars */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-3 sm:mb-4">
           <div className="flex items-center">
             {[...Array(5)].map((_, i) => (
               <Star key={i} className="w-3 h-3 sm:w-4 sm:h-4 fill-yellow-400 text-yellow-400" />
@@ -335,6 +315,27 @@ const ProductCard = ({ product }: { product: Product }) => {
             <span className="text-xs sm:text-sm font-medium mr-1">View</span>
             <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4" />
           </div>
+        </div>
+
+        {/* Action Buttons - Always visible */}
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            className="flex-1 bg-white text-gray-900 hover:bg-gray-50 shadow-sm border border-gray-200 hover:border-primary/30 transition-all duration-300 text-xs sm:text-sm"
+            onClick={handleViewDetails}
+          >
+            <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Quick</span> View
+          </Button>
+          <Button
+            size="sm"
+            className="flex-1 bg-gradient-to-r from-primary to-primary/80 text-white hover:from-primary/90 hover:to-primary/70 shadow-sm transition-all duration-300 hover:scale-105 text-xs sm:text-sm"
+            onClick={handleAddToCart}
+          >
+            <ShoppingBag className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Add to</span> Cart
+          </Button>
         </div>
       </div>
     </div>
