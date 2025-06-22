@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { toast } from "sonner";
 import useCart from "@/hooks/use-cart";
-import { getImageUrl, getThumbnailUrl } from "@/config";
+import { getImageUrl, getThumbnailUrl, getSquareImageUrl } from "@/config";
 import ContactModal from "@/components/ui/ContactModal";
 
 type WishlistItem = {
@@ -252,9 +252,9 @@ const ProductCard = ({ product, index }: { product: Product; index: number }) =>
       onClick={() => handleProductClick(product._id)}
     >
       {/* Image Container */}
-      <div className="relative aspect-[4/5] overflow-hidden">
+      <div className="relative aspect-square overflow-hidden">
         <img
-          src={getThumbnailUrl(product.images?.[0], 400)}
+          src={getSquareImageUrl(product.images?.[0], 400)}
           alt={product.title}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         />

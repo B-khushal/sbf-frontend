@@ -85,6 +85,79 @@ export const getProductImageUrl = (imagePath: string | undefined, width: number 
   });
 };
 
+// Generate square images with AI generative fill for consistent product grid display
+export const getSquareImageUrl = (imagePath: string | undefined, size: number = 400): string => {
+  if (!imagePath) {
+    return '/images/placeholder.jpg';
+  }
+  
+  // If it's already a full Cloudinary URL, apply generative fill transformations
+  if (imagePath.startsWith('https://res.cloudinary.com')) {
+    const baseUrl = imagePath.split('/upload/')[0] + '/upload/';
+    const imagePart = imagePath.split('/upload/')[1];
+    
+    // Apply generative fill transformations for square aspect ratio
+    const transformations = [
+      'ar_1:1,g_center,b_gen_fill,c_pad', // Generative fill with 1:1 aspect ratio
+      `w_${size},h_${size},c_scale`,       // Scale to desired size
+      'q_auto:best',                       // Best quality
+      'f_auto'                            // Auto format
+    ];
+    
+    return `${baseUrl}${transformations.join('/')}/${imagePart}`;
+  }
+  
+  // For non-Cloudinary URLs, fall back to regular thumbnail
+  return getThumbnailUrl(imagePath, size);
+};
+
+// Generate enhanced product images with optional generative fill
+export const getEnhancedProductImageUrl = (
+  imagePath: string | undefined, 
+  options?: {
+    width?: number;
+    height?: number;
+    aspectRatio?: string;
+    useGenFill?: boolean;
+  }
+): string => {
+  const {
+    width = 800,
+    height = 600,
+    aspectRatio = '4:3',
+    useGenFill = true
+  } = options || {};
+  
+  if (!imagePath) {
+    return '/images/placeholder.jpg';
+  }
+  
+  // If it's already a full Cloudinary URL, apply enhanced transformations
+  if (imagePath.startsWith('https://res.cloudinary.com')) {
+    const baseUrl = imagePath.split('/upload/')[0] + '/upload/';
+    const imagePart = imagePath.split('/upload/')[1];
+    
+    const transformations = [];
+    
+    // Apply generative fill if requested
+    if (useGenFill) {
+      transformations.push(`ar_${aspectRatio.replace(':', '_')},g_center,b_gen_fill,c_pad`);
+    }
+    
+    // Scale to target dimensions
+    transformations.push(`w_${width},h_${height},c_scale`);
+    
+    // Optimize quality and format
+    transformations.push('q_auto:best');
+    transformations.push('f_auto');
+    
+    return `${baseUrl}${transformations.join('/')}/${imagePart}`;
+  }
+  
+  // For non-Cloudinary URLs, fall back to regular optimization
+  return getImageUrl(imagePath, { width, height: height, crop: 'scale' });
+};
+
 // Other configuration constants can be added here
 export const ITEMS_PER_PAGE = 10;
 export const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB

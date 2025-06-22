@@ -10,7 +10,7 @@ import api from "@/services/api";
 import { Search, Filter, Grid3X3, List, Star, Heart, Eye, ExternalLink, Sparkles, Leaf, Gift, ShoppingBag, X } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { toast } from "sonner";
-import { getImageUrl } from "@/config";
+import { getImageUrl, getSquareImageUrl } from "@/config";
 import ContactModal from "@/components/ui/ContactModal";
 
 const ShopPage = () => {
@@ -150,7 +150,7 @@ const ShopPage = () => {
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <img 
-              src={getImageUrl(product.images?.[0])}
+              src={getSquareImageUrl(product.images?.[0], 500)}
               alt={product.title}
               className="w-full h-48 sm:h-64 object-cover rounded-lg"
             />
