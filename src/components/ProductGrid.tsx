@@ -33,16 +33,16 @@ type ProductGridProps = {
 
 const ProductGrid = ({ products, title, subtitle, className, loading }: ProductGridProps) => {
   return (
-    <section className={cn("py-16 px-6 md:px-8", className)}>
+    <section className={cn("py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8", className)}>
       {(title || subtitle) && (
-        <div className="text-center mb-12">
+        <div className="text-center mb-8 sm:mb-12 lg:mb-16">
           {title && (
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4 bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight mb-3 sm:mb-4 bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">
               {title}
             </h2>
           )}
           {subtitle && (
-            <p className="text-muted-foreground max-w-2xl mx-auto text-lg leading-relaxed">
+            <p className="text-muted-foreground max-w-2xl mx-auto text-base sm:text-lg leading-relaxed">
               {subtitle}
             </p>
           )}
@@ -50,17 +50,17 @@ const ProductGrid = ({ products, title, subtitle, className, loading }: ProductG
       )}
 
       {loading ? (
-        <div className="text-center py-16">
-          <div className="inline-block w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
-          <p className="text-gray-600 text-lg">Loading products...</p>
+        <div className="text-center py-12 sm:py-16">
+          <div className="inline-block w-12 h-12 sm:w-16 sm:h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+          <p className="text-gray-600 text-base sm:text-lg">Loading products...</p>
         </div>
       ) : products.length === 0 ? (
-        <div className="text-center py-16">
-          <div className="text-6xl mb-4">🌸</div>
-          <p className="text-muted-foreground text-lg">No products available at the moment.</p>
+        <div className="text-center py-12 sm:py-16">
+          <div className="text-4xl sm:text-6xl mb-4">🌸</div>
+          <p className="text-muted-foreground text-base sm:text-lg">No products available at the moment.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
           {products.map((product) => (
             <ProductCard key={product._id} product={product} />
           ))}
@@ -95,14 +95,19 @@ const ProductCard = ({ product }: { product: Product }) => {
   const isInWishlist = wishlist.includes(product._id);
 
   // Handle main card click - redirect to product details
-  const handleCardClick = () => {
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Only navigate if the click isn't on a button
+    if ((e.target as HTMLElement).closest('button')) {
+      return;
+    }
     console.log("Card clicked, navigating to product:", product._id);
     navigate(`/product/${product._id}`);
   };
 
   // Handle add to cart
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent card click
+  const handleAddToCart = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     console.log("Add to cart clicked:", product.title);
     
     try {
@@ -133,14 +138,16 @@ const ProductCard = ({ product }: { product: Product }) => {
 
   // Handle view details
   const handleViewDetails = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent card click
+    e.preventDefault();
+    e.stopPropagation();
     console.log("View details clicked:", product._id);
     navigate(`/product/${product._id}`);
   };
 
   // Handle wishlist toggle
   const handleWishlistToggle = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent card click
+    e.preventDefault();
+    e.stopPropagation();
     console.log("Wishlist toggle clicked:", product._id);
     
     try {
@@ -206,11 +213,11 @@ const ProductCard = ({ product }: { product: Product }) => {
   
   return (
     <div 
-      className="group relative bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-gray-100 cursor-pointer hover:border-primary/20"
+      className="group relative bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 cursor-pointer hover:border-primary/20"
       onClick={handleCardClick}
     >
       {/* Image Container */}
-      <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
         {/* Image Loading Skeleton */}
         {!isImageLoaded && (
           <div className="absolute inset-0 bg-gradient-to-br from-gray-200 via-gray-100 to-gray-200 animate-pulse" />
@@ -220,7 +227,7 @@ const ProductCard = ({ product }: { product: Product }) => {
           src={getImageUrl(product.images?.[0])}
           alt={product.title}
           className={cn(
-            "w-full h-full object-cover transition-all duration-700 group-hover:scale-110",
+            "w-full h-full object-cover transition-all duration-500 group-hover:scale-105",
             isImageLoaded ? "opacity-100" : "opacity-0"
           )}
           onLoad={() => setIsImageLoaded(true)}
@@ -232,34 +239,34 @@ const ProductCard = ({ product }: { product: Product }) => {
         />
         
         {/* Badges */}
-        <div className="absolute top-3 left-3 flex flex-col gap-2">
+        <div className="absolute top-2 sm:top-3 left-2 sm:left-3 flex flex-col gap-1 sm:gap-2">
           {hasDiscount && (
-            <span className="bg-gradient-to-r from-red-500 to-pink-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg">
+            <span className="bg-gradient-to-r from-red-500 to-pink-500 text-white px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-bold shadow-lg">
               -{product.discount}%
             </span>
           )}
           {isNewProduct() && (
-            <span className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg flex items-center gap-1">
-              <Sparkles className="w-3 h-3" />
+            <span className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-bold shadow-lg flex items-center gap-1">
+              <Sparkles className="w-2 h-2 sm:w-3 sm:h-3" />
               New
             </span>
           )}
           {product.featured && (
-            <span className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg">
+            <span className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-bold shadow-lg">
               ⭐ Featured
             </span>
           )}
         </div>
 
         {/* Wishlist Button - Always visible */}
-        <div className="absolute top-3 right-3">
+        <div className="absolute top-2 sm:top-3 right-2 sm:right-3">
           <Button
             variant="ghost"
             size="icon"
-            className="bg-white/90 hover:bg-white shadow-lg backdrop-blur-sm transition-all duration-300 hover:scale-110"
+            className="w-8 h-8 sm:w-10 sm:h-10 bg-white/90 hover:bg-white shadow-lg backdrop-blur-sm transition-all duration-300 hover:scale-110"
             onClick={handleWishlistToggle}
           >
-            <Heart className={cn("w-5 h-5 transition-all duration-300", 
+            <Heart className={cn("w-3 h-3 sm:w-4 sm:h-4 transition-all duration-300", 
               isInWishlist 
                 ? "fill-red-500 text-red-500 scale-110" 
                 : "text-gray-600 hover:text-red-500 hover:scale-110"
@@ -268,45 +275,47 @@ const ProductCard = ({ product }: { product: Product }) => {
         </div>
 
         {/* Hover Actions - Appear on hover */}
-        <div className="absolute inset-x-4 bottom-4 flex gap-2 opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">
+        <div className="absolute inset-x-2 sm:inset-x-4 bottom-2 sm:bottom-4 flex gap-1 sm:gap-2 opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
           <Button
-            className="flex-1 bg-white/95 text-gray-900 hover:bg-white shadow-lg backdrop-blur-sm border border-gray-200 hover:border-primary/30 transition-all duration-300"
+            size="sm"
+            className="flex-1 bg-white/95 text-gray-900 hover:bg-white shadow-lg backdrop-blur-sm border border-gray-200 hover:border-primary/30 transition-all duration-300 text-xs sm:text-sm"
             onClick={handleViewDetails}
           >
-            <Eye className="w-4 h-4 mr-2" />
-            Quick View
+            <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Quick</span> View
           </Button>
           <Button
-            className="flex-1 bg-gradient-to-r from-primary to-primary/80 text-white hover:from-primary/90 hover:to-primary/70 shadow-lg transition-all duration-300 hover:scale-105"
+            size="sm"
+            className="flex-1 bg-gradient-to-r from-primary to-primary/80 text-white hover:from-primary/90 hover:to-primary/70 shadow-lg transition-all duration-300 hover:scale-105 text-xs sm:text-sm"
             onClick={handleAddToCart}
           >
-            <ShoppingBag className="w-4 h-4 mr-2" />
-            Add to Cart
+            <ShoppingBag className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Add to</span> Cart
           </Button>
         </div>
 
         {/* Gradient Overlay on hover */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
       </div>
 
       {/* Product Info */}
-      <div className="p-6">
-        <div className="mb-3">
-          <p className="text-sm text-primary font-semibold uppercase tracking-wide mb-1">
+      <div className="p-3 sm:p-4 lg:p-5">
+        <div className="mb-2 sm:mb-3">
+          <p className="text-xs sm:text-sm text-primary font-semibold uppercase tracking-wide mb-1">
             {product.category}
           </p>
-          <h3 className="font-bold text-gray-900 group-hover:text-primary transition-colors duration-300 line-clamp-2 text-lg leading-tight">
+          <h3 className="font-bold text-gray-900 group-hover:text-primary transition-colors duration-300 line-clamp-2 text-sm sm:text-base lg:text-lg leading-tight">
             {product.title}
           </h3>
         </div>
         
         {/* Price Section */}
-        <div className="flex items-center gap-2 mb-3">
-          <div className="text-2xl font-bold text-gray-900">
+        <div className="flex items-center gap-2 mb-2 sm:mb-3">
+          <div className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">
             {formatPrice(convertPrice(discountedPrice))}
           </div>
           {hasDiscount && (
-            <div className="text-sm text-gray-500 line-through">
+            <div className="text-xs sm:text-sm text-gray-500 line-through">
               {formatPrice(convertPrice(originalPrice))}
             </div>
           )}
@@ -316,15 +325,15 @@ const ProductCard = ({ product }: { product: Product }) => {
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             {[...Array(5)].map((_, i) => (
-              <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+              <Star key={i} className="w-3 h-3 sm:w-4 sm:h-4 fill-yellow-400 text-yellow-400" />
             ))}
-            <span className="text-sm text-gray-500 ml-2">(4.5)</span>
+            <span className="text-xs sm:text-sm text-gray-500 ml-1 sm:ml-2">(4.5)</span>
           </div>
           
           {/* Action Hint */}
           <div className="flex items-center text-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <span className="text-sm font-medium mr-1">View</span>
-            <ArrowRight className="w-4 h-4" />
+            <span className="text-xs sm:text-sm font-medium mr-1">View</span>
+            <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4" />
           </div>
         </div>
       </div>
