@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, Package, Eye, Wrench, Truck, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Check, Package, Eye, Wrench, Truck, CheckCircle, XCircle, Clock, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface TrackingStep {
@@ -20,6 +20,8 @@ interface OrderTrackingProps {
 }
 
 const OrderTracking: React.FC<OrderTrackingProps> = ({ currentStatus, trackingHistory, className }) => {
+  const isDelivered = currentStatus === 'delivered';
+  
   const trackingSteps: TrackingStep[] = [
     {
       status: 'order_placed',
@@ -94,16 +96,33 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ currentStatus, trackingHi
   }
 
   return (
-    <div className={cn("bg-white rounded-lg border p-6", className)}>
-      <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
-        <Package className="w-5 h-5 text-primary" />
+    <div className={cn(
+      "rounded-lg border p-6 transition-all duration-300",
+      isDelivered 
+        ? "bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 shadow-green-100/50" 
+        : "bg-white border-gray-200",
+      className
+    )}>
+      <h3 className={cn(
+        "text-lg font-semibold mb-6 flex items-center gap-2",
+        isDelivered ? "text-green-800" : "text-gray-800"
+      )}>
+        {isDelivered ? (
+          <Sparkles className="w-5 h-5 text-green-600" />
+        ) : (
+          <Package className="w-5 h-5 text-primary" />
+        )}
         Order Tracking
+        {isDelivered && (
+          <span className="ml-2 text-green-600 text-sm font-normal">✓ Complete</span>
+        )}
       </h3>
       
       <div className="space-y-6">
         {trackingSteps.map((step, index) => {
           const stepStatus = getStepStatus(step.status);
           const history = getStepHistory(step.status);
+          const isCurrentStepDelivered = step.status === 'delivered' && stepStatus === 'current';
           
           return (
             <div key={step.status} className="flex gap-4">
@@ -112,12 +131,13 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ currentStatus, trackingHi
                 <div
                   className={cn(
                     "w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300",
-                    stepStatus === 'completed' && "bg-green-500 border-green-500 text-white",
-                    stepStatus === 'current' && "bg-primary border-primary text-white animate-pulse",
+                    stepStatus === 'completed' && "bg-green-500 border-green-500 text-white shadow-lg shadow-green-200/50",
+                    stepStatus === 'current' && !isCurrentStepDelivered && "bg-primary border-primary text-white animate-pulse",
+                    isCurrentStepDelivered && "bg-green-500 border-green-500 text-white animate-pulse shadow-lg shadow-green-200/50",
                     stepStatus === 'pending' && "bg-gray-100 border-gray-300 text-gray-400"
                   )}
                 >
-                  {stepStatus === 'completed' ? (
+                  {stepStatus === 'completed' || isCurrentStepDelivered ? (
                     <Check className="w-5 h-5" />
                   ) : stepStatus === 'current' ? (
                     <Clock className="w-5 h-5" />
@@ -131,7 +151,7 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ currentStatus, trackingHi
                   <div
                     className={cn(
                       "w-0.5 h-12 mt-2 transition-all duration-300",
-                      stepStatus === 'completed' ? "bg-green-500" : "bg-gray-200"
+                      (stepStatus === 'completed' || isCurrentStepDelivered) ? "bg-green-500" : "bg-gray-200"
                     )}
                   />
                 )}
@@ -143,16 +163,22 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ currentStatus, trackingHi
                   <h4
                     className={cn(
                       "font-medium transition-colors",
-                      stepStatus === 'completed' && "text-green-600",
-                      stepStatus === 'current' && "text-primary",
+                      (stepStatus === 'completed' || isCurrentStepDelivered) && "text-green-600",
+                      stepStatus === 'current' && !isCurrentStepDelivered && "text-primary",
                       stepStatus === 'pending' && "text-gray-400"
                     )}
                   >
                     {step.label}
+                    {isCurrentStepDelivered && (
+                      <span className="ml-2 text-green-500">🎉</span>
+                    )}
                   </h4>
                   
                   {history && (
-                    <span className="text-sm text-gray-500">
+                    <span className={cn(
+                      "text-sm",
+                      isDelivered ? "text-green-600" : "text-gray-500"
+                    )}>
                       {formatDate(history.timestamp)}
                     </span>
                   )}
@@ -161,18 +187,32 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ currentStatus, trackingHi
                 <p
                   className={cn(
                     "text-sm mt-1 transition-colors",
-                    stepStatus === 'completed' && "text-green-600",
-                    stepStatus === 'current' && "text-gray-700",
+                    (stepStatus === 'completed' || isCurrentStepDelivered) && "text-green-600",
+                    stepStatus === 'current' && !isCurrentStepDelivered && "text-gray-700",
                     stepStatus === 'pending' && "text-gray-400"
                   )}
                 >
                   {history?.message || step.description}
+                  {isCurrentStepDelivered && " Thank you for choosing us! 🌸"}
                 </p>
               </div>
             </div>
           );
         })}
       </div>
+      
+      {/* Delivered Order Special Message */}
+      {isDelivered && (
+        <div className="mt-6 p-4 bg-green-100 border border-green-200 rounded-lg">
+          <div className="flex items-center gap-2 text-green-800">
+            <CheckCircle className="w-5 h-5" />
+            <p className="font-medium">Order Successfully Delivered!</p>
+          </div>
+          <p className="text-sm text-green-700 mt-1">
+            We hope you loved your beautiful arrangement. Thank you for choosing Spring Blossoms Florist! 🌹
+          </p>
+        </div>
+      )}
     </div>
   );
 };

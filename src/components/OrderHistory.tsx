@@ -6,13 +6,15 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { format } from 'date-fns';
-import { ImageIcon, RefreshCw } from 'lucide-react';
+import { ImageIcon, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
 import { getImageUrl as getImageUrlFromConfig } from '@/config';
 import OrderTracking from './OrderTracking';
+import { cn } from '@/lib/utils';
 
 const OrderHistory = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
   const { formatPrice, convertPrice, currency } = useCurrency();
   const navigate = useNavigate();
 
@@ -30,6 +32,18 @@ const OrderHistory = () => {
 
     fetchOrders();
   }, []);
+
+  const toggleOrderExpansion = (orderId: string) => {
+    setExpandedOrders(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(orderId)) {
+        newSet.delete(orderId);
+      } else {
+        newSet.add(orderId);
+      }
+      return newSet;
+    });
+  };
 
   // Helper function to format price with currency conversion
   const displayOrderPrice = (amount: number, orderCurrency?: string, orderRate?: number) => {
@@ -80,6 +94,13 @@ const OrderHistory = () => {
       default:
         return 'bg-yellow-100 text-yellow-800';
     }
+  };
+
+  const getCardStyling = (status: Order['status']) => {
+    if (status === 'delivered') {
+      return 'bg-green-50/80 backdrop-blur-sm border-green-200/50 shadow-green-100/50 hover:shadow-green-200/50';
+    }
+    return 'bg-white/70 backdrop-blur-sm border border-white/20 shadow-lg hover:shadow-xl';
   };
 
   const getStatusDisplayName = (status: Order['status']) => {
@@ -141,105 +162,159 @@ const OrderHistory = () => {
 
   return (
     <div className="space-y-6">
-      {orders.map((order) => (
-        <Card key={order._id} className="bg-white/70 backdrop-blur-sm border border-white/20 shadow-lg hover:shadow-xl transition-all duration-300">
-          <CardContent className="p-6">
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <h3 className="font-bold text-lg text-gray-800">Order #{order.orderNumber}</h3>
-                <p className="text-sm text-gray-600">
-                  {format(new Date(order.createdAt), 'MMM d, yyyy')} at {format(new Date(order.createdAt), 'h:mm a')}
-                </p>
-              </div>
-              <Badge className={getStatusColor(order.status)}>
-                {getStatusDisplayName(order.status)}
-              </Badge>
-            </div>
-
-            <div className="space-y-4">
-              {order.items.map((item) => {
-                const imageUrl = getImageUrl(item.product.images?.[0]);
-
-                return (
-                  <div key={item.product._id} className="flex items-center gap-4 bg-white/50 rounded-xl p-4">
-                    <div className="h-16 w-16 bg-gray-100 rounded-xl relative overflow-hidden flex-shrink-0 border border-gray-200">
-                      <img
-                        src={imageUrl}
-                        alt={item.product.title}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = "/images/placeholder.jpg";
-                        }}
-                      />
-                      <div className="absolute -top-1 -right-1 h-5 w-5 bg-gradient-to-r from-primary to-secondary text-white text-xs font-bold flex items-center justify-center rounded-full">
-                        {item.quantity}
-                      </div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-gray-800 truncate">{item.product.title}</h4>
-                      <div className="text-gray-600 text-sm">
-                        {displayOrderPrice(item.price, order.currency, order.currencyRate)} × {item.quantity}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-bold text-gray-800">
-                        {displayOrderPrice(item.finalPrice * item.quantity, order.currency, order.currencyRate)}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {currency}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Order Tracking */}
-            <div className="mt-6">
-              <OrderTracking 
-                currentStatus={order.status}
-                trackingHistory={order.trackingHistory}
-                className="bg-white/30 backdrop-blur-sm"
-              />
-            </div>
-
-            <div className="mt-6 pt-4 border-t border-gray-200">
-              <div className="flex justify-between items-start">
-                <div className="text-sm space-y-1">
-                  <p className="font-semibold text-gray-700">Shipping Address</p>
-                  <p className="text-gray-600">{order.shippingDetails.fullName}</p>
-                  <p className="text-gray-600">{order.shippingDetails.address}</p>
-                  {order.shippingDetails.apartment && (
-                    <p className="text-gray-600">{order.shippingDetails.apartment}</p>
-                  )}
-                  <p className="text-gray-600">
-                    {order.shippingDetails.city}, {order.shippingDetails.state}{' '}
-                    {order.shippingDetails.zipCode}
+      {orders.map((order) => {
+        const isExpanded = expandedOrders.has(order._id);
+        const isDelivered = order.status === 'delivered';
+        
+        return (
+          <Card 
+            key={order._id} 
+            className={cn(
+              getCardStyling(order.status),
+              "transition-all duration-300",
+              isDelivered && "ring-2 ring-green-200/50"
+            )}
+          >
+            <CardContent className="p-6">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className={cn(
+                    "font-bold text-lg",
+                    isDelivered ? "text-green-800" : "text-gray-800"
+                  )}>
+                    Order #{order.orderNumber}
+                    {isDelivered && (
+                      <span className="ml-2 text-green-600">✓</span>
+                    )}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    {format(new Date(order.createdAt), 'MMM d, yyyy')} at {format(new Date(order.createdAt), 'h:mm a')}
                   </p>
-                  {order.shippingDetails.deliveryDate && (
-                    <p className="text-gray-600 font-medium">
-                      Delivery: {format(new Date(order.shippingDetails.deliveryDate), 'MMM d, yyyy')}
-                      {order.shippingDetails.timeSlot && ` • ${order.shippingDetails.timeSlot}`}
+                </div>
+                <Badge className={getStatusColor(order.status)}>
+                  {getStatusDisplayName(order.status)}
+                </Badge>
+              </div>
+
+              <div className="space-y-4">
+                {order.items.map((item) => {
+                  const imageUrl = getImageUrl(item.product.images?.[0]);
+
+                  return (
+                    <div key={item.product._id} className={cn(
+                      "flex items-center gap-4 rounded-xl p-4",
+                      isDelivered ? "bg-green-50/50" : "bg-white/50"
+                    )}>
+                      <div className="h-16 w-16 bg-gray-100 rounded-xl relative overflow-hidden flex-shrink-0 border border-gray-200">
+                        <img
+                          src={imageUrl}
+                          alt={item.product.title}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = "/images/placeholder.jpg";
+                          }}
+                        />
+                        <div className="absolute -top-1 -right-1 h-5 w-5 bg-gradient-to-r from-primary to-secondary text-white text-xs font-bold flex items-center justify-center rounded-full">
+                          {item.quantity}
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-gray-800 truncate">{item.product.title}</h4>
+                        <div className="text-gray-600 text-sm">
+                          {displayOrderPrice(item.price, order.currency, order.currencyRate)} × {item.quantity}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold text-gray-800">
+                          {displayOrderPrice(item.finalPrice * item.quantity, order.currency, order.currencyRate)}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {currency}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Mobile Track Order Dropdown Button */}
+              <div className="mt-6 md:hidden">
+                <Button
+                  variant="outline"
+                  onClick={() => toggleOrderExpansion(order._id)}
+                  className={cn(
+                    "w-full flex items-center justify-between",
+                    isDelivered && "border-green-300 text-green-700 hover:bg-green-50"
+                  )}
+                >
+                  <span>Track Order</span>
+                  {isExpanded ? (
+                    <ChevronUp className="w-4 h-4" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4" />
+                  )}
+                </Button>
+              </div>
+
+              {/* Order Tracking - Always visible on desktop, collapsible on mobile */}
+              <div className={cn(
+                "mt-6",
+                // Desktop: always visible
+                "hidden md:block",
+                // Mobile: show only when expanded
+                isExpanded && "block md:block"
+              )}>
+                <OrderTracking 
+                  currentStatus={order.status}
+                  trackingHistory={order.trackingHistory}
+                  className={cn(
+                    "backdrop-blur-sm",
+                    isDelivered ? "bg-green-50/30" : "bg-white/30"
+                  )}
+                />
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-gray-200">
+                <div className="flex justify-between items-start">
+                  <div className="text-sm space-y-1">
+                    <p className="font-semibold text-gray-700">Shipping Address</p>
+                    <p className="text-gray-600">{order.shippingDetails.fullName}</p>
+                    <p className="text-gray-600">{order.shippingDetails.address}</p>
+                    {order.shippingDetails.apartment && (
+                      <p className="text-gray-600">{order.shippingDetails.apartment}</p>
+                    )}
+                    <p className="text-gray-600">
+                      {order.shippingDetails.city}, {order.shippingDetails.state}{' '}
+                      {order.shippingDetails.zipCode}
                     </p>
-                  )}
-                </div>
-                <div className="text-right space-y-1">
-                  <p className="text-lg font-bold text-gray-800">
-                    Total: {displayOrderPrice(order.totalAmount, order.currency, order.currencyRate)}
-                  </p>
-                  <p className="text-xs text-gray-500 capitalize">
-                    {order.paymentDetails.method} • {order.paymentDetails.status || 'Paid'}
-                  </p>
-                  <div className="text-xs text-gray-400">
-                    Showing in {currency}
+                    {order.shippingDetails.deliveryDate && (
+                      <p className="text-gray-600 font-medium">
+                        Delivery: {format(new Date(order.shippingDetails.deliveryDate), 'MMM d, yyyy')}
+                        {order.shippingDetails.timeSlot && ` • ${order.shippingDetails.timeSlot}`}
+                      </p>
+                    )}
+                  </div>
+                  <div className="text-right space-y-1">
+                    <p className={cn(
+                      "text-lg font-bold",
+                      isDelivered ? "text-green-800" : "text-gray-800"
+                    )}>
+                      Total: {displayOrderPrice(order.totalAmount, order.currency, order.currencyRate)}
+                    </p>
+                    <p className="text-xs text-gray-500 capitalize">
+                      {order.paymentDetails.method} • {order.paymentDetails.status || 'Paid'}
+                    </p>
+                    <div className="text-xs text-gray-400">
+                      Showing in {currency}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 };
