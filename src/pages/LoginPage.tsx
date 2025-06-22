@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from "framer-motion";
 import { Button } from '@/components/ui/button';
@@ -43,11 +43,24 @@ const LoginPage = () => {
   
   // Get the redirect path from location state or default to '/'
   const redirectPath = location.state?.redirect || '/';
+  const redirectMessage = location.state?.message;
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Show redirect message if present
+  useEffect(() => {
+    if (redirectMessage) {
+      toast({
+        title: "Login Required",
+        description: redirectMessage,
+        variant: "default",
+        duration: 4000,
+      });
+    }
+  }, [redirectMessage, toast]);
   
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

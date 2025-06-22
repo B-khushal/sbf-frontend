@@ -6,6 +6,7 @@ import { Heart, ShoppingBag, Eye, Star, ArrowRight, Sparkles } from "lucide-reac
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import useCart from "@/hooks/use-cart";
+import { useAuth } from "@/hooks/use-auth";
 import { getImageUrl } from "@/config";
 
 export type Product = {
@@ -76,6 +77,7 @@ const ProductCard = ({ product }: { product: Product }) => {
   const navigate = useNavigate();
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
+  const { user } = useAuth();
 
   // Load wishlist from localStorage
   useEffect(() => {
@@ -109,6 +111,23 @@ const ProductCard = ({ product }: { product: Product }) => {
     e.preventDefault();
     e.stopPropagation();
     console.log("Add to cart clicked:", product.title);
+    
+    if (!user) {
+      toast.error("Please login first to add items to your cart", {
+        description: "You'll be redirected to the login page",
+        duration: 3000,
+      });
+      // Redirect to login page with current page as redirect path
+      setTimeout(() => {
+        navigate('/login', { 
+          state: { 
+            redirect: window.location.pathname,
+            message: "Please login to add items to your cart"
+          } 
+        });
+      }, 1500);
+      return;
+    }
     
     try {
       const success = addItem({
@@ -149,6 +168,23 @@ const ProductCard = ({ product }: { product: Product }) => {
     e.preventDefault();
     e.stopPropagation();
     console.log("Wishlist toggle clicked:", product._id);
+    
+    if (!user) {
+      toast.error("Please login first to add items to your wishlist", {
+        description: "You'll be redirected to the login page",
+        duration: 3000,
+      });
+      // Redirect to login page with current page as redirect path
+      setTimeout(() => {
+        navigate('/login', { 
+          state: { 
+            redirect: window.location.pathname,
+            message: "Please login to manage your wishlist"
+          } 
+        });
+      }, 1500);
+      return;
+    }
     
     try {
       const wishlistItem = {
@@ -203,12 +239,21 @@ const ProductCard = ({ product }: { product: Product }) => {
   const discountedPrice = product.discount > 0 ? originalPrice - (originalPrice * product.discount / 100) : originalPrice;
   const hasDiscount = product.discount > 0;
 
-  // Check if product is new (within last 30 days)
+  // Check if product is new (either marked as new or within last 30 days)
   const isNewProduct = () => {
+    // Check if explicitly marked as new (handles both frontend and backend property names)
+    if (product.isNewArrival || (product as any).isNew) return true;
+    
+    // Fallback to date-based check if createdAt is available
     if (!product.createdAt) return false;
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     return new Date(product.createdAt) > thirtyDaysAgo;
+  };
+
+  // Check if product is featured (handles both frontend and backend property names)
+  const isFeaturedProduct = () => {
+    return product.featured || product.isFeatured || (product as any).isFeatured;
   };
   
   return (
@@ -217,7 +262,7 @@ const ProductCard = ({ product }: { product: Product }) => {
       onClick={handleCardClick}
     >
       {/* Image Container */}
-      <div className="relative aspect-[4/3] sm:aspect-[3/2] overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="relative aspect-[4/3] sm:aspect-[4/5] overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
         {/* Image Loading Skeleton */}
         {!isImageLoaded && (
           <div className="absolute inset-0 bg-gradient-to-br from-gray-200 via-gray-100 to-gray-200 animate-pulse" />
@@ -251,9 +296,10 @@ const ProductCard = ({ product }: { product: Product }) => {
               New
             </span>
           )}
-          {product.featured && (
-            <span className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-bold shadow-lg">
-              ⭐ Featured
+          {isFeaturedProduct() && (
+            <span className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-bold shadow-lg flex items-center gap-1">
+              <Star className="w-2 h-2 sm:w-3 sm:h-3 fill-current" />
+              Featured
             </span>
           )}
         </div>
@@ -291,13 +337,21 @@ const ProductCard = ({ product }: { product: Product }) => {
         
         {/* Price Section */}
         <div className="flex items-center gap-2 mb-3 sm:mb-4">
-          <div className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">
+          <div className={cn(
+            "text-lg sm:text-xl lg:text-2xl font-bold",
+            hasDiscount ? "text-red-600" : "text-gray-900"
+          )}>
             {formatPrice(convertPrice(discountedPrice))}
           </div>
           {hasDiscount && (
             <div className="text-xs sm:text-sm text-gray-500 line-through">
               {formatPrice(convertPrice(originalPrice))}
             </div>
+          )}
+          {hasDiscount && (
+            <span className="text-xs sm:text-sm bg-red-100 text-red-700 px-2 py-1 rounded-full font-medium">
+              Save {formatPrice(convertPrice(originalPrice - discountedPrice))}
+            </span>
           )}
         </div>
 
