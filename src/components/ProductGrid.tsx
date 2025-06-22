@@ -109,7 +109,7 @@ const ProductGrid = ({ products, title, subtitle, className, loading }: ProductG
 
 const ProductCard = ({ product, index }: { product: Product; index: number }) => {
   const { formatPrice, convertPrice } = useCurrency();
-  const { addItem } = useCart();
+  const { addItem, openCart } = useCart();
   const navigate = useNavigate();
   const [wishlist, setWishlist] = useState(() => {
     try {
@@ -137,7 +137,7 @@ const ProductCard = ({ product, index }: { product: Product; index: number }) =>
   // Handle add to cart
   const handleAddToCart = (product: Product) => {
     try {
-      addItem({
+      const success = addItem({
         id: product._id,
         productId: product._id,
         title: product.title,
@@ -146,11 +146,16 @@ const ProductCard = ({ product, index }: { product: Product; index: number }) =>
         image: product.images?.[0] || '/images/placeholder.svg'
       }, 1);
       
-      // Show success toast
-      toast.success("Added to cart!", {
-        description: `${product.title} has been added to your cart`,
-        duration: 3000,
-      });
+      if (success) {
+        // Show success toast
+        toast.success("Added to cart!", {
+          description: `${product.title} has been added to your cart`,
+          duration: 3000,
+        });
+        
+        // Open cart sidebar after a short delay
+        setTimeout(() => openCart(), 300);
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Please try again";
       console.error("Error adding to cart:", error);
@@ -264,129 +269,63 @@ const ProductCard = ({ product, index }: { product: Product; index: number }) =>
               if (product.images?.[0]?.startsWith('/uploads/')) {
                 target.src = `https://sbf-backend.onrender.com${product.images[0]}`;
               } else if (product.images?.[0] && !product.images[0].startsWith('http')) {
-                target.src = `https://sbf-backend.onrender.com/uploads/${product.images[0]}`;
-              } else {
-                target.src = "/images/placeholder.svg";
+                target.src = `/images/placeholder.svg`;
               }
-            } else if (!target.src.includes('placeholder.svg')) {
-              target.src = "/images/placeholder.svg";
             }
           }}
         />
         
-        {/* Simple overlay on hover */}
-        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        
-        {/* Wishlist Button - Always Visible */}
-        <button 
-          onClick={(e) => {
-            e.stopPropagation();
-            handleWishlistToggle(product._id);
-          }}
-          className={`absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-110 z-10 ${
-            isInWishlist 
-              ? 'bg-red-500 text-white' 
-              : 'bg-white/90 text-gray-700 hover:text-red-500'
-          }`}
-          title={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
-        >
-          <Heart size={16} className={isInWishlist ? 'fill-current' : ''} />
-        </button>
-
-        {/* Feature and New Badges */}
-        <div className="absolute top-4 left-4 flex flex-col gap-2">
-          {isFeaturedProduct() && (
-            <div className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-3 py-1 rounded-full flex items-center gap-1 shadow-md">
-              <Star size={12} className="fill-white text-white" />
-              <span className="text-xs font-bold">FEATURED</span>
-            </div>
-          )}
-          
+        {/* Product Badges */}
+        <div className="absolute top-2 left-2 flex flex-col gap-1">
           {isNewProduct() && (
-            <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-3 py-1 rounded-full flex items-center gap-1 shadow-md">
-              <Sparkles size={12} className="text-white" />
-              <span className="text-xs font-bold">NEW</span>
-            </div>
+            <span className="bg-green-500 text-white px-2 py-1 rounded-full text-xs font-medium">
+              New
+            </span>
           )}
-          
-          {product.discount > 0 && (
-            <div className="bg-gradient-to-r from-red-500 to-red-600 text-white px-3 py-1 rounded-full flex items-center gap-1 shadow-md animate-pulse">
-              <span className="text-xs font-bold">-{product.discount}% OFF</span>
-            </div>
+          {isFeaturedProduct() && (
+            <span className="bg-yellow-500 text-white px-2 py-1 rounded-full text-xs font-medium">
+              Featured
+            </span>
           )}
         </div>
 
-        {/* Quick Actions Overlay - Show on Hover */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center">
-          <div className="p-4 flex gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleProductClick(product._id);
-              }}
-              className="px-4 py-2 bg-white/90 text-gray-800 rounded-full text-sm font-medium hover:bg-white transition-colors flex items-center gap-2"
-            >
-              <Eye size={14} />
-              View Details
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleAddToCart(product);
-              }}
-              className="px-4 py-2 bg-primary text-white rounded-full text-sm font-medium hover:bg-primary/90 transition-colors flex items-center gap-2"
-            >
-              <ShoppingBag size={14} />
-              Add to Cart
-            </button>
-          </div>
+        {/* Action Buttons */}
+        <div className="absolute top-2 right-2 flex flex-col gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="bg-white/90 hover:bg-white shadow-sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleWishlistToggle(product._id);
+            }}
+          >
+            <Heart className={cn("w-5 h-5", isInWishlist ? "fill-red-500 text-red-500" : "text-gray-600")} />
+          </Button>
         </div>
       </div>
 
-      {/* Content Section */}
+      {/* Product Info */}
       <div className="p-4">
-        <div className="mb-3">
-          <h3 className="text-lg font-semibold text-gray-800 mb-1 line-clamp-1 group-hover:text-primary transition-colors">
-            {product.title}
-          </h3>
-          <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
-            {product.description || "Beautiful floral arrangement perfect for any occasion"}
-          </p>
+        <h3 className="font-medium text-gray-900 group-hover:text-primary transition-colors line-clamp-2">
+          {product.title}
+        </h3>
+        <div className="mt-2 flex items-center justify-between">
+          <div className="text-lg font-semibold text-gray-900">
+            {formatPrice(convertPrice(product.price))}
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="bg-primary/10 hover:bg-primary/20 text-primary"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleAddToCart(product);
+            }}
+          >
+            <ShoppingBag className="w-5 h-5" />
+          </Button>
         </div>
-        
-        {/* Enhanced Price Display Below Photo */}
-        <div className="mb-3">
-          {product.discount > 0 ? (
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-2">
-                <span className="text-xl font-bold text-red-600">
-                  {formatPrice(convertPrice(product.price * (1 - product.discount / 100)))}
-                </span>
-                <span className="text-sm text-gray-500 line-through decoration-red-500 decoration-2">
-                  {formatPrice(convertPrice(product.price))}
-                </span>
-              </div>
-              <div className="text-xs text-red-600 font-semibold bg-red-100 px-2 py-1 rounded-full inline-block w-fit">
-                Save {formatPrice(convertPrice(product.price * (product.discount / 100)))}
-              </div>
-            </div>
-          ) : (
-            <span className="text-xl font-bold text-primary">{formatPrice(convertPrice(product.price))}</span>
-          )}
-        </div>
-        
-        {/* Footer */}
-        <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
-            {product.category}
-          </span>
-          <span className="text-xs text-green-600 font-medium">In Stock</span>
-        </div>
-      </div>
-
-      {/* External Link Indicator */}
-      <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-blue-500 text-white p-1 rounded-full" style={{ marginRight: '48px' }}>
-        <ExternalLink size={12} />
       </div>
     </div>
   );

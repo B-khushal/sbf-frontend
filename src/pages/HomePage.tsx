@@ -11,6 +11,8 @@ import Footer from "../components/Footer";
 import Cart from "../components/Cart";
 import useCart from "../hooks/use-cart";
 import { useSettings } from "../contexts/SettingsContext";
+import { useOfferPopup } from "../hooks/use-offer-popup";
+import OfferPopup from "../components/ui/OfferPopup";
 import api from "../services/api";
 
 // Animation variants
@@ -52,6 +54,7 @@ const fadeInVariants = {
 const HomePage = () => {
   const { items, itemCount, isCartOpen, closeCart, updateItemQuantity, removeItem } = useCart();
   const { homeSections, loading: settingsLoading } = useSettings();
+  const { currentOffer, isOpen: isOfferOpen, closeOffer } = useOfferPopup();
   
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [newProducts, setNewProducts] = useState([]);
@@ -242,57 +245,52 @@ const HomePage = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-bloom-blue-50 via-bloom-pink-50 to-bloom-green-50 relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-bloom-blue-200/20 via-transparent to-bloom-pink-200/20 rounded-full blur-3xl animate-spin-slow" />
-        <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-gradient-to-tl from-bloom-green-200/20 via-transparent to-bloom-blue-200/20 rounded-full blur-3xl animate-reverse-spin" />
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-bloom-pink-100/30 to-bloom-green-100/30 rounded-full blur-2xl animate-pulse" />
-      </div>
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+      className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-gray-100"
+    >
+      {/* Offer Popup */}
+      {currentOffer && (
+        <OfferPopup
+          isOpen={isOfferOpen}
+          onClose={closeOffer}
+          offer={currentOffer}
+        />
+      )}
+
+      <Navigation />
+      <CategoryMenu />
       
-      <Navigation cartItemCount={itemCount} />
-
-      <motion.main 
-        className="relative flex-1 mt-16 z-10"
-        initial="hidden"
-        animate="visible"
-        variants={containerVariants}
-      >
-        {/* Category Menu */}
-        <motion.div variants={itemVariants} className="sticky top-16 z-30 bg-white/80 backdrop-blur-md border-b border-white/20">
-          <CategoryMenu />
-        </motion.div>
-
-        {/* Dynamic Home Sections */}
-        {settingsLoading ? (
-          <div className="text-center py-16">
-            <div className="inline-block w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p className="text-gray-600">Loading sections...</p>
+      {error && (
+        <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
+          <div className="flex items-center">
+            <AlertTriangle className="h-5 w-5 text-red-400 mr-2" />
+            <p className="text-red-800">{error}</p>
           </div>
-        ) : (
-          homeSections
-            .filter(section => section.enabled)
-            .sort((a, b) => a.order - b.order)
-            .map((section, index) => (
-              <motion.div key={section.id} variants={itemVariants}>
-                {renderSection(section, index)}
-              </motion.div>
-            ))
-        )}
-      </motion.main>
+        </div>
+      )}
+
+      {/* Render sections based on settings */}
+      {!settingsLoading && homeSections?.map((section, index) => (
+        <React.Fragment key={section.id || index}>
+          {renderSection(section, index)}
+        </React.Fragment>
+      ))}
+
+      {isCartOpen && (
+        <Cart
+          items={items}
+          itemCount={itemCount}
+          onClose={closeCart}
+          onUpdateQuantity={updateItemQuantity}
+          onRemoveItem={removeItem}
+        />
+      )}
 
       <Footer />
-
-      {/* Testing Mode Badge - Floating */}
-      <div className="fixed bottom-4 right-4 bg-yellow-500 text-black px-3 py-2 rounded-lg shadow-lg font-semibold flex items-center gap-2 z-50 text-xs sm:text-sm max-w-xs">
-        <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-        <span className="leading-tight">
-          ⚠️ TESTING MODE: Orders may not be processed.
-        </span>
-      </div>
-
-      <Cart items={items} isOpen={isCartOpen} onClose={closeCart} onUpdateQuantity={updateItemQuantity} onRemoveItem={removeItem} />
-    </div>
+    </motion.div>
   );
 };
 

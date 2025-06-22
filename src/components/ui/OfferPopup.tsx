@@ -1,0 +1,110 @@
+import React from 'react';
+import { Dialog, DialogContent } from './dialog';
+import { Button } from './button';
+import { X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
+interface OfferPopupProps {
+  isOpen: boolean;
+  onClose: () => void;
+  offer: {
+    title: string;
+    description: string;
+    imageUrl?: string;
+    backgroundColor: string;
+    textColor: string;
+    buttonText: string;
+    buttonLink: string;
+    theme: 'festive' | 'sale' | 'holiday' | 'general';
+  };
+}
+
+const OfferPopup: React.FC<OfferPopupProps> = ({
+  isOpen,
+  onClose,
+  offer
+}) => {
+  const navigate = useNavigate();
+
+  const handleButtonClick = () => {
+    onClose();
+    navigate(offer.buttonLink);
+  };
+
+  const getThemeStyles = () => {
+    switch (offer.theme) {
+      case 'festive':
+        return 'bg-gradient-to-br from-yellow-400 via-red-500 to-pink-500';
+      case 'sale':
+        return 'bg-gradient-to-br from-blue-400 via-indigo-500 to-purple-500';
+      case 'holiday':
+        return 'bg-gradient-to-br from-green-400 via-emerald-500 to-teal-500';
+      default:
+        return 'bg-gradient-to-br from-gray-100 to-gray-200';
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden">
+        <div 
+          className={`relative ${getThemeStyles()} text-white`}
+          style={{
+            backgroundColor: offer.backgroundColor,
+            color: offer.textColor
+          }}
+        >
+          {/* Close Button */}
+          <button
+            onClick={onClose}
+            className="absolute right-4 top-4 text-current opacity-70 hover:opacity-100 transition-opacity z-10"
+          >
+            <X className="h-6 w-6" />
+          </button>
+
+          {/* Content */}
+          <div className="p-8">
+            {offer.imageUrl && (
+              <div className="mb-6 flex justify-center">
+                <img
+                  src={offer.imageUrl}
+                  alt="Offer"
+                  className="max-h-[200px] rounded-lg object-contain"
+                />
+              </div>
+            )}
+
+            <div className="text-center space-y-4">
+              <h2 className="text-3xl font-bold leading-tight">
+                {offer.title}
+              </h2>
+              
+              <p className="text-lg opacity-90">
+                {offer.description}
+              </p>
+
+              <Button
+                onClick={handleButtonClick}
+                className="mt-6 w-full py-6 text-lg font-semibold rounded-xl hover:scale-105 transition-transform duration-300"
+                style={{
+                  backgroundColor: offer.textColor,
+                  color: offer.backgroundColor
+                }}
+              >
+                {offer.buttonText}
+              </Button>
+            </div>
+          </div>
+
+          {/* Decorative Elements */}
+          <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+            <div className="absolute top-0 left-0 w-20 h-20 border-t-4 border-l-4 border-current opacity-20 rounded-tl-xl" />
+            <div className="absolute bottom-0 right-0 w-20 h-20 border-b-4 border-r-4 border-current opacity-20 rounded-br-xl" />
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default OfferPopup; 
