@@ -66,8 +66,27 @@ const CheckoutShippingPage = () => {
   const hasMidnightFee = selectedTimeSlot === 'midnight';
   const deliveryFee = hasMidnightFee ? midnightDeliveryFee : 0;
 
-  // Calculate total with delivery fee
-  const orderTotal = subtotal + deliveryFee;
+  // Load promo code discount from localStorage if available
+  const [appliedPromoCode, setAppliedPromoCode] = useState<{
+    code: string;
+    discount: number;
+    finalAmount: number;
+  } | null>(null);
+
+  useEffect(() => {
+    const savedPromoCode = localStorage.getItem('appliedPromoCode');
+    if (savedPromoCode) {
+      try {
+        setAppliedPromoCode(JSON.parse(savedPromoCode));
+      } catch (error) {
+        console.error('Error parsing promo code from localStorage:', error);
+      }
+    }
+  }, []);
+
+  // Calculate total with delivery fee and promo discount
+  const promoDiscount = appliedPromoCode ? appliedPromoCode.discount : 0;
+  const orderTotal = subtotal + deliveryFee - promoDiscount;
   
   // Load saved addresses on component mount
   useEffect(() => {
@@ -842,6 +861,12 @@ const CheckoutShippingPage = () => {
                         {hasMidnightFee ? formatPrice(convertPrice(midnightDeliveryFee)) : 'Free'}
                       </span>                    
                     </div>
+                    {appliedPromoCode && (
+                      <div className="flex justify-between text-sm text-green-600">
+                        <span>Promo code ({appliedPromoCode.code})</span>
+                        <span>-{formatPrice(convertPrice(appliedPromoCode.discount))}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between font-medium pt-2 border-t mt-2">
                       <span>Total</span>
                       <span>

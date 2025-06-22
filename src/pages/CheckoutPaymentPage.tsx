@@ -10,6 +10,8 @@ import { useToast } from '@/hooks/use-toast';
 import api from '@/services/api';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useNotification } from '@/contexts/NotificationContext';
+import PromoCodeInput from '@/components/PromoCodeInput';
+import type { PromoCodeValidationResult } from '@/services/promoCodeService';
 
 // Add Razorpay script to window
 interface RazorpayOptions {
@@ -56,6 +58,13 @@ const CheckoutPaymentPage = () => {
   const { toast } = useToast();
   const { formatPrice, convertPrice, currency, rate } = useCurrency();
   const [isRazorpayLoaded, setIsRazorpayLoaded] = useState(false);
+  
+  // State for promo code functionality
+  const [appliedPromoCode, setAppliedPromoCode] = useState<{
+    code: string;
+    discount: number;
+    finalAmount: number;
+  } | null>(null);
   interface ShippingInfo {
     firstName: string;
     lastName: string;
@@ -124,6 +133,17 @@ const CheckoutPaymentPage = () => {
     } else {
       navigate('/checkout/shipping');
     }
+
+    // Load applied promo code from localStorage
+    const savedPromoCode = localStorage.getItem('appliedPromoCode');
+    if (savedPromoCode) {
+      try {
+        setAppliedPromoCode(JSON.parse(savedPromoCode));
+      } catch (error) {
+        console.error('Error parsing promo code from localStorage:', error);
+        localStorage.removeItem('appliedPromoCode');
+      }
+    }
   }, [navigate]);
 
   useEffect(() => {
@@ -131,6 +151,24 @@ const CheckoutPaymentPage = () => {
       navigate('/cart');
     }
   }, [items.length, navigate]);
+
+  // Promo code handlers
+  const handlePromoCodeApplied = (validationResult: PromoCodeValidationResult) => {
+    if (validationResult.success && validationResult.data) {
+      const promoData = {
+        code: validationResult.data.code,
+        discount: validationResult.data.discount.amount,
+        finalAmount: validationResult.data.finalAmount
+      };
+      setAppliedPromoCode(promoData);
+      localStorage.setItem('appliedPromoCode', JSON.stringify(promoData));
+    }
+  };
+
+  const handlePromoCodeRemoved = () => {
+    setAppliedPromoCode(null);
+    localStorage.removeItem('appliedPromoCode');
+  };
   
   const handlePayment = async () => {
     try {
@@ -149,8 +187,10 @@ const CheckoutPaymentPage = () => {
       const convertedSubtotal = convertPrice(subtotal);
       // Apply delivery fee for midnight delivery
       const deliveryFee = shippingInfo.timeSlot === 'midnight' ? convertPrice(midnightDeliveryFee) : 0;
-      // Calculate total with subtotal and delivery fee only
-      const total = convertedSubtotal + deliveryFee;
+      // Apply promo code discount if available
+      const promoDiscount = appliedPromoCode ? convertPrice(appliedPromoCode.discount) : 0;
+      // Calculate total with subtotal, delivery fee, and promo discount
+      const total = convertedSubtotal + deliveryFee - promoDiscount;
 
       // For Razorpay payment, convert amount back to INR (base currency)
       // since Razorpay primarily works with INR for Indian merchants
@@ -251,6 +291,10 @@ const CheckoutPaymentPage = () => {
                 originalCurrency: currency,
                 subtotal: convertedSubtotal,
                 deliveryFee: deliveryFee,
+                promoCode: appliedPromoCode ? {
+                  code: appliedPromoCode.code,
+                  discount: promoDiscount
+                } : null,
                 deliveryType: shippingInfo.timeSlot === 'midnight' ? 'midnight' : 'standard'
               };
 
@@ -594,11 +638,27 @@ const CheckoutPaymentPage = () => {
                           'Free'}
                       </span>
                     </div>
+
+                    {/* Promo Code Section */}
+                    <div className="border-t pt-4 mt-4">
+                      <PromoCodeInput
+                        orderAmount={convertPrice(subtotal)}
+                        orderItems={items}
+                        onPromoCodeApplied={handlePromoCodeApplied}
+                        onPromoCodeRemoved={handlePromoCodeRemoved}
+                        appliedPromoCode={appliedPromoCode}
+                      />
+                    </div>
+
                     <div className="flex justify-between font-medium pt-2 border-t mt-2">
                       <span>Total</span>
                       <span>
                         {formatPrice(
-                          convertPrice(subtotal + (shippingInfo.timeSlot === 'midnight' ? midnightDeliveryFee : 0))
+                          convertPrice(
+                            subtotal + 
+                            (shippingInfo.timeSlot === 'midnight' ? midnightDeliveryFee : 0) - 
+                            (appliedPromoCode ? appliedPromoCode.discount : 0)
+                          )
                         )}
                       </span>
                     </div>

@@ -9,6 +9,11 @@ import { Button } from '@/components/ui/button';
 import useCart from '@/hooks/use-cart';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import ContactModal from '@/components/ui/ContactModal';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import PromoCodeInput from '@/components/PromoCodeInput';
+import { useState } from 'react';
+import type { PromoCodeValidationResult } from '@/services/promoCodeService';
 
 // Animation variants
 const containerVariants = {
@@ -39,6 +44,13 @@ const CartPage: React.FC = () => {
   const { items, updateItemQuantity, removeItem, showContactModal, contactModalProduct, closeContactModal } = useCart();
   const { formatPrice, convertPrice } = useCurrency();
   
+  // State for promo code functionality
+  const [appliedPromoCode, setAppliedPromoCode] = useState<{
+    code: string;
+    discount: number;
+    finalAmount: number;
+  } | null>(null);
+  
   // Intersection observer for animations
   const [summaryRef, summaryInView] = useInView({
     triggerOnce: true,
@@ -49,14 +61,51 @@ const CartPage: React.FC = () => {
     (total, item) => total + item.price * item.quantity, 
     0
   );
+
+  // Calculate final total with promo code discount
+  const finalTotal = appliedPromoCode ? appliedPromoCode.finalAmount : subtotal;
   
   const handleCheckout = () => {
+    // Save promo code info to localStorage for checkout process
+    if (appliedPromoCode) {
+      localStorage.setItem('appliedPromoCode', JSON.stringify(appliedPromoCode));
+    } else {
+      localStorage.removeItem('appliedPromoCode');
+    }
     navigate('/checkout/shipping');
   };
 
   const handleQuantityChange = (itemId: string, newQuantity: number) => {
     if (newQuantity < 1) return;
     updateItemQuantity(itemId, newQuantity);
+    
+    // Recalculate promo code if applied when quantity changes
+    if (appliedPromoCode) {
+      const newSubtotal = items.reduce((total, item) => {
+        const quantity = item.id === itemId ? newQuantity : item.quantity;
+        return total + item.price * quantity;
+      }, 0);
+      
+      // Update the applied promo code amounts
+      setAppliedPromoCode(prev => prev ? {
+        ...prev,
+        finalAmount: newSubtotal - prev.discount
+      } : null);
+    }
+  };
+
+  const handlePromoCodeApplied = (validationResult: PromoCodeValidationResult) => {
+    if (validationResult.success && validationResult.data) {
+      setAppliedPromoCode({
+        code: validationResult.data.code,
+        discount: validationResult.data.discount.amount,
+        finalAmount: validationResult.data.finalAmount
+      });
+    }
+  };
+
+  const handlePromoCodeRemoved = () => {
+    setAppliedPromoCode(null);
   };
 
   return (
@@ -277,10 +326,21 @@ const CartPage: React.FC = () => {
                         <span className="text-xs sm:text-sm text-gray-500">Calculated at checkout</span>
                       </div>
 
+                      {/* Promo Code Section */}
+                      <div className="border-t border-gray-200 pt-3 sm:pt-4 mt-3 sm:mt-4">
+                        <PromoCodeInput
+                          orderAmount={convertPrice(subtotal)}
+                          orderItems={items}
+                          onPromoCodeApplied={handlePromoCodeApplied}
+                          onPromoCodeRemoved={handlePromoCodeRemoved}
+                          appliedPromoCode={appliedPromoCode}
+                        />
+                      </div>
+
                       <div className="border-t border-gray-200 pt-3 sm:pt-4 mt-3 sm:mt-4">
                         <div className="flex justify-between items-center">
                           <span className="text-lg sm:text-xl font-black text-gray-800">Total</span>
-                          <span className="text-lg sm:text-xl font-black text-primary">{formatPrice(convertPrice(subtotal))}</span>
+                          <span className="text-lg sm:text-xl font-black text-primary">{formatPrice(convertPrice(finalTotal))}</span>
                         </div>
                       </div>
                     </div>
