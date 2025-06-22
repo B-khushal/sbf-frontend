@@ -6,9 +6,9 @@ import { useSettings } from '@/contexts/SettingsContext';
 const Footer = () => {
   const { footerSettings, loading } = useSettings();
 
-  // WhatsApp contact number
-  const whatsappNumber = "994968322";
-  const whatsappUrl = `https://wa.me/91${whatsappNumber}?text=Hello! I'm interested in your flower arrangements.`;
+  // WhatsApp contact number - using just the number without +91
+  const whatsappNumber = "9949683222";
+  const whatsappUrl = `https://wa.me/${whatsappNumber}?text=Hello! I'm interested in your flower arrangements.`;
 
   if (loading) {
     return (

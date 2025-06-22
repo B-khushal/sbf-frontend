@@ -13,7 +13,7 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose, productTit
 
   const handleWhatsAppClick = () => {
     const message = `Hi! I would like to order more than 5 units of "${productTitle}". Can you help me with bulk pricing and availability?`;
-    const whatsappUrl = `https://wa.me/91994968322?text=${encodeURIComponent(message)}`;
+    const whatsappUrl = `https://wa.me/9949683222?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
 
@@ -87,7 +87,7 @@ Best regards`;
               <MessageCircle size={24} />
               <div className="text-left">
                 <div>WhatsApp Us</div>
-                <div className="text-sm opacity-90">+91 99496 8322</div>
+                <div className="text-sm opacity-90">9949683222</div>
               </div>
             </Button>
 
