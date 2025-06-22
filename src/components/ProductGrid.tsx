@@ -22,6 +22,15 @@ export type Product = {
   featured?: boolean;
   isNewArrival?: boolean;
   isFeatured?: boolean;
+  rating?: number;
+  numReviews?: number;
+  reviews?: Array<{
+    user: string;
+    name: string;
+    rating: number;
+    comment: string;
+    createdAt: string;
+  }>;
 };
 
 type ProductGridProps = {
@@ -355,14 +364,30 @@ const ProductCard = ({ product }: { product: Product }) => {
           )}
         </div>
 
-        {/* Rating Stars */}
+        {/* Rating Stars - Only show if product has reviews */}
         <div className="flex items-center justify-between mb-3 sm:mb-4">
-          <div className="flex items-center">
-            {[...Array(5)].map((_, i) => (
-              <Star key={i} className="w-3 h-3 sm:w-4 sm:h-4 fill-yellow-400 text-yellow-400" />
-            ))}
-            <span className="text-xs sm:text-sm text-gray-500 ml-1 sm:ml-2">(4.5)</span>
-          </div>
+          {(product.numReviews && product.numReviews > 0) ? (
+            <div className="flex items-center">
+              {[...Array(5)].map((_, i) => (
+                <Star 
+                  key={i} 
+                  className={cn(
+                    "w-3 h-3 sm:w-4 sm:h-4 transition-colors duration-200",
+                    i < Math.floor(product.rating || 0) 
+                      ? "fill-yellow-400 text-yellow-400" 
+                      : "fill-gray-200 text-gray-200"
+                  )} 
+                />
+              ))}
+              <span className="text-xs sm:text-sm text-gray-500 ml-1 sm:ml-2">
+                ({product.rating?.toFixed(1) || '0.0'}) • {product.numReviews} review{product.numReviews !== 1 ? 's' : ''}
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center">
+              <span className="text-xs sm:text-sm text-gray-400">No reviews yet</span>
+            </div>
+          )}
           
           {/* Action Hint */}
           <div className="flex items-center text-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300">

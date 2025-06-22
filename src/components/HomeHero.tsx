@@ -97,7 +97,7 @@ const HomeHero = () => {
   return (
     <div className="relative">
       {/* Hero Slides */}
-      <div className="relative h-[60vh] sm:h-[70vh] md:h-[80vh] lg:h-[85vh] overflow-hidden bg-gray-900">
+      <div className="relative h-[60vh] sm:h-[70vh] md:h-[80vh] lg:h-[85vh] overflow-hidden bg-gray-900 rounded-2xl mx-4 sm:mx-6 lg:mx-8 shadow-2xl">
         {heroSlides.map((slide, index) => (
           <div
             key={slide.id}
@@ -108,7 +108,7 @@ const HomeHero = () => {
           >
             {/* Loading skeleton */}
             {!imagesLoaded[index] && (
-              <div className="absolute inset-0 bg-gradient-to-br from-gray-800 via-gray-700 to-gray-900 animate-pulse flex items-center justify-center">
+              <div className="absolute inset-0 bg-gradient-to-br from-gray-800 via-gray-700 to-gray-900 animate-pulse flex items-center justify-center rounded-2xl">
                 <div className="text-white/50 text-xl">Loading...</div>
               </div>
             )}
@@ -118,7 +118,7 @@ const HomeHero = () => {
               src={slide.image}
               alt={slide.title}
               className={cn(
-                "absolute inset-0 w-full h-full object-cover transition-all duration-700",
+                "absolute inset-0 w-full h-full object-cover transition-all duration-700 rounded-2xl",
                 imagesLoaded[index] ? "opacity-100 scale-100" : "opacity-0 scale-105"
               )}
               onLoad={() => handleImageLoad(index)}
@@ -127,7 +127,7 @@ const HomeHero = () => {
             />
             
             {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-black/20" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-black/20 rounded-2xl" />
             
             {/* Content */}
             <div className="absolute inset-0 flex items-center justify-center z-10">
