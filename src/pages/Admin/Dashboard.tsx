@@ -32,7 +32,8 @@ import {
   Volume2,
   VolumeX,
   Wifi,
-  WifiOff
+  WifiOff,
+  X
 } from 'lucide-react';
 import api from '@/services/api';
 import { useCurrency } from '@/contexts/CurrencyContext';
@@ -45,6 +46,9 @@ import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { testNotificationSound } from '@/utils/notificationSound';
 import DeliveryCalendar from '@/components/DeliveryCalendar';
+import NotificationHistoryModal from '@/components/NotificationHistoryModal';
+import { getSessionId, createNewSession, isNewSession } from '@/utils/sessionManager';
+import { showNotificationsOnLogin, clearReadNotifications } from '@/services/notificationService';
 
 interface DashboardData {
   revenue: {
@@ -119,10 +123,37 @@ const AdminDashboardHome: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [autoRefresh, setAutoRefresh] = useState(true);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [sessionId, setSessionId] = useState<string>('');
   const { formatPrice, convertPrice, currency, setCurrency } = useCurrency();
   const { notifications, unreadCount, markAllAsRead, isConnected, enableSounds, toggleSounds, addNotification } = useNotification();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Session management and notification handling on component mount
+  useEffect(() => {
+    const initializeSession = async () => {
+      const currentSessionId = getSessionId();
+      setSessionId(currentSessionId);
+      
+      // Check if this is a new session (login)
+      if (isNewSession()) {
+        console.log('New session detected, creating fresh session...');
+        const newSessionId = createNewSession();
+        setSessionId(newSessionId);
+        
+        // Show notifications that were hidden in previous sessions
+        try {
+          await showNotificationsOnLogin(newSessionId);
+          console.log('Notifications reset for new session');
+        } catch (error) {
+          console.error('Error resetting notifications for new session:', error);
+        }
+      }
+    };
+    
+    initializeSession();
+  }, []);
 
   // Debug logging for currency conversion
   useEffect(() => {
@@ -232,6 +263,26 @@ const AdminDashboardHome: React.FC = () => {
     viewSettings: () => navigate('/admin/settings'),
     addProduct: () => navigate('/admin/products/new'),
     viewAnalytics: () => navigate('/admin/analytics'),
+  };
+
+  const handleClearReadNotifications = async () => {
+    try {
+      await clearReadNotifications(sessionId);
+      toast({
+        title: "Read Notifications Cleared",
+        description: "Read notifications have been hidden until next login"
+      });
+      
+      // Refresh notifications to reflect the changes
+      fetchDashboardData();
+    } catch (error) {
+      console.error('Error clearing read notifications:', error);
+      toast({
+        title: "Error",
+        description: "Failed to clear read notifications",
+        variant: "destructive"
+      });
+    }
   };
 
   // Calculate real-time metrics
@@ -764,6 +815,16 @@ const AdminDashboardHome: React.FC = () => {
             </CardTitle>
             <div className="flex flex-wrap gap-1 sm:gap-2">
               <Button 
+                onClick={() => setShowHistoryModal(true)}
+                variant="outline" 
+                size="sm"
+                className="gap-1 text-xs sm:text-sm"
+                title="View notification history"
+              >
+                <Clock className="h-3 w-3" />
+                <span className="hidden sm:inline">History</span>
+              </Button>
+              <Button 
                 onClick={markAllAsRead} 
                 variant="ghost" 
                 size="sm"
@@ -773,6 +834,17 @@ const AdminDashboardHome: React.FC = () => {
               >
                 <Check className="h-3 w-3" />
                 <span className="hidden sm:inline">Mark all read</span>
+              </Button>
+              <Button 
+                onClick={handleClearReadNotifications}
+                variant="ghost" 
+                size="sm"
+                className="gap-1 text-xs sm:text-sm text-destructive hover:text-destructive"
+                disabled={notifications.filter(n => n.isRead).length === 0}
+                title="Clear read notifications"
+              >
+                <X className="h-3 w-3" />
+                <span className="hidden sm:inline">Clear read</span>
               </Button>
               <Button 
                 onClick={testNotificationSound}
@@ -1076,6 +1148,12 @@ const AdminDashboardHome: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+      
+      {/* Notification History Modal */}
+      <NotificationHistoryModal 
+        open={showHistoryModal}
+        onOpenChange={setShowHistoryModal}
+      />
     </div>
   );
 };

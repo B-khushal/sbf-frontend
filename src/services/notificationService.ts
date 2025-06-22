@@ -19,8 +19,13 @@ interface NotificationResponse {
 }
 
 // Get all notifications
-export const getNotifications = async () => {
-  const response = await api.get<{ notifications: NotificationResponse[] }>('/notifications');
+export const getNotifications = async (since?: string, showHistory?: boolean, sessionId?: string) => {
+  const params: any = {};
+  if (since) params.since = since;
+  if (showHistory) params.showHistory = 'true';
+  if (sessionId) params.sessionId = sessionId;
+  
+  const response = await api.get<{ notifications: NotificationResponse[] }>('/notifications', { params });
   return response.data.notifications.map((n) => ({
     ...n,
     createdAt: new Date(n.createdAt)
@@ -40,8 +45,22 @@ export const markAllAsRead = async () => {
 };
 
 // Clear read notifications
-export const clearReadNotifications = async () => {
-  const response = await api.delete('/notifications/read');
+export const clearReadNotifications = async (sessionId: string) => {
+  const response = await api.delete('/notifications/read', { 
+    data: { sessionId } 
+  });
+  return response.data;
+};
+
+// Show notifications on login
+export const showNotificationsOnLogin = async (sessionId: string) => {
+  const response = await api.post('/notifications/show-on-login', { sessionId });
+  return response.data;
+};
+
+// Get notification statistics
+export const getNotificationStats = async () => {
+  const response = await api.get('/notifications/stats');
   return response.data;
 };
 
