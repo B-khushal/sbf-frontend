@@ -5,7 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { MapPin, Edit, Trash2, Plus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogTitle, DialogFooter, DialogHeader, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogFooter, DialogHeader } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 
@@ -329,9 +329,6 @@ const AddressManager: React.FC = () => {
             <DialogTitle>
               {currentAddress ? 'Edit Address' : 'Add New Address'}
             </DialogTitle>
-            <DialogDescription>
-              {currentAddress ? 'Update your existing address information.' : 'Add a new shipping address to your account.'}
-            </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4 py-4">

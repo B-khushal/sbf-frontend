@@ -9,86 +9,25 @@ declare global {
           initialize: (config: any) => void;
           prompt: () => void;
           renderButton: (element: HTMLElement, config: any) => void;
-          disableAutoSelect: () => void;
         };
       };
     };
-    googleOAuthInitialized?: boolean;
   }
 }
 
-export const useGmailLogin = (autoPrompt: boolean = false) => {
+export const useGmailLogin = () => {
+  const [isGmailDialogOpen, setIsGmailDialogOpen] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [isGoogleInitialized, setIsGoogleInitialized] = useState(false);
   const auth = useContext(AuthContext);
-
-  // Handle Google OAuth response
-  const handleGoogleResponse = useCallback(async (response: any) => {
-    try {
-      if (!response.credential) {
-        console.error('Missing credential in Google response');
-        return;
-      }
-      
-      setIsGoogleLoading(true);
-      
-      // Store the credential and redirect to login page for processing
-      sessionStorage.setItem('google_credential', response.credential);
-      sessionStorage.setItem('google_auth_pending', 'true');
-      
-      // Redirect to login page
-      window.location.href = '/login?google=true';
-      
-    } catch (error) {
-      console.error('Google authentication error:', error);
-      setIsGoogleLoading(false);
-    }
-  }, []);
 
   // Initialize Google OAuth
   useEffect(() => {
-    // Prevent multiple initializations across all component instances
-    if (window.googleOAuthInitialized) {
-      setIsGoogleInitialized(true);
-      // If autoPrompt is enabled and we're already initialized, show the prompt
-      if (autoPrompt) {
-        setTimeout(() => {
-          triggerGoogleLogin();
-        }, 1000); // Small delay to ensure UI is ready
-      }
-      return;
-    }
-    
     const initializeGoogleAuth = () => {
-      // Don't initialize if no client ID is configured
-      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-      if (!clientId || clientId === 'your-google-client-id' || clientId === 'your-google-client-id-placeholder') {
-        console.warn('Google OAuth not configured - skipping initialization');
-        return;
-      }
-
-      try {
-        if (window.google && window.google.accounts && !window.googleOAuthInitialized) {
-          window.google.accounts.id.initialize({
-            client_id: clientId,
-            callback: handleGoogleResponse,
-            auto_select: false,
-            cancel_on_tap_outside: true,
-            use_fedcm_for_prompt: true,
-          });
-          window.googleOAuthInitialized = true;
-          setIsGoogleInitialized(true);
-          console.log('Google OAuth initialized successfully');
-          
-          // Auto-prompt if enabled
-          if (autoPrompt) {
-            setTimeout(() => {
-              triggerGoogleLogin();
-            }, 1000); // Small delay to ensure UI is ready
-          }
-        }
-      } catch (error) {
-        console.error('Failed to initialize Google OAuth:', error);
+      if (window.google && window.google.accounts) {
+        window.google.accounts.id.initialize({
+          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+          callback: handleGoogleResponse,
+        });
       }
     };
 
@@ -99,77 +38,107 @@ export const useGmailLogin = (autoPrompt: boolean = false) => {
       script.async = true;
       script.defer = true;
       script.onload = initializeGoogleAuth;
-      script.onerror = () => {
-        console.error('Failed to load Google OAuth script');
-      };
       document.head.appendChild(script);
     } else {
       initializeGoogleAuth();
     }
-  }, [handleGoogleResponse, autoPrompt]);
+  }, []);
 
-  // Trigger Google Sign-In (this will show the account chooser)
-  const triggerGoogleLogin = useCallback(() => {
+  // Handle Google OAuth response
+  const handleGoogleResponse = useCallback(async (response: any) => {
     try {
-      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-      if (!clientId || clientId === 'your-google-client-id' || clientId === 'your-google-client-id-placeholder') {
-        console.warn('Google OAuth not configured');
-        // Redirect to regular login
-        window.location.href = '/login';
-        return;
-      }
-
-      if (!window.google || (!isGoogleInitialized && !window.googleOAuthInitialized)) {
-        console.error('Google OAuth not available or not initialized');
-        // Redirect to regular login as fallback
-        window.location.href = '/login';
-        return;
-      }
+      if (!auth || !response.credential) return;
       
       setIsGoogleLoading(true);
+      const success = await auth.socialLogin('google', response.credential);
       
-      // Show Google account chooser
-      try {
-        window.google.accounts.id.prompt();
-      } catch (promptError) {
-        console.warn('Google prompt failed, redirecting to login page:', promptError);
-        // Redirect to login page as fallback
-        window.location.href = '/login';
+      if (success) {
+        closeGmailDialog();
+        localStorage.removeItem('google_popup_dismissed');
       }
     } catch (error) {
-      console.error('Google login error:', error);
-      // Redirect to login page as fallback
-      window.location.href = '/login';
+      console.error('Gmail login error:', error);
     } finally {
       setIsGoogleLoading(false);
     }
-  }, [isGoogleInitialized]);
+  }, [auth]);
 
-  // Render Google Sign-In button
-  const renderGoogleButton = useCallback((element: HTMLElement) => {
-    if (!window.google || !window.google.accounts || (!isGoogleInitialized && !window.googleOAuthInitialized)) {
-      return;
-    }
+  // Check if user should see the Google login popup
+  useEffect(() => {
+    const checkShouldShowPopup = () => {
+      // Don't show if user is already logged in
+      if (auth?.user) return false;
 
+      // Check if popup was already shown in this session
+      const popupShown = sessionStorage.getItem('google_popup_shown');
+      if (popupShown) return false;
+
+      // Check if user dismissed popup recently (within 24 hours)
+      const dismissedTime = localStorage.getItem('google_popup_dismissed');
+      if (dismissedTime) {
+        const dismissedDate = new Date(dismissedTime);
+        const now = new Date();
+        const hoursDiff = (now.getTime() - dismissedDate.getTime()) / (1000 * 60 * 60);
+        if (hoursDiff < 24) return false;
+      }
+
+      // Check if user has visited before (has any localStorage data)
+      const hasVisitedBefore = localStorage.getItem('user') || 
+                              localStorage.getItem('cart_guest') || 
+                              localStorage.getItem('wishlist');
+      
+      // Show popup for new users or returning users who haven't seen it recently
+      return !hasVisitedBefore || !dismissedTime;
+    };
+
+    // Show popup after a delay for better UX
+    const timer = setTimeout(() => {
+      if (checkShouldShowPopup()) {
+        setIsGmailDialogOpen(true);
+        sessionStorage.setItem('google_popup_shown', 'true');
+      }
+    }, 3000); // Show after 3 seconds
+
+    return () => clearTimeout(timer);
+  }, [auth?.user]);
+
+  const openGmailDialog = useCallback(() => {
+    setIsGmailDialogOpen(true);
+    sessionStorage.setItem('google_popup_shown', 'true');
+  }, []);
+
+  const closeGmailDialog = useCallback(() => {
+    setIsGmailDialogOpen(false);
+    // Mark as dismissed for 24 hours
+    localStorage.setItem('google_popup_dismissed', new Date().toISOString());
+  }, []);
+
+  const handleGmailLogin = useCallback(async () => {
     try {
-      window.google.accounts.id.renderButton(element, {
-        theme: 'outline',
-        size: 'large',
-        type: 'standard',
-        shape: 'rectangular',
-        text: 'signin_with',
-        logo_alignment: 'left',
-        width: '100%',
-      });
+      if (!auth || !window.google) return;
+      
+      setIsGoogleLoading(true);
+      // Trigger Google OAuth popup
+      window.google.accounts.id.prompt();
     } catch (error) {
-      console.error('Failed to render Google button:', error);
+      console.error('Gmail login error:', error);
+      setIsGoogleLoading(false);
     }
-  }, [isGoogleInitialized]);
+  }, [auth]);
+
+  // Function to manually trigger popup (for buttons, etc.)
+  const triggerGoogleLogin = useCallback(() => {
+    if (!auth?.user) {
+      openGmailDialog();
+    }
+  }, [auth?.user, openGmailDialog]);
 
   return {
+    isGmailDialogOpen,
+    openGmailDialog,
+    closeGmailDialog,
+    handleGmailLogin,
     triggerGoogleLogin,
-    renderGoogleButton,
     isGoogleLoading,
-    isGoogleInitialized: isGoogleInitialized || window.googleOAuthInitialized,
   };
 }; 

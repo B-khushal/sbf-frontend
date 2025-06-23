@@ -11,7 +11,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from '@/components/ui/dialog';
 
 interface CalendarDay {
@@ -306,9 +305,6 @@ const DeliveryCalendar: React.FC<DeliveryCalendarProps> = ({ className }) => {
                 day: 'numeric'
               })}
             </DialogTitle>
-            <DialogDescription>
-              View all orders scheduled for delivery on this date.
-            </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4">
