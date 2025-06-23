@@ -15,8 +15,6 @@ import { useOfferPopup } from "../hooks/use-offer-popup";
 import OfferPopup from "../components/ui/OfferPopup";
 import api from "../services/api";
 import { useAuth } from '@/hooks/use-auth';
-import { useGmailLogin } from '@/hooks/use-gmail-login';
-import GmailLoginDialog from '@/components/ui/GmailLoginDialog';
 
 // Animation variants
 const containerVariants = {
@@ -59,7 +57,6 @@ const HomePage = () => {
   const { homeSections, loading: settingsLoading } = useSettings();
   const { currentOffer, isOpen: isOfferOpen, closeOffer } = useOfferPopup();
   const { user } = useAuth();
-  const { isGmailDialogOpen, closeGmailDialog, handleGmailLogin } = useGmailLogin();
   
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [newProducts, setNewProducts] = useState([]);
@@ -296,13 +293,6 @@ const HomePage = () => {
       />
 
       <Footer />
-
-      {/* Gmail Login Dialog */}
-      <GmailLoginDialog
-        isOpen={isGmailDialogOpen}
-        onClose={closeGmailDialog}
-        onGmailLogin={handleGmailLogin}
-      />
     </motion.div>
   );
 };

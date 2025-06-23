@@ -9,7 +9,7 @@ import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
-import { GoogleLogin } from '@react-oauth/google';
+import { useGmailLogin } from '@/hooks/use-gmail-login';
 
 // Animation variants
 const containerVariants = {
@@ -40,6 +40,7 @@ const LoginPage = () => {
   const location = useLocation();
   const { login, socialLogin } = useAuth();
   const { toast } = useToast();
+  const { triggerGoogleLogin, renderGoogleButton, isGoogleLoading } = useGmailLogin();
   
   // Get the redirect path from location state or default to '/'
   const redirectPath = location.state?.redirect || '/';
@@ -49,6 +50,59 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Handle Google authentication from redirect
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const isGoogleAuth = urlParams.get('google') === 'true';
+    const googleCredential = sessionStorage.getItem('google_credential');
+    
+    if (isGoogleAuth && googleCredential) {
+      handleGoogleCredential(googleCredential);
+      // Clean up
+      sessionStorage.removeItem('google_credential');
+      sessionStorage.removeItem('google_auth_pending');
+    }
+  }, [location]);
+
+  // Handle Google credential authentication
+  const handleGoogleCredential = async (credential: string) => {
+    try {
+      setIsLoading(true);
+      console.log("Processing Google credential");
+      
+      const success = await socialLogin('google', credential);
+      
+      if (success) {
+        toast({
+          title: "Welcome! 🌸",
+          description: "You have successfully signed in with Google."
+        });
+
+        const role = localStorage.getItem('role');
+        if (role === 'admin') {
+          navigate('/admin');
+        } else {
+          navigate(redirectPath);
+        }
+      } else {
+        toast({
+          title: "Sign-in failed",
+          description: "Google sign-in failed. Please try again.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error("Google authentication error:", error);
+      toast({
+        title: "Sign-in failed",
+        description: "An error occurred during Google sign-in",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Show redirect message if present
   useEffect(() => {
@@ -115,52 +169,6 @@ const LoginPage = () => {
     }
   };
 
-  const handleGoogleSuccess = async (credentialResponse: any) => {
-    try {
-      setIsLoading(true);
-      console.log("Google login credential:", credentialResponse);
-      
-      const success = await socialLogin('google', credentialResponse.credential);
-      
-      if (success) {
-        toast({
-          title: "Welcome back! 🌸",
-          description: "You have successfully logged in with Google."
-        });
-
-        const role = localStorage.getItem('role');
-        if (role === 'admin') {
-          navigate('/admin');
-        } else {
-          navigate(redirectPath);
-        }
-      } else {
-        toast({
-          title: "Login failed",
-          description: "Google login failed. Please try again.",
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      console.error("Google login error:", error);
-      toast({
-        title: "Login failed",
-        description: "An error occurred during Google login",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleGoogleError = () => {
-    toast({
-      title: "Login failed",
-      description: "Google login was cancelled or failed",
-      variant: "destructive"
-    });
-  };
-  
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 relative overflow-hidden">
       {/* Animated Background Elements */}
@@ -316,15 +324,23 @@ const LoginPage = () => {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <GoogleLogin
-                  onSuccess={handleGoogleSuccess}
-                  onError={handleGoogleError}
-                  theme="outline"
-                  size="large"
-                  width="100%"
-                  text="signin_with"
-                  shape="rectangular"
-                />
+                <Button
+                  className="w-full h-14 bg-gradient-to-r from-primary via-secondary to-accent text-white font-bold text-lg rounded-2xl hover:shadow-2xl transition-all duration-300 disabled:opacity-50"
+                  onClick={triggerGoogleLogin}
+                  disabled={isGoogleLoading}
+                >
+                  {isGoogleLoading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Signing in with Google...
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <LogIn className="w-5 h-5" />
+                      Sign In with Google
+                    </div>
+                  )}
+                </Button>
               </motion.div>
             </div>
             
