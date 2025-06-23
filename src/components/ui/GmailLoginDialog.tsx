@@ -112,6 +112,13 @@ const GmailLoginDialog: React.FC<GmailLoginDialogProps> = ({
             </ul>
           </div>
 
+          {/* Browser Settings Note */}
+          <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+            <p className="text-xs text-blue-800">
+              <strong>Note:</strong> If Google Sign-In doesn't work, please enable third-party cookies and sign-in permissions in your browser settings, or use the email option below.
+            </p>
+          </div>
+
           {/* Alternative Sign In */}
           <div className="text-center pt-4 border-t border-gray-100">
             <p className="text-sm text-gray-500 mb-3">

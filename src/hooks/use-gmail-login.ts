@@ -12,6 +12,7 @@ declare global {
         };
       };
     };
+    googleOAuthInitialized?: boolean;
   }
 }
 
@@ -46,7 +47,11 @@ export const useGmailLogin = () => {
 
   // Initialize Google OAuth
   useEffect(() => {
-    if (isGoogleInitialized) return; // Prevent re-initialization
+    // Prevent multiple initializations across all component instances
+    if (window.googleOAuthInitialized) {
+      setIsGoogleInitialized(true);
+      return;
+    }
     
     const initializeGoogleAuth = () => {
       // Don't initialize if no client ID is configured
@@ -57,13 +62,14 @@ export const useGmailLogin = () => {
       }
 
       try {
-        if (window.google && window.google.accounts) {
+        if (window.google && window.google.accounts && !window.googleOAuthInitialized) {
           window.google.accounts.id.initialize({
             client_id: clientId,
             callback: handleGoogleResponse,
             auto_select: false,
             cancel_on_tap_outside: true,
           });
+          window.googleOAuthInitialized = true;
           setIsGoogleInitialized(true);
           console.log('Google OAuth initialized successfully');
         }
@@ -86,7 +92,7 @@ export const useGmailLogin = () => {
     } else {
       initializeGoogleAuth();
     }
-  }, [handleGoogleResponse, isGoogleInitialized]);
+  }, [handleGoogleResponse]);
 
   // Check if user should see the Google login popup
   useEffect(() => {
@@ -118,7 +124,7 @@ export const useGmailLogin = () => {
 
     // Show popup after a delay for better UX
     const timer = setTimeout(() => {
-      if (checkShouldShowPopup() && isGoogleInitialized) {
+      if (checkShouldShowPopup() && (isGoogleInitialized || window.googleOAuthInitialized)) {
         setIsGmailDialogOpen(true);
         sessionStorage.setItem('google_popup_shown', 'true');
       }
@@ -146,14 +152,22 @@ export const useGmailLogin = () => {
         return;
       }
 
-      if (!auth || !window.google || !isGoogleInitialized) {
+      if (!auth || !window.google || (!isGoogleInitialized && !window.googleOAuthInitialized)) {
         console.error('Google OAuth not available or not initialized');
         return;
       }
       
       setIsGoogleLoading(true);
       // Trigger Google OAuth popup
-      window.google.accounts.id.prompt();
+      try {
+        window.google.accounts.id.prompt();
+      } catch (promptError) {
+        console.warn('Google prompt failed (likely due to browser settings):', promptError);
+        // Fallback: show a message to user about enabling third-party cookies
+        alert('To use Google Sign-In, please enable third-party cookies or sign-in permissions in your browser settings.');
+      } finally {
+        setIsGoogleLoading(false);
+      }
     } catch (error) {
       console.error('Gmail login error:', error);
       setIsGoogleLoading(false);
@@ -174,6 +188,6 @@ export const useGmailLogin = () => {
     handleGmailLogin,
     triggerGoogleLogin,
     isGoogleLoading,
-    isGoogleInitialized,
+    isGoogleInitialized: isGoogleInitialized || window.googleOAuthInitialized,
   };
 }; 
