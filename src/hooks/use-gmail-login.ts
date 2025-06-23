@@ -146,30 +146,53 @@ export const useGmailLogin = () => {
 
   const handleGmailLogin = useCallback(async () => {
     try {
+      console.log('🔵 Google login button clicked'); // Debug log
+      
       const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
       if (!clientId || clientId === 'your-google-client-id' || clientId === 'your-google-client-id-placeholder') {
         console.warn('Google OAuth not configured');
+        alert('Google Sign-In is not configured properly.');
         return;
       }
 
-      if (!auth || !window.google || (!isGoogleInitialized && !window.googleOAuthInitialized)) {
+      if (!auth) {
+        console.error('Auth context not available');
+        alert('Authentication service not available.');
+        return;
+      }
+
+      if (!window.google || (!isGoogleInitialized && !window.googleOAuthInitialized)) {
         console.error('Google OAuth not available or not initialized');
+        alert('Google Sign-In is not available. Please try again later or use email login.');
         return;
       }
       
+      console.log('🟡 Attempting to show Google prompt'); // Debug log
       setIsGoogleLoading(true);
+      
       // Trigger Google OAuth popup
       try {
         window.google.accounts.id.prompt();
+        console.log('🟢 Google prompt triggered successfully'); // Debug log
       } catch (promptError) {
         console.warn('Google prompt failed (likely due to browser settings):', promptError);
-        // Fallback: show a message to user about enabling third-party cookies
-        alert('To use Google Sign-In, please enable third-party cookies or sign-in permissions in your browser settings.');
+        // Provide specific instructions based on the error
+        const errorMessage = `Google Sign-In is blocked by your browser settings.
+
+To enable Google Sign-In:
+1. Look for a login icon (🔐) in your address bar and click it
+2. Or go to browser Settings → Privacy → Third-party cookies → Allow
+3. Alternatively, use the "Email Login" button below
+
+Error details: ${promptError.message || 'Browser security restriction'}`;
+        
+        alert(errorMessage);
       } finally {
         setIsGoogleLoading(false);
       }
     } catch (error) {
       console.error('Gmail login error:', error);
+      alert('An error occurred while trying to sign in with Google. Please try the email login option.');
       setIsGoogleLoading(false);
     }
   }, [auth, isGoogleInitialized]);

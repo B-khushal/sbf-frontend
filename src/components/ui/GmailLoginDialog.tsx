@@ -26,6 +26,11 @@ const GmailLoginDialog: React.FC<GmailLoginDialogProps> = ({
     }
   ];
 
+  const handleGoogleButtonClick = () => {
+    console.log('🔴 Google button in dialog clicked'); // Debug log
+    onGmailLogin();
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[420px] p-0 overflow-hidden bg-white rounded-2xl border-0 shadow-2xl">
@@ -63,7 +68,7 @@ const GmailLoginDialog: React.FC<GmailLoginDialogProps> = ({
             {mockGoogleAccounts.map((account) => (
               <motion.button
                 key={account.id}
-                onClick={onGmailLogin}
+                onClick={handleGoogleButtonClick}
                 className="w-full p-4 border border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 flex items-center gap-4 text-left group"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
