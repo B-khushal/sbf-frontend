@@ -12,6 +12,7 @@ import { useCurrency } from '@/contexts/CurrencyContext';
 import { useNotification } from '@/contexts/NotificationContext';
 import PromoCodeInput from '@/components/PromoCodeInput';
 import type { PromoCodeValidationResult } from '@/services/promoCodeService';
+import { RAZORPAY_CONFIG } from '@/config/razorpay';
 
 // Add Razorpay script to window
 interface RazorpayOptions {
@@ -238,10 +239,10 @@ const CheckoutPaymentPage = () => {
       }
 
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_6k61FN9WlxIlut',
+        key: RAZORPAY_CONFIG.getKey(),
         amount: response.data.amount,
         currency: response.data.currency,
-        name: 'SBF Store',
+        name: RAZORPAY_CONFIG.DEFAULT_OPTIONS.name,
         description: `Purchase from SBF Store${currency !== 'INR' ? ` (Order total: ${formatPrice(total)} in ${currency})` : ''}`,
         order_id: response.data.id,
         handler: async (response: {
@@ -454,7 +455,7 @@ const CheckoutPaymentPage = () => {
           contact: shippingInfo.phone
         },
         theme: {
-          color: '#000000',
+          ...RAZORPAY_CONFIG.DEFAULT_OPTIONS.theme,
           display: {
             blocks: {
               banks: {
