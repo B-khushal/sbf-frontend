@@ -12,39 +12,39 @@ const Footer = () => {
 
   if (loading) {
     return (
-      <footer className="bg-secondary/40 pt-16 pb-8 px-6 md:px-8">
+      <footer className="bg-secondary/40 pt-12 sm:pt-16 pb-6 sm:pb-8 px-3 sm:px-4 md:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center">
-            <div className="inline-block w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p className="text-gray-600">Loading footer...</p>
+            <div className="inline-block w-6 h-6 sm:w-8 sm:h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-3 sm:mb-4"></div>
+            <p className="text-gray-600 text-sm sm:text-base">Loading footer...</p>
           </div>
         </div>
       </footer>
     );
   }
   return (
-    <footer className="bg-secondary/40 pt-16 pb-8 px-6 md:px-8">
+    <footer className="bg-secondary/40 pt-12 sm:pt-16 lg:pt-20 pb-6 sm:pb-8 px-3 sm:px-4 md:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 pb-12 mb-12 border-b">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 pb-8 sm:pb-12 mb-8 sm:mb-12 border-b">
           {/* Brand & Info */}
-          <div className="md:col-span-1">
-            <Link to="/" className="inline-block text-xl font-medium mb-4">
+          <div className="sm:col-span-2 lg:col-span-1">
+            <Link to="/" className="inline-block text-lg sm:text-xl font-medium mb-3 sm:mb-4">
               {footerSettings.companyName}
             </Link>
-            <p className="text-muted-foreground text-sm mb-6 max-w-xs">
+            <p className="text-muted-foreground text-sm sm:text-base mb-4 sm:mb-6 max-w-xs leading-relaxed">
               {footerSettings.description}
             </p>
-            <div className="flex space-x-4">
+            <div className="flex space-x-3 sm:space-x-4">
               {/* WhatsApp Link */}
               <a 
                 href={whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-9 h-9 flex items-center justify-center text-muted-foreground hover:text-green-500 transition-colors duration-300 bg-green-50 hover:bg-green-100 rounded-full"
+                className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-muted-foreground hover:text-green-500 transition-colors duration-300 bg-green-50 hover:bg-green-100 rounded-full"
                 aria-label="WhatsApp"
                 title="Chat with us on WhatsApp"
               >
-                <MessageCircle size={18} />
+                <MessageCircle size={16} className="sm:w-[18px] sm:h-[18px]" />
               </a>
               
               {/* Existing Social Links */}
@@ -60,10 +60,10 @@ const Footer = () => {
                     <a 
                       key={link.platform}
                       href={link.url} 
-                      className="w-9 h-9 flex items-center justify-center text-muted-foreground hover:text-primary transition-colors duration-300"
+                      className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-muted-foreground hover:text-primary transition-colors duration-300"
                       aria-label={link.platform}
                     >
-                      <IconComponent size={18} />
+                      <IconComponent size={16} className="sm:w-[18px] sm:h-[18px]" />
                     </a>
                   );
                 })
@@ -73,14 +73,14 @@ const Footer = () => {
 
           {/* Google Maps Iframe */}
           {footerSettings.showMap && (
-            <div className="md:col-span-1">
-              <h3 className="text-sm font-medium uppercase tracking-wide mb-4">
+            <div className="sm:col-span-2 lg:col-span-1">
+              <h3 className="text-sm font-medium uppercase tracking-wide mb-3 sm:mb-4">
                 Location
               </h3>
               <div className="aspect-w-16 aspect-h-9 w-full">
                 <iframe 
                   src={footerSettings.mapEmbedUrl} 
-                  className="w-full h-48" 
+                  className="w-full h-40 sm:h-48 rounded-lg" 
                   style={{ border: 0 }} 
                   allowFullScreen 
                   loading="lazy" 
@@ -92,18 +92,18 @@ const Footer = () => {
           
           {/* Dynamic Footer Links */}
           {footerSettings.links.map((section) => (
-            <div key={section.section}>
-              <h3 className="text-sm font-medium uppercase tracking-wide mb-4">
+            <div key={section.section} className="min-w-0">
+              <h3 className="text-sm font-medium uppercase tracking-wide mb-3 sm:mb-4">
                 {section.section}
               </h3>
-              <ul className="space-y-3 text-sm">
+              <ul className="space-y-2 sm:space-y-3 text-sm">
                 {section.items
                   .filter(item => item.enabled)
                   .map((item) => (
                   <li key={item.href}>
                     <Link 
                       to={item.href} 
-                      className="text-muted-foreground hover:text-primary transition-colors duration-200"
+                      className="text-muted-foreground hover:text-primary transition-colors duration-200 block"
                     >
                       {item.label}
                     </Link>
@@ -114,22 +114,22 @@ const Footer = () => {
           ))}
           
           {/* Contact Info */}
-          <div>
-            <h3 className="text-sm font-medium uppercase tracking-wide mb-4">
+          <div className="min-w-0">
+            <h3 className="text-sm font-medium uppercase tracking-wide mb-3 sm:mb-4">
               Contact
             </h3>
-            <ul className="space-y-3 text-sm">
+            <ul className="space-y-2 sm:space-y-3 text-sm">
               <li className="flex items-start">
-                <Mail size={16} className="mr-2 mt-0.5 text-muted-foreground" />
+                <Mail size={14} className="mr-2 mt-0.5 text-muted-foreground flex-shrink-0 sm:w-4 sm:h-4" />
                 <a 
                   href={`mailto:${footerSettings.contactInfo.email}`} 
-                  className="text-muted-foreground hover:text-primary transition-colors duration-200"
+                  className="text-muted-foreground hover:text-primary transition-colors duration-200 break-all"
                 >
                   {footerSettings.contactInfo.email}
                 </a>
               </li>
               <li className="flex items-start">
-                <Phone size={16} className="mr-2 mt-0.5 text-muted-foreground" />
+                <Phone size={14} className="mr-2 mt-0.5 text-muted-foreground flex-shrink-0 sm:w-4 sm:h-4" />
                 <a 
                   href={`tel:${footerSettings.contactInfo.phone}`} 
                   className="text-muted-foreground hover:text-primary transition-colors duration-200"
@@ -139,7 +139,7 @@ const Footer = () => {
               </li>
               {/* Additional WhatsApp Contact */}
               <li className="flex items-start">
-                <MessageCircle size={16} className="mr-2 mt-0.5 text-green-600" />
+                <MessageCircle size={14} className="mr-2 mt-0.5 text-green-600 flex-shrink-0 sm:w-4 sm:h-4" />
                 <a 
                   href={whatsappUrl}
                   target="_blank"
@@ -149,8 +149,8 @@ const Footer = () => {
                    {whatsappNumber} WhatsApp
                 </a>
               </li>
-              <li className="pt-2">
-                <p className="text-muted-foreground">
+              <li className="pt-1 sm:pt-2">
+                <p className="text-muted-foreground text-xs sm:text-sm leading-relaxed">
                   {footerSettings.contactInfo.address}
                 </p>
               </li>
@@ -159,11 +159,11 @@ const Footer = () => {
         </div>
         
         {/* Bottom Bar */}
-        <div className="pt-8 flex flex-col md:flex-row md:items-center justify-between text-sm text-muted-foreground">
-          <div className="mb-4 md:mb-0">
+        <div className="pt-6 sm:pt-8 flex flex-col sm:flex-row sm:items-center justify-between text-xs sm:text-sm text-muted-foreground space-y-4 sm:space-y-0">
+          <div className="text-center sm:text-left">
             {footerSettings.copyright}
           </div>
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-wrap justify-center sm:justify-end gap-3 sm:gap-4">
             <Link to="/terms" className="hover:text-primary transition-colors duration-200">
               Terms of Service
             </Link>

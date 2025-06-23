@@ -97,7 +97,7 @@ const HomeHero = () => {
   return (
     <div className="relative">
       {/* Hero Slides */}
-      <div className="relative h-[60vh] sm:h-[70vh] md:h-[80vh] lg:h-[85vh] overflow-hidden bg-gray-900 rounded-2xl mx-4 sm:mx-6 lg:mx-8 shadow-2xl">
+      <div className="relative h-[50vh] xs:h-[55vh] sm:h-[60vh] md:h-[65vh] lg:h-[70vh] xl:h-[75vh] 2xl:h-[80vh] overflow-hidden bg-gray-900 rounded-xl sm:rounded-2xl lg:rounded-3xl mx-3 sm:mx-4 md:mx-6 lg:mx-8 shadow-lg sm:shadow-xl lg:shadow-2xl">
         {heroSlides.map((slide, index) => (
           <div
             key={slide.id}
@@ -108,8 +108,8 @@ const HomeHero = () => {
           >
             {/* Loading skeleton */}
             {!imagesLoaded[index] && (
-              <div className="absolute inset-0 bg-gradient-to-br from-gray-800 via-gray-700 to-gray-900 animate-pulse flex items-center justify-center rounded-2xl">
-                <div className="text-white/50 text-xl">Loading...</div>
+              <div className="absolute inset-0 bg-gradient-to-br from-gray-800 via-gray-700 to-gray-900 animate-pulse flex items-center justify-center rounded-xl sm:rounded-2xl lg:rounded-3xl">
+                <div className="text-white/50 text-base sm:text-lg lg:text-xl">Loading...</div>
               </div>
             )}
             
@@ -118,7 +118,7 @@ const HomeHero = () => {
               src={slide.image}
               alt={slide.title}
               className={cn(
-                "absolute inset-0 w-full h-full object-cover transition-all duration-700 rounded-2xl",
+                "absolute inset-0 w-full h-full object-cover transition-all duration-700 rounded-xl sm:rounded-2xl lg:rounded-3xl",
                 imagesLoaded[index] ? "opacity-100 scale-100" : "opacity-0 scale-105"
               )}
               onLoad={() => handleImageLoad(index)}
@@ -127,30 +127,30 @@ const HomeHero = () => {
             />
             
             {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-black/20 rounded-2xl" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-black/20 rounded-xl sm:rounded-2xl lg:rounded-3xl" />
         
         {/* Content */}
             <div className="absolute inset-0 flex items-center justify-center z-10">
-              <div className="text-center text-white max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="text-center text-white max-w-6xl mx-auto px-3 xs:px-4 sm:px-6 md:px-8 lg:px-12">
                 <div className={cn(
                   "transition-all duration-700 ease-out",
                   index === currentSlide 
                     ? "opacity-100 transform translate-y-0" 
                     : "opacity-0 transform translate-y-8"
                 )}>
-                  <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-4 sm:mb-6 leading-tight drop-shadow-lg">
+                  <h1 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl font-bold mb-2 xs:mb-3 sm:mb-4 md:mb-5 lg:mb-6 leading-tight drop-shadow-lg">
                   {slide.title}
                 </h1>
-                  <p className="text-base sm:text-lg md:text-xl lg:text-2xl mb-6 sm:mb-8 opacity-90 max-w-2xl mx-auto leading-relaxed drop-shadow-md">
+                  <p className="text-xs xs:text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl mb-4 xs:mb-5 sm:mb-6 md:mb-7 lg:mb-8 opacity-90 max-w-4xl mx-auto leading-relaxed drop-shadow-md">
                   {slide.subtitle}
                 </p>
                   <Button
                     size="lg"
-                    className="bg-white text-primary hover:bg-gray-100 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                    className="bg-white text-primary hover:bg-gray-100 px-4 xs:px-5 sm:px-6 md:px-7 lg:px-8 py-2 xs:py-2.5 sm:py-3 md:py-3.5 lg:py-4 text-xs xs:text-sm sm:text-base md:text-lg lg:text-xl font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                     onClick={() => navigate(slide.ctaLink)}
                 >
                   {slide.ctaText}
-                    <ArrowRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5" />
+                    <ArrowRight className="ml-1.5 xs:ml-2 w-3 h-3 xs:w-4 xs:h-4 sm:w-5 sm:h-5" />
                   </Button>
                 </div>
               </div>
@@ -159,22 +159,22 @@ const HomeHero = () => {
         ))}
         
         {/* Navigation Controls */}
-        <div className="absolute bottom-4 sm:bottom-6 left-1/2 transform -translate-x-1/2 flex items-center gap-2 sm:gap-4 z-20">
+        <div className="absolute bottom-3 xs:bottom-4 sm:bottom-5 md:bottom-6 left-1/2 transform -translate-x-1/2 flex items-center gap-2 xs:gap-3 sm:gap-4 z-20">
           <Button
             variant="outline"
             size="icon"
-            className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 hover:bg-white/30 border-white/30 text-white backdrop-blur-sm rounded-full transition-all duration-300 hover:scale-110"
+            className="w-8 h-8 xs:w-9 xs:h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 lg:w-12 lg:h-12 bg-white/20 hover:bg-white/30 border-white/30 text-white backdrop-blur-sm rounded-full transition-all duration-300 hover:scale-110"
             onClick={goToPrevSlide}
           >
-            <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+            <ChevronLeft className="w-4 h-4 xs:w-5 xs:h-5 sm:w-6 sm:h-6" />
           </Button>
           
-          <div className="flex gap-2">
+          <div className="flex gap-1.5 xs:gap-2">
           {heroSlides.map((_, index) => (
             <button
               key={index}
               className={cn(
-                  "w-3 h-3 sm:w-4 sm:h-4 rounded-full transition-all duration-300",
+                  "w-2 h-2 xs:w-2.5 xs:h-2.5 sm:w-3 sm:h-3 md:w-4 md:h-4 rounded-full transition-all duration-300",
                 index === currentSlide 
                     ? 'bg-white scale-125 shadow-lg'
                     : 'bg-white/50 hover:bg-white/75 hover:scale-110'
@@ -187,49 +187,50 @@ const HomeHero = () => {
           <Button
             variant="outline"
             size="icon"
-            className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 hover:bg-white/30 border-white/30 text-white backdrop-blur-sm rounded-full transition-all duration-300 hover:scale-110"
+            className="w-8 h-8 xs:w-9 xs:h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 lg:w-12 lg:h-12 bg-white/20 hover:bg-white/30 border-white/30 text-white backdrop-blur-sm rounded-full transition-all duration-300 hover:scale-110"
             onClick={goToNextSlide}
         >
-            <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
+            <ChevronRight className="w-4 h-4 xs:w-5 xs:h-5 sm:w-6 sm:h-6" />
           </Button>
         </div>
       </div>
 
       {/* Categories Section */}
-      <div className="bg-gradient-to-br from-green-50 to-blue-50 py-8 sm:py-12 lg:py-16">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="bg-gradient-to-br from-green-50 to-blue-50 py-6 sm:py-8 md:py-10 lg:py-12 xl:py-16">
+        <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
           <div className="text-center mb-6 sm:mb-8 lg:mb-12">
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 sm:mb-4">
+            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-800 mb-2 sm:mb-3 lg:mb-4">
               Shop by Category
             </h2>
-            <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
-              Discover our beautiful collection of fresh flowers for every occasion
+            <p className="text-sm sm:text-base lg:text-lg xl:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed px-2">
+              Discover our beautiful collection of fresh flowers and arrangements
             </p>
           </div>
           
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 md:gap-5 lg:gap-6">
             {[
-              { name: 'Roses', icon: '🌹' },
-              { name: 'Tulips', icon: '🌷' },
-              { name: 'Sunflowers', icon: '🌻' },
-              { name: 'Lilies', icon: '🌺' },
-              { name: 'Orchids', icon: '🌸' },
-              { name: 'Mixed', icon: '💐' }
-            ].map((category, index) => (
-              <div
-                key={index}
-                className="group cursor-pointer transform transition-all duration-300 hover:scale-105"
-                onClick={() => navigate(`/shop?category=${category.name.toLowerCase()}`)}
+              { name: 'Roses', emoji: '🌹', link: '/shop/roses', color: 'from-rose-400 to-pink-500' },
+              { name: 'Lilies', emoji: '🌺', link: '/shop/lilies', color: 'from-purple-400 to-indigo-500' },
+              { name: 'Tulips', emoji: '🌷', link: '/shop/tulips', color: 'from-yellow-400 to-orange-500' },
+              { name: 'Orchids', emoji: '🌸', link: '/shop/orchids', color: 'from-pink-400 to-rose-500' },
+              { name: 'Sunflowers', emoji: '🌻', link: '/shop/sunflowers', color: 'from-amber-400 to-yellow-500' },
+              { name: 'Bouquets', emoji: '💐', link: '/shop/bouquets', color: 'from-emerald-400 to-green-500' },
+            ].map((category) => (
+              <Link
+                key={category.name}
+                to={category.link}
+                className="group relative bg-white rounded-xl sm:rounded-2xl lg:rounded-3xl p-3 sm:p-4 lg:p-6 text-center hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 hover:border-primary/20"
               >
-                <div className="relative bg-white rounded-2xl lg:rounded-3xl p-3 sm:p-4 lg:p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 text-center">
-                  <div className="text-2xl sm:text-3xl lg:text-5xl mb-2 sm:mb-3 lg:mb-4 transform group-hover:scale-110 transition-transform duration-300">
-                    {category.icon}
-                  </div>
-                  <h3 className="text-xs sm:text-sm lg:text-base font-semibold text-gray-900 group-hover:text-primary transition-colors duration-300">
-                    {category.name}
-                  </h3>
+                <div className={cn(
+                  "w-12 h-12 xs:w-14 xs:h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 bg-gradient-to-br rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3 lg:mb-4 text-white shadow-lg group-hover:scale-110 transition-transform duration-300",
+                  category.color
+                )}>
+                  <span className="text-lg xs:text-xl sm:text-2xl lg:text-3xl">{category.emoji}</span>
                 </div>
-              </div>
+                <h3 className="text-xs xs:text-sm sm:text-base lg:text-lg font-semibold text-gray-800 group-hover:text-primary transition-colors duration-200">
+                  {category.name}
+                </h3>
+              </Link>
             ))}
           </div>
         </div>

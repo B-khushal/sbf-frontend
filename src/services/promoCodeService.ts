@@ -5,6 +5,7 @@ export interface PromoCode {
   id: string;
   code: string;
   description: string;
+  image?: string;
   discountType: 'percentage' | 'fixed';
   discountValue: number;
   minimumOrderAmount: number;
@@ -39,6 +40,7 @@ export interface PromoCode {
 export interface PromoCodeFormData {
   code: string;
   description: string;
+  image?: string;
   discountType: 'percentage' | 'fixed';
   discountValue: number;
   minimumOrderAmount?: number;

@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2, Tag } from 'lucide-react';
+import { Plus, Edit, Trash2, Tag, Upload, X, Image as ImageIcon } from 'lucide-react';
 import { 
   getAllPromoCodes, 
   createPromoCode, 
@@ -11,11 +11,13 @@ import {
   deletePromoCode,
   type PromoCode
 } from '@/services/promoCodeService';
+import { uploadImage } from '@/services/uploadService';
 import { useToast } from '@/hooks/use-toast';
 
 const PromoCodesPage: React.FC = () => {
   const [promoCodes, setPromoCodes] = useState<PromoCode[]>([]);
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [editingPromoCode, setEditingPromoCode] = useState<PromoCode | null>(null);
@@ -25,8 +27,12 @@ const PromoCodesPage: React.FC = () => {
     discountType: 'percentage' as 'percentage' | 'fixed',
     discountValue: 0,
     minimumOrderAmount: 0,
-    validUntil: ''
+    validUntil: '',
+    image: ''
   });
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { toast } = useToast();
 
@@ -51,11 +57,109 @@ const PromoCodesPage: React.FC = () => {
     }
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Error",
+          description: "Please select a valid image file",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "Error",
+          description: "Image size should be less than 5MB",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      setSelectedFile(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleImageUpload = async (): Promise<string | null> => {
+    if (!selectedFile) return null;
+
+    try {
+      setUploading(true);
+      const uploadFormData = new FormData();
+      uploadFormData.append('image', selectedFile);
+
+      const response = await uploadImage(uploadFormData);
+      
+      if (response.success && response.data?.url) {
+        return response.data.url;
+      } else {
+        throw new Error('Upload failed');
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast({
+        title: "Error",
+        description: "Failed to upload image",
+        variant: "destructive"
+      });
+      return null;
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const clearImageSelection = () => {
+    setSelectedFile(null);
+    setImagePreview('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      code: '',
+      description: '',
+      discountType: 'percentage',
+      discountValue: 0,
+      minimumOrderAmount: 0,
+      validUntil: '',
+      image: ''
+    });
+    clearImageSelection();
+  };
+
   const handleCreatePromoCode = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
-      const response = await createPromoCode(formData);
+      let imageUrl = formData.image;
+
+      // Upload image if a new file is selected
+      if (selectedFile) {
+        const uploadedUrl = await handleImageUpload();
+        if (uploadedUrl) {
+          imageUrl = uploadedUrl;
+        }
+      }
+
+      const promoCodeData = {
+        ...formData,
+        image: imageUrl
+      };
+
+      const response = await createPromoCode(promoCodeData);
       
       if (response.success) {
         toast({
@@ -64,14 +168,7 @@ const PromoCodesPage: React.FC = () => {
         });
         
         setShowCreateForm(false);
-        setFormData({
-          code: '',
-          description: '',
-          discountType: 'percentage',
-          discountValue: 0,
-          minimumOrderAmount: 0,
-          validUntil: ''
-        });
+        resetForm();
         fetchPromoCodes();
       }
     } catch (error: any) {
@@ -92,8 +189,15 @@ const PromoCodesPage: React.FC = () => {
       discountType: promoCode.discountType,
       discountValue: promoCode.discountValue,
       minimumOrderAmount: promoCode.minimumOrderAmount || 0,
-      validUntil: new Date(promoCode.validUntil).toISOString().split('T')[0]
+      validUntil: new Date(promoCode.validUntil).toISOString().split('T')[0],
+      image: (promoCode as any).image || ''
     });
+    
+    // Set image preview if exists
+    if ((promoCode as any).image) {
+      setImagePreview((promoCode as any).image);
+    }
+    
     setShowEditForm(true);
     setShowCreateForm(false);
   };
@@ -104,7 +208,22 @@ const PromoCodesPage: React.FC = () => {
     if (!editingPromoCode) return;
     
     try {
-      const response = await updatePromoCode(editingPromoCode._id, formData);
+      let imageUrl = formData.image;
+
+      // Upload image if a new file is selected
+      if (selectedFile) {
+        const uploadedUrl = await handleImageUpload();
+        if (uploadedUrl) {
+          imageUrl = uploadedUrl;
+        }
+      }
+
+      const promoCodeData = {
+        ...formData,
+        image: imageUrl
+      };
+
+      const response = await updatePromoCode(editingPromoCode._id, promoCodeData);
       
       if (response.success) {
         toast({
@@ -114,14 +233,7 @@ const PromoCodesPage: React.FC = () => {
         
         setShowEditForm(false);
         setEditingPromoCode(null);
-        setFormData({
-          code: '',
-          description: '',
-          discountType: 'percentage',
-          discountValue: 0,
-          minimumOrderAmount: 0,
-          validUntil: ''
-        });
+        resetForm();
         fetchPromoCodes();
       }
     } catch (error: any) {
@@ -179,6 +291,70 @@ const PromoCodesPage: React.FC = () => {
     }
   };
 
+  const ImageUploadSection = () => (
+    <div>
+      <label className="block text-sm font-medium mb-2">Promo Code Image</label>
+      <div className="space-y-4">
+        {/* Image Preview */}
+        {imagePreview && (
+          <div className="relative inline-block">
+            <img
+              src={imagePreview}
+              alt="Promo code preview"
+              className="w-32 h-32 object-cover rounded-lg border border-gray-200"
+            />
+            <button
+              type="button"
+              onClick={clearImageSelection}
+              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        {/* File Input */}
+        <div className="flex items-center gap-4">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="flex items-center gap-2"
+          >
+            {uploading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                Uploading...
+              </>
+            ) : (
+              <>
+                <Upload className="w-4 h-4" />
+                {imagePreview ? 'Change Image' : 'Upload Image'}
+              </>
+            )}
+          </Button>
+          {selectedFile && (
+            <span className="text-sm text-gray-600">
+              {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+            </span>
+          )}
+        </div>
+
+        <p className="text-xs text-gray-500">
+          Supported formats: JPG, PNG, GIF. Max size: 5MB. Recommended size: 400x200px
+        </p>
+      </div>
+    </div>
+  );
+
   return (
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
@@ -192,14 +368,7 @@ const PromoCodesPage: React.FC = () => {
             setShowCreateForm(!showCreateForm);
             setShowEditForm(false);
             setEditingPromoCode(null);
-            setFormData({
-              code: '',
-              description: '',
-              discountType: 'percentage',
-              discountValue: 0,
-              minimumOrderAmount: 0,
-              validUntil: ''
-            });
+            resetForm();
           }}
           disabled={showEditForm}
         >
@@ -249,6 +418,9 @@ const PromoCodesPage: React.FC = () => {
                 />
               </div>
 
+              {/* Image Upload Section */}
+              <ImageUploadSection />
+
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-2">
@@ -285,8 +457,13 @@ const PromoCodesPage: React.FC = () => {
               </div>
 
               <div className="flex space-x-2">
-                <Button type="submit">Create Promo Code</Button>
-                <Button type="button" variant="outline" onClick={() => setShowCreateForm(false)}>
+                <Button type="submit" disabled={uploading}>
+                  {uploading ? 'Creating...' : 'Create Promo Code'}
+                </Button>
+                <Button type="button" variant="outline" onClick={() => {
+                  setShowCreateForm(false);
+                  resetForm();
+                }}>
                   Cancel
                 </Button>
               </div>
@@ -336,6 +513,9 @@ const PromoCodesPage: React.FC = () => {
                 />
               </div>
 
+              {/* Image Upload Section */}
+              <ImageUploadSection />
+
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-2">
@@ -372,21 +552,16 @@ const PromoCodesPage: React.FC = () => {
               </div>
 
               <div className="flex space-x-2">
-                <Button type="submit">Update Promo Code</Button>
+                <Button type="submit" disabled={uploading}>
+                  {uploading ? 'Updating...' : 'Update Promo Code'}
+                </Button>
                 <Button 
                   type="button" 
                   variant="outline" 
                   onClick={() => {
                     setShowEditForm(false);
                     setEditingPromoCode(null);
-                    setFormData({
-                      code: '',
-                      description: '',
-                      discountType: 'percentage',
-                      discountValue: 0,
-                      minimumOrderAmount: 0,
-                      validUntil: ''
-                    });
+                    resetForm();
                   }}
                 >
                   Cancel
@@ -411,15 +586,30 @@ const PromoCodesPage: React.FC = () => {
               <CardContent className="p-6">
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-2">
-                      <h3 className="text-lg font-semibold">{promoCode.code}</h3>
-                      {getStatusBadge(promoCode)}
-                      <Badge variant="outline">
-                        {formatDiscount(promoCode)}
-                      </Badge>
+                    <div className="flex items-start space-x-4 mb-4">
+                      {/* Promo Code Image */}
+                      {(promoCode as any).image && (
+                        <div className="flex-shrink-0">
+                          <img
+                            src={(promoCode as any).image}
+                            alt={`${promoCode.code} promo`}
+                            className="w-20 h-20 object-cover rounded-lg border border-gray-200"
+                          />
+                        </div>
+                      )}
+                      
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-3 mb-2">
+                          <h3 className="text-lg font-semibold">{promoCode.code}</h3>
+                          {getStatusBadge(promoCode)}
+                          <Badge variant="outline">
+                            {formatDiscount(promoCode)}
+                          </Badge>
+                        </div>
+                        
+                        <p className="text-muted-foreground mb-3">{promoCode.description}</p>
+                      </div>
                     </div>
-                    
-                    <p className="text-muted-foreground mb-3">{promoCode.description}</p>
                     
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                       <div>

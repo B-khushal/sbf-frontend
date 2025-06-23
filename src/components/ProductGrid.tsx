@@ -43,16 +43,16 @@ type ProductGridProps = {
 
 const ProductGrid = ({ products, title, subtitle, className, loading }: ProductGridProps) => {
   return (
-    <section className={cn("py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8", className)}>
+    <section className={cn("py-8 sm:py-12 lg:py-16 xl:py-20 px-3 sm:px-4 md:px-6 lg:px-8", className)}>
       {(title || subtitle) && (
-        <div className="text-center mb-8 sm:mb-12 lg:mb-16">
+        <div className="text-center mb-6 sm:mb-8 lg:mb-12 xl:mb-16">
           {title && (
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight mb-3 sm:mb-4 bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">
+            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold tracking-tight mb-2 sm:mb-3 lg:mb-4 bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">
               {title}
             </h2>
           )}
           {subtitle && (
-            <p className="text-muted-foreground max-w-2xl mx-auto text-base sm:text-lg leading-relaxed">
+            <p className="text-muted-foreground max-w-2xl mx-auto text-sm sm:text-base lg:text-lg xl:text-xl leading-relaxed px-2">
               {subtitle}
             </p>
           )}
@@ -60,17 +60,17 @@ const ProductGrid = ({ products, title, subtitle, className, loading }: ProductG
       )}
 
       {loading ? (
-        <div className="text-center py-12 sm:py-16">
-          <div className="inline-block w-12 h-12 sm:w-16 sm:h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
-          <p className="text-gray-600 text-base sm:text-lg">Loading products...</p>
+        <div className="text-center py-8 sm:py-12 lg:py-16">
+          <div className="inline-block w-8 h-8 sm:w-12 sm:h-12 lg:w-16 lg:h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mb-3 sm:mb-4"></div>
+          <p className="text-gray-600 text-sm sm:text-base lg:text-lg">Loading products...</p>
         </div>
       ) : products.length === 0 ? (
-        <div className="text-center py-12 sm:py-16">
-          <div className="text-4xl sm:text-6xl mb-4">🌸</div>
-          <p className="text-muted-foreground text-base sm:text-lg">No products available at the moment.</p>
+        <div className="text-center py-8 sm:py-12 lg:py-16">
+          <div className="text-3xl sm:text-4xl lg:text-6xl mb-3 sm:mb-4">🌸</div>
+          <p className="text-muted-foreground text-sm sm:text-base lg:text-lg">No products available at the moment.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+        <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-5 lg:gap-6 xl:gap-8">
           {products.map((product) => (
             <ProductCard key={product._id} product={product} />
           ))}
@@ -199,89 +199,128 @@ const ProductCard = ({ product }: { product: Product }) => {
       const wishlistItem = {
         id: String(product._id),
         title: product.title,
-        image: getImageUrl(product.images?.[0]),
-        price: product.price
+        price: product.price,
+        image: product.images?.[0] || '/images/placeholder.svg',
+        category: product.category,
+        dateAdded: new Date().toISOString()
       };
-      
-      let existingWishlist = [];
-      try {
-        const wishlistStr = localStorage.getItem("wishlist");
-        existingWishlist = wishlistStr ? JSON.parse(wishlistStr) : [];
-        if (!Array.isArray(existingWishlist)) {
-          existingWishlist = [];
-        }
-      } catch (error) {
-        console.error("Error parsing wishlist:", error);
-        existingWishlist = [];
-      }
-      
-      const isCurrentlyInWishlist = existingWishlist.some(item => item.id === String(product._id));
-      
-      if (isCurrentlyInWishlist) {
-        const updatedWishlist = existingWishlist.filter(item => item.id !== String(product._id));
-        localStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
+
+      const currentWishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
+      let updatedWishlist;
+      let message;
+
+      if (isInWishlist) {
+        updatedWishlist = currentWishlist.filter((item: any) => item.id !== String(product._id));
+        message = "Removed from wishlist";
         setWishlist(prev => prev.filter(id => id !== product._id));
-        toast.success("💔 Removed from wishlist", {
-          description: "Item has been removed from your wishlist",
-          duration: 2000,
-        });
       } else {
-        const updatedWishlist = [...existingWishlist, wishlistItem];
-        localStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
+        updatedWishlist = [...currentWishlist, wishlistItem];
+        message = "Added to wishlist";
         setWishlist(prev => [...prev, product._id]);
-        toast.success("💖 Added to wishlist", {
-          description: "Item has been added to your wishlist",
-          duration: 2000,
-        });
       }
+
+      localStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
       
-      window.dispatchEvent(new Event('storage'));
-      
+      // Dispatch custom event for wishlist updates
+      const event = new CustomEvent('wishlist-update', { 
+        detail: { 
+          count: updatedWishlist.length,
+          action: isInWishlist ? 'remove' : 'add',
+          product: wishlistItem
+        }
+      });
+      window.dispatchEvent(event);
+
+      toast.success(`❤️ ${message}!`, {
+        description: `${product.title} has been ${isInWishlist ? 'removed from' : 'added to'} your wishlist`,
+        duration: 3000,
+      });
     } catch (error) {
       console.error("Error updating wishlist:", error);
-      toast.error("Failed to update wishlist");
+      toast.error("Failed to update wishlist", {
+        description: "Please try again",
+        duration: 3000,
+      });
     }
   };
 
-  // Calculate discounted price
-  const originalPrice = product.price;
-  const discountedPrice = product.discount > 0 ? originalPrice - (originalPrice * product.discount / 100) : originalPrice;
-  const hasDiscount = product.discount > 0;
-
-  // Check if product is new (either marked as new or within last 30 days)
+  // Check if product is new (created within last 30 days)
   const isNewProduct = () => {
-    // Check if explicitly marked as new (handles both frontend and backend property names)
-    if (product.isNewArrival || (product as any).isNew) return true;
-    
-    // Fallback to date-based check if createdAt is available
-    if (!product.createdAt) return false;
+    if (!product.createdAt && !product.isNewArrival) return false;
+    if (product.isNewArrival) return true;
+    const createdDate = new Date(product.createdAt!);
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    return new Date(product.createdAt) > thirtyDaysAgo;
+    return createdDate > thirtyDaysAgo;
   };
 
-  // Check if product is featured (handles both frontend and backend property names)
+  // Check if product is featured
   const isFeaturedProduct = () => {
-    return product.featured || product.isFeatured || (product as any).isFeatured;
+    return product.featured || product.isFeatured;
   };
-  
+
+  // Calculate discounted price
+  const discountedPrice = product.discount > 0 
+    ? product.price - (product.price * product.discount / 100)
+    : product.price;
+
+  // Calculate average rating
+  const averageRating = product.reviews && product.reviews.length > 0
+    ? product.reviews.reduce((acc, review) => acc + review.rating, 0) / product.reviews.length
+    : product.rating || 0;
+
   return (
-    <div 
-      className="group relative bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 cursor-pointer hover:border-primary/20"
+    <div
       onClick={handleCardClick}
+      className="group relative bg-white rounded-xl sm:rounded-2xl lg:rounded-3xl overflow-hidden border border-gray-200/50 hover:border-primary/30 transition-all duration-500 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1 cursor-pointer"
     >
-      {/* Image Container */}
-      <div className="relative aspect-[4/3] sm:aspect-[4/5] overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
-        {/* Image Loading Skeleton */}
-        {!isImageLoaded && (
-          <div className="absolute inset-0 bg-gradient-to-br from-gray-200 via-gray-100 to-gray-200 animate-pulse" />
+      {/* Badges */}
+      <div className="absolute top-2 sm:top-3 left-2 sm:left-3 z-20 flex flex-col gap-1 sm:gap-2">
+        {product.discount > 0 && (
+          <span className="bg-red-500 text-white text-xs sm:text-sm font-bold px-2 py-1 rounded-full shadow-lg">
+            -{product.discount}%
+          </span>
         )}
-        
+        {isNewProduct() && (
+          <span className="bg-green-500 text-white text-xs sm:text-sm font-bold px-2 py-1 rounded-full shadow-lg">
+            NEW
+          </span>
+        )}
+        {isFeaturedProduct() && (
+          <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs sm:text-sm font-bold px-2 py-1 rounded-full shadow-lg flex items-center gap-1">
+            <Sparkles className="w-3 h-3" />
+            <span className="hidden sm:inline">Featured</span>
+          </span>
+        )}
+      </div>
+
+      {/* Wishlist Button */}
+      <button
+        onClick={handleWishlistToggle}
+        className="absolute top-2 sm:top-3 right-2 sm:right-3 z-20 w-8 h-8 sm:w-10 sm:h-10 bg-white/90 backdrop-blur-sm hover:bg-white border border-gray-200/50 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg"
+      >
+        <Heart 
+          className={cn(
+            "w-4 h-4 sm:w-5 sm:h-5 transition-colors duration-200",
+            isInWishlist 
+              ? "text-red-500 fill-red-500" 
+              : "text-gray-400 hover:text-red-500 group-hover:text-red-500"
+          )}
+        />
+      </button>
+
+      {/* Image Container */}
+      <div className="relative aspect-[4/3] sm:aspect-[3/2] overflow-hidden bg-gray-100">
+        {!isImageLoaded && (
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-200 via-gray-100 to-gray-200 animate-pulse flex items-center justify-center">
+            <div className="text-gray-400 text-lg sm:text-xl">🌸</div>
+          </div>
+        )}
         <img
-          src={getImageUrl(product.images?.[0])}
+          src={getImageUrl(product.images?.[0]) || '/images/placeholder.svg'}
           alt={product.title}
           className={cn(
-            "w-full h-full object-cover transition-all duration-500 group-hover:scale-105",
+            "w-full h-full object-cover transition-all duration-700 group-hover:scale-110",
             isImageLoaded ? "opacity-100" : "opacity-0"
           )}
           onLoad={() => setIsImageLoaded(true)}
@@ -290,130 +329,78 @@ const ProductCard = ({ product }: { product: Product }) => {
             target.src = '/images/placeholder.svg';
             setIsImageLoaded(true);
           }}
+          loading="lazy"
         />
         
-        {/* Badges */}
-        <div className="absolute top-2 sm:top-3 left-2 sm:left-3 flex flex-col gap-1 sm:gap-2">
-          {hasDiscount && (
-            <span className="bg-gradient-to-r from-red-500 to-pink-500 text-white px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-bold shadow-lg">
-              -{product.discount}%
-            </span>
-          )}
-          {isNewProduct() && (
-            <span className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-bold shadow-lg flex items-center gap-1">
-              <Sparkles className="w-2 h-2 sm:w-3 sm:h-3" />
-              New
-            </span>
-          )}
-          {isFeaturedProduct() && (
-            <span className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-bold shadow-lg flex items-center gap-1">
-              <Star className="w-2 h-2 sm:w-3 sm:h-3 fill-current" />
-              Featured
-            </span>
-          )}
-        </div>
-
-        {/* Wishlist Button - Always visible */}
-        <div className="absolute top-2 sm:top-3 right-2 sm:right-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="w-8 h-8 sm:w-10 sm:h-10 bg-white/90 hover:bg-white shadow-lg backdrop-blur-sm transition-all duration-300 hover:scale-110"
-            onClick={handleWishlistToggle}
-          >
-            <Heart className={cn("w-3 h-3 sm:w-4 sm:h-4 transition-all duration-300", 
-              isInWishlist 
-                ? "fill-red-500 text-red-500 scale-110" 
-                : "text-gray-600 hover:text-red-500 hover:scale-110"
-            )} />
-          </Button>
-        </div>
-
-        {/* Gradient Overlay on hover */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </div>
 
-      {/* Product Info */}
+      {/* Content */}
       <div className="p-3 sm:p-4 lg:p-5">
+        {/* Title and Category */}
         <div className="mb-2 sm:mb-3">
-          <p className="text-xs sm:text-sm text-primary font-semibold uppercase tracking-wide mb-1">
-            {product.category}
-          </p>
-          <h3 className="font-bold text-gray-900 group-hover:text-primary transition-colors duration-300 line-clamp-2 text-sm sm:text-base lg:text-lg leading-tight">
-          {product.title}
-        </h3>
+          <h3 className="font-semibold text-gray-900 mb-1 text-sm sm:text-base lg:text-lg leading-tight line-clamp-2 group-hover:text-primary transition-colors duration-200">
+            {product.title}
+          </h3>
+          <p className="text-xs sm:text-sm text-gray-500 capitalize">{product.category}</p>
         </div>
-        
-        {/* Price Section */}
-        <div className="flex items-center gap-2 mb-3 sm:mb-4">
-          <div className={cn(
-            "text-lg sm:text-xl lg:text-2xl font-bold",
-            hasDiscount ? "text-red-600" : "text-gray-900"
-          )}>
-            {formatPrice(convertPrice(discountedPrice))}
-          </div>
-          {hasDiscount && (
-            <div className="text-xs sm:text-sm text-gray-500 line-through">
-              {formatPrice(convertPrice(originalPrice))}
+
+        {/* Rating */}
+        {averageRating > 0 && (
+          <div className="flex items-center gap-1 mb-2 sm:mb-3">
+            <div className="flex items-center">
+              {[...Array(5)].map((_, i) => (
+                <Star
+                  key={i}
+                  className={cn(
+                    "w-3 h-3 sm:w-4 sm:h-4",
+                    i < averageRating
+                      ? "text-yellow-400 fill-yellow-400"
+                      : "text-gray-300"
+                  )}
+                />
+              ))}
             </div>
-          )}
-          {hasDiscount && (
-            <span className="text-xs sm:text-sm bg-red-100 text-red-700 px-2 py-1 rounded-full font-medium">
-              Save {formatPrice(convertPrice(originalPrice - discountedPrice))}
+            <span className="text-xs sm:text-sm text-gray-500">
+              {averageRating.toFixed(1)}
+              {product.numReviews && ` (${product.numReviews})`}
+            </span>
+          </div>
+        )}
+
+        {/* Price */}
+        <div className="flex items-center gap-2 mb-3 sm:mb-4">
+          <span className="text-base sm:text-lg lg:text-xl font-bold text-primary">
+            {formatPrice(convertPrice(discountedPrice))}
+          </span>
+          {product.discount > 0 && (
+            <span className="text-xs sm:text-sm text-gray-500 line-through">
+              {formatPrice(convertPrice(product.price))}
             </span>
           )}
         </div>
 
-        {/* Rating Stars - Only show if product has reviews */}
-        <div className="flex items-center justify-between mb-3 sm:mb-4">
-          {(product.numReviews && product.numReviews > 0) ? (
-            <div className="flex items-center">
-              {[...Array(5)].map((_, i) => (
-                <Star 
-                  key={i} 
-                  className={cn(
-                    "w-3 h-3 sm:w-4 sm:h-4 transition-colors duration-200",
-                    i < Math.floor(product.rating || 0) 
-                      ? "fill-yellow-400 text-yellow-400" 
-                      : "fill-gray-200 text-gray-200"
-                  )} 
-                />
-              ))}
-              <span className="text-xs sm:text-sm text-gray-500 ml-1 sm:ml-2">
-                ({product.rating?.toFixed(1) || '0.0'}) • {product.numReviews} review{product.numReviews !== 1 ? 's' : ''}
-              </span>
-            </div>
-          ) : (
-            <div className="flex items-center">
-              <span className="text-xs sm:text-sm text-gray-400">No reviews yet</span>
-            </div>
-          )}
-          
-          {/* Action Hint */}
-          <div className="flex items-center text-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <span className="text-xs sm:text-sm font-medium mr-1">View</span>
-            <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4" />
-          </div>
-        </div>
-
-        {/* Action Buttons - Always visible */}
+        {/* Action Buttons */}
         <div className="flex gap-2">
           <Button
-            size="sm"
-            variant="outline"
-            className="flex-1 bg-white text-gray-900 hover:bg-gray-50 shadow-sm border border-gray-200 hover:border-primary/30 transition-all duration-300 text-xs sm:text-sm"
             onClick={handleViewDetails}
+            variant="outline"
+            size="sm"
+            className="flex-1 text-xs sm:text-sm py-2 sm:py-2.5 rounded-lg sm:rounded-xl hover:bg-gray-50 border-gray-200 transition-all duration-200"
           >
             <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-            <span className="hidden sm:inline">Quick</span> View
+            <span className="hidden xs:inline">Quick View</span>
+            <span className="xs:hidden">View</span>
           </Button>
           <Button
-            size="sm"
-            className="flex-1 bg-gradient-to-r from-primary to-primary/80 text-white hover:from-primary/90 hover:to-primary/70 shadow-sm transition-all duration-300 hover:scale-105 text-xs sm:text-sm"
             onClick={handleAddToCart}
+            size="sm"
+            className="flex-1 text-xs sm:text-sm py-2 sm:py-2.5 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white rounded-lg sm:rounded-xl transition-all duration-200 hover:shadow-lg"
           >
             <ShoppingBag className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-            <span className="hidden sm:inline">Add to</span> Cart
+            <span className="hidden xs:inline">Add to Cart</span>
+            <span className="xs:hidden">Add</span>
           </Button>
         </div>
       </div>

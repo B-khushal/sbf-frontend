@@ -171,26 +171,32 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-lg border-b shadow-sm">
-      <div className="container mx-auto px-4 flex items-center justify-between h-16">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-lg border-b shadow-sm">
+      <div className="container mx-auto px-3 sm:px-4 lg:px-6 flex items-center justify-between h-14 sm:h-16">
         {/* Logo */}
         <Link to="/" className="flex items-center">
           {/* Desktop Logo */}
           <img
             src={headerSettings.logo}
             alt="Spring Blossoms Florist Logo"
-            className="hidden md:block h-24 w-70 transition-transform duration-300 ease-in-out hover:scale-105"
+            className="hidden lg:block h-20 w-60 xl:h-24 xl:w-70 transition-transform duration-300 ease-in-out hover:scale-105"
+          />
+          {/* Tablet Logo */}
+          <img
+            src={headerSettings.logo}
+            alt="Spring Blossoms Florist Logo"
+            className="hidden md:block lg:hidden h-16 w-48 transition-transform duration-300 ease-in-out hover:scale-105"
           />
           {/* Mobile Logo */}
           <div className="md:hidden">
-            <span className="text-2xl font-black bg-gradient-to-r from-pink-500 via-purple-600 to-blue-600 bg-clip-text text-transparent tracking-wider hover:from-blue-600 hover:via-pink-500 hover:to-purple-600 transition-all duration-300 transform hover:scale-105">
+            <span className="text-xl sm:text-2xl font-black bg-gradient-to-r from-pink-500 via-purple-600 to-blue-600 bg-clip-text text-transparent tracking-wider hover:from-blue-600 hover:via-pink-500 hover:to-purple-600 transition-all duration-300 transform hover:scale-105">
               SBF
             </span>
           </div>
         </Link>
         
         {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center space-x-6">
+        <div className="hidden lg:flex items-center space-x-4 xl:space-x-6">
           {headerSettings.navigationItems
             .filter(item => item.enabled)
             .sort((a, b) => a.order - b.order)
@@ -200,296 +206,188 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
             </NavLink>
           ))}
         </div>
-
-        {/* Desktop Search Bar */}
-        <div className="hidden md:flex items-center flex-1 max-w-md mx-6 relative">
+        
+        {/* Search Bar - Hidden on mobile, shown on tablet+ */}
+        <div className="hidden md:flex relative flex-1 max-w-sm lg:max-w-md xl:max-w-lg mx-4 lg:mx-6">
           <form onSubmit={handleSearchSubmit} className="w-full relative">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
               <Input
                 type="text"
                 placeholder="Search flowers, bouquets..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onFocus={handleSearchFocus}
-                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-300 focus:border-pink-300 bg-white/80 backdrop-blur-sm"
+                onBlur={() => {
+                  setTimeout(() => {
+                    setIsSearchFocused(false);
+                    setShowSuggestions(false);
+                  }, 200);
+                }}
+                className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-full bg-gray-50/50 backdrop-blur-sm focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300"
               />
+              {isSearching && (
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              )}
             </div>
-            {searchQuery && (
-              <button
-                type="submit"
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-pink-500 text-white px-3 py-1 rounded-md text-sm font-medium hover:bg-pink-600 transition-colors"
-              >
-                Search
-              </button>
+            
+            {/* Search Suggestions Dropdown */}
+            {(showSuggestions && isSearchFocused) && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-2xl shadow-lg z-50 max-h-96 overflow-y-auto">
+                {searchQuery.length >= 2 && searchSuggestions.length > 0 && (
+                  <div className="p-2">
+                    <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">Products</h4>
+                    {searchSuggestions.map((suggestion) => (
+                      <button
+                        key={suggestion.id}
+                        onClick={() => handleSuggestionClick(suggestion)}
+                        className="w-full text-left px-3 py-2 hover:bg-gray-50 rounded-lg transition-colors duration-200 flex items-center gap-3"
+                      >
+                        <div className="w-8 h-8 bg-gray-100 rounded-lg flex-shrink-0"></div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">{suggestion.title}</p>
+                          <p className="text-xs text-gray-500">{suggestion.category}</p>
+                        </div>
+                        <p className="text-sm font-medium text-primary">₹{suggestion.price}</p>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                
+                {searchQuery.length < 2 && (
+                  <div className="p-2">
+                    <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-2">Popular Searches</h4>
+                    <div className="grid grid-cols-2 gap-1">
+                      {popularSearches.map((term) => (
+                        <button
+                          key={term}
+                          onClick={() => handlePopularSearchClick(term)}
+                          className="text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors duration-200"
+                        >
+                          {term}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
           </form>
-
-          {/* Desktop Search Suggestions Dropdown */}
-          {showSuggestions && isSearchFocused && searchQuery.length >= 2 && searchSuggestions.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg border border-gray-200 shadow-lg z-50 max-h-96 overflow-y-auto">
-              <div className="p-3">
-                <div className="text-xs font-bold text-pink-600 mb-3 flex items-center gap-1">
-                  <Sparkles className="h-3 w-3 text-yellow-500" />
-                  Suggestions
-                </div>
-                {searchSuggestions.map((suggestion) => (
-                  <button
-                    key={suggestion.id}
-                    onClick={() => handleSuggestionClick(suggestion)}
-                    className="w-full flex items-center gap-3 p-2 hover:bg-pink-50 rounded-lg transition-all duration-200 text-left mb-1"
-                  >
-                    <div className="w-10 h-10 bg-gray-100 rounded-lg flex-shrink-0 overflow-hidden">
-                      {suggestion.image ? (
-                        <img 
-                          src={suggestion.image} 
-                          alt={suggestion.title}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-pink-100 flex items-center justify-center">
-                          <Search className="h-4 w-4 text-pink-600" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-gray-800 truncate text-sm">{suggestion.title}</div>
-                      <div className="text-xs text-pink-600">{suggestion.category}</div>
-                      <div className="text-xs text-gray-500">₹{suggestion.price}</div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Desktop Popular Searches Dropdown */}
-          {showSuggestions && isSearchFocused && searchQuery.length < 2 && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg border border-gray-200 shadow-lg z-50">
-              <div className="p-3">
-                <div className="text-xs font-bold text-green-600 mb-3 flex items-center gap-1">
-                  <TrendingUp className="h-3 w-3 text-green-500" />
-                  Popular Searches
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  {popularSearches.map((term) => (
-                    <button
-                      key={term}
-                      onClick={() => handlePopularSearchClick(term)}
-                      className="text-left p-2 text-sm text-gray-700 hover:bg-green-50 rounded-lg transition-all duration-200 font-medium"
-                    >
-                      {term}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
         </div>
         
-        {/* Actions */}
-        <div className="flex items-center space-x-2">
-          {/* Currency Converter - Desktop */}
-          {headerSettings.showCurrencyConverter && (
-            <CurrencyConverter className="hidden md:block" />
-          )}
-          
-          {/* Desktop Auth Actions */}
-          {user ? (
-            <Link to="/profile" className="hidden md:block">
-              <Button variant="ghost" size="icon" aria-label="Account" className="text-pink-600 transition-colors hover:text-green-600">
-                <User className="h-5 w-5 hover:text-green-600" />
-              </Button>
-            </Link>
-          ) : (
-            <Link to="/login" className="hidden md:block">
-              <Button variant="outline" size="sm" className="text-pink-600 border-pink-600 hover:bg-pink-600 hover:text-white transition-colors">
-                <LogIn className="h-4 w-4 mr-2" />
-                Sign In
-              </Button>
-            </Link>
-          )}
-
-          {/* Mobile Navigation Icons */}
-          <div className="md:hidden flex items-center space-x-1">
-            {/* Shop Icon - Mobile */}
-            <Link to="/shop">
-              <Button variant="ghost" size="icon" aria-label="Shop" className="text-pink-600 transition-colors hover:text-green-600">
-                <Store className="h-5 w-5" />
-              </Button>
-            </Link>
-
-            {/* Wishlist Icon - Mobile */}
-            {headerSettings.showWishlist && (
-              <Link to="/wishlist">
-                <Button variant="ghost" size="icon" aria-label="Wishlist" className="text-pink-600 transition-colors hover:text-green-600 relative">
-                  <Heart className="h-5 w-5" />
-                  {wishlistCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                      {wishlistCount}
-                    </span>
-                  )}
-                </Button>
-              </Link>
-            )}
-
-            {/* Mobile Auth Actions */}
-            {user ? (
-              <Link to="/profile">
-                <Button variant="ghost" size="icon" aria-label="Account" className="text-pink-600 transition-colors hover:text-green-600">
-                  <User className="h-5 w-5" />
-                </Button>
-              </Link>
-            ) : (
-              <Link to="/login">
-                <Button variant="ghost" size="icon" aria-label="Sign In" className="text-pink-600 transition-colors hover:text-green-600">
-                  <LogIn className="h-4 w-4" />
-                </Button>
-              </Link>
-            )}
-
-            {/* Currency Converter - Mobile with Dollar Sign Icon */}
-            {headerSettings.showCurrencyConverter && (
-              <div className="relative">
-                <CurrencyConverter />
-              </div>
-            )}
+        {/* Right Side Actions */}
+        <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-4">
+          {/* Currency Converter - Hidden on mobile */}
+          <div className="hidden sm:block">
+            <CurrencyConverter />
           </div>
-
-          {/* Wishlist Icon - Desktop */}
-          {headerSettings.showWishlist && (
-            <Link to="/wishlist" className="hidden md:block">
-              <Button variant="ghost" size="icon" aria-label="Wishlist" className="text-pink-600 transition-colors hover:text-green-600 relative">
-                <Heart className="h-5 w-5" />
+          
+          {/* Mobile Search Button */}
+          <Button 
+            variant="ghost" 
+            size="icon"
+            className="md:hidden w-8 h-8 sm:w-10 sm:h-10"
+            onClick={() => navigate('/shop')}
+          >
+            <Search size={18} />
+          </Button>
+          
+          {/* Wishlist */}
+          {user && (
+            <Button variant="ghost" size="icon" asChild className="relative w-8 h-8 sm:w-10 sm:h-10">
+              <Link to="/wishlist">
+                <Heart size={18} />
                 {wishlistCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                    {wishlistCount}
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center font-medium">
+                    {wishlistCount > 9 ? '9+' : wishlistCount}
                   </span>
                 )}
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           )}
           
-          {/* Shopping Cart */}
-          {headerSettings.showCart && (
+          {/* Cart */}
+          <Button variant="ghost" size="icon" asChild className="relative w-8 h-8 sm:w-10 sm:h-10">
             <Link to="/cart">
-              <Button variant="ghost" size="icon" aria-label="Shopping Cart" className="relative text-pink-600 transition-colors hover:text-green-600">
-                <ShoppingCart className="h-5 w-5" />
-                {actualCartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                    {actualCartCount}
-                  </span>
-                )}
-              </Button>
+              <ShoppingCart size={18} />
+              {actualCartCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-primary text-white text-xs rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center font-medium">
+                  {actualCartCount > 9 ? '9+' : actualCartCount}
+                </span>
+              )}
             </Link>
+          </Button>
+          
+          {/* User Menu */}
+          {user ? (
+            <Button variant="ghost" size="icon" asChild className="w-8 h-8 sm:w-10 sm:h-10">
+              <Link to="/profile">
+                <User size={18} />
+              </Link>
+            </Button>
+          ) : (
+            <Button variant="ghost" size="icon" asChild className="w-8 h-8 sm:w-10 sm:h-10">
+              <Link to="/login">
+                <LogIn size={18} />
+              </Link>
+            </Button>
           )}
           
-          {/* Desktop Sidebar Trigger */}
-          <Sheet>
+          {/* Mobile Menu */}
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label="Search & More" className="hidden md:block text-pink-600 transition-colors hover:text-green-600">
-                <Search className="h-5 w-5" />
+              <Button variant="ghost" size="icon" className="lg:hidden w-8 h-8 sm:w-10 sm:h-10">
+                <Menu size={18} />
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-80">
+            <SheetContent side="right" className="w-full sm:w-80 p-0">
               <div className="flex flex-col h-full">
-                <div className="flex items-center justify-between py-4 border-b">
-                  <h2 className="text-xl font-bold text-pink-600">Search & Explore</h2>
+                {/* Mobile Header */}
+                <div className="flex items-center justify-between p-4 border-b">
+                  <Link to="/" onClick={() => setMobileMenuOpen(false)}>
+                    <span className="text-xl font-black bg-gradient-to-r from-pink-500 via-purple-600 to-blue-600 bg-clip-text text-transparent">
+                      Spring Blossoms Florist
+                    </span>
+                  </Link>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="w-8 h-8"
+                  >
+                    <X size={18} />
+                  </Button>
                 </div>
                 
-                {/* Enhanced Desktop Sidebar Search */}
-                <div className="px-2 py-4 mb-4">
-                  <div className="text-sm font-semibold text-pink-600 mb-3 flex items-center gap-2">
-                    <Search className="h-4 w-4" />
-                    Search Products
-                  </div>
-                  <form onSubmit={handleSearchSubmit} className="relative">
+                {/* Mobile Search */}
+                <div className="p-4 border-b">
+                  <form onSubmit={(e) => {
+                    handleSearchSubmit(e);
+                    setMobileMenuOpen(false);
+                  }}>
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
                       <Input
                         type="text"
-                        placeholder="Search for flowers, bouquets..."
+                        placeholder="Search flowers, bouquets..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        onFocus={handleSearchFocus}
-                        className="w-full pl-10 pr-4 py-3 border-2 border-pink-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-300 focus:border-pink-300 bg-gradient-to-r from-pink-50/50 to-purple-50/50"
+                        className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg"
                       />
                     </div>
-                    {searchQuery && (
-                      <button
-                        type="submit"
-                        className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-pink-500 text-white px-3 py-1 rounded-lg text-sm font-medium hover:bg-pink-600 transition-colors"
-                      >
-                        Search
-                      </button>
-                    )}
                   </form>
-
-                  {/* Search Suggestions in Desktop Sidebar */}
-                  {searchQuery.length >= 2 && searchSuggestions.length > 0 && (
-                    <div className="mt-4 bg-gradient-to-br from-white via-pink-50/30 to-purple-50/30 rounded-xl border border-pink-200/50 shadow-lg overflow-hidden backdrop-blur-sm">
-                      <div className="p-3">
-                        <div className="text-xs font-bold text-pink-600 mb-3 flex items-center gap-1">
-                          <Sparkles className="h-3 w-3 text-yellow-500" />
-                          ✨ SUGGESTIONS
-                        </div>
-                        {searchSuggestions.map((suggestion) => (
-                          <button
-                            key={suggestion.id}
-                            onClick={() => handleSuggestionClick(suggestion)}
-                            className="w-full flex items-center gap-3 p-2 hover:bg-gradient-to-r hover:from-pink-100/70 hover:to-purple-100/70 rounded-lg transition-all duration-300 text-left mb-2 bg-white/70"
-                          >
-                            <div className="w-10 h-10 bg-gradient-to-br from-pink-200 to-purple-200 rounded-lg flex-shrink-0 overflow-hidden">
-                              {suggestion.image ? (
-                                <img 
-                                  src={suggestion.image} 
-                                  alt={suggestion.title}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full bg-gradient-to-br from-pink-200 to-purple-200 flex items-center justify-center">
-                                  <Search className="h-3 w-3 text-pink-600" />
-                                </div>
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="font-medium text-pink-800 truncate text-sm">{suggestion.title}</div>
-                              <div className="text-xs text-purple-600">{suggestion.category}</div>
-                              <div className="text-xs text-gray-500">₹{suggestion.price}</div>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Popular Searches in Desktop Sidebar */}
-                  {searchQuery.length < 2 && (
-                    <div className="mt-4">
-                      <div className="text-xs font-bold text-green-600 mb-3 flex items-center gap-1">
-                        <TrendingUp className="h-3 w-3 text-green-500" />
-                        🔥 POPULAR SEARCHES
-                      </div>
-                      <div className="grid grid-cols-1 gap-2">
-                        {popularSearches.map((term) => (
-                          <button
-                            key={term}
-                            onClick={() => handlePopularSearchClick(term)}
-                            className="text-left p-2 text-sm text-pink-700 bg-gradient-to-r from-white/80 to-pink-50/80 hover:from-pink-100 hover:to-purple-100 rounded-lg transition-all duration-300 font-medium shadow-sm"
-                          >
-                            {term}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
                 
-                {/* Quick Navigation Links */}
-                <div className="mt-4 border-t pt-4">
-                  <h3 className="text-sm font-semibold text-gray-600 mb-3">Quick Navigation</h3>
-                  <nav className="flex flex-col space-y-2">
+                {/* Currency Converter */}
+                <div className="p-4 border-b">
+                  <CurrencyConverter />
+                </div>
+                
+                {/* Navigation Links */}
+                <div className="flex-1 p-4">
+                  <nav className="space-y-2">
                     {headerSettings.navigationItems
                       .filter(item => item.enabled)
                       .sort((a, b) => a.order - b.order)
@@ -497,11 +395,12 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                       <Link
                         key={item.href}
                         to={item.href}
+                        onClick={() => setMobileMenuOpen(false)}
                         className={cn(
-                          "px-3 py-2 text-sm rounded-lg transition-colors",
+                          'flex items-center px-3 py-3 text-sm font-medium rounded-lg transition-colors',
                           pathname === item.href 
-                            ? "font-medium bg-gradient-to-r from-pink-100 to-purple-100 text-pink-700" 
-                            : "text-muted-foreground hover:bg-pink-50 hover:text-pink-600"
+                            ? 'bg-primary text-primary-foreground' 
+                            : 'text-gray-700 hover:bg-gray-100'
                         )}
                       >
                         {item.label}
@@ -509,86 +408,24 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                     ))}
                   </nav>
                 </div>
-              </div>
-            </SheetContent>
-          </Sheet>
-          
-          {/* Mobile Menu - Only for navigation, no search */}
-          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label="Menu" className="md:hidden">
-                <Menu className="h-5 w-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-80">
-              <div className="flex flex-col h-full">
-                <div className="flex items-center justify-between py-4 border-b">
-                  <Link to="/" className="text-xl font-bold transition-colors"
-                   onClick={() => setMobileMenuOpen(false)}>
-                    <span className="text-3xl font-black bg-gradient-to-r from-pink-500 via-purple-600 to-blue-600 bg-clip-text text-transparent tracking-wider hover:from-blue-600 hover:via-pink-500 hover:to-purple-600 transition-all duration-300 transform hover:scale-105">
-                      SBF
-                    </span>
-                  </Link>
-                  <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)}>
-                    <X className="h-5 w-5" />
-                  </Button>
-                </div>
                 
-                <nav className="flex flex-col space-y-4 mt-6 flex-1">
-                  {headerSettings.navigationItems
-                    .filter(item => item.enabled)
-                    .sort((a, b) => a.order - b.order)
-                    .map((item) => (
-                    <Link
-                      key={item.href}
-                      to={item.href}
-                      className={cn(
-                        "px-4 py-3 text-lg rounded-lg transition-colors",
-                        pathname === item.href 
-                          ? "font-medium bg-gradient-to-r from-bloom-pink-100 to-bloom-blue-100 text-bloom-blue-700" 
-                          : "text-muted-foreground hover:bg-bloom-pink-50 hover:text-bloom-blue-600"
-                      )}
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      {item.label}
-                    </Link>
-                  ))}
-                  
-                  {/* Mobile Auth Section */}
-                  <div className="border-t pt-4 mt-6">
-                    {user ? (
-                      <div className="space-y-2">
-                        <Link
-                          to="/profile"
-                          className="flex items-center px-4 py-3 text-lg rounded-lg transition-colors text-muted-foreground hover:bg-bloom-pink-50 hover:text-bloom-blue-600"
-                          onClick={() => setMobileMenuOpen(false)}
-                        >
-                          <User className="h-5 w-5 mr-3" />
-                          My Account
-                        </Link>
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        <Link
-                          to="/login"
-                          className="flex items-center px-4 py-3 text-lg rounded-lg transition-colors bg-gradient-to-r from-pink-500 to-purple-600 text-white hover:from-pink-600 hover:to-purple-700"
-                          onClick={() => setMobileMenuOpen(false)}
-                        >
-                          <LogIn className="h-5 w-5 mr-3" />
-                          Sign In
-                        </Link>
-                        <Link
-                          to="/signup"
-                          className="flex items-center px-4 py-3 text-lg rounded-lg transition-colors border border-pink-300 text-pink-600 hover:bg-pink-50"
-                          onClick={() => setMobileMenuOpen(false)}
-                        >
-                          <User className="h-5 w-5 mr-3" />
-                          Sign Up
-                        </Link>
-                      </div>
-                    )}
-                  </div>
-                </nav>
+                {/* Mobile Footer Actions */}
+                <div className="p-4 border-t space-y-2">
+                  {!user ? (
+                    <>
+                      <Button asChild className="w-full" onClick={() => setMobileMenuOpen(false)}>
+                        <Link to="/login">Sign In</Link>
+                      </Button>
+                      <Button variant="outline" asChild className="w-full" onClick={() => setMobileMenuOpen(false)}>
+                        <Link to="/signup">Sign Up</Link>
+                      </Button>
+                    </>
+                  ) : (
+                    <Button asChild className="w-full" onClick={() => setMobileMenuOpen(false)}>
+                      <Link to="/profile">My Account</Link>
+                    </Button>
+                  )}
+                </div>
               </div>
             </SheetContent>
           </Sheet>
