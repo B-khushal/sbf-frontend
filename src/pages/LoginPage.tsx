@@ -40,7 +40,7 @@ const LoginPage = () => {
   const location = useLocation();
   const { login, socialLogin } = useAuth();
   const { toast } = useToast();
-  const { triggerGoogleLogin, renderGoogleButton, isGoogleLoading } = useGmailLogin(true);
+  const { triggerGoogleLogin, renderGoogleButton, isGoogleLoading } = useGmailLogin();
   
   // Get the redirect path from location state or default to '/'
   const redirectPath = location.state?.redirect || '/';
