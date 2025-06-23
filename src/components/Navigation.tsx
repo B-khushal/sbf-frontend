@@ -10,7 +10,6 @@ import api from '@/services/api';
 import useCart from '@/hooks/use-cart';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useAuth } from '@/hooks/use-auth';
-import { useGmailLogin } from '@/hooks/use-gmail-login';
 
 interface NavItem {
   href: string;
@@ -67,7 +66,6 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
   const [isSearching, setIsSearching] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { triggerGoogleLogin } = useGmailLogin();
 
   // Get wishlist count directly from localStorage
   useEffect(() => {
@@ -344,15 +342,16 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
 
           {/* User Authentication */}
           {!user ? (
-            <Button 
-              onClick={triggerGoogleLogin}
-              variant="outline" 
-              size="sm"
-              className="hidden md:flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 hover:from-blue-600 hover:to-blue-700 transition-all duration-300"
-            >
-              <LogIn className="h-4 w-4" />
-              Sign In
-            </Button>
+            <Link to="/login">
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="hidden md:flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 hover:from-blue-600 hover:to-blue-700 transition-all duration-300"
+              >
+                <LogIn className="h-4 w-4" />
+                Sign In
+              </Button>
+            </Link>
           ) : (
             <Link to="/profile">
               <Button variant="ghost" size="icon" aria-label="User Profile" className="text-pink-600 transition-colors hover:text-green-600">
@@ -363,15 +362,16 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
 
           {/* Mobile Sign In Button */}
           {!user && (
-            <Button 
-              onClick={triggerGoogleLogin}
-              variant="outline" 
-              size="sm"
-              className="md:hidden flex items-center gap-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 hover:from-blue-600 hover:to-blue-700 transition-all duration-300 px-2 py-1 text-xs"
-            >
-              <LogIn className="h-3 w-3" />
-              Sign In
-            </Button>
+            <Link to="/login">
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="md:hidden flex items-center gap-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 hover:from-blue-600 hover:to-blue-700 transition-all duration-300 px-2 py-1 text-xs"
+              >
+                <LogIn className="h-3 w-3" />
+                Sign In
+              </Button>
+            </Link>
           )}
           
           {/* Desktop Sidebar Trigger */}
@@ -545,16 +545,18 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                   
                   {/* Mobile Authentication */}
                   {!user ? (
-                    <Button 
-                      onClick={() => {
-                        setMobileMenuOpen(false);
-                        triggerGoogleLogin();
-                      }}
-                      className="mx-4 mt-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 transition-all duration-300"
+                    <Link
+                      to="/login"
+                      className="mx-4 mt-4"
+                      onClick={() => setMobileMenuOpen(false)}
                     >
-                      <LogIn className="h-4 w-4 mr-2" />
-                      Sign In with Google
-                    </Button>
+                      <Button 
+                        className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 transition-all duration-300"
+                      >
+                        <LogIn className="h-4 w-4 mr-2" />
+                        Sign In
+                      </Button>
+                    </Link>
                   ) : (
                     <Link
                       to="/profile"

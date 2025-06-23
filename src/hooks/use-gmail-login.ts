@@ -17,7 +17,7 @@ declare global {
   }
 }
 
-export const useGmailLogin = () => {
+export const useGmailLogin = (autoPrompt: boolean = false) => {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isGoogleInitialized, setIsGoogleInitialized] = useState(false);
   const auth = useContext(AuthContext);
@@ -50,6 +50,12 @@ export const useGmailLogin = () => {
     // Prevent multiple initializations across all component instances
     if (window.googleOAuthInitialized) {
       setIsGoogleInitialized(true);
+      // If autoPrompt is enabled and we're already initialized, show the prompt
+      if (autoPrompt) {
+        setTimeout(() => {
+          triggerGoogleLogin();
+        }, 1000); // Small delay to ensure UI is ready
+      }
       return;
     }
     
@@ -73,6 +79,13 @@ export const useGmailLogin = () => {
           window.googleOAuthInitialized = true;
           setIsGoogleInitialized(true);
           console.log('Google OAuth initialized successfully');
+          
+          // Auto-prompt if enabled
+          if (autoPrompt) {
+            setTimeout(() => {
+              triggerGoogleLogin();
+            }, 1000); // Small delay to ensure UI is ready
+          }
         }
       } catch (error) {
         console.error('Failed to initialize Google OAuth:', error);
@@ -93,7 +106,7 @@ export const useGmailLogin = () => {
     } else {
       initializeGoogleAuth();
     }
-  }, [handleGoogleResponse]);
+  }, [handleGoogleResponse, autoPrompt]);
 
   // Trigger Google Sign-In (this will show the account chooser)
   const triggerGoogleLogin = useCallback(() => {
