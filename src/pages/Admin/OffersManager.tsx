@@ -30,6 +30,7 @@ const OffersManager = () => {
   const [offers, setOffers] = useState<Offer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [currentOffer, setCurrentOffer] = useState<Partial<Offer>>({
     theme: 'general',
     backgroundColor: '#ffffff',
@@ -79,6 +80,7 @@ const OffersManager = () => {
         buttonText: 'Shop Now'
       });
       setIsEditing(false);
+      setShowForm(false);
       fetchOffers();
     } catch (error) {
       toast({
@@ -129,9 +131,28 @@ const OffersManager = () => {
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold mb-8">Manage Offers</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Manage Offers</h1>
+        <Button 
+          onClick={() => {
+            setIsEditing(false);
+            setShowForm(true);
+            setCurrentOffer({
+              theme: 'general',
+              backgroundColor: '#ffffff',
+              textColor: '#000000',
+              buttonText: 'Shop Now'
+            });
+          }}
+          className="bg-pink-600 hover:bg-pink-700 text-white"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Add New Offer
+        </Button>
+      </div>
 
       {/* Offer Form */}
+      {showForm && (
       <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-xl shadow-sm mb-8">
         <h2 className="text-xl font-semibold mb-4">
           {isEditing ? 'Edit Offer' : 'Create New Offer'}
@@ -288,6 +309,7 @@ const OffersManager = () => {
               variant="outline"
               onClick={() => {
                 setIsEditing(false);
+                setShowForm(false);
                 setCurrentOffer({
                   theme: 'general',
                   backgroundColor: '#ffffff',
@@ -301,6 +323,7 @@ const OffersManager = () => {
           )}
         </div>
       </form>
+      )}
 
       {/* Offers List */}
       <div className="space-y-4">
@@ -334,6 +357,7 @@ const OffersManager = () => {
                       onClick={() => {
                         setCurrentOffer(offer);
                         setIsEditing(true);
+                        setShowForm(true);
                       }}
                     >
                       Edit

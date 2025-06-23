@@ -128,8 +128,8 @@ const HomeHero = () => {
             
             {/* Gradient Overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-black/20 rounded-2xl" />
-            
-            {/* Content */}
+        
+        {/* Content */}
             <div className="absolute inset-0 flex items-center justify-center z-10">
               <div className="text-center text-white max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className={cn(
@@ -139,17 +139,17 @@ const HomeHero = () => {
                     : "opacity-0 transform translate-y-8"
                 )}>
                   <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-4 sm:mb-6 leading-tight drop-shadow-lg">
-                    {slide.title}
-                  </h1>
+                  {slide.title}
+                </h1>
                   <p className="text-base sm:text-lg md:text-xl lg:text-2xl mb-6 sm:mb-8 opacity-90 max-w-2xl mx-auto leading-relaxed drop-shadow-md">
-                    {slide.subtitle}
-                  </p>
+                  {slide.subtitle}
+                </p>
                   <Button
                     size="lg"
                     className="bg-white text-primary hover:bg-gray-100 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                     onClick={() => navigate(slide.ctaLink)}
-                  >
-                    {slide.ctaText}
+                >
+                  {slide.ctaText}
                     <ArrowRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5" />
                   </Button>
                 </div>
@@ -170,26 +170,26 @@ const HomeHero = () => {
           </Button>
           
           <div className="flex gap-2">
-            {heroSlides.map((_, index) => (
-              <button
-                key={index}
-                className={cn(
+          {heroSlides.map((_, index) => (
+            <button
+              key={index}
+              className={cn(
                   "w-3 h-3 sm:w-4 sm:h-4 rounded-full transition-all duration-300",
-                  index === currentSlide
+                index === currentSlide 
                     ? 'bg-white scale-125 shadow-lg'
                     : 'bg-white/50 hover:bg-white/75 hover:scale-110'
-                )}
+              )}
                 onClick={() => setCurrentSlide(index)}
-              />
-            ))}
-          </div>
-          
+            />
+          ))}
+        </div>
+        
           <Button
             variant="outline"
             size="icon"
             className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 hover:bg-white/30 border-white/30 text-white backdrop-blur-sm rounded-full transition-all duration-300 hover:scale-110"
             onClick={goToNextSlide}
-          >
+        >
             <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
           </Button>
         </div>

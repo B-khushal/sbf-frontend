@@ -157,11 +157,11 @@ const ProductCard = ({ product }: { product: Product }) => {
       }
     } catch (error) {
       console.error("Error adding to cart:", error);
-      toast.error("Failed to add to cart", {
+        toast.error("Failed to add to cart", {
         description: "Please try again",
-        duration: 3000,
-      });
-    }
+          duration: 3000,
+        });
+      }
   };
 
   // Handle view details
@@ -340,8 +340,8 @@ const ProductCard = ({ product }: { product: Product }) => {
             {product.category}
           </p>
           <h3 className="font-bold text-gray-900 group-hover:text-primary transition-colors duration-300 line-clamp-2 text-sm sm:text-base lg:text-lg leading-tight">
-            {product.title}
-          </h3>
+          {product.title}
+        </h3>
         </div>
         
         {/* Price Section */}

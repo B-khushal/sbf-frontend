@@ -7,6 +7,7 @@ import { Plus, Edit, Trash2, Tag } from 'lucide-react';
 import { 
   getAllPromoCodes, 
   createPromoCode, 
+  updatePromoCode,
   deletePromoCode,
   type PromoCode
 } from '@/services/promoCodeService';
@@ -16,6 +17,8 @@ const PromoCodesPage: React.FC = () => {
   const [promoCodes, setPromoCodes] = useState<PromoCode[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [editingPromoCode, setEditingPromoCode] = useState<PromoCode | null>(null);
   const [formData, setFormData] = useState({
     code: '',
     description: '',
@@ -79,6 +82,54 @@ const PromoCodesPage: React.FC = () => {
     }
   };
 
+  const handleEditPromoCode = (promoCode: PromoCode) => {
+    setEditingPromoCode(promoCode);
+    setFormData({
+      code: promoCode.code,
+      description: promoCode.description,
+      discountType: promoCode.discountType,
+      discountValue: promoCode.discountValue,
+      validUntil: new Date(promoCode.validUntil).toISOString().split('T')[0]
+    });
+    setShowEditForm(true);
+    setShowCreateForm(false);
+  };
+
+  const handleUpdatePromoCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!editingPromoCode) return;
+    
+    try {
+      const response = await updatePromoCode(editingPromoCode._id, formData);
+      
+      if (response.success) {
+        toast({
+          title: "Success",
+          description: "Promo code updated successfully"
+        });
+        
+        setShowEditForm(false);
+        setEditingPromoCode(null);
+        setFormData({
+          code: '',
+          description: '',
+          discountType: 'percentage',
+          discountValue: 0,
+          validUntil: ''
+        });
+        fetchPromoCodes();
+      }
+    } catch (error: any) {
+      console.error('Error updating promo code:', error);
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || 'Failed to update promo code',
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleDeletePromoCode = async (promoCode: PromoCode) => {
     if (!confirm(`Are you sure you want to delete promo code "${promoCode.code}"?`)) {
       return;
@@ -132,7 +183,21 @@ const PromoCodesPage: React.FC = () => {
           <p className="text-muted-foreground">Manage promotional codes and discounts</p>
         </div>
         
-        <Button onClick={() => setShowCreateForm(!showCreateForm)}>
+        <Button 
+          onClick={() => {
+            setShowCreateForm(!showCreateForm);
+            setShowEditForm(false);
+            setEditingPromoCode(null);
+            setFormData({
+              code: '',
+              description: '',
+              discountType: 'percentage',
+              discountValue: 0,
+              validUntil: ''
+            });
+          }}
+          disabled={showEditForm}
+        >
           <Plus className="w-4 h-4 mr-2" />
           Create Promo Code
         </Button>
@@ -215,6 +280,97 @@ const PromoCodesPage: React.FC = () => {
         </Card>
       )}
 
+      {/* Edit Form */}
+      {showEditForm && editingPromoCode && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Edit Promo Code</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleUpdatePromoCode} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Promo Code *</label>
+                  <Input
+                    value={formData.code}
+                    onChange={(e) => setFormData({...formData, code: e.target.value.toUpperCase()})}
+                    placeholder="e.g., SAVE20"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Discount Type *</label>
+                  <select 
+                    className="w-full p-2 border rounded-md"
+                    value={formData.discountType}
+                    onChange={(e) => setFormData({...formData, discountType: e.target.value as 'percentage' | 'fixed'})}
+                  >
+                    <option value="percentage">Percentage (%)</option>
+                    <option value="fixed">Fixed Amount (₹)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Description *</label>
+                <Input
+                  value={formData.description}
+                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  placeholder="Describe this promo code..."
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Discount Value * {formData.discountType === 'percentage' ? '(%)' : '(₹)'}
+                  </label>
+                  <Input
+                    type="number"
+                    value={formData.discountValue}
+                    onChange={(e) => setFormData({...formData, discountValue: parseFloat(e.target.value) || 0})}
+                    min="0"
+                    max={formData.discountType === 'percentage' ? "100" : undefined}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Valid Until *</label>
+                  <Input
+                    type="date"
+                    value={formData.validUntil}
+                    onChange={(e) => setFormData({...formData, validUntil: e.target.value})}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="flex space-x-2">
+                <Button type="submit">Update Promo Code</Button>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => {
+                    setShowEditForm(false);
+                    setEditingPromoCode(null);
+                    setFormData({
+                      code: '',
+                      description: '',
+                      discountType: 'percentage',
+                      discountValue: 0,
+                      validUntil: ''
+                    });
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Promo Codes List */}
       <div className="grid gap-4">
         {loading ? (
@@ -269,6 +425,14 @@ const PromoCodesPage: React.FC = () => {
                   </div>
                   
                   <div className="flex space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEditPromoCode(promoCode)}
+                    >
+                      <Edit className="w-4 h-4 mr-2" />
+                      Edit
+                    </Button>
                     <Button
                       variant="destructive"
                       size="sm"
