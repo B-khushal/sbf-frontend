@@ -1,8 +1,8 @@
 // Razorpay Configuration
 export const RAZORPAY_CONFIG = {
-  // Updated with new credentials from user
-  keyId: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_X9mhr8hFuFuAy6',
-  keySecret: import.meta.env.VITE_RAZORPAY_KEY_SECRET || '9aAEZlQZmcVbcV7MOSWy',
+  // Updated with newest credentials from user
+  keyId: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_eGFXvmTuCZJo3Z',
+  keySecret: import.meta.env.VITE_RAZORPAY_KEY_SECRET || 'NUAqe6xx4c5aHQNYDb6YdaDF',
   
   // Configuration options
   currency: 'INR',
@@ -14,7 +14,7 @@ export const RAZORPAY_CONFIG = {
   },
   
   isValidKeySecret: (keySecret: string): boolean => {
-    return /^[A-Za-z0-9]{24}$/.test(keySecret);
+    return /^[A-Za-z0-9]{20,}$/.test(keySecret);
   },
   
   // Get validated config
