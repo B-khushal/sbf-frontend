@@ -8,7 +8,6 @@ import { toast } from "sonner";
 import useCart from "@/hooks/use-cart";
 import { useAuth } from "@/hooks/use-auth";
 import { getImageUrl } from "@/config";
-import { useGmailLogin } from "@/hooks/use-gmail-login";
 
 export type Product = {
   _id: string;
@@ -88,7 +87,6 @@ const ProductCard = ({ product }: { product: Product }) => {
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   const { user } = useAuth();
-  const { triggerGoogleLogin } = useGmailLogin();
 
   // Load wishlist from localStorage
   useEffect(() => {
@@ -125,13 +123,18 @@ const ProductCard = ({ product }: { product: Product }) => {
     
     if (!user) {
       toast.error("Please login first to add items to your cart", {
-        description: "Sign in with Google to continue shopping",
+        description: "You'll be redirected to the login page",
         duration: 3000,
       });
-      // Show Google login popup
+      // Redirect to login page with current page as redirect path
       setTimeout(() => {
-        triggerGoogleLogin();
-      }, 800);
+        navigate('/login', { 
+          state: { 
+            redirect: window.location.pathname,
+            message: "Please login to add items to your cart"
+          } 
+        });
+      }, 1500);
       return;
     }
     
@@ -177,13 +180,18 @@ const ProductCard = ({ product }: { product: Product }) => {
     
     if (!user) {
       toast.error("Please login first to add items to your wishlist", {
-        description: "Sign in with Google to save your favorites",
+        description: "You'll be redirected to the login page",
         duration: 3000,
       });
-      // Show Google login popup
+      // Redirect to login page with current page as redirect path
       setTimeout(() => {
-        triggerGoogleLogin();
-      }, 800);
+        navigate('/login', { 
+          state: { 
+            redirect: window.location.pathname,
+            message: "Please login to manage your wishlist"
+          } 
+        });
+      }, 1500);
       return;
     }
     
@@ -409,8 +417,6 @@ const ProductCard = ({ product }: { product: Product }) => {
           </Button>
         </div>
       </div>
-
-
     </div>
   );
 };

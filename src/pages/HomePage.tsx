@@ -14,7 +14,6 @@ import { useSettings } from "../contexts/SettingsContext";
 import { useOfferPopup } from "../hooks/use-offer-popup";
 import OfferPopup from "../components/ui/OfferPopup";
 import api from "../services/api";
-import { useAuth } from '@/hooks/use-auth';
 
 // Animation variants
 const containerVariants = {
@@ -56,7 +55,6 @@ const HomePage = () => {
   const { items, itemCount, isCartOpen, closeCart, updateItemQuantity, removeItem } = useCart();
   const { homeSections, loading: settingsLoading } = useSettings();
   const { currentOffer, isOpen: isOfferOpen, closeOffer } = useOfferPopup();
-  const { user } = useAuth();
   
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [newProducts, setNewProducts] = useState([]);

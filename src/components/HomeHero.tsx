@@ -95,7 +95,7 @@ const HomeHero = () => {
   }, []);
 
   return (
-    <div className="relative pt-8 sm:pt-12 lg:pt-16">
+    <div className="relative">
       {/* Hero Slides */}
       <div className="relative h-[60vh] sm:h-[70vh] md:h-[80vh] lg:h-[85vh] overflow-hidden bg-gray-900 rounded-2xl mx-4 sm:mx-6 lg:mx-8 shadow-2xl">
         {heroSlides.map((slide, index) => (
