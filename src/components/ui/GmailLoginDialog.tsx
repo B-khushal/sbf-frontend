@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './dialog';
 import { Button } from './button';
 import { X, Mail, User, Shield, CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -29,6 +29,11 @@ const GmailLoginDialog: React.FC<GmailLoginDialogProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[420px] p-0 overflow-hidden bg-white rounded-2xl border-0 shadow-2xl">
+        <DialogHeader className="sr-only">
+          <DialogTitle>Sign in to Spring Blossoms</DialogTitle>
+          <DialogDescription>Choose an account to continue with Google authentication</DialogDescription>
+        </DialogHeader>
+        
         {/* Header */}
         <div className="relative bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 pb-8">
           <button

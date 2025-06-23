@@ -1,8 +1,9 @@
 import React from 'react';
-import { Dialog, DialogContent } from './dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from './dialog';
 import { Button } from './button';
 import { X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 
 interface OfferPopupProps {
   isOpen: boolean;
@@ -47,6 +48,11 @@ const OfferPopup: React.FC<OfferPopupProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden">
+        <VisuallyHidden>
+          <DialogTitle>{offer.title}</DialogTitle>
+          <DialogDescription>{offer.description}</DialogDescription>
+        </VisuallyHidden>
+        
         <div 
           className={`relative ${getThemeStyles()} text-white`}
           style={{

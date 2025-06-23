@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
@@ -132,6 +132,9 @@ const NotificationHistoryModal: React.FC<NotificationHistoryModalProps> = ({
               </Badge>
             )}
           </DialogTitle>
+          <DialogDescription>
+            View and manage your notification history. Filter by read status and delete individual notifications.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col gap-4 flex-1 min-h-0">
