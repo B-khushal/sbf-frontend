@@ -310,7 +310,7 @@ const ProductCard = ({ product }: { product: Product }) => {
       </button>
 
       {/* Image Container */}
-      <div className="relative aspect-[4/3] sm:aspect-[4/2] overflow-hidden bg-gray-100">
+      <div className="relative aspect-[4/5] sm:aspect-[4/5] overflow-hidden bg-gray-100">
         {!isImageLoaded && (
           <div className="absolute inset-0 bg-gradient-to-br from-gray-200 via-gray-100 to-gray-200 animate-pulse flex items-center justify-center">
             <div className="text-gray-400 text-lg sm:text-xl">🌸</div>
