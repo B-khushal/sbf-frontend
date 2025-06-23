@@ -239,12 +239,26 @@ const CheckoutPaymentPage = () => {
       }
 
       const options = {
-        key: RAZORPAY_CONFIG.getKey(),
+        key: RAZORPAY_CONFIG.keyId,
         amount: response.data.amount,
         currency: response.data.currency,
-        name: RAZORPAY_CONFIG.DEFAULT_OPTIONS.name,
+        name: 'SBF Store',
         description: `Purchase from SBF Store${currency !== 'INR' ? ` (Order total: ${formatPrice(total)} in ${currency})` : ''}`,
         order_id: response.data.id,
+        prefill: {
+          name: `${shippingInfo.firstName} ${shippingInfo.lastName}`,
+          email: shippingInfo.email,
+          contact: shippingInfo.phone,
+        },
+        theme: {
+          color: '#000000'
+        },
+        modal: {
+          confirm_close: true,
+          ondismiss: () => {
+            console.log('Razorpay checkout dismissed');
+          }
+        },
         handler: async (response: {
           razorpay_order_id: string;
           razorpay_payment_id: string; 
@@ -449,21 +463,6 @@ const CheckoutPaymentPage = () => {
             });
           }
         },
-        prefill: {
-          name: `${shippingInfo.firstName} ${shippingInfo.lastName}`,
-          email: shippingInfo.email,
-          contact: shippingInfo.phone
-        },
-        theme: {
-          ...RAZORPAY_CONFIG.DEFAULT_OPTIONS.theme,
-          display: {
-            blocks: {
-              banks: {
-                height: '40px' // Set explicit height for SVG elements
-              }
-            }
-          }
-        }
       };
 
       try {
