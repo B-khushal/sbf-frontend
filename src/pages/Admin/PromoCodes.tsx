@@ -24,6 +24,7 @@ const PromoCodesPage: React.FC = () => {
     description: '',
     discountType: 'percentage' as 'percentage' | 'fixed',
     discountValue: 0,
+    minimumOrderAmount: 0,
     validUntil: ''
   });
 
@@ -68,6 +69,7 @@ const PromoCodesPage: React.FC = () => {
           description: '',
           discountType: 'percentage',
           discountValue: 0,
+          minimumOrderAmount: 0,
           validUntil: ''
         });
         fetchPromoCodes();
@@ -89,6 +91,7 @@ const PromoCodesPage: React.FC = () => {
       description: promoCode.description,
       discountType: promoCode.discountType,
       discountValue: promoCode.discountValue,
+      minimumOrderAmount: promoCode.minimumOrderAmount || 0,
       validUntil: new Date(promoCode.validUntil).toISOString().split('T')[0]
     });
     setShowEditForm(true);
@@ -116,6 +119,7 @@ const PromoCodesPage: React.FC = () => {
           description: '',
           discountType: 'percentage',
           discountValue: 0,
+          minimumOrderAmount: 0,
           validUntil: ''
         });
         fetchPromoCodes();
@@ -193,6 +197,7 @@ const PromoCodesPage: React.FC = () => {
               description: '',
               discountType: 'percentage',
               discountValue: 0,
+              minimumOrderAmount: 0,
               validUntil: ''
             });
           }}
@@ -244,7 +249,7 @@ const PromoCodesPage: React.FC = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-2">
                     Discount Value * {formData.discountType === 'percentage' ? '(%)' : '(₹)'}
@@ -256,6 +261,16 @@ const PromoCodesPage: React.FC = () => {
                     min="0"
                     max={formData.discountType === 'percentage' ? "100" : undefined}
                     required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Minimum Order Amount (₹)</label>
+                  <Input
+                    type="number"
+                    value={formData.minimumOrderAmount}
+                    onChange={(e) => setFormData({...formData, minimumOrderAmount: parseFloat(e.target.value) || 0})}
+                    min="0"
+                    placeholder="0 = No minimum"
                   />
                 </div>
                 <div>
@@ -321,7 +336,7 @@ const PromoCodesPage: React.FC = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-2">
                     Discount Value * {formData.discountType === 'percentage' ? '(%)' : '(₹)'}
@@ -333,6 +348,16 @@ const PromoCodesPage: React.FC = () => {
                     min="0"
                     max={formData.discountType === 'percentage' ? "100" : undefined}
                     required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Minimum Order Amount (₹)</label>
+                  <Input
+                    type="number"
+                    value={formData.minimumOrderAmount}
+                    onChange={(e) => setFormData({...formData, minimumOrderAmount: parseFloat(e.target.value) || 0})}
+                    min="0"
+                    placeholder="0 = No minimum"
                   />
                 </div>
                 <div>
@@ -359,6 +384,7 @@ const PromoCodesPage: React.FC = () => {
                       description: '',
                       discountType: 'percentage',
                       discountValue: 0,
+                      minimumOrderAmount: 0,
                       validUntil: ''
                     });
                   }}
