@@ -11,7 +11,6 @@ import useCart from '@/hooks/use-cart';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useAuth } from '@/hooks/use-auth';
 import { useGmailLogin } from '@/hooks/use-gmail-login';
-import GmailLoginDialog from '@/components/ui/GmailLoginDialog';
 
 interface NavItem {
   href: string;
@@ -68,7 +67,7 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
   const [isSearching, setIsSearching] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { isGmailDialogOpen, closeGmailDialog, handleGmailLogin, triggerGoogleLogin } = useGmailLogin();
+  const { triggerGoogleLogin } = useGmailLogin();
 
   // Get wishlist count directly from localStorage
   useEffect(() => {
@@ -573,12 +572,7 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
         </div>
       </div>
 
-      {/* Gmail Login Dialog */}
-      <GmailLoginDialog
-        isOpen={isGmailDialogOpen}
-        onClose={closeGmailDialog}
-        onGmailLogin={handleGmailLogin}
-      />
+
     </header>
   );
 };

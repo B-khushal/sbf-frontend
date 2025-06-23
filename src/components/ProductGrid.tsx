@@ -9,7 +9,6 @@ import useCart from "@/hooks/use-cart";
 import { useAuth } from "@/hooks/use-auth";
 import { getImageUrl } from "@/config";
 import { useGmailLogin } from "@/hooks/use-gmail-login";
-import GmailLoginDialog from "@/components/ui/GmailLoginDialog";
 
 export type Product = {
   _id: string;
@@ -89,7 +88,7 @@ const ProductCard = ({ product }: { product: Product }) => {
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   const { user } = useAuth();
-  const { isGmailDialogOpen, closeGmailDialog, handleGmailLogin, triggerGoogleLogin } = useGmailLogin();
+  const { triggerGoogleLogin } = useGmailLogin();
 
   // Load wishlist from localStorage
   useEffect(() => {
@@ -411,12 +410,7 @@ const ProductCard = ({ product }: { product: Product }) => {
         </div>
       </div>
 
-      {/* Gmail Login Dialog */}
-      <GmailLoginDialog
-        isOpen={isGmailDialogOpen}
-        onClose={closeGmailDialog}
-        onGmailLogin={handleGmailLogin}
-      />
+
     </div>
   );
 };
