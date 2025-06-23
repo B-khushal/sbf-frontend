@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, Search, ShoppingCart, User, X, Heart, Sparkles, TrendingUp, DollarSign, Store } from 'lucide-react';
+import { Menu, Search, ShoppingCart, User, X, Heart, Sparkles, TrendingUp, DollarSign, Store, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import api from '@/services/api';
 import useCart from '@/hooks/use-cart';
 import { useSettings } from '@/contexts/SettingsContext';
+import { useAuth } from '@/hooks/use-auth';
 
 interface NavItem {
   href: string;
@@ -64,6 +65,7 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   // Get wishlist count directly from localStorage
   useEffect(() => {
@@ -293,12 +295,21 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
             <CurrencyConverter className="hidden md:block" />
           )}
           
-          {/* Account - Desktop only */}
-          <Link to="/profile" className="hidden md:block">
-            <Button variant="ghost" size="icon" aria-label="Account" className="text-pink-600 transition-colors hover:text-green-600">
-              <User className="h-5 w-5 hover:text-green-600" />
-            </Button>
-          </Link>
+          {/* Desktop Auth Actions */}
+          {user ? (
+            <Link to="/profile" className="hidden md:block">
+              <Button variant="ghost" size="icon" aria-label="Account" className="text-pink-600 transition-colors hover:text-green-600">
+                <User className="h-5 w-5 hover:text-green-600" />
+              </Button>
+            </Link>
+          ) : (
+            <Link to="/login" className="hidden md:block">
+              <Button variant="outline" size="sm" className="text-pink-600 border-pink-600 hover:bg-pink-600 hover:text-white transition-colors">
+                <LogIn className="h-4 w-4 mr-2" />
+                Sign In
+              </Button>
+            </Link>
+          )}
 
           {/* Mobile Navigation Icons */}
           <div className="md:hidden flex items-center space-x-1">
@@ -323,12 +334,20 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
               </Link>
             )}
 
-            {/* Account Icon - Mobile */}
-            <Link to="/profile">
-              <Button variant="ghost" size="icon" aria-label="Account" className="text-pink-600 transition-colors hover:text-green-600">
-                <User className="h-5 w-5" />
-              </Button>
-            </Link>
+            {/* Mobile Auth Actions */}
+            {user ? (
+              <Link to="/profile">
+                <Button variant="ghost" size="icon" aria-label="Account" className="text-pink-600 transition-colors hover:text-green-600">
+                  <User className="h-5 w-5" />
+                </Button>
+              </Link>
+            ) : (
+              <Link to="/login">
+                <Button variant="ghost" size="icon" aria-label="Sign In" className="text-pink-600 transition-colors hover:text-green-600">
+                  <LogIn className="h-4 w-4" />
+                </Button>
+              </Link>
+            )}
 
             {/* Currency Converter - Mobile with Dollar Sign Icon */}
             {headerSettings.showCurrencyConverter && (
@@ -534,6 +553,41 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                       {item.label}
                     </Link>
                   ))}
+                  
+                  {/* Mobile Auth Section */}
+                  <div className="border-t pt-4 mt-6">
+                    {user ? (
+                      <div className="space-y-2">
+                        <Link
+                          to="/profile"
+                          className="flex items-center px-4 py-3 text-lg rounded-lg transition-colors text-muted-foreground hover:bg-bloom-pink-50 hover:text-bloom-blue-600"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <User className="h-5 w-5 mr-3" />
+                          My Account
+                        </Link>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <Link
+                          to="/login"
+                          className="flex items-center px-4 py-3 text-lg rounded-lg transition-colors bg-gradient-to-r from-pink-500 to-purple-600 text-white hover:from-pink-600 hover:to-purple-700"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <LogIn className="h-5 w-5 mr-3" />
+                          Sign In
+                        </Link>
+                        <Link
+                          to="/signup"
+                          className="flex items-center px-4 py-3 text-lg rounded-lg transition-colors border border-pink-300 text-pink-600 hover:bg-pink-50"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <User className="h-5 w-5 mr-3" />
+                          Sign Up
+                        </Link>
+                      </div>
+                    )}
+                  </div>
                 </nav>
               </div>
             </SheetContent>
