@@ -7,6 +7,7 @@ import { lazy, Suspense, useEffect } from 'react';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { CurrencyProvider } from '@/contexts/CurrencyContext';
 import { SettingsProvider } from '@/contexts/SettingsContext';
+import { CartProvider } from '@/contexts/CartContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { NotificationProvider } from '@/contexts/NotificationContext';
 import { GoogleOAuthProvider } from '@react-oauth/google';
@@ -78,10 +79,11 @@ const App = () => {
             <CurrencyProvider>
               <SettingsProvider>
                 <NotificationProvider>
-                  <TooltipProvider>
-                  <Toaster />
-                  <Sonner />
-                  <BrowserRouter>
+                  <CartProvider>
+                    <TooltipProvider>
+                      <Toaster />
+                      <Sonner />
+                      <BrowserRouter>
                   <Suspense fallback={
                     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-bloom-blue-50 via-bloom-pink-50 to-bloom-green-50">
                       <div className="text-center">
@@ -152,7 +154,8 @@ const App = () => {
                     </Routes>
                   </Suspense>
                 </BrowserRouter>
-                              </TooltipProvider>
+                    </TooltipProvider>
+                  </CartProvider>
                 </NotificationProvider>
               </SettingsProvider>
             </CurrencyProvider>

@@ -3,6 +3,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useCurrency } from './CurrencyContext';
 import { useAuth } from '@/hooks/use-auth';
 
+// Types
 export type CartItem = {
   id: string;
   productId: string;
@@ -16,7 +17,7 @@ export type CartItem = {
   currencyRate?: number;
 };
 
-interface CartContextType {
+export interface CartContextType {
   items: CartItem[];
   addItem: (item: Omit<CartItem, 'quantity'>, quantity?: number) => boolean;
   removeItem: (itemId: string) => void;
@@ -34,8 +35,13 @@ interface CartContextType {
   closeContactModal: () => void;
 }
 
+// Create the context
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+// Export the context
+export { CartContext };
+
+// Provider component
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
   const { toast } = useToast();
