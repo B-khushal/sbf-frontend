@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 
+// Add an instance ID to track multiple cart hooks
+const cartInstanceId = Math.random().toString(36).substr(2, 9);
+console.log('🏷️ Cart hook instance created:', cartInstanceId);
+
 export type CartItem = {
   id: string;
   productId: string;
@@ -24,7 +28,7 @@ const useCart = () => {
   // Debug logging for cart state changes
   useEffect(() => {
     const calculatedItemCount = items.reduce((total, item) => total + item.quantity, 0);
-    console.log('Cart state changed:', {
+    console.log(`[${cartInstanceId}] Cart state changed:`, {
       isCartOpen,
       itemsArrayLength: items.length,
       itemsArray: items,
@@ -35,8 +39,10 @@ const useCart = () => {
   
   // Update localStorage when cart changes or user changes
   useEffect(() => {
+    console.log(`[${cartInstanceId}] 📝 Save cart effect triggered:`, { user: user?.id, itemsCount: items.length, items });
     if (user) {
       localStorage.setItem(`cart_${user.id}`, JSON.stringify(items));
+      console.log(`[${cartInstanceId}] 💾 Saved cart to localStorage for user:`, user.id, 'items:', items.length);
     } else {
       // If user is temporarily null but authenticated, try to get user ID from localStorage
       const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
@@ -62,9 +68,10 @@ const useCart = () => {
   useEffect(() => {
     if (user) {
       const savedCart = localStorage.getItem(`cart_${user.id}`);
+      console.log(`[${cartInstanceId}] 🔍 Raw localStorage data for`, `cart_${user.id}:`, savedCart);
       const cartItems = savedCart ? JSON.parse(savedCart) : [];
       setItems(cartItems);
-      console.log('🛒 Loaded cart for user:', user.id, 'items:', cartItems.length);
+      console.log(`[${cartInstanceId}] 🛒 Loaded cart for user:`, user.id, 'items:', cartItems.length, 'data:', cartItems);
     } else {
       // Don't clear the cart immediately when user becomes null
       // This could be a temporary state during token verification
@@ -98,7 +105,7 @@ const useCart = () => {
   }, [user]);
   
   const addItem = (item: Omit<CartItem, 'quantity'>, quantity: number = 1) => {
-    console.log('Adding item to cart:', { item, quantity, user: user ? user.id : null });
+    console.log(`[${cartInstanceId}] Adding item to cart:`, { item, quantity, user: user ? user.id : null });
     
     // Check if user is logged in (either user object exists or localStorage says authenticated)
     const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
@@ -162,6 +169,21 @@ const useCart = () => {
         console.log('Added new item to cart:', { itemId: item.id, quantity });
       }
       console.log('Cart items after update:', updatedItems);
+      
+      // Immediately save to localStorage after adding
+      if (user) {
+        try {
+          localStorage.setItem(`cart_${user.id}`, JSON.stringify(updatedItems));
+          console.log(`[${cartInstanceId}] 💾 Immediately saved cart to localStorage:`, user.id, updatedItems.length, 'items');
+          
+          // Verify the save worked
+          const verification = localStorage.getItem(`cart_${user.id}`);
+          console.log(`[${cartInstanceId}] ✅ Verification read:`, verification ? JSON.parse(verification).length : 0, 'items');
+        } catch (error) {
+          console.error(`[${cartInstanceId}] ❌ Error saving to localStorage:`, error);
+        }
+      }
+      
       return updatedItems;
     });
     
