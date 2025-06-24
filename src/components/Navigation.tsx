@@ -228,7 +228,7 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
             transition={{ duration: 0.5 }}
           >
             <Sparkles size={14} />
-            <span>🌸 Free Same-Day Delivery on Orders Over ₹999!</span>
+            <span>🌸 Free Delivery on Your First Order </span>
             <Truck size={14} />
           </motion.div>
         </div>

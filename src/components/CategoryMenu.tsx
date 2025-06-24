@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronRight, Search, Sparkles, Heart, Gift, Star } from 'lucide-react';
+import { ChevronDown, ChevronRight, Sparkles } from 'lucide-react';
 
 const CategoryMenu = () => {
   const { pathname } = useLocation();
@@ -83,12 +83,6 @@ const CategoryMenu = () => {
         { name: "Garden Plants", path: "/shop?category=garden-plants", count: 10 },
       ]
     },
-  ];
-
-  const quickActions = [
-    { icon: <Search size={14} />, label: "Browse All", path: "/shop", color: "bg-blue-500" },
-    { icon: <Heart size={14} />, label: "Wishlist", path: "/wishlist", color: "bg-red-500" },
-    { icon: <Gift size={14} />, label: "Gift Cards", path: "/gift-cards", color: "bg-green-500" },
   ];
 
   const containerVariants = {
@@ -249,55 +243,6 @@ const CategoryMenu = () => {
                 </motion.div>
               ))}
             </div>
-          </div>
-
-          {/* Quick Actions */}
-          <div className="hidden lg:flex items-center space-x-2 ml-4">
-            {quickActions.map((action) => (
-              <motion.div
-                key={action.path}
-                variants={itemVariants}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Link
-                  to={action.path}
-                  className={cn(
-                    "flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white rounded-lg transition-all duration-300 hover:shadow-lg",
-                    action.color
-                  )}
-                  title={action.label}
-                >
-                  {action.icon}
-                  <span className="hidden xl:inline">{action.label}</span>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-
-        {/* Mobile Quick Actions */}
-        <div className="lg:hidden border-t border-gray-100 py-2">
-          <div className="flex justify-center space-x-4">
-            {quickActions.map((action) => (
-              <motion.div
-                key={action.path}
-                variants={itemVariants}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Link
-                  to={action.path}
-                  className={cn(
-                    "flex items-center gap-1 px-2 py-1 text-xs font-medium text-white rounded-lg transition-all duration-300",
-                    action.color
-                  )}
-                >
-                  {action.icon}
-                  <span>{action.label}</span>
-                </Link>
-              </motion.div>
-            ))}
           </div>
         </div>
       </div>
