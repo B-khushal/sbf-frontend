@@ -195,48 +195,53 @@ const CategoryMenu = () => {
                         initial="hidden"
                         animate="visible"
                         exit="exit"
-                        className="absolute top-full left-0 mt-2 w-64 bg-white/95 backdrop-blur-xl border border-gray-100 rounded-2xl shadow-2xl z-50 overflow-hidden"
+                        className="absolute top-full left-0 mt-1 bg-white rounded-2xl shadow-xl border border-gray-100 min-w-[280px] overflow-hidden z-50"
                       >
-                        <div className="p-4">
-                          <div className="flex items-center gap-2 mb-3">
-                            <span className="text-xl">{category.emoji}</span>
+                        {/* Category Header */}
+                        <div className="p-4 bg-gradient-to-r from-primary/5 to-secondary/5">
+                          <div className="flex items-center gap-3 mb-2">
+                            <span className="text-2xl">{category.emoji}</span>
                             <div>
-                              <h4 className="font-semibold text-gray-900">
-                                {category.name.split(' ').slice(1).join(' ')}
-                              </h4>
-                              <p className="text-xs text-gray-500">{category.description}</p>
+                              <h3 className="font-semibold text-gray-900">{category.name.split(' ').slice(1).join(' ')}</h3>
+                              <p className="text-sm text-gray-500">{category.description}</p>
                             </div>
                           </div>
-                          
-                          <div className="space-y-1">
-                            {category.subcategories.map((sub) => (
+                        </div>
+
+                        {/* Subcategories */}
+                        <div className="p-2">
+                          {category.subcategories.map((sub, idx) => (
+                            <motion.div
+                              key={sub.path}
+                              initial={{ x: -20, opacity: 0 }}
+                              animate={{ x: 0, opacity: 1 }}
+                              transition={{ delay: idx * 0.1 }}
+                            >
                               <Link
-                                key={sub.path}
                                 to={sub.path}
-                                className="flex items-center justify-between px-3 py-2 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-primary/5 hover:to-secondary/5 rounded-lg transition-all duration-200 group"
+                                className="flex items-center justify-between px-4 py-2.5 rounded-xl hover:bg-gradient-to-r hover:from-primary/5 hover:to-secondary/5 transition-all duration-300 group"
                               >
-                                <span className="group-hover:text-primary font-medium">
+                                <span className="text-gray-700 group-hover:text-primary font-medium">
                                   {sub.name}
                                 </span>
                                 <div className="flex items-center gap-2">
-                                  <span className="text-xs text-gray-400">
-                                    {sub.count}
+                                  <span className="text-xs text-gray-400 group-hover:text-primary/60">
+                                    {sub.count} items
                                   </span>
-                                  <ChevronRight size={12} className="text-gray-400 group-hover:text-primary transition-colors" />
+                                  <ChevronRight size={14} className="text-gray-300 group-hover:text-primary transition-colors" />
                                 </div>
                               </Link>
-                            ))}
-                          </div>
-                          
-                          <div className="mt-3 pt-3 border-t border-gray-100">
-                            <Link
-                              to={category.path}
-                              className="block w-full text-center py-2 text-sm font-medium text-primary hover:bg-gradient-to-r hover:from-primary/10 hover:to-secondary/10 rounded-lg transition-all duration-200"
-                            >
-                              View All {category.name.split(' ').slice(1).join(' ')}
-                            </Link>
-                          </div>
+                            </motion.div>
+                          ))}
                         </div>
+
+                        {/* View All Link */}
+                        <Link
+                          to={category.path}
+                          className="block p-3 text-center text-sm font-medium text-primary hover:text-secondary border-t border-gray-100 bg-gradient-to-r from-primary/5 to-secondary/5 hover:from-primary/10 hover:to-secondary/10 transition-all duration-300"
+                        >
+                          View All {category.name.split(' ').slice(1).join(' ')}
+                        </Link>
                       </motion.div>
                     )}
                   </AnimatePresence>
