@@ -413,17 +413,31 @@ const ShopPage = () => {
                   <div 
                     key={category.category}
                     onClick={() => handleCategoryClick(category.category)}
-                    className="group relative bg-gradient-to-br from-white to-gray-50 rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-6 text-center cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl border border-gray-100 hover:border-primary/30"
+                    className="group relative bg-gradient-to-br from-white to-gray-50 rounded-xl sm:rounded-2xl overflow-hidden cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl border border-gray-100 hover:border-primary/30"
                   >
-                    <div className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 mb-2 sm:mb-3 lg:mb-4 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center group-hover:scale-110 transition-transform duration-300 mx-auto">
+                    {/* 2:3 Aspect Ratio Image */}
+                    <div className="aspect-[2/3] w-full overflow-hidden">
                       <img 
                         src={category.image.startsWith("http") ? category.image : category.image} 
                         alt={category.name} 
-                        className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 rounded-full object-cover"
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       />
+                      {/* Gradient Overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
                     </div>
-                    <h3 className="text-xs sm:text-sm lg:text-lg font-bold text-gray-800 mb-1 lg:mb-2 leading-tight">{category.name}</h3>
-                    <p className="text-xs text-gray-500 hidden sm:block">{category.count} products</p>
+                    
+                    {/* Content Overlay */}
+                    <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 text-white">
+                      <h3 className="text-xs sm:text-sm lg:text-base font-bold mb-1 leading-tight">{category.name}</h3>
+                      <p className="text-xs text-white/80 hidden sm:block">{category.count} products</p>
+                    </div>
+                    
+                    {/* Popular Badge */}
+                    {category.featured && (
+                      <div className="absolute top-2 right-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                        ✨
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
