@@ -57,7 +57,7 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { pathname } = useLocation();
   const [wishlistCount, setWishlistCount] = useState(0);
-  const { itemCount: actualCartCount } = useCart();
+  const { itemCount: actualCartCount, toggleCart } = useCart();
   const { headerSettings, loading: settingsLoading } = useSettings();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchSuggestions, setSearchSuggestions] = useState<SearchSuggestion[]>([]);
@@ -309,15 +309,18 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
           )}
           
           {/* Cart */}
-          <Button variant="ghost" size="icon" asChild className="relative w-8 h-8 sm:w-10 sm:h-10">
-            <Link to="/cart">
-              <ShoppingCart size={18} />
-              {actualCartCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-primary text-white text-xs rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center font-medium">
-                  {actualCartCount > 9 ? '9+' : actualCartCount}
-                </span>
-              )}
-            </Link>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={toggleCart}
+            className="relative w-8 h-8 sm:w-10 sm:h-10"
+          >
+            <ShoppingCart size={18} />
+            {actualCartCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-primary text-white text-xs rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center font-medium">
+                {actualCartCount > 9 ? '9+' : actualCartCount}
+              </span>
+            )}
           </Button>
           
           {/* User Menu */}

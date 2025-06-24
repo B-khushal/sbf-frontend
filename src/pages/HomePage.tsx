@@ -52,7 +52,7 @@ const fadeInVariants = {
 };
 
 const HomePage = () => {
-  const { items, itemCount, isCartOpen, closeCart, updateItemQuantity, removeItem } = useCart();
+  const { items, itemCount, isCartOpen, closeCart, updateItemQuantity, removeItem, openCart, addItem } = useCart();
   const { homeSections, loading: settingsLoading } = useSettings();
   const { currentOffer, isOpen: isOfferOpen, closeOffer } = useOfferPopup();
   
@@ -108,6 +108,8 @@ const HomePage = () => {
               title={section.title || "✨ Featured Collection"}
               subtitle={section.subtitle || "Explore our most popular floral arrangements"}
               loading={loading}
+              onAddToCart={addItem}
+              onOpenCart={openCart}
             />
           </motion.section>
         );
@@ -123,6 +125,8 @@ const HomePage = () => {
               title={section.title || "🌸 New Arrivals"}
               subtitle={section.subtitle || "Discover our latest seasonal additions"}
               loading={loading}
+              onAddToCart={addItem}
+              onOpenCart={openCart}
             />
           </motion.section>
         );

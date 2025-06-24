@@ -15,12 +15,7 @@ export type CartItem = {
 const useCart = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [items, setItems] = useState<CartItem[]>(() => {
-    if (!user) return [];
-    
-    const savedCart = localStorage.getItem(`cart_${user.id}`);
-    return savedCart ? JSON.parse(savedCart) : [];
-  });
+  const [items, setItems] = useState<CartItem[]>([]);
   
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [showContactModal, setShowContactModal] = useState(false);
@@ -33,9 +28,12 @@ const useCart = () => {
     }
   }, [items, user]);
   
-  // Clear cart when user logs out
+  // Load cart from localStorage when user changes
   useEffect(() => {
-    if (!user) {
+    if (user) {
+      const savedCart = localStorage.getItem(`cart_${user.id}`);
+      setItems(savedCart ? JSON.parse(savedCart) : []);
+    } else {
       setItems([]);
     }
   }, [user]);

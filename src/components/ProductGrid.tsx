@@ -39,9 +39,11 @@ type ProductGridProps = {
   subtitle?: string;
   className?: string;
   loading?: boolean;
+  onAddToCart?: (item: any, quantity: number) => boolean;
+  onOpenCart?: () => void;
 };
 
-const ProductGrid = ({ products, title, subtitle, className, loading }: ProductGridProps) => {
+const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCart, onOpenCart }: ProductGridProps) => {
   return (
     <section className={cn("py-8 sm:py-12 lg:py-16 xl:py-20 px-3 sm:px-4 md:px-6 lg:px-8", className)}>
       {(title || subtitle) && (
@@ -72,7 +74,7 @@ const ProductGrid = ({ products, title, subtitle, className, loading }: ProductG
       ) : (
         <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-5 lg:gap-6 xl:gap-8">
           {products.map((product) => (
-            <ProductCard key={product._id} product={product} />
+            <ProductCard key={product._id} product={product} onAddToCart={onAddToCart} onOpenCart={onOpenCart} />
           ))}
         </div>
       )}
@@ -80,7 +82,11 @@ const ProductGrid = ({ products, title, subtitle, className, loading }: ProductG
   );
 };
 
-const ProductCard = ({ product }: { product: Product }) => {
+const ProductCard = ({ product, onAddToCart, onOpenCart }: { 
+  product: Product; 
+  onAddToCart?: (item: any, quantity: number) => boolean;
+  onOpenCart?: () => void;
+}) => {
   const { formatPrice, convertPrice } = useCurrency();
   const { addItem, openCart } = useCart();
   const navigate = useNavigate();
@@ -139,7 +145,11 @@ const ProductCard = ({ product }: { product: Product }) => {
     }
     
     try {
-      const success = addItem({
+      // Use the passed onAddToCart function if available, otherwise use the hook
+      const addToCartFunction = onAddToCart || addItem;
+      const openCartFunction = onOpenCart || openCart;
+      
+      const success = addToCartFunction({
         id: product._id,
         productId: product._id,
         title: product.title,
@@ -153,7 +163,7 @@ const ProductCard = ({ product }: { product: Product }) => {
           description: `${product.title} has been added to your cart`,
           duration: 3000,
         });
-        setTimeout(() => openCart(), 300);
+        setTimeout(() => openCartFunction(), 300);
       }
     } catch (error) {
       console.error("Error adding to cart:", error);
