@@ -35,7 +35,7 @@ const ShopPage = () => {
     {
       name: "Premium Roses",
       description: "Symbol of eternal love",
-      image: "/images/d1.jpg",
+      image: "/images/p-roses.png",
       icon: "🌹",
       category: "roses",
       featured: true,

@@ -174,137 +174,131 @@ const CategoryMenu = () => {
   };
 
   return (
-    <motion.section 
-      className="bg-white/98 backdrop-blur-xl border-b border-gray-100/80 sticky top-0 z-40 shadow-lg"
-      initial="hidden"
-      animate="visible"
-      variants={containerVariants}
-    >
+    <nav className="bg-white/98 backdrop-blur-xl border-b border-gray-100/80 sticky top-0 z-40 shadow-sm">
       <div className="container mx-auto px-3 sm:px-4 lg:px-6">
-        {/* Main Categories Bar */}
-        <div className="flex items-center justify-between py-3 lg:py-4">
-          {/* Categories */}
-          <div className="flex items-center overflow-x-auto scrollbar-hide flex-1">
-            <div className="flex space-x-1 sm:space-x-2 lg:space-x-3 min-w-max pr-4">
-              {categories.map((category, index) => (
-                <motion.div
-                  key={category.path}
-                  variants={itemVariants}
-                  className="relative"
-                  onMouseEnter={() => setHoveredCategory(category.name)}
-                  onMouseLeave={() => setHoveredCategory(null)}
+        <div className="flex items-center justify-center py-3 lg:py-4">
+          <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-4">
+            {categories.map((category, index) => (
+              <div
+                key={category.path}
+                className="relative"
+                onMouseEnter={() => setHoveredCategory(category.name)}
+                onMouseLeave={() => setHoveredCategory(null)}
+              >
+                <Link
+                  to={category.path}
+                  className={cn(
+                    "relative px-3 sm:px-4 lg:px-5 py-2 lg:py-2.5 text-xs sm:text-sm lg:text-base font-medium whitespace-nowrap rounded-xl transition-all duration-300 group flex items-center gap-2 border",
+                    isActive(category.path)
+                      ? "text-white bg-gradient-to-r from-primary via-secondary to-accent shadow-lg border-primary/20"
+                      : "text-gray-700 hover:text-primary bg-white/80 hover:bg-gradient-to-r hover:from-primary/10 hover:to-secondary/10 border-gray-200/50 hover:border-primary/30 hover:shadow-md"
+                  )}
                 >
-                  <Link
-                    to={category.path}
+                  <span className="text-base lg:text-lg group-hover:scale-110 transition-transform duration-200">
+                    {category.emoji}
+                  </span>
+                  <span className="font-semibold">
+                    {category.name.split(' ').slice(1).join(' ')}
+                  </span>
+                  
+                  {/* Dropdown indicator */}
+                  <ChevronDown 
+                    size={12} 
                     className={cn(
-                      "relative px-3 sm:px-4 lg:px-5 py-2 lg:py-2.5 text-xs sm:text-sm lg:text-base font-medium whitespace-nowrap rounded-xl transition-all duration-300 group flex items-center gap-2 border",
-                      isActive(category.path)
-                        ? "text-white bg-gradient-to-r from-primary via-secondary to-accent shadow-lg border-primary/20 scale-105"
-                        : "text-gray-700 hover:text-primary bg-white/80 hover:bg-gradient-to-r hover:from-primary/10 hover:to-secondary/10 border-gray-200/50 hover:border-primary/30 hover:shadow-md hover:scale-102"
+                      "transition-transform duration-200",
+                      hoveredCategory === category.name ? "rotate-180" : ""
                     )}
-                  >
-                    <span className="text-base lg:text-lg group-hover:scale-110 transition-transform duration-200">
-                      {category.emoji}
-                    </span>
-                    <span className="font-semibold">
-                      {category.name.split(' ').slice(1).join(' ')}
-                    </span>
-                    
-                    {category.popular && (
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center"
-                      >
-                        <Sparkles size={8} className="text-white" />
-                      </motion.div>
-                    )}
-                    
-                    {/* Active indicator */}
-                    {isActive(category.path) && (
-                      <motion.div
-                        layoutId="categoryActiveIndicator"
-                        className="absolute bottom-0 left-1/2 w-8 h-1 bg-white rounded-full transform -translate-x-1/2 shadow-sm"
-                        initial={false}
-                        transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                      />
-                    )}
-                  </Link>
+                  />
+                  
+                  {category.popular && (
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+                      <Sparkles size={8} className="text-white" />
+                    </div>
+                  )}
+                </Link>
 
-                  {/* Hover Dropdown */}
-                  <AnimatePresence>
-                    {hoveredCategory === category.name && (
-                      <motion.div
-                        variants={dropdownVariants}
-                        initial="hidden"
-                        animate="visible"
-                        exit="exit"
-                        className="absolute top-full left-0 mt-1 bg-white rounded-2xl shadow-xl border border-gray-100 min-w-[280px] overflow-hidden z-[9999]"
-                      >
-                        {/* Category Header */}
-                        <div className="p-4 bg-gradient-to-r from-primary/5 to-secondary/5">
-                          <div className="flex items-center gap-3 mb-2">
-                            <span className="text-2xl">{category.emoji}</span>
-                            <div>
-                              <h3 className="font-semibold text-gray-900">{category.name.split(' ').slice(1).join(' ')}</h3>
-                              <p className="text-sm text-gray-500">{category.description}</p>
-                            </div>
+                {/* Dropdown Menu */}
+                <AnimatePresence>
+                  {hoveredCategory === category.name && (
+                    <motion.div
+                      variants={dropdownVariants}
+                      initial="hidden"
+                      animate="visible"
+                      exit="exit"
+                      className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 min-w-[280px] overflow-hidden z-50"
+                      style={{ 
+                        filter: 'drop-shadow(0 20px 25px rgb(0 0 0 / 0.15))',
+                      }}
+                    >
+                      {/* Category Header */}
+                      <div className="p-4 bg-gradient-to-r from-primary/5 to-secondary/5 border-b border-gray-50">
+                        <div className="flex items-center gap-3">
+                          <span className="text-2xl">{category.emoji}</span>
+                          <div>
+                            <h3 className="font-semibold text-gray-900 text-lg">
+                              {category.name.split(' ').slice(1).join(' ')}
+                            </h3>
+                            <p className="text-sm text-gray-500">{category.description}</p>
                           </div>
                         </div>
+                      </div>
 
-                        {/* Subcategories */}
-                        <motion.div 
-                          className="p-2"
-                          variants={subcategoryContainerVariants}
-                          initial="hidden"
-                          animate="visible"
-                        >
-                          {category.subcategories.map((sub, idx) => (
-                            <motion.div
-                              key={sub.path}
-                              variants={subcategoryVariants}
-                              className="overflow-hidden"
+                      {/* Subcategories */}
+                      <motion.div 
+                        className="p-3"
+                        variants={subcategoryContainerVariants}
+                        initial="hidden"
+                        animate="visible"
+                      >
+                        {category.subcategories.map((sub, idx) => (
+                          <motion.div
+                            key={sub.path}
+                            variants={subcategoryVariants}
+                            className="overflow-hidden"
+                          >
+                            <Link
+                              to={sub.path}
+                              className="flex items-center justify-between px-4 py-3 rounded-xl hover:bg-gradient-to-r hover:from-primary/8 hover:to-secondary/8 transition-all duration-300 group transform hover:scale-[1.02]"
+                              onClick={() => setHoveredCategory(null)}
                             >
-                              <Link
-                                to={sub.path}
-                                className="flex items-center justify-between px-4 py-3 rounded-xl hover:bg-gradient-to-r hover:from-primary/8 hover:to-secondary/8 transition-all duration-300 group transform hover:scale-[1.02] hover:shadow-sm"
-                              >
-                                <span className="text-gray-700 group-hover:text-primary font-medium transition-colors duration-200">
-                                  {sub.name}
+                              <span className="text-gray-700 group-hover:text-primary font-medium transition-colors duration-200">
+                                {sub.name}
+                              </span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-gray-400 group-hover:text-primary/60 transition-colors duration-200 bg-gray-50 group-hover:bg-primary/10 px-2 py-1 rounded-full">
+                                  {sub.count}
                                 </span>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xs text-gray-400 group-hover:text-primary/60 transition-colors duration-200">
-                                    {sub.count} items
-                                  </span>
-                                  <motion.div
-                                    whileHover={{ x: 2 }}
-                                    transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                                  >
-                                    <ChevronRight size={14} className="text-gray-300 group-hover:text-primary transition-colors duration-200" />
-                                  </motion.div>
-                                </div>
-                              </Link>
-                            </motion.div>
-                          ))}
-                        </motion.div>
+                                <motion.div
+                                  whileHover={{ x: 2 }}
+                                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                                >
+                                  <ChevronRight size={14} className="text-gray-300 group-hover:text-primary transition-colors duration-200" />
+                                </motion.div>
+                              </div>
+                            </Link>
+                          </motion.div>
+                        ))}
+                      </motion.div>
 
-                        {/* View All Link */}
+                      {/* View All Link */}
+                      <div className="border-t border-gray-100">
                         <Link
                           to={category.path}
-                          className="block p-3 text-center text-sm font-medium text-primary hover:text-secondary border-t border-gray-100 bg-gradient-to-r from-primary/5 to-secondary/5 hover:from-primary/10 hover:to-secondary/10 transition-all duration-300"
+                          className="block p-4 text-center text-sm font-medium text-primary hover:text-secondary bg-gradient-to-r from-primary/5 to-secondary/5 hover:from-primary/10 hover:to-secondary/10 transition-all duration-300"
+                          onClick={() => setHoveredCategory(null)}
                         >
                           View All {category.name.split(' ').slice(1).join(' ')}
                         </Link>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
-              ))}
-            </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ))}
           </div>
         </div>
       </div>
-    </motion.section>
+    </nav>
   );
 };
 
