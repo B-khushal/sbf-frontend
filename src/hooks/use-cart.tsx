@@ -37,6 +37,24 @@ const useCart = () => {
   useEffect(() => {
     if (user) {
       localStorage.setItem(`cart_${user.id}`, JSON.stringify(items));
+    } else {
+      // If user is temporarily null but authenticated, try to get user ID from localStorage
+      const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+      if (isAuthenticated) {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          try {
+            const userData = JSON.parse(storedUser);
+            const userId = userData._id || userData.id;
+            if (userId) {
+              localStorage.setItem(`cart_${userId}`, JSON.stringify(items));
+              console.log('💾 Saved cart using stored user ID:', userId);
+            }
+          } catch (error) {
+            console.error('Error parsing stored user data:', error);
+          }
+        }
+      }
     }
   }, [items, user]);
   
@@ -44,22 +62,65 @@ const useCart = () => {
   useEffect(() => {
     if (user) {
       const savedCart = localStorage.getItem(`cart_${user.id}`);
-      setItems(savedCart ? JSON.parse(savedCart) : []);
+      const cartItems = savedCart ? JSON.parse(savedCart) : [];
+      setItems(cartItems);
+      console.log('🛒 Loaded cart for user:', user.id, 'items:', cartItems.length);
     } else {
-      setItems([]);
+      // Don't clear the cart immediately when user becomes null
+      // This could be a temporary state during token verification
+      // Only clear if we're certain the user is actually logged out
+      const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+      if (!isAuthenticated) {
+        console.log('🧹 Clearing cart - user logged out');
+        setItems([]);
+      } else {
+        console.log('⏳ User temporarily null during auth check - keeping cart');
+        // Try to load cart using stored user data
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          try {
+            const userData = JSON.parse(storedUser);
+            const userId = userData._id || userData.id;
+            if (userId) {
+              const savedCart = localStorage.getItem(`cart_${userId}`);
+              if (savedCart) {
+                const cartItems = JSON.parse(savedCart);
+                setItems(cartItems);
+                console.log('🔄 Loaded cart using stored user ID:', userId, 'items:', cartItems.length);
+              }
+            }
+          } catch (error) {
+            console.error('Error loading cart with stored user data:', error);
+          }
+        }
+      }
     }
   }, [user]);
   
   const addItem = (item: Omit<CartItem, 'quantity'>, quantity: number = 1) => {
     console.log('Adding item to cart:', { item, quantity, user: user ? user.id : null });
     
-    if (!user) {
+    // Check if user is logged in (either user object exists or localStorage says authenticated)
+    const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+    if (!user && !isAuthenticated) {
       console.log('User not logged in, cannot add to cart');
       toast({
         title: "Please login first",
         description: "You need to be logged in to add items to your cart",
         variant: "destructive",
         duration: 3000,
+      });
+      return false;
+    }
+    
+    // If user is temporarily null but authenticated, wait for auth to resolve
+    if (!user && isAuthenticated) {
+      console.log('⏳ User object temporarily null but authenticated - queuing cart action');
+      // You could implement a queue here, but for now, show a message
+      toast({
+        title: "Please wait",
+        description: "Loading your account, please try again in a moment",
+        duration: 2000,
       });
       return false;
     }
@@ -114,7 +175,8 @@ const useCart = () => {
   };
   
   const updateItemQuantity = (id: string, quantity: number) => {
-    if (!user) return;
+    const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+    if (!user && !isAuthenticated) return;
     
     // Check if the new quantity exceeds the limit of 5
     if (quantity > 5) {
@@ -140,13 +202,15 @@ const useCart = () => {
   };
   
   const removeItem = (id: string) => {
-    if (!user) return;
+    const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+    if (!user && !isAuthenticated) return;
     
     setItems(prevItems => prevItems.filter(item => item.id !== id));
   };
   
   const clearCart = () => {
-    if (!user) return;
+    const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+    if (!user && !isAuthenticated) return;
     setItems([]);
   };
   
