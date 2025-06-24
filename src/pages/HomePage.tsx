@@ -335,6 +335,7 @@ const HomePage = () => {
       />
 
       {/* Offer Popup */}
+      {console.log('🔍 Offer Popup State:', { currentOffer, isOfferOpen })}
       {currentOffer && isOfferOpen && (
         <OfferPopup 
           offer={currentOffer} 
