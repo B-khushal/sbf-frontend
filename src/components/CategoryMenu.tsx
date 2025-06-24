@@ -175,7 +175,7 @@ const CategoryMenu = () => {
 
   return (
     <motion.section 
-      className="bg-white/98 backdrop-blur-xl border-b border-gray-100/80 sticky top-0 z-30 shadow-lg"
+      className="bg-white/98 backdrop-blur-xl border-b border-gray-100/80 sticky top-0 z-40 shadow-lg"
       initial="hidden"
       animate="visible"
       variants={containerVariants}
@@ -239,7 +239,7 @@ const CategoryMenu = () => {
                         initial="hidden"
                         animate="visible"
                         exit="exit"
-                        className="absolute top-full left-0 mt-1 bg-white rounded-2xl shadow-xl border border-gray-100 min-w-[280px] overflow-hidden z-50"
+                        className="absolute top-full left-0 mt-1 bg-white rounded-2xl shadow-xl border border-gray-100 min-w-[280px] overflow-hidden z-[9999]"
                       >
                         {/* Category Header */}
                         <div className="p-4 bg-gradient-to-r from-primary/5 to-secondary/5">
