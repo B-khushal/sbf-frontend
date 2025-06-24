@@ -129,10 +129,7 @@ const useCart = () => {
   const toggleCart = () => {
     console.log('toggleCart called - current state:', isCartOpen);
     console.log('User:', user);
-    setIsCartOpen(prev => {
-      console.log('Toggling cart from', prev, 'to', !prev);
-      return !prev;
-    });
+    setIsCartOpen(prev => !prev);
   };
 
   const closeContactModal = () => {

@@ -848,14 +848,14 @@ const ProductForm = () => {
             </div>
 
             {!isEditMode && (
-              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg relative z-50">
                 <p className="text-sm text-blue-800">
                   <span className="font-medium">ℹ️ Note:</span> New products are hidden by default. 
                   Turn off "Hide Product from Public View" when you're ready to make this product visible to customers.
                 </p>
               </div>
             )}
-            <div className="space-y-4">
+            <div className="space-y-4 relative z-50">
               <ProductFeaturesToggle
                 isNewArrival={Boolean(formData.isNewArrival)}
                 isFeatured={Boolean(formData.isFeatured)}

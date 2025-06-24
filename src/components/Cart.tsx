@@ -81,7 +81,7 @@ const Cart = ({
     <>
       <div 
         className={cn(
-          "fixed inset-0 bg-black/40 backdrop-blur-sm z-60 transition-opacity duration-300",
+          "fixed inset-0 bg-black/40 backdrop-blur-sm z-[9999] transition-opacity duration-300",
           isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
         )}
         onClick={onClose}
@@ -89,7 +89,7 @@ const Cart = ({
       
       <div 
         className={cn(
-          "fixed top-0 right-0 bottom-0 w-full sm:w-96 bg-background shadow-lg z-60 flex flex-col transition-transform duration-500 ease-out-expo",
+          "fixed top-0 right-0 bottom-0 w-full sm:w-96 bg-background shadow-lg z-[9999] flex flex-col transition-transform duration-500 ease-out-expo",
           isOpen ? "translate-x-0" : "translate-x-full"
         )}
       >
