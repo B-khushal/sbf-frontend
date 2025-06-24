@@ -7,6 +7,7 @@ import CategoryMenu from "../components/CategoryMenu";
 import HomeHero from "../components/HomeHero";
 import Categories from "../components/Categories";
 import ProductGrid from "../components/ProductGrid";
+import OffersSection from "../components/OffersSection";
 import Footer from "../components/Footer";
 import Cart from "../components/Cart";
 import useCart from "../hooks/use-cart";
@@ -129,6 +130,16 @@ const HomePage = () => {
               onAddToCart={addItem}
               onOpenCart={openCart}
             />
+          </motion.section>
+        );
+      
+      case 'offers':
+        return (
+          <motion.section 
+            variants={itemVariants}
+            className="relative"
+          >
+            <OffersSection />
           </motion.section>
         );
       
@@ -318,8 +329,9 @@ const HomePage = () => {
             {renderSection({ type: 'hero' }, 0)}
             {renderSection({ type: 'categories' }, 1)}
             {renderSection({ type: 'featured' }, 2)}
-            {renderSection({ type: 'new' }, 3)}
-            {renderSection({ type: 'philosophy' }, 4)}
+            {renderSection({ type: 'offers' }, 3)}
+            {renderSection({ type: 'new' }, 4)}
+            {renderSection({ type: 'philosophy' }, 5)}
           </>
         )}
       </motion.main>

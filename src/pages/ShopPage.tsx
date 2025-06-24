@@ -59,7 +59,7 @@ const ShopPage = () => {
     {
       name: "Graceful Lilies",
       description: "Pure serenity",
-      image: "/images/p-lily.png",
+      image: "/images/p-lilly.png",
       gradient: "from-pink-500 via-rose-500 to-purple-500",
       icon: "🌷",
       category: "lilies",
@@ -352,7 +352,7 @@ const ShopPage = () => {
       <Navigation cartItemCount={itemCount} />
       
       <main className="pt-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Search Results Header */}
           {searchQuery && (
             <div className="mb-12">
@@ -395,38 +395,40 @@ const ShopPage = () => {
               </div>
 
               {/* Mobile Responsive Category Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
-                {flowerCategories.map((category, index) => (
-                  <div 
-                    key={category.category}
-                    onClick={() => handleCategoryClick(category.category)}
-                    className="group relative bg-gradient-to-br from-white to-gray-50 rounded-xl sm:rounded-2xl overflow-hidden cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl border border-gray-100 hover:border-primary/30"
-                  >
-                    {/* 2:3 Aspect Ratio Image */}
-                    <div className="aspect-[2/3] w-full overflow-hidden">
-                      <img 
-                        src={category.image.startsWith("http") ? category.image : category.image} 
-                        alt={category.name} 
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                      />
-                      {/* Gradient Overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
-                    </div>
-                    
-                    {/* Content Overlay */}
-                    <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 text-white">
-                      <h3 className="text-xs sm:text-sm lg:text-base font-bold mb-1 leading-tight">{category.name}</h3>
-                      <p className="text-xs text-white/80 hidden sm:block">{category.count} products</p>
-                    </div>
-                    
-                    {/* Popular Badge */}
-                    {category.featured && (
-                      <div className="absolute top-2 right-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                        ✨
+              <div className="max-w-6xl mx-auto">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 lg:gap-6 justify-items-center">
+                  {flowerCategories.map((category, index) => (
+                    <div 
+                      key={category.category}
+                      onClick={() => handleCategoryClick(category.category)}
+                      className="group relative bg-gradient-to-br from-white to-gray-50 rounded-xl sm:rounded-2xl overflow-hidden cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl border border-gray-100 hover:border-primary/30"
+                    >
+                      {/* 2:3 Aspect Ratio Image */}
+                      <div className="aspect-[2/3] w-full overflow-hidden">
+                        <img 
+                          src={category.image.startsWith("http") ? category.image : category.image} 
+                          alt={category.name} 
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        />
+                        {/* Gradient Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
                       </div>
-                    )}
-                  </div>
-                ))}
+                      
+                      {/* Content Overlay */}
+                      <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 text-white">
+                        <h3 className="text-xs sm:text-sm lg:text-base font-bold mb-1 leading-tight">{category.name}</h3>
+                        <p className="text-xs text-white/80 hidden sm:block">{category.count} products</p>
+                      </div>
+                      
+                      {/* Popular Badge */}
+                      {category.featured && (
+                        <div className="absolute top-2 right-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                          ✨
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
