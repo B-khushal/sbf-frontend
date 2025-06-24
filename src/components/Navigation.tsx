@@ -92,8 +92,12 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
   
   // Debug cart state
   useEffect(() => {
-    console.log('Navigation - Cart state changed:', { isCartOpen, actualCartCount });
-  }, [isCartOpen, actualCartCount]);
+    console.log('Navigation - Cart state changed:', { 
+      isCartOpen, 
+      actualCartCount,
+      toggleCartType: typeof toggleCart
+    });
+  }, [isCartOpen, actualCartCount, toggleCart]);
   const { headerSettings, loading: settingsLoading } = useSettings();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchSuggestions, setSearchSuggestions] = useState<SearchSuggestion[]>([]);
@@ -483,10 +487,17 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log('Cart button clicked, current cart state:', isCartOpen);
-                    console.log('toggleCart function exists:', typeof toggleCart);
+                    console.log('🛒 Cart button clicked!');
+                    console.log('Current cart state:', isCartOpen);
                     console.log('Cart items count:', actualCartCount);
-                    toggleCart();
+                    console.log('toggleCart function type:', typeof toggleCart);
+                    
+                    try {
+                      toggleCart();
+                      console.log('✅ toggleCart called successfully');
+                    } catch (error) {
+                      console.error('❌ Error calling toggleCart:', error);
+                    }
                   }}
                   className="relative group hover:bg-primary/10 transition-all duration-300 cursor-pointer"
                 >

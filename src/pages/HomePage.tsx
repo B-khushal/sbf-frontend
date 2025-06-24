@@ -10,6 +10,7 @@ import ProductGrid from "../components/ProductGrid";
 import Footer from "../components/Footer";
 import Cart from "../components/Cart";
 import useCart from "../hooks/use-cart";
+import CartDebugger from "../components/CartDebugger";
 import { useSettings } from "../contexts/SettingsContext";
 import { useOfferPopup } from "../hooks/use-offer-popup";
 import OfferPopup from "../components/ui/OfferPopup";
@@ -52,7 +53,24 @@ const fadeInVariants = {
 };
 
 const HomePage = () => {
-  const { items, itemCount, isCartOpen, closeCart, updateItemQuantity, removeItem, openCart, addItem } = useCart();
+  const cartHook = useCart();
+  const { items, itemCount, isCartOpen, closeCart, updateItemQuantity, removeItem, openCart, addItem } = cartHook;
+  
+  // Debug cart hook
+  useEffect(() => {
+    console.log('HomePage - Cart hook values:', {
+      items: items.length,
+      itemCount,
+      isCartOpen,
+      functionsAvailable: {
+        closeCart: typeof closeCart,
+        updateItemQuantity: typeof updateItemQuantity,
+        removeItem: typeof removeItem,
+        openCart: typeof openCart,
+        addItem: typeof addItem
+      }
+    });
+  }, [items, itemCount, isCartOpen]);
   const { homeSections, loading: settingsLoading } = useSettings();
   const { currentOffer, isOpen: isOfferOpen, closeOffer } = useOfferPopup();
   
@@ -324,6 +342,9 @@ const HomePage = () => {
           onClose={closeOffer} 
         />
       )}
+
+      {/* Cart Debugger - Remove in production */}
+      <CartDebugger />
     </div>
   );
 };

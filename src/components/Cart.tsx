@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
-import { X, ShoppingBag, Trash2, Clock } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import TimeSlotSelector from '@/components/TimeSlotSelector';
+import { cn } from '@/lib/utils';
+import { X, ShoppingBag, Trash2 } from 'lucide-react';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
 
 type CartItem = {
   id: string;
@@ -33,29 +32,44 @@ const Cart = ({
   onUpdateQuantity, 
   onRemoveItem 
 }: CartProps) => {
-  const { toast } = useToast();
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
   const { formatPrice, convertPrice } = useCurrency();
+  const { user } = useAuth();
+  const { toast } = useToast();
   
-  // Calculate the raw subtotal in base currency (INR)
-  const subtotal = items.reduce((total, item) => total + (item.price * item.quantity), 0);
+  // Debug logging
+  React.useEffect(() => {
+    console.log('Cart component rendered with:', {
+      isOpen,
+      itemsCount: items.length,
+      items,
+      user: user ? { id: user.id, name: user.name } : null
+    });
+  }, [isOpen, items, user]);
   
+  // Calculate subtotal
+  const subtotal = items.reduce(
+    (total, item) => total + item.price * item.quantity, 
+    0
+  );
+
   const handleRemoveItem = (id: string) => {
+    console.log('Removing item with id:', id);
     onRemoveItem(id);
     toast({
       title: "Item removed",
-      description: "The item has been removed from your cart",
-      duration: 3000,
+      description: "Item has been removed from your cart",
+      duration: 2000,
     });
   };
 
   const handleCheckout = () => {
+    console.log('Checkout clicked with items:', items);
+    
     if (items.length === 0) {
       toast({
         title: "Cart is empty",
-        description: "Please add items to your cart before checkout",
+        description: "Please add some items to your cart before checkout",
         variant: "destructive",
         duration: 3000,
       });
@@ -77,8 +91,14 @@ const Cart = ({
     onClose();
   };
 
+  // Don't render if not open
+  if (!isOpen) {
+    return null;
+  }
+
   return (
     <>
+      {/* Backdrop */}
       <div 
         className={cn(
           "fixed inset-0 bg-black/40 backdrop-blur-sm z-[9999] transition-opacity duration-300",
@@ -87,65 +107,68 @@ const Cart = ({
         onClick={onClose}
       />
       
+      {/* Cart Panel */}
       <div 
         className={cn(
-          "fixed top-0 right-0 bottom-0 w-full sm:w-96 bg-background shadow-lg z-[9999] flex flex-col transition-transform duration-500 ease-out-expo",
+          "fixed top-0 right-0 bottom-0 w-full sm:w-96 bg-white shadow-2xl z-[9999] flex flex-col transition-transform duration-500 ease-out-expo",
           isOpen ? "translate-x-0" : "translate-x-full"
         )}
       >
-        <div className="py-4 px-6 border-b flex items-center justify-between">
-          <h2 className="text-lg font-medium flex items-center gap-2">
+        {/* Header */}
+        <div className="py-4 px-6 border-b flex items-center justify-between bg-gradient-to-r from-primary/5 to-secondary/5">
+          <h2 className="text-lg font-semibold flex items-center gap-2 text-gray-900">
             <ShoppingBag size={18} />
             <span>Shopping Cart</span>
             {items.length > 0 && (
-              <span className="ml-2 text-sm text-muted-foreground">
-                ({items.length})
+              <span className="ml-2 text-sm text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                {items.length} {items.length === 1 ? 'item' : 'items'}
               </span>
             )}
           </h2>
           <button 
             onClick={onClose}
-            className="text-muted-foreground hover:text-foreground transition-colors"
+            className="text-gray-400 hover:text-gray-600 transition-colors p-1 hover:bg-gray-100 rounded-lg"
             aria-label="Close cart"
           >
             <X size={20} />
           </button>
         </div>
         
+        {/* Content */}
         <div className="flex-1 overflow-y-auto py-4 px-6">
           {!user ? (
             <div className="h-full flex flex-col items-center justify-center text-center">
-              <ShoppingBag size={32} className="text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium mb-2">Please Login</h3>
-              <p className="text-muted-foreground mb-8">
-                You need to be logged in to view your cart.
+              <ShoppingBag size={48} className="text-gray-300 mb-4" />
+              <h3 className="text-xl font-semibold mb-2 text-gray-900">Please Login</h3>
+              <p className="text-gray-500 mb-8 max-w-xs">
+                You need to be logged in to view and manage your cart items.
               </p>
               <button 
                 onClick={() => {
                   onClose();
                   navigate('/login', { state: { redirect: '/cart' } });
                 }}
-                className="bg-primary text-primary-foreground px-6 py-2 hover-lift subtle-shadow"
+                className="bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-lg font-medium hover:shadow-lg transition-all duration-300 transform hover:scale-105"
               >
-                Login
+                Login Now
               </button>
             </div>
           ) : items.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center">
-              <ShoppingBag size={32} className="text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium mb-2">Your cart is empty</h3>
-              <p className="text-muted-foreground">
-                Looks like you haven't added any products to your cart yet.
+              <ShoppingBag size={48} className="text-gray-300 mb-4" />
+              <h3 className="text-xl font-semibold mb-2 text-gray-900">Your cart is empty</h3>
+              <p className="text-gray-500 mb-8 max-w-xs">
+                Discover our beautiful floral arrangements and add them to your cart.
               </p>
               <button 
                 onClick={onClose}
-                className="mt-6 bg-primary text-primary-foreground px-6 py-2 hover-lift subtle-shadow"
+                className="bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-lg font-medium hover:shadow-lg transition-all duration-300 transform hover:scale-105"
               >
                 Continue Shopping
               </button>
             </div>
           ) : (
-            <ul className="space-y-6">
+            <div className="space-y-4">
               {items.map((item) => (
                 <CartItem 
                   key={item.id} 
@@ -154,42 +177,47 @@ const Cart = ({
                   onRemove={() => handleRemoveItem(item.id)} 
                 />
               ))}
-            </ul>
+            </div>
           )}
         </div>
         
+        {/* Footer */}
         {items.length > 0 && (
-          <div className="border-t py-4 px-6">
-            <div className="flex justify-between font-medium pt-2 border-t mt-2">
-              <span>Total</span>
-              <span>{formatPrice(convertPrice(subtotal))}</span>
-            </div>
-            
-            {/* Promo Code Reminder */}
-            <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <div className="flex items-center gap-2 text-blue-700 text-sm">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                </svg>
-                <span className="font-medium">Have a promo code?</span>
+          <div className="border-t bg-gray-50 py-4 px-6">
+            <div className="space-y-4">
+              {/* Subtotal */}
+              <div className="flex justify-between items-center text-lg font-semibold">
+                <span>Subtotal</span>
+                <span className="text-primary">{formatPrice(convertPrice(subtotal))}</span>
               </div>
+              
+              {/* Promo Code Reminder */}
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center gap-2 text-blue-700 text-sm">
+                  <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                  </svg>
+                  <span className="font-medium">Have a promo code?</span>
+                </div>
+                <button 
+                  onClick={() => {
+                    onClose();
+                    navigate('/cart');
+                  }}
+                  className="text-blue-600 text-xs underline mt-1 hover:text-blue-800 transition-colors"
+                >
+                  Go to cart page to apply promo codes
+                </button>
+              </div>
+              
+              {/* Checkout Button */}
               <button 
-                onClick={() => {
-                  onClose();
-                  navigate('/cart');
-                }}
-                className="text-blue-600 text-xs underline mt-1 hover:text-blue-800"
+                className="w-full h-12 bg-gradient-to-r from-primary to-secondary text-white flex items-center justify-center rounded-lg font-medium hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+                onClick={handleCheckout}
               >
-                Go to cart to apply promo code
+                Proceed to Checkout
               </button>
             </div>
-            
-            <button 
-              className="w-full h-12 bg-primary text-primary-foreground flex items-center justify-center hover-lift subtle-shadow mt-3"
-              onClick={handleCheckout}
-            >
-              Proceed to Checkout
-            </button>
           </div>
         )}
       </div>
@@ -209,49 +237,54 @@ const CartItem = ({
   const { formatPrice, convertPrice } = useCurrency();
   
   return (
-    <li className="flex items-start gap-4 animate-fade-in">
-      <div className="w-20 h-20 bg-secondary/20 relative overflow-hidden flex-shrink-0">
+    <div className="flex items-start gap-4 p-4 bg-white border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+      <div className="w-16 h-16 bg-gray-100 relative overflow-hidden rounded-lg flex-shrink-0">
         <img 
           src={item.image} 
           alt={item.title}
           className="w-full h-full object-cover"
+          onError={(e) => {
+            e.currentTarget.src = '/api/placeholder/64/64';
+          }}
         />
       </div>
       <div className="flex-1 min-w-0">
-        <h4 className="text-sm font-medium truncate">{item.title}</h4>
-        <div className="text-muted-foreground text-sm mt-1">
+        <h4 className="text-sm font-medium text-gray-900 mb-1 line-clamp-2">{item.title}</h4>
+        <div className="text-sm text-gray-500 mb-2">
           {item.originalPrice !== item.price && (
-            <span className="line-through mr-2">
+            <span className="line-through mr-2 text-gray-400">
               {formatPrice(convertPrice(item.originalPrice))}
             </span>
           )}
-          {formatPrice(convertPrice(item.price))}
+          <span className="font-medium text-primary">
+            {formatPrice(convertPrice(item.price))}
+          </span>
         </div>
-        <div className="flex items-center mt-2">
+        <div className="flex items-center justify-between">
           <select 
             value={item.quantity}
             onChange={(e) => onUpdateQuantity(item.id, parseInt(e.target.value))}
-            className="text-sm h-8 px-2 border rounded-md bg-background mr-3"
+            className="text-sm h-8 px-2 border border-gray-200 rounded-md bg-white focus:border-primary focus:outline-none"
           >
             {[1,2,3,4,5].map((num) => (
               <option key={num} value={num}>
-                {num}
+                Qty: {num}
               </option>
             ))}
           </select>
           <button 
             onClick={onRemove}
-            className="text-muted-foreground hover:text-destructive transition-colors duration-200"
+            className="text-gray-400 hover:text-red-500 transition-colors duration-200 p-1 hover:bg-red-50 rounded"
             aria-label="Remove item"
           >
             <Trash2 size={16} />
           </button>
         </div>
       </div>
-      <div className="text-sm font-medium">
+      <div className="text-sm font-semibold text-gray-900">
         {formatPrice(convertPrice(item.price * item.quantity))}
       </div>
-    </li>
+    </div>
   );
 };
 

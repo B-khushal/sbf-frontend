@@ -21,6 +21,15 @@ const useCart = () => {
   const [showContactModal, setShowContactModal] = useState(false);
   const [contactModalProduct, setContactModalProduct] = useState<string>('');
   
+  // Debug logging for cart state changes
+  useEffect(() => {
+    console.log('Cart state changed:', {
+      isCartOpen,
+      itemsCount: items.length,
+      user: user ? { id: user.id, name: user.name } : null
+    });
+  }, [isCartOpen, items, user]);
+  
   // Update localStorage when cart changes or user changes
   useEffect(() => {
     if (user) {
@@ -39,8 +48,17 @@ const useCart = () => {
   }, [user]);
   
   const addItem = (item: Omit<CartItem, 'quantity'>, quantity: number = 1) => {
+    console.log('Adding item to cart:', { item, quantity, user: user ? user.id : null });
+    
     if (!user) {
-      throw new Error('Please log in to add items to cart');
+      console.log('User not logged in, cannot add to cart');
+      toast({
+        title: "Please login first",
+        description: "You need to be logged in to add items to your cart",
+        variant: "destructive",
+        duration: 3000,
+      });
+      return false;
     }
     
     const existingItem = items.find(i => i.id === item.id);
@@ -61,21 +79,32 @@ const useCart = () => {
     }
     
     setItems(prevItems => {
+      let updatedItems;
       if (existingItem) {
         // Update quantity of existing item
-        return prevItems.map(i => 
+        updatedItems = prevItems.map(i => 
           i.id === item.id 
             ? { ...i, quantity: newTotalQuantity } 
             : i
         );
+        console.log('Updated existing item quantity:', { itemId: item.id, newQuantity: newTotalQuantity });
       } else {
         // Add new item
-        return [...prevItems, { 
+        updatedItems = [...prevItems, { 
           ...item, 
           quantity,
           productId: item.id // Store the MongoDB ID
         }];
+        console.log('Added new item to cart:', { itemId: item.id, quantity });
       }
+      console.log('Cart items after update:', updatedItems);
+      return updatedItems;
+    });
+    
+    toast({
+      title: "Added to cart!",
+      description: `${item.title} has been added to your cart`,
+      duration: 2000,
     });
     
     return true; // Return success indicator
