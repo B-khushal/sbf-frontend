@@ -25,7 +25,7 @@ export const useOfferPopup = () => {
 
         if (offers && offers.length > 0) {
           // Check if we should show this offer
-          const seenOffers = JSON.parse(localStorage.getItem('seenOffers') || '{}');
+          const seenOffers = JSON.parse(sessionStorage.getItem('seenOffers') || '{}');
           
           // Find the first offer that hasn't been seen (if showOnlyOnce is true)
           const offerToShow = offers.find(offer => 
@@ -39,7 +39,7 @@ export const useOfferPopup = () => {
             // Mark offer as seen if showOnlyOnce is true
             if (offerToShow.showOnlyOnce) {
               seenOffers[offerToShow._id] = true;
-              localStorage.setItem('seenOffers', JSON.stringify(seenOffers));
+              sessionStorage.setItem('seenOffers', JSON.stringify(seenOffers));
             }
           }
         }
