@@ -3,8 +3,11 @@ import useCart from '@/hooks/use-cart';
 import { useAuth } from '@/hooks/use-auth';
 
 const CartDebugger = () => {
-  const { items, itemCount, isCartOpen, toggleCart, addItem, removeItem } = useCart();
+  const cartHook = useCart();
+  const { items, itemCount, isCartOpen, toggleCart, addItem, removeItem, forceUpdate } = cartHook;
   const { user } = useAuth();
+  
+  console.log('🐛 CartDebugger - Cart hook instance:', cartHook);
 
   const testProduct = {
     id: 'test-product-1',
@@ -32,6 +35,10 @@ const CartDebugger = () => {
         <div>Cart Open: {isCartOpen ? 'Yes' : 'No'}</div>
         <div>Item Count: {itemCount}</div>
         <div>Items in Cart: {items.length}</div>
+        <div>Force Update: {forceUpdate}</div>
+        <div className="border-t pt-1 mt-1">
+          <div>Raw Items: {JSON.stringify(items)}</div>
+        </div>
       </div>
       <div className="space-y-2">
         <button

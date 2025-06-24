@@ -344,7 +344,7 @@ const HomePage = () => {
       )}
 
       {/* Cart Debugger - Remove in production */}
-      <CartDebugger />
+      {process.env.NODE_ENV === 'development' && <CartDebugger />}
     </div>
   );
 };

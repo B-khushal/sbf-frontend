@@ -88,16 +88,20 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { pathname } = useLocation();
   const [wishlistCount, setWishlistCount] = useState(0);
-  const { itemCount: actualCartCount, toggleCart, isCartOpen } = useCart();
+  const cartHook = useCart();
+  const { itemCount: actualCartCount, toggleCart, isCartOpen, items } = cartHook;
   
-  // Debug cart state
+  // Debug cart state with detailed logging
   useEffect(() => {
     console.log('Navigation - Cart state changed:', { 
       isCartOpen, 
       actualCartCount,
-      toggleCartType: typeof toggleCart
+      itemsLength: items.length,
+      items: items,
+      toggleCartType: typeof toggleCart,
+      fullCartHook: Object.keys(cartHook)
     });
-  }, [isCartOpen, actualCartCount, toggleCart]);
+  }, [isCartOpen, actualCartCount, items, toggleCart, cartHook]);
   const { headerSettings, loading: settingsLoading } = useSettings();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchSuggestions, setSearchSuggestions] = useState<SearchSuggestion[]>([]);
@@ -490,6 +494,8 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                     console.log('🛒 Cart button clicked!');
                     console.log('Current cart state:', isCartOpen);
                     console.log('Cart items count:', actualCartCount);
+                    console.log('Actual items array:', items);
+                    console.log('Items length:', items.length);
                     console.log('toggleCart function type:', typeof toggleCart);
                     
                     try {
@@ -502,13 +508,14 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                   className="relative group hover:bg-primary/10 transition-all duration-300 cursor-pointer"
                 >
                   <ShoppingCart size={18} className="group-hover:text-primary transition-colors" />
-                  {actualCartCount > 0 && (
+                  {(actualCartCount > 0 || items.length > 0) && (
                     <motion.span
+                      key={`cart-${actualCartCount}-${items.length}`}
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       className="absolute -top-1 -right-1 bg-gradient-to-r from-primary to-secondary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg"
                     >
-                      {actualCartCount > 9 ? '9+' : actualCartCount}
+                      {actualCartCount > 9 ? '9+' : actualCartCount || items.length}
                     </motion.span>
                   )}
                 </Button>

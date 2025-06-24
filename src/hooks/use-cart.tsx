@@ -23,9 +23,12 @@ const useCart = () => {
   
   // Debug logging for cart state changes
   useEffect(() => {
+    const calculatedItemCount = items.reduce((total, item) => total + item.quantity, 0);
     console.log('Cart state changed:', {
       isCartOpen,
-      itemsCount: items.length,
+      itemsArrayLength: items.length,
+      itemsArray: items,
+      calculatedItemCount: calculatedItemCount,
       user: user ? { id: user.id, name: user.name } : null
     });
   }, [isCartOpen, items, user]);
@@ -169,12 +172,20 @@ const useCart = () => {
     setContactModalProduct('');
   };
   
+  // Force recalculation of item count to ensure updates
+  const [forceUpdate, setForceUpdate] = useState(0);
   const itemCount = items.reduce((total, item) => total + item.quantity, 0);
   
   const subtotal = items.reduce(
     (total, item) => total + item.price * item.quantity, 
     0
   );
+  
+  // Force update when items change
+  useEffect(() => {
+    setForceUpdate(prev => prev + 1);
+    console.log('🔄 Force updating cart count - itemCount:', itemCount, 'items:', items.length);
+  }, [items, itemCount]);
 
   return {
     items,
@@ -191,6 +202,7 @@ const useCart = () => {
     closeCart,
     toggleCart,
     closeContactModal,
+    forceUpdate, // For debugging
   };
 };
 
