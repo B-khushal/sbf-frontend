@@ -280,7 +280,7 @@ const HomePage = () => {
       <CategoryMenu />
       
       <motion.main 
-        className="relative flex-1 pt-14 sm:pt-16 z-10"
+        className="relative flex-1 z-10"
         initial="hidden"
         animate="visible"
         variants={containerVariants}

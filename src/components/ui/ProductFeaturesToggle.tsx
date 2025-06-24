@@ -22,7 +22,7 @@ export const ProductFeaturesToggle: React.FC<ProductFeaturesToggleProps> = ({
   console.log('ProductFeaturesToggle rendered with:', { isNewArrival, isFeatured, hidden });
   
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 relative z-10">
       <div className="flex items-center space-x-2">
         <Switch
           id="isNewArrival"
