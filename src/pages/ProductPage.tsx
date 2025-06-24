@@ -5,7 +5,7 @@ import ProductDetail from '@/components/ProductDetail';
 import ProductGrid from '@/components/ProductGrid';
 import Footer from '@/components/Footer';
 import Cart from '@/components/Cart';
-import useCart from '@/hooks/use-cart';
+import { useCart } from '@/contexts/CartContext';
 import api from '@/services/api';
 import productService, { ProductData } from '@/services/productService';
 
@@ -79,14 +79,20 @@ const ProductPage = () => {
     quantity: number;
   }) => {
     try {
-      const success = addItem(item, item.quantity);
+      const success = addItem({
+        id: item.id,
+        productId: item.productId,
+        title: item.title,
+        price: item.price,
+        originalPrice: item.originalPrice,
+        image: item.image,
+      }, item.quantity);
+      
       if (success) {
         setTimeout(() => openCart(), 300);
       }
-      // If success is false, the addItem function already showed an error toast
     } catch (error) {
       console.error('Error adding to cart:', error);
-      // Re-throw the error so ProductDetail can handle it
       throw error;
     }
   };
