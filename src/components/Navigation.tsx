@@ -89,6 +89,11 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
   const { pathname } = useLocation();
   const [wishlistCount, setWishlistCount] = useState(0);
   const { itemCount: actualCartCount, toggleCart, isCartOpen } = useCart();
+  
+  // Debug cart state
+  useEffect(() => {
+    console.log('Navigation - Cart state changed:', { isCartOpen, actualCartCount });
+  }, [isCartOpen, actualCartCount]);
   const { headerSettings, loading: settingsLoading } = useSettings();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchSuggestions, setSearchSuggestions] = useState<SearchSuggestion[]>([]);
@@ -475,13 +480,15 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
                     console.log('Cart button clicked, current cart state:', isCartOpen);
                     console.log('toggleCart function exists:', typeof toggleCart);
                     console.log('Cart items count:', actualCartCount);
                     toggleCart();
                   }}
-                  className="relative group hover:bg-primary/10 transition-all duration-300"
+                  className="relative group hover:bg-primary/10 transition-all duration-300 cursor-pointer"
                 >
                   <ShoppingCart size={18} className="group-hover:text-primary transition-colors" />
                   {actualCartCount > 0 && (
