@@ -8,6 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { format } from 'date-fns';
 import { CalendarIcon, Plus, Trash2, Power } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import api from '@/services/api';
 
 interface Offer {
@@ -22,6 +23,7 @@ interface Offer {
   startDate: string;
   endDate: string;
   isActive: boolean;
+  showOnlyOnce: boolean;
   theme: 'festive' | 'sale' | 'holiday' | 'general';
 }
 
@@ -35,7 +37,8 @@ const OffersManager = () => {
     theme: 'general',
     backgroundColor: '#ffffff',
     textColor: '#000000',
-    buttonText: 'Shop Now'
+    buttonText: 'Shop Now',
+    showOnlyOnce: false
   });
 
   // Fetch offers
@@ -77,7 +80,8 @@ const OffersManager = () => {
         theme: 'general',
         backgroundColor: '#ffffff',
         textColor: '#000000',
-        buttonText: 'Shop Now'
+        buttonText: 'Shop Now',
+        showOnlyOnce: false
       });
       setIsEditing(false);
       setShowForm(false);
@@ -141,7 +145,8 @@ const OffersManager = () => {
               theme: 'general',
               backgroundColor: '#ffffff',
               textColor: '#000000',
-              buttonText: 'Shop Now'
+              buttonText: 'Shop Now',
+              showOnlyOnce: false
             });
           }}
           className="bg-pink-600 hover:bg-pink-700 text-white"
@@ -297,6 +302,17 @@ const OffersManager = () => {
               </PopoverContent>
             </Popover>
           </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="showOnlyOnce"
+                checked={currentOffer.showOnlyOnce || false}
+                onCheckedChange={(checked) => setCurrentOffer({ ...currentOffer, showOnlyOnce: checked as boolean })}
+              />
+              <Label htmlFor="showOnlyOnce">Show only once per session</Label>
+            </div>
+          </div>
         </div>
 
         <div className="flex gap-4">
@@ -314,7 +330,8 @@ const OffersManager = () => {
                   theme: 'general',
                   backgroundColor: '#ffffff',
                   textColor: '#000000',
-                  buttonText: 'Shop Now'
+                  buttonText: 'Shop Now',
+                  showOnlyOnce: false
                 });
               }}
             >

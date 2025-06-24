@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const heroSlides = [
   {
@@ -37,6 +38,7 @@ const HomeHero = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [imagesLoaded, setImagesLoaded] = useState<boolean[]>(new Array(heroSlides.length).fill(false));
+  const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
   const navigate = useNavigate();
   
   const goToNextSlide = () => {
@@ -209,28 +211,173 @@ const HomeHero = () => {
           
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 md:gap-5 lg:gap-6">
             {[
-              { name: 'Roses', emoji: '🌹', link: '/shop/roses', color: 'from-rose-400 to-pink-500' },
-              { name: 'Lilies', emoji: '🌺', link: '/shop/lilies', color: 'from-purple-400 to-indigo-500' },
-              { name: 'Tulips', emoji: '🌷', link: '/shop/tulips', color: 'from-yellow-400 to-orange-500' },
-              { name: 'Orchids', emoji: '🌸', link: '/shop/orchids', color: 'from-pink-400 to-rose-500' },
-              { name: 'Sunflowers', emoji: '🌻', link: '/shop/sunflowers', color: 'from-amber-400 to-yellow-500' },
-              { name: 'Bouquets', emoji: '💐', link: '/shop/bouquets', color: 'from-emerald-400 to-green-500' },
+              { 
+                name: 'Roses', 
+                emoji: '🌹', 
+                link: '/shop/roses', 
+                color: 'from-rose-400 to-pink-500',
+                subcategories: [
+                  { name: 'Red Roses', link: '/shop/red-roses', count: 25 },
+                  { name: 'White Roses', link: '/shop/white-roses', count: 18 },
+                  { name: 'Pink Roses', link: '/shop/pink-roses', count: 22 },
+                  { name: 'Yellow Roses', link: '/shop/yellow-roses', count: 15 },
+                ]
+              },
+              { 
+                name: 'Lilies', 
+                emoji: '🌺', 
+                link: '/shop/lilies', 
+                color: 'from-purple-400 to-indigo-500',
+                subcategories: [
+                  { name: 'Tiger Lilies', link: '/shop/tiger-lilies', count: 12 },
+                  { name: 'Oriental Lilies', link: '/shop/oriental-lilies', count: 16 },
+                  { name: 'Asiatic Lilies', link: '/shop/asiatic-lilies', count: 14 },
+                  { name: 'Easter Lilies', link: '/shop/easter-lilies', count: 8 },
+                ]
+              },
+              { 
+                name: 'Tulips', 
+                emoji: '🌷', 
+                link: '/shop/tulips', 
+                color: 'from-yellow-400 to-orange-500',
+                subcategories: [
+                  { name: 'Red Tulips', link: '/shop/red-tulips', count: 18 },
+                  { name: 'Yellow Tulips', link: '/shop/yellow-tulips', count: 20 },
+                  { name: 'Purple Tulips', link: '/shop/purple-tulips', count: 15 },
+                  { name: 'Mixed Tulips', link: '/shop/mixed-tulips', count: 25 },
+                ]
+              },
+              { 
+                name: 'Orchids', 
+                emoji: '🌸', 
+                link: '/shop/orchids', 
+                color: 'from-pink-400 to-rose-500',
+                subcategories: [
+                  { name: 'Phalaenopsis', link: '/shop/phalaenopsis', count: 12 },
+                  { name: 'Dendrobium', link: '/shop/dendrobium', count: 10 },
+                  { name: 'Cattleya', link: '/shop/cattleya', count: 8 },
+                  { name: 'Cymbidium', link: '/shop/cymbidium', count: 6 },
+                ]
+              },
+              { 
+                name: 'Sunflowers', 
+                emoji: '🌻', 
+                link: '/shop/sunflowers', 
+                color: 'from-amber-400 to-yellow-500',
+                subcategories: [
+                  { name: 'Giant Sunflowers', link: '/shop/giant-sunflowers', count: 15 },
+                  { name: 'Dwarf Sunflowers', link: '/shop/dwarf-sunflowers', count: 12 },
+                  { name: 'Teddy Bear', link: '/shop/teddy-bear-sunflowers', count: 8 },
+                  { name: 'Red Sunflowers', link: '/shop/red-sunflowers', count: 6 },
+                ]
+              },
+              { 
+                name: 'Bouquets', 
+                emoji: '💐', 
+                link: '/shop/bouquets', 
+                color: 'from-emerald-400 to-green-500',
+                subcategories: [
+                  { name: 'Wedding Bouquets', link: '/shop/wedding-bouquets', count: 30 },
+                  { name: 'Birthday Bouquets', link: '/shop/birthday-bouquets', count: 25 },
+                  { name: 'Anniversary', link: '/shop/anniversary-bouquets', count: 20 },
+                  { name: 'Sympathy Bouquets', link: '/shop/sympathy-bouquets', count: 18 },
+                ]
+              },
             ].map((category) => (
-              <Link
+              <motion.div
                 key={category.name}
-                to={category.link}
-                className="group relative bg-white rounded-xl sm:rounded-2xl lg:rounded-3xl p-3 sm:p-4 lg:p-6 text-center hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 hover:border-primary/20"
+                className="relative"
+                onMouseEnter={() => setHoveredCategory(category.name)}
+                onMouseLeave={() => setHoveredCategory(null)}
+                whileHover={{ scale: 1.02 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
               >
-                <div className={cn(
-                  "w-12 h-12 xs:w-14 xs:h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 bg-gradient-to-br rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3 lg:mb-4 text-white shadow-lg group-hover:scale-110 transition-transform duration-300",
-                  category.color
-                )}>
-                  <span className="text-lg xs:text-xl sm:text-2xl lg:text-3xl">{category.emoji}</span>
-                </div>
-                <h3 className="text-xs xs:text-sm sm:text-base lg:text-lg font-semibold text-gray-800 group-hover:text-primary transition-colors duration-200">
-                  {category.name}
-                </h3>
-              </Link>
+                <Link
+                  to={category.link}
+                  className="group relative bg-white rounded-xl sm:rounded-2xl lg:rounded-3xl p-3 sm:p-4 lg:p-6 text-center hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 hover:border-primary/20 block"
+                >
+                  <div className={cn(
+                    "w-12 h-12 xs:w-14 xs:h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 bg-gradient-to-br rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3 lg:mb-4 text-white shadow-lg group-hover:scale-110 transition-transform duration-300",
+                    category.color
+                  )}>
+                    <span className="text-lg xs:text-xl sm:text-2xl lg:text-3xl">{category.emoji}</span>
+                  </div>
+                  <h3 className="text-xs xs:text-sm sm:text-base lg:text-lg font-semibold text-gray-800 group-hover:text-primary transition-colors duration-200">
+                    {category.name}
+                  </h3>
+                  
+                  {/* Hover Indicator */}
+                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <ChevronDown size={16} className="text-gray-400" />
+                  </div>
+                </Link>
+
+                {/* Hover Dropdown */}
+                <AnimatePresence>
+                  {hoveredCategory === category.name && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      transition={{ duration: 0.2, ease: "easeOut" }}
+                      className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 min-w-[240px] overflow-hidden z-50"
+                    >
+                      {/* Category Header */}
+                      <div className="p-4 bg-gradient-to-r from-primary/5 to-secondary/5 border-b border-gray-100">
+                        <div className="flex items-center gap-3">
+                          <div className={cn(
+                            "w-8 h-8 bg-gradient-to-br rounded-full flex items-center justify-center text-white text-lg shadow-md",
+                            category.color
+                          )}>
+                            {category.emoji}
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-gray-900">{category.name}</h3>
+                            <p className="text-sm text-gray-500">Premium quality flowers</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Subcategories */}
+                      <div className="p-2">
+                        {category.subcategories.map((sub, idx) => (
+                          <motion.div
+                            key={sub.link}
+                            initial={{ x: -20, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            transition={{ 
+                              delay: idx * 0.05,
+                              type: "spring",
+                              stiffness: 300,
+                              damping: 25
+                            }}
+                          >
+                            <Link
+                              to={sub.link}
+                              className="flex items-center justify-between px-4 py-3 rounded-xl hover:bg-gradient-to-r hover:from-primary/8 hover:to-secondary/8 transition-all duration-300 group"
+                            >
+                              <span className="text-gray-700 group-hover:text-primary font-medium transition-colors duration-200">
+                                {sub.name}
+                              </span>
+                              <span className="text-xs text-gray-400 group-hover:text-primary/60 transition-colors duration-200">
+                                {sub.count} items
+                              </span>
+                            </Link>
+                          </motion.div>
+                        ))}
+                      </div>
+
+                      {/* View All Link */}
+                      <Link
+                        to={category.link}
+                        className="block p-3 text-center text-sm font-medium text-primary hover:text-secondary border-t border-gray-100 bg-gradient-to-r from-primary/5 to-secondary/5 hover:from-primary/10 hover:to-secondary/10 transition-all duration-300"
+                      >
+                        View All {category.name}
+                      </Link>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
             ))}
           </div>
         </div>
