@@ -93,15 +93,12 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
   
   // Debug cart state with detailed logging
   useEffect(() => {
-    console.log('Navigation - Cart state changed:', { 
-      isCartOpen, 
+    console.log('Navigation - Cart state:', { 
       actualCartCount,
       itemsLength: items.length,
       items: items,
-      toggleCartType: typeof toggleCart,
-      fullCartHook: Object.keys(cartHook)
     });
-  }, [isCartOpen, actualCartCount, items, toggleCart, cartHook]);
+  }, [actualCartCount, items]);
   const { headerSettings, loading: settingsLoading } = useSettings();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchSuggestions, setSearchSuggestions] = useState<SearchSuggestion[]>([]);
@@ -213,6 +210,10 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
   const handleSearchFocus = () => {
     setIsSearchFocused(true);
     setShowSuggestions(true);
+  };
+
+  const handleCartClick = () => {
+    navigate('/cart');
   };
 
   return (
@@ -488,23 +489,7 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('🛒 Cart button clicked!');
-                    console.log('Current cart state:', isCartOpen);
-                    console.log('Cart items count:', actualCartCount);
-                    console.log('Actual items array:', items);
-                    console.log('Items length:', items.length);
-                    console.log('toggleCart function type:', typeof toggleCart);
-                    
-                    try {
-                      toggleCart();
-                      console.log('✅ toggleCart called successfully');
-                    } catch (error) {
-                      console.error('❌ Error calling toggleCart:', error);
-                    }
-                  }}
+                  onClick={handleCartClick}
                   className="relative group hover:bg-primary/10 transition-all duration-300 cursor-pointer"
                 >
                   <ShoppingCart size={18} className="group-hover:text-primary transition-colors" />
