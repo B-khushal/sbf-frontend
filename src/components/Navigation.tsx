@@ -171,7 +171,7 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-lg border-b shadow-sm">
+    <header className="fixed top-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-lg border-b shadow-sm">
       <div className="container mx-auto px-3 sm:px-4 lg:px-6 flex items-center justify-between h-14 sm:h-16">
         {/* Logo */}
         <Link to="/" className="flex items-center">
@@ -312,7 +312,12 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
           <Button 
             variant="ghost" 
             size="icon" 
-            onClick={toggleCart}
+            onClick={() => {
+              console.log('Cart button clicked');
+              console.log('toggleCart function:', toggleCart);
+              console.log('actualCartCount:', actualCartCount);
+              toggleCart();
+            }}
             className="relative w-8 h-8 sm:w-10 sm:h-10"
           >
             <ShoppingCart size={18} />

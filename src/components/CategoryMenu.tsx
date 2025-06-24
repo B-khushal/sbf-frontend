@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 
 const CategoryMenu = () => {
   return (
-    <section className="bg-white border-b sticky top-16 z-30">
+    <section className="bg-white border-b sticky top-20 z-35">
       <div className="container mx-auto px-4">
         <div className="flex justify-center overflow-x-auto py-4 scrollbar-hide">
           <div className="flex space-x-6 md:space-x-8 min-w-max">

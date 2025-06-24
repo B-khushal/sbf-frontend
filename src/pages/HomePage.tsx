@@ -277,6 +277,7 @@ const HomePage = () => {
       </div>
 
       <Navigation cartItemCount={itemCount} />
+      <CategoryMenu />
       
       <motion.main 
         className="relative flex-1 pt-14 sm:pt-16 z-10"
