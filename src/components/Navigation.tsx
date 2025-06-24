@@ -235,7 +235,7 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
       </div>
 
       {/* Main Navigation */}
-      <header className="sticky top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-xl border-b border-gray-100 shadow-lg">
+      <header className="sticky top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-b border-gray-100 shadow-lg">
         <div className="container mx-auto px-3 sm:px-4 lg:px-6">
           {/* Main Navigation Row */}
           <div className="flex items-center justify-between h-16 sm:h-18 lg:h-20">
@@ -339,7 +339,7 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                         transition={{ duration: 0.2 }}
-                        className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-100 rounded-2xl shadow-2xl z-50 max-h-96 overflow-hidden"
+                        className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-100 rounded-2xl shadow-2xl z-60 max-h-96 overflow-hidden"
                       >
                         {searchQuery.length >= 2 && searchSuggestions.length > 0 && (
                           <div className="p-3">
