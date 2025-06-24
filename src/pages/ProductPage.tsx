@@ -5,7 +5,7 @@ import ProductDetail from '@/components/ProductDetail';
 import ProductGrid from '@/components/ProductGrid';
 import Footer from '@/components/Footer';
 import Cart from '@/components/Cart';
-import { useCart } from '@/contexts/CartContext';
+import useCart from '@/hooks/use-cart';
 import api from '@/services/api';
 import productService, { ProductData } from '@/services/productService';
 
