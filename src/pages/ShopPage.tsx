@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import Navigation from "@/components/Navigation";
-import CategoryMenu from "@/components/CategoryMenu";
 import ProductGrid from "@/components/ProductGrid";
 import Footer from "@/components/Footer";
 import Cart from "@/components/Cart";
@@ -366,9 +365,6 @@ const ShopPage = () => {
       <Navigation cartItemCount={itemCount} />
       
       <main className="pt-20">
-        {/* Category Menu */}
-        <CategoryMenu />
-
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Search Results Header */}
           {searchQuery && (

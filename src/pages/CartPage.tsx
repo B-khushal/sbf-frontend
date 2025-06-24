@@ -113,7 +113,7 @@ const CartPage: React.FC = () => {
       <Navigation cartItemCount={items.length} />
       
       <motion.main 
-        className="relative flex-1 pt-20 z-10"
+        className="relative flex-1 pt-8 z-10"
         initial="hidden"
         animate="visible"
         variants={containerVariants}

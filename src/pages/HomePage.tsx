@@ -334,6 +334,16 @@ const HomePage = () => {
         onRemoveItem={removeItem}
       />
 
+
+      {/* Testing Mode Badge - Floating */}
+      <div className="fixed bottom-4 right-4 bg-yellow-500 text-black px-3 py-2 rounded-lg shadow-lg font-semibold flex items-center gap-2 z-50 text-xs sm:text-sm max-w-xs">
+        <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+        <span className="leading-tight">
+          ⚠️ TESTING MODE: Orders may not be processed.
+        </span>
+      </div>
+
+      
       {/* Offer Popup */}
       {console.log('🔍 Offer Popup State:', { currentOffer, isOfferOpen })}
       {currentOffer && isOfferOpen && (
