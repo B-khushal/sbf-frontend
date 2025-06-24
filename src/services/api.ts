@@ -75,10 +75,20 @@ api.interceptors.response.use(
     
     // Handle authentication errors (401, 403)
     if (error.response?.status === 401 || error.response?.status === 403) {
-      // Clear invalid authentication
+      // Save cart state before clearing auth
+      const userId = JSON.parse(localStorage.getItem('user') || '{}').id;
+      const cartKey = `cart_${userId}`;
+      const savedCart = localStorage.getItem(cartKey);
+      
+      // Clear invalid authentication but preserve cart
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       localStorage.removeItem('isAuthenticated');
+      
+      // Restore cart state if it existed
+      if (savedCart && userId) {
+        localStorage.setItem(cartKey, savedCart);
+      }
       
       // Redirect to login page if not already there
       if (!window.location.pathname.includes('/login')) {

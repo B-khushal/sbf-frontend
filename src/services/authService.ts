@@ -198,9 +198,27 @@ export const checkAuthToken = async () => {
     return response.data.valid;
   } catch (error) {
     const token = localStorage.getItem('token');
-    if (token && token.includes('mock')) {
-      return true;
+    
+    // If no token exists, return false without clearing storage
+    if (!token) {
+      return false;
     }
+    
+    // Save cart state before clearing auth
+    const userId = JSON.parse(localStorage.getItem('user') || '{}').id;
+    const cartKey = `cart_${userId}`;
+    const savedCart = localStorage.getItem(cartKey);
+    
+    // Clear invalid authentication but preserve cart
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('isAuthenticated');
+    
+    // Restore cart state if it existed
+    if (savedCart && userId) {
+      localStorage.setItem(cartKey, savedCart);
+    }
+    
     return false;
   }
 };
