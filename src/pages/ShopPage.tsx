@@ -34,7 +34,7 @@ const ShopPage = () => {
     {
       name: "Premium Roses",
       description: "Symbol of eternal love",
-      image: "/images/p-roses.png",
+      image: "/images/roses-1.png",
       icon: "🌹",
       category: "roses",
       featured: true,
@@ -44,22 +44,9 @@ const ShopPage = () => {
       ).length
     },
     {
-      name: "Vibrant Gerberas",
-      description: "Bursts of joy & color",
-      image: "/images/1.jpg",
-      gradient: "from-orange-500 via-yellow-500 to-red-500",
-      icon: "🌼",
-      category: "gerberas",
-      featured: false,
-      count: filteredProducts.filter(p => 
-        p.category?.toLowerCase() === "gerberas" || 
-        p.categories?.some(cat => cat.toLowerCase() === "gerberas")
-      ).length
-    },
-    {
       name: "Exotic Orchids",
       description: "Sophisticated elegance",
-      image: "https://images.unsplash.com/photo-1615738254841-b8263d5c935e?w=600&h=400&fit=crop",
+      image: "/images/p-orchid.png",
       gradient: "from-purple-500 via-indigo-500 to-blue-500",
       icon: "🌺",
       category: "orchids",
@@ -72,7 +59,7 @@ const ShopPage = () => {
     {
       name: "Graceful Lilies",
       description: "Pure serenity",
-      image: "https://images.unsplash.com/photo-1560116226-4d128cf6b5ee?w=600&h=400&fit=crop",
+      image: "/images/p-lily.png",
       gradient: "from-pink-500 via-rose-500 to-purple-500",
       icon: "🌷",
       category: "lilies",
@@ -85,7 +72,7 @@ const ShopPage = () => {
     {
       name: "Classic Carnations",
       description: "Timeless beauty",
-      image: "https://images.unsplash.com/photo-1609205807107-e6ec88c65b60?w=600&h=400&fit=crop",
+      image: "/images/p-carnation.png",
       gradient: "from-red-500 via-pink-500 to-rose-500",
       icon: "💐",
       category: "carnations",
@@ -98,7 +85,7 @@ const ShopPage = () => {
     {
       name: "Sunshine Flowers",
       description: "Radiant happiness",
-      image: "https://images.unsplash.com/photo-1470509037663-253afd7f0c44?w=600&h=400&fit=crop",
+      image: "/images/p-sunflower.png",
       gradient: "from-yellow-500 via-orange-500 to-amber-500",
       icon: "🌻",
       category: "sunflowers",
