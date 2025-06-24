@@ -108,18 +108,62 @@ const CategoryMenu = () => {
   };
 
   const dropdownVariants = {
-    hidden: { opacity: 0, y: -10, scale: 0.95 },
+    hidden: { 
+      opacity: 0, 
+      y: -10, 
+      scale: 0.95,
+      transformOrigin: "top center"
+    },
     visible: {
       opacity: 1,
       y: 0,
       scale: 1,
-      transition: { duration: 0.2, ease: "easeOut" }
+      transformOrigin: "top center",
+      transition: { 
+        duration: 0.3, 
+        ease: "easeOut",
+        staggerChildren: 0.05,
+        delayChildren: 0.1
+      }
     },
     exit: {
       opacity: 0,
       y: -10,
       scale: 0.95,
-      transition: { duration: 0.15 }
+      transformOrigin: "top center",
+      transition: { 
+        duration: 0.2,
+        ease: "easeIn"
+      }
+    }
+  };
+
+  const subcategoryVariants = {
+    hidden: { 
+      x: -30, 
+      opacity: 0,
+      scale: 0.95
+    },
+    visible: {
+      x: 0,
+      opacity: 1,
+      scale: 1,
+      transition: {
+        type: "spring",
+        stiffness: 300,
+        damping: 25,
+        mass: 0.8
+      }
+    }
+  };
+
+  const subcategoryContainerVariants = {
+    hidden: {},
+    visible: {
+      transition: {
+        staggerChildren: 0.08,
+        delayChildren: 0.1
+      }
     }
   };
 
@@ -209,31 +253,40 @@ const CategoryMenu = () => {
                         </div>
 
                         {/* Subcategories */}
-                        <div className="p-2">
+                        <motion.div 
+                          className="p-2"
+                          variants={subcategoryContainerVariants}
+                          initial="hidden"
+                          animate="visible"
+                        >
                           {category.subcategories.map((sub, idx) => (
                             <motion.div
                               key={sub.path}
-                              initial={{ x: -20, opacity: 0 }}
-                              animate={{ x: 0, opacity: 1 }}
-                              transition={{ delay: idx * 0.1 }}
+                              variants={subcategoryVariants}
+                              className="overflow-hidden"
                             >
                               <Link
                                 to={sub.path}
-                                className="flex items-center justify-between px-4 py-2.5 rounded-xl hover:bg-gradient-to-r hover:from-primary/5 hover:to-secondary/5 transition-all duration-300 group"
+                                className="flex items-center justify-between px-4 py-3 rounded-xl hover:bg-gradient-to-r hover:from-primary/8 hover:to-secondary/8 transition-all duration-300 group transform hover:scale-[1.02] hover:shadow-sm"
                               >
-                                <span className="text-gray-700 group-hover:text-primary font-medium">
+                                <span className="text-gray-700 group-hover:text-primary font-medium transition-colors duration-200">
                                   {sub.name}
                                 </span>
                                 <div className="flex items-center gap-2">
-                                  <span className="text-xs text-gray-400 group-hover:text-primary/60">
+                                  <span className="text-xs text-gray-400 group-hover:text-primary/60 transition-colors duration-200">
                                     {sub.count} items
                                   </span>
-                                  <ChevronRight size={14} className="text-gray-300 group-hover:text-primary transition-colors" />
+                                  <motion.div
+                                    whileHover={{ x: 2 }}
+                                    transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                                  >
+                                    <ChevronRight size={14} className="text-gray-300 group-hover:text-primary transition-colors duration-200" />
+                                  </motion.div>
                                 </div>
                               </Link>
                             </motion.div>
                           ))}
-                        </div>
+                        </motion.div>
 
                         {/* View All Link */}
                         <Link
