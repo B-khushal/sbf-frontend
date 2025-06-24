@@ -89,7 +89,6 @@ const CategoryMenu = () => {
     { icon: <Search size={14} />, label: "Browse All", path: "/shop", color: "bg-blue-500" },
     { icon: <Heart size={14} />, label: "Wishlist", path: "/wishlist", color: "bg-red-500" },
     { icon: <Gift size={14} />, label: "Gift Cards", path: "/gift-cards", color: "bg-green-500" },
-    { icon: <Star size={14} />, label: "Featured", path: "/shop?featured=true", color: "bg-yellow-500" },
   ];
 
   const containerVariants = {
