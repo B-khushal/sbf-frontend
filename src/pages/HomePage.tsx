@@ -207,8 +207,8 @@ const HomePage = () => {
         setLoading(true);
         setError("");
         const [featuredResponse, newResponse] = await Promise.all([
-          api.get('/products?featured=true'),
-          api.get('/products?new=true')
+          api.get('/products/featured'),
+          api.get('/products/new')
         ]);
         
         const processProducts = (products) => {

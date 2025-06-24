@@ -57,7 +57,15 @@ export const ProductFeaturesToggle: React.FC<ProductFeaturesToggleProps> = ({
               onHiddenChange(checked);
             }}
           />
-          <Label htmlFor="hidden">Hide Product</Label>
+          <Label htmlFor="hidden" className="flex flex-col">
+            <span>Hide Product from Public View</span>
+            <span className="text-xs text-gray-500 font-normal">
+              {hidden 
+                ? "🔒 Product is hidden from customers (Admin-only)" 
+                : "👁️ Product is visible to customers"
+              }
+            </span>
+          </Label>
         </div>
       )}
     </div>

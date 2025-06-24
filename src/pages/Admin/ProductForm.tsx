@@ -117,7 +117,7 @@ const initialFormData: ProductData = {
   rating: 0,
   numReviews: 0,
   reviews: [],
-  hidden: false
+  hidden: true  // 🔒 New products are hidden by default until admin makes them visible
 };
 
 const ProductForm = () => {
@@ -847,6 +847,14 @@ const ProductForm = () => {
               </div>
             </div>
 
+            {!isEditMode && (
+              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  <span className="font-medium">ℹ️ Note:</span> New products are hidden by default. 
+                  Turn off "Hide Product from Public View" when you're ready to make this product visible to customers.
+                </p>
+              </div>
+            )}
             <div className="space-y-4">
               <ProductFeaturesToggle
                 isNewArrival={Boolean(formData.isNewArrival)}
