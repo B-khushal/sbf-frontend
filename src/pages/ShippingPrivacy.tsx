@@ -142,8 +142,8 @@ const ShippingPage = () => {
                 <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
                   <Clock className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                 </div>
-                <h3 className="text-base sm:text-lg lg:text-xl font-bold text-gray-800 mb-2">Same Day Delivery</h3>
-                <p className="text-sm sm:text-base text-gray-600">Order by 4:00 PM IST</p>
+                <h3 className="text-base sm:text-lg lg:text-xl font-bold text-gray-800 mb-2">Scheduled Delivery</h3>
+                <p className="text-sm sm:text-base text-gray-600">Timely & reliable</p>
               </motion.div>
 
               <motion.div
@@ -225,7 +225,7 @@ const ShippingPage = () => {
                         Delivery Timeframes
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700">
-                        <li><strong>Same-day standard delivery:</strong> Place orders by <strong>4:00 PM IST</strong>.</li>
+                        <li><strong>Standard delivery:</strong> Place orders by <strong>4:00 PM IST</strong> for next day delivery.</li>
                         <li><strong>Fixed time delivery:</strong> Subject to a delivery window of ±30 minutes from the chosen time.</li>
                         <li><strong>Midnight delivery:</strong> Currently not available.</li>
                       </ul>

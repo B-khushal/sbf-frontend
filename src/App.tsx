@@ -15,6 +15,8 @@ import ProductForm from '@/pages/Admin/ProductForm';
 import TermsPage from "@/pages/TermsPage";
 import ShippingPage from "./pages/ShippingPrivacy";
 import PrivacyPage from "./pages/PrivacyPage";
+import RefundPolicyPage from "./pages/RefundPolicyPage";
+import CancellationPolicyPage from "./pages/CancellationPolicyPage";
 import ErrorBoundary from '@/components/ErrorBoundary';
 
 // Pages
@@ -105,6 +107,8 @@ const App = () => {
                       <Route path="/terms" element={<TermsPage />} />
                       <Route path="/shipping" element={<ShippingPage />} />
                       <Route path="/privacy" element={<PrivacyPage/>} />
+                      <Route path="/refund-policy" element={<RefundPolicyPage />} />
+                      <Route path="/cancellation-policy" element={<CancellationPolicyPage />} />
                       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                       
                       {/* Checkout Routes */}

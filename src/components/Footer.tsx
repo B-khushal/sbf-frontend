@@ -173,6 +173,12 @@ const Footer = () => {
             <Link to="/shipping" className="hover:text-primary transition-colors duration-200">
               Shipping Policy
             </Link>
+            <Link to="/refund-policy" className="hover:text-primary transition-colors duration-200">
+              Refund Policy
+            </Link>
+            <Link to="/cancellation-policy" className="hover:text-primary transition-colors duration-200">
+              Cancellation Policy
+            </Link>
           </div>
         </div>
       </div>

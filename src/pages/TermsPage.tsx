@@ -94,7 +94,7 @@ const TermsPage: React.FC = () => {
               >
                 <Truck className="w-8 h-8 text-blue-500 mx-auto mb-3" />
                 <h3 className="font-bold text-gray-800 mb-2">Timely Delivery</h3>
-                <p className="text-sm text-gray-600">Same-day available</p>
+                <p className="text-sm text-gray-600">Reliable service</p>
               </motion.div>
               <motion.div 
                 className="text-center bg-white/50 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20"
@@ -217,7 +217,7 @@ const TermsPage: React.FC = () => {
                         When you place an order with us, you will receive an acknowledgment via email or SMS. This acknowledgment does not constitute acceptance of your order. Spring Blossoms Florist reserves the right to accept or reject your order for any reason, including but not limited to stock unavailability, payment issues, or suspected fraudulent activity.
                       </p>
                       <p className="text-gray-700 leading-relaxed">
-                        You may cancel or modify your order up to 24 hours before the scheduled delivery time. No modifications or cancellations are allowed for same-day deliveries once confirmed.
+                        You may cancel or modify your order up to 24 hours before the scheduled delivery time. No modifications or cancellations are allowed once the order is confirmed and processed.
                       </p>
                     </motion.div>
 
@@ -232,7 +232,7 @@ const TermsPage: React.FC = () => {
                         Delivery and Shipping
                       </h3>
                       <p className="text-gray-700 leading-relaxed mb-4">
-                        We offer same-day and scheduled deliveries within our operational regions. Delivery charges may apply depending on location, time, or urgency. While we strive to honor requested delivery times, delays may occur due to factors beyond our control such as traffic, weather, or public holidays.
+                        We offer scheduled deliveries within our operational regions. Delivery charges may apply depending on location, time, or urgency. While we strive to honor requested delivery times, delays may occur due to factors beyond our control such as traffic, weather, or public holidays.
                       </p>
                       <p className="text-gray-700 leading-relaxed mb-4">
                         In case the recipient is unavailable at the time of delivery:

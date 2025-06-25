@@ -101,11 +101,35 @@ const ContactPage: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await submitContactForm(formData);
+      // Format message for WhatsApp and SMS
+      const contactMessage = `*New Contact Form Message*
       
+Name: ${formData.firstName} ${formData.lastName}
+Email: ${formData.email}
+
+Message:
+${formData.message}
+
+---
+Sent from Spring Blossoms Florist Website`;
+
+      // Send via WhatsApp
+      const whatsappNumber = "9849589710";
+      const encodedMessage = encodeURIComponent(contactMessage);
+      const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
+      
+      // Open WhatsApp
+      window.open(whatsappUrl, '_blank');
+      
+      // Also create SMS link as fallback
+      const smsMessage = `New Contact: ${formData.firstName} ${formData.lastName} (${formData.email}) - ${formData.message}`;
+      const encodedSmsMessage = encodeURIComponent(smsMessage);
+      const smsUrl = `sms:${whatsappNumber}?body=${encodedSmsMessage}`;
+      
+      // Show success message
       toast({
         title: "Message Sent! 🌸",
-        description: response.message || "We've received your message and will get back to you soon!",
+        description: "Your message has been sent via WhatsApp. We'll get back to you soon!",
       });
       
       // Reset form
@@ -115,10 +139,18 @@ const ContactPage: React.FC = () => {
         email: '',
         message: ''
       });
+      
+      // Optional: Also open SMS as backup (user can choose)
+      setTimeout(() => {
+        if (window.confirm("Would you also like to send this message via SMS as a backup?")) {
+          window.location.href = smsUrl;
+        }
+      }, 2000);
+      
     } catch (error: any) {
       toast({
         title: "Message Failed",
-        description: error.message || "Failed to send message. Please try again or contact us directly.",
+        description: "Failed to send message. Please try contacting us directly at +91 9849589710.",
         variant: "destructive",
       });
     } finally {
@@ -369,7 +401,7 @@ const ContactPage: React.FC = () => {
                         <p className="text-gray-600 text-lg mb-1">+91 9849589710</p>
                         <p className="text-sm text-gray-500 mb-3">Available during business hours</p>
                         <Button
-                          onClick={callPhone}
+                          onClick={() => window.location.href = 'tel:+919849589710'}
                           variant="outline"
                           size="sm"
                           className="text-blue-600 border-blue-200 hover:bg-blue-50"
@@ -387,10 +419,15 @@ const ContactPage: React.FC = () => {
                       </div>
                       <div className="flex-1">
                         <h3 className="text-xl font-bold text-gray-800 mb-2">💬 WhatsApp</h3>
-                        <p className="text-green-600 text-lg font-semibold mb-1">9949683222</p>
+                        <p className="text-green-600 text-lg font-semibold mb-1">9849589710</p>
                         <p className="text-sm text-gray-500 mb-3">Chat with us instantly</p>
                         <Button
-                          onClick={() => openWhatsApp("Hello! I'm interested in your flower arrangements.")}
+                          onClick={() => {
+                            const message = "Hello! I'm interested in your flower arrangements.";
+                            const encodedMessage = encodeURIComponent(message);
+                            const whatsappUrl = `https://wa.me/9849589710?text=${encodedMessage}`;
+                            window.open(whatsappUrl, '_blank');
+                          }}
                           variant="outline"
                           size="sm"
                           className="text-green-600 border-green-200 hover:bg-green-50"

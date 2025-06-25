@@ -35,6 +35,38 @@ interface RazorpayOptions {
   theme: {
     color: string;
   };
+  config?: {
+    display: {
+      blocks: {
+        utib: {
+          name: string;
+          instruments: Array<{
+            method: string;
+          }>;
+        };
+        other: {
+          name: string;
+          instruments: Array<{
+            method: string;
+          }>;
+        };
+      };
+      sequence: string[];
+      preferences: {
+        show_default_blocks: boolean;
+      };
+    };
+  };
+  method?: {
+    upi: boolean;
+    card: boolean;
+    netbanking: boolean;
+    wallet: boolean;
+  };
+  modal?: {
+    confirm_close: boolean;
+    ondismiss: () => void;
+  };
 }
 
 interface RazorpayResponse {
@@ -252,6 +284,44 @@ const CheckoutPaymentPage = () => {
         },
         theme: {
           color: '#000000'
+        },
+        config: {
+          display: {
+            blocks: {
+              utib: { // UPI
+                name: 'Pay using UPI',
+                instruments: [
+                  {
+                    method: 'upi'
+                  }
+                ]
+              },
+              other: { // Other payment methods
+                name: 'Other payment methods',
+                instruments: [
+                  {
+                    method: 'card'
+                  },
+                  {
+                    method: 'netbanking'
+                  },
+                  {
+                    method: 'wallet'
+                  }
+                ]
+              }
+            },
+            sequence: ['block.utib', 'block.other'],
+            preferences: {
+              show_default_blocks: true
+            }
+          }
+        },
+        method: {
+          upi: true,
+          card: true,
+          netbanking: true,
+          wallet: true
         },
         modal: {
           confirm_close: true,
