@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Search, Store, Eye, Check, X, Pause, Play, Filter, Download, RefreshCw, Users } from 'lucide-react';
+import { Search, Store, Eye, Check, X, Pause, Play, Filter, Download, RefreshCw, Users, Star } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -24,8 +24,8 @@ type Vendor = {
   storeDescription: string;
   status: 'pending' | 'approved' | 'suspended' | 'rejected';
   businessType: string;
-  phone: string;
-  address: {
+  phone?: string;
+  address?: {
     street: string;
     city: string;
     state: string;
@@ -35,33 +35,28 @@ type Vendor = {
   verification: {
     isVerified: boolean;
     verifiedAt?: string;
-    documents: {
-      businessLicense?: string;
-      taxCertificate?: string;
-      identityProof?: string;
-    };
   };
-  bankDetails: {
-    accountHolderName: string;
-    accountNumber: string;
-    bankName: string;
-    ifscCode: string;
+  bankDetails?: {
+    accountHolderName?: string;
+    accountNumber?: string;
+    bankName?: string;
+    ifscCode?: string;
     upiId?: string;
   };
-  stats: {
+  stats?: {
     totalProducts: number;
     totalOrders: number;
     totalRevenue: number;
     rating: number;
     totalReviews: number;
   };
-  commission: {
+  commission?: {
     type: 'percentage' | 'fixed';
     rate: number;
   };
-  subscription: {
+  subscription?: {
     plan: 'basic' | 'premium' | 'enterprise';
-    expiresAt: string;
+    expiresAt?: string;
   };
   createdAt: string;
   updatedAt: string;
@@ -167,17 +162,18 @@ const AdminVendorManagement: React.FC = () => {
 
   // Filter vendors
   const filteredVendors = vendors.filter(vendor => {
+    const lowerSearchTerm = searchTerm.toLowerCase();
     const matchesSearch = 
-      vendor.storeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      vendor.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      vendor.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      vendor.businessType.toLowerCase().includes(searchTerm.toLowerCase());
+      vendor.storeName.toLowerCase().includes(lowerSearchTerm) ||
+      vendor.user.name.toLowerCase().includes(lowerSearchTerm) ||
+      vendor.user.email.toLowerCase().includes(lowerSearchTerm) ||
+      (vendor.businessType && vendor.businessType.toLowerCase().includes(lowerSearchTerm));
     
     const matchesStatus = statusFilter === 'all' || vendor.status === statusFilter;
     const matchesVerification = verificationFilter === 'all' || 
       (verificationFilter === 'verified' && vendor.verification.isVerified) ||
       (verificationFilter === 'unverified' && !vendor.verification.isVerified);
-    const matchesSubscription = subscriptionFilter === 'all' || vendor.subscription.plan === subscriptionFilter;
+    const matchesSubscription = subscriptionFilter === 'all' || (vendor.subscription && vendor.subscription.plan === subscriptionFilter);
     
     return matchesSearch && matchesStatus && matchesVerification && matchesSubscription;
   });
@@ -190,9 +186,9 @@ const AdminVendorManagement: React.FC = () => {
     suspended: vendors.filter(v => v.status === 'suspended').length,
     rejected: vendors.filter(v => v.status === 'rejected').length,
     verified: vendors.filter(v => v.verification.isVerified).length,
-    totalRevenue: vendors.reduce((sum, v) => sum + (v.stats.totalRevenue || 0), 0),
-    totalProducts: vendors.reduce((sum, v) => sum + (v.stats.totalProducts || 0), 0),
-    totalOrders: vendors.reduce((sum, v) => sum + (v.stats.totalOrders || 0), 0),
+    totalRevenue: vendors.reduce((sum, v) => sum + (v.stats?.totalRevenue || 0), 0),
+    totalProducts: vendors.reduce((sum, v) => sum + (v.stats?.totalProducts || 0), 0),
+    totalOrders: vendors.reduce((sum, v) => sum + (v.stats?.totalOrders || 0), 0),
   };
 
   // Export vendors data
@@ -206,9 +202,9 @@ const AdminVendorManagement: React.FC = () => {
         vendor.status,
         vendor.verification.isVerified ? 'Yes' : 'No',
         vendor.businessType,
-        vendor.stats.totalProducts,
-        vendor.stats.totalOrders,
-        vendor.stats.totalRevenue,
+        vendor.stats?.totalProducts,
+        vendor.stats?.totalOrders,
+        vendor.stats?.totalRevenue,
         new Date(vendor.createdAt).toLocaleDateString()
       ].join(','))
     ].join('\n');
@@ -225,8 +221,8 @@ const AdminVendorManagement: React.FC = () => {
     switch (status) {
       case 'approved': return 'bg-green-100 text-green-800';
       case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'suspended': return 'bg-red-100 text-red-800';
-      case 'rejected': return 'bg-gray-100 text-gray-800';
+      case 'suspended': return 'bg-orange-100 text-orange-800';
+      case 'rejected': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -425,12 +421,21 @@ const AdminVendorManagement: React.FC = () => {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge className={getSubscriptionColor(vendor.subscription.plan)}>
-                      {vendor.subscription.plan}
+                    <Badge className={getSubscriptionColor(vendor.subscription?.plan || 'basic')}>
+                      {vendor.subscription?.plan || 'Basic'}
                     </Badge>
                   </TableCell>
-                  <TableCell>{vendor.stats.totalProducts}</TableCell>
-                  <TableCell>{formatPrice(vendor.stats.totalRevenue)}</TableCell>
+                  <TableCell>
+                    <div className="font-medium">{(vendor.commission?.rate ?? 0).toFixed(2)}%</div>
+                    <div className="text-sm text-muted-foreground capitalize">{vendor.commission?.type || 'N/A'}</div>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div className="flex items-center justify-center gap-1">
+                      <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                      <span>{(vendor.stats?.rating ?? 0).toFixed(1)}</span>
+                    </div>
+                    <div className="text-xs text-muted-foreground">({vendor.stats?.totalReviews ?? 0} reviews)</div>
+                  </TableCell>
                   <TableCell>{new Date(vendor.createdAt).toLocaleDateString()}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex gap-1 justify-end">
@@ -530,8 +535,8 @@ const AdminVendorManagement: React.FC = () => {
                   {selectedVendor.verification.isVerified && (
                     <Badge variant="default">Verified</Badge>
                   )}
-                  <Badge className={getSubscriptionColor(selectedVendor.subscription.plan)}>
-                    {selectedVendor.subscription.plan}
+                  <Badge className={getSubscriptionColor(selectedVendor.subscription?.plan || 'basic')}>
+                    {selectedVendor.subscription?.plan || 'Basic'}
                   </Badge>
                 </div>
                 <div className="flex gap-2">
@@ -595,7 +600,7 @@ const AdminVendorManagement: React.FC = () => {
                       <strong>Business Type:</strong> {selectedVendor.businessType}
                     </div>
                     <div>
-                      <strong>Phone:</strong> {selectedVendor.phone}
+                      <strong>Phone:</strong> {selectedVendor.phone || 'N/A'}
                     </div>
                     <div>
                       <strong>Address:</strong>
@@ -641,23 +646,23 @@ const AdminVendorManagement: React.FC = () => {
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                     <div className="text-center p-3 rounded-lg border">
-                      <div className="text-2xl font-bold">{selectedVendor.stats.totalProducts}</div>
+                      <div className="text-2xl font-bold">{selectedVendor.stats?.totalProducts || 0}</div>
                       <div className="text-sm text-muted-foreground">Products</div>
                     </div>
                     <div className="text-center p-3 rounded-lg border">
-                      <div className="text-2xl font-bold">{selectedVendor.stats.totalOrders}</div>
+                      <div className="text-2xl font-bold">{selectedVendor.stats?.totalOrders || 0}</div>
                       <div className="text-sm text-muted-foreground">Orders</div>
                     </div>
                     <div className="text-center p-3 rounded-lg border">
-                      <div className="text-2xl font-bold">{formatPrice(selectedVendor.stats.totalRevenue)}</div>
+                      <div className="text-2xl font-bold">{formatPrice(selectedVendor.stats?.totalRevenue || 0)}</div>
                       <div className="text-sm text-muted-foreground">Revenue</div>
                     </div>
                     <div className="text-center p-3 rounded-lg border">
-                      <div className="text-2xl font-bold">{selectedVendor.stats.rating.toFixed(1)}</div>
+                      <div className="text-2xl font-bold">{(selectedVendor.stats?.rating ?? 0).toFixed(1)}</div>
                       <div className="text-sm text-muted-foreground">Rating</div>
                     </div>
                     <div className="text-center p-3 rounded-lg border">
-                      <div className="text-2xl font-bold">{selectedVendor.stats.totalReviews}</div>
+                      <div className="text-2xl font-bold">{selectedVendor.stats?.totalReviews || 0}</div>
                       <div className="text-sm text-muted-foreground">Reviews</div>
                     </div>
                   </div>
@@ -671,18 +676,18 @@ const AdminVendorManagement: React.FC = () => {
                 </CardHeader>
                 <CardContent className="space-y-3 text-sm">
                   <div>
-                    <strong>Account Holder:</strong> {selectedVendor.bankDetails.accountHolderName}
+                    <strong>Account Holder:</strong> {selectedVendor.bankDetails?.accountHolderName || 'N/A'}
                   </div>
                   <div>
-                    <strong>Bank Name:</strong> {selectedVendor.bankDetails.bankName}
+                    <strong>Bank Name:</strong> {selectedVendor.bankDetails?.bankName || 'N/A'}
                   </div>
                   <div>
-                    <strong>Account Number:</strong> **** **** {selectedVendor.bankDetails.accountNumber.slice(-4)}
+                    <strong>Account Number:</strong> **** **** {selectedVendor.bankDetails?.accountNumber?.slice(-4) || 'N/A'}
                   </div>
                   <div>
-                    <strong>IFSC Code:</strong> {selectedVendor.bankDetails.ifscCode}
+                    <strong>IFSC Code:</strong> {selectedVendor.bankDetails?.ifscCode || 'N/A'}
                   </div>
-                  {selectedVendor.bankDetails.upiId && (
+                  {selectedVendor.bankDetails?.upiId && (
                     <div>
                       <strong>UPI ID:</strong> {selectedVendor.bankDetails.upiId}
                     </div>
@@ -697,10 +702,10 @@ const AdminVendorManagement: React.FC = () => {
                 </CardHeader>
                 <CardContent className="space-y-3 text-sm">
                   <div>
-                    <strong>Type:</strong> {selectedVendor.commission.type}
+                    <strong>Type:</strong> {selectedVendor.commission?.type || 'N/A'}
                   </div>
                   <div>
-                    <strong>Rate:</strong> {selectedVendor.commission.type === 'percentage' ? `${selectedVendor.commission.rate}%` : formatPrice(selectedVendor.commission.rate)}
+                    <strong>Rate:</strong> {selectedVendor.commission?.type === 'percentage' ? `${selectedVendor.commission.rate}%` : formatPrice(selectedVendor.commission.rate || 0)}
                   </div>
                 </CardContent>
               </Card>
