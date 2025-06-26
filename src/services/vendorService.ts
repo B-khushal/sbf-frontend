@@ -139,6 +139,20 @@ export interface VendorDashboardData {
   };
 }
 
+export interface VendorSettingsData {
+  storeName: string;
+  storeDescription: string;
+  contactInfo: {
+    email: string;
+    phone: string;
+  };
+  payoutInfo: {
+    bankAccountHolder: string;
+    bankAccountNumber: string;
+    bankIfsc: string;
+  };
+}
+
 // Vendor registration and profile
 export const registerVendor = async (data: VendorRegistrationData) => {
   try {
@@ -231,6 +245,17 @@ export const getVendorPayouts = async (params?: {
   return response.data;
 };
 
+// Vendor settings
+export const getVendorSettings = async (): Promise<VendorSettingsData> => {
+  const response = await api.get('/vendors/settings');
+  return response.data;
+};
+
+export const updateVendorSettings = async (data: VendorSettingsData) => {
+  const response = await api.put('/vendors/settings', data);
+  return response.data;
+};
+
 // Admin functions
 export const getAllVendors = async (params?: {
   page?: number;
@@ -264,4 +289,6 @@ export default {
   getAllVendors,
   updateVendorStatus,
   getVendorById,
+  getVendorSettings,
+  updateVendorSettings,
 }; 
