@@ -6,7 +6,7 @@ type User = {
   id: string;
   email: string;
   name: string;
-  role: 'admin' | 'user';
+  role: 'admin' | 'user' | 'vendor';
   photoURL?: string;
   provider?: string;
   token?: string;
@@ -78,7 +78,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             id: userData._id || userData.id, // Use _id from backend or id if already mapped
             email: userData.email,
             name: userData.name,
-            role: userData.role === 'admin' ? 'admin' : 'user',
+            role: userData.role === 'admin' ? 'admin' : userData.role === 'vendor' ? 'vendor' : 'user',
             photoURL: userData.photoURL,
             provider: userData.provider,
             token: userData.token
@@ -155,7 +155,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         id: userData._id || userData.id,
         name: userData.name,
         email: userData.email,
-        role: userData.role === 'admin' ? 'admin' : 'user',
+        role: userData.role === 'admin' ? 'admin' : userData.role === 'vendor' ? 'vendor' : 'user',
         token: userData.token
       });
       localStorage.setItem('isAuthenticated', 'true');
@@ -186,7 +186,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         id: userData._id || userData.id,
         name: userData.name,
         email: userData.email,
-        role: userData.role === 'admin' ? 'admin' : 'user',
+        role: userData.role === 'admin' ? 'admin' : userData.role === 'vendor' ? 'vendor' : 'user',
         provider: userData.provider,
         photoURL: userData.photoURL,
         token: userData.token
