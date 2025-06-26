@@ -216,6 +216,11 @@ export const updateVendorStatus = async (vendorId: string, status: string) => {
   return response.data;
 };
 
+export const getVendorById = async (vendorId: string): Promise<VendorProfile> => {
+  const response = await api.get(`/vendors/admin/${vendorId}`);
+  return response.data;
+};
+
 export default {
   registerVendor,
   getVendorProfile,
@@ -227,4 +232,5 @@ export default {
   getVendorPayouts,
   getAllVendors,
   updateVendorStatus,
+  getVendorById,
 }; 
