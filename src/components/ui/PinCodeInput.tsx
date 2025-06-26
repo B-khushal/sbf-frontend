@@ -1,8 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { Input } from './input';
-import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from './command';
-import { Popover, PopoverContent, PopoverTrigger } from './popover';
-import { Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Alert, AlertDescription } from './alert';
 
@@ -121,25 +118,31 @@ const PinCodeInput: React.FC<PinCodeInputProps> = ({
   className,
   onValidationChange
 }) => {
-  const [open, setOpen] = useState(false);
-  const [filteredCodes, setFilteredCodes] = useState<typeof SERVICEABLE_PINCODES>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [showError, setShowError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const [filteredCodes, setFilteredCodes] = useState<typeof SERVICEABLE_PINCODES>([]);
 
-  // Filter PIN codes based on input
-  useEffect(() => {
-    if (value) {
-      const filtered = SERVICEABLE_PINCODES.filter(pincode =>
-        pincode.code.startsWith(value) || 
-        pincode.area.toLowerCase().includes(value.toLowerCase())
-      );
-      setFilteredCodes(filtered);
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputValue = e.target.value.replace(/\D/g, ''); // Only allow digits
+    if (inputValue.length <= 6) {
+      onChange(inputValue);
       
-      // Check if the entered value is valid
-      const exactMatch = SERVICEABLE_PINCODES.find(pincode => pincode.code === value);
-      
-      if (value.length >= 6) {
+      // Filter codes for suggestions
+      if (inputValue.length > 0 && inputValue.length < 6) {
+        const filtered = SERVICEABLE_PINCODES.filter(pincode =>
+          pincode.code.startsWith(inputValue)
+        );
+        setFilteredCodes(filtered.slice(0, 8)); // Limit to 8 suggestions
+        setShowSuggestions(filtered.length > 0);
+      } else {
+        setShowSuggestions(false);
+      }
+
+      // Validate only when 6 digits are entered
+      if (inputValue.length === 6) {
+        const exactMatch = SERVICEABLE_PINCODES.find(pincode => pincode.code === inputValue);
         if (!exactMatch) {
           setShowError(true);
           setErrorMessage("Sorry, we don't deliver to this PIN code yet. We currently only serve specific areas in Hyderabad.");
@@ -149,105 +152,53 @@ const PinCodeInput: React.FC<PinCodeInputProps> = ({
           setErrorMessage('');
           onValidationChange?.(true);
         }
+        setShowSuggestions(false);
       } else {
         setShowError(false);
         setErrorMessage('');
         onValidationChange?.(true);
       }
-    } else {
-      setFilteredCodes([]);
-      setShowError(false);
-      setErrorMessage('');
-      onValidationChange?.(true);
-    }
-  }, [value, onValidationChange]);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const inputValue = e.target.value.replace(/\D/g, ''); // Only allow digits
-    if (inputValue.length <= 6) {
-      onChange(inputValue);
-      // Don't automatically open dropdown on every keystroke to avoid focus issues
-      if (inputValue.length > 0 && inputValue.length < 6) {
-        setOpen(true);
-      } else if (inputValue.length === 6) {
-        setOpen(false);
-      }
     }
   };
 
-  const handlePinCodeSelect = (pincode: string) => {
+  const handleSuggestionClick = (pincode: string) => {
     onChange(pincode);
-    setOpen(false);
-    // Don't blur the input to maintain focus for continued typing
-    setTimeout(() => {
-      inputRef.current?.focus();
-    }, 100);
+    setShowSuggestions(false);
+    setShowError(false);
+    setErrorMessage('');
+    onValidationChange?.(true);
   };
 
   return (
     <div className={cn("relative", className)}>
-      <Popover open={open && value.length > 0 && value.length < 6 && filteredCodes.length > 0} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <div className="relative">
-            <Input
-              ref={inputRef}
-              type="text"
-              value={value}
-              onChange={handleInputChange}
-              placeholder={placeholder}
-              required={required}
-              className={cn(
-                "w-full",
-                showError && "border-red-500 focus:border-red-500 focus:ring-red-500"
-              )}
-              onFocus={() => {
-                if (value.length > 0 && value.length < 6 && filteredCodes.length > 0) {
-                  setOpen(true);
-                }
-              }}
-            />
-            {value.length > 0 && filteredCodes.length > 0 && (
-              <ChevronsUpDown className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-            )}
-          </div>
-        </PopoverTrigger>
-        <PopoverContent className="w-full p-0" align="start">
-          <Command>
-            <CommandList>
-              {filteredCodes.length === 0 ? (
-                <CommandEmpty>No PIN codes found</CommandEmpty>
-              ) : (
-                <CommandGroup>
-                  {filteredCodes.slice(0, 10).map((pincode) => (
-                    <CommandItem
-                      key={pincode.code}
-                      value={pincode.code}
-                      onSelect={() => handlePinCodeSelect(pincode.code)}
-                      className="cursor-pointer"
-                    >
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          value === pincode.code ? "opacity-100" : "opacity-0"
-                        )}
-                      />
-                      <div className="flex flex-col">
-                        <span className="font-medium">{pincode.code}</span>
-                        <span className="text-sm text-gray-500">{pincode.area}</span>
-                      </div>
-                    </CommandItem>
-                  ))}
-                  {filteredCodes.length > 10 && (
-                    <div className="px-2 py-1 text-xs text-gray-500">
-                      +{filteredCodes.length - 10} more results...
-                    </div>
-                  )}
-                </CommandGroup>
-              )}
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
+      <Input
+        ref={inputRef}
+        type="text"
+        value={value}
+        onChange={handleInputChange}
+        placeholder={placeholder}
+        required={required}
+        className={cn(
+          "w-full",
+          showError && "border-red-500 focus:border-red-500 focus:ring-red-500"
+        )}
+      />
+      
+      {/* Simple dropdown suggestions */}
+      {showSuggestions && filteredCodes.length > 0 && (
+        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
+          {filteredCodes.map((pincode) => (
+            <div
+              key={pincode.code}
+              onClick={() => handleSuggestionClick(pincode.code)}
+              className="px-3 py-2 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0"
+            >
+              <div className="font-medium text-sm">{pincode.code}</div>
+              <div className="text-xs text-gray-500 truncate">{pincode.area}</div>
+            </div>
+          ))}
+        </div>
+      )}
       
       {showError && (
         <Alert className="mt-2 border-red-200 bg-red-50">
