@@ -64,10 +64,19 @@ const VendorRegistration: React.FC = () => {
     }
   ];
 
-  const handleInputChange = (section: keyof VendorRegistrationData, field: string, value: string) => {
+  const handleInputChange = (section: keyof VendorRegistrationData | 'businessType', field: string, value: string) => {
     setFormData(prev => {
       if (field === '') {
-        // Handle top-level fields
+        // Handle top-level fields like storeName, storeDescription, businessType
+        if (section === 'businessInfo' && field === 'businessType') {
+            return {
+                ...prev,
+                businessInfo: {
+                    ...prev.businessInfo,
+                    businessType: value as 'individual' | 'partnership' | 'llc' | 'corporation'
+                }
+            };
+        }
         return {
           ...prev,
           [section]: value
@@ -77,7 +86,7 @@ const VendorRegistration: React.FC = () => {
         return {
           ...prev,
           [section]: {
-            ...prev[section],
+            ...(prev[section as keyof VendorRegistrationData] as object),
             [field]: value
           }
         };
@@ -337,7 +346,7 @@ const VendorRegistration: React.FC = () => {
                     required
                   />
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-2 md:col-span-2">
                   <Label htmlFor="website">Website (Optional)</Label>
                   <Input
                     id="website"
@@ -360,13 +369,13 @@ const VendorRegistration: React.FC = () => {
                 value={formData.businessInfo.businessType}
                 onValueChange={(value) => handleInputChange('businessInfo', 'businessType', value)}
               >
-                <SelectTrigger>
+                <SelectTrigger id="businessType">
                   <SelectValue placeholder="Select business type" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="individual">Individual</SelectItem>
                   <SelectItem value="partnership">Partnership</SelectItem>
-                  <SelectItem value="llc">Limited Liability Company</SelectItem>
+                  <SelectItem value="llc">LLC</SelectItem>
                   <SelectItem value="corporation">Corporation</SelectItem>
                 </SelectContent>
               </Select>
@@ -496,7 +505,7 @@ const VendorRegistration: React.FC = () => {
         </div>
 
         {/* Form Card */}
-        <Card className="mb-6">
+        <Card>
           <CardHeader>
             <CardTitle>Step {currentStep + 1} of {steps.length}</CardTitle>
           </CardHeader>
@@ -542,7 +551,7 @@ const VendorRegistration: React.FC = () => {
         </Card>
 
         {/* Info Card */}
-        <Card>
+        <Card className="mt-6">
           <CardContent className="pt-6">
             <h3 className="font-semibold mb-2">What happens next?</h3>
             <ul className="space-y-2 text-sm text-gray-600">

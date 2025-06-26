@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import api from '@/services/api';
 
 interface Offer {
@@ -17,27 +17,12 @@ interface Offer {
 export const useOfferPopup = () => {
   const [currentOffer, setCurrentOffer] = useState<Offer | null>(null);
   const [isOpen, setIsOpen] = useState(false);
-  const [hasCheckedOffers, setHasCheckedOffers] = useState(false);
-
-  const closeOffer = useCallback(() => {
-    console.log('🔒 Closing offer popup');
-    setIsOpen(false);
-  }, []);
 
   useEffect(() => {
-    let isMounted = true;
-
     const fetchActiveOffers = async () => {
-      // Don't fetch if we've already checked offers
-      if (hasCheckedOffers) return;
-
       try {
         console.log('🎯 Fetching active offers...');
         const { data: offers } = await api.get('/offers/active');
-        
-        // Check if component is still mounted
-        if (!isMounted) return;
-
         console.log('📦 Received offers:', offers);
 
         if (offers && offers.length > 0) {
@@ -51,7 +36,7 @@ export const useOfferPopup = () => {
           );
           console.log('🎁 Offer selected to show:', offerToShow);
 
-          if (offerToShow && isMounted) {
+          if (offerToShow) {
             setCurrentOffer(offerToShow);
             setIsOpen(true);
             console.log('🔓 Opening offer popup');
@@ -70,19 +55,16 @@ export const useOfferPopup = () => {
         }
       } catch (error) {
         console.error('❌ Error fetching offers:', error);
-      } finally {
-        if (isMounted) {
-          setHasCheckedOffers(true);
-        }
       }
     };
 
     fetchActiveOffers();
+  }, []);
 
-    return () => {
-      isMounted = false;
-    };
-  }, [hasCheckedOffers]); // Only depend on hasCheckedOffers
+  const closeOffer = () => {
+    console.log('🔒 Closing offer popup');
+    setIsOpen(false);
+  };
 
   return {
     currentOffer,
