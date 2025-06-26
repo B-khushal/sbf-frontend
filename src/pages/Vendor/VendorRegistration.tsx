@@ -65,13 +65,24 @@ const VendorRegistration: React.FC = () => {
   ];
 
   const handleInputChange = (section: keyof VendorRegistrationData, field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [section]: {
-        ...prev[section],
-        [field]: value
+    setFormData(prev => {
+      if (field === '') {
+        // Handle top-level fields
+        return {
+          ...prev,
+          [section]: value
+        };
+      } else {
+        // Handle nested fields
+        return {
+          ...prev,
+          [section]: {
+            ...prev[section],
+            [field]: value
+          }
+        };
       }
-    }));
+    });
   };
 
   const handleNextStep = () => {
@@ -119,7 +130,7 @@ const VendorRegistration: React.FC = () => {
   const validateStep = (step: number): boolean => {
     switch (step) {
       case 0:
-        if (!formData.storeName.trim()) {
+        if (!formData.storeName || typeof formData.storeName !== 'string' || !formData.storeName.trim()) {
           toast({
             title: "Store Name Required",
             description: "Please enter your store name",
@@ -127,7 +138,7 @@ const VendorRegistration: React.FC = () => {
           });
           return false;
         }
-        if (!formData.storeDescription.trim()) {
+        if (!formData.storeDescription || typeof formData.storeDescription !== 'string' || !formData.storeDescription.trim()) {
           toast({
             title: "Store Description Required",
             description: "Please enter a description for your store",
@@ -138,7 +149,7 @@ const VendorRegistration: React.FC = () => {
         return true;
 
       case 1:
-        if (!formData.storeAddress.street.trim()) {
+        if (!formData.storeAddress?.street || typeof formData.storeAddress.street !== 'string' || !formData.storeAddress.street.trim()) {
           toast({
             title: "Street Address Required",
             description: "Please enter your street address",
@@ -146,7 +157,7 @@ const VendorRegistration: React.FC = () => {
           });
           return false;
         }
-        if (!formData.storeAddress.city.trim()) {
+        if (!formData.storeAddress?.city || typeof formData.storeAddress.city !== 'string' || !formData.storeAddress.city.trim()) {
           toast({
             title: "City Required",
             description: "Please enter your city",
@@ -154,7 +165,7 @@ const VendorRegistration: React.FC = () => {
           });
           return false;
         }
-        if (!formData.storeAddress.state.trim()) {
+        if (!formData.storeAddress?.state || typeof formData.storeAddress.state !== 'string' || !formData.storeAddress.state.trim()) {
           toast({
             title: "State Required",
             description: "Please enter your state",
@@ -162,7 +173,7 @@ const VendorRegistration: React.FC = () => {
           });
           return false;
         }
-        if (!formData.storeAddress.zipCode.trim()) {
+        if (!formData.storeAddress?.zipCode || typeof formData.storeAddress.zipCode !== 'string' || !formData.storeAddress.zipCode.trim()) {
           toast({
             title: "ZIP Code Required",
             description: "Please enter your ZIP code",
@@ -170,7 +181,7 @@ const VendorRegistration: React.FC = () => {
           });
           return false;
         }
-        if (!formData.contactInfo.phone.trim()) {
+        if (!formData.contactInfo?.phone || typeof formData.contactInfo.phone !== 'string' || !formData.contactInfo.phone.trim()) {
           toast({
             title: "Phone Number Required",
             description: "Please enter your phone number",
@@ -178,7 +189,7 @@ const VendorRegistration: React.FC = () => {
           });
           return false;
         }
-        if (!formData.contactInfo.email.trim() || !formData.contactInfo.email.includes('@')) {
+        if (!formData.contactInfo?.email || typeof formData.contactInfo.email !== 'string' || !formData.contactInfo.email.trim() || !formData.contactInfo.email.includes('@')) {
           toast({
             title: "Valid Email Required",
             description: "Please enter a valid email address",
@@ -189,7 +200,7 @@ const VendorRegistration: React.FC = () => {
         return true;
 
       case 2:
-        if (!formData.businessInfo.businessType) {
+        if (!formData.businessInfo?.businessType) {
           toast({
             title: "Business Type Required",
             description: "Please select your business type",
@@ -200,7 +211,7 @@ const VendorRegistration: React.FC = () => {
         return true;
 
       case 3:
-        if (!formData.bankDetails.accountHolderName?.trim()) {
+        if (!formData.bankDetails?.accountHolderName || typeof formData.bankDetails.accountHolderName !== 'string' || !formData.bankDetails.accountHolderName.trim()) {
           toast({
             title: "Account Holder Name Required",
             description: "Please enter the account holder name",
@@ -208,7 +219,8 @@ const VendorRegistration: React.FC = () => {
           });
           return false;
         }
-        if (!formData.bankDetails.accountNumber?.trim() && !formData.bankDetails.upiId?.trim()) {
+        if ((!formData.bankDetails?.accountNumber || !formData.bankDetails.accountNumber.trim()) && 
+            (!formData.bankDetails?.upiId || !formData.bankDetails.upiId.trim())) {
           toast({
             title: "Payment Details Required",
             description: "Please enter either bank account details or UPI ID",
@@ -233,7 +245,7 @@ const VendorRegistration: React.FC = () => {
               <Input
                 id="storeName"
                 value={formData.storeName}
-                onChange={(e) => handleInputChange('storeName' as any, '', e.target.value)}
+                onChange={(e) => handleInputChange('storeName', '', e.target.value)}
                 placeholder="Enter your store name"
                 required
               />
@@ -243,7 +255,7 @@ const VendorRegistration: React.FC = () => {
               <Textarea
                 id="storeDescription"
                 value={formData.storeDescription}
-                onChange={(e) => handleInputChange('storeDescription' as any, '', e.target.value)}
+                onChange={(e) => handleInputChange('storeDescription', '', e.target.value)}
                 placeholder="Describe what your store sells and what makes it special"
                 rows={4}
                 required

@@ -252,62 +252,56 @@ const AdminVendorManagement: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Store className="h-8 w-8 text-primary" />
-            Vendor Management
-          </h1>
-          <p className="text-muted-foreground">Manage vendor applications, approvals, and store operations</p>
-        </div>
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            onClick={exportVendorsData}
-            disabled={filteredVendors.length === 0}
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Export Data
-          </Button>
-          <Button onClick={fetchVendors} disabled={loading}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-        </div>
-      </div>
-
+    <div className="p-6 space-y-6">
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
-            <div className="text-sm text-muted-foreground">Total Vendors</div>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Total Vendors</CardTitle>
+            <Store className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.total}</div>
+            <div className="text-xs text-muted-foreground">
+              {stats.verified} verified
+            </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
-            <div className="text-sm text-muted-foreground">Pending Approval</div>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatPrice(stats.totalRevenue)}</div>
+            <div className="text-xs text-muted-foreground">
+              From {stats.totalOrders} orders
+            </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-green-600">{stats.approved}</div>
-            <div className="text-sm text-muted-foreground">Active Vendors</div>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Status Distribution</CardTitle>
+            <Filter className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-2">
+              <Badge variant="secondary">{stats.approved} approved</Badge>
+              <Badge variant="secondary">{stats.pending} pending</Badge>
+              <Badge variant="secondary">{stats.suspended} suspended</Badge>
+            </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-purple-600">{stats.verified}</div>
-            <div className="text-sm text-muted-foreground">Verified</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-emerald-600">{formatPrice(stats.totalRevenue)}</div>
-            <div className="text-sm text-muted-foreground">Total Revenue</div>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Total Products</CardTitle>
+            <Store className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalProducts}</div>
+            <div className="text-xs text-muted-foreground">
+              Across all vendors
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -315,23 +309,35 @@ const AdminVendorManagement: React.FC = () => {
       {/* Filters and Search */}
       <Card>
         <CardHeader>
-          <CardTitle>Filter Vendors</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>Vendor Management</CardTitle>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={fetchVendors}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+              <Button variant="outline" onClick={exportVendorsData}>
+                <Download className="h-4 w-4 mr-2" />
+                Export
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-4">
-            <div className="flex-1 min-w-[200px]">
+          <div className="flex flex-col md:flex-row gap-4 mb-6">
+            <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search vendors..."
-                  className="pl-8"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-8"
                 />
               </div>
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[150px]">
+              <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -343,7 +349,7 @@ const AdminVendorManagement: React.FC = () => {
               </SelectContent>
             </Select>
             <Select value={verificationFilter} onValueChange={setVerificationFilter}>
-              <SelectTrigger className="w-[150px]">
+              <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Verification" />
               </SelectTrigger>
               <SelectContent>
@@ -353,8 +359,8 @@ const AdminVendorManagement: React.FC = () => {
               </SelectContent>
             </Select>
             <Select value={subscriptionFilter} onValueChange={setSubscriptionFilter}>
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="Plan" />
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Subscription" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Plans</SelectItem>
@@ -363,375 +369,189 @@ const AdminVendorManagement: React.FC = () => {
                 <SelectItem value="enterprise">Enterprise</SelectItem>
               </SelectContent>
             </Select>
-            {(statusFilter !== 'all' || verificationFilter !== 'all' || subscriptionFilter !== 'all') && (
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  setStatusFilter('all');
-                  setVerificationFilter('all');
-                  setSubscriptionFilter('all');
-                }}
-              >
-                Clear Filters
-              </Button>
-            )}
+          </div>
+
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Store</TableHead>
+                  <TableHead>Owner</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Products</TableHead>
+                  <TableHead>Revenue</TableHead>
+                  <TableHead>Subscription</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredVendors.map((vendor) => (
+                  <TableRow key={vendor._id}>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">{vendor.storeName}</div>
+                        <div className="text-sm text-muted-foreground">{vendor.businessType}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">{vendor.user.name}</div>
+                        <div className="text-sm text-muted-foreground">{vendor.user.email}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={getStatusColor(vendor.status)}>
+                        {vendor.status}
+                      </Badge>
+                      {vendor.verification.isVerified && (
+                        <Badge variant="outline" className="ml-2">
+                          <Check className="h-3 w-3 mr-1" />
+                          Verified
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="font-medium">{vendor.stats.totalProducts}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {vendor.stats.totalOrders} orders
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="font-medium">{formatPrice(vendor.stats.totalRevenue)}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {vendor.commission.rate}% commission
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={getSubscriptionColor(vendor.subscription.plan)}>
+                        {vendor.subscription.plan}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleViewDetails(vendor)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        {vendor.status === 'pending' && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-green-600 hover:text-green-800"
+                            onClick={() => openStatusDialog(vendor, 'approved')}
+                          >
+                            <Check className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {vendor.status === 'approved' && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-yellow-600 hover:text-yellow-800"
+                            onClick={() => openStatusDialog(vendor, 'suspended')}
+                          >
+                            <Pause className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {vendor.status === 'suspended' && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-green-600 hover:text-green-800"
+                            onClick={() => openStatusDialog(vendor, 'approved')}
+                          >
+                            <Play className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>
 
-      {/* Vendors Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Vendors ({filteredVendors.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Store Name</TableHead>
-                <TableHead>Owner</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Verification</TableHead>
-                <TableHead>Plan</TableHead>
-                <TableHead>Products</TableHead>
-                <TableHead>Revenue</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredVendors.map((vendor) => (
-                <TableRow key={vendor._id}>
-                  <TableCell>
-                    <div>
-                      <div className="font-medium">{vendor.storeName}</div>
-                      <div className="text-sm text-muted-foreground">{vendor.businessType}</div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div>
-                      <div className="font-medium">{vendor.user.name}</div>
-                      <div className="text-sm text-muted-foreground">{vendor.user.email}</div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={getStatusColor(vendor.status)}>
-                      {vendor.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={vendor.verification.isVerified ? "default" : "outline"}>
-                      {vendor.verification.isVerified ? "Verified" : "Unverified"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={getSubscriptionColor(vendor.subscription.plan)}>
-                      {vendor.subscription.plan}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{vendor.stats.totalProducts}</TableCell>
-                  <TableCell>{formatPrice(vendor.stats.totalRevenue)}</TableCell>
-                  <TableCell>{new Date(vendor.createdAt).toLocaleDateString()}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex gap-1 justify-end">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleViewDetails(vendor)}
-                        title="View Details"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      {vendor.status === 'pending' && (
-                        <>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => openStatusDialog(vendor, 'approved')}
-                            disabled={updatingVendor === vendor._id}
-                            title="Approve"
-                            className="text-green-600 hover:text-green-700"
-                          >
-                            <Check className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => openStatusDialog(vendor, 'rejected')}
-                            disabled={updatingVendor === vendor._id}
-                            title="Reject"
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </>
-                      )}
-                      {vendor.status === 'approved' && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => openStatusDialog(vendor, 'suspended')}
-                          disabled={updatingVendor === vendor._id}
-                          title="Suspend"
-                          className="text-orange-600 hover:text-orange-700"
-                        >
-                          <Pause className="h-4 w-4" />
-                        </Button>
-                      )}
-                      {vendor.status === 'suspended' && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => openStatusDialog(vendor, 'approved')}
-                          disabled={updatingVendor === vendor._id}
-                          title="Reactivate"
-                          className="text-green-600 hover:text-green-700"
-                        >
-                          <Play className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {filteredVendors.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
-                    No vendors found matching your criteria
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      {/* Vendor Detail Dialog */}
+      {/* Vendor Details Dialog */}
       <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Store className="h-5 w-5" />
-              {selectedVendor?.storeName}
-            </DialogTitle>
-            <DialogDescription>
-              Comprehensive vendor information and management
-            </DialogDescription>
+            <DialogTitle>Vendor Details</DialogTitle>
           </DialogHeader>
-          
           {selectedVendor && (
-            <div className="space-y-6">
-              {/* Status and Quick Actions */}
-              <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/50">
-                <div className="flex items-center gap-3">
-                  <Badge className={getStatusColor(selectedVendor.status)}>
-                    {selectedVendor.status}
-                  </Badge>
-                  {selectedVendor.verification.isVerified && (
-                    <Badge variant="default">Verified</Badge>
-                  )}
-                  <Badge className={getSubscriptionColor(selectedVendor.subscription.plan)}>
-                    {selectedVendor.subscription.plan}
-                  </Badge>
-                </div>
-                <div className="flex gap-2">
-                  {selectedVendor.status === 'pending' && (
-                    <>
-                      <Button
-                        size="sm"
-                        onClick={() => openStatusDialog(selectedVendor, 'approved')}
-                        disabled={updatingVendor === selectedVendor._id}
-                      >
-                        <Check className="h-4 w-4 mr-1" />
-                        Approve
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => openStatusDialog(selectedVendor, 'rejected')}
-                        disabled={updatingVendor === selectedVendor._id}
-                      >
-                        <X className="h-4 w-4 mr-1" />
-                        Reject
-                      </Button>
-                    </>
-                  )}
-                  {selectedVendor.status === 'approved' && (
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => openStatusDialog(selectedVendor, 'suspended')}
-                      disabled={updatingVendor === selectedVendor._id}
-                    >
-                      <Pause className="h-4 w-4 mr-1" />
-                      Suspend
-                    </Button>
-                  )}
-                  {selectedVendor.status === 'suspended' && (
-                    <Button
-                      size="sm"
-                      onClick={() => openStatusDialog(selectedVendor, 'approved')}
-                      disabled={updatingVendor === selectedVendor._id}
-                    >
-                      <Play className="h-4 w-4 mr-1" />
-                      Reactivate
-                    </Button>
-                  )}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <h3 className="font-semibold mb-2">Store Information</h3>
+                <div className="space-y-1">
+                  <p><span className="font-medium">Name:</span> {selectedVendor.storeName}</p>
+                  <p><span className="font-medium">Type:</span> {selectedVendor.businessType}</p>
+                  <p><span className="font-medium">Description:</span> {selectedVendor.storeDescription}</p>
                 </div>
               </div>
-
-              {/* Store Information */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Store Information</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3 text-sm">
-                    <div>
-                      <strong>Description:</strong>
-                      <p className="mt-1 text-muted-foreground">{selectedVendor.storeDescription}</p>
-                    </div>
-                    <div>
-                      <strong>Business Type:</strong> {selectedVendor.businessType}
-                    </div>
-                    <div>
-                      <strong>Phone:</strong> {selectedVendor.phone}
-                    </div>
-                    <div>
-                      <strong>Address:</strong>
-                      <p className="mt-1 text-muted-foreground">
-                        {selectedVendor.address.street}, {selectedVendor.address.city}<br />
-                        {selectedVendor.address.state} {selectedVendor.address.zipCode}<br />
-                        {selectedVendor.address.country}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Owner Information</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3 text-sm">
-                    <div>
-                      <strong>Name:</strong> {selectedVendor.user.name}
-                    </div>
-                    <div>
-                      <strong>Email:</strong> {selectedVendor.user.email}
-                    </div>
-                    <div>
-                      <strong>Last Login:</strong> {selectedVendor.user.lastLogin || 'Never'}
-                    </div>
-                    <div>
-                      <strong>Joined:</strong> {new Date(selectedVendor.createdAt).toLocaleDateString()}
-                    </div>
-                  </CardContent>
-                </Card>
+              <div>
+                <h3 className="font-semibold mb-2">Contact Information</h3>
+                <div className="space-y-1">
+                  <p><span className="font-medium">Owner:</span> {selectedVendor.user.name}</p>
+                  <p><span className="font-medium">Email:</span> {selectedVendor.user.email}</p>
+                  <p><span className="font-medium">Phone:</span> {selectedVendor.phone}</p>
+                </div>
               </div>
-
-              {/* Statistics */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Performance Statistics</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                    <div className="text-center p-3 rounded-lg border">
-                      <div className="text-2xl font-bold">{selectedVendor.stats.totalProducts}</div>
-                      <div className="text-sm text-muted-foreground">Products</div>
-                    </div>
-                    <div className="text-center p-3 rounded-lg border">
-                      <div className="text-2xl font-bold">{selectedVendor.stats.totalOrders}</div>
-                      <div className="text-sm text-muted-foreground">Orders</div>
-                    </div>
-                    <div className="text-center p-3 rounded-lg border">
-                      <div className="text-2xl font-bold">{formatPrice(selectedVendor.stats.totalRevenue)}</div>
-                      <div className="text-sm text-muted-foreground">Revenue</div>
-                    </div>
-                    <div className="text-center p-3 rounded-lg border">
-                      <div className="text-2xl font-bold">{selectedVendor.stats.rating.toFixed(1)}</div>
-                      <div className="text-sm text-muted-foreground">Rating</div>
-                    </div>
-                    <div className="text-center p-3 rounded-lg border">
-                      <div className="text-2xl font-bold">{selectedVendor.stats.totalReviews}</div>
-                      <div className="text-sm text-muted-foreground">Reviews</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Banking Information */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Banking Information</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3 text-sm">
-                  <div>
-                    <strong>Account Holder:</strong> {selectedVendor.bankDetails.accountHolderName}
-                  </div>
-                  <div>
-                    <strong>Bank Name:</strong> {selectedVendor.bankDetails.bankName}
-                  </div>
-                  <div>
-                    <strong>Account Number:</strong> **** **** {selectedVendor.bankDetails.accountNumber.slice(-4)}
-                  </div>
-                  <div>
-                    <strong>IFSC Code:</strong> {selectedVendor.bankDetails.ifscCode}
-                  </div>
-                  {selectedVendor.bankDetails.upiId && (
-                    <div>
-                      <strong>UPI ID:</strong> {selectedVendor.bankDetails.upiId}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Commission Information */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Commission Structure</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3 text-sm">
-                  <div>
-                    <strong>Type:</strong> {selectedVendor.commission.type}
-                  </div>
-                  <div>
-                    <strong>Rate:</strong> {selectedVendor.commission.type === 'percentage' ? `${selectedVendor.commission.rate}%` : formatPrice(selectedVendor.commission.rate)}
-                  </div>
-                </CardContent>
-              </Card>
+              <div>
+                <h3 className="font-semibold mb-2">Address</h3>
+                <div className="space-y-1">
+                  <p>{selectedVendor.address.street}</p>
+                  <p>{selectedVendor.address.city}, {selectedVendor.address.state}</p>
+                  <p>{selectedVendor.address.zipCode}, {selectedVendor.address.country}</p>
+                </div>
+              </div>
+              <div>
+                <h3 className="font-semibold mb-2">Business Details</h3>
+                <div className="space-y-1">
+                  <p><span className="font-medium">Status:</span> {selectedVendor.status}</p>
+                  <p><span className="font-medium">Verified:</span> {selectedVendor.verification.isVerified ? 'Yes' : 'No'}</p>
+                  <p><span className="font-medium">Commission:</span> {selectedVendor.commission.rate}%</p>
+                </div>
+              </div>
+              <div>
+                <h3 className="font-semibold mb-2">Performance</h3>
+                <div className="space-y-1">
+                  <p><span className="font-medium">Total Products:</span> {selectedVendor.stats.totalProducts}</p>
+                  <p><span className="font-medium">Total Orders:</span> {selectedVendor.stats.totalOrders}</p>
+                  <p><span className="font-medium">Total Revenue:</span> {formatPrice(selectedVendor.stats.totalRevenue)}</p>
+                  <p><span className="font-medium">Rating:</span> {selectedVendor.stats.rating.toFixed(1)} ({selectedVendor.stats.totalReviews} reviews)</p>
+                </div>
+              </div>
+              <div>
+                <h3 className="font-semibold mb-2">Subscription</h3>
+                <div className="space-y-1">
+                  <p><span className="font-medium">Plan:</span> {selectedVendor.subscription.plan}</p>
+                  <p><span className="font-medium">Expires:</span> {new Date(selectedVendor.subscription.expiresAt).toLocaleDateString()}</p>
+                  <p><span className="font-medium">Member Since:</span> {new Date(selectedVendor.createdAt).toLocaleDateString()}</p>
+                </div>
+              </div>
             </div>
           )}
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDetailDialogOpen(false)}>
-              Close
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Status Change Confirmation Dialog */}
+      {/* Status Update Dialog */}
       <AlertDialog open={isStatusDialogOpen} onOpenChange={setIsStatusDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Status Change</AlertDialogTitle>
+            <AlertDialogTitle>Update Vendor Status</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to change the status of "{selectedVendor?.storeName}" to "{newStatus}"?
-              {newStatus === 'approved' && " This will allow the vendor to start selling."}
-              {newStatus === 'rejected' && " This will permanently reject the vendor application."}
-              {newStatus === 'suspended' && " This will temporarily suspend the vendor's operations."}
+              Are you sure you want to change the status of vendor "{selectedVendor?.storeName}" to {newStatus}?
+              This action will affect their ability to manage their store and process orders.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={updatingVendor !== null}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleStatusUpdate}
-              disabled={updatingVendor !== null}
-            >
-              {updatingVendor ? "Updating..." : "Confirm"}
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleStatusUpdate} disabled={!!updatingVendor}>
+              {updatingVendor ? 'Updating...' : 'Update Status'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
