@@ -18,6 +18,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'; // Make sure th
 import { Info } from 'lucide-react';
 import api from '@/services/api';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import PinCodeInput from '@/components/ui/PinCodeInput';
 
 
 const CheckoutShippingPage = () => {
@@ -60,6 +61,8 @@ const CheckoutShippingPage = () => {
   });
 
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
+  const [isPinCodeValid, setIsPinCodeValid] = useState(true);
+  const [pinCodeValidationMessage, setPinCodeValidationMessage] = useState('');
   
   // Calculate midnight delivery fee
   const midnightDeliveryFee = 100.00; // ₹100
@@ -105,6 +108,19 @@ const CheckoutShippingPage = () => {
   
   const handleCheckboxChange = (checked: boolean) => {
     setFormData(prev => ({ ...prev, saveInfo: checked }));
+  };
+
+  const handleZipCodeChange = (value: string) => {
+    setFormData(prev => ({ ...prev, zipCode: value }));
+  };
+
+  const handleReceiverZipCodeChange = (value: string) => {
+    setFormData(prev => ({ ...prev, receiverZipCode: value }));
+  };
+
+  const handlePinCodeValidation = (isValid: boolean, message?: string) => {
+    setIsPinCodeValid(isValid);
+    setPinCodeValidationMessage(message || '');
   };  
 
   const handleSavedAddressSelect = (address: any) => {
@@ -167,6 +183,16 @@ const CheckoutShippingPage = () => {
       return;
     }
     
+    // Check PIN code validation first
+    if (!isPinCodeValid) {
+      toast({
+        title: "Invalid PIN code",
+        description: pinCodeValidationMessage,
+        variant: "destructive"
+      });
+      return;
+    }
+
     // Validate based on delivery option
     if (deliveryOption === 'self') {
       if (!formData.firstName || !formData.lastName || !formData.address || 
@@ -596,12 +622,12 @@ const CheckoutShippingPage = () => {
                                 <label htmlFor="zipCode" className="block text-sm font-medium mb-1">
                                   Zip/Postal Code *
                                 </label>
-                                <Input
-                                  id="zipCode"
-                                  name="zipCode"
+                                <PinCodeInput
                                   value={formData.zipCode}
-                                  onChange={handleInputChange}
+                                  onChange={handleZipCodeChange}
+                                  placeholder="Enter PIN code"
                                   required
+                                  onValidationChange={handlePinCodeValidation}
                                 />
                               </div>
                             </div>
@@ -717,12 +743,12 @@ const CheckoutShippingPage = () => {
                               <label htmlFor="receiverZipCode" className="block text-sm font-medium mb-1">
                                 Zip/Postal Code *
                               </label>
-                              <Input
-                                id="receiverZipCode"
-                                name="receiverZipCode"
+                              <PinCodeInput
                                 value={formData.receiverZipCode}
-                                onChange={handleInputChange}
+                                onChange={handleReceiverZipCodeChange}
+                                placeholder="Enter PIN code"
                                 required={deliveryOption === 'gift'}
+                                onValidationChange={handlePinCodeValidation}
                               />
                             </div>
                           </div>

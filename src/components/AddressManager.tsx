@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogTitle, DialogFooter, DialogHeader, DialogDescription } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import PinCodeInput from '@/components/ui/PinCodeInput';
 
 interface Address {
   id: string;
@@ -42,6 +43,7 @@ const AddressManager: React.FC = () => {
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [currentAddress, setCurrentAddress] = useState<Address | null>(null);
+  const [isPinCodeValid, setIsPinCodeValid] = useState(true);
   const [formData, setFormData] = useState<Partial<Address>>({
     firstName: '',
     lastName: '',
@@ -102,12 +104,29 @@ const AddressManager: React.FC = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleZipCodeChange = (value: string) => {
+    setFormData(prev => ({ ...prev, zipCode: value }));
+  };
+
+  const handlePinCodeValidation = (isValid: boolean) => {
+    setIsPinCodeValid(isValid);
+  };
+
   const handleSaveAddress = () => {
     if (!user?.id) {
       toast({
         variant: "destructive",
         title: "Authentication Error",
         description: "You must be logged in to save addresses"
+      });
+      return;
+    }
+
+    if (!isPinCodeValid) {
+      toast({
+        variant: "destructive",
+        title: "Invalid PIN Code",
+        description: "Please enter a valid PIN code for delivery"
       });
       return;
     }
@@ -407,12 +426,12 @@ const AddressManager: React.FC = () => {
               
               <div className="space-y-2">
                 <Label htmlFor="zipCode">Zip Code *</Label>
-                <Input 
-                  id="zipCode"
-                  name="zipCode"
+                <PinCodeInput
                   value={formData.zipCode || ''}
-                  onChange={handleInputChange}
+                  onChange={handleZipCodeChange}
+                  placeholder="Enter PIN code"
                   required
+                  onValidationChange={handlePinCodeValidation}
                 />
               </div>
             </div>
