@@ -5,6 +5,8 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { getImageUrl } from '@/config';
+import { motion } from 'framer-motion';
 
 const heroSlides = [
   {
@@ -64,10 +66,20 @@ const HomeHero = () => {
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>, index: number) => {
     console.error(`Failed to load image for slide ${index}:`, heroSlides[index].image);
     const target = e.target as HTMLImageElement;
-    target.src = '/images/placeholder.svg';
+    // Try different URL constructions if the first one fails
+    if (!target.src.includes('placeholder')) {
+      if (heroSlides[index].image.startsWith('/uploads/')) {
+        target.src = `https://sbf-backend.onrender.com${heroSlides[index].image}`;
+      } else if (!heroSlides[index].image.startsWith('http')) {
+        target.src = `https://sbf-backend.onrender.com/uploads/${heroSlides[index].image}`;
+      } else {
+        target.src = '/images/placeholder.svg';
+      }
+    }
     handleImageLoad(index);
   };
   
+  // Reset transition state after animation
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsTransitioning(false);
@@ -76,12 +88,15 @@ const HomeHero = () => {
     return () => clearTimeout(timer);
   }, [currentSlide]);
   
+  // Auto-advance slides
   useEffect(() => {
+    if (isTransitioning) return; // Don't start new interval if transitioning
+    
     const interval = setInterval(goToNextSlide, 6000);
     return () => clearInterval(interval);
-  }, [currentSlide, isTransitioning]);
+  }, [isTransitioning]); // Only depend on isTransitioning
 
-  // Preload images
+  // Preload images with optimized URLs
   useEffect(() => {
     heroSlides.forEach((slide, index) => {
       const img = new Image();
@@ -90,9 +105,15 @@ const HomeHero = () => {
         console.error(`Failed to preload image: ${slide.image}`);
         handleImageLoad(index);
       };
-      img.src = slide.image;
+      img.src = getImageUrl(slide.image, {
+        width: 1920,
+        height: 1080,
+        crop: 'fill',
+        quality: 'auto',
+        format: 'auto'
+      });
     });
-  }, []);
+  }, []); // Empty dependency array since heroSlides is constant
 
   return (
     <div className="relative">
@@ -115,7 +136,13 @@ const HomeHero = () => {
             
             {/* Background Image */}
             <img
-              src={slide.image}
+              src={getImageUrl(slide.image, {
+                width: 1920,
+                height: 1080,
+                crop: 'fill',
+                quality: 'auto',
+                format: 'auto'
+              })}
               alt={slide.title}
               className={cn(
                 "absolute inset-0 w-full h-full object-cover transition-all duration-700 rounded-xl sm:rounded-2xl lg:rounded-3xl",
@@ -128,70 +155,74 @@ const HomeHero = () => {
             
             {/* Gradient Overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-black/20 rounded-xl sm:rounded-2xl lg:rounded-3xl" />
-        
-        {/* Content */}
-            <div className="absolute inset-0 flex items-center justify-center z-10">
-              <div className="text-center text-white max-w-6xl mx-auto px-3 xs:px-4 sm:px-6 md:px-8 lg:px-12">
-                <div className={cn(
-                  "transition-all duration-700 ease-out",
-                  index === currentSlide 
-                    ? "opacity-100 transform translate-y-0" 
-                    : "opacity-0 transform translate-y-8"
-                )}>
-                  <h1 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl font-bold mb-2 xs:mb-3 sm:mb-4 md:mb-5 lg:mb-6 leading-tight drop-shadow-lg">
-                  {slide.title}
-                </h1>
-                  <p className="text-xs xs:text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl mb-4 xs:mb-5 sm:mb-6 md:mb-7 lg:mb-8 opacity-90 max-w-4xl mx-auto leading-relaxed drop-shadow-md">
-                  {slide.subtitle}
-                </p>
-                  <Button
-                    size="lg"
-                    className="bg-white text-primary hover:bg-gray-100 px-4 xs:px-5 sm:px-6 md:px-7 lg:px-8 py-2 xs:py-2.5 sm:py-3 md:py-3.5 lg:py-4 text-xs xs:text-sm sm:text-base md:text-lg lg:text-xl font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                    onClick={() => navigate(slide.ctaLink)}
+            
+            {/* Content */}
+            <div className="absolute inset-0 flex flex-col justify-center items-center text-center text-white p-6 sm:p-8 md:p-10 lg:p-12">
+              <motion.h1 
+                className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+              >
+                {slide.title}
+              </motion.h1>
+              <motion.p 
+                className="text-sm xs:text-base sm:text-lg md:text-xl lg:text-2xl mb-6 sm:mb-8 max-w-2xl"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+              >
+                {slide.subtitle}
+              </motion.p>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.6 }}
+              >
+                <Button
+                  onClick={() => navigate(slide.ctaLink)}
+                  size="lg"
+                  className="bg-white text-primary hover:bg-white/90 text-base sm:text-lg"
                 >
                   {slide.ctaText}
-                    <ArrowRight className="ml-1.5 xs:ml-2 w-3 h-3 xs:w-4 xs:h-4 sm:w-5 sm:h-5" />
-                  </Button>
-                </div>
-              </div>
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </motion.div>
             </div>
           </div>
         ))}
         
-        {/* Navigation Controls */}
-        <div className="absolute bottom-3 xs:bottom-4 sm:bottom-5 md:bottom-6 left-1/2 transform -translate-x-1/2 flex items-center gap-2 xs:gap-3 sm:gap-4 z-20">
-          <Button
-            variant="outline"
-            size="icon"
-            className="w-8 h-8 xs:w-9 xs:h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 lg:w-12 lg:h-12 bg-white/20 hover:bg-white/30 border-white/30 text-white backdrop-blur-sm rounded-full transition-all duration-300 hover:scale-110"
-            onClick={goToPrevSlide}
-          >
-            <ChevronLeft className="w-4 h-4 xs:w-5 xs:h-5 sm:w-6 sm:h-6" />
-          </Button>
-          
-          <div className="flex gap-1.5 xs:gap-2">
+        {/* Navigation Buttons */}
+        <button
+          onClick={goToPrevSlide}
+          className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-all z-20"
+          aria-label="Previous slide"
+        >
+          <ChevronLeft className="h-6 w-6" />
+        </button>
+        <button
+          onClick={goToNextSlide}
+          className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-all z-20"
+          aria-label="Next slide"
+        >
+          <ChevronRight className="h-6 w-6" />
+        </button>
+        
+        {/* Slide Indicators */}
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2 z-20">
           {heroSlides.map((_, index) => (
             <button
               key={index}
+              onClick={() => setCurrentSlide(index)}
               className={cn(
-                  "w-2 h-2 xs:w-2.5 xs:h-2.5 sm:w-3 sm:h-3 md:w-4 md:h-4 rounded-full transition-all duration-300",
-                index === currentSlide 
-                    ? 'bg-white scale-125 shadow-lg'
-                    : 'bg-white/50 hover:bg-white/75 hover:scale-110'
+                "w-2 h-2 rounded-full transition-all",
+                index === currentSlide
+                  ? "bg-white w-4"
+                  : "bg-white/50 hover:bg-white/75"
               )}
-                onClick={() => setCurrentSlide(index)}
+              aria-label={`Go to slide ${index + 1}`}
             />
           ))}
-        </div>
-        
-          <Button
-            variant="outline"
-            size="icon"
-            className="w-8 h-8 xs:w-9 xs:h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 lg:w-12 lg:h-12 bg-white/20 hover:bg-white/30 border-white/30 text-white backdrop-blur-sm rounded-full transition-all duration-300 hover:scale-110"
-            onClick={goToNextSlide}
-        >
-            <ChevronRight className="w-4 h-4 xs:w-5 xs:h-5 sm:w-6 sm:h-6" />
-          </Button>
         </div>
       </div>
 
