@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import api from '@/services/api';
 
 interface Offer {
@@ -17,9 +18,16 @@ interface Offer {
 export const useOfferPopup = () => {
   const [currentOffer, setCurrentOffer] = useState<Offer | null>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     const fetchActiveOffers = async () => {
+      // Don't show popups on vendor registration or admin pages
+      if (location.pathname.startsWith('/vendor') || location.pathname.startsWith('/admin')) {
+        console.log('🚫 Offer popup disabled on this page.');
+        return;
+      }
+
       try {
         console.log('🎯 Fetching active offers...');
         const { data: offers } = await api.get('/offers/active');
@@ -59,7 +67,7 @@ export const useOfferPopup = () => {
     };
 
     fetchActiveOffers();
-  }, []);
+  }, [location.pathname]);
 
   const closeOffer = () => {
     console.log('🔒 Closing offer popup');
