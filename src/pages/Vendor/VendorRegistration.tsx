@@ -64,19 +64,10 @@ const VendorRegistration: React.FC = () => {
     }
   ];
 
-  const handleInputChange = (section: keyof VendorRegistrationData | 'businessType', field: string, value: string) => {
+  const handleInputChange = (section: keyof VendorRegistrationData, field: string, value: string) => {
     setFormData(prev => {
       if (field === '') {
-        // Handle top-level fields like storeName, storeDescription, businessType
-        if (section === 'businessInfo' && field === 'businessType') {
-            return {
-                ...prev,
-                businessInfo: {
-                    ...prev.businessInfo,
-                    businessType: value as 'individual' | 'partnership' | 'llc' | 'corporation'
-                }
-            };
-        }
+        // Handle top-level fields
         return {
           ...prev,
           [section]: value
@@ -86,7 +77,7 @@ const VendorRegistration: React.FC = () => {
         return {
           ...prev,
           [section]: {
-            ...(prev[section as keyof VendorRegistrationData] as object),
+            ...prev[section],
             [field]: value
           }
         };
@@ -367,15 +358,15 @@ const VendorRegistration: React.FC = () => {
               <Label htmlFor="businessType">Business Type *</Label>
               <Select
                 value={formData.businessInfo.businessType}
-                onValueChange={(value) => handleInputChange('businessInfo', 'businessType', value)}
+                onValueChange={(value: any) => handleInputChange('businessInfo', 'businessType', value)}
               >
-                <SelectTrigger id="businessType">
+                <SelectTrigger>
                   <SelectValue placeholder="Select business type" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="individual">Individual</SelectItem>
                   <SelectItem value="partnership">Partnership</SelectItem>
-                  <SelectItem value="llc">LLC</SelectItem>
+                  <SelectItem value="llc">Limited Liability Company</SelectItem>
                   <SelectItem value="corporation">Corporation</SelectItem>
                 </SelectContent>
               </Select>
@@ -525,7 +516,7 @@ const VendorRegistration: React.FC = () => {
                 </Button>
 
                 {currentStep === steps.length - 1 ? (
-                  <Button type="submit" disabled={loading || !validateStep(currentStep)}>
+                  <Button type="submit" disabled={loading}>
                     {loading ? (
                       <div className="flex items-center gap-2">
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
@@ -539,7 +530,6 @@ const VendorRegistration: React.FC = () => {
                   <Button
                     type="button"
                     onClick={handleNextStep}
-                    disabled={!validateStep(currentStep)}
                   >
                     Next
                     <ArrowRight className="h-4 w-4 ml-2" />
