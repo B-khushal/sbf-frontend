@@ -166,8 +166,11 @@ const PinCodeInput: React.FC<PinCodeInputProps> = ({
     const inputValue = e.target.value.replace(/\D/g, ''); // Only allow digits
     if (inputValue.length <= 6) {
       onChange(inputValue);
-      if (inputValue.length > 0 && filteredCodes.length > 0) {
+      // Don't automatically open dropdown on every keystroke to avoid focus issues
+      if (inputValue.length > 0 && inputValue.length < 6) {
         setOpen(true);
+      } else if (inputValue.length === 6) {
+        setOpen(false);
       }
     }
   };
@@ -175,12 +178,15 @@ const PinCodeInput: React.FC<PinCodeInputProps> = ({
   const handlePinCodeSelect = (pincode: string) => {
     onChange(pincode);
     setOpen(false);
-    inputRef.current?.blur();
+    // Don't blur the input to maintain focus for continued typing
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 100);
   };
 
   return (
     <div className={cn("relative", className)}>
-      <Popover open={open && value.length > 0 && filteredCodes.length > 0} onOpenChange={setOpen}>
+      <Popover open={open && value.length > 0 && value.length < 6 && filteredCodes.length > 0} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <div className="relative">
             <Input
@@ -195,7 +201,7 @@ const PinCodeInput: React.FC<PinCodeInputProps> = ({
                 showError && "border-red-500 focus:border-red-500 focus:ring-red-500"
               )}
               onFocus={() => {
-                if (value.length > 0 && filteredCodes.length > 0) {
+                if (value.length > 0 && value.length < 6 && filteredCodes.length > 0) {
                   setOpen(true);
                 }
               }}
