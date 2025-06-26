@@ -337,7 +337,7 @@ const VendorRegistration: React.FC = () => {
                     required
                   />
                 </div>
-                <div className="space-y-2 md:col-span-2">
+                <div className="space-y-2">
                   <Label htmlFor="website">Website (Optional)</Label>
                   <Input
                     id="website"
@@ -358,7 +358,7 @@ const VendorRegistration: React.FC = () => {
               <Label htmlFor="businessType">Business Type *</Label>
               <Select
                 value={formData.businessInfo.businessType}
-                onValueChange={(value: any) => handleInputChange('businessInfo', 'businessType', value)}
+                onValueChange={(value) => handleInputChange('businessInfo', 'businessType', value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select business type" />
@@ -496,7 +496,7 @@ const VendorRegistration: React.FC = () => {
         </div>
 
         {/* Form Card */}
-        <Card>
+        <Card className="mb-6">
           <CardHeader>
             <CardTitle>Step {currentStep + 1} of {steps.length}</CardTitle>
           </CardHeader>
@@ -542,7 +542,7 @@ const VendorRegistration: React.FC = () => {
         </Card>
 
         {/* Info Card */}
-        <Card className="mt-6">
+        <Card>
           <CardContent className="pt-6">
             <h3 className="font-semibold mb-2">What happens next?</h3>
             <ul className="space-y-2 text-sm text-gray-600">
