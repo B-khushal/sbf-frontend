@@ -527,43 +527,43 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                   <AnimatePresence>
                     {showUserMenu && (
                       <motion.div
-                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        transition={{ duration: 0.2 }}
-                        className="absolute right-0 top-full mt-2 w-48 bg-white border border-gray-100 rounded-2xl shadow-xl z-50 overflow-hidden"
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 p-2 z-50"
                         onMouseLeave={() => setShowUserMenu(false)}
                       >
-                        <div className="p-3 border-b border-gray-100 bg-gradient-to-r from-primary/5 to-secondary/5">
-                          <p className="text-sm font-medium text-gray-900">Hello, {user.name || 'User'}!</p>
-                          <p className="text-xs text-gray-500">{user.email}</p>
+                        <div className="p-2 border-b">
+                          <p className="font-semibold text-sm text-gray-800">{user.name}</p>
+                          <p className="text-xs text-gray-500 truncate">{user.email}</p>
                         </div>
-                        <div className="py-2">
-                          <Link to="/profile" className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-primary/5 transition-colors">
-                            <User size={16} />
-                            My Profile
-                          </Link>
-                          <Link to="/orders" className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-primary/5 transition-colors">
-                            <ShoppingCart size={16} />
-                            My Orders
-                          </Link>
-                          <Link to="/wishlist" className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-primary/5 transition-colors">
-                            <Heart size={16} />
-                            Wishlist
-                          </Link>
-                          {user.role === 'vendor' ? (
-                            <Link to="/vendor/dashboard" className="flex items-center gap-3 px-4 py-2 text-sm text-primary hover:bg-primary/10 transition-colors font-medium">
-                              <Store size={16} />
+                        <div className="py-1">
+                          {user.role === 'vendor' && user.vendorStatus === 'approved' && (
+                            <Link to="/vendor/dashboard" className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-primary rounded-md">
+                              <Store className="w-4 h-4 mr-2" />
                               Vendor Dashboard
                             </Link>
-                          ) : user.role === 'admin' ? (
-                            <Link to="/admin" className="flex items-center gap-3 px-4 py-2 text-sm text-purple-600 hover:bg-purple-50 transition-colors font-medium">
-                              <Shield size={16} />
+                          )}
+                          <Link to="/profile" className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-primary rounded-md">
+                            <User className="w-4 h-4 mr-2" />
+                            My Account
+                          </Link>
+                          <Link to="/orders" className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-primary rounded-md">
+                            <ShoppingCart className="w-4 h-4 mr-2" />
+                            My Orders
+                          </Link>
+                          <Link to="/wishlist" className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-primary rounded-md">
+                            <Heart className="w-4 h-4 mr-2" />
+                            Wishlist
+                          </Link>
+                          {user.role === 'admin' ? (
+                            <Link to="/admin" className="flex items-center w-full px-3 py-2 text-sm text-purple-600 hover:bg-gray-100 hover:text-purple-600 rounded-md">
+                              <Shield className="w-4 h-4 mr-2" />
                               Admin Dashboard
                             </Link>
-                          ) : (
-                            <Link to="/vendor" className="flex items-center gap-3 px-4 py-2 text-sm text-green-600 hover:bg-green-50 transition-colors">
-                              <Store size={16} />
+                          ) : user.role !== 'vendor' && (
+                            <Link to="/vendor/register" className="flex items-center w-full px-3 py-2 text-sm text-green-600 hover:bg-gray-100 hover:text-green-600 rounded-md">
+                              <Store className="w-4 h-4 mr-2" />
                               Become a Vendor
                             </Link>
                           )}
@@ -573,9 +573,9 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                               // Add logout logic here
                               setShowUserMenu(false);
                             }}
-                            className="flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors w-full text-left"
+                            className="flex items-center w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md"
                           >
-                            <LogIn size={16} />
+                            <LogIn className="w-4 h-4 mr-2" />
                             Sign Out
                           </button>
                         </div>
