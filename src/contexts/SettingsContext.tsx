@@ -116,6 +116,7 @@ const defaultFooterSettings: FooterSettings = {
         { label: "About Us", href: "/about", enabled: true },
         { label: "Blog", href: "/blog", enabled: true },
         { label: "Contact", href: "/contact", enabled: true },
+        { label: "Become a Vendor", href: "/vendor/register", enabled: true },
       ]
     }
   ],
