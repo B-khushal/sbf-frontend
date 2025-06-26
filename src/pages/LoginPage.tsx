@@ -78,23 +78,17 @@ const LoginPage = () => {
     
     try {
       console.log("Attempting to login with:", { email });
-      const success = await login(email, password);
+      const result = await login(email, password);
       
-      if (success) {
+      if (result.success) {
         console.log("Login successful");
         toast({
           title: "Welcome back! 🌸",
           description: "You have successfully logged in."
         });
 
-        const role = localStorage.getItem('role');
-        console.log("Stored role:", role);
-
-        if (role === 'admin') {
-          navigate('/admin');
-        } else {
-          navigate(redirectPath);
-        }
+        // Use the redirectTo from auth context or fall back to redirectPath
+        navigate(result.redirectTo || redirectPath);
       } else {
         console.log("Login failed");
         toast({
@@ -120,20 +114,16 @@ const LoginPage = () => {
       setIsLoading(true);
       console.log("Google login credential:", credentialResponse);
       
-      const success = await socialLogin('google', credentialResponse.credential);
+      const result = await socialLogin('google', credentialResponse.credential);
       
-      if (success) {
+      if (result.success) {
         toast({
           title: "Welcome back! 🌸",
           description: "You have successfully logged in with Google."
         });
 
-        const role = localStorage.getItem('role');
-        if (role === 'admin') {
-          navigate('/admin');
-        } else {
-          navigate(redirectPath);
-        }
+        // Use the redirectTo from auth context or fall back to redirectPath
+        navigate(result.redirectTo || redirectPath);
       } else {
         toast({
           title: "Login failed",

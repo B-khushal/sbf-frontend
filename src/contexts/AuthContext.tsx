@@ -22,10 +22,10 @@ interface SignupData {
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
-  signup: (data: SignupData) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<{ success: boolean; redirectTo?: string }>;
+  signup: (data: SignupData) => Promise<{ success: boolean; redirectTo?: string }>;
   logout: () => void;
-  socialLogin: (provider: string, credential?: string) => Promise<boolean>;
+  socialLogin: (provider: string, credential?: string) => Promise<{ success: boolean; redirectTo?: string }>;
 }
 
 // Create the context with a default value
@@ -125,22 +125,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const userData = await login({ email, password });
       
       // Map response data to our User type
-      setUser({
+      const user = {
         id: userData._id || userData.id, // Support both _id (from MongoDB) and id formats
         name: userData.name,
         email: userData.email,
-        role: userData.role === 'admin' ? 'admin' : 'user',
+        role: userData.role === 'admin' ? 'admin' : userData.role === 'vendor' ? 'vendor' : 'user',
         token: userData.token
-      });
+      };
+      
+      setUser(user);
       
       // Set authentication flag
       localStorage.setItem('isAuthenticated', 'true');
       localStorage.setItem('user', JSON.stringify(userData));
       
-      return true;
+      // Determine redirect destination based on user role
+      let redirectTo = '/';
+      switch (user.role) {
+        case 'admin':
+          redirectTo = '/admin';
+          break;
+        case 'vendor':
+          redirectTo = '/vendor/dashboard';
+          break;
+        default:
+          redirectTo = '/';
+      }
+      
+      return { success: true, redirectTo };
     } catch (error) {
       console.error('Login error:', error);
-      return false;
+      return { success: false };
     } finally {
       setIsLoading(false);
     }
@@ -151,19 +166,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setIsLoading(true);
       const userData = await register(data);
-      setUser({
+      const user = {
         id: userData._id || userData.id,
         name: userData.name,
         email: userData.email,
         role: userData.role === 'admin' ? 'admin' : userData.role === 'vendor' ? 'vendor' : 'user',
         token: userData.token
-      });
+      };
+      
+      setUser(user);
       localStorage.setItem('isAuthenticated', 'true');
       localStorage.setItem('user', JSON.stringify(userData));
-      return true;
+      
+      // Determine redirect destination based on user role
+      let redirectTo = '/';
+      switch (user.role) {
+        case 'admin':
+          redirectTo = '/admin';
+          break;
+        case 'vendor':
+          redirectTo = '/vendor/dashboard';
+          break;
+        default:
+          redirectTo = '/';
+      }
+      
+      return { success: true, redirectTo };
     } catch (error) {
       console.error('Signup error:', error);
-      return false;
+      return { success: false };
     } finally {
       setIsLoading(false);
     }
@@ -182,7 +213,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(true);
       const userData = await socialLogin(provider, credential);
       
-      setUser({
+      const user = {
         id: userData._id || userData.id,
         name: userData.name,
         email: userData.email,
@@ -190,15 +221,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         provider: userData.provider,
         photoURL: userData.photoURL,
         token: userData.token
-      });
+      };
+      
+      setUser(user);
       
       localStorage.setItem('isAuthenticated', 'true');
       localStorage.setItem('user', JSON.stringify(userData));
       
-      return true;
+      // Determine redirect destination based on user role
+      let redirectTo = '/';
+      switch (user.role) {
+        case 'admin':
+          redirectTo = '/admin';
+          break;
+        case 'vendor':
+          redirectTo = '/vendor/dashboard';
+          break;
+        default:
+          redirectTo = '/';
+      }
+      
+      return { success: true, redirectTo };
     } catch (error) {
       console.error('Social login error:', error);
-      return false;
+      return { success: false };
     } finally {
       setIsLoading(false);
     }

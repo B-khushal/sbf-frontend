@@ -551,6 +551,22 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                             <Heart size={16} />
                             Wishlist
                           </Link>
+                          {user.role === 'vendor' ? (
+                            <Link to="/vendor/dashboard" className="flex items-center gap-3 px-4 py-2 text-sm text-primary hover:bg-primary/10 transition-colors font-medium">
+                              <Store size={16} />
+                              Vendor Dashboard
+                            </Link>
+                          ) : user.role === 'admin' ? (
+                            <Link to="/admin" className="flex items-center gap-3 px-4 py-2 text-sm text-purple-600 hover:bg-purple-50 transition-colors font-medium">
+                              <Shield size={16} />
+                              Admin Dashboard
+                            </Link>
+                          ) : (
+                            <Link to="/vendor" className="flex items-center gap-3 px-4 py-2 text-sm text-green-600 hover:bg-green-50 transition-colors">
+                              <Store size={16} />
+                              Become a Vendor
+                            </Link>
+                          )}
                           <div className="border-t border-gray-100 my-2"></div>
                           <button 
                             onClick={() => {
@@ -669,11 +685,41 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                           <Button variant="outline" asChild className="w-full border-2 hover:bg-primary/5 transition-colors" onClick={() => setMobileMenuOpen(false)}>
                             <Link to="/signup">Sign Up</Link>
                           </Button>
+                          <Button variant="outline" asChild className="w-full border-2 border-green-200 text-green-600 hover:bg-green-50 transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                            <Link to="/vendor" className="flex items-center justify-center gap-2">
+                              <Store size={16} />
+                              Become a Vendor
+                            </Link>
+                          </Button>
                         </>
                       ) : (
-                        <Button asChild className="w-full bg-gradient-to-r from-primary to-secondary hover:shadow-lg transition-all duration-300" onClick={() => setMobileMenuOpen(false)}>
-                          <Link to="/profile">My Account</Link>
-                        </Button>
+                        <>
+                          <Button asChild className="w-full bg-gradient-to-r from-primary to-secondary hover:shadow-lg transition-all duration-300" onClick={() => setMobileMenuOpen(false)}>
+                            <Link to="/profile">My Account</Link>
+                          </Button>
+                          {user.role === 'vendor' ? (
+                            <Button variant="outline" asChild className="w-full border-2 border-primary text-primary hover:bg-primary/10 transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                              <Link to="/vendor/dashboard" className="flex items-center justify-center gap-2">
+                                <Store size={16} />
+                                Vendor Dashboard
+                              </Link>
+                            </Button>
+                          ) : user.role === 'admin' ? (
+                            <Button variant="outline" asChild className="w-full border-2 border-purple-200 text-purple-600 hover:bg-purple-50 transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                              <Link to="/admin" className="flex items-center justify-center gap-2">
+                                <Shield size={16} />
+                                Admin Dashboard
+                              </Link>
+                            </Button>
+                          ) : (
+                            <Button variant="outline" asChild className="w-full border-2 border-green-200 text-green-600 hover:bg-green-50 transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                              <Link to="/vendor" className="flex items-center justify-center gap-2">
+                                <Store size={16} />
+                                Become a Vendor
+                              </Link>
+                            </Button>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>

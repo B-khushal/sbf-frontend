@@ -125,17 +125,21 @@ const SignupPage = () => {
     
     try {
       setIsLoading(true);
-      await signup({
+      const result = await signup({
         name: formData.name,
         email: formData.email,
         password: formData.password,
         confirmPassword: formData.confirmPassword
       });
-      toast({
-        title: "Welcome to Spring Blossoms! 🎉",
-        description: "Your account has been created successfully!",
-      });
-      navigate('/');
+      
+      if (result.success) {
+        toast({
+          title: "Welcome to Spring Blossoms! 🎉",
+          description: "Your account has been created successfully!",
+        });
+        // Use the redirectTo from auth context or fall back to redirectPath
+        navigate(result.redirectTo || redirectPath);
+      }
     } catch (error: any) {
       toast({
         title: "Signup Failed",
@@ -152,14 +156,15 @@ const SignupPage = () => {
       setIsLoading(true);
       console.log("Google signup credential:", credentialResponse);
       
-      const success = await socialLogin('google', credentialResponse.credential);
+      const result = await socialLogin('google', credentialResponse.credential);
       
-      if (success) {
+      if (result.success) {
         toast({
           title: "Welcome to Spring Blossoms! 🎉",
           description: "Your account has been created successfully with Google!"
         });
-        navigate(redirectPath);
+        // Use the redirectTo from auth context or fall back to redirectPath
+        navigate(result.redirectTo || redirectPath);
       } else {
         toast({
           title: "Signup failed",

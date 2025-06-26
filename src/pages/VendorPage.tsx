@@ -27,7 +27,7 @@ const VendorPage: React.FC = () => {
               <p className="text-gray-600 mb-4">
                 Join our marketplace and start selling your products to thousands of customers.
               </p>
-              <Button onClick={() => navigate('/auth/login')}>
+              <Button onClick={() => navigate('/vendor/register')}>
                 Get Started
               </Button>
             </CardContent>
@@ -41,7 +41,7 @@ const VendorPage: React.FC = () => {
               <p className="text-gray-600 mb-4">
                 Already a vendor? Access your dashboard to manage products and orders.
               </p>
-              <Button onClick={() => navigate('/auth/login')}>
+              <Button onClick={() => navigate('/login')}>
                 Login to Dashboard
               </Button>
             </CardContent>

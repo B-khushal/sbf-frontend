@@ -36,6 +36,7 @@ import AdminDashboardHome from "./pages/Admin/Dashboard";
 import AdminProducts from "./pages/Admin/Products";
 import AdminOrders from "./pages/Admin/Orders";
 import AdminUsers from "./pages/Admin/Users";
+import AdminVendorManagement from "./pages/Admin/VendorManagement";
 import OrderDetailsPage from "./pages/Admin/OrderDetailsPage";
 import AdminSettingsPage from "./pages/AdminSettingsPage";
 import Analytics from "./pages/Admin/Analytics";
@@ -53,6 +54,13 @@ const ProductPage = lazy(() => import('./pages/ProductPage'));
 const CartPage = lazy(() => import('./pages/CartPage'));
 const AboutPage = lazy(() => import('./pages/AboutPage'));
 const ContactPage = lazy(() => import('./pages/ContactPage'));
+
+// Vendor Pages
+import VendorPage from "./pages/VendorPage";
+import VendorDashboard from "./pages/Vendor/VendorDashboard";
+import VendorRegistration from "./pages/Vendor/VendorRegistration";
+import VendorLayout from "@/components/VendorLayout";
+import VendorProtectedRoute from "@/components/VendorProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -147,12 +155,24 @@ const App = () => {
                         <Route path="products/edit/:id" element={<ProductForm />} />
                         <Route path="orders" element={<AdminOrders />} />
                         <Route path="users" element={<AdminUsers />} />
+                        <Route path="vendors" element={<AdminVendorManagement />} />
                         <Route path="analytics" element={<Analytics />} />
                         <Route path="promocodes" element={<PromoCodes />} />
                         <Route path="offers" element={<OffersManager />} />
                         <Route path="settings" element={<AdminSettingsPage />} />
                         <Route path="/admin/orders/:orderId" element={<OrderDetailsPage />} />
                       </Route>
+                      
+                      {/* Vendor Panel Routes - Protected */}
+                      <Route path="/vendor" element={<VendorPage />} />
+                      <Route path="/vendor/register" element={<VendorRegistration />} />
+                      <Route path="/vendor/dashboard" element={
+                        <VendorProtectedRoute>
+                          <VendorLayout>
+                            <VendorDashboard />
+                          </VendorLayout>
+                        </VendorProtectedRoute>
+                      } />
                       
                       <Route path="*" element={<NotFound />} />
                     </Routes>

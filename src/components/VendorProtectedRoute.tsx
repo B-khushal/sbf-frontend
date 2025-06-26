@@ -18,7 +18,7 @@ const VendorProtectedRoute: React.FC<VendorProtectedRouteProps> = ({ children })
   }
 
   if (!user) {
-    return <Navigate to="/auth/login" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   if (user.role !== 'vendor') {
