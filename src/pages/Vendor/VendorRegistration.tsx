@@ -75,8 +75,10 @@ const VendorRegistration: React.FC = () => {
   };
 
   const handleNextStep = () => {
-    if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1);
+    if (validateStep(currentStep)) {
+      if (currentStep < steps.length - 1) {
+        setCurrentStep(currentStep + 1);
+      }
     }
   };
 
@@ -88,13 +90,18 @@ const VendorRegistration: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateStep(currentStep)) {
+      return;
+    }
+
     setLoading(true);
 
     try {
-      await registerVendor(formData);
+      const response = await registerVendor(formData);
       toast({
         title: "Registration Successful!",
-        description: "Your vendor application has been submitted. You'll receive an email once approved.",
+        description: response.message || "Your vendor application has been submitted. You'll receive an email once approved.",
       });
       navigate('/vendor/dashboard');
     } catch (error: any) {
@@ -112,16 +119,105 @@ const VendorRegistration: React.FC = () => {
   const validateStep = (step: number): boolean => {
     switch (step) {
       case 0:
-        return !!(formData.storeName && formData.storeDescription);
+        if (!formData.storeName.trim()) {
+          toast({
+            title: "Store Name Required",
+            description: "Please enter your store name",
+            variant: "destructive",
+          });
+          return false;
+        }
+        if (!formData.storeDescription.trim()) {
+          toast({
+            title: "Store Description Required",
+            description: "Please enter a description for your store",
+            variant: "destructive",
+          });
+          return false;
+        }
+        return true;
+
       case 1:
-        return !!(formData.storeAddress.street && formData.storeAddress.city && 
-                 formData.storeAddress.state && formData.storeAddress.zipCode &&
-                 formData.contactInfo.phone && formData.contactInfo.email);
+        if (!formData.storeAddress.street.trim()) {
+          toast({
+            title: "Street Address Required",
+            description: "Please enter your street address",
+            variant: "destructive",
+          });
+          return false;
+        }
+        if (!formData.storeAddress.city.trim()) {
+          toast({
+            title: "City Required",
+            description: "Please enter your city",
+            variant: "destructive",
+          });
+          return false;
+        }
+        if (!formData.storeAddress.state.trim()) {
+          toast({
+            title: "State Required",
+            description: "Please enter your state",
+            variant: "destructive",
+          });
+          return false;
+        }
+        if (!formData.storeAddress.zipCode.trim()) {
+          toast({
+            title: "ZIP Code Required",
+            description: "Please enter your ZIP code",
+            variant: "destructive",
+          });
+          return false;
+        }
+        if (!formData.contactInfo.phone.trim()) {
+          toast({
+            title: "Phone Number Required",
+            description: "Please enter your phone number",
+            variant: "destructive",
+          });
+          return false;
+        }
+        if (!formData.contactInfo.email.trim() || !formData.contactInfo.email.includes('@')) {
+          toast({
+            title: "Valid Email Required",
+            description: "Please enter a valid email address",
+            variant: "destructive",
+          });
+          return false;
+        }
+        return true;
+
       case 2:
-        return !!(formData.businessInfo.businessType);
+        if (!formData.businessInfo.businessType) {
+          toast({
+            title: "Business Type Required",
+            description: "Please select your business type",
+            variant: "destructive",
+          });
+          return false;
+        }
+        return true;
+
       case 3:
-        return !!(formData.bankDetails.accountHolderName && 
-                 (formData.bankDetails.accountNumber || formData.bankDetails.upiId));
+        if (!formData.bankDetails.accountHolderName?.trim()) {
+          toast({
+            title: "Account Holder Name Required",
+            description: "Please enter the account holder name",
+            variant: "destructive",
+          });
+          return false;
+        }
+        if (!formData.bankDetails.accountNumber?.trim() && !formData.bankDetails.upiId?.trim()) {
+          toast({
+            title: "Payment Details Required",
+            description: "Please enter either bank account details or UPI ID",
+            variant: "destructive",
+          });
+          return false;
+        }
+        return true;
+
       default:
         return false;
     }

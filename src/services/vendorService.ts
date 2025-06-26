@@ -141,24 +141,55 @@ export interface VendorDashboardData {
 
 // Vendor registration and profile
 export const registerVendor = async (data: VendorRegistrationData) => {
-  const response = await api.post('/vendors/register', data);
-  return response.data;
+  try {
+    const response = await api.post('/vendors/register', data);
+    return response.data;
+  } catch (error: any) {
+    if (error.response?.data?.message) {
+      throw new Error(error.response.data.message);
+    }
+    throw new Error('Failed to register vendor. Please try again later.');
+  }
 };
 
 export const getVendorProfile = async (): Promise<{ vendor: VendorProfile }> => {
-  const response = await api.get('/vendors/profile');
-  return response.data;
+  try {
+    const response = await api.get('/vendors/profile');
+    return response.data;
+  } catch (error: any) {
+    if (error.response?.data?.message) {
+      throw new Error(error.response.data.message);
+    }
+    throw new Error('Failed to fetch vendor profile. Please try again later.');
+  }
 };
 
 export const updateVendorProfile = async (data: Partial<VendorProfile>) => {
-  const response = await api.put('/vendors/profile', data);
-  return response.data;
+  try {
+    const response = await api.put('/vendors/profile', data);
+    return response.data;
+  } catch (error: any) {
+    if (error.response?.data?.message) {
+      throw new Error(error.response.data.message);
+    }
+    throw new Error('Failed to update vendor profile. Please try again later.');
+  }
 };
 
 // Vendor dashboard
 export const getVendorDashboard = async (): Promise<VendorDashboardData> => {
-  const response = await api.get('/vendors/dashboard');
-  return response.data;
+  try {
+    const response = await api.get('/vendors/dashboard');
+    return response.data;
+  } catch (error: any) {
+    if (error.response?.status === 404) {
+      throw new Error('Vendor profile not found. Please complete registration first.');
+    }
+    if (error.response?.data?.message) {
+      throw new Error(error.response.data.message);
+    }
+    throw new Error('Failed to fetch vendor dashboard. Please try again later.');
+  }
 };
 
 // Vendor products
