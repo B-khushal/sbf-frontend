@@ -1,12 +1,8 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
 
-interface VendorProtectedRouteProps {
-  children: React.ReactNode;
-}
-
-const VendorProtectedRoute: React.FC<VendorProtectedRouteProps> = ({ children }) => {
+const VendorProtectedRoute: React.FC = () => {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
@@ -25,7 +21,7 @@ const VendorProtectedRoute: React.FC<VendorProtectedRouteProps> = ({ children })
     return <Navigate to="/" replace />;
   }
 
-  return <>{children}</>;
+  return <Outlet />;
 };
 
 export default VendorProtectedRoute; 

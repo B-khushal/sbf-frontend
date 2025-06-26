@@ -82,6 +82,7 @@ const AdminVendorManagement: React.FC = () => {
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
   const [newStatus, setNewStatus] = useState<string>('');
   const [updatingVendor, setUpdatingVendor] = useState<string | null>(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   
   const { formatPrice } = useCurrency();
 
@@ -143,16 +144,15 @@ const AdminVendorManagement: React.FC = () => {
   };
 
   // Handle vendor details view
-  const handleViewDetails = async (vendor: Vendor) => {
-    try {
-      const detailedVendor = await getVendorById(vendor._id);
-      setSelectedVendor(detailedVendor);
-      setIsDetailDialogOpen(true);
-    } catch (error: any) {
-      console.error('Error fetching vendor details:', error);
+  const handleViewDetails = (vendorId: string) => {
+    const vendor = vendors.find((v) => v._id === vendorId);
+    if (vendor) {
+      setSelectedVendor(vendor);
+      setIsDetailsModalOpen(true);
+    } else {
       toast({
         title: "Error",
-        description: "Failed to fetch vendor details",
+        description: "Could not find vendor details.",
         variant: "destructive",
       });
     }
@@ -437,7 +437,7 @@ const AdminVendorManagement: React.FC = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleViewDetails(vendor)}
+                        onClick={() => handleViewDetails(vendor._id)}
                         title="View Details"
                       >
                         <Eye className="h-4 w-4" />
@@ -507,7 +507,7 @@ const AdminVendorManagement: React.FC = () => {
       </Card>
 
       {/* Vendor Detail Dialog */}
-      <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
+      <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -599,10 +599,14 @@ const AdminVendorManagement: React.FC = () => {
                     </div>
                     <div>
                       <strong>Address:</strong>
-                      <p className="mt-1 text-muted-foreground">
-                        {selectedVendor.address.street}, {selectedVendor.address.city}<br />
-                        {selectedVendor.address.state} {selectedVendor.address.zipCode}<br />
-                        {selectedVendor.address.country}
+                      <p className="text-sm">
+                        {selectedVendor.address ? (
+                          <>
+                            {selectedVendor.address.street}, {selectedVendor.address.city}<br />
+                            {selectedVendor.address.state} {selectedVendor.address.zipCode}<br />
+                            {selectedVendor.address.country}
+                          </>
+                        ) : 'No address provided'}
                       </p>
                     </div>
                   </CardContent>
@@ -704,7 +708,7 @@ const AdminVendorManagement: React.FC = () => {
           )}
           
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDetailDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setIsDetailsModalOpen(false)}>
               Close
             </Button>
           </DialogFooter>

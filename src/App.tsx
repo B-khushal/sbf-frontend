@@ -59,8 +59,13 @@ const ContactPage = lazy(() => import('./pages/ContactPage'));
 import VendorPage from "./pages/VendorPage";
 import VendorDashboard from "./pages/Vendor/VendorDashboard";
 import VendorRegistration from "./pages/Vendor/VendorRegistration";
-import VendorLayout from "@/components/VendorLayout";
-import VendorProtectedRoute from "@/components/VendorProtectedRoute";
+import VendorLayout from "./components/VendorLayout";
+import VendorProtectedRoute from "./components/VendorProtectedRoute";
+import VendorProducts from './pages/Vendor/VendorProducts';
+import VendorOrders from './pages/Vendor/VendorOrders';
+import VendorAnalytics from './pages/Vendor/VendorAnalytics';
+import VendorPayouts from './pages/Vendor/VendorPayouts';
+import VendorSettings from './pages/Vendor/VendorSettings';
 
 const queryClient = new QueryClient();
 
@@ -164,15 +169,17 @@ const App = () => {
                       </Route>
                       
                       {/* Vendor Panel Routes - Protected */}
-                      <Route path="/vendor" element={<VendorPage />} />
+                      <Route path="/vendor" element={<VendorProtectedRoute />}>
+                        <Route element={<VendorLayout />}>
+                          <Route path="dashboard" element={<VendorDashboard />} />
+                          <Route path="products" element={<VendorProducts />} />
+                          <Route path="orders" element={<VendorOrders />} />
+                          <Route path="analytics" element={<VendorAnalytics />} />
+                          <Route path="payouts" element={<VendorPayouts />} />
+                          <Route path="settings" element={<VendorSettings />} />
+                        </Route>
+                      </Route>
                       <Route path="/vendor/register" element={<VendorRegistration />} />
-                      <Route path="/vendor/dashboard" element={
-                        <VendorProtectedRoute>
-                          <VendorLayout>
-                            <VendorDashboard />
-                          </VendorLayout>
-                        </VendorProtectedRoute>
-                      } />
                       
                       <Route path="*" element={<NotFound />} />
                     </Routes>
