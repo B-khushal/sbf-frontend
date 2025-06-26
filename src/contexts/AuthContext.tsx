@@ -10,6 +10,7 @@ type User = {
   photoURL?: string;
   provider?: string;
   token?: string;
+  vendorStatus?: 'pending' | 'approved' | 'suspended' | 'rejected';
 };
 
 interface SignupData {
@@ -78,7 +79,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             id: userData._id || userData.id, // Use _id from backend or id if already mapped
             email: userData.email,
             name: userData.name,
-            role: userData.role === 'admin' ? 'admin' : userData.role === 'vendor' ? 'vendor' : 'user',
+            role: userData.role,
+            vendorStatus: userData.vendorStatus,
             photoURL: userData.photoURL,
             provider: userData.provider,
             token: userData.token
@@ -122,22 +124,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const loginUser = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      const userData = await login({ email, password });
+      const loginResponse = await login({ email, password });
       
-      // Map response data to our User type
+      // After successful login, get the full user profile
+      const profileData = await getUserProfile();
+      
       const user = {
-        id: userData._id || userData.id, // Support both _id (from MongoDB) and id formats
-        name: userData.name,
-        email: userData.email,
-        role: userData.role === 'admin' ? 'admin' : userData.role === 'vendor' ? 'vendor' : 'user',
-        token: userData.token
+        id: profileData._id,
+        name: profileData.name,
+        email: profileData.email,
+        role: profileData.role,
+        vendorStatus: profileData.vendorStatus,
+        token: loginResponse.token
       };
       
       setUser(user);
       
-      // Set authentication flag
       localStorage.setItem('isAuthenticated', 'true');
-      localStorage.setItem('user', JSON.stringify(userData));
+      localStorage.setItem('user', JSON.stringify(profileData)); // Store the full profile
       
       // Determine redirect destination based on user role
       let redirectTo = '/';
@@ -165,18 +169,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const registerUser = async (data: SignupData) => {
     try {
       setIsLoading(true);
-      const userData = await register(data);
+      const registerResponse = await register(data);
+      const profileData = await getUserProfile();
+
       const user = {
-        id: userData._id || userData.id,
-        name: userData.name,
-        email: userData.email,
-        role: userData.role === 'admin' ? 'admin' : userData.role === 'vendor' ? 'vendor' : 'user',
-        token: userData.token
+        id: profileData._id,
+        name: profileData.name,
+        email: profileData.email,
+        role: profileData.role,
+        vendorStatus: profileData.vendorStatus,
+        token: registerResponse.token
       };
       
       setUser(user);
       localStorage.setItem('isAuthenticated', 'true');
-      localStorage.setItem('user', JSON.stringify(userData));
+      localStorage.setItem('user', JSON.stringify(profileData)); // Store the full profile
       
       // Determine redirect destination based on user role
       let redirectTo = '/';
@@ -211,22 +218,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const handleSocialLogin = async (provider: string, credential?: string) => {
     try {
       setIsLoading(true);
-      const userData = await socialLogin(provider, credential);
+      const socialLoginResponse = await socialLogin(provider, credential);
+      const profileData = await getUserProfile();
       
       const user = {
-        id: userData._id || userData.id,
-        name: userData.name,
-        email: userData.email,
-        role: userData.role === 'admin' ? 'admin' : userData.role === 'vendor' ? 'vendor' : 'user',
-        provider: userData.provider,
-        photoURL: userData.photoURL,
-        token: userData.token
+        id: profileData._id,
+        name: profileData.name,
+        email: profileData.email,
+        role: profileData.role,
+        vendorStatus: profileData.vendorStatus,
+        provider: profileData.provider,
+        photoURL: profileData.photoURL,
+        token: socialLoginResponse.token
       };
       
       setUser(user);
       
       localStorage.setItem('isAuthenticated', 'true');
-      localStorage.setItem('user', JSON.stringify(userData));
+      localStorage.setItem('user', JSON.stringify(profileData)); // Store the full profile
       
       // Determine redirect destination based on user role
       let redirectTo = '/';
