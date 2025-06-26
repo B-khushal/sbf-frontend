@@ -39,9 +39,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Check for existing session on mount
   useEffect(() => {
-    const checkAuthStatus = () => {
+    const checkAuthStatus = async () => {
       try {
-        // First check for auth_data in sessionStorage (post-payment recovery)
         const authDataString = sessionStorage.getItem('auth_data');
         if (authDataString) {
           console.log('Found auth_data in sessionStorage during AuthContext initialization');
@@ -68,29 +67,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
         
-        // Now proceed with normal auth check
-        const storedUser = localStorage.getItem('user');
         const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
-        
-        if (isAuthenticated && storedUser) {
-          // Parse stored user and map to our User type
-          const userData = JSON.parse(storedUser);
-          setUser({
-            id: userData._id || userData.id, // Use _id from backend or id if already mapped
-            email: userData.email,
-            name: userData.name,
-            role: userData.role,
-            vendorStatus: userData.vendorStatus,
-            photoURL: userData.photoURL,
-            provider: userData.provider,
-            token: userData.token
-          });
+        const token = localStorage.getItem('token');
+
+        if (isAuthenticated && token) {
+          // If authenticated, always fetch the latest user profile
+          // to ensure data (like vendorStatus) is fresh.
+          try {
+            const profileData = await getUserProfile();
+            const user = {
+              id: profileData._id,
+              name: profileData.name,
+              email: profileData.email,
+              role: profileData.role,
+              vendorStatus: profileData.vendorStatus,
+              photoURL: profileData.photoURL,
+              provider: profileData.provider,
+              token: token,
+            };
+            setUser(user);
+            // Also update localStorage with the fresh data
+            localStorage.setItem('user', JSON.stringify(profileData));
+          } catch (fetchError) {
+            console.error('Failed to fetch user profile, logging out:', fetchError);
+            // If profile fetch fails (e.g., invalid token), log the user out
+            logoutUser();
+          }
+        } else {
+            // If not authenticated, ensure user state is null
+            setUser(null);
         }
       } catch (error) {
         console.error('Error checking auth status:', error);
         // Clear potentially corrupted auth data
-        localStorage.removeItem('user');
-        localStorage.removeItem('isAuthenticated');
+        logoutUser();
       } finally {
         setIsLoading(false);
       }
@@ -112,11 +122,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     window.addEventListener('storage', handleStorageChange);
     
     // Also listen for custom storage event dispatched within the same window
-    window.addEventListener('storageUpdate', checkAuthStatus);
+    window.addEventListener('storageUpdate', checkAuthStatus as EventListener);
     
     return () => {
       window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('storageUpdate', checkAuthStatus);
+      window.removeEventListener('storageUpdate', checkAuthStatus as EventListener);
     };
   }, []);
 
@@ -141,7 +151,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(user);
       
       localStorage.setItem('isAuthenticated', 'true');
-      localStorage.setItem('user', JSON.stringify(profileData)); // Store the full profile
+      localStorage.setItem('user', JSON.stringify(profileData));
+      localStorage.setItem('token', loginResponse.token); // Also store the token separately
       
       // Determine redirect destination based on user role
       let redirectTo = '/';
@@ -183,7 +194,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       setUser(user);
       localStorage.setItem('isAuthenticated', 'true');
-      localStorage.setItem('user', JSON.stringify(profileData)); // Store the full profile
+      localStorage.setItem('user', JSON.stringify(profileData));
+      localStorage.setItem('token', registerResponse.token); // Also store the token separately
       
       // Determine redirect destination based on user role
       let redirectTo = '/';
@@ -212,6 +224,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
     localStorage.removeItem('user');
     localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('token'); // Also remove the token
   };
 
   // Social login function
@@ -235,7 +248,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(user);
       
       localStorage.setItem('isAuthenticated', 'true');
-      localStorage.setItem('user', JSON.stringify(profileData)); // Store the full profile
+      localStorage.setItem('user', JSON.stringify(profileData));
+      localStorage.setItem('token', socialLoginResponse.token); // Also store the token separately
       
       // Determine redirect destination based on user role
       let redirectTo = '/';
