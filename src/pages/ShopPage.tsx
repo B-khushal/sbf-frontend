@@ -44,6 +44,7 @@ const ShopPage = () => {
   const [wishlist, setWishlist] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
 
   const {
     addItem,
@@ -470,75 +471,86 @@ const ShopPage = () => {
           )}
 
           {/* Main Content: Filters and Product Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mt-12">
+          <div className="flex items-center justify-end mb-4">
+            <button 
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-primary"
+            >
+              <Filter size={16} />
+              {showFilters ? 'Hide' : 'Show'} Filters
+            </button>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mt-4">
             
             {/* Filters Sidebar */}
-            <div className="lg:col-span-1">
-              <div className="bg-white/60 backdrop-blur-md rounded-xl shadow-sm p-4 sticky top-24">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                    <Filter size={18} />
-                    Filters
-                  </h2>
-                  <button 
-                    onClick={() => {
-                      setSelectedCategory("");
-                      setPriceRange("all");
-                      setSortBy("newest");
-                      navigate("/shop");
-                    }}
-                    className="text-xs font-medium text-gray-500 hover:text-primary"
-                  >
-                    Reset
-                  </button>
+            {showFilters && (
+              <div className="lg:col-span-1">
+                <div className="bg-white/60 backdrop-blur-md rounded-xl shadow-sm p-4 sticky top-24">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                      <Filter size={18} />
+                      Filters
+                    </h2>
+                    <button 
+                      onClick={() => {
+                        setSelectedCategory("");
+                        setPriceRange("all");
+                        setSortBy("newest");
+                        navigate("/shop");
+                      }}
+                      className="text-xs font-medium text-gray-500 hover:text-primary"
+                    >
+                      Reset
+                    </button>
+                  </div>
+
+                  <FilterSection title="Category">
+                    {categories.map((cat) => (
+                      <button
+                        key={cat}
+                        onClick={() => setSelectedCategory(cat)}
+                        className={`w-full text-left px-3 py-1 rounded-md transition-colors text-xs hover:bg-gray-100 ${
+                          selectedCategory === cat ? "bg-primary text-white font-medium" : "text-gray-600"
+                        }`}
+                      >
+                        {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                      </button>
+                    ))}
+                  </FilterSection>
+
+                  <FilterSection title="Price Range">
+                    {["0-1000", "1000-2000", "2000-5000", "5000+"].map((range) => (
+                      <button
+                        key={range}
+                        onClick={() => setPriceRange(range)}
+                        className={`w-full text-left px-3 py-1 rounded-md transition-colors text-xs hover:bg-gray-100 ${
+                          priceRange === range ? "bg-primary text-white font-medium" : "text-gray-600"
+                        }`}
+                      >
+                        ₹{range.replace("-", " - ")}
+                      </button>
+                    ))}
+                  </FilterSection>
+
+                  <FilterSection title="Sort By">
+                    {["newest", "price-asc", "price-desc", "top-rated"].map((sortOption) => (
+                      <button
+                        key={sortOption}
+                        onClick={() => setSortBy(sortOption)}
+                        className={`w-full text-left px-3 py-1 rounded-md transition-colors text-xs hover:bg-gray-100 ${
+                          sortBy === sortOption ? "bg-primary text-white font-medium" : "text-gray-600"
+                        }`}
+                      >
+                        {sortOption.replace("-", " ").replace(/\b\w/g, l => l.toUpperCase())}
+                      </button>
+                    ))}
+                  </FilterSection>
                 </div>
-
-                <FilterSection title="Category">
-                  {categories.map((cat) => (
-                    <button
-                      key={cat}
-                      onClick={() => setSelectedCategory(cat)}
-                      className={`w-full text-left px-3 py-1 rounded-md transition-colors text-xs hover:bg-gray-100 ${
-                        selectedCategory === cat ? "bg-primary text-white font-medium" : "text-gray-600"
-                      }`}
-                    >
-                      {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                    </button>
-                  ))}
-                </FilterSection>
-
-                <FilterSection title="Price Range">
-                  {["0-1000", "1000-2000", "2000-5000", "5000+"].map((range) => (
-                    <button
-                      key={range}
-                      onClick={() => setPriceRange(range)}
-                      className={`w-full text-left px-3 py-1 rounded-md transition-colors text-xs hover:bg-gray-100 ${
-                        priceRange === range ? "bg-primary text-white font-medium" : "text-gray-600"
-                      }`}
-                    >
-                      ₹{range.replace("-", " - ")}
-                    </button>
-                  ))}
-                </FilterSection>
-
-                <FilterSection title="Sort By">
-                  {["newest", "price-asc", "price-desc", "top-rated"].map((sortOption) => (
-                    <button
-                      key={sortOption}
-                      onClick={() => setSortBy(sortOption)}
-                      className={`w-full text-left px-3 py-1 rounded-md transition-colors text-xs hover:bg-gray-100 ${
-                        sortBy === sortOption ? "bg-primary text-white font-medium" : "text-gray-600"
-                      }`}
-                    >
-                      {sortOption.replace("-", " ").replace(/\b\w/g, l => l.toUpperCase())}
-                    </button>
-                  ))}
-                </FilterSection>
               </div>
-            </div>
+            )}
 
             {/* Products Grid */}
-            <div className="lg:col-span-3">
+            <div className={showFilters ? "lg:col-span-3" : "lg:col-span-4"}>
               {isLoading ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                   {[...Array(6)].map((_, i) => (

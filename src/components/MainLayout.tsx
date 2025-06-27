@@ -5,6 +5,7 @@ import Footer from './Footer';
 import Cart from './Cart';
 import useCart from '../hooks/use-cart';
 import { useSettings } from '../contexts/SettingsContext';
+import CategoryMenu from './CategoryMenu';
 
 const MainLayout: React.FC = () => {
   const cartHook = useCart();
@@ -17,6 +18,7 @@ const MainLayout: React.FC = () => {
     <div className="flex flex-col min-h-screen">
       <div className="sticky top-0 z-50">
         <Navigation />
+        <CategoryMenu />
       </div>
       <Cart
         isOpen={cartHook.isCartOpen}
