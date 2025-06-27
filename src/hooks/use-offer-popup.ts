@@ -35,7 +35,7 @@ export const useOfferPopup = () => {
 
         if (offers && offers.length > 0) {
           // Check if we should show this offer
-          const seenOffers = JSON.parse(sessionStorage.getItem('seenOffers') || '{}');
+          const seenOffers = JSON.parse(localStorage.getItem('seenOffers') || '{}');
           console.log('👀 Previously seen offers:', seenOffers);
           
           // Find the first offer that hasn't been seen (if showOnlyOnce is true)
@@ -52,8 +52,8 @@ export const useOfferPopup = () => {
             // Mark offer as seen if showOnlyOnce is true
             if (offerToShow.showOnlyOnce) {
               seenOffers[offerToShow._id] = true;
-              sessionStorage.setItem('seenOffers', JSON.stringify(seenOffers));
-              console.log('✍️ Marked offer as seen in session storage');
+              localStorage.setItem('seenOffers', JSON.stringify(seenOffers));
+              console.log('✍️ Marked offer as seen in local storage');
             }
           } else {
             console.log('❌ No eligible offers to show');

@@ -110,7 +110,16 @@ const AdminSettingsPage: React.FC = () => {
   
   // State for all settings
   const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
-  const [homeSections, setHomeSections] = useState<HomeSection[]>([]);
+  const [homeSections, setHomeSections] = useState<HomeSection[]>([
+    { 
+      id: "offers", 
+      type: "offers", 
+      title: "Exclusive Offers", 
+      subtitle: "Don't miss out on our special deals", 
+      enabled: true, 
+      order: 3 
+    }
+  ]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [headerSettings, setHeaderSettings] = useState<HeaderSettings>({
     logo: "/images/logosbf.png",
@@ -175,6 +184,14 @@ const AdminSettingsPage: React.FC = () => {
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
+      onActivation: ({ event }) => {
+        const target = event.target as HTMLElement;
+        // Prevent activation if the target is an input, textarea, or button
+        if (target.closest('input, textarea, button')) {
+          return false;
+        }
+        return true;
+      },
     })
   );
 
@@ -194,7 +211,26 @@ const AdminSettingsPage: React.FC = () => {
           }));
           setHeroSlides(validatedSlides);
         }
-        if (data.homeSections) setHomeSections(data.homeSections);
+
+        let fetchedHomeSections = data.homeSections || [];
+
+        // Ensure "offers" section exists
+        const offersSectionExists = fetchedHomeSections.some(section => section.type === 'offers');
+        if (!offersSectionExists) {
+          fetchedHomeSections.push({
+            id: "offers",
+            type: "offers",
+            title: "Exclusive Offers",
+            subtitle: "Don't miss out on our special deals",
+            enabled: true,
+            order: 3 // Default order, can be adjusted
+          });
+        }
+        
+        // Sort sections by order
+        fetchedHomeSections.sort((a, b) => a.order - b.order);
+
+        setHomeSections(fetchedHomeSections);
         if (data.categories) setCategories(data.categories);
         if (data.headerSettings) setHeaderSettings(data.headerSettings);
         if (data.footerSettings) setFooterSettings(data.footerSettings);
