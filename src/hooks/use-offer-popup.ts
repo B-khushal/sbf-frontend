@@ -22,6 +22,12 @@ export const useOfferPopup = () => {
 
   useEffect(() => {
     const fetchActiveOffers = async () => {
+      // Only show popups on the homepage ('/')
+      if (location.pathname !== '/') {
+        if (isOpen) setIsOpen(false); // Close popup if navigating away
+        return;
+      }
+
       // Don't show popups on vendor registration or admin pages
       if (location.pathname.startsWith('/vendor') || location.pathname.startsWith('/admin')) {
         console.log('🚫 Offer popup disabled on this page.');
