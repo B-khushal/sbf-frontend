@@ -459,27 +459,106 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                 <Search size={18} className="group-hover:text-primary transition-colors" />
               </Button>
               
-              {/* Wishlist */}
+              {/* Wishlist and User Menu only if logged in */}
               {user && (
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Button variant="ghost" size="icon" asChild className="relative group hover:bg-red-50 transition-all duration-300">
-                    <Link to="/wishlist">
-                      <Heart size={18} className="group-hover:text-red-500 transition-colors" />
-                      {wishlistCount > 0 && (
-                        <motion.span
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg"
+                <>
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Button variant="ghost" size="icon" asChild className="relative group hover:bg-red-50 transition-all duration-300">
+                      <Link to="/wishlist">
+                        <Heart size={18} className="group-hover:text-red-500 transition-colors" />
+                        {wishlistCount > 0 && (
+                          <motion.span
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg"
+                          >
+                            {wishlistCount > 9 ? '9+' : wishlistCount}
+                          </motion.span>
+                        )}
+                      </Link>
+                    </Button>
+                  </motion.div>
+
+                  {/* User Menu */}
+                  <div className="relative">
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => setShowUserMenu(!showUserMenu)}
+                        className="relative group hover:bg-primary/10 transition-all duration-300"
+                      >
+                        <User size={18} className="group-hover:text-primary transition-colors" />
+                        <ChevronDown size={12} className="absolute -bottom-1 -right-1 group-hover:text-primary transition-colors" />
+                      </Button>
+                    </motion.div>
+                    
+                    <AnimatePresence>
+                      {showUserMenu && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 p-2 z-50"
+                          onMouseLeave={() => setShowUserMenu(false)}
                         >
-                          {wishlistCount > 9 ? '9+' : wishlistCount}
-                        </motion.span>
+                          <div className="p-2 border-b">
+                            <p className="font-semibold text-sm text-gray-800">{user.name}</p>
+                            <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                          </div>
+                          <div className="py-1">
+                            {user.role === 'vendor' && user.vendorStatus === 'approved' && (
+                              <Link to="/vendor/dashboard" className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-primary rounded-md">
+                                <Store className="w-4 h-4 mr-2" />
+                                Vendor Dashboard
+                              </Link>
+                            )}
+                            <Link to="/profile" className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-primary rounded-md">
+                              <User className="w-4 h-4 mr-2" />
+                              My Account
+                            </Link>
+                            <Link to="/orders" className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-primary rounded-md">
+                              <ShoppingCart className="w-4 h-4 mr-2" />
+                              My Orders
+                            </Link>
+                            <Link to="/wishlist" className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-primary rounded-md">
+                              <Heart className="w-4 h-4 mr-2" />
+                              Wishlist
+                            </Link>
+                            {user.role === 'admin' ? (
+                              <Link to="/admin" className="flex items-center w-full px-3 py-2 text-sm text-purple-600 hover:bg-gray-100 hover:text-purple-600 rounded-md">
+                                <Shield className="w-4 h-4 mr-2" />
+                                Admin Dashboard
+                              </Link>
+                            ) : user.role !== 'vendor' && (
+                              <Link to="/vendor/register" className="flex items-center w-full px-3 py-2 text-sm text-green-600 hover:bg-gray-100 hover:text-green-600 rounded-md">
+                                <Store className="w-4 h-4 mr-2" />
+                                Become a Vendor
+                              </Link>
+                            )}
+                            <div className="border-t border-gray-100 my-2"></div>
+                            <button 
+                              onClick={() => {
+                                logout();
+                                setShowUserMenu(false);
+                              }}
+                              className="flex items-center w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md"
+                            >
+                              <LogIn className="w-4 h-4 mr-2" />
+                              Sign Out
+                            </button>
+                          </div>
+                        </motion.div>
                       )}
-                    </Link>
-                  </Button>
-                </motion.div>
+                    </AnimatePresence>
+                  </div>
+                </>
               )}
               
               {/* Cart */}
@@ -506,85 +585,6 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                   )}
                 </Button>
               </motion.div>
-              
-              {/* User Menu */}
-              {user ? (
-                <div className="relative">
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={() => setShowUserMenu(!showUserMenu)}
-                      className="relative group hover:bg-primary/10 transition-all duration-300"
-                    >
-                      <User size={18} className="group-hover:text-primary transition-colors" />
-                      <ChevronDown size={12} className="absolute -bottom-1 -right-1 group-hover:text-primary transition-colors" />
-                    </Button>
-                  </motion.div>
-                  
-                  <AnimatePresence>
-                    {showUserMenu && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 p-2 z-50"
-                        onMouseLeave={() => setShowUserMenu(false)}
-                      >
-                        <div className="p-2 border-b">
-                          <p className="font-semibold text-sm text-gray-800">{user.name}</p>
-                          <p className="text-xs text-gray-500 truncate">{user.email}</p>
-                        </div>
-                        <div className="py-1">
-                          {user.role === 'vendor' && user.vendorStatus === 'approved' && (
-                            <Link to="/vendor/dashboard" className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-primary rounded-md">
-                              <Store className="w-4 h-4 mr-2" />
-                              Vendor Dashboard
-                            </Link>
-                          )}
-                          <Link to="/profile" className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-primary rounded-md">
-                            <User className="w-4 h-4 mr-2" />
-                            My Account
-                          </Link>
-                          <Link to="/orders" className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-primary rounded-md">
-                            <ShoppingCart className="w-4 h-4 mr-2" />
-                            My Orders
-                          </Link>
-                          <Link to="/wishlist" className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-primary rounded-md">
-                            <Heart className="w-4 h-4 mr-2" />
-                            Wishlist
-                          </Link>
-                          {user.role === 'admin' ? (
-                            <Link to="/admin" className="flex items-center w-full px-3 py-2 text-sm text-purple-600 hover:bg-gray-100 hover:text-purple-600 rounded-md">
-                              <Shield className="w-4 h-4 mr-2" />
-                              Admin Dashboard
-                            </Link>
-                          ) : user.role !== 'vendor' && (
-                            <Link to="/vendor/register" className="flex items-center w-full px-3 py-2 text-sm text-green-600 hover:bg-gray-100 hover:text-green-600 rounded-md">
-                              <Store className="w-4 h-4 mr-2" />
-                              Become a Vendor
-                            </Link>
-                          )}
-                          <div className="border-t border-gray-100 my-2"></div>
-                          <button 
-                            onClick={() => {
-                              logout();
-                              setShowUserMenu(false);
-                            }}
-                            className="flex items-center w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md"
-                          >
-                            <LogIn className="w-4 h-4 mr-2" />
-                            Sign Out
-                          </button>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              )}
               
               {/* Mobile Menu */}
               <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
