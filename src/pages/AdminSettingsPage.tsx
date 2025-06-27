@@ -167,36 +167,44 @@ const AdminSettingsPage: React.FC = () => {
   );
 
   useEffect(() => {
+    const fetchAllSettings = async () => {
+      try {
+        setLoading(true);
+        const response = await api.get("/settings/all");
+        const data = response.data;
+        
+        if (data.heroSlides) {
+          // Ensure all required properties are set
+          const validatedSlides = data.heroSlides.map((slide: HeroSlide) => ({
+            ...slide,
+            enabled: typeof slide.enabled === 'boolean' ? slide.enabled : true,
+            order: typeof slide.order === 'number' ? slide.order : 0
+          }));
+          setHeroSlides(validatedSlides);
+        }
+        if (data.homeSections) setHomeSections(data.homeSections);
+        if (data.categories) setCategories(data.categories);
+        if (data.headerSettings) setHeaderSettings(data.headerSettings);
+        if (data.footerSettings) setFooterSettings(data.footerSettings);
+        
+        toast({
+          title: "Settings loaded",
+          description: "All settings have been loaded successfully",
+        });
+      } catch (error) {
+        console.error("Error fetching settings:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load settings",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchAllSettings();
   }, []);
-
-  const fetchAllSettings = async () => {
-    try {
-      setLoading(true);
-      const response = await api.get("/settings/all");
-      const data = response.data;
-      
-      if (data.heroSlides) setHeroSlides(data.heroSlides);
-      if (data.homeSections) setHomeSections(data.homeSections);
-      if (data.categories) setCategories(data.categories);
-      if (data.headerSettings) setHeaderSettings(data.headerSettings);
-      if (data.footerSettings) setFooterSettings(data.footerSettings);
-      
-      toast({
-        title: "Settings loaded",
-        description: "All settings have been loaded successfully",
-      });
-    } catch (error) {
-      console.error("Error fetching settings:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load settings",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const saveAllSettings = async () => {
     try {
@@ -267,40 +275,55 @@ const AdminSettingsPage: React.FC = () => {
   };
 
   const updateSlide = (slideId: number, field: keyof HeroSlide, value: string | boolean | number) => {
-    setHeroSlides(prev => prev.map(slide => {
-      if (slide.id === slideId) {
-        return { ...slide, [field]: value };
-      }
-      return slide;
-    }));
+    console.log('Updating slide:', { slideId, field, value });
+    setHeroSlides(prev => {
+      const newSlides = prev.map(slide => {
+        if (slide.id === slideId) {
+          const updatedSlide = { ...slide, [field]: value };
+          console.log('Updating slide:', slide.id, field, value, updatedSlide);
+          return updatedSlide;
+        }
+        return slide;
+      });
+      return newSlides;
+    });
   };
 
   const addNewSlide = () => {
     const newSlide: HeroSlide = {
-      id: Math.max(...heroSlides.map(s => s.id), 0) + 1,
+      id: Math.max(...heroSlides.map(s => s.id || 0), 0) + 1,
       title: "New Slide",
       subtitle: "Add your subtitle here",
       image: "https://placehold.co/800x400?text=Add+Image",
       ctaText: "Shop Now",
       ctaLink: "/shop",
       enabled: true,
-      order: heroSlides.length,
+      order: heroSlides.length
     };
+    console.log('Adding new slide:', newSlide);
     setHeroSlides(prev => [...prev, newSlide]);
   };
 
   const deleteSlide = (slideId: number) => {
-    setHeroSlides(prev => prev.filter(slide => slide.id !== slideId));
+    console.log('Deleting slide:', slideId);
+    setHeroSlides(prev => {
+      const newSlides = prev.filter(slide => slide.id !== slideId);
+      console.log('Remaining slides:', newSlides);
+      return newSlides;
+    });
   };
 
   const handleSlidesDragEnd = (event: any) => {
     const { active, over } = event;
     if (active.id !== over?.id) {
+      console.log('Reordering slides:', { from: active.id, to: over.id });
       setHeroSlides((items) => {
         const oldIndex = items.findIndex((item) => item.id === active.id);
         const newIndex = items.findIndex((item) => item.id === over.id);
         const reordered = arrayMove(items, oldIndex, newIndex);
-        return reordered.map((item, index) => ({ ...item, order: index }));
+        const updated = reordered.map((item, index) => ({ ...item, order: index }));
+        console.log('Reordered slides:', updated);
+        return updated;
       });
     }
   };
@@ -503,14 +526,17 @@ const AdminSettingsPage: React.FC = () => {
                               <Badge variant={slide.enabled ? "default" : "secondary"}>
                                 Slide {slide.id}
                               </Badge>
-                              <Switch
-                                checked={slide.enabled}
-                                onCheckedChange={(checked) => updateSlide(slide.id, 'enabled', checked)}
-                              />
-                              <Label className="text-sm">
-                                {slide.enabled ? 'Enabled' : 'Disabled'}
-                              </Label>
-                              <div className="ml-auto flex gap-2">
+                              <div className="flex items-center gap-2">
+                                <Switch
+                                  id={`slide-enabled-${slide.id}`}
+                                  checked={slide.enabled}
+                                  onCheckedChange={(checked) => updateSlide(slide.id, 'enabled', checked)}
+                                />
+                                <Label htmlFor={`slide-enabled-${slide.id}`} className="text-sm">
+                                  {slide.enabled ? 'Enabled' : 'Disabled'}
+                                </Label>
+                              </div>
+                              <div className="ml-auto">
                                 <Button
                                   variant="outline"
                                   size="sm"
