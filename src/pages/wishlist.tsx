@@ -4,8 +4,6 @@ import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 import { Trash2, ShoppingBag, RefreshCw, Heart, Sparkles, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import Navigation from "@/components/Navigation";
-import Footer from "@/components/Footer";
 import useCart from "@/hooks/use-cart";
 import { useToast } from "@/hooks/use-toast";
 
@@ -137,8 +135,6 @@ const WishlistPage = () => {
         <div className="absolute top-1/4 left-1/4 w-64 sm:w-96 h-64 sm:h-96 bg-gradient-to-r from-secondary/3 to-accent/3 rounded-full blur-2xl animate-pulse" />
       </div>
 
-      <Navigation cartItemCount={0} />
-      
       <motion.main 
         className="relative flex-1 pt-20 sm:pt-24 z-10"
         initial="hidden"
@@ -320,29 +316,15 @@ const WishlistPage = () => {
 
           {/* Continue Shopping */}
           {items.length > 0 && (
-            <motion.div 
-              variants={itemVariants}
-              className="text-center mt-8 sm:mt-12"
-            >
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Button 
-                  onClick={() => navigate("/shop")} 
-                  variant="outline"
-                  className="px-6 sm:px-8 py-2 sm:py-3 rounded-xl sm:rounded-2xl border-2 border-gray-200 hover:border-primary transition-all text-sm sm:text-base"
-                >
-                  Continue Shopping
-                  <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-2" />
-                </Button>
-              </motion.div>
-            </motion.div>
+            <div className="text-center mt-12 sm:mt-16">
+              <Button onClick={() => navigate('/shop')} className="text-sm sm:text-base">
+                <ArrowRight className="w-4 h-4 mr-2" />
+                Continue Shopping
+              </Button>
+            </div>
           )}
         </div>
       </motion.main>
-
-      <Footer />
     </div>
   );
 };

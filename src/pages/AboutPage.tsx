@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
-import Navigation from '@/components/Navigation';
-import Footer from '@/components/Footer';
 import { Heart, Award, Users, Leaf, Sparkles, Star, X, Book } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -72,8 +70,6 @@ const AboutPage: React.FC = () => {
         <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-gradient-to-tl from-bloom-green-200/20 via-transparent to-bloom-blue-200/20 rounded-full blur-3xl animate-reverse-spin" />
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-bloom-pink-100/30 to-bloom-green-100/30 rounded-full blur-2xl animate-pulse" />
       </div>
-      
-      <Navigation cartItemCount={0} />
       
       <motion.main 
         className="relative flex-1 pt-24 z-10"
@@ -379,161 +375,7 @@ const AboutPage: React.FC = () => {
         </motion.section>
       </motion.main>
       
-      <Footer />
-
-      {/* Journey Modal */}
-      {showJourneyModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          {/* Backdrop */}
-          <div 
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={closeJourneyModal}
-          />
-          
-          {/* Modal */}
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="relative bg-white rounded-3xl shadow-2xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden"
-          >
-            {/* Header */}
-            <div className="bg-gradient-to-r from-primary via-secondary to-accent p-6 text-white relative">
-              <button
-                onClick={closeJourneyModal}
-                className="absolute top-4 right-4 text-white/80 hover:text-white transition-colors"
-              >
-                <X size={24} />
-              </button>
-              <div className="pr-8">
-                <h2 className="text-3xl font-bold mb-2 flex items-center gap-3">
-                  <Book className="w-8 h-8" />
-                  Our Journey
-                </h2>
-                <p className="text-white/90">From a small dream to blooming reality</p>
-              </div>
-            </div>
-
-            {/* Content */}
-            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-              <div className="space-y-8">
-                {/* Timeline */}
-                <div className="relative">
-                  {/* Timeline Line */}
-                  <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary via-secondary to-accent"></div>
-                  
-                  {/* Timeline Items */}
-                  <div className="space-y-8">
-                    {/* 2006 - Foundation */}
-                    <div className="relative flex items-start gap-6">
-                      <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center z-10">
-                        <Sparkles className="w-4 h-4 text-white" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-2xl p-6">
-                          <h3 className="text-2xl font-bold text-gray-800 mb-2">2006 - The Beginning</h3>
-                          <p className="text-gray-600 leading-relaxed">
-                            Spring Blossoms Florist was born from a passion for nature's beauty. What started as a small local flower shop in Hyderabad was founded with a simple yet powerful vision: to connect people through the universal language of flowers.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* 2008-2012 - Growth */}
-                    <div className="relative flex items-start gap-6">
-                      <div className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center z-10">
-                        <Leaf className="w-4 h-4 text-white" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="bg-gradient-to-r from-secondary/10 to-accent/10 rounded-2xl p-6">
-                          <h3 className="text-2xl font-bold text-gray-800 mb-2">2008-2012 - Growing Roots</h3>
-                          <p className="text-gray-600 leading-relaxed">
-                            As word spread about our unique arrangements and exceptional service, we built lasting relationships with our community. We introduced custom arrangements for weddings, corporate events, and special occasions, establishing ourselves as Hyderabad's trusted florist.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* 2013-2018 - Innovation */}
-                    <div className="relative flex items-start gap-6">
-                      <div className="w-8 h-8 bg-accent rounded-full flex items-center justify-center z-10">
-                        <Award className="w-4 h-4 text-white" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="bg-gradient-to-r from-accent/10 to-primary/10 rounded-2xl p-6">
-                          <h3 className="text-2xl font-bold text-gray-800 mb-2">2013-2018 - Innovation & Excellence</h3>
-                          <p className="text-gray-600 leading-relaxed">
-                            We embraced sustainable practices, partnering with local farms and implementing eco-friendly packaging. Our team of expert florists developed signature arrangements that became synonymous with quality and creativity in the region.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* 2019-2023 - Digital Transformation */}
-                    <div className="relative flex items-start gap-6">
-                      <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center z-10">
-                        <Star className="w-4 h-4 text-white" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-2xl p-6">
-                          <h3 className="text-2xl font-bold text-gray-800 mb-2">2019-2023 - Digital Bloom</h3>
-                          <p className="text-gray-600 leading-relaxed">
-                            Recognizing the changing world, we expanded online to serve customers beyond our physical location. Our e-commerce platform brought our beautiful arrangements to doorsteps across the region, while maintaining the personal touch that defines us.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* 2024 - Present */}
-                    <div className="relative flex items-start gap-6">
-                      <div className="w-8 h-8 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center z-10">
-                        <Heart className="w-4 h-4 text-white" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="bg-gradient-to-r from-secondary/10 to-accent/10 rounded-2xl p-6">
-                          <h3 className="text-2xl font-bold text-gray-800 mb-2">2024 - Today & Beyond</h3>
-                          <p className="text-gray-600 leading-relaxed">
-                            Today, Spring Blossoms continues to bloom, serving thousands of happy customers while staying true to our founding principles. We're not just a florist; we're memory makers, emotion connectors, and guardians of life's most beautiful moments.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Mission Statement */}
-                <div className="bg-gradient-to-r from-primary/5 via-secondary/5 to-accent/5 rounded-3xl p-8 text-center">
-                  <h3 className="text-2xl font-bold text-gray-800 mb-4">Our Continuing Mission</h3>
-                  <p className="text-gray-600 text-lg leading-relaxed mb-6">
-                    "To bring joy, beauty, and connection to every life we touch through the timeless artistry of flowers. 
-                    Every bloom tells a story, and we're honored to be part of yours."
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                    <Button
-                      onClick={() => {
-                        closeJourneyModal();
-                        document.querySelector('a[href="/shop"]')?.click();
-                      }}
-                      className="bg-gradient-to-r from-primary via-secondary to-accent hover:shadow-lg"
-                    >
-                      🛍️ Shop Our Collection
-                    </Button>
-                    <Button
-                      onClick={() => {
-                        closeJourneyModal();
-                        document.querySelector('a[href="/contact"]')?.click();
-                      }}
-                      variant="outline"
-                    >
-                      💬 Get In Touch
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      )}
+      {showJourneyModal && <JourneyModal onClose={closeJourneyModal} />}
     </div>
   );
 };

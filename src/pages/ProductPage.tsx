@@ -1,10 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import Navigation from '@/components/Navigation';
 import ProductDetail from '@/components/ProductDetail';
 import ProductGrid from '@/components/ProductGrid';
-import Footer from '@/components/Footer';
-import Cart from '@/components/Cart';
 import useCart from '@/hooks/use-cart';
 import api from '@/services/api';
 import productService, { ProductData } from '@/services/productService';
@@ -21,14 +18,8 @@ const ProductPage = () => {
   const [loading, setLoading] = useState(true);
   
   const { 
-    items, 
-    itemCount, 
-    isCartOpen, 
     addItem, 
     openCart, 
-    closeCart, 
-    updateItemQuantity, 
-    removeItem 
   } = useCart();
   
   // Use either id or productId parameter
@@ -109,7 +100,6 @@ const ProductPage = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Navigation cartItemCount={itemCount} />
       
       <main className="flex-1">
         <ProductDetail product={product} onAddToCart={handleAddToCart} />
@@ -124,15 +114,6 @@ const ProductPage = () => {
         )}
       </main>
       
-      <Footer />
-      
-      <Cart 
-        items={items} 
-        isOpen={isCartOpen} 
-        onClose={closeCart}
-        onUpdateQuantity={updateItemQuantity}
-        onRemoveItem={removeItem}
-      />
     </div>
   );
 };

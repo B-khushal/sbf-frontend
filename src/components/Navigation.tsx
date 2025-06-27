@@ -495,8 +495,30 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                         </div>
                         <div className="py-1">
                           <Link to="/profile" className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                            <User className="w-4 h-4 mr-2" />
                             My Account
                           </Link>
+                          <Link to="/orders" className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                            <ShoppingCart className="w-4 h-4 mr-2" />
+                            My Orders
+                          </Link>
+                          {user.role === 'admin' && (
+                            <Link to="/admin" className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                              <Shield className="w-4 h-4 mr-2" />
+                              Admin Dashboard
+                            </Link>
+                          )}
+                          {user.role === 'vendor' ? (
+                            <Link to="/vendor/dashboard" className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                              <Store className="w-4 h-4 mr-2" />
+                              Vendor Dashboard
+                            </Link>
+                          ) : (
+                            <Link to="/vendor/register" className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                              <Store className="w-4 h-4 mr-2" />
+                              Become a Vendor
+                            </Link>
+                          )}
                           <button 
                             onClick={() => {
                               logout();
@@ -504,6 +526,7 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                             }}
                             className="flex items-center w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md"
                           >
+                            <LogIn className="w-4 h-4 mr-2" />
                             Sign Out
                           </button>
                         </div>

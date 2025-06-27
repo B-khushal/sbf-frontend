@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import Navigation from "@/components/Navigation";
 import ProductGrid from "@/components/ProductGrid";
-import Footer from "@/components/Footer";
-import Cart from "@/components/Cart";
 import useCart from "@/hooks/use-cart";
 import api from "@/services/api";
 import { Search, Filter, Grid3X3, List, Star, Heart, Eye, ExternalLink, Sparkles, Leaf, Gift, ShoppingBag, X } from "lucide-react";
@@ -28,6 +25,13 @@ const ShopPage = () => {
   const [wishlist, setWishlist] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+
+  const {
+    addItem,
+    showContactModal,
+    contactModalProduct,
+    closeContactModal,
+  } = useCart();
 
   // Enhanced flower category data with modern design
   const flowerCategories = [
@@ -96,19 +100,6 @@ const ShopPage = () => {
       ).length
     }
   ];
-
-  const {
-    items,
-    itemCount,
-    isCartOpen,
-    closeCart,
-    updateItemQuantity,
-    removeItem,
-    addItem,
-    showContactModal,
-    contactModalProduct,
-    closeContactModal,
-  } = useCart();
 
   // Handle category click with same-tab navigation
   const handleCategoryClick = (categoryName: string) => {
@@ -349,8 +340,8 @@ const ShopPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-bloom-blue-50 via-bloom-pink-50 to-bloom-green-50">
-      <Navigation cartItemCount={itemCount} />
-      
+      <QuickViewModal product={quickViewProduct} onClose={() => setQuickViewProduct(null)} />
+
       <main className="pt-20">
         <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Search Results Header */}
@@ -459,166 +450,135 @@ const ShopPage = () => {
             </div>
           )}
 
-          {/* Advanced Control Panel - Mobile Responsive */}
-          <div className="bg-white/80 backdrop-blur-md rounded-2xl sm:rounded-3xl shadow-2xl p-4 sm:p-6 lg:p-8 mb-8 sm:mb-12 border border-white/50">
-            <div className="flex flex-col gap-4 sm:gap-6 lg:gap-8">
-              {/* Filter Controls - Mobile Responsive */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <Filter size={20} className="text-primary flex-shrink-0" />
-                  <select
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="h-10 sm:h-12 lg:h-14 px-3 sm:px-4 lg:px-6 pr-8 sm:pr-10 lg:pr-12 border-2 border-gray-200 rounded-xl lg:rounded-2xl text-sm sm:text-base lg:text-lg bg-white/80 backdrop-blur-sm focus:outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all shadow-lg flex-1 min-w-0"
-                  >
-                    <option value="">All Categories</option>
-                    {categories.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+          {/* Main Content: Filters and Product Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mt-12">
+            
+            {/* Filters Sidebar */}
+            <div className="lg:col-span-1">
+              <div className="bg-white/80 backdrop-blur-md rounded-2xl sm:rounded-3xl shadow-2xl p-4 sm:p-6 lg:p-8 mb-8 sm:mb-12 border border-white/50">
+                <div className="flex flex-col gap-4 sm:gap-6 lg:gap-8">
+                  {/* Filter Controls - Mobile Responsive */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <Filter size={20} className="text-primary flex-shrink-0" />
+                      <select
+                        value={selectedCategory}
+                        onChange={(e) => setSelectedCategory(e.target.value)}
+                        className="h-10 sm:h-12 lg:h-14 px-3 sm:px-4 lg:px-6 pr-8 sm:pr-10 lg:pr-12 border-2 border-gray-200 rounded-xl lg:rounded-2xl text-sm sm:text-base lg:text-lg bg-white/80 backdrop-blur-sm focus:outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all shadow-lg flex-1 min-w-0"
+                      >
+                        <option value="">All Categories</option>
+                        {categories.map((cat) => (
+                          <option key={cat} value={cat}>
+                            {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
 
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <select
-                    value={priceRange}
-                    onChange={(e) => setPriceRange(e.target.value)}
-                    className="h-10 sm:h-12 lg:h-14 px-3 sm:px-4 lg:px-6 pr-8 sm:pr-10 lg:pr-12 border-2 border-gray-200 rounded-xl lg:rounded-2xl text-sm sm:text-base lg:text-lg bg-white/80 backdrop-blur-sm focus:outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all shadow-lg w-full"
-                  >
-                    <option value="all">All Prices</option>
-                    <option value="0-500">Under ₹500</option>
-                    <option value="500-1000">₹500 - ₹1000</option>
-                    <option value="1000-2000">₹1000 - ₹2000</option>
-                    <option value="2000-5000">₹2000 - ₹5000</option>
-                    <option value="5000">Above ₹5000</option>
-                  </select>
-                </div>
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <select
+                        value={priceRange}
+                        onChange={(e) => setPriceRange(e.target.value)}
+                        className="h-10 sm:h-12 lg:h-14 px-3 sm:px-4 lg:px-6 pr-8 sm:pr-10 lg:pr-12 border-2 border-gray-200 rounded-xl lg:rounded-2xl text-sm sm:text-base lg:text-lg bg-white/80 backdrop-blur-sm focus:outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all shadow-lg w-full"
+                      >
+                        <option value="all">All Prices</option>
+                        <option value="0-500">Under ₹500</option>
+                        <option value="500-1000">₹500 - ₹1000</option>
+                        <option value="1000-2000">₹1000 - ₹2000</option>
+                        <option value="2000-5000">₹2000 - ₹5000</option>
+                        <option value="5000">Above ₹5000</option>
+                      </select>
+                    </div>
 
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="h-10 sm:h-12 lg:h-14 px-3 sm:px-4 lg:px-6 pr-8 sm:pr-10 lg:pr-12 border-2 border-gray-200 rounded-xl lg:rounded-2xl text-sm sm:text-base lg:text-lg bg-white/80 backdrop-blur-sm focus:outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all shadow-lg w-full"
-                  >
-                    <option value="newest">Newest First</option>
-                    <option value="price-low">Price: Low to High</option>
-                    <option value="price-high">Price: High to Low</option>
-                    <option value="name-asc">Name: A to Z</option>
-                    <option value="name-desc">Name: Z to A</option>
-                    <option value="rating">Highest Rated</option>
-                    <option value="trending">Trending</option>
-                  </select>
-                </div>
-              </div>
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <select
+                        value={sortBy}
+                        onChange={(e) => setSortBy(e.target.value)}
+                        className="h-10 sm:h-12 lg:h-14 px-3 sm:px-4 lg:px-6 pr-8 sm:pr-10 lg:pr-12 border-2 border-gray-200 rounded-xl lg:rounded-2xl text-sm sm:text-base lg:text-lg bg-white/80 backdrop-blur-sm focus:outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all shadow-lg w-full"
+                      >
+                        <option value="newest">Newest First</option>
+                        <option value="price-low">Price: Low to High</option>
+                        <option value="price-high">Price: High to Low</option>
+                        <option value="name-asc">Name: A to Z</option>
+                        <option value="name-desc">Name: Z to A</option>
+                        <option value="rating">Highest Rated</option>
+                        <option value="trending">Trending</option>
+                      </select>
+                    </div>
+                  </div>
 
-              {/* View Mode and Results - Mobile Responsive */}
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setViewMode("grid")}
-                    className={`p-2 sm:p-3 rounded-lg sm:rounded-xl transition-all ${
-                      viewMode === "grid" 
-                        ? "bg-primary text-white shadow-lg" 
-                        : "bg-white/60 text-gray-600 hover:bg-white/80"
-                    }`}
-                    title="Grid View"
-                  >
-                    <Grid3X3 size={16} className="sm:hidden" />
-                    <Grid3X3 size={20} className="hidden sm:block" />
-                  </button>
-                  <button
-                    onClick={() => setViewMode("list")}
-                    className={`p-2 sm:p-3 rounded-lg sm:rounded-xl transition-all ${
-                      viewMode === "list" 
-                        ? "bg-primary text-white shadow-lg" 
-                        : "bg-white/60 text-gray-600 hover:bg-white/80"
-                    }`}
-                    title="List View"
-                  >
-                    <List size={16} className="sm:hidden" />
-                    <List size={20} className="hidden sm:block" />
-                  </button>
-                </div>
-                <div className="text-sm sm:text-base lg:text-lg font-medium text-gray-800">
-                  {isLoading ? "Loading..." : `${filteredProducts.length} Products`}
+                  {/* View Mode and Results - Mobile Responsive */}
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setViewMode("grid")}
+                        className={`p-2 sm:p-3 rounded-lg sm:rounded-xl transition-all ${
+                          viewMode === "grid" 
+                            ? "bg-primary text-white shadow-lg" 
+                            : "bg-white/60 text-gray-600 hover:bg-white/80"
+                        }`}
+                        title="Grid View"
+                      >
+                        <Grid3X3 size={16} className="sm:hidden" />
+                        <Grid3X3 size={20} className="hidden sm:block" />
+                      </button>
+                      <button
+                        onClick={() => setViewMode("list")}
+                        className={`p-2 sm:p-3 rounded-lg sm:rounded-xl transition-all ${
+                          viewMode === "list" 
+                            ? "bg-primary text-white shadow-lg" 
+                            : "bg-white/60 text-gray-600 hover:bg-white/80"
+                        }`}
+                        title="List View"
+                      >
+                        <List size={16} className="sm:hidden" />
+                        <List size={20} className="hidden sm:block" />
+                      </button>
+                    </div>
+                    <div className="text-sm sm:text-base lg:text-lg font-medium text-gray-800">
+                      {isLoading ? "Loading..." : `${filteredProducts.length} Products`}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Products Grid */}
-          <div className="mb-16">
-            {isLoading ? (
-              <div className="text-center py-16">
-                <div className="inline-block w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
-                <p className="text-gray-600">Loading beautiful flowers...</p>
-              </div>
-            ) : filteredProducts.length === 0 ? (
-              <div className="text-center py-16">
-                <Search size={60} className="text-gray-400 mx-auto mb-6" />
-                <h3 className="text-2xl font-bold text-gray-800 mb-4">No flowers found</h3>
-                <p className="text-gray-600 max-w-md mx-auto mb-8">
-                  {searchQuery 
-                    ? "Your search didn't match any flowers in our garden. Try exploring different categories or adjusting your filters."
-                    : "No products match your current filters. Try adjusting your selection."
-                  }
-                </p>
-                <div className="flex gap-4 justify-center">
-                  {searchQuery && (
-                    <button
-                      onClick={() => {
-                        setSearchQuery("");
-                        navigate('/shop');
-                      }}
-                      className="px-6 py-3 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors"
-                    >
-                      Clear Search
-                    </button>
-                  )}
-                  <button
-                    onClick={() => {
-                      setSelectedCategory("");
-                      setPriceRange("all");
-                      setSortBy("newest");
-                    }}
-                    className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
-                  >
-                    Reset Filters
-                  </button>
+            {/* Products Grid */}
+            <div className="lg:col-span-3">
+              {isLoading ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {[...Array(6)].map((_, i) => (
+                    <div key={i} className="bg-white p-4 rounded-xl shadow-sm animate-pulse">
+                      <div className="w-full h-48 bg-gray-200 rounded-lg"></div>
+                      <div className="mt-4 h-6 bg-gray-200 rounded w-3/4"></div>
+                      <div className="mt-2 h-4 bg-gray-200 rounded w-1/2"></div>
+                    </div>
+                  ))}
                 </div>
-              </div>
-            ) : (
-              <ProductGrid 
-                products={filteredProducts} 
-                loading={isLoading}
-                className={viewMode === "list" ? "grid-cols-1 gap-4" : ""}
-              />
-            )}
+              ) : filteredProducts.length === 0 ? (
+                <div className="text-center py-16">
+                  <ShoppingBag size={48} className="mx-auto text-gray-400 mb-4" />
+                  <h3 className="text-xl font-semibold text-gray-800">No products found</h3>
+                  <p className="text-gray-500 mt-2">Try adjusting your filters or search query.</p>
+                </div>
+              ) : (
+                <ProductGrid 
+                  products={filteredProducts} 
+                  loading={isLoading}
+                  className={viewMode === "list" ? "grid-cols-1 gap-4" : ""}
+                />
+              )}
+            </div>
           </div>
         </div>
-
-        {/* Quick View Modal */}
-        <QuickViewModal product={quickViewProduct} onClose={() => setQuickViewProduct(null)} />
-
-        {/* Cart Sidebar */}
-        <Cart
-          isOpen={isCartOpen}
-          onClose={closeCart}
-          items={items}
-          onUpdateQuantity={updateItemQuantity}
-          onRemoveItem={removeItem}
-        />
-
-        {/* Contact Modal */}
-        <ContactModal 
-          isOpen={showContactModal}
-          onClose={closeContactModal}
-          productTitle={contactModalProduct}
-        />
       </main>
-      
-      <Footer />
+
+      {/* Contact Modal */}
+      <ContactModal 
+        isOpen={showContactModal}
+        onClose={closeContactModal}
+        productTitle={contactModalProduct}
+      />
     </div>
   );
 };

@@ -1,8 +1,6 @@
 import React from 'react';
 import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
-import Navigation from '@/components/Navigation';
-import Footer from '@/components/Footer';
 import { useNavigate } from 'react-router-dom';
 import { Trash2, ShoppingCart, Plus, Minus, ArrowRight, Info, Sparkles, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -110,8 +108,6 @@ const CartPage: React.FC = () => {
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-secondary/3 to-accent/3 rounded-full blur-2xl animate-pulse" />
       </div>
 
-      <Navigation cartItemCount={items.length} />
-      
       <motion.main 
         className="relative flex-1 pt-8 z-10"
         initial="hidden"
@@ -371,7 +367,7 @@ const CartPage: React.FC = () => {
             </div>
           )}
         </div>
-            </motion.main>
+      </motion.main>
 
       {/* Testing Mode Badge - Floating */}
       <div className="fixed bottom-4 right-4 bg-yellow-500 text-black px-3 py-2 rounded-lg shadow-lg font-semibold flex items-center gap-2 z-50 text-xs sm:text-sm max-w-xs">
@@ -380,8 +376,6 @@ const CartPage: React.FC = () => {
           ⚠️ TESTING MODE: Orders may not be processed.
         </span>
       </div>
-
-      <Footer />
 
       {/* Contact Modal */}
       <ContactModal 

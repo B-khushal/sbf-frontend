@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
-import Navigation from '@/components/Navigation';
-import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -166,8 +164,6 @@ Sent from Spring Blossoms Florist Website`;
         <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-gradient-to-tl from-accent/5 via-transparent to-primary/5 rounded-full blur-3xl animate-reverse-spin" />
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-secondary/3 to-accent/3 rounded-full blur-2xl animate-pulse" />
       </div>
-      
-      <Navigation cartItemCount={0} />
       
       <motion.main 
         className="relative flex-1 pt-24 z-10"
@@ -501,8 +497,6 @@ Sent from Spring Blossoms Florist Website`;
           </div>
         </motion.section>
       </motion.main>
-      
-      <Footer />
     </div>
   );
 };
