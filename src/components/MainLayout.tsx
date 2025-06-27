@@ -3,7 +3,7 @@ import { Outlet } from 'react-router-dom';
 import Navigation from './Navigation';
 import Footer from './Footer';
 import Cart from './Cart';
-import { useCart } from '../hooks/use-cart';
+import useCart from '../hooks/use-cart';
 import { useSettings } from '../contexts/SettingsContext';
 
 const MainLayout: React.FC = () => {
