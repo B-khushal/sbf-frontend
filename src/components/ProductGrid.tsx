@@ -72,7 +72,7 @@ const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCar
           <p className="text-muted-foreground text-sm sm:text-base lg:text-lg">No products available at the moment.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5 md:gap-6 lg:gap-7 xl:gap-9">
+        <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-4 sm:gap-5 md:gap-6 lg:gap-7 xl:gap-9">
           {products.map((product) => (
             <ProductCard key={product._id} product={product} onAddToCart={onAddToCart} onOpenCart={onOpenCart} />
           ))}
