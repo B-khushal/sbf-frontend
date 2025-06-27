@@ -527,7 +527,7 @@ const AdminSettingsPage: React.FC = () => {
                   <div className="space-y-4">
                     {heroSlides.map((slide) => (
                       <SortableItem key={slide.id} id={slide.id}>
-                        <Card className="border-2 border-dashed border-gray-200 hover:border-primary/50 transition-colors">
+                        <Card key={slide.id} className="border-2 border-dashed border-gray-200 hover:border-primary/50 transition-colors">
                           <CardContent className="p-6">
                             <div className="flex items-center gap-4 mb-4">
                               <GripVertical className="w-5 h-5 text-gray-400 cursor-grab" />
@@ -694,7 +694,7 @@ const AdminSettingsPage: React.FC = () => {
                   <div className="space-y-4">
                     {homeSections.map((section) => (
                       <SortableItem key={section.id} id={section.id}>
-                        <Card className="border-2 border-dashed border-gray-200 hover:border-primary/50 transition-colors">
+                        <Card key={section.id} className="border-2 border-dashed border-gray-200 hover:border-primary/50 transition-colors">
                           <CardContent className="p-6">
                             <div className="flex items-center gap-4 mb-4">
                               <GripVertical className="w-5 h-5 text-gray-400 cursor-grab" />
@@ -842,7 +842,7 @@ const AdminSettingsPage: React.FC = () => {
                   <div className="space-y-4">
                     {categories.map((category) => (
                       <SortableItem key={category.id} id={category.id}>
-                        <Card className="border-2 border-dashed border-gray-200 hover:border-primary/50 transition-colors">
+                        <Card key={category.id} className="border-2 border-dashed border-gray-200 hover:border-primary/50 transition-colors">
                           <CardContent className="p-6">
                             <div className="flex items-center gap-4 mb-4">
                               <GripVertical className="w-5 h-5 text-gray-400 cursor-grab" />
