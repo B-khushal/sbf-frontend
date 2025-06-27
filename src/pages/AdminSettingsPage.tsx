@@ -215,9 +215,16 @@ const AdminSettingsPage: React.FC = () => {
       });
     } catch (error) {
       console.error("Error saving settings:", error);
+      
+      // Extract error message from response if available
+      const errorMessage = error.response?.data?.message || 'Failed to save settings';
+      const detailedError = error.response?.data?.errors 
+        ? Object.values(error.response.data.errors).join(', ')
+        : error.response?.data?.error || error.message;
+      
       toast({
         title: "Error",
-        description: "Failed to save settings",
+        description: `${errorMessage}${detailedError ? `: ${detailedError}` : ''}`,
         variant: "destructive",
       });
     } finally {
@@ -266,7 +273,7 @@ const AdminSettingsPage: React.FC = () => {
       id: Math.max(...heroSlides.map(s => s.id), 0) + 1,
       title: "New Slide",
       subtitle: "Add your subtitle here",
-      image: "/images/placeholder.jpg",
+      image: "https://placehold.co/800x400?text=Add+Image",
       ctaText: "Shop Now",
       ctaLink: "/shop",
       enabled: true,

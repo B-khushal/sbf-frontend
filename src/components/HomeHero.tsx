@@ -105,7 +105,7 @@ const HomeHero = () => {
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>, index: number) => {
     console.error(`Failed to load image for slide ${index}:`, heroSlides[index]?.image);
     const target = e.target as HTMLImageElement;
-    target.src = '/images/placeholder.svg';
+    target.src = 'https://placehold.co/800x400?text=Image+Not+Found';
     handleImageLoad(index);
   };
   
