@@ -236,7 +236,7 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
       </div>
 
       {/* Main Navigation */}
-      <header className="bg-white/95 backdrop-blur-xl border-b border-gray-100">
+      <header className="bg-white/95 backdrop-blur-xl border-b border-gray-100 sticky top-0 z-[70]">
         <div className="container mx-auto px-3 sm:px-4 lg:px-6">
           {/* Main Navigation Row */}
           <div className="flex items-center justify-between h-16 sm:h-18 lg:h-20">
@@ -498,28 +498,19 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                             <User className="w-4 h-4 mr-2" />
                             My Account
                           </Link>
-                          <Link to="/orders" className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
-                            <ShoppingCart className="w-4 h-4 mr-2" />
-                            My Orders
-                          </Link>
-                          {user.role === 'admin' && (
-                            <Link to="/admin" className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
-                              <Shield className="w-4 h-4 mr-2" />
+                          {user.isAdmin && (
+                            <Link to="/admin/dashboard" className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                              <Store className="w-4 h-4 mr-2" />
                               Admin Dashboard
                             </Link>
                           )}
-                          {user.role === 'vendor' ? (
+                          {user.isVendor && (
                             <Link to="/vendor/dashboard" className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
                               <Store className="w-4 h-4 mr-2" />
                               Vendor Dashboard
                             </Link>
-                          ) : (
-                            <Link to="/vendor/register" className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
-                              <Store className="w-4 h-4 mr-2" />
-                              Become a Vendor
-                            </Link>
                           )}
-                          <button 
+                          <button
                             onClick={() => {
                               logout();
                               setShowUserMenu(false);
