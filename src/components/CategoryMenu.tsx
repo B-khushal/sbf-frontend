@@ -12,6 +12,20 @@ const CategoryMenu = () => {
   const [dropdownPosition, setDropdownPosition] = useState({ left: 0 });
   const navRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleMouseEnter = (categoryName: string) => {
+    if (hideTimeoutRef.current) {
+      clearTimeout(hideTimeoutRef.current);
+    }
+    setHoveredCategory(categoryName);
+  };
+
+  const handleMouseLeave = () => {
+    hideTimeoutRef.current = setTimeout(() => {
+      setHoveredCategory(null);
+    }, 200);
+  };
 
   useLayoutEffect(() => {
     if (hoveredCategory && navRef.current) {
@@ -103,27 +117,7 @@ const CategoryMenu = () => {
     },
   ];
 
-  const containerVariants = {
-    hidden: { opacity: 0, y: -10 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.5,
-        staggerChildren: 0.1,
-        delayChildren: 0.2
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 10 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.3 }
-    }
-  };
+  const activeCategory = categories.find(c => c.name === hoveredCategory);
 
   const dropdownVariants = {
     hidden: { 
@@ -192,17 +186,19 @@ const CategoryMenu = () => {
   };
 
   return (
-    <nav className="bg-white/98 backdrop-blur-xl border-b border-gray-100/80 sticky top-[64px] sm:top-[72px] lg:top-[80px] z-[60] shadow-sm" ref={navRef}>
-      <div className="container mx-auto px-3 sm:px-4 lg:px-6">
+    <nav 
+      className="bg-white/98 backdrop-blur-xl border-b border-gray-100/80 sticky top-0 z-[60] shadow-sm" 
+      ref={navRef}
+      onMouseLeave={handleMouseLeave}
+    >
+      <div className="container relative mx-auto px-3 sm:px-4 lg:px-6">
         <ScrollArea className="w-full whitespace-nowrap">
-          <div className="relative flex items-center justify-start py-3 lg:py-4">
+          <div className="flex items-center justify-start py-3 lg:py-4">
             <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-4">
               {categories.map((category, index) => (
                 <div
                   key={category.path}
-                  className="relative"
-                  onMouseEnter={() => setHoveredCategory(category.name)}
-                  onMouseLeave={() => setHoveredCategory(null)}
+                  onMouseEnter={() => handleMouseEnter(category.name)}
                   ref={el => itemRefs.current[index] = el}
                 >
                   <Link
@@ -220,7 +216,6 @@ const CategoryMenu = () => {
                     <span className="font-semibold">
                       {category.name.split(' ').slice(1).join(' ')}
                     </span>
-                    
                     <ChevronDown 
                       size={14} 
                       className={cn(
@@ -228,100 +223,97 @@ const CategoryMenu = () => {
                         hoveredCategory === category.name ? "rotate-180" : ""
                       )}
                     />
-                    
                     {category.popular && (
                       <div className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-yellow-400 rounded-full flex items-center justify-center border-2 border-white">
                         <Sparkles size={10} className="text-white" />
                       </div>
                     )}
                   </Link>
-
-                  {/* Dropdown Menu */}
-                  <AnimatePresence>
-                    {hoveredCategory === category.name && (
-                      <motion.div
-                        variants={dropdownVariants}
-                        initial="hidden"
-                        animate="visible"
-                        exit="exit"
-                        className="absolute top-full mt-2 bg-white rounded-xl shadow-lg border w-72 overflow-hidden z-[100]"
-                        style={{ 
-                          left: `${dropdownPosition.left}px`,
-                          transform: 'translateX(-50%)',
-                        }}
-                      >
-                        {/* Category Header */}
-                        <div className="p-4 border-b">
-                          <div className="flex items-center gap-3">
-                            <span className="text-3xl">{category.emoji}</span>
-                            <div>
-                              <h3 className="font-bold text-gray-800">
-                                {category.name.split(' ').slice(1).join(' ')}
-                              </h3>
-                              <p className="text-sm text-gray-500">{category.description}</p>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Subcategories */}
-                        <motion.div 
-                          className="p-2"
-                          variants={subcategoryContainerVariants}
-                          initial="hidden"
-                          animate="visible"
-                        >
-                          {category.subcategories.map((sub, idx) => (
-                            <motion.div
-                              key={sub.path}
-                              variants={subcategoryVariants}
-                              className="overflow-hidden"
-                            >
-                              <Link
-                                to={sub.path}
-                                className="flex items-center justify-between px-4 py-3 rounded-xl hover:bg-gradient-to-r hover:from-primary/8 hover:to-secondary/8 transition-all duration-300 group transform hover:scale-[1.02]"
-                                onClick={() => setHoveredCategory(null)}
-                              >
-                                <span className="text-gray-700 group-hover:text-primary font-medium transition-colors duration-200">
-                                  {sub.name}
-                                </span>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xs text-gray-400 group-hover:text-primary/60 transition-colors duration-200 bg-gray-50 group-hover:bg-primary/10 px-2 py-1 rounded-full">
-                                    {sub.count}
-                                  </span>
-                                  <motion.div
-                                    whileHover={{ x: 2 }}
-                                    transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                                  >
-                                    <ChevronRight size={14} className="text-gray-300 group-hover:text-primary transition-colors duration-200" />
-                                  </motion.div>
-                                </div>
-                              </Link>
-                            </motion.div>
-                          ))}
-                        </motion.div>
-
-                        {/* View All Link */}
-                        <div className="border-t border-gray-100">
-                          <Link
-                            to={category.path}
-                            className="block p-4 text-center text-sm font-medium text-primary hover:text-secondary bg-gradient-to-r from-primary/5 to-secondary/5 hover:from-primary/10 hover:to-secondary/10 transition-all duration-300"
-                            onClick={() => setHoveredCategory(null)}
-                          >
-                            View All {category.name.split(' ').slice(1).join(' ')}
-                          </Link>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
                 </div>
               ))}
             </div>
-            <ScrollBar orientation="horizontal" />
           </div>
+          <ScrollBar orientation="horizontal" />
         </ScrollArea>
+
+        {/* Dropdown Menu */}
+        <AnimatePresence>
+          {activeCategory && (
+            <motion.div
+              variants={dropdownVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="absolute top-full mt-2 bg-white rounded-xl shadow-lg border w-72 overflow-hidden z-[100]"
+              style={{ 
+                left: `${dropdownPosition.left}px`,
+                transform: 'translateX(-50%)',
+              }}
+              onMouseEnter={() => handleMouseEnter(activeCategory.name)}
+            >
+              <div className="p-4 border-b">
+                <div className="flex items-center gap-3">
+                  <span className="text-3xl">{activeCategory.emoji}</span>
+                  <div>
+                    <h3 className="font-bold text-gray-800">
+                      {activeCategory.name.split(' ').slice(1).join(' ')}
+                    </h3>
+                    <p className="text-sm text-gray-500">{activeCategory.description}</p>
+                  </div>
+                </div>
+              </div>
+
+              <motion.div 
+                className="p-2"
+                variants={subcategoryContainerVariants}
+                initial="hidden"
+                animate="visible"
+              >
+                {activeCategory.subcategories.map((sub) => (
+                  <motion.div
+                    key={sub.path}
+                    variants={subcategoryVariants}
+                    className="overflow-hidden"
+                  >
+                    <Link
+                      to={sub.path}
+                      className="flex items-center justify-between px-4 py-3 rounded-xl hover:bg-gradient-to-r hover:from-primary/8 hover:to-secondary/8 transition-all duration-300 group transform hover:scale-[1.02]"
+                      onClick={() => setHoveredCategory(null)}
+                    >
+                      <span className="text-gray-700 group-hover:text-primary font-medium transition-colors duration-200">
+                        {sub.name}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-400 group-hover:text-primary/60 transition-colors duration-200 bg-gray-50 group-hover:bg-primary/10 px-2 py-1 rounded-full">
+                          {sub.count}
+                        </span>
+                        <motion.div
+                          whileHover={{ x: 2 }}
+                          transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                        >
+                          <ChevronRight size={14} className="text-gray-300 group-hover:text-primary transition-colors duration-200" />
+                        </motion.div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
+              </motion.div>
+
+              <div className="border-t border-gray-100">
+                <Link
+                  to={activeCategory.path}
+                  className="block p-4 text-center text-sm font-medium text-primary hover:text-secondary bg-gradient-to-r from-primary/5 to-secondary/5 hover:from-primary/10 hover:to-secondary/10 transition-all duration-300"
+                  onClick={() => setHoveredCategory(null)}
+                >
+                  View All {activeCategory.name.split(' ').slice(1).join(' ')}
+                </Link>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </nav>
   );
 };
 
-export default CategoryMenu;
+export default CategoryMenu; 
