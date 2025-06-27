@@ -11,9 +11,33 @@ import { Label } from "../components/ui/label";
 import { Badge } from "../components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Separator } from "../components/ui/separator";
-import { Plus, Trash2, Eye, EyeOff, GripVertical, Save, RefreshCw } from "lucide-react";
+import { 
+  Plus, 
+  Trash2, 
+  Eye, 
+  EyeOff, 
+  GripVertical, 
+  Save, 
+  RefreshCw, 
+  Upload, 
+  Image as ImageIcon,
+  Edit,
+  Settings
+} from "lucide-react";
 import api from "../services/api";
+import { uploadImage } from "../services/uploadService";
 import { useToast } from "../hooks/use-toast";
+
+interface HeroSlide {
+  id: number;
+  title: string;
+  subtitle: string;
+  image: string;
+  ctaText: string;
+  ctaLink: string;
+  enabled: boolean;
+  order: number;
+}
 
 interface HomeSection {
   id: string;
@@ -78,63 +102,11 @@ interface FooterSettings {
 
 const AdminSettingsPage: React.FC = () => {
   const { toast } = useToast();
+  
+  // State for all settings
+  const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
   const [homeSections, setHomeSections] = useState<HomeSection[]>([]);
-  const [categories, setCategories] = useState<Category[]>([
-    {
-      id: 'bouquets',
-      name: 'Bouquets',
-      description: 'Handcrafted floral arrangements',
-      image: 'https://images.unsplash.com/photo-1582794543139-8ac9cb0f7b11?ixlib=rb-4.0.3&q=85&w=800&auto=format&fit=crop',
-      link: '/shop/bouquets',
-      enabled: true,
-      order: 0,
-    },
-    {
-      id: 'plants',
-      name: 'Plants',
-      description: 'Indoor and outdoor greenery',
-      image: 'https://images.unsplash.com/photo-1533038590840-1cde6e668a91?ixlib=rb-4.0.3&q=85&w=800&auto=format&fit=crop',
-      link: '/shop/plants',
-      enabled: true,
-      order: 1,
-    },
-    {
-      id: 'gifts',
-      name: 'Gifts',
-      description: 'Thoughtful presents for any occasion',
-      image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?ixlib=rb-4.0.3&q=85&w=800&auto=format&fit=crop',
-      link: '/shop/gifts',
-      enabled: true,
-      order: 2,
-    },
-    {
-      id: 'baskets',
-      name: 'Baskets',
-      description: 'Thoughtful presents for any occasion',
-      image: '/images/d3.jpg',
-      link: '/shop/baskets',
-      enabled: true,
-      order: 3,
-    },
-    {
-      id: 'birthday',
-      name: 'Birthday',
-      description: 'Perfect floral gifts',
-      image: 'https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?ixlib=rb-4.0.3&q=85&w=800&auto=format&fit=crop',
-      link: '/shop/birthday',
-      enabled: true,
-      order: 4,
-    },
-    {
-      id: 'anniversary',
-      name: 'Anniversary',
-      description: 'Romantic arrangements',
-      image: 'https://images.unsplash.com/photo-1519378058457-4c29a0a2efac?ixlib=rb-4.0.3&q=85&w=800&auto=format&fit=crop',
-      link: '/shop/anniversary',
-      enabled: true,
-      order: 5,
-    },
-  ]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [headerSettings, setHeaderSettings] = useState<HeaderSettings>({
     logo: "/images/logosbf.png",
     navigationItems: [
@@ -182,8 +154,10 @@ const AdminSettingsPage: React.FC = () => {
     showMap: true,
     mapEmbedUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3807.3484898316306!2d78.43144207424317!3d17.395055702585967!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bcb971c17e5196b%3A0x78305a92a4153749!2sSpring%20Blossoms%20Florist!5e0!3m2!1sen!2sin!4v1744469050804!5m2!1sen!2sin"
   });
+  
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState<string | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -199,272 +173,576 @@ const AdminSettingsPage: React.FC = () => {
   const fetchAllSettings = async () => {
     try {
       setLoading(true);
+      const response = await api.get("/settings/all");
+      const data = response.data;
       
-      // Fetch all settings in parallel
-      const [sectionsRes, categoriesRes, headerRes, footerRes] = await Promise.allSettled([
-        api.get("/settings/home-sections"),
-        api.get("/settings/categories"),
-        api.get("/settings/header"),
-        api.get("/settings/footer"),
-      ]);
-
-      // Handle home sections
-      if (sectionsRes.status === 'fulfilled') {
-        setHomeSections(sectionsRes.value.data || [
-          { id: 'hero', type: 'hero', title: 'Hero Section', subtitle: 'Main banner area', enabled: true, order: 0 },
-          { id: 'categories', type: 'categories', title: 'Categories', subtitle: 'Product categories showcase', enabled: true, order: 1 },
-          { id: 'featured', type: 'featured', title: 'Featured Collection', subtitle: 'Explore our most popular floral arrangements', enabled: true, order: 2 },
-          { id: 'new', type: 'new', title: 'New Arrivals', subtitle: 'Discover our latest seasonal additions', enabled: true, order: 3 },
-          { id: 'philosophy', type: 'philosophy', title: 'Artfully Crafted Botanical Experiences', subtitle: 'Every arrangement we create is a unique work of art, designed to bring beauty and tranquility into your everyday spaces.', enabled: true, order: 4 }
-        ]);
-      }
-
-      // Handle categories
-      if (categoriesRes.status === 'fulfilled') {
-        setCategories(categoriesRes.value.data || []);
-      }
-
-      // Handle header settings
-      if (headerRes.status === 'fulfilled') {
-        setHeaderSettings(headerRes.value.data);
-      }
-
-      // Handle footer settings
-      if (footerRes.status === 'fulfilled') {
-        setFooterSettings(footerRes.value.data);
-      }
-
-    } catch (error) {
+      if (data.heroSlides) setHeroSlides(data.heroSlides);
+      if (data.homeSections) setHomeSections(data.homeSections);
+      if (data.categories) setCategories(data.categories);
+      if (data.headerSettings) setHeaderSettings(data.headerSettings);
+      if (data.footerSettings) setFooterSettings(data.footerSettings);
+      
       toast({
-        variant: "destructive",
+        title: "Settings loaded",
+        description: "All settings have been loaded successfully",
+      });
+    } catch (error) {
+      console.error("Error fetching settings:", error);
+      toast({
         title: "Error",
         description: "Failed to load settings",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDragEnd = (event: any, type: 'sections' | 'categories') => {
-    const { active, over } = event;
-
-    if (active.id !== over.id) {
-      if (type === 'sections') {
-        setHomeSections((items) => {
-          const oldIndex = items.findIndex((item) => item.id === active.id);
-          const newIndex = items.findIndex((item) => item.id === over.id);
-          const newItems = arrayMove(items, oldIndex, newIndex);
-          return newItems.map((item, index) => ({ ...item, order: index }));
-        });
-      } else {
-        setCategories((items) => {
-          const oldIndex = items.findIndex((item) => item.id === active.id);
-          const newIndex = items.findIndex((item) => item.id === over.id);
-          const newItems = arrayMove(items, oldIndex, newIndex);
-          return newItems.map((item, index) => ({ ...item, order: index }));
-        });
-      }
-    }
-  };
-
-  const toggleSectionEnabled = (id: string, type: 'sections' | 'categories') => {
-    if (type === 'sections') {
-      setHomeSections(prev => 
-        prev.map(section => 
-          section.id === id ? { ...section, enabled: !section.enabled } : section
-        )
-      );
-    } else {
-      setCategories(prev => 
-        prev.map(category => 
-          category.id === id ? { ...category, enabled: !category.enabled } : category
-        )
-      );
-    }
-  };
-
-  const updateSectionContent = (id: string, field: string, value: string) => {
-    setHomeSections(prev => 
-      prev.map(section => 
-        section.id === id ? { ...section, [field]: value } : section
-      )
-    );
-  };
-
-  const updateCategoryContent = (id: string, field: string, value: string) => {
-    setCategories(prev => 
-      prev.map(category => 
-        category.id === id ? { ...category, [field]: value } : category
-      )
-    );
-  };
-
-  const addNewSection = () => {
-    const newSection: HomeSection = {
-      id: `custom-${Date.now()}`,
-      type: 'custom',
-      title: 'New Section',
-      subtitle: 'Section description',
-      enabled: true,
-      order: homeSections.length,
-    };
-    setHomeSections(prev => [...prev, newSection]);
-  };
-
-  const addNewCategory = () => {
-    const newCategory: Category = {
-      id: `category-${Date.now()}`,
-      name: 'New Category',
-      description: 'Category description',
-      image: 'https://images.unsplash.com/photo-1582794543139-8ac9cb0f7b11?ixlib=rb-4.0.3&q=85&w=800&auto=format&fit=crop',
-      link: '/shop/new-category',
-      enabled: true,
-      order: categories.length,
-    };
-    setCategories(prev => [...prev, newCategory]);
-  };
-
-  const deleteSection = (id: string) => {
-    setHomeSections(prev => prev.filter(section => section.id !== id));
-  };
-
-  const deleteCategory = (id: string) => {
-    setCategories(prev => prev.filter(category => category.id !== id));
-  };
-
   const saveAllSettings = async () => {
     try {
       setSaving(true);
-      
-      // Save each setting type
-      await Promise.allSettled([
-        api.put("/settings/home-sections", { sections: homeSections }),
-        api.put("/settings/categories", { categories }),
-        api.put("/settings/header", headerSettings),
-        api.put("/settings/footer", footerSettings),
-      ]);
+      await api.put("/settings/all", {
+        heroSlides,
+        homeSections,
+        categories,
+        headerSettings,
+        footerSettings,
+      });
       
       toast({
-        title: "Success",
-        description: "All settings saved successfully",
+        title: "Settings saved",
+        description: "All settings have been saved successfully",
       });
     } catch (error) {
+      console.error("Error saving settings:", error);
       toast({
-        variant: "destructive",
         title: "Error",
         description: "Failed to save settings",
+        variant: "destructive",
       });
     } finally {
       setSaving(false);
     }
   };
 
+  // Hero Slides Management
+  const handleSlideImageUpload = async (slideId: number, file: File) => {
+    try {
+      setUploadingImage(`slide-${slideId}`);
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      const response = await uploadImage(formData);
+      const imageUrl = response.url;
+      
+      setHeroSlides(prev => prev.map(slide => 
+        slide.id === slideId ? { ...slide, image: imageUrl } : slide
+      ));
+      
+      toast({
+        title: "Image uploaded",
+        description: "Slide image has been updated successfully",
+      });
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      toast({
+        title: "Error",
+        description: "Failed to upload image",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingImage(null);
+    }
+  };
+
+  const updateSlide = (slideId: number, field: string, value: string | boolean) => {
+    setHeroSlides(prev => prev.map(slide => 
+      slide.id === slideId ? { ...slide, [field]: value } : slide
+    ));
+  };
+
+  const addNewSlide = () => {
+    const newSlide: HeroSlide = {
+      id: Math.max(...heroSlides.map(s => s.id), 0) + 1,
+      title: "New Slide",
+      subtitle: "Add your subtitle here",
+      image: "/images/placeholder.jpg",
+      ctaText: "Shop Now",
+      ctaLink: "/shop",
+      enabled: true,
+      order: heroSlides.length,
+    };
+    setHeroSlides(prev => [...prev, newSlide]);
+  };
+
+  const deleteSlide = (slideId: number) => {
+    setHeroSlides(prev => prev.filter(slide => slide.id !== slideId));
+  };
+
+  const handleSlidesDragEnd = (event: any) => {
+    const { active, over } = event;
+    if (active.id !== over?.id) {
+      setHeroSlides((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+        const reordered = arrayMove(items, oldIndex, newIndex);
+        return reordered.map((item, index) => ({ ...item, order: index }));
+      });
+    }
+  };
+
+  // Home Sections Management
+  const toggleSectionEnabled = (id: string) => {
+    setHomeSections(prev => prev.map(section => 
+      section.id === id ? { ...section, enabled: !section.enabled } : section
+    ));
+  };
+
+  const updateSectionContent = (id: string, field: string, value: string) => {
+    setHomeSections(prev => prev.map(section => 
+      section.id === id ? { ...section, [field]: value } : section
+    ));
+  };
+
+  const addNewSection = () => {
+    const newSection: HomeSection = {
+      id: `custom-${Date.now()}`,
+      type: "custom",
+      title: "New Section",
+      subtitle: "Add your subtitle here",
+      enabled: true,
+      order: homeSections.length,
+    };
+    setHomeSections(prev => [...prev, newSection]);
+  };
+
+  const deleteSection = (id: string) => {
+    setHomeSections(prev => prev.filter(section => section.id !== id));
+  };
+
+  const handleSectionsDragEnd = (event: any) => {
+    const { active, over } = event;
+    if (active.id !== over?.id) {
+      setHomeSections((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+        const reordered = arrayMove(items, oldIndex, newIndex);
+        return reordered.map((item, index) => ({ ...item, order: index }));
+      });
+    }
+  };
+
+  // Categories Management
+  const handleCategoryImageUpload = async (categoryId: string, file: File) => {
+    try {
+      setUploadingImage(`category-${categoryId}`);
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      const response = await uploadImage(formData);
+      const imageUrl = response.url;
+      
+      setCategories(prev => prev.map(category => 
+        category.id === categoryId ? { ...category, image: imageUrl } : category
+      ));
+      
+      toast({
+        title: "Image uploaded",
+        description: "Category image has been updated successfully",
+      });
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      toast({
+        title: "Error",
+        description: "Failed to upload image",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingImage(null);
+    }
+  };
+
+  const toggleCategoryEnabled = (id: string) => {
+    setCategories(prev => prev.map(category => 
+      category.id === id ? { ...category, enabled: !category.enabled } : category
+    ));
+  };
+
+  const updateCategoryContent = (id: string, field: string, value: string) => {
+    setCategories(prev => prev.map(category => 
+      category.id === id ? { ...category, [field]: value } : category
+    ));
+  };
+
+  const addNewCategory = () => {
+    const newCategory: Category = {
+      id: `category-${Date.now()}`,
+      name: "New Category",
+      description: "Add description here",
+      image: "/images/placeholder.jpg",
+      link: "/shop/new-category",
+      enabled: true,
+      order: categories.length,
+    };
+    setCategories(prev => [...prev, newCategory]);
+  };
+
+  const deleteCategory = (id: string) => {
+    setCategories(prev => prev.filter(category => category.id !== id));
+  };
+
+  const handleCategoriesDragEnd = (event: any) => {
+    const { active, over } = event;
+    if (active.id !== over?.id) {
+      setCategories((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+        const reordered = arrayMove(items, oldIndex, newIndex);
+        return reordered.map((item, index) => ({ ...item, order: index }));
+      });
+    }
+  };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-2" />
-          <p>Loading settings...</p>
+      <div className="container mx-auto p-6">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="flex flex-col items-center gap-4">
+            <RefreshCw className="w-8 h-8 animate-spin text-primary" />
+            <p className="text-lg text-gray-600">Loading settings...</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="container mx-auto p-6 max-w-7xl">
+      <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold">Website Settings</h1>
-          <p className="text-muted-foreground">Manage your website content and layout</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Website Settings</h1>
+          <p className="text-gray-600">Manage all aspects of your homepage including hero slides, sections, and content</p>
         </div>
-        <Button onClick={saveAllSettings} disabled={saving} className="gap-2">
-          {saving ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-          {saving ? "Saving..." : "Save All Changes"}
+        <Button 
+          onClick={saveAllSettings} 
+          disabled={saving}
+          size="lg"
+          className="bg-primary hover:bg-primary/90"
+        >
+          {saving ? (
+            <>
+              <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            <>
+              <Save className="w-4 h-4 mr-2" />
+              Save All Settings
+            </>
+          )}
         </Button>
       </div>
 
-      <Tabs defaultValue="sections" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="sections">Home Sections</TabsTrigger>
+      <Tabs defaultValue="hero-slides" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-5 lg:w-[600px]">
+          <TabsTrigger value="hero-slides">Hero Slides</TabsTrigger>
+          <TabsTrigger value="sections">Page Sections</TabsTrigger>
           <TabsTrigger value="categories">Categories</TabsTrigger>
           <TabsTrigger value="header">Header</TabsTrigger>
           <TabsTrigger value="footer">Footer</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="sections" className="space-y-4">
+        {/* Hero Slides Tab */}
+        <TabsContent value="hero-slides" className="space-y-6">
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex justify-between items-center">
                 <div>
-                  <CardTitle>Home Page Sections</CardTitle>
-                  <p className="text-sm text-muted-foreground">Drag to reorder, toggle to enable/disable</p>
+                  <CardTitle className="flex items-center gap-2">
+                    <ImageIcon className="w-5 h-5" />
+                    Hero Slides Management
+                  </CardTitle>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Manage the main banner slides on your homepage
+                  </p>
                 </div>
-                <Button onClick={addNewSection} size="sm" className="gap-2">
-                  <Plus className="h-4 w-4" />
+                <Button onClick={addNewSlide} variant="outline">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Slide
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleSlidesDragEnd}
+              >
+                <SortableContext items={heroSlides.map(s => s.id)} strategy={verticalListSortingStrategy}>
+                  <div className="space-y-4">
+                    {heroSlides.map((slide) => (
+                      <SortableItem key={slide.id} id={slide.id}>
+                        <Card className="border-2 border-dashed border-gray-200 hover:border-primary/50 transition-colors">
+                          <CardContent className="p-6">
+                            <div className="flex items-center gap-4 mb-4">
+                              <GripVertical className="w-5 h-5 text-gray-400 cursor-grab" />
+                              <Badge variant={slide.enabled ? "default" : "secondary"}>
+                                Slide {slide.id}
+                              </Badge>
+                              <Switch
+                                checked={slide.enabled}
+                                onCheckedChange={(checked) => updateSlide(slide.id, 'enabled', checked)}
+                              />
+                              <Label className="text-sm">
+                                {slide.enabled ? 'Enabled' : 'Disabled'}
+                              </Label>
+                              <div className="ml-auto flex gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => deleteSlide(slide.id)}
+                                  className="text-red-600 hover:text-red-700"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                              {/* Image Upload Section */}
+                              <div className="space-y-4">
+                                <Label className="text-base font-medium">Slide Image</Label>
+                                <div className="relative group">
+                                  <img
+                                    src={slide.image}
+                                    alt={slide.title}
+                                    className="w-full h-48 object-cover rounded-lg border"
+                                  />
+                                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                                    <Label
+                                      htmlFor={`slide-image-${slide.id}`}
+                                      className="cursor-pointer bg-white text-black px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors"
+                                    >
+                                      {uploadingImage === `slide-${slide.id}` ? (
+                                        <>
+                                          <RefreshCw className="w-4 h-4 mr-2 animate-spin inline" />
+                                          Uploading...
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Upload className="w-4 h-4 mr-2 inline" />
+                                          Change Image
+                                        </>
+                                      )}
+                                    </Label>
+                                    <input
+                                      id={`slide-image-${slide.id}`}
+                                      type="file"
+                                      accept="image/*"
+                                      className="hidden"
+                                      onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) handleSlideImageUpload(slide.id, file);
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Content Section */}
+                              <div className="space-y-4">
+                                <div className="space-y-2">
+                                  <Label htmlFor={`slide-title-${slide.id}`}>Title</Label>
+                                  <Input
+                                    id={`slide-title-${slide.id}`}
+                                    value={slide.title}
+                                    onChange={(e) => updateSlide(slide.id, 'title', e.target.value)}
+                                    placeholder="Enter slide title"
+                                  />
+                                </div>
+
+                                <div className="space-y-2">
+                                  <Label htmlFor={`slide-subtitle-${slide.id}`}>Subtitle</Label>
+                                  <Textarea
+                                    id={`slide-subtitle-${slide.id}`}
+                                    value={slide.subtitle}
+                                    onChange={(e) => updateSlide(slide.id, 'subtitle', e.target.value)}
+                                    placeholder="Enter slide subtitle"
+                                    rows={3}
+                                  />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div className="space-y-2">
+                                    <Label htmlFor={`slide-cta-${slide.id}`}>Button Text</Label>
+                                    <Input
+                                      id={`slide-cta-${slide.id}`}
+                                      value={slide.ctaText}
+                                      onChange={(e) => updateSlide(slide.id, 'ctaText', e.target.value)}
+                                      placeholder="Shop Now"
+                                    />
+                                  </div>
+
+                                  <div className="space-y-2">
+                                    <Label htmlFor={`slide-link-${slide.id}`}>Button Link</Label>
+                                    <Input
+                                      id={`slide-link-${slide.id}`}
+                                      value={slide.ctaLink}
+                                      onChange={(e) => updateSlide(slide.id, 'ctaLink', e.target.value)}
+                                      placeholder="/shop"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </SortableItem>
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Page Sections Tab */}
+        <TabsContent value="sections" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Settings className="w-5 h-5" />
+                    Page Sections Management
+                  </CardTitle>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Control which sections appear on your homepage and their content
+                  </p>
+                </div>
+                <Button onClick={addNewSection} variant="outline">
+                  <Plus className="w-4 h-4 mr-2" />
                   Add Section
                 </Button>
               </div>
             </CardHeader>
             <CardContent>
-              <DndContext 
+              <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}
-                onDragEnd={(event) => handleDragEnd(event, 'sections')}
+                onDragEnd={handleSectionsDragEnd}
               >
                 <SortableContext items={homeSections.map(s => s.id)} strategy={verticalListSortingStrategy}>
                   <div className="space-y-4">
                     {homeSections.map((section) => (
                       <SortableItem key={section.id} id={section.id}>
-                        <Card className={`${!section.enabled ? 'opacity-50' : ''}`}>
-                          <CardContent className="p-4">
-                            <div className="flex items-center gap-4">
-                              <GripVertical className="h-5 w-5 text-muted-foreground cursor-grab" />
-                              <div className="flex-1 space-y-3">
-                                <div className="flex items-center gap-3">
-                                  <Switch
-                                    checked={section.enabled}
-                                    onCheckedChange={() => toggleSectionEnabled(section.id, 'sections')}
+                        <Card className="border-2 border-dashed border-gray-200 hover:border-primary/50 transition-colors">
+                          <CardContent className="p-6">
+                            <div className="flex items-center gap-4 mb-4">
+                              <GripVertical className="w-5 h-5 text-gray-400 cursor-grab" />
+                              <Badge variant={section.enabled ? "default" : "secondary"}>
+                                {section.type}
+                              </Badge>
+                              <Switch
+                                checked={section.enabled}
+                                onCheckedChange={() => toggleSectionEnabled(section.id)}
+                              />
+                              <Label className="text-sm">
+                                {section.enabled ? 'Enabled' : 'Disabled'}
+                              </Label>
+                              <div className="ml-auto flex gap-2">
+                                {section.enabled ? 
+                                  <Eye className="w-4 h-4 text-green-600" /> : 
+                                  <EyeOff className="w-4 h-4 text-gray-400" />
+                                }
+                                {section.type === 'custom' && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => deleteSection(section.id)}
+                                    className="text-red-600 hover:text-red-700"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label htmlFor={`section-title-${section.id}`}>Section Title</Label>
+                                <Input
+                                  id={`section-title-${section.id}`}
+                                  value={section.title}
+                                  onChange={(e) => updateSectionContent(section.id, 'title', e.target.value)}
+                                  placeholder="Enter section title"
+                                />
+                              </div>
+
+                              <div className="space-y-2">
+                                <Label htmlFor={`section-subtitle-${section.id}`}>Section Subtitle</Label>
+                                <Textarea
+                                  id={`section-subtitle-${section.id}`}
+                                  value={section.subtitle}
+                                  onChange={(e) => updateSectionContent(section.id, 'subtitle', e.target.value)}
+                                  placeholder="Enter section subtitle"
+                                  rows={2}
+                                />
+                              </div>
+                            </div>
+
+                            {section.type === 'philosophy' && (
+                              <div className="mt-4 space-y-4">
+                                <Separator />
+                                <Label className="text-base font-medium">Philosophy Section Image</Label>
+                                <div className="relative group w-full max-w-md">
+                                  <img
+                                    src={section.content?.image || '/images/d3.jpg'}
+                                    alt="Philosophy section"
+                                    className="w-full h-32 object-cover rounded-lg border"
                                   />
-                                  <Badge variant="outline">{section.type}</Badge>
-                                  {section.enabled ? (
-                                    <Eye className="h-4 w-4 text-green-600" />
-                                  ) : (
-                                    <EyeOff className="h-4 w-4 text-muted-foreground" />
-                                  )}
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                  <div>
-                                    <Label htmlFor={`title-${section.id}`}>Title</Label>
-                                    <Input
-                                      id={`title-${section.id}`}
-                                      value={section.title || ""}
-                                      onChange={(e) => updateSectionContent(section.id, "title", e.target.value)}
-                                      placeholder="Section title"
-                                    />
-                                  </div>
-                                  <div>
-                                    <Label htmlFor={`subtitle-${section.id}`}>Subtitle</Label>
-                                    <Textarea
-                                      id={`subtitle-${section.id}`}
-                                      value={section.subtitle || ""}
-                                      onChange={(e) => updateSectionContent(section.id, "subtitle", e.target.value)}
-                                      placeholder="Section subtitle"
-                                      rows={2}
+                                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                                    <Label
+                                      htmlFor={`philosophy-image`}
+                                      className="cursor-pointer bg-white text-black px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors"
+                                    >
+                                      <Upload className="w-4 h-4 mr-2 inline" />
+                                      Change Image
+                                    </Label>
+                                    <input
+                                      id={`philosophy-image`}
+                                      type="file"
+                                      accept="image/*"
+                                      className="hidden"
+                                      onChange={async (e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) {
+                                          try {
+                                            const formData = new FormData();
+                                            formData.append('image', file);
+                                            const response = await uploadImage(formData);
+                                            updateSectionContent(section.id, 'content', { 
+                                              ...section.content, 
+                                              image: response.url 
+                                            });
+                                            toast({
+                                              title: "Image uploaded",
+                                              description: "Philosophy section image updated successfully",
+                                            });
+                                          } catch (error) {
+                                            toast({
+                                              title: "Error",
+                                              description: "Failed to upload image",
+                                              variant: "destructive",
+                                            });
+                                          }
+                                        }
+                                      }}
                                     />
                                   </div>
                                 </div>
                               </div>
-                              {section.type === 'custom' && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => deleteSection(section.id)}
-                                  className="text-red-600 hover:text-red-700"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              )}
-                            </div>
+                            )}
                           </CardContent>
                         </Card>
                       </SortableItem>
@@ -476,93 +754,136 @@ const AdminSettingsPage: React.FC = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="categories" className="space-y-4">
+        {/* Categories Tab */}
+        <TabsContent value="categories" className="space-y-6">
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex justify-between items-center">
                 <div>
-                  <CardTitle>Categories</CardTitle>
-                  <p className="text-sm text-muted-foreground">Manage category display and order</p>
+                  <CardTitle className="flex items-center gap-2">
+                    <Edit className="w-5 h-5" />
+                    Categories Management
+                  </CardTitle>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Manage product categories displayed on the homepage
+                  </p>
                 </div>
-                <Button onClick={addNewCategory} size="sm" className="gap-2">
-                  <Plus className="h-4 w-4" />
+                <Button onClick={addNewCategory} variant="outline">
+                  <Plus className="w-4 h-4 mr-2" />
                   Add Category
                 </Button>
               </div>
             </CardHeader>
             <CardContent>
-              <DndContext 
+              <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}
-                onDragEnd={(event) => handleDragEnd(event, 'categories')}
+                onDragEnd={handleCategoriesDragEnd}
               >
                 <SortableContext items={categories.map(c => c.id)} strategy={verticalListSortingStrategy}>
                   <div className="space-y-4">
                     {categories.map((category) => (
                       <SortableItem key={category.id} id={category.id}>
-                        <Card className={`${!category.enabled ? 'opacity-50' : ''}`}>
-                          <CardContent className="p-4">
-                            <div className="flex items-center gap-4">
-                              <GripVertical className="h-5 w-5 text-muted-foreground cursor-grab" />
-                              <div className="flex-1 space-y-3">
-                                <div className="flex items-center gap-3">
-                                  <Switch
-                                    checked={category.enabled}
-                                    onCheckedChange={() => toggleSectionEnabled(category.id, 'categories')}
+                        <Card className="border-2 border-dashed border-gray-200 hover:border-primary/50 transition-colors">
+                          <CardContent className="p-6">
+                            <div className="flex items-center gap-4 mb-4">
+                              <GripVertical className="w-5 h-5 text-gray-400 cursor-grab" />
+                              <Badge variant={category.enabled ? "default" : "secondary"}>
+                                {category.name}
+                              </Badge>
+                              <Switch
+                                checked={category.enabled}
+                                onCheckedChange={() => toggleCategoryEnabled(category.id)}
+                              />
+                              <Label className="text-sm">
+                                {category.enabled ? 'Enabled' : 'Disabled'}
+                              </Label>
+                              <div className="ml-auto flex gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => deleteCategory(category.id)}
+                                  className="text-red-600 hover:text-red-700"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                              {/* Image Upload Section */}
+                              <div className="space-y-4">
+                                <Label className="text-base font-medium">Category Image</Label>
+                                <div className="relative group">
+                                  <img
+                                    src={category.image}
+                                    alt={category.name}
+                                    className="w-full h-32 object-cover rounded-lg border"
                                   />
-                                  {category.enabled ? (
-                                    <Eye className="h-4 w-4 text-green-600" />
-                                  ) : (
-                                    <EyeOff className="h-4 w-4 text-muted-foreground" />
-                                  )}
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                  <div>
-                                    <Label htmlFor={`name-${category.id}`}>Name</Label>
-                                    <Input
-                                      id={`name-${category.id}`}
-                                      value={category.name}
-                                      onChange={(e) => updateCategoryContent(category.id, "name", e.target.value)}
-                                      placeholder="Category name"
-                                    />
-                                  </div>
-                                  <div>
-                                    <Label htmlFor={`description-${category.id}`}>Description</Label>
-                                    <Input
-                                      id={`description-${category.id}`}
-                                      value={category.description}
-                                      onChange={(e) => updateCategoryContent(category.id, "description", e.target.value)}
-                                      placeholder="Category description"
-                                    />
-                                  </div>
-                                  <div>
-                                    <Label htmlFor={`link-${category.id}`}>Link</Label>
-                                    <Input
-                                      id={`link-${category.id}`}
-                                      value={category.link}
-                                      onChange={(e) => updateCategoryContent(category.id, "link", e.target.value)}
-                                      placeholder="/shop/category"
+                                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                                    <Label
+                                      htmlFor={`category-image-${category.id}`}
+                                      className="cursor-pointer bg-white text-black px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors"
+                                    >
+                                      {uploadingImage === `category-${category.id}` ? (
+                                        <>
+                                          <RefreshCw className="w-4 h-4 mr-2 animate-spin inline" />
+                                          Uploading...
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Upload className="w-4 h-4 mr-2 inline" />
+                                          Change Image
+                                        </>
+                                      )}
+                                    </Label>
+                                    <input
+                                      id={`category-image-${category.id}`}
+                                      type="file"
+                                      accept="image/*"
+                                      className="hidden"
+                                      onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) handleCategoryImageUpload(category.id, file);
+                                      }}
                                     />
                                   </div>
                                 </div>
-                                <div>
-                                  <Label htmlFor={`image-${category.id}`}>Image URL</Label>
+                              </div>
+
+                              {/* Content Section */}
+                              <div className="space-y-4">
+                                <div className="space-y-2">
+                                  <Label htmlFor={`category-name-${category.id}`}>Category Name</Label>
                                   <Input
-                                    id={`image-${category.id}`}
-                                    value={category.image}
-                                    onChange={(e) => updateCategoryContent(category.id, "image", e.target.value)}
-                                    placeholder="Image URL"
+                                    id={`category-name-${category.id}`}
+                                    value={category.name}
+                                    onChange={(e) => updateCategoryContent(category.id, 'name', e.target.value)}
+                                    placeholder="Enter category name"
+                                  />
+                                </div>
+
+                                <div className="space-y-2">
+                                  <Label htmlFor={`category-description-${category.id}`}>Description</Label>
+                                  <Textarea
+                                    id={`category-description-${category.id}`}
+                                    value={category.description}
+                                    onChange={(e) => updateCategoryContent(category.id, 'description', e.target.value)}
+                                    placeholder="Enter category description"
+                                    rows={2}
+                                  />
+                                </div>
+
+                                <div className="space-y-2">
+                                  <Label htmlFor={`category-link-${category.id}`}>Category Link</Label>
+                                  <Input
+                                    id={`category-link-${category.id}`}
+                                    value={category.link}
+                                    onChange={(e) => updateCategoryContent(category.id, 'link', e.target.value)}
+                                    placeholder="/shop/category-name"
                                   />
                                 </div>
                               </div>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => deleteCategory(category.id)}
-                                className="text-red-600 hover:text-red-700"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
                             </div>
                           </CardContent>
                         </Card>
@@ -575,241 +896,180 @@ const AdminSettingsPage: React.FC = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="header" className="space-y-4">
+        {/* Header Settings Tab */}
+        <TabsContent value="header" className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>Header Settings</CardTitle>
+              <p className="text-sm text-gray-600">Configure your website header and navigation</p>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div>
-                <Label htmlFor="logo">Logo URL</Label>
-                <Input
-                  id="logo"
-                  value={headerSettings.logo}
-                  onChange={(e) => setHeaderSettings(prev => ({ ...prev, logo: e.target.value }))}
-                  placeholder="Logo image URL"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="searchPlaceholder">Search Placeholder</Label>
-                <Input
-                  id="searchPlaceholder"
-                  value={headerSettings.searchPlaceholder}
-                  onChange={(e) => setHeaderSettings(prev => ({ ...prev, searchPlaceholder: e.target.value }))}
-                  placeholder="Search placeholder text"
-                />
-              </div>
-
-              <div className="grid grid-cols-3 gap-4">
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="showWishlist"
-                    checked={headerSettings.showWishlist}
-                    onCheckedChange={(checked) => setHeaderSettings(prev => ({ ...prev, showWishlist: checked }))}
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="logo-url">Logo URL</Label>
+                  <Input
+                    id="logo-url"
+                    value={headerSettings.logo}
+                    onChange={(e) => setHeaderSettings(prev => ({ ...prev, logo: e.target.value }))}
+                    placeholder="/images/logosbf.png"
                   />
-                  <Label htmlFor="showWishlist">Show Wishlist</Label>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="showCart"
-                    checked={headerSettings.showCart}
-                    onCheckedChange={(checked) => setHeaderSettings(prev => ({ ...prev, showCart: checked }))}
-                  />
-                  <Label htmlFor="showCart">Show Cart</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="showCurrencyConverter"
-                    checked={headerSettings.showCurrencyConverter}
-                    onCheckedChange={(checked) => setHeaderSettings(prev => ({ ...prev, showCurrencyConverter: checked }))}
-                  />
-                  <Label htmlFor="showCurrencyConverter">Show Currency Converter</Label>
-                </div>
-              </div>
 
-              <Separator />
+                <div className="space-y-2">
+                  <Label htmlFor="search-placeholder">Search Placeholder</Label>
+                  <Input
+                    id="search-placeholder"
+                    value={headerSettings.searchPlaceholder}
+                    onChange={(e) => setHeaderSettings(prev => ({ ...prev, searchPlaceholder: e.target.value }))}
+                    placeholder="Search for flowers..."
+                  />
+                </div>
 
-              <div>
-                <h3 className="text-lg font-medium mb-3">Navigation Items</h3>
-                <div className="space-y-3">
-                  {headerSettings.navigationItems.map((item, index) => (
-                    <div key={item.id} className="flex items-center gap-3 p-3 border rounded">
+                <div className="space-y-4">
+                  <Label className="text-base font-medium">Header Features</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="flex items-center space-x-2">
                       <Switch
-                        checked={item.enabled}
-                        onCheckedChange={(checked) => {
-                          const newItems = [...headerSettings.navigationItems];
-                          newItems[index].enabled = checked;
-                          setHeaderSettings(prev => ({ ...prev, navigationItems: newItems }));
-                        }}
+                        id="show-wishlist"
+                        checked={headerSettings.showWishlist}
+                        onCheckedChange={(checked) => setHeaderSettings(prev => ({ ...prev, showWishlist: checked }))}
                       />
-                      <Input
-                        value={item.label}
-                        onChange={(e) => {
-                          const newItems = [...headerSettings.navigationItems];
-                          newItems[index].label = e.target.value;
-                          setHeaderSettings(prev => ({ ...prev, navigationItems: newItems }));
-                        }}
-                        placeholder="Label"
-                        className="flex-1"
-                      />
-                      <Input
-                        value={item.href}
-                        onChange={(e) => {
-                          const newItems = [...headerSettings.navigationItems];
-                          newItems[index].href = e.target.value;
-                          setHeaderSettings(prev => ({ ...prev, navigationItems: newItems }));
-                        }}
-                        placeholder="URL"
-                        className="flex-1"
-                      />
+                      <Label htmlFor="show-wishlist">Show Wishlist</Label>
                     </div>
-                  ))}
+
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="show-cart"
+                        checked={headerSettings.showCart}
+                        onCheckedChange={(checked) => setHeaderSettings(prev => ({ ...prev, showCart: checked }))}
+                      />
+                      <Label htmlFor="show-cart">Show Cart</Label>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="show-currency"
+                        checked={headerSettings.showCurrencyConverter}
+                        onCheckedChange={(checked) => setHeaderSettings(prev => ({ ...prev, showCurrencyConverter: checked }))}
+                      />
+                      <Label htmlFor="show-currency">Show Currency Converter</Label>
+                    </div>
+                  </div>
                 </div>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="footer" className="space-y-4">
+        {/* Footer Settings Tab */}
+        <TabsContent value="footer" className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>Footer Settings</CardTitle>
+              <p className="text-sm text-gray-600">Configure your website footer information</p>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="companyName">Company Name</Label>
-                  <Input
-                    id="companyName"
-                    value={footerSettings.companyName}
-                    onChange={(e) => setFooterSettings(prev => ({ ...prev, companyName: e.target.value }))}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="copyright">Copyright Text</Label>
-                  <Input
-                    id="copyright"
-                    value={footerSettings.copyright}
-                    onChange={(e) => setFooterSettings(prev => ({ ...prev, copyright: e.target.value }))}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={footerSettings.description}
-                  onChange={(e) => setFooterSettings(prev => ({ ...prev, description: e.target.value }))}
-                  rows={3}
-                />
-              </div>
-
-              <Separator />
-
-              <div>
-                <h3 className="text-lg font-medium mb-3">Contact Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="email">Email</Label>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="company-name">Company Name</Label>
                     <Input
-                      id="email"
-                      value={footerSettings.contactInfo.email}
-                      onChange={(e) => setFooterSettings(prev => ({
-                        ...prev,
-                        contactInfo: { ...prev.contactInfo, email: e.target.value }
-                      }))}
+                      id="company-name"
+                      value={footerSettings.companyName}
+                      onChange={(e) => setFooterSettings(prev => ({ ...prev, companyName: e.target.value }))}
+                      placeholder="Spring Blossoms Florist"
                     />
                   </div>
-                  <div>
-                    <Label htmlFor="phone">Phone</Label>
-                    <Input
-                      id="phone"
-                      value={footerSettings.contactInfo.phone}
-                      onChange={(e) => setFooterSettings(prev => ({
-                        ...prev,
-                        contactInfo: { ...prev.contactInfo, phone: e.target.value }
-                      }))}
-                    />
-                  </div>
-                </div>
-                <div className="mt-4">
-                  <Label htmlFor="address">Address</Label>
-                  <Textarea
-                    id="address"
-                    value={footerSettings.contactInfo.address}
-                    onChange={(e) => setFooterSettings(prev => ({
-                      ...prev,
-                      contactInfo: { ...prev.contactInfo, address: e.target.value }
-                    }))}
-                    rows={3}
-                  />
-                </div>
-              </div>
 
-              <Separator />
-
-              <div>
-                <div className="flex items-center space-x-2 mb-3">
-                  <Switch
-                    id="showMap"
-                    checked={footerSettings.showMap}
-                    onCheckedChange={(checked) => setFooterSettings(prev => ({ ...prev, showMap: checked }))}
-                  />
-                  <Label htmlFor="showMap">Show Map</Label>
-                </div>
-                {footerSettings.showMap && (
-                  <div>
-                    <Label htmlFor="mapEmbedUrl">Map Embed URL</Label>
+                  <div className="space-y-2">
+                    <Label htmlFor="company-description">Company Description</Label>
                     <Textarea
-                      id="mapEmbedUrl"
-                      value={footerSettings.mapEmbedUrl}
-                      onChange={(e) => setFooterSettings(prev => ({ ...prev, mapEmbedUrl: e.target.value }))}
+                      id="company-description"
+                      value={footerSettings.description}
+                      onChange={(e) => setFooterSettings(prev => ({ ...prev, description: e.target.value }))}
+                      placeholder="Company description"
                       rows={3}
                     />
                   </div>
-                )}
+
+                  <div className="space-y-2">
+                    <Label htmlFor="copyright">Copyright Text</Label>
+                    <Input
+                      id="copyright"
+                      value={footerSettings.copyright}
+                      onChange={(e) => setFooterSettings(prev => ({ ...prev, copyright: e.target.value }))}
+                      placeholder="© 2024 Spring Blossoms Florist. All rights reserved."
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="contact-email">Contact Email</Label>
+                    <Input
+                      id="contact-email"
+                      value={footerSettings.contactInfo.email}
+                      onChange={(e) => setFooterSettings(prev => ({ 
+                        ...prev, 
+                        contactInfo: { ...prev.contactInfo, email: e.target.value }
+                      }))}
+                      placeholder="contact@example.com"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="contact-phone">Contact Phone</Label>
+                    <Input
+                      id="contact-phone"
+                      value={footerSettings.contactInfo.phone}
+                      onChange={(e) => setFooterSettings(prev => ({ 
+                        ...prev, 
+                        contactInfo: { ...prev.contactInfo, phone: e.target.value }
+                      }))}
+                      placeholder="+91 9849589710"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="contact-address">Contact Address</Label>
+                    <Textarea
+                      id="contact-address"
+                      value={footerSettings.contactInfo.address}
+                      onChange={(e) => setFooterSettings(prev => ({ 
+                        ...prev, 
+                        contactInfo: { ...prev.contactInfo, address: e.target.value }
+                      }))}
+                      placeholder="Business address"
+                      rows={3}
+                    />
+                  </div>
+                </div>
               </div>
 
               <Separator />
 
-              <div>
-                <h3 className="text-lg font-medium mb-3">Social Links</h3>
-                <div className="space-y-3">
-                  {footerSettings.socialLinks.map((link, index) => (
-                    <div key={link.platform} className="flex items-center gap-3 p-3 border rounded">
-                      <Switch
-                        checked={link.enabled}
-                        onCheckedChange={(checked) => {
-                          const newLinks = [...footerSettings.socialLinks];
-                          newLinks[index].enabled = checked;
-                          setFooterSettings(prev => ({ ...prev, socialLinks: newLinks }));
-                        }}
-                      />
-                      <Input
-                        value={link.platform}
-                        onChange={(e) => {
-                          const newLinks = [...footerSettings.socialLinks];
-                          newLinks[index].platform = e.target.value;
-                          setFooterSettings(prev => ({ ...prev, socialLinks: newLinks }));
-                        }}
-                        placeholder="Platform"
-                        className="w-32"
-                      />
-                      <Input
-                        value={link.url}
-                        onChange={(e) => {
-                          const newLinks = [...footerSettings.socialLinks];
-                          newLinks[index].url = e.target.value;
-                          setFooterSettings(prev => ({ ...prev, socialLinks: newLinks }));
-                        }}
-                        placeholder="URL"
-                        className="flex-1"
-                      />
-                    </div>
-                  ))}
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="show-map"
+                    checked={footerSettings.showMap}
+                    onCheckedChange={(checked) => setFooterSettings(prev => ({ ...prev, showMap: checked }))}
+                  />
+                  <Label htmlFor="show-map">Show Google Map</Label>
                 </div>
+
+                {footerSettings.showMap && (
+                  <div className="space-y-2">
+                    <Label htmlFor="map-embed">Google Map Embed URL</Label>
+                    <Textarea
+                      id="map-embed"
+                      value={footerSettings.mapEmbedUrl}
+                      onChange={(e) => setFooterSettings(prev => ({ ...prev, mapEmbedUrl: e.target.value }))}
+                      placeholder="Google Maps embed URL"
+                      rows={2}
+                    />
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
