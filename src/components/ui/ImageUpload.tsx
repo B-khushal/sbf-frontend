@@ -117,4 +117,5 @@ export const ImageUpload = ({
         disabled={disabled || isUploading}
       />
     </div>
-  ); 
+  );
+}; 
