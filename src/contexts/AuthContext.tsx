@@ -1,5 +1,12 @@
 import React, { createContext, useState, useEffect } from 'react';
-import { login, register, logout, socialLogin, getUserProfile, updateUserProfile } from '@/services/authService';
+import { 
+  login as loginService, 
+  register as registerService, 
+  logout, 
+  socialLogin, 
+  getUserProfile, 
+  updateUserProfile 
+} from '@/services/authService';
 
 // Define types for our authentication context
 type User = {
@@ -91,7 +98,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           } catch (fetchError) {
             console.error('Failed to fetch user profile, logging out:', fetchError);
             // If profile fetch fails (e.g., invalid token), log the user out
-            logoutUser();
+            logout();
           }
         } else {
             // If not authenticated, ensure user state is null
@@ -100,7 +107,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } catch (error) {
         console.error('Error checking auth status:', error);
         // Clear potentially corrupted auth data
-        logoutUser();
+        logout();
       } finally {
         setIsLoading(false);
       }
@@ -131,10 +138,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   // Login function
-  const loginUser = async (email: string, password: string) => {
+  const login = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      const loginResponse = await login({ email, password });
+      const loginResponse = await loginService({ email, password });
       
       // After successful login, get the full user profile
       const profileData = await getUserProfile();
@@ -177,10 +184,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Signup function
-  const registerUser = async (data: SignupData) => {
+  const signup = async (data: SignupData) => {
     try {
       setIsLoading(true);
-      const registerResponse = await register(data);
+      const registerResponse = await registerService(data);
       const profileData = await getUserProfile();
 
       const user = {
@@ -220,7 +227,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Logout function
-  const logoutUser = () => {
+  const logout = () => {
     setUser(null);
     localStorage.removeItem('user');
     localStorage.removeItem('isAuthenticated');
@@ -277,9 +284,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const value = {
     user,
     isLoading,
-    login: loginUser,
-    signup: registerUser,
-    logout: logoutUser,
+    login,
+    signup,
+    logout,
     socialLogin: handleSocialLogin,
   };
 
