@@ -41,11 +41,9 @@ type ProductGridProps = {
   loading?: boolean;
   onAddToCart?: (item: any, quantity: number) => boolean;
   onOpenCart?: () => void;
-  viewMode?: 'grid' | 'list';
-  onQuickView?: (product: Product) => void;
 };
 
-const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCart, onOpenCart, viewMode = 'grid', onQuickView }: ProductGridProps) => {
+const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCart, onOpenCart }: ProductGridProps) => {
   return (
     <section className={cn("py-8 sm:py-12 lg:py-16 xl:py-20 px-3 sm:px-4 md:px-6 lg:px-8", className)}>
       {(title || subtitle) && (
@@ -74,16 +72,9 @@ const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCar
           <p className="text-muted-foreground text-sm sm:text-base lg:text-lg">No products available at the moment.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-2 gap-4 sm:gap-5 md:gap-6 lg:gap-7 xl:gap-9">
+        <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 sm:gap-5 md:gap-6 lg:gap-7 xl:gap-9">
           {products.map((product) => (
-            <ProductCard 
-              key={product._id} 
-              product={product} 
-              onAddToCart={onAddToCart} 
-              onOpenCart={onOpenCart}
-              viewMode={viewMode}
-              onQuickView={onQuickView}
-            />
+            <ProductCard key={product._id} product={product} onAddToCart={onAddToCart} onOpenCart={onOpenCart} />
           ))}
         </div>
       )}
@@ -91,12 +82,10 @@ const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCar
   );
 };
 
-const ProductCard = ({ product, onAddToCart, onOpenCart, viewMode = 'grid', onQuickView }: { 
+const ProductCard = ({ product, onAddToCart, onOpenCart }: { 
   product: Product; 
   onAddToCart?: (item: any, quantity: number) => boolean;
   onOpenCart?: () => void;
-  viewMode?: 'grid' | 'list';
-  onQuickView?: (product: Product) => void;
 }) => {
   const { formatPrice, convertPrice } = useCurrency();
   const { addItem, openCart } = useCart();
@@ -281,129 +270,148 @@ const ProductCard = ({ product, onAddToCart, onOpenCart, viewMode = 'grid', onQu
   };
 
   // Calculate discounted price
-  const discountedPrice = product.price * (1 - (product.discount || 0) / 100);
+  const discountedPrice = product.discount > 0 
+    ? product.price - (product.price * product.discount / 100)
+    : product.price;
 
   // Calculate average rating
   const averageRating = product.reviews && product.reviews.length > 0
-    ? product.reviews.reduce((acc, item) => acc + item.rating, 0) / product.reviews.length
+    ? product.reviews.reduce((acc, review) => acc + review.rating, 0) / product.reviews.length
     : product.rating || 0;
 
   return (
     <div
       onClick={handleCardClick}
-      className="bg-white rounded-2xl shadow-lg overflow-hidden group relative flex flex-col cursor-pointer transition-all duration-300 hover:shadow-2xl hover:-translate-y-1"
+      className="group relative bg-white rounded-xl sm:rounded-2xl lg:rounded-3xl overflow-hidden border border-gray-200/50 hover:border-primary/30 transition-all duration-500 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1 cursor-pointer"
     >
+      {/* Badges */}
       <div className="absolute top-2 sm:top-3 left-2 sm:left-3 z-20 flex flex-col gap-1 sm:gap-2">
-        <button
-          onClick={handleWishlistToggle}
+        {product.discount > 0 && (
+          <span className="bg-red-500 text-white text-xs sm:text-sm font-bold px-2 py-1 rounded-full shadow-lg">
+            -{product.discount}%
+          </span>
+        )}
+        {isNewProduct() && (
+          <span className="bg-green-500 text-white text-xs sm:text-sm font-bold px-2 py-1 rounded-full shadow-lg">
+            NEW
+          </span>
+        )}
+        {isFeaturedProduct() && (
+          <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs sm:text-sm font-bold px-2 py-1 rounded-full shadow-lg flex items-center gap-1">
+            <Sparkles className="w-3 h-3" />
+            <span className="hidden sm:inline">Featured</span>
+          </span>
+        )}
+      </div>
+
+      {/* Wishlist Button */}
+      <button
+        onClick={handleWishlistToggle}
+        className="absolute top-2 sm:top-3 right-2 sm:right-3 z-20 w-8 h-8 sm:w-10 sm:h-10 bg-white/90 backdrop-blur-sm hover:bg-white border border-gray-200/50 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg"
+      >
+        <Heart 
           className={cn(
-            "p-2 rounded-full transition-colors",
-            isInWishlist ? "bg-red-500/90 text-white" : "bg-white/70 text-gray-700 hover:bg-white"
+            "w-4 h-4 sm:w-5 sm:h-5 transition-colors duration-200",
+            isInWishlist 
+              ? "text-red-500 fill-red-500" 
+              : "text-gray-400 hover:text-red-500 group-hover:text-red-500"
           )}
-        >
-          <Heart size={16} fill={isInWishlist ? 'currentColor' : 'none'} />
-        </button>
+        />
+      </button>
+
+      {/* Image Container */}
+      <div className="relative aspect-[4/5] sm:aspect-[4/5] overflow-hidden bg-gray-100">
+        {!isImageLoaded && (
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-200 via-gray-100 to-gray-200 animate-pulse flex items-center justify-center">
+            <div className="text-gray-400 text-lg sm:text-xl">🌸</div>
+          </div>
+        )}
+        <img
+          src={getImageUrl(product.images?.[0]) || '/images/placeholder.svg'}
+          alt={product.title}
+          className={cn(
+            "w-full h-full object-cover transition-all duration-700 group-hover:scale-110",
+            isImageLoaded ? "opacity-100" : "opacity-0"
+          )}
+          onLoad={() => setIsImageLoaded(true)}
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.src = '/images/placeholder.svg';
+            setIsImageLoaded(true);
+          }}
+          loading="lazy"
+        />
+        
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </div>
 
-      <div className="relative">
-        <div className={cn("bg-gray-100", viewMode === 'list' ? 'aspect-square' : 'aspect-w-1 aspect-h-1')}>
-          {!isImageLoaded && (
-            <div className="absolute inset-0 bg-gradient-to-br from-gray-200 via-gray-100 to-gray-200 animate-pulse flex items-center justify-center">
-              <div className="text-gray-400 text-lg sm:text-xl">🌸</div>
-            </div>
-          )}
-          <img
-            src={getImageUrl(product.images?.[0]) || '/images/placeholder.svg'}
-            alt={product.title}
-            className={cn(
-              "w-full h-full object-cover transition-all duration-700 group-hover:scale-110",
-              isImageLoaded ? "opacity-100" : "opacity-0"
-            )}
-            onLoad={() => setIsImageLoaded(true)}
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.src = '/images/placeholder.svg';
-              setIsImageLoaded(true);
-            }}
-            loading="lazy"
-          />
-          
-          {/* Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        </div>
-      </div>
-
-      <div className="p-3 sm:p-4 lg:p-5 flex-grow flex flex-col">
-        <div className="flex-grow">
-          <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">{product.category}</p>
-          <h3 className="font-bold text-gray-800 text-sm sm:text-base leading-tight truncate group-hover:text-primary transition-colors">
+      {/* Content */}
+      <div className="p-3 sm:p-4 lg:p-5">
+        {/* Title and Category */}
+        <div className="mb-2 sm:mb-3">
+          <h3 className="font-semibold text-gray-900 mb-1 text-sm sm:text-base lg:text-lg leading-tight line-clamp-2 group-hover:text-primary transition-colors duration-200">
             {product.title}
           </h3>
-          <div className="flex items-baseline gap-2 mt-2">
-            <p className="text-primary font-bold text-lg">
-              {formatPrice(convertPrice(discountedPrice))}
-            </p>
-            {product.discount > 0 && (
-              <p className="text-gray-400 line-through text-sm">
-                {formatPrice(convertPrice(product.price))}
-              </p>
-            )}
-          </div>
-          <div className="flex items-center mt-1">
-            <div className="flex items-center gap-0.5">
+          <p className="text-xs sm:text-sm text-gray-500 capitalize">{product.category}</p>
+        </div>
+
+        {/* Rating */}
+        {averageRating > 0 && (
+          <div className="flex items-center gap-1 mb-2 sm:mb-3">
+            <div className="flex items-center">
               {[...Array(5)].map((_, i) => (
-                <Star key={i} size={14} className={i < (averageRating || 0) ? 'text-yellow-400 fill-current' : 'text-gray-300'} />
+                <Star
+                  key={i}
+                  className={cn(
+                    "w-3 h-3 sm:w-4 sm:h-4",
+                    i < averageRating
+                      ? "text-yellow-400 fill-yellow-400"
+                      : "text-gray-300"
+                  )}
+                />
               ))}
             </div>
-            <span className="text-xs text-gray-500 ml-2">({product.numReviews || 0})</span>
+            <span className="text-xs sm:text-sm text-gray-500">
+              {averageRating.toFixed(1)}
+              {product.numReviews && ` (${product.numReviews})`}
+            </span>
           </div>
-        </div>
-        
-        <div className="mt-auto pt-4">
-          {viewMode === 'grid' ? (
-            <div className="flex gap-2">
-              <Button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (onQuickView) onQuickView(product);
-                }}
-                size="sm"
-                variant="outline"
-                className="bg-white/80 text-xs h-8 px-3 flex-1"
-              >
-                <Eye size={14} className="mr-1.5" />
-                Quick View
-              </Button>
-              <Button
-                onClick={handleAddToCart}
-                size="sm"
-                className="text-xs h-8 px-3 flex-1"
-              >
-                <ShoppingBag size={14} className="mr-1.5" />
-                Add to Cart
-              </Button>
-            </div>
-          ) : (
-            <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex justify-center items-center gap-2">
-              <Button
-                onClick={handleAddToCart}
-                size="sm"
-                className="bg-primary/90 text-white hover:bg-primary shadow-lg rounded-full text-xs h-9 px-4 flex-1"
-              >
-                <ShoppingBag size={14} className="mr-2" />
-                Add to Cart
-              </Button>
-              <Button
-                onClick={handleViewDetails}
-                size="sm"
-                variant="secondary"
-                className="bg-white/90 text-gray-800 hover:bg-white shadow-lg rounded-full text-xs h-9 px-4"
-              >
-                <Eye size={14} className="mr-2" />
-                Details
-              </Button>
-            </div>
+        )}
+
+        {/* Price */}
+        <div className="flex items-center gap-2 mb-3 sm:mb-4">
+          <span className="text-base sm:text-lg lg:text-xl font-bold text-primary">
+            {formatPrice(convertPrice(discountedPrice))}
+          </span>
+          {product.discount > 0 && (
+            <span className="text-xs sm:text-sm text-gray-500 line-through">
+              {formatPrice(convertPrice(product.price))}
+            </span>
           )}
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-2">
+          <Button
+            onClick={handleViewDetails}
+            variant="outline"
+            size="sm"
+            className="flex-1 text-xs sm:text-sm py-2 sm:py-2.5 rounded-lg sm:rounded-xl hover:bg-gray-50 border-gray-200 transition-all duration-200"
+          >
+            <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+            <span className="hidden xs:inline">Quick View</span>
+            <span className="xs:hidden">View</span>
+          </Button>
+          <Button
+            onClick={handleAddToCart}
+            size="sm"
+            className="flex-1 text-xs sm:text-sm py-2 sm:py-2.5 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white rounded-lg sm:rounded-xl transition-all duration-200 hover:shadow-lg"
+          >
+            <ShoppingBag className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+            <span className="hidden xs:inline">Add to Cart</span>
+            <span className="xs:hidden">Add</span>
+          </Button>
         </div>
       </div>
     </div>

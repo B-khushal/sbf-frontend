@@ -35,7 +35,7 @@ const ShopPage = () => {
   const { convertPrice, formatPrice, currency } = useCurrency();
   const [selectedCategory, setSelectedCategory] = useState(category || "");
   const [sortBy, setSortBy] = useState("newest");
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>("grid");
+  const [viewMode, setViewMode] = useState("grid");
   const [priceRange, setPriceRange] = useState("all");
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
@@ -558,8 +558,8 @@ const ShopPage = () => {
               ) : (
                 <ProductGrid 
                   products={filteredProducts} 
-                  viewMode={viewMode}
-                  onQuickView={handleQuickView}
+                  loading={isLoading}
+                  className={viewMode === "list" ? "grid-cols-1 gap-4" : ""}
                 />
               )}
             </div>
