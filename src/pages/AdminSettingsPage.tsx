@@ -103,6 +103,10 @@ interface FooterSettings {
 const AdminSettingsPage: React.FC = () => {
   const { toast } = useToast();
   
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState<string | null>(null);
+  
   // State for all settings
   const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
   const [homeSections, setHomeSections] = useState<HomeSection[]>([]);
@@ -154,10 +158,6 @@ const AdminSettingsPage: React.FC = () => {
     showMap: true,
     mapEmbedUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3807.3484898316306!2d78.43144207424317!3d17.395055702585967!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bcb971c17e5196b%3A0x78305a92a4153749!2sSpring%20Blossoms%20Florist!5e0!3m2!1sen!2sin!4v1744469050804!5m2!1sen!2sin"
   });
-  
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [uploadingImage, setUploadingImage] = useState<string | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -240,8 +240,12 @@ const AdminSettingsPage: React.FC = () => {
       formData.append('image', file);
       
       const response = await uploadImage(formData);
-      const imageUrl = response.url;
+      const imageUrl = response.imageUrl;
       
+      if (!imageUrl) {
+        throw new Error('No image URL returned from server');
+      }
+
       setHeroSlides(prev => prev.map(slide => 
         slide.id === slideId ? { ...slide, image: imageUrl } : slide
       ));
@@ -254,7 +258,7 @@ const AdminSettingsPage: React.FC = () => {
       console.error("Error uploading image:", error);
       toast({
         title: "Error",
-        description: "Failed to upload image",
+        description: error.response?.data?.message || "Failed to upload image",
         variant: "destructive",
       });
     } finally {
@@ -262,10 +266,13 @@ const AdminSettingsPage: React.FC = () => {
     }
   };
 
-  const updateSlide = (slideId: number, field: string, value: string | boolean) => {
-    setHeroSlides(prev => prev.map(slide => 
-      slide.id === slideId ? { ...slide, [field]: value } : slide
-    ));
+  const updateSlide = (slideId: number, field: keyof HeroSlide, value: string | boolean | number) => {
+    setHeroSlides(prev => prev.map(slide => {
+      if (slide.id === slideId) {
+        return { ...slide, [field]: value };
+      }
+      return slide;
+    }));
   };
 
   const addNewSlide = () => {
@@ -524,6 +531,10 @@ const AdminSettingsPage: React.FC = () => {
                                     src={slide.image}
                                     alt={slide.title}
                                     className="w-full h-48 object-cover rounded-lg border"
+                                    onError={(e) => {
+                                      const target = e.target as HTMLImageElement;
+                                      target.src = 'https://placehold.co/800x400?text=Image+Not+Found';
+                                    }}
                                   />
                                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
                                     <Label
@@ -549,7 +560,10 @@ const AdminSettingsPage: React.FC = () => {
                                       className="hidden"
                                       onChange={(e) => {
                                         const file = e.target.files?.[0];
-                                        if (file) handleSlideImageUpload(slide.id, file);
+                                        if (file) {
+                                          handleSlideImageUpload(slide.id, file);
+                                          e.target.value = ''; // Reset input
+                                        }
                                       }}
                                     />
                                   </div>
