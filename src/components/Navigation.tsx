@@ -498,6 +498,10 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                             <User className="w-4 h-4 mr-2" />
                             My Account
                           </Link>
+                          <Link to="/profile#orders" className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                            <ShoppingCart className="w-4 h-4 mr-2" />
+                            My Orders
+                          </Link>
                           {user.isAdmin && (
                             <Link to="/admin/dashboard" className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
                               <Store className="w-4 h-4 mr-2" />
