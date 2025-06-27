@@ -254,8 +254,8 @@ const AdminSettingsPage: React.FC = () => {
     if (active.id !== over?.id) {
       console.log('Reordering slides:', { from: active.id, to: over.id });
       setHeroSlides((items) => {
-        const oldIndex = items.findIndex((item) => item.id === active.id);
-        const newIndex = items.findIndex((item) => item.id === over.id);
+        const oldIndex = items.findIndex((item) => String(item.id) === active.id);
+        const newIndex = items.findIndex((item) => String(item.id) === over.id);
         const reordered = arrayMove(items, oldIndex, newIndex);
         const updated = reordered.map((item, index) => ({ ...item, order: index }));
         console.log('Reordered slides:', updated);
@@ -523,11 +523,11 @@ const AdminSettingsPage: React.FC = () => {
                 collisionDetection={closestCenter}
                 onDragEnd={handleSlidesDragEnd}
               >
-                <SortableContext items={heroSlides.map(s => s.id)} strategy={verticalListSortingStrategy}>
+                <SortableContext items={heroSlides.map(s => String(s.id))} strategy={verticalListSortingStrategy}>
                   <div className="space-y-4">
                     {heroSlides.map((slide) => (
-                      <SortableItem key={slide.id} id={slide.id}>
-                        <Card key={slide.id} className="border-2 border-dashed border-gray-200 hover:border-primary/50 transition-colors">
+                      <SortableItem key={slide.id} id={String(slide.id)}>
+                        <Card className="border-2 border-dashed border-gray-200 hover:border-primary/50 transition-colors">
                           <CardContent className="p-6">
                             <div className="flex items-center gap-4 mb-4">
                               <GripVertical className="w-5 h-5 text-gray-400 cursor-grab" />
