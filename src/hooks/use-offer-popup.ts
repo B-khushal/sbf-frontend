@@ -18,26 +18,27 @@ interface Offer {
 export const useOfferPopup = () => {
   const [currentOffer, setCurrentOffer] = useState<Offer | null>(null);
   const [isOpen, setIsOpen] = useState(false);
-  const [hasFetched, setHasFetched] = useState(false);
   const location = useLocation();
 
   useEffect(() => {
     const fetchActiveOffers = async () => {
-      // Only show popups on the homepage ('/')
+      // Rule 1: Only show popups on the homepage ('/')
       if (location.pathname !== '/') {
         if (isOpen) setIsOpen(false); // Close popup if navigating away
-        setHasFetched(false); // Reset fetch status when leaving homepage
         return;
       }
 
-      // Prevent re-fetching if we already have an open offer or have fetched
-      if (isOpen || hasFetched) return;
+      // Rule 2: Don't show if it has already been shown in this session.
+      const shownThisSession = sessionStorage.getItem('offerShownThisSession');
+      if (shownThisSession) {
+        return;
+      }
       
       try {
-        setHasFetched(true); // Mark as fetched to prevent re-runs
         const { data: offers } = await api.get('/offers/active');
 
         if (offers && offers.length > 0) {
+          // Rule 3: Check localStorage for offers that should only be shown once ever.
           const seenOffers = JSON.parse(localStorage.getItem('seenOffers') || '{}');
           
           const offerToShow = offers.find(offer => 
@@ -47,7 +48,11 @@ export const useOfferPopup = () => {
           if (offerToShow) {
             setCurrentOffer(offerToShow);
             setIsOpen(true);
+            
+            // Mark as shown for this session
+            sessionStorage.setItem('offerShownThisSession', 'true');
 
+            // If it's a "show only once" offer, add it to localStorage.
             if (offerToShow.showOnlyOnce) {
               seenOffers[offerToShow._id] = true;
               localStorage.setItem('seenOffers', JSON.stringify(seenOffers));
@@ -56,12 +61,17 @@ export const useOfferPopup = () => {
         }
       } catch (error) {
         console.error('❌ Error fetching offers:', error);
-        setHasFetched(false); // Allow refetch on error
       }
     };
 
-    fetchActiveOffers();
-  }, [location.pathname, isOpen, hasFetched]);
+    // Use a small delay to prevent race conditions on initial load
+    const timer = setTimeout(() => {
+        fetchActiveOffers();
+    }, 100);
+
+    return () => clearTimeout(timer);
+
+  }, [location.pathname]);
 
   const closeOffer = () => {
     setIsOpen(false);
