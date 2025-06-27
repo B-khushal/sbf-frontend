@@ -1,13 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useLayoutEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronRight, Sparkles } from 'lucide-react';
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 const CategoryMenu = () => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
+  const [dropdownPosition, setDropdownPosition] = useState({ left: 0 });
+  const navRef = useRef<HTMLDivElement>(null);
+  const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  useLayoutEffect(() => {
+    if (hoveredCategory && navRef.current) {
+      const categoryIndex = categories.findIndex(c => c.name === hoveredCategory);
+      const itemRef = itemRefs.current[categoryIndex];
+      const navRect = navRef.current.getBoundingClientRect();
+      
+      if (itemRef) {
+        const itemRect = itemRef.getBoundingClientRect();
+        const left = itemRect.left - navRect.left + itemRect.width / 2;
+        setDropdownPosition({ left });
+      }
+    }
+  }, [hoveredCategory]);
   
   const categories = [
     { 
@@ -174,129 +192,133 @@ const CategoryMenu = () => {
   };
 
   return (
-    <nav className="bg-white/98 backdrop-blur-xl border-b border-gray-100/80 sticky top-0 z-40 shadow-sm">
+    <nav className="bg-white/98 backdrop-blur-xl border-b border-gray-100/80 sticky top-0 z-40 shadow-sm" ref={navRef}>
       <div className="container mx-auto px-3 sm:px-4 lg:px-6">
-        <div className="relative flex items-center justify-start py-3 lg:py-4">
-          <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-4 overflow-x-auto pb-4 -mb-4 no-scrollbar">
-            {categories.map((category, index) => (
-              <div
-                key={category.path}
-                className="relative"
-                onMouseEnter={() => setHoveredCategory(category.name)}
-                onMouseLeave={() => setHoveredCategory(null)}
-              >
-                <Link
-                  to={category.path}
-                  className={cn(
-                    "relative px-3 sm:px-4 lg:px-5 py-2 lg:py-2.5 text-xs sm:text-sm lg:text-base font-medium whitespace-nowrap rounded-xl transition-all duration-300 group flex items-center gap-2 border",
-                    isActive(category.path)
-                      ? "text-white bg-gradient-to-r from-primary via-secondary to-accent shadow-lg border-primary/20"
-                      : "text-gray-700 hover:text-primary bg-white/80 hover:bg-gradient-to-r hover:from-primary/10 hover:to-secondary/10 border-gray-200/50 hover:border-primary/30 hover:shadow-md"
-                  )}
+        <ScrollArea className="w-full whitespace-nowrap">
+          <div className="relative flex items-center justify-start py-3 lg:py-4">
+            <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-4">
+              {categories.map((category, index) => (
+                <div
+                  key={category.path}
+                  className="relative"
+                  onMouseEnter={() => setHoveredCategory(category.name)}
+                  onMouseLeave={() => setHoveredCategory(null)}
+                  ref={el => itemRefs.current[index] = el}
                 >
-                  <span className="text-base lg:text-lg group-hover:scale-110 transition-transform duration-200">
-                    {category.emoji}
-                  </span>
-                  <span className="font-semibold">
-                    {category.name.split(' ').slice(1).join(' ')}
-                  </span>
-                  
-                  {/* Dropdown indicator */}
-                  <ChevronDown 
-                    size={12} 
+                  <Link
+                    to={category.path}
                     className={cn(
-                      "transition-transform duration-200",
-                      hoveredCategory === category.name ? "rotate-180" : ""
+                      "relative px-4 py-2.5 text-sm font-medium whitespace-nowrap rounded-lg transition-all duration-300 group flex items-center gap-2 border",
+                      isActive(category.path)
+                        ? "text-white bg-primary shadow-lg"
+                        : "text-gray-600 hover:text-primary bg-gray-50 hover:bg-white border-transparent hover:border-primary/30 hover:shadow-md"
                     )}
-                  />
-                  
-                  {category.popular && (
-                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
-                      <Sparkles size={8} className="text-white" />
-                    </div>
-                  )}
-                </Link>
-
-                {/* Dropdown Menu */}
-                <AnimatePresence>
-                  {hoveredCategory === category.name && (
-                    <motion.div
-                      variants={dropdownVariants}
-                      initial="hidden"
-                      animate="visible"
-                      exit="exit"
-                      className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 min-w-[280px] overflow-hidden z-50"
-                      style={{ 
-                        filter: 'drop-shadow(0 20px 25px rgb(0 0 0 / 0.15))',
-                      }}
-                    >
-                      {/* Category Header */}
-                      <div className="p-4 bg-gradient-to-r from-primary/5 to-secondary/5 border-b border-gray-50">
-                        <div className="flex items-center gap-3">
-                          <span className="text-2xl">{category.emoji}</span>
-                          <div>
-                            <h3 className="font-semibold text-gray-900 text-lg">
-                              {category.name.split(' ').slice(1).join(' ')}
-                            </h3>
-                            <p className="text-sm text-gray-500">{category.description}</p>
-                          </div>
-                        </div>
+                  >
+                    <span className="text-lg group-hover:scale-110 transition-transform duration-200">
+                      {category.emoji}
+                    </span>
+                    <span className="font-semibold">
+                      {category.name.split(' ').slice(1).join(' ')}
+                    </span>
+                    
+                    <ChevronDown 
+                      size={14} 
+                      className={cn(
+                        "transition-transform duration-200",
+                        hoveredCategory === category.name ? "rotate-180" : ""
+                      )}
+                    />
+                    
+                    {category.popular && (
+                      <div className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-yellow-400 rounded-full flex items-center justify-center border-2 border-white">
+                        <Sparkles size={10} className="text-white" />
                       </div>
+                    )}
+                  </Link>
 
-                      {/* Subcategories */}
-                      <motion.div 
-                        className="p-3"
-                        variants={subcategoryContainerVariants}
+                  {/* Dropdown Menu */}
+                  <AnimatePresence>
+                    {hoveredCategory === category.name && (
+                      <motion.div
+                        variants={dropdownVariants}
                         initial="hidden"
                         animate="visible"
+                        exit="exit"
+                        className="absolute top-full mt-2 bg-white rounded-xl shadow-lg border w-72 overflow-hidden z-50"
+                        style={{ 
+                          left: `${dropdownPosition.left}px`,
+                          transform: 'translateX(-50%)',
+                        }}
                       >
-                        {category.subcategories.map((sub, idx) => (
-                          <motion.div
-                            key={sub.path}
-                            variants={subcategoryVariants}
-                            className="overflow-hidden"
-                          >
-                            <Link
-                              to={sub.path}
-                              className="flex items-center justify-between px-4 py-3 rounded-xl hover:bg-gradient-to-r hover:from-primary/8 hover:to-secondary/8 transition-all duration-300 group transform hover:scale-[1.02]"
-                              onClick={() => setHoveredCategory(null)}
-                            >
-                              <span className="text-gray-700 group-hover:text-primary font-medium transition-colors duration-200">
-                                {sub.name}
-                              </span>
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs text-gray-400 group-hover:text-primary/60 transition-colors duration-200 bg-gray-50 group-hover:bg-primary/10 px-2 py-1 rounded-full">
-                                  {sub.count}
-                                </span>
-                                <motion.div
-                                  whileHover={{ x: 2 }}
-                                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                                >
-                                  <ChevronRight size={14} className="text-gray-300 group-hover:text-primary transition-colors duration-200" />
-                                </motion.div>
-                              </div>
-                            </Link>
-                          </motion.div>
-                        ))}
-                      </motion.div>
+                        {/* Category Header */}
+                        <div className="p-4 border-b">
+                          <div className="flex items-center gap-3">
+                            <span className="text-3xl">{category.emoji}</span>
+                            <div>
+                              <h3 className="font-bold text-gray-800">
+                                {category.name.split(' ').slice(1).join(' ')}
+                              </h3>
+                              <p className="text-sm text-gray-500">{category.description}</p>
+                            </div>
+                          </div>
+                        </div>
 
-                      {/* View All Link */}
-                      <div className="border-t border-gray-100">
-                        <Link
-                          to={category.path}
-                          className="block p-4 text-center text-sm font-medium text-primary hover:text-secondary bg-gradient-to-r from-primary/5 to-secondary/5 hover:from-primary/10 hover:to-secondary/10 transition-all duration-300"
-                          onClick={() => setHoveredCategory(null)}
+                        {/* Subcategories */}
+                        <motion.div 
+                          className="p-2"
+                          variants={subcategoryContainerVariants}
+                          initial="hidden"
+                          animate="visible"
                         >
-                          View All {category.name.split(' ').slice(1).join(' ')}
-                        </Link>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            ))}
+                          {category.subcategories.map((sub, idx) => (
+                            <motion.div
+                              key={sub.path}
+                              variants={subcategoryVariants}
+                              className="overflow-hidden"
+                            >
+                              <Link
+                                to={sub.path}
+                                className="flex items-center justify-between px-4 py-3 rounded-xl hover:bg-gradient-to-r hover:from-primary/8 hover:to-secondary/8 transition-all duration-300 group transform hover:scale-[1.02]"
+                                onClick={() => setHoveredCategory(null)}
+                              >
+                                <span className="text-gray-700 group-hover:text-primary font-medium transition-colors duration-200">
+                                  {sub.name}
+                                </span>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs text-gray-400 group-hover:text-primary/60 transition-colors duration-200 bg-gray-50 group-hover:bg-primary/10 px-2 py-1 rounded-full">
+                                    {sub.count}
+                                  </span>
+                                  <motion.div
+                                    whileHover={{ x: 2 }}
+                                    transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                                  >
+                                    <ChevronRight size={14} className="text-gray-300 group-hover:text-primary transition-colors duration-200" />
+                                  </motion.div>
+                                </div>
+                              </Link>
+                            </motion.div>
+                          ))}
+                        </motion.div>
+
+                        {/* View All Link */}
+                        <div className="border-t border-gray-100">
+                          <Link
+                            to={category.path}
+                            className="block p-4 text-center text-sm font-medium text-primary hover:text-secondary bg-gradient-to-r from-primary/5 to-secondary/5 hover:from-primary/10 hover:to-secondary/10 transition-all duration-300"
+                            onClick={() => setHoveredCategory(null)}
+                          >
+                            View All {category.name.split(' ').slice(1).join(' ')}
+                          </Link>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              ))}
+            </div>
+            <ScrollBar orientation="horizontal" />
           </div>
-        </div>
+        </ScrollArea>
       </div>
     </nav>
   );

@@ -438,283 +438,147 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
             
             {/* Right Side Actions */}
             <motion.div 
-              className="flex items-center space-x-1 sm:space-x-2 lg:space-x-3"
+              className="flex items-center space-x-1 sm:space-x-2"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.6 }}
             >
-              
-              {/* Currency Converter - Hidden on mobile */}
               <div className="hidden sm:block">
                 <CurrencyConverter />
               </div>
               
-              {/* Mobile Search Button */}
-              <Button 
-                variant="ghost" 
-                size="icon"
-                className="md:hidden relative group hover:bg-primary/10 transition-all duration-300"
-                onClick={() => setShowMobileSearch(true)}
-              >
-                <Search size={18} className="group-hover:text-primary transition-colors" />
-              </Button>
-              
-              {/* Wishlist and User Menu only if logged in */}
-              {user && (
-                <>
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Button variant="ghost" size="icon" asChild className="relative group hover:bg-red-50 transition-all duration-300">
-                      <Link to="/wishlist">
-                        <Heart size={18} className="group-hover:text-red-500 transition-colors" />
-                        {wishlistCount > 0 && (
-                          <motion.span
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg"
-                          >
-                            {wishlistCount > 9 ? '9+' : wishlistCount}
-                          </motion.span>
-                        )}
-                      </Link>
-                    </Button>
-                  </motion.div>
+              <div className="md:hidden">
+                <Button variant="ghost" size="icon" onClick={() => setShowMobileSearch(true)}>
+                  <Search size={18} />
+                </Button>
+              </div>
 
-                  {/* User Menu */}
-                  <div className="relative">
-                    <motion.div
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        onClick={() => setShowUserMenu(!showUserMenu)}
-                        className="relative group hover:bg-primary/10 transition-all duration-300"
-                      >
-                        <User size={18} className="group-hover:text-primary transition-colors" />
-                        <ChevronDown size={12} className="absolute -bottom-1 -right-1 group-hover:text-primary transition-colors" />
-                      </Button>
-                    </motion.div>
-                    
-                    <AnimatePresence>
-                      {showUserMenu && (
-                        <motion.div
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 p-2 z-50"
-                          onMouseLeave={() => setShowUserMenu(false)}
-                        >
-                          <div className="p-2 border-b">
-                            <p className="font-semibold text-sm text-gray-800">{user.name}</p>
-                            <p className="text-xs text-gray-500 truncate">{user.email}</p>
-                          </div>
-                          <div className="py-1">
-                            {user.role === 'vendor' && user.vendorStatus === 'approved' && (
-                              <Link to="/vendor/dashboard" className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-primary rounded-md">
-                                <Store className="w-4 h-4 mr-2" />
-                                Vendor Dashboard
-                              </Link>
-                            )}
-                            <Link to="/profile" className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-primary rounded-md">
-                              <User className="w-4 h-4 mr-2" />
-                              My Account
-                            </Link>
-                            <Link to="/orders" className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-primary rounded-md">
-                              <ShoppingCart className="w-4 h-4 mr-2" />
-                              My Orders
-                            </Link>
-                            <Link to="/wishlist" className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-primary rounded-md">
-                              <Heart className="w-4 h-4 mr-2" />
-                              Wishlist
-                            </Link>
-                            {user.role === 'admin' ? (
-                              <Link to="/admin" className="flex items-center w-full px-3 py-2 text-sm text-purple-600 hover:bg-gray-100 hover:text-purple-600 rounded-md">
-                                <Shield className="w-4 h-4 mr-2" />
-                                Admin Dashboard
-                              </Link>
-                            ) : user.role !== 'vendor' && (
-                              <Link to="/vendor/register" className="flex items-center w-full px-3 py-2 text-sm text-green-600 hover:bg-gray-100 hover:text-green-600 rounded-md">
-                                <Store className="w-4 h-4 mr-2" />
-                                Become a Vendor
-                              </Link>
-                            )}
-                            <div className="border-t border-gray-100 my-2"></div>
-                            <button 
-                              onClick={() => {
-                                logout();
-                                setShowUserMenu(false);
-                              }}
-                              className="flex items-center w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md"
-                            >
-                              <LogIn className="w-4 h-4 mr-2" />
-                              Sign Out
-                            </button>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                </>
+              {user && (
+                <Button variant="ghost" size="icon" asChild>
+                  <Link to="/wishlist" className="relative">
+                    <Heart size={18} />
+                    {wishlistCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                        {wishlistCount}
+                      </span>
+                    )}
+                  </Link>
+                </Button>
               )}
               
-              {/* Cart */}
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={handleCartClick}
-                  className="relative group hover:bg-primary/10 transition-all duration-300 cursor-pointer"
-                >
-                  <ShoppingCart size={18} className="group-hover:text-primary transition-colors" />
-                  {(actualCartCount > 0 || items.length > 0) && (
-                    <motion.span
-                      key={`cart-${actualCartCount}-${items.length}`}
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="absolute -top-1 -right-1 bg-gradient-to-r from-primary to-secondary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg"
-                    >
-                      {actualCartCount > 9 ? '9+' : actualCartCount || items.length}
-                    </motion.span>
-                  )}
-                </Button>
-              </motion.div>
-              
-              {/* Mobile Menu */}
-              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-                <SheetTrigger asChild>
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Button variant="ghost" size="icon" className="lg:hidden group hover:bg-primary/10 transition-all duration-300">
-                      <Menu size={18} className="group-hover:text-primary transition-colors" />
-                    </Button>
-                  </motion.div>
-                </SheetTrigger>
-                <SheetContent side="right" className="w-full sm:w-80 p-0 bg-white">
-                  <div className="flex flex-col h-full">
-                    {/* Mobile Header */}
-                    <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gradient-to-r from-primary/5 to-secondary/5">
-                      <Link to="/" onClick={() => setMobileMenuOpen(false)}>
-                        <span className="text-xl font-black bg-gradient-to-r from-pink-500 via-purple-600 to-blue-600 bg-clip-text text-transparent">
-                          Spring Blossoms Florist
-                        </span>
-                      </Link>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="hover:bg-white/50 transition-colors"
+              <Button variant="ghost" size="icon" onClick={handleCartClick} className="relative">
+                <ShoppingCart size={18} />
+                {(actualCartCount > 0) && (
+                  <span className="absolute -top-1 -right-1 bg-primary text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                    {actualCartCount}
+                  </span>
+                )}
+              </Button>
+
+              {user ? (
+                <div className="relative">
+                  <Button variant="ghost" size="icon" onClick={() => setShowUserMenu(!showUserMenu)}>
+                    <User size={18} />
+                  </Button>
+                  <AnimatePresence>
+                    {showUserMenu && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border p-2 z-50"
+                        onMouseLeave={() => setShowUserMenu(false)}
                       >
-                        <X size={18} />
-                      </Button>
-                    </div>
-                    
-                    {/* Mobile Search */}
-                    <div className="p-6 border-b border-gray-100">
-                      <form onSubmit={(e) => {
-                        handleSearchSubmit(e);
-                        setMobileMenuOpen(false);
-                      }}>
-                        <div className="relative">
-                          <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                          <Input
-                            type="text"
-                            placeholder="Search flowers, bouquets..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-3 text-sm border-2 border-gray-200 rounded-xl focus:border-primary transition-colors"
-                          />
+                        <div className="p-2 border-b">
+                          <p className="font-semibold text-sm">{user.name}</p>
+                          <p className="text-xs text-gray-500 truncate">{user.email}</p>
                         </div>
-                      </form>
-                    </div>
-                    
-                    {/* Currency Converter */}
-                    <div className="p-6 border-b border-gray-100">
-                      <CurrencyConverter />
-                    </div>
-                    
-                    {/* Navigation Links */}
-                    <div className="flex-1 p-6">
-                      <nav className="space-y-3">
-                        {headerSettings?.navigationItems
-                          ?.filter(item => item.enabled)
-                          ?.sort((a, b) => a.order - b.order)
-                          ?.map((item) => (
-                          <Link
-                            key={item.href}
-                            to={item.href}
-                            onClick={() => setMobileMenuOpen(false)}
-                            className={cn(
-                              'flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-300',
-                              pathname === item.href 
-                                ? 'bg-gradient-to-r from-primary to-secondary text-white shadow-lg' 
-                                : 'text-gray-700 hover:bg-gradient-to-r hover:from-primary/10 hover:to-secondary/10 hover:text-primary'
-                            )}
-                          >
-                            {item.label}
+                        <div className="py-1">
+                          <Link to="/profile" className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                            My Account
                           </Link>
-                        ))}
-                      </nav>
-                    </div>
-                    
-                    {/* Mobile Footer Actions */}
-                    <div className="p-6 border-t border-gray-100 space-y-3 bg-gray-50">
-                      {!user ? (
-                        <>
-                          <Button asChild className="w-full bg-gradient-to-r from-primary to-secondary hover:shadow-lg transition-all duration-300" onClick={() => setMobileMenuOpen(false)}>
-                            <Link to="/login">Sign In</Link>
-                          </Button>
-                          <Button variant="outline" asChild className="w-full border-2 hover:bg-primary/5 transition-colors" onClick={() => setMobileMenuOpen(false)}>
-                            <Link to="/signup">Sign Up</Link>
-                          </Button>
-                          <Button variant="outline" asChild className="w-full border-2 border-green-200 text-green-600 hover:bg-green-50 transition-colors" onClick={() => setMobileMenuOpen(false)}>
-                            <Link to="/vendor" className="flex items-center justify-center gap-2">
-                              <Store size={16} />
-                              Become a Vendor
+                          <button 
+                            onClick={() => {
+                              logout();
+                              setShowUserMenu(false);
+                            }}
+                            className="flex items-center w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md"
+                          >
+                            Sign Out
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              ) : (
+                <Button variant="ghost" size="icon" asChild>
+                  <Link to="/login">
+                    <LogIn size={18} />
+                  </Link>
+                </Button>
+              )}
+
+              <div className="lg:hidden">
+                <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                  <SheetTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <Menu size={18} />
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="right" className="w-full sm:w-80 p-0">
+                    <div className="flex flex-col h-full">
+                      <div className="p-6 border-b">
+                        <Link to="/" onClick={() => setMobileMenuOpen(false)}>
+                          <span className="text-xl font-bold">SBF</span>
+                        </Link>
+                      </div>
+                      <div className="flex-1 p-6">
+                        <nav className="space-y-2">
+                          {headerSettings?.navigationItems
+                            ?.filter(item => item.enabled)
+                            .sort((a,b) => a.order - b.order)
+                            .map((item) => (
+                            <Link
+                              key={item.href}
+                              to={item.href}
+                              onClick={() => setMobileMenuOpen(false)}
+                              className={cn(
+                                'block px-4 py-2 text-sm rounded-md',
+                                pathname === item.href ? 'bg-primary text-white' : 'text-gray-700 hover:bg-gray-100'
+                              )}
+                            >
+                              {item.label}
                             </Link>
+                          ))}
+                        </nav>
+                      </div>
+                      <div className="p-6 border-t">
+                        {!user ? (
+                          <div className="space-y-2">
+                            <Button asChild className="w-full" onClick={() => setMobileMenuOpen(false)}>
+                              <Link to="/login">Sign In</Link>
+                            </Button>
+                            <Button variant="outline" asChild className="w-full" onClick={() => setMobileMenuOpen(false)}>
+                              <Link to="/signup">Sign Up</Link>
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button 
+                            onClick={() => {
+                              logout();
+                              setMobileMenuOpen(false);
+                            }}
+                            className="w-full"
+                          >
+                            Sign Out
                           </Button>
-                        </>
-                      ) : (
-                        <>
-                          <Button asChild className="w-full bg-gradient-to-r from-primary to-secondary hover:shadow-lg transition-all duration-300" onClick={() => setMobileMenuOpen(false)}>
-                            <Link to="/profile">My Account</Link>
-                          </Button>
-                          {user.role === 'vendor' ? (
-                            <Button variant="outline" asChild className="w-full border-2 border-primary text-primary hover:bg-primary/10 transition-colors" onClick={() => setMobileMenuOpen(false)}>
-                              <Link to="/vendor/dashboard" className="flex items-center justify-center gap-2">
-                                <Store size={16} />
-                                Vendor Dashboard
-                              </Link>
-                            </Button>
-                          ) : user.role === 'admin' ? (
-                            <Button variant="outline" asChild className="w-full border-2 border-purple-200 text-purple-600 hover:bg-purple-50 transition-colors" onClick={() => setMobileMenuOpen(false)}>
-                              <Link to="/admin" className="flex items-center justify-center gap-2">
-                                <Shield size={16} />
-                                Admin Dashboard
-                              </Link>
-                            </Button>
-                          ) : (
-                            <Button variant="outline" asChild className="w-full border-2 border-green-200 text-green-600 hover:bg-green-50 transition-colors" onClick={() => setMobileMenuOpen(false)}>
-                              <Link to="/vendor" className="flex items-center justify-center gap-2">
-                                <Store size={16} />
-                                Become a Vendor
-                              </Link>
-                            </Button>
-                          )}
-                        </>
-                      )}
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </SheetContent>
-              </Sheet>
+                  </SheetContent>
+                </Sheet>
+              </div>
             </motion.div>
           </div>
         </div>
