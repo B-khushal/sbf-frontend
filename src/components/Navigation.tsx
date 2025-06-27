@@ -108,7 +108,7 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
   const [isSearching, setIsSearching] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   // Get wishlist count directly from localStorage
   useEffect(() => {
@@ -571,7 +571,7 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                           <div className="border-t border-gray-100 my-2"></div>
                           <button 
                             onClick={() => {
-                              // Add logout logic here
+                              logout();
                               setShowUserMenu(false);
                             }}
                             className="flex items-center w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md"
