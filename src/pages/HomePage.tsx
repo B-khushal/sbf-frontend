@@ -2,16 +2,11 @@ import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 import { AlertTriangle } from "lucide-react";
-import Navigation from "../components/Navigation";
-import CategoryMenu from "../components/CategoryMenu"; 
 import HomeHero from "../components/HomeHero";
 import Categories from "../components/Categories";
 import ProductGrid from "../components/ProductGrid";
 import OffersSection from "../components/OffersSection";
-import Footer from "../components/Footer";
-import Cart from "../components/Cart";
 import useCart from "../hooks/use-cart";
-import CartDebugger from "../components/CartDebugger";
 import { useSettings } from "../contexts/SettingsContext";
 import { useOfferPopup } from "../hooks/use-offer-popup";
 import OfferPopup from "../components/ui/OfferPopup";
@@ -269,105 +264,41 @@ const HomePage = () => {
     fetchProducts();
   }, []);
 
-  // Show error state if there's an error
-  if (error && !loading) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Navigation cartItemCount={itemCount} />
-        <main className="flex-1 flex items-center justify-center pt-16 sm:pt-20">
-          <div className="text-center px-3 sm:px-6">
-            <AlertTriangle className="w-12 h-12 sm:w-16 sm:h-16 text-yellow-500 mx-auto mb-4" />
-            <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 mb-2">
-              Something went wrong
-            </h2>
-            <p className="text-gray-600 text-sm sm:text-base mb-4">
-              {error}
-            </p>
-            <button 
-              onClick={() => window.location.reload()} 
-              className="bg-primary text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-primary/90 transition-colors text-sm sm:text-base"
-            >
-              Try Again
-            </button>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
+  const enabledSections = homeSections.filter(section => section.enabled);
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 rounded-full blur-3xl animate-spin-slow" />
-        <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-gradient-to-tl from-accent/5 via-transparent to-primary/5 rounded-full blur-3xl animate-reverse-spin" />
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 sm:w-80 sm:h-80 lg:w-96 lg:h-96 bg-gradient-to-r from-secondary/3 to-accent/3 rounded-full blur-2xl animate-pulse" />
-      </div>
-
-      <Navigation cartItemCount={itemCount} />
-      <CategoryMenu />
+    <div className="bg-gradient-to-br from-bloom-blue-50 via-bloom-pink-50 to-bloom-green-50 min-h-screen">
       
-      <motion.main 
-        className="relative flex-1 z-10"
-        initial="hidden"
-        animate="visible"
-        variants={containerVariants}
-      >
-        {homeSections && homeSections.length > 0 ? (
-          homeSections
-            .filter(section => section.enabled)
-            .sort((a, b) => a.order - b.order)
-            .map((section, index) => (
-              <div key={`${section.type}-${index}`}>
-                {renderSection(section, index)}
-              </div>
-            ))
-        ) : (
-          // Default sections if no settings loaded
-          <>
-            {renderSection({ type: 'hero' }, 0)}
-            {renderSection({ type: 'categories' }, 1)}
-            {renderSection({ type: 'featured' }, 2)}
-            {renderSection({ type: 'offers' }, 3)}
-            {renderSection({ type: 'new' }, 4)}
-            {renderSection({ type: 'philosophy' }, 5)}
-          </>
-        )}
-      </motion.main>
-      
-      <Footer />
-      
-      <Cart 
-        items={items} 
-        isOpen={isCartOpen} 
-        onClose={closeCart}
-        onUpdateQuantity={updateItemQuantity}
-        onRemoveItem={removeItem}
-      />
-
-
-      {/* Testing Mode Badge - Floating */}
-      <div className="fixed bottom-4 right-4 bg-yellow-500 text-black px-3 py-2 rounded-lg shadow-lg font-semibold flex items-center gap-2 z-50 text-xs sm:text-sm max-w-xs">
-        <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-        <span className="leading-tight">
-          ⚠️ TESTING MODE: Orders may not be processed.
-        </span>
-      </div>
-
-      
-      {/* Offer Popup */}
-      {console.log('🔍 Offer Popup State:', { currentOffer, isOfferOpen })}
-      {currentOffer && isOfferOpen && (
+      {isOfferOpen && currentOffer && (
         <OfferPopup 
           offer={currentOffer} 
           isOpen={isOfferOpen} 
           onClose={closeOffer} 
         />
       )}
-
-      {/* Cart Debugger - Remove in production */}
-      {process.env.NODE_ENV === 'development' && <CartDebugger />}
+      
+      <motion.div 
+        className="space-y-12 sm:space-y-16 md:space-y-20 lg:space-y-24 xl:space-y-28 pb-12 sm:pb-16 md:pb-20"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        {enabledSections.length === 0 && !settingsLoading ? (
+          <div className="text-center py-20 px-4">
+            <AlertTriangle className="mx-auto h-12 w-12 text-yellow-500" />
+            <h2 className="mt-4 text-2xl font-bold text-gray-800">No sections to display</h2>
+            <p className="mt-2 text-gray-600">
+              The homepage sections may be loading or are not configured.
+            </p>
+          </div>
+        ) : (
+          enabledSections.map((section, index) => (
+            <div key={section.id || index} className="overflow-hidden">
+              {renderSection(section, index)}
+            </div>
+          ))
+        )}
+      </motion.div>
     </div>
   );
 };

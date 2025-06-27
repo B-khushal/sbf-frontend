@@ -9,7 +9,7 @@ interface Offer {
   title: string;
   description: string;
   imageUrl?: string;
-  backgroundColor: string;
+  background: string;
   textColor: string;
   buttonText: string;
   buttonLink: string;
@@ -124,7 +124,7 @@ const OffersSection = () => {
             >
               <div 
                 className="relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100"
-                style={{ backgroundColor: offer.backgroundColor }}
+                style={{ background: offer.background }}
               >
                 {/* Theme-based accent bar */}
                 <div className={`h-1 bg-gradient-to-r ${getThemeGradient(offer.theme)}`} />

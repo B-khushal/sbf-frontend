@@ -176,8 +176,8 @@ const CategoryMenu = () => {
   return (
     <nav className="bg-white/98 backdrop-blur-xl border-b border-gray-100/80 sticky top-0 z-40 shadow-sm">
       <div className="container mx-auto px-3 sm:px-4 lg:px-6">
-        <div className="flex items-center justify-center py-3 lg:py-4">
-          <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-4">
+        <div className="relative flex items-center justify-start py-3 lg:py-4">
+          <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-4 overflow-x-auto pb-4 -mb-4 no-scrollbar">
             {categories.map((category, index) => (
               <div
                 key={category.path}

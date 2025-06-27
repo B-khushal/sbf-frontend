@@ -18,6 +18,7 @@ import PrivacyPage from "./pages/PrivacyPage";
 import RefundPolicyPage from "./pages/RefundPolicyPage";
 import CancellationPolicyPage from "./pages/CancellationPolicyPage";
 import ErrorBoundary from '@/components/ErrorBoundary';
+import MainLayout from './components/MainLayout';
 
 // Pages
 import HomePage from "./pages/HomePage";
@@ -108,15 +109,18 @@ const App = () => {
                     </div>
                   }>
                     <Routes>
-                      <Route path="/" element={<HomePage />} />
-                      <Route path="/shop" element={<ShopPage />} />
-                      <Route path="/shop/:category" element={<ShopPage />} />
-                      <Route path="/product/:id" element={<ProductPage />} />
-                      <Route path="/products/:productId" element={<ProductPage />} />
-                      <Route path="/cart" element={<CartPage />} />
-                      <Route path="/about" element={<AboutPage />} />
-                      <Route path="/wishlist" element={<WishlistPage />} />
-                      <Route path="/contact" element={<ContactPage />} />
+                      <Route element={<MainLayout />}>
+                        <Route path="/" element={<HomePage />} />
+                        <Route path="/shop" element={<ShopPage />} />
+                        <Route path="/shop/:category" element={<ShopPage />} />
+                        <Route path="/product/:id" element={<ProductPage />} />
+                        <Route path="/products/:productId" element={<ProductPage />} />
+                        <Route path="/cart" element={<CartPage />} />
+                        <Route path="/about" element={<AboutPage />} />
+                        <Route path="/wishlist" element={<WishlistPage />} />
+                        <Route path="/contact" element={<ContactPage />} />
+                      </Route>
+                      
                       <Route path="/terms" element={<TermsPage />} />
                       <Route path="/shipping" element={<ShippingPage />} />
                       <Route path="/privacy" element={<PrivacyPage/>} />

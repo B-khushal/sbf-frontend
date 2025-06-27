@@ -86,6 +86,7 @@ const NavLink: React.FC<{ to: string; active: boolean; children: React.ReactNode
 
 const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showMobileSearch, setShowMobileSearch] = useState(false);
   const { pathname } = useLocation();
   const [wishlistCount, setWishlistCount] = useState(0);
   const cartHook = useCart();
@@ -235,7 +236,7 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
       </div>
 
       {/* Main Navigation */}
-      <header className="sticky top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-b border-gray-100 shadow-lg">
+      <header className="bg-white/95 backdrop-blur-xl border-b border-gray-100">
         <div className="container mx-auto px-3 sm:px-4 lg:px-6">
           {/* Main Navigation Row */}
           <div className="flex items-center justify-between h-16 sm:h-18 lg:h-20">
@@ -453,7 +454,7 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                 variant="ghost" 
                 size="icon"
                 className="md:hidden relative group hover:bg-primary/10 transition-all duration-300"
-                onClick={() => navigate('/shop')}
+                onClick={() => setShowMobileSearch(true)}
               >
                 <Search size={18} className="group-hover:text-primary transition-colors" />
               </Button>
@@ -583,17 +584,6 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                     )}
                   </AnimatePresence>
                 </div>
-              ) : (
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Button variant="ghost" size="icon" asChild className="group hover:bg-primary/10 transition-all duration-300">
-                    <Link to="/login">
-                      <LogIn size={18} className="group-hover:text-primary transition-colors" />
-                    </Link>
-                  </Button>
-                </motion.div>
               )}
               
               {/* Mobile Menu */}
@@ -729,6 +719,76 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
           </div>
         </div>
       </header>
+
+      {/* Mobile Search Modal */}
+      <AnimatePresence>
+        {showMobileSearch && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="fixed inset-0 bg-white z-[100] p-4 flex flex-col"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">Search</h2>
+              <Button variant="ghost" size="icon" onClick={() => setShowMobileSearch(false)}>
+                <X size={20} />
+              </Button>
+            </div>
+            <form onSubmit={handleSearchSubmit} className="relative">
+              <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <Input
+                type="text"
+                placeholder="Search for flowers, bouquets, gifts..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:border-primary"
+                autoFocus
+              />
+            </form>
+            <div className="mt-4 overflow-y-auto">
+              {searchQuery.length >= 2 && searchSuggestions.length > 0 ? (
+                <div className="space-y-2">
+                  {searchSuggestions.map((suggestion) => (
+                    <button
+                      key={suggestion.id}
+                      onClick={() => {
+                        handleSuggestionClick(suggestion);
+                        setShowMobileSearch(false);
+                      }}
+                      className="w-full text-left p-3 hover:bg-gray-100 rounded-lg flex items-center gap-3"
+                    >
+                      <img src={suggestion.image} alt={suggestion.title} className="w-12 h-12 rounded-md object-cover" />
+                      <div>
+                        <p className="font-semibold">{suggestion.title}</p>
+                        <p className="text-sm text-gray-500">₹{suggestion.price}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-600 mb-2">Popular Searches</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {popularSearches.map((item) => (
+                      <button
+                        key={item.term}
+                        onClick={() => {
+                          handlePopularSearchClick(item.term);
+                          setShowMobileSearch(false);
+                        }}
+                        className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-full text-sm"
+                      >
+                        {item.term}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 };

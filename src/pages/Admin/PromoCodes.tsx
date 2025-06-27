@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2, Tag, Upload, X, Image as ImageIcon } from 'lucide-react';
+import { Plus, Edit, Trash2 } from 'lucide-react';
 import { 
   getAllPromoCodes, 
   createPromoCode, 
@@ -13,6 +13,21 @@ import {
 } from '@/services/promoCodeService';
 import { uploadImage } from '@/services/uploadService';
 import { useToast } from '@/hooks/use-toast';
+import { ImageUpload } from '@/components/ui/ImageUpload';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+const gradientOptions = [
+  { name: 'Sunrise', value: 'linear-gradient(to right, #ff9966, #ff5e62)' },
+  { name: 'Ocean', value: 'linear-gradient(to right, #43cea2, #185a9d)' },
+  { name: 'Grapefruit', value: 'linear-gradient(to right, #ffc0cb, #f3a683)' },
+  { name: 'Peachy', value: 'linear-gradient(to right, #ffecd2, #fcb69f)' },
+  { name: 'Sky', value: 'linear-gradient(to right, #a1c4fd, #c2e9fb)' },
+  { name: 'Lush', value: 'linear-gradient(to right, #56ab2f, #a8e063)' },
+  { name: 'Royal', value: 'linear-gradient(to right, #8e44ad, #c0392b)' },
+  { name: 'Sunset', value: 'linear-gradient(to right, #ff7e5f, #feb47b)' },
+  { name: 'Nightfall', value: 'linear-gradient(to right, #2c3e50, #4ca1af)' },
+  { name: 'Custom', value: '#ffffff' }
+];
 
 const PromoCodesPage: React.FC = () => {
   const [promoCodes, setPromoCodes] = useState<PromoCode[]>([]);
@@ -28,11 +43,10 @@ const PromoCodesPage: React.FC = () => {
     discountValue: 0,
     minimumOrderAmount: 0,
     validUntil: '',
-    image: ''
+    image: '',
+    background: '#ffffff'
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string>('');
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { toast } = useToast();
 
@@ -57,76 +71,6 @@ const PromoCodesPage: React.FC = () => {
     }
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        toast({
-          title: "Error",
-          description: "Please select a valid image file",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        toast({
-          title: "Error",
-          description: "Image size should be less than 5MB",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      setSelectedFile(file);
-      
-      // Create preview
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setImagePreview(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleImageUpload = async (): Promise<string | null> => {
-    if (!selectedFile) return null;
-
-    try {
-      setUploading(true);
-      const uploadFormData = new FormData();
-      uploadFormData.append('image', selectedFile);
-
-      const response = await uploadImage(uploadFormData);
-      
-      if (response.success && response.data?.url) {
-        return response.data.url;
-      } else {
-        throw new Error('Upload failed');
-      }
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      toast({
-        title: "Error",
-        description: "Failed to upload image",
-        variant: "destructive"
-      });
-      return null;
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const clearImageSelection = () => {
-    setSelectedFile(null);
-    setImagePreview('');
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
   const resetForm = () => {
     setFormData({
       code: '',
@@ -135,28 +79,30 @@ const PromoCodesPage: React.FC = () => {
       discountValue: 0,
       minimumOrderAmount: 0,
       validUntil: '',
-      image: ''
+      image: '',
+      background: '#ffffff'
     });
-    clearImageSelection();
+    setSelectedFile(null);
   };
 
   const handleCreatePromoCode = async (e: React.FormEvent) => {
     e.preventDefault();
+    setUploading(true);
     
     try {
-      let imageUrl = formData.image;
+      let imageUrl = '';
 
       // Upload image if a new file is selected
       if (selectedFile) {
-        const uploadedUrl = await handleImageUpload();
-        if (uploadedUrl) {
-          imageUrl = uploadedUrl;
-        }
+        const uploadFormData = new FormData();
+        uploadFormData.append('image', selectedFile);
+        const response = await uploadImage(uploadFormData);
+        imageUrl = response.imageUrl;
       }
 
       const promoCodeData = {
         ...formData,
-        image: imageUrl
+        image: imageUrl,
       };
 
       const response = await createPromoCode(promoCodeData);
@@ -178,6 +124,8 @@ const PromoCodesPage: React.FC = () => {
         description: error.response?.data?.message || 'Failed to create promo code',
         variant: "destructive"
       });
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -190,13 +138,10 @@ const PromoCodesPage: React.FC = () => {
       discountValue: promoCode.discountValue,
       minimumOrderAmount: promoCode.minimumOrderAmount || 0,
       validUntil: new Date(promoCode.validUntil).toISOString().split('T')[0],
-      image: (promoCode as any).image || ''
+      image: (promoCode as any).image || '',
+      background: (promoCode as any).background || '#ffffff'
     });
-    
-    // Set image preview if exists
-    if ((promoCode as any).image) {
-      setImagePreview((promoCode as any).image);
-    }
+    setSelectedFile(null);
     
     setShowEditForm(true);
     setShowCreateForm(false);
@@ -206,16 +151,17 @@ const PromoCodesPage: React.FC = () => {
     e.preventDefault();
     
     if (!editingPromoCode) return;
+    setUploading(true);
     
     try {
       let imageUrl = formData.image;
 
       // Upload image if a new file is selected
       if (selectedFile) {
-        const uploadedUrl = await handleImageUpload();
-        if (uploadedUrl) {
-          imageUrl = uploadedUrl;
-        }
+        const uploadFormData = new FormData();
+        uploadFormData.append('image', selectedFile);
+        const response = await uploadImage(uploadFormData);
+        imageUrl = response.imageUrl;
       }
 
       const promoCodeData = {
@@ -243,6 +189,8 @@ const PromoCodesPage: React.FC = () => {
         description: error.response?.data?.message || 'Failed to update promo code',
         variant: "destructive"
       });
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -290,70 +238,6 @@ const PromoCodesPage: React.FC = () => {
       return `₹${promoCode.discountValue} OFF`;
     }
   };
-
-  const ImageUploadSection = () => (
-    <div>
-      <label className="block text-sm font-medium mb-2">Promo Code Image</label>
-      <div className="space-y-4">
-        {/* Image Preview */}
-        {imagePreview && (
-          <div className="relative inline-block">
-            <img
-              src={imagePreview}
-              alt="Promo code preview"
-              className="w-32 h-32 object-cover rounded-lg border border-gray-200"
-            />
-            <button
-              type="button"
-              onClick={clearImageSelection}
-              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        )}
-
-        {/* File Input */}
-        <div className="flex items-center gap-4">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleFileSelect}
-            className="hidden"
-          />
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            className="flex items-center gap-2"
-          >
-            {uploading ? (
-              <>
-                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                Uploading...
-              </>
-            ) : (
-              <>
-                <Upload className="w-4 h-4" />
-                {imagePreview ? 'Change Image' : 'Upload Image'}
-              </>
-            )}
-          </Button>
-          {selectedFile && (
-            <span className="text-sm text-gray-600">
-              {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
-            </span>
-          )}
-        </div>
-
-        <p className="text-xs text-gray-500">
-          Supported formats: JPG, PNG, GIF. Max size: 5MB. Recommended size: 400x200px
-        </p>
-      </div>
-    </div>
-  );
 
   return (
     <div className="container mx-auto p-6">
@@ -418,8 +302,54 @@ const PromoCodesPage: React.FC = () => {
                 />
               </div>
 
+              {/* Background Selector */}
+              <div>
+                <label className="block text-sm font-medium mb-2">Background</label>
+                <div className="flex items-center gap-2">
+                  <Select
+                    value={formData.background}
+                    onValueChange={(value) => setFormData({ ...formData, background: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select background" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {gradientOptions.map(option => (
+                        <SelectItem key={option.name} value={option.value}>
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="w-4 h-4 rounded-full"
+                              style={{ background: option.value }}
+                            />
+                            {option.name}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {formData.background && !formData.background.includes('gradient') && (
+                    <Input
+                      type="color"
+                      value={formData.background}
+                      onChange={(e) => setFormData({ ...formData, background: e.target.value })}
+                      className="w-16 p-1"
+                    />
+                  )}
+                </div>
+              </div>
+
               {/* Image Upload Section */}
-              <ImageUploadSection />
+              <div>
+                <label className="block text-sm font-medium mb-2">Promo Code Image</label>
+                <ImageUpload
+                  currentImage={formData.image}
+                  onImageUpload={(file) => setSelectedFile(file)}
+                  placeholder="Click or drag to upload an image for the promo code"
+                />
+                <p className="text-xs text-gray-500 mt-2">
+                  Recommended size: 400x200px. Max size: 5MB.
+                </p>
+              </div>
 
               <div className="grid grid-cols-3 gap-4">
                 <div>
@@ -513,8 +443,54 @@ const PromoCodesPage: React.FC = () => {
                 />
               </div>
 
+              {/* Background Selector */}
+              <div>
+                <label className="block text-sm font-medium mb-2">Background</label>
+                <div className="flex items-center gap-2">
+                  <Select
+                    value={formData.background}
+                    onValueChange={(value) => setFormData({ ...formData, background: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select background" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {gradientOptions.map(option => (
+                        <SelectItem key={option.name} value={option.value}>
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="w-4 h-4 rounded-full"
+                              style={{ background: option.value }}
+                            />
+                            {option.name}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {formData.background && !formData.background.includes('gradient') && (
+                    <Input
+                      type="color"
+                      value={formData.background}
+                      onChange={(e) => setFormData({ ...formData, background: e.target.value })}
+                      className="w-16 p-1"
+                    />
+                  )}
+                </div>
+              </div>
+
               {/* Image Upload Section */}
-              <ImageUploadSection />
+              <div>
+                <label className="block text-sm font-medium mb-2">Promo Code Image</label>
+                <ImageUpload
+                  currentImage={formData.image}
+                  onImageUpload={(file) => setSelectedFile(file)}
+                  placeholder="Click or drag to upload an image for the promo code"
+                />
+                <p className="text-xs text-gray-500 mt-2">
+                  Recommended size: 400x200px. Max size: 5MB.
+                </p>
+              </div>
 
               <div className="grid grid-cols-3 gap-4">
                 <div>
@@ -584,9 +560,12 @@ const PromoCodesPage: React.FC = () => {
           promoCodes.map((promoCode) => (
             <Card key={promoCode._id}>
               <CardContent className="p-6">
-                <div className="flex justify-between items-start">
+                <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <div className="flex items-start space-x-4 mb-4">
+                    <div 
+                      className="flex items-start space-x-4 mb-4 p-4 rounded-lg"
+                      style={{ background: (promoCode as any).background || '#ffffff' }}
+                    >
                       {/* Promo Code Image */}
                       {(promoCode as any).image && (
                         <div className="flex-shrink-0">
@@ -600,18 +579,18 @@ const PromoCodesPage: React.FC = () => {
                       
                       <div className="flex-1">
                         <div className="flex items-center space-x-3 mb-2">
-                          <h3 className="text-lg font-semibold">{promoCode.code}</h3>
+                          <h3 className="text-lg font-semibold text-gray-800">{promoCode.code}</h3>
                           {getStatusBadge(promoCode)}
-                          <Badge variant="outline">
+                          <Badge variant="outline" className="bg-white">
                             {formatDiscount(promoCode)}
                           </Badge>
                         </div>
                         
-                        <p className="text-muted-foreground mb-3">{promoCode.description}</p>
+                        <p className="text-gray-600 mb-3">{promoCode.description}</p>
                       </div>
                     </div>
                     
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm px-4">
                       <div>
                         <p className="text-muted-foreground">Used</p>
                         <p className="font-medium">

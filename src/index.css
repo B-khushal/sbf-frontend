@@ -118,6 +118,13 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }
 
 /* Custom keyframes for shop page animations */
@@ -186,4 +193,14 @@
 
 .animate-glow {
   animation: glow 2s ease-in-out infinite;
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }

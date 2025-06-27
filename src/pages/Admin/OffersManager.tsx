@@ -10,13 +10,15 @@ import { CalendarIcon, Plus, Trash2, Power } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import api from '@/services/api';
+import { ImageUpload } from '@/components/ui/ImageUpload';
+import { uploadImage as uploadImageService } from '@/services/uploadService';
 
 interface Offer {
   _id: string;
   title: string;
   description: string;
   imageUrl?: string;
-  backgroundColor: string;
+  background: string;
   textColor: string;
   buttonText: string;
   buttonLink: string;
@@ -27,6 +29,19 @@ interface Offer {
   theme: 'festive' | 'sale' | 'holiday' | 'general';
 }
 
+const gradientOptions = [
+  { name: 'Sunrise', value: 'linear-gradient(to right, #ff9966, #ff5e62)' },
+  { name: 'Ocean', value: 'linear-gradient(to right, #43cea2, #185a9d)' },
+  { name: 'Grapefruit', value: 'linear-gradient(to right, #ffc0cb, #f3a683)' },
+  { name: 'Peachy', value: 'linear-gradient(to right, #ffecd2, #fcb69f)' },
+  { name: 'Sky', value: 'linear-gradient(to right, #a1c4fd, #c2e9fb)' },
+  { name: 'Lush', value: 'linear-gradient(to right, #56ab2f, #a8e063)' },
+  { name: 'Royal', value: 'linear-gradient(to right, #8e44ad, #c0392b)' },
+  { name: 'Sunset', value: 'linear-gradient(to right, #ff7e5f, #feb47b)' },
+  { name: 'Nightfall', value: 'linear-gradient(to right, #2c3e50, #4ca1af)' },
+  { name: 'Custom', value: '#ffffff' }
+];
+
 const OffersManager = () => {
   const { toast } = useToast();
   const [offers, setOffers] = useState<Offer[]>([]);
@@ -35,11 +50,12 @@ const OffersManager = () => {
   const [showForm, setShowForm] = useState(false);
   const [currentOffer, setCurrentOffer] = useState<Partial<Offer>>({
     theme: 'general',
-    backgroundColor: '#ffffff',
+    background: '#ffffff',
     textColor: '#000000',
     buttonText: 'Shop Now',
     showOnlyOnce: false
   });
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   // Fetch offers
   const fetchOffers = async () => {
@@ -65,10 +81,21 @@ const OffersManager = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      let imageUrl = currentOffer.imageUrl;
+
+      if (selectedFile) {
+        const formData = new FormData();
+        formData.append('image', selectedFile);
+        const response = await uploadImageService(formData);
+        imageUrl = response.imageUrl;
+      }
+      
+      const offerData = { ...currentOffer, imageUrl };
+
       if (isEditing) {
-        await api.put(`/offers/${currentOffer._id}`, currentOffer);
+        await api.put(`/offers/${currentOffer._id}`, offerData);
       } else {
-        await api.post('/offers', currentOffer);
+        await api.post('/offers', offerData);
       }
 
       toast({
@@ -78,11 +105,12 @@ const OffersManager = () => {
 
       setCurrentOffer({
         theme: 'general',
-        backgroundColor: '#ffffff',
+        background: '#ffffff',
         textColor: '#000000',
         buttonText: 'Shop Now',
         showOnlyOnce: false
       });
+      setSelectedFile(null);
       setIsEditing(false);
       setShowForm(false);
       fetchOffers();
@@ -143,7 +171,7 @@ const OffersManager = () => {
             setShowForm(true);
             setCurrentOffer({
               theme: 'general',
-              backgroundColor: '#ffffff',
+              background: '#ffffff',
               textColor: '#000000',
               buttonText: 'Shop Now',
               showOnlyOnce: false
@@ -202,12 +230,12 @@ const OffersManager = () => {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="imageUrl">Image URL</Label>
-            <Input
-              id="imageUrl"
-              value={currentOffer.imageUrl || ''}
-              onChange={(e) => setCurrentOffer({ ...currentOffer, imageUrl: e.target.value })}
+          <div className="space-y-2 md:col-span-2">
+            <Label>Offer Image</Label>
+            <ImageUpload
+              currentImage={currentOffer.imageUrl}
+              onImageUpload={async (file) => setSelectedFile(file)}
+              placeholder="Click or drag to upload an image"
             />
           </div>
 
@@ -232,19 +260,38 @@ const OffersManager = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="backgroundColor">Background Color</Label>
-            <div className="flex gap-2">
-              <Input
-                id="backgroundColor"
-                type="color"
-                value={currentOffer.backgroundColor || '#ffffff'}
-                onChange={(e) => setCurrentOffer({ ...currentOffer, backgroundColor: e.target.value })}
-                className="w-16"
-              />
-              <Input
-                value={currentOffer.backgroundColor || '#ffffff'}
-                onChange={(e) => setCurrentOffer({ ...currentOffer, backgroundColor: e.target.value })}
-              />
+            <Label htmlFor="background">Background</Label>
+            <div className="flex items-center gap-2">
+              <Select
+                value={currentOffer.background}
+                onValueChange={(value) => setCurrentOffer({ ...currentOffer, background: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select background" />
+                </SelectTrigger>
+                <SelectContent>
+                  {gradientOptions.map(option => (
+                    <SelectItem key={option.name} value={option.value}>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-4 h-4 rounded-full"
+                          style={{ background: option.value }}
+                        />
+                        {option.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {currentOffer.background && !currentOffer.background.includes('gradient') && (
+                <Input
+                  id="backgroundColor"
+                  type="color"
+                  value={currentOffer.background || '#ffffff'}
+                  onChange={(e) => setCurrentOffer({ ...currentOffer, background: e.target.value })}
+                  className="w-16 p-1"
+                />
+              )}
             </div>
           </div>
 
@@ -328,7 +375,7 @@ const OffersManager = () => {
                 setShowForm(false);
                 setCurrentOffer({
                   theme: 'general',
-                  backgroundColor: '#ffffff',
+                  background: '#ffffff',
                   textColor: '#000000',
                   buttonText: 'Shop Now',
                   showOnlyOnce: false
