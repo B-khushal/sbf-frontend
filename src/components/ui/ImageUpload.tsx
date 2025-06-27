@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Upload, RefreshCw, X } from 'lucide-react';
+import { Upload, RefreshCw } from 'lucide-react';
 import { Button } from './button';
 import { Label } from './label';
 import { cn } from '@/lib/utils';
