@@ -27,6 +27,7 @@ import {
 import api from "../services/api";
 import { uploadImage } from "../services/uploadService";
 import { useToast } from "../hooks/use-toast";
+import { ImageUpload } from "../components/ui/ImageUpload";
 
 interface HeroSlide {
   id: number;
@@ -206,86 +207,21 @@ const AdminSettingsPage: React.FC = () => {
     fetchAllSettings();
   }, []);
 
-  const saveAllSettings = async () => {
-    try {
-      setSaving(true);
-      await api.put("/settings/all", {
-        heroSlides,
-        homeSections,
-        categories,
-        headerSettings,
-        footerSettings,
-      });
-      
-      toast({
-        title: "Settings saved",
-        description: "All settings have been saved successfully",
-      });
-    } catch (error) {
-      console.error("Error saving settings:", error);
-      
-      // Extract error message from response if available
-      const errorMessage = error.response?.data?.message || 'Failed to save settings';
-      const detailedError = error.response?.data?.errors 
-        ? Object.values(error.response.data.errors).join(', ')
-        : error.response?.data?.error || error.message;
-      
-      toast({
-        title: "Error",
-        description: `${errorMessage}${detailedError ? `: ${detailedError}` : ''}`,
-        variant: "destructive",
-      });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // Hero Slides Management
-  const handleSlideImageUpload = async (slideId: number, file: File) => {
-    try {
-      setUploadingImage(`slide-${slideId}`);
-      const formData = new FormData();
-      formData.append('image', file);
-      
-      const response = await uploadImage(formData);
-      const imageUrl = response.imageUrl;
-      
-      if (!imageUrl) {
-        throw new Error('No image URL returned from server');
-      }
-
-      setHeroSlides(prev => prev.map(slide => 
-        slide.id === slideId ? { ...slide, image: imageUrl } : slide
-      ));
-      
-      toast({
-        title: "Image uploaded",
-        description: "Slide image has been updated successfully",
-      });
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to upload image",
-        variant: "destructive",
-      });
-    } finally {
-      setUploadingImage(null);
-    }
-  };
-
   const updateSlide = (slideId: number, field: keyof HeroSlide, value: string | boolean | number) => {
     console.log('Updating slide:', { slideId, field, value });
     setHeroSlides(prev => {
-      const newSlides = prev.map(slide => {
-        if (slide.id === slideId) {
-          const updatedSlide = { ...slide, [field]: value };
-          console.log('Updating slide:', slide.id, field, value, updatedSlide);
-          return updatedSlide;
-        }
-        return slide;
-      });
-      return newSlides;
+      const slideIndex = prev.findIndex(slide => slide.id === slideId);
+      if (slideIndex === -1) {
+        console.error('Slide not found:', slideId);
+        return prev;
+      }
+
+      const updatedSlides = [...prev];
+      const updatedSlide = { ...updatedSlides[slideIndex], [field]: value };
+      updatedSlides[slideIndex] = updatedSlide;
+      
+      console.log('Updated slide:', updatedSlide);
+      return updatedSlides;
     });
   };
 
@@ -377,8 +313,12 @@ const AdminSettingsPage: React.FC = () => {
       formData.append('image', file);
       
       const response = await uploadImage(formData);
-      const imageUrl = response.url;
+      const imageUrl = response.imageUrl;
       
+      if (!imageUrl) {
+        throw new Error('No image URL returned from server');
+      }
+
       setCategories(prev => prev.map(category => 
         category.id === categoryId ? { ...category, image: imageUrl } : category
       ));
@@ -388,10 +328,10 @@ const AdminSettingsPage: React.FC = () => {
         description: "Category image has been updated successfully",
       });
     } catch (error) {
-      console.error("Error uploading image:", error);
+      console.error("Error uploading category image:", error);
       toast({
         title: "Error",
-        description: "Failed to upload image",
+        description: error.response?.data?.message || "Failed to upload image",
         variant: "destructive",
       });
     } finally {
@@ -437,6 +377,74 @@ const AdminSettingsPage: React.FC = () => {
         const reordered = arrayMove(items, oldIndex, newIndex);
         return reordered.map((item, index) => ({ ...item, order: index }));
       });
+    }
+  };
+
+  const saveAllSettings = async () => {
+    try {
+      setSaving(true);
+      await api.put("/settings/all", {
+        heroSlides,
+        homeSections,
+        categories,
+        headerSettings,
+        footerSettings,
+      });
+      
+      toast({
+        title: "Settings saved",
+        description: "All settings have been saved successfully",
+      });
+    } catch (error) {
+      console.error("Error saving settings:", error);
+      
+      // Extract error message from response if available
+      const errorMessage = error.response?.data?.message || 'Failed to save settings';
+      const detailedError = error.response?.data?.errors 
+        ? Object.values(error.response.data.errors).join(', ')
+        : error.response?.data?.error || error.message;
+      
+      toast({
+        title: "Error",
+        description: `${errorMessage}${detailedError ? `: ${detailedError}` : ''}`,
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Hero Slides Management
+  const handleSlideImageUpload = async (slideId: number, file: File) => {
+    try {
+      setUploadingImage(`slide-${slideId}`);
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      const response = await uploadImage(formData);
+      const imageUrl = response.imageUrl;
+      
+      if (!imageUrl) {
+        throw new Error('No image URL returned from server');
+      }
+
+      setHeroSlides(prev => prev.map(slide => 
+        slide.id === slideId ? { ...slide, image: imageUrl } : slide
+      ));
+      
+      toast({
+        title: "Image uploaded",
+        description: "Slide image has been updated successfully",
+      });
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to upload image",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingImage(null);
     }
   };
 
@@ -601,8 +609,9 @@ const AdminSettingsPage: React.FC = () => {
                                 <div className="space-y-2">
                                   <Label htmlFor={`slide-title-${slide.id}`}>Title</Label>
                                   <Input
+                                    type="text"
                                     id={`slide-title-${slide.id}`}
-                                    value={slide.title}
+                                    value={slide.title || ''}
                                     onChange={(e) => updateSlide(slide.id, 'title', e.target.value)}
                                     placeholder="Enter slide title"
                                   />
@@ -612,7 +621,7 @@ const AdminSettingsPage: React.FC = () => {
                                   <Label htmlFor={`slide-subtitle-${slide.id}`}>Subtitle</Label>
                                   <Textarea
                                     id={`slide-subtitle-${slide.id}`}
-                                    value={slide.subtitle}
+                                    value={slide.subtitle || ''}
                                     onChange={(e) => updateSlide(slide.id, 'subtitle', e.target.value)}
                                     placeholder="Enter slide subtitle"
                                     rows={3}
@@ -623,8 +632,9 @@ const AdminSettingsPage: React.FC = () => {
                                   <div className="space-y-2">
                                     <Label htmlFor={`slide-cta-${slide.id}`}>Button Text</Label>
                                     <Input
+                                      type="text"
                                       id={`slide-cta-${slide.id}`}
-                                      value={slide.ctaText}
+                                      value={slide.ctaText || ''}
                                       onChange={(e) => updateSlide(slide.id, 'ctaText', e.target.value)}
                                       placeholder="Shop Now"
                                     />
@@ -633,8 +643,9 @@ const AdminSettingsPage: React.FC = () => {
                                   <div className="space-y-2">
                                     <Label htmlFor={`slide-link-${slide.id}`}>Button Link</Label>
                                     <Input
+                                      type="text"
                                       id={`slide-link-${slide.id}`}
-                                      value={slide.ctaLink}
+                                      value={slide.ctaLink || ''}
                                       onChange={(e) => updateSlide(slide.id, 'ctaLink', e.target.value)}
                                       placeholder="/shop"
                                     />
@@ -858,43 +869,16 @@ const AdminSettingsPage: React.FC = () => {
                             </div>
 
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                              {/* Image Upload Section */}
+                              {/* Image Upload */}
                               <div className="space-y-4">
-                                <Label className="text-base font-medium">Category Image</Label>
-                                <div className="relative group">
-                                  <img
-                                    src={category.image}
-                                    alt={category.name}
-                                    className="w-full h-32 object-cover rounded-lg border"
+                                <div className="relative">
+                                  <ImageUpload
+                                    currentImage={category.image}
+                                    onImageUpload={(file) => handleCategoryImageUpload(category.id, file)}
+                                    isUploading={uploadingImage === `category-${category.id}`}
+                                    aspectRatio="landscape"
+                                    placeholder="Upload category image"
                                   />
-                                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                                    <Label
-                                      htmlFor={`category-image-${category.id}`}
-                                      className="cursor-pointer bg-white text-black px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors"
-                                    >
-                                      {uploadingImage === `category-${category.id}` ? (
-                                        <>
-                                          <RefreshCw className="w-4 h-4 mr-2 animate-spin inline" />
-                                          Uploading...
-                                        </>
-                                      ) : (
-                                        <>
-                                          <Upload className="w-4 h-4 mr-2 inline" />
-                                          Change Image
-                                        </>
-                                      )}
-                                    </Label>
-                                    <input
-                                      id={`category-image-${category.id}`}
-                                      type="file"
-                                      accept="image/*"
-                                      className="hidden"
-                                      onChange={(e) => {
-                                        const file = e.target.files?.[0];
-                                        if (file) handleCategoryImageUpload(category.id, file);
-                                      }}
-                                    />
-                                  </div>
                                 </div>
                               </div>
 
