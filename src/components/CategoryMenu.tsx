@@ -192,7 +192,7 @@ const CategoryMenu = () => {
   };
 
   return (
-    <nav className="bg-white/98 backdrop-blur-xl border-b border-gray-100/80 sticky top-0 z-[60] shadow-sm" ref={navRef}>
+    <nav className="bg-white/98 backdrop-blur-xl border-b border-gray-100/80 sticky top-[64px] sm:top-[72px] lg:top-[80px] z-[60] shadow-sm" ref={navRef}>
       <div className="container mx-auto px-3 sm:px-4 lg:px-6">
         <ScrollArea className="w-full whitespace-nowrap">
           <div className="relative flex items-center justify-start py-3 lg:py-4">
