@@ -14,7 +14,7 @@ interface ImageUploadProps {
   disabled?: boolean;
 }
 
-const ImageUpload: React.FC<ImageUploadProps> = ({
+export const ImageUpload = ({
   currentImage,
   onImageUpload,
   isUploading = false,
@@ -22,7 +22,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   aspectRatio = 'landscape',
   placeholder = 'Upload Image',
   disabled = false
-}) => {
+}: ImageUploadProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
 
@@ -165,7 +165,4 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         disabled={disabled || isUploading}
       />
     </div>
-  );
-};
-
-export default ImageUpload; 
+  ); 

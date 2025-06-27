@@ -27,7 +27,7 @@ import {
 import api from "../services/api";
 import { uploadImage } from "../services/uploadService";
 import { useToast } from "../hooks/use-toast";
-import { ImageUpload } from "../components/ui/ImageUpload";
+import { ImageUpload } from "@/components/ui/ImageUpload";
 
 interface HeroSlide {
   id: number;
