@@ -185,10 +185,14 @@ const AdminSettingsPage: React.FC = () => {
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
       onActivation: ({ event }) => {
-        const target = event.target as HTMLElement;
-        // Prevent activation if the target is an input, textarea, or button
-        if (target.closest('input, textarea, button')) {
-          return false;
+        if (event.target instanceof HTMLElement) {
+          const target = event.target as HTMLElement;
+          if (
+            target.dataset.noDnd ||
+            target.closest('input, textarea, button, [role="button"]')
+          ) {
+            return false;
+          }
         }
         return true;
       },
