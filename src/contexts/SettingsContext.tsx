@@ -245,14 +245,30 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
 
       // Handle home sections
       if (sectionsRes.status === 'fulfilled') {
-        const fetchedSections = sectionsRes.value.data || [];
+        let fetchedSections = sectionsRes.value.data || [];
+        
+        // Ensure "offers" section exists
+        const offersSectionExists = fetchedSections.some((section: HomeSection) => section.type === 'offers');
+        if (!offersSectionExists) {
+          fetchedSections.push({
+            id: "offers",
+            type: "offers",
+            title: "Exclusive Offers",
+            subtitle: "Don't miss out on our special deals",
+            enabled: true,
+            order: 3 // Default order, can be adjusted
+          });
+        }
+        
         // Only show enabled sections, sorted by order
         const enabledSections = fetchedSections
           .filter((section: HomeSection) => section.enabled)
           .sort((a: HomeSection, b: HomeSection) => a.order - b.order);
+        
         setHomeSections(enabledSections);
       } else {
-        console.warn('Failed to fetch home sections');
+        console.warn('Failed to fetch home sections, using defaults');
+        setHomeSections([]);
       }
 
     } catch (err) {

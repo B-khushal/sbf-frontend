@@ -116,7 +116,7 @@ const AdminSettingsPage: React.FC = () => {
       type: "offers", 
       title: "Exclusive Offers", 
       subtitle: "Don't miss out on our special deals", 
-      enabled: true, 
+      enabled: true,
       order: 3 
     }
   ]);
@@ -200,9 +200,9 @@ const AdminSettingsPage: React.FC = () => {
   );
 
   useEffect(() => {
-    const fetchAllSettings = async () => {
-      try {
-        setLoading(true);
+  const fetchAllSettings = async () => {
+    try {
+      setLoading(true);
         const response = await api.get("/settings/all");
         const data = response.data;
         
@@ -243,17 +243,17 @@ const AdminSettingsPage: React.FC = () => {
           title: "Settings loaded",
           description: "All settings have been loaded successfully",
         });
-      } catch (error) {
+    } catch (error) {
         console.error("Error fetching settings:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load settings",
+      toast({
+        title: "Error",
+        description: "Failed to load settings",
           variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
     fetchAllSettings();
   }, []);
@@ -318,13 +318,13 @@ const AdminSettingsPage: React.FC = () => {
   // Home Sections Management
   const toggleSectionEnabled = (id: string) => {
     setHomeSections(prev => prev.map(section => 
-      section.id === id ? { ...section, enabled: !section.enabled } : section
+          section.id === id ? { ...section, enabled: !section.enabled } : section
     ));
   };
 
   const updateSectionContent = (id: string, field: string, value: string) => {
     setHomeSections(prev => prev.map(section => 
-      section.id === id ? { ...section, [field]: value } : section
+        section.id === id ? { ...section, [field]: value } : section
     ));
   };
 
@@ -569,7 +569,7 @@ const AdminSettingsPage: React.FC = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <DndContext
+              <DndContext 
                 sensors={sensors}
                 collisionDetection={closestCenter}
                 onDragEnd={handleSlidesDragEnd}
@@ -586,7 +586,7 @@ const AdminSettingsPage: React.FC = () => {
                                 Slide {slide.id}
                               </Badge>
                               <div className="flex items-center gap-2">
-                                <Switch
+                                  <Switch
                                   id={`slide-enabled-${slide.id}`}
                                   checked={slide.enabled}
                                   onCheckedChange={(checked) => updateSlide(slide.id, 'enabled', checked)}
@@ -651,7 +651,7 @@ const AdminSettingsPage: React.FC = () => {
                                         }
                                       }}
                                     />
-                                  </div>
+                                </div>
                                 </div>
                               </div>
 
@@ -659,25 +659,25 @@ const AdminSettingsPage: React.FC = () => {
                               <div className="space-y-4">
                                 <div className="space-y-2">
                                   <Label htmlFor={`slide-title-${slide.id}`}>Title</Label>
-                                  <Input
+                                    <Input
                                     type="text"
                                     id={`slide-title-${slide.id}`}
                                     value={slide.title || ''}
                                     onChange={(e) => updateSlide(slide.id, 'title', e.target.value)}
                                     placeholder="Enter slide title"
-                                  />
-                                </div>
+                                    />
+                                  </div>
 
                                 <div className="space-y-2">
                                   <Label htmlFor={`slide-subtitle-${slide.id}`}>Subtitle</Label>
-                                  <Textarea
+                                    <Textarea
                                     id={`slide-subtitle-${slide.id}`}
                                     value={slide.subtitle || ''}
                                     onChange={(e) => updateSlide(slide.id, 'subtitle', e.target.value)}
                                     placeholder="Enter slide subtitle"
                                     rows={3}
-                                  />
-                                </div>
+                                    />
+                                  </div>
 
                                 <div className="grid grid-cols-2 gap-4">
                                   <div className="space-y-2">
@@ -689,7 +689,7 @@ const AdminSettingsPage: React.FC = () => {
                                       onChange={(e) => updateSlide(slide.id, 'ctaText', e.target.value)}
                                       placeholder="Shop Now"
                                     />
-                                  </div>
+                                </div>
 
                                   <div className="space-y-2">
                                     <Label htmlFor={`slide-link-${slide.id}`}>Button Link</Label>
@@ -700,7 +700,7 @@ const AdminSettingsPage: React.FC = () => {
                                       onChange={(e) => updateSlide(slide.id, 'ctaLink', e.target.value)}
                                       placeholder="/shop"
                                     />
-                                  </div>
+                              </div>
                                 </div>
                               </div>
                             </div>
@@ -764,17 +764,17 @@ const AdminSettingsPage: React.FC = () => {
                                   <Eye className="w-4 h-4 text-green-600" /> : 
                                   <EyeOff className="w-4 h-4 text-gray-400" />
                                 }
-                                {section.type === 'custom' && (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => deleteSection(section.id)}
-                                    className="text-red-600 hover:text-red-700"
-                                  >
+                              {section.type === 'custom' && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => deleteSection(section.id)}
+                                  className="text-red-600 hover:text-red-700"
+                                >
                                     <Trash2 className="w-4 h-4" />
-                                  </Button>
-                                )}
-                              </div>
+                                </Button>
+                              )}
+                            </div>
                             </div>
 
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -884,7 +884,7 @@ const AdminSettingsPage: React.FC = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <DndContext
+              <DndContext 
                 sensors={sensors}
                 collisionDetection={closestCenter}
                 onDragEnd={handleCategoriesDragEnd}
@@ -900,8 +900,8 @@ const AdminSettingsPage: React.FC = () => {
                               <Badge variant={category.enabled ? "default" : "secondary"}>
                                 {category.name}
                               </Badge>
-                              <Switch
-                                checked={category.enabled}
+                                  <Switch
+                                    checked={category.enabled}
                                 onCheckedChange={() => toggleCategoryEnabled(category.id)}
                               />
                               <Label className="text-sm">
@@ -916,7 +916,7 @@ const AdminSettingsPage: React.FC = () => {
                                 >
                                   <Trash2 className="w-4 h-4" />
                                 </Button>
-                              </div>
+                                </div>
                             </div>
 
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -937,35 +937,35 @@ const AdminSettingsPage: React.FC = () => {
                               <div className="space-y-4">
                                 <div className="space-y-2">
                                   <Label htmlFor={`category-name-${category.id}`}>Category Name</Label>
-                                  <Input
+                                    <Input
                                     id={`category-name-${category.id}`}
-                                    value={category.name}
+                                      value={category.name}
                                     onChange={(e) => updateCategoryContent(category.id, 'name', e.target.value)}
                                     placeholder="Enter category name"
-                                  />
-                                </div>
+                                    />
+                                  </div>
 
                                 <div className="space-y-2">
                                   <Label htmlFor={`category-description-${category.id}`}>Description</Label>
                                   <Textarea
                                     id={`category-description-${category.id}`}
-                                    value={category.description}
+                                      value={category.description}
                                     onChange={(e) => updateCategoryContent(category.id, 'description', e.target.value)}
                                     placeholder="Enter category description"
                                     rows={2}
-                                  />
-                                </div>
+                                    />
+                                  </div>
 
                                 <div className="space-y-2">
                                   <Label htmlFor={`category-link-${category.id}`}>Category Link</Label>
-                                  <Input
+                                    <Input
                                     id={`category-link-${category.id}`}
-                                    value={category.link}
+                                      value={category.link}
                                     onChange={(e) => updateCategoryContent(category.id, 'link', e.target.value)}
                                     placeholder="/shop/category-name"
-                                  />
+                                    />
+                                  </div>
                                 </div>
-                              </div>
                             </div>
                           </CardContent>
                         </Card>
@@ -989,54 +989,54 @@ const AdminSettingsPage: React.FC = () => {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="logo-url">Logo URL</Label>
-                  <Input
+                <Input
                     id="logo-url"
-                    value={headerSettings.logo}
-                    onChange={(e) => setHeaderSettings(prev => ({ ...prev, logo: e.target.value }))}
+                  value={headerSettings.logo}
+                  onChange={(e) => setHeaderSettings(prev => ({ ...prev, logo: e.target.value }))}
                     placeholder="/images/logosbf.png"
-                  />
-                </div>
-
+                />
+              </div>
+              
                 <div className="space-y-2">
                   <Label htmlFor="search-placeholder">Search Placeholder</Label>
-                  <Input
+                <Input
                     id="search-placeholder"
-                    value={headerSettings.searchPlaceholder}
-                    onChange={(e) => setHeaderSettings(prev => ({ ...prev, searchPlaceholder: e.target.value }))}
+                  value={headerSettings.searchPlaceholder}
+                  onChange={(e) => setHeaderSettings(prev => ({ ...prev, searchPlaceholder: e.target.value }))}
                     placeholder="Search for flowers..."
-                  />
-                </div>
+                />
+              </div>
 
                 <div className="space-y-4">
                   <Label className="text-base font-medium">Header Features</Label>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="flex items-center space-x-2">
-                      <Switch
+                <div className="flex items-center space-x-2">
+                  <Switch
                         id="show-wishlist"
-                        checked={headerSettings.showWishlist}
-                        onCheckedChange={(checked) => setHeaderSettings(prev => ({ ...prev, showWishlist: checked }))}
-                      />
+                    checked={headerSettings.showWishlist}
+                    onCheckedChange={(checked) => setHeaderSettings(prev => ({ ...prev, showWishlist: checked }))}
+                  />
                       <Label htmlFor="show-wishlist">Show Wishlist</Label>
-                    </div>
+                </div>
 
-                    <div className="flex items-center space-x-2">
-                      <Switch
+                <div className="flex items-center space-x-2">
+                  <Switch
                         id="show-cart"
-                        checked={headerSettings.showCart}
-                        onCheckedChange={(checked) => setHeaderSettings(prev => ({ ...prev, showCart: checked }))}
-                      />
+                    checked={headerSettings.showCart}
+                    onCheckedChange={(checked) => setHeaderSettings(prev => ({ ...prev, showCart: checked }))}
+                  />
                       <Label htmlFor="show-cart">Show Cart</Label>
-                    </div>
+                </div>
 
-                    <div className="flex items-center space-x-2">
-                      <Switch
+                <div className="flex items-center space-x-2">
+                  <Switch
                         id="show-currency"
-                        checked={headerSettings.showCurrencyConverter}
-                        onCheckedChange={(checked) => setHeaderSettings(prev => ({ ...prev, showCurrencyConverter: checked }))}
-                      />
+                    checked={headerSettings.showCurrencyConverter}
+                    onCheckedChange={(checked) => setHeaderSettings(prev => ({ ...prev, showCurrencyConverter: checked }))}
+                  />
                       <Label htmlFor="show-currency">Show Currency Converter</Label>
-                    </div>
-                  </div>
+                </div>
+              </div>
                 </div>
               </div>
             </CardContent>
@@ -1055,13 +1055,13 @@ const AdminSettingsPage: React.FC = () => {
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="company-name">Company Name</Label>
-                    <Input
+                  <Input
                       id="company-name"
-                      value={footerSettings.companyName}
-                      onChange={(e) => setFooterSettings(prev => ({ ...prev, companyName: e.target.value }))}
+                    value={footerSettings.companyName}
+                    onChange={(e) => setFooterSettings(prev => ({ ...prev, companyName: e.target.value }))}
                       placeholder="Spring Blossoms Florist"
-                    />
-                  </div>
+                  />
+                </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="company-description">Company Description</Label>
@@ -1075,15 +1075,15 @@ const AdminSettingsPage: React.FC = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="copyright">Copyright Text</Label>
-                    <Input
-                      id="copyright"
-                      value={footerSettings.copyright}
-                      onChange={(e) => setFooterSettings(prev => ({ ...prev, copyright: e.target.value }))}
+                  <Label htmlFor="copyright">Copyright Text</Label>
+                  <Input
+                    id="copyright"
+                    value={footerSettings.copyright}
+                    onChange={(e) => setFooterSettings(prev => ({ ...prev, copyright: e.target.value }))}
                       placeholder="© 2024 Spring Blossoms Florist. All rights reserved."
-                    />
-                  </div>
+                  />
                 </div>
+              </div>
 
                 <div className="space-y-4">
                   <div className="space-y-2">
@@ -1091,8 +1091,8 @@ const AdminSettingsPage: React.FC = () => {
                     <Input
                       id="contact-email"
                       value={footerSettings.contactInfo.email}
-                      onChange={(e) => setFooterSettings(prev => ({ 
-                        ...prev, 
+                      onChange={(e) => setFooterSettings(prev => ({
+                        ...prev,
                         contactInfo: { ...prev.contactInfo, email: e.target.value }
                       }))}
                       placeholder="contact@example.com"
@@ -1104,8 +1104,8 @@ const AdminSettingsPage: React.FC = () => {
                     <Input
                       id="contact-phone"
                       value={footerSettings.contactInfo.phone}
-                      onChange={(e) => setFooterSettings(prev => ({ 
-                        ...prev, 
+                      onChange={(e) => setFooterSettings(prev => ({
+                        ...prev,
                         contactInfo: { ...prev.contactInfo, phone: e.target.value }
                       }))}
                       placeholder="+91 9849589710"
@@ -1114,16 +1114,16 @@ const AdminSettingsPage: React.FC = () => {
 
                   <div className="space-y-2">
                     <Label htmlFor="contact-address">Contact Address</Label>
-                    <Textarea
+                  <Textarea
                       id="contact-address"
-                      value={footerSettings.contactInfo.address}
-                      onChange={(e) => setFooterSettings(prev => ({ 
-                        ...prev, 
-                        contactInfo: { ...prev.contactInfo, address: e.target.value }
-                      }))}
+                    value={footerSettings.contactInfo.address}
+                    onChange={(e) => setFooterSettings(prev => ({
+                      ...prev,
+                      contactInfo: { ...prev.contactInfo, address: e.target.value }
+                    }))}
                       placeholder="Business address"
-                      rows={3}
-                    />
+                    rows={3}
+                  />
                   </div>
                 </div>
               </div>
