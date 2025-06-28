@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ShoppingCart, Heart, Share2, Minus, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ShoppingCart, Heart, Share2, Minus, Plus, ChevronLeft, ChevronRight, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useCurrency } from '@/contexts/CurrencyContext';
@@ -7,6 +7,18 @@ import { useAuth } from '@/hooks/use-auth';
 import { getImageUrl, getProductImageUrl } from '@/config';
 import ContactModal from '@/components/ui/ContactModal';
 import useCart from '@/hooks/use-cart';
+import productService from '@/services/productService';
+import { Button } from './ui/button';
+import { Textarea } from './ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+
+type Review = {
+  _id: string;
+  name: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+};
 
 type ProductDetailProps = {
   product: {
@@ -21,6 +33,9 @@ type ProductDetailProps = {
     category: string;
     isNewArrival?: boolean;
     isFeatured?: boolean;
+    reviews: Review[];
+    rating: number;
+    numReviews: number;
   };
   onAddToCart: (item: {
     id: string;
@@ -36,6 +51,9 @@ type ProductDetailProps = {
 const ProductDetail = ({ product, onAddToCart }: ProductDetailProps) => {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { formatPrice, convertPrice } = useCurrency();
   const { user } = useAuth();
@@ -238,6 +256,47 @@ const ProductDetail = ({ product, onAddToCart }: ProductDetailProps) => {
     }
   };
 
+  const handleReviewSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) {
+      toast({
+        title: "Please log in",
+        description: "You need to be logged in to write a review.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (rating === 0 || comment.trim() === '') {
+      toast({
+        title: "Incomplete review",
+        description: "Please provide a rating and a comment.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await productService.createProductReview(product._id, { rating, comment });
+      toast({
+        title: "Review submitted",
+        description: "Thank you for your feedback!",
+      });
+      setRating(0);
+      setComment('');
+      // Optionally, you could refetch the product data to show the new review instantly
+    } catch (error: any) {
+      toast({
+        title: "Error submitting review",
+        description: error.response?.data?.message || "An unexpected error occurred.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <section className="pt-24 pb-16 px-6 md:px-8 animate-fade-in">
       <div className="max-w-6xl mx-auto">
@@ -422,6 +481,76 @@ const ProductDetail = ({ product, onAddToCart }: ProductDetailProps) => {
         onClose={closeContactModal}
         productTitle={contactModalProduct}
       />
+
+      {/* Reviews Section */}
+      <div className="max-w-6xl mx-auto mt-16">
+        <h2 className="text-3xl font-bold mb-6">Reviews ({product.numReviews})</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+          <div>
+            {product.reviews.length === 0 && <p>No reviews yet.</p>}
+            <div className="space-y-6">
+              {product.reviews.map((review) => (
+                <Card key={review._id}>
+                  <CardHeader>
+                    <CardTitle className="text-lg">{review.name}</CardTitle>
+                    <div className="flex items-center">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className={cn("h-5 w-5", i < review.rating ? "text-yellow-400 fill-yellow-400" : "text-gray-300")} />
+                      ))}
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p>{review.comment}</p>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      {new Date(review.createdAt).toLocaleDateString()}
+                    </p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+          <div>
+            {user ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Write a Review</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleReviewSubmit} className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Rating</label>
+                      <div className="flex items-center">
+                        {[...Array(5)].map((_, i) => (
+                          <Star
+                            key={i}
+                            className={cn("h-8 w-8 cursor-pointer", i < rating ? "text-yellow-400 fill-yellow-400" : "text-gray-300")}
+                            onClick={() => setRating(i + 1)}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <label htmlFor="comment" className="block text-sm font-medium text-gray-700 mb-2">Comment</label>
+                      <Textarea
+                        id="comment"
+                        value={comment}
+                        onChange={(e) => setComment(e.target.value)}
+                        placeholder="Share your thoughts about the product..."
+                        rows={4}
+                      />
+                    </div>
+                    <Button type="submit" disabled={isSubmitting}>
+                      {isSubmitting ? 'Submitting...' : 'Submit Review'}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+            ) : (
+              <p>Please <a href="/login" className="underline">log in</a> to write a review.</p>
+            )}
+          </div>
+        </div>
+      </div>
     </section>
   );
 };
