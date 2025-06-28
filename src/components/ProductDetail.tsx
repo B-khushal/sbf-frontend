@@ -259,7 +259,11 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
 
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    console.log('🔍 Review submission started:', { rating, comment, productId: product._id });
+    
     if (!user) {
+      console.log('❌ No user found');
       toast({
         title: "Please log in",
         description: "You need to be logged in to write a review.",
@@ -268,7 +272,10 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
       return;
     }
 
+    console.log('✅ User is logged in:', user.name);
+
     if (rating === 0 || comment.trim() === '') {
+      console.log('❌ Invalid rating or comment:', { rating, comment: comment.trim() });
       toast({
         title: "Incomplete review",
         description: "Please provide a rating and a comment.",
@@ -277,9 +284,14 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
       return;
     }
 
+    console.log('✅ Rating and comment are valid');
+
     setIsSubmitting(true);
     try {
-      await productService.createProductReview(product._id, { rating, comment });
+      console.log('📡 Sending review to server...');
+      const result = await productService.createProductReview(product._id, { rating, comment });
+      console.log('✅ Review submitted successfully:', result);
+      
       toast({
         title: "Review submitted",
         description: "Thank you for your feedback!",
@@ -288,6 +300,10 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
       setComment('');
       onReviewSubmit();
     } catch (error: any) {
+      console.error('❌ Error submitting review:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      
       toast({
         title: "Error submitting review",
         description: error.response?.data?.message || "An unexpected error occurred.",

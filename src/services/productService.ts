@@ -302,6 +302,7 @@ export const createProductReview = async (productId: string, review: {
   rating: number;
   comment: string;
 }) => {
-  const response = await axios.post<{ message: string }>(`${API_URL}/products/${productId}/reviews`, review);
+  const config = createAuthConfig();
+  const response = await axios.post<{ message: string }>(`${API_URL}/products/${productId}/reviews`, review, config);
   return response.data;
 };
