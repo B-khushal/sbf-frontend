@@ -25,36 +25,36 @@ const ProductPage = () => {
   // Use either id or productId parameter
   const actualId = id || productId;
 
+  const fetchProduct = async () => {
+    try {
+      setLoading(true);
+      // Fetch product using productService (includes care instructions)
+      const productData = await productService.getProductById(actualId!);
+      setProduct(productData);
+      console.log("ProductPage - Product with care instructions:", productData);
+
+      // Fetch related products
+      const relatedResponse = await api.get(`/products?category=${productData.category}`);
+      setRelatedProducts(
+        relatedResponse.data.products
+          .filter((p: Product) => p._id !== actualId)
+          .slice(0, 4)
+      );
+    } catch (error) {
+      console.error("Error fetching product:", error);
+      // Redirect to shop instead of showing not found
+      navigate('/shop', { replace: true });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     // If no valid ID is provided, redirect to shop immediately
     if (!actualId || actualId.trim() === '') {
       navigate('/shop', { replace: true });
       return;
     }
-
-    const fetchProduct = async () => {
-      try {
-        setLoading(true);
-        // Fetch product using productService (includes care instructions)
-        const productData = await productService.getProductById(actualId);
-        setProduct(productData);
-        console.log("ProductPage - Product with care instructions:", productData);
-
-        // Fetch related products
-        const relatedResponse = await api.get(`/products?category=${productData.category}`);
-        setRelatedProducts(
-          relatedResponse.data.products
-            .filter((p: Product) => p._id !== actualId)
-            .slice(0, 4)
-        );
-      } catch (error) {
-        console.error("Error fetching product:", error);
-        // Redirect to shop instead of showing not found
-        navigate('/shop', { replace: true });
-      } finally {
-        setLoading(false);
-      }
-    };
 
     fetchProduct();
     window.scrollTo(0, 0);
@@ -102,7 +102,7 @@ const ProductPage = () => {
     <div className="min-h-screen flex flex-col">
       
       <main className="flex-1">
-        <ProductDetail product={product} onAddToCart={handleAddToCart} />
+        <ProductDetail product={product} onAddToCart={handleAddToCart} onReviewSubmit={fetchProduct} />
         
         {relatedProducts.length > 0 && (
           <ProductGrid 

@@ -46,9 +46,10 @@ type ProductDetailProps = {
     image: string;
     quantity: number;
   }) => void;
+  onReviewSubmit: () => void;
 };
 
-const ProductDetail = ({ product, onAddToCart }: ProductDetailProps) => {
+const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailProps) => {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [rating, setRating] = useState(0);
@@ -285,7 +286,7 @@ const ProductDetail = ({ product, onAddToCart }: ProductDetailProps) => {
       });
       setRating(0);
       setComment('');
-      // Optionally, you could refetch the product data to show the new review instantly
+      onReviewSubmit();
     } catch (error: any) {
       toast({
         title: "Error submitting review",
