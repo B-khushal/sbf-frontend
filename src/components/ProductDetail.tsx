@@ -524,10 +524,10 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                         <p className="text-green-800 text-sm font-medium">{instruction}</p>
                       </div>
                     </div>
-                                    ))}
+                  ))}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -555,24 +555,25 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
             ) : (
               <div className="space-y-6">
                 {product.reviews.map((review) => (
-                <Card key={review._id}>
-                  <CardHeader>
-                    <CardTitle className="text-lg">{review.name}</CardTitle>
-                    <div className="flex items-center">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} className={cn("h-5 w-5", i < review.rating ? "text-yellow-400 fill-yellow-400" : "text-gray-300")} />
-                      ))}
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p>{review.comment}</p>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      {new Date(review.createdAt).toLocaleDateString()}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                  <Card key={review._id}>
+                    <CardHeader>
+                      <CardTitle className="text-lg">{review.name}</CardTitle>
+                      <div className="flex items-center">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} className={cn("h-5 w-5", i < review.rating ? "text-yellow-400 fill-yellow-400" : "text-gray-300")} />
+                        ))}
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p>{review.comment}</p>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        {new Date(review.createdAt).toLocaleDateString()}
+                      </p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
           <div>
             {user ? (
