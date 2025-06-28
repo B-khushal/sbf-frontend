@@ -260,7 +260,12 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('🔍 Review submission started:', { rating, comment, productId: product._id });
+    console.log('🔍 Review submission started:', { 
+      rating, 
+      comment: comment.length, 
+      productId: product._id,
+      userLoggedIn: !!user 
+    });
     
     if (!user) {
       console.log('❌ No user found');
@@ -272,45 +277,80 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
       return;
     }
 
-    console.log('✅ User is logged in:', user.name);
+    console.log('✅ User is logged in:', user.name, 'User ID:', user._id);
 
-    if (rating === 0 || comment.trim() === '') {
-      console.log('❌ Invalid rating or comment:', { rating, comment: comment.trim() });
+    if (rating === 0) {
+      console.log('❌ No rating selected');
       toast({
-        title: "Incomplete review",
-        description: "Please provide a rating and a comment.",
+        title: "Rating required",
+        description: "Please select a rating (1-5 stars).",
         variant: "destructive"
       });
       return;
     }
 
-    console.log('✅ Rating and comment are valid');
+    if (comment.trim() === '') {
+      console.log('❌ No comment provided');
+      toast({
+        title: "Comment required",
+        description: "Please write a comment about the product.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    console.log('✅ Rating and comment are valid:', { rating, commentLength: comment.trim().length });
 
     setIsSubmitting(true);
     try {
       console.log('📡 Sending review to server...');
-      const result = await productService.createProductReview(product._id, { rating, comment });
+      console.log('🔗 API URL will be:', `/api/products/${product._id}/reviews`);
+      
+      const result = await productService.createProductReview(product._id, { 
+        rating, 
+        comment: comment.trim() 
+      });
+      
       console.log('✅ Review submitted successfully:', result);
       
       toast({
-        title: "Review submitted",
+        title: "Review submitted successfully!",
         description: "Thank you for your feedback!",
       });
+      
+      // Reset form
       setRating(0);
       setComment('');
+      
+      // Refresh the product data
+      console.log('🔄 Refreshing product data...');
       onReviewSubmit();
+      
     } catch (error: any) {
       console.error('❌ Error submitting review:', error);
-      console.error('Error response:', error.response?.data);
-      console.error('Error status:', error.response?.status);
+      console.error('Error details:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+        config: error.config?.url
+      });
+      
+      let errorMessage = "An unexpected error occurred.";
+      
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
       
       toast({
-        title: "Error submitting review",
-        description: error.response?.data?.message || "An unexpected error occurred.",
+        title: "Failed to submit review",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
       setIsSubmitting(false);
+      console.log('🏁 Review submission process completed');
     }
   };
 
@@ -484,10 +524,10 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                         <p className="text-green-800 text-sm font-medium">{instruction}</p>
                       </div>
                     </div>
-                  ))}
+                                    ))}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -504,9 +544,17 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
         <h2 className="text-3xl font-bold mb-6">Reviews ({product.numReviews})</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
           <div>
-            {product.reviews.length === 0 && <p>No reviews yet.</p>}
-            <div className="space-y-6">
-              {product.reviews.map((review) => (
+            {product.reviews.length === 0 ? (
+              <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
+                <div className="text-gray-400 mb-2">
+                  <Star className="h-12 w-12 mx-auto" />
+                </div>
+                <p className="text-gray-600 font-medium">No reviews yet</p>
+                <p className="text-sm text-gray-500 mt-1">Be the first to review this product!</p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {product.reviews.map((review) => (
                 <Card key={review._id}>
                   <CardHeader>
                     <CardTitle className="text-lg">{review.name}</CardTitle>
@@ -535,29 +583,57 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                 <CardContent>
                   <form onSubmit={handleReviewSubmit} className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Rating</label>
-                      <div className="flex items-center">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Rating <span className="text-red-500">*</span>
+                      </label>
+                      <div className="flex items-center gap-1">
                         {[...Array(5)].map((_, i) => (
                           <Star
                             key={i}
-                            className={cn("h-8 w-8 cursor-pointer", i < rating ? "text-yellow-400 fill-yellow-400" : "text-gray-300")}
+                            className={cn(
+                              "h-8 w-8 cursor-pointer transition-colors duration-200",
+                              i < rating ? "text-yellow-400 fill-yellow-400" : "text-gray-300 hover:text-yellow-200"
+                            )}
                             onClick={() => setRating(i + 1)}
                           />
                         ))}
+                        {rating > 0 && (
+                          <span className="ml-2 text-sm text-gray-600">({rating}/5)</span>
+                        )}
                       </div>
                     </div>
                     <div>
-                      <label htmlFor="comment" className="block text-sm font-medium text-gray-700 mb-2">Comment</label>
+                      <label htmlFor="comment" className="block text-sm font-medium text-gray-700 mb-2">
+                        Comment <span className="text-red-500">*</span>
+                      </label>
                       <Textarea
                         id="comment"
                         value={comment}
                         onChange={(e) => setComment(e.target.value)}
                         placeholder="Share your thoughts about the product..."
                         rows={4}
+                        className={cn(
+                          "transition-colors duration-200",
+                          comment.trim() === '' ? "border-gray-300" : "border-green-300"
+                        )}
                       />
+                      <div className="text-sm text-gray-500 mt-1">
+                        {comment.length}/500 characters
+                      </div>
                     </div>
-                    <Button type="submit" disabled={isSubmitting}>
-                      {isSubmitting ? 'Submitting...' : 'Submit Review'}
+                    <Button 
+                      type="submit" 
+                      disabled={isSubmitting || rating === 0 || comment.trim() === ''}
+                      className="w-full bg-primary hover:bg-primary/90 text-white font-medium py-2 px-4 rounded-md transition-colors"
+                    >
+                      {isSubmitting ? (
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          Submitting...
+                        </div>
+                      ) : (
+                        'Submit Review'
+                      )}
                     </Button>
                   </form>
                 </CardContent>
