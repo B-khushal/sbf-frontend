@@ -5,6 +5,16 @@ import { X, ShoppingBag, Trash2 } from 'lucide-react';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetFooter,
+  SheetTrigger,
+  SheetClose,
+} from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
 
 type CartItem = {
   id: string;
@@ -91,48 +101,21 @@ const Cart = ({
     onClose();
   };
 
-  // Always render but control visibility with CSS
-  // This ensures the component stays mounted and can track state changes
-
   return (
-    <>
-      {/* Backdrop */}
-      <div 
-        className={cn(
-          "fixed inset-0 bg-black/40 backdrop-blur-sm z-[9999] transition-opacity duration-300",
-          isOpen ? "opacity-100 visible" : "opacity-0 invisible pointer-events-none"
-        )}
-        onClick={onClose}
-      />
-      
-      {/* Cart Panel */}
-      <div 
-        className={cn(
-          "fixed top-0 right-0 bottom-0 w-full sm:w-96 bg-white shadow-2xl z-[9999] flex flex-col transition-transform duration-300 ease-out",
-          isOpen ? "translate-x-0 visible" : "translate-x-full"
-        )}
-      >
-        {/* Header */}
-        <div className="py-4 px-6 border-b flex items-center justify-between bg-gradient-to-r from-primary/5 to-secondary/5">
-          <h2 className="text-lg font-semibold flex items-center gap-2 text-gray-900">
-            <ShoppingBag size={18} />
+    <Sheet open={isOpen} onOpenChange={onClose}>
+      <SheetContent className="flex flex-col w-full sm:w-96">
+        <SheetHeader className="px-6 pt-6">
+          <SheetTitle className="flex items-center gap-2 text-lg font-semibold text-gray-900">
+            <ShoppingBag size={20} />
             <span>Shopping Cart</span>
             {items.length > 0 && (
               <span className="ml-2 text-sm text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
                 {items.length} {items.length === 1 ? 'item' : 'items'}
               </span>
             )}
-          </h2>
-          <button 
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors p-1 hover:bg-gray-100 rounded-lg"
-            aria-label="Close cart"
-          >
-            <X size={20} />
-          </button>
-        </div>
+          </SheetTitle>
+        </SheetHeader>
         
-        {/* Content */}
         <div className="flex-1 overflow-y-auto py-4 px-6">
           {!user ? (
             <div className="h-full flex flex-col items-center justify-center text-center">
@@ -141,15 +124,15 @@ const Cart = ({
               <p className="text-gray-500 mb-8 max-w-xs">
                 You need to be logged in to view and manage your cart items.
               </p>
-              <button 
+              <Button 
                 onClick={() => {
                   onClose();
                   navigate('/login', { state: { redirect: '/cart' } });
                 }}
-                className="bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-lg font-medium hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+                className="bg-gradient-to-r from-primary to-secondary text-white"
               >
                 Login Now
-              </button>
+              </Button>
             </div>
           ) : items.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center">
@@ -158,12 +141,12 @@ const Cart = ({
               <p className="text-gray-500 mb-8 max-w-xs">
                 Discover our beautiful floral arrangements and add them to your cart.
               </p>
-              <button 
+              <Button 
                 onClick={onClose}
-                className="bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-lg font-medium hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+                className="bg-gradient-to-r from-primary to-secondary text-white"
               >
                 Continue Shopping
-              </button>
+              </Button>
             </div>
           ) : (
             <div className="space-y-4">
@@ -179,17 +162,14 @@ const Cart = ({
           )}
         </div>
         
-        {/* Footer */}
-        {items.length > 0 && (
-          <div className="border-t bg-gray-50 py-4 px-6">
-            <div className="space-y-4">
-              {/* Subtotal */}
+        {items.length > 0 && user && (
+          <SheetFooter className="bg-gray-50 px-6 py-4 border-t">
+            <div className="w-full space-y-4">
               <div className="flex justify-between items-center text-lg font-semibold">
                 <span>Subtotal</span>
                 <span className="text-primary">{formatPrice(convertPrice(subtotal))}</span>
               </div>
               
-              {/* Promo Code Reminder */}
               <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <div className="flex items-center gap-2 text-blue-700 text-sm">
                   <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -208,18 +188,17 @@ const Cart = ({
                 </button>
               </div>
               
-              {/* Checkout Button */}
-              <button 
-                className="w-full h-12 bg-gradient-to-r from-primary to-secondary text-white flex items-center justify-center rounded-lg font-medium hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+              <Button 
+                className="w-full h-12 bg-gradient-to-r from-primary to-secondary text-white font-medium"
                 onClick={handleCheckout}
               >
                 Proceed to Checkout
-              </button>
+              </Button>
             </div>
-          </div>
+          </SheetFooter>
         )}
-      </div>
-    </>
+      </SheetContent>
+    </Sheet>
   );
 };
 
