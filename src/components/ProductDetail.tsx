@@ -60,50 +60,6 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
   const { user } = useAuth();
   const { showContactModal, contactModalProduct, closeContactModal } = useCart();
 
-  // Add debug logging for user state
-  console.log('🔍 ProductDetail: Component rendered with user state:', {
-    user: user ? { id: user._id, name: user.name, email: user.email } : null,
-    isAuthenticated: !!user,
-    productId: product._id,
-    productTitle: product.title
-  });
-
-  // Test server connectivity on mount
-  useEffect(() => {
-    const testServerConnection = async () => {
-      try {
-        console.log('🔍 ProductDetail: Testing server connectivity...');
-        const token = localStorage.getItem('token');
-        console.log('🔍 ProductDetail: Current token:', token ? 'present' : 'missing');
-        
-        // Try to fetch the current product to test API connectivity
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/products/${product._id}`);
-        console.log('🔍 ProductDetail: Server connectivity test:', {
-          status: response.status,
-          statusText: response.statusText,
-          ok: response.ok,
-          url: response.url
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          console.log('✅ ProductDetail: Server is reachable, product data:', {
-            id: data._id,
-            title: data.title,
-            numReviews: data.numReviews,
-            reviewsCount: data.reviews?.length || 0
-          });
-        } else {
-          console.error('❌ ProductDetail: Server returned error:', response.status, response.statusText);
-        }
-      } catch (error) {
-        console.error('❌ ProductDetail: Server connectivity test failed:', error);
-      }
-    };
-
-    testServerConnection();
-  }, [product._id]);
-
   // Debug log to check properties
   console.log(`Product Detail ${product.title}:`, {
     isNewArrival: product.isNewArrival,
@@ -195,41 +151,62 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
 
   const handleAddToWishlist = () => {
     try {
-      // Get existing wishlist from localStorage
-      const existingWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+      // Use utility function for consistent image URL construction
+      const imageUrl = getImageUrl(product.images?.[0], { bustCache: true });
       
-      // Check if product is already in wishlist
-      const isAlreadyInWishlist = existingWishlist.some((item: any) => item._id === product._id);
+      // Create wishlist item with proper ID
+      const wishlistItem = {
+        id: String(product._id),
+        title: product.title,
+        image: imageUrl,
+        price: product.price
+      };
       
-      if (isAlreadyInWishlist) {
+      console.log("Adding to wishlist from ProductDetail:", wishlistItem);
+      
+      // Get existing wishlist with error handling
+      let existingWishlist = [];
+      try {
+        const wishlistStr = localStorage.getItem("wishlist");
+        existingWishlist = wishlistStr ? JSON.parse(wishlistStr) : [];
+        if (!Array.isArray(existingWishlist)) {
+          console.error("Wishlist is not an array, resetting");
+          existingWishlist = [];
+        }
+      } catch (error) {
+        console.error("Error parsing wishlist:", error);
+        existingWishlist = [];
+      }
+      
+      // Check if already exists
+      if (existingWishlist.some(item => item.id === String(product._id))) {
         toast({
-          title: "Already in Wishlist",
+          title: "Already in wishlist",
           description: "This product is already in your wishlist",
-          variant: "default"
+          duration: 3000,
         });
         return;
       }
       
-      // Add product to wishlist
-      const updatedWishlist = [...existingWishlist, product];
-      localStorage.setItem('wishlist', JSON.stringify(updatedWishlist));
+      // Add new item and save directly
+      const updatedWishlist = [...existingWishlist, wishlistItem];
+      localStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
       
-      // Dispatch custom event to update wishlist count
-      window.dispatchEvent(new CustomEvent('wishlist-update', { 
-        detail: { count: updatedWishlist.length } 
-      }));
+      // Trigger storage event for Navigation to update count
+      window.dispatchEvent(new Event('storage'));
       
       toast({
-        title: "Added to Wishlist",
+        title: "Added to wishlist",
         description: `${product.title} has been added to your wishlist`,
-        variant: "default"
+        duration: 3000,
       });
     } catch (error) {
-      console.error('Error adding to wishlist:', error);
+      console.error("Error adding to wishlist:", error);
       toast({
         title: "Error",
         description: "Failed to add to wishlist",
-        variant: "destructive"
+        variant: "destructive",
+        duration: 3000,
       });
     }
   };
@@ -283,28 +260,15 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('🔍 ProductDetail: Review submission started');
-    console.log('📊 ProductDetail: Current state:', { 
+    console.log('🔍 Review submission started:', { 
       rating, 
-      commentLength: comment.length,
-      comment: comment.substring(0, 50) + (comment.length > 50 ? '...' : ''),
+      comment: comment.length, 
       productId: product._id,
-      userLoggedIn: !!user,
-      userId: user?._id,
-      userName: user?.name
-    });
-
-    // Check localStorage for token
-    const token = localStorage.getItem('token');
-    console.log('🔑 ProductDetail: Token check:', {
-      hasToken: !!token,
-      tokenStart: token ? token.substring(0, 20) + '...' : 'none',
-      tokenLength: token?.length || 0
+      userLoggedIn: !!user 
     });
     
     if (!user) {
-      console.log('❌ ProductDetail: No user found in context');
-      console.log('❌ ProductDetail: Auth context user:', user);
+      console.log('❌ No user found');
       toast({
         title: "Please log in",
         description: "You need to be logged in to write a review.",
@@ -313,14 +277,10 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
       return;
     }
 
-    console.log('✅ ProductDetail: User is logged in:', {
-      id: user._id,
-      name: user.name,
-      email: user.email
-    });
+    console.log('✅ User is logged in:', user.name, 'User ID:', user._id);
 
     if (rating === 0) {
-      console.log('❌ ProductDetail: No rating selected');
+      console.log('❌ No rating selected');
       toast({
         title: "Rating required",
         description: "Please select a rating (1-5 stars).",
@@ -330,7 +290,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
     }
 
     if (comment.trim() === '') {
-      console.log('❌ ProductDetail: No comment provided');
+      console.log('❌ No comment provided');
       toast({
         title: "Comment required",
         description: "Please write a comment about the product.",
@@ -339,32 +299,19 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
       return;
     }
 
-    console.log('✅ ProductDetail: Rating and comment are valid:', { 
-      rating, 
-      commentLength: comment.trim().length,
-      commentPreview: comment.trim().substring(0, 30) + '...'
-    });
+    console.log('✅ Rating and comment are valid:', { rating, commentLength: comment.trim().length });
 
     setIsSubmitting(true);
-    console.log('🔄 ProductDetail: Setting isSubmitting to true');
-
     try {
-      console.log('📡 ProductDetail: About to call productService.createProductReview');
-      console.log('📡 ProductDetail: API call parameters:', {
-        productId: product._id,
-        reviewData: { 
-          rating, 
-          comment: comment.trim() 
-        }
-      });
+      console.log('📡 Sending review to server...');
+      console.log('🔗 API URL will be:', `/api/products/${product._id}/reviews`);
       
       const result = await productService.createProductReview(product._id, { 
         rating, 
         comment: comment.trim() 
       });
       
-      console.log('✅ ProductDetail: Review submitted successfully');
-      console.log('📥 ProductDetail: API response:', result);
+      console.log('✅ Review submitted successfully:', result);
       
       toast({
         title: "Review submitted successfully!",
@@ -372,43 +319,25 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
       });
       
       // Reset form
-      console.log('🔄 ProductDetail: Resetting form state');
       setRating(0);
       setComment('');
       
       // Refresh the product data
-      console.log('🔄 ProductDetail: Calling onReviewSubmit to refresh product data');
+      console.log('🔄 Refreshing product data...');
       onReviewSubmit();
       
     } catch (error: any) {
-      console.error('❌ ProductDetail: Error submitting review:', error);
-      console.error('❌ ProductDetail: Error details:', {
+      console.error('❌ Error submitting review:', error);
+      console.error('Error details:', {
         message: error.message,
         status: error.response?.status,
-        statusText: error.response?.statusText,
         data: error.response?.data,
-        config: {
-          url: error.config?.url,
-          method: error.config?.method,
-          headers: error.config?.headers
-        }
+        config: error.config?.url
       });
       
       let errorMessage = "An unexpected error occurred.";
       
-      if (error.response?.status === 401) {
-        errorMessage = "Please log in again to submit a review.";
-        console.error('❌ ProductDetail: Authentication error - user may need to log in again');
-      } else if (error.response?.status === 400) {
-        errorMessage = error.response?.data?.message || "Invalid review data.";
-        console.error('❌ ProductDetail: Bad request error');
-      } else if (error.response?.status === 404) {
-        errorMessage = "Product not found.";
-        console.error('❌ ProductDetail: Product not found error');
-      } else if (error.response?.status >= 500) {
-        errorMessage = "Server error. Please try again later.";
-        console.error('❌ ProductDetail: Server error');
-      } else if (error.response?.data?.message) {
+      if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       } else if (error.message) {
         errorMessage = error.message;
@@ -420,9 +349,8 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
         variant: "destructive"
       });
     } finally {
-      console.log('🏁 ProductDetail: Setting isSubmitting to false');
       setIsSubmitting(false);
-      console.log('🏁 ProductDetail: Review submission process completed');
+      console.log('🏁 Review submission process completed');
     }
   };
 
@@ -707,79 +635,6 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                       ) : (
                         'Submit Review'
                       )}
-                    </Button>
-                    
-                    {/* Debug button for testing - remove in production */}
-                    <Button 
-                      type="button"
-                      variant="outline"
-                      onClick={async () => {
-                        console.log('🔍 DEBUG: Manual review test started');
-                        console.log('🔍 DEBUG: Environment variables:', {
-                          VITE_API_URL: import.meta.env.VITE_API_URL,
-                          NODE_ENV: import.meta.env.NODE_ENV,
-                          DEV: import.meta.env.DEV
-                        });
-                        
-                        const token = localStorage.getItem('token');
-                        console.log('🔍 DEBUG: Token info:', {
-                          hasToken: !!token,
-                          tokenLength: token?.length,
-                          tokenPreview: token?.substring(0, 30) + '...'
-                        });
-                        
-                        console.log('🔍 DEBUG: User info:', {
-                          user: user,
-                          userId: user?._id,
-                          userName: user?.name
-                        });
-                        
-                        console.log('🔍 DEBUG: Form state:', {
-                          rating,
-                          comment: comment.substring(0, 50),
-                          productId: product._id
-                        });
-                        
-                        // Test API endpoint directly
-                        try {
-                          const apiUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/products/${product._id}/reviews`;
-                          console.log('🔍 DEBUG: Testing API endpoint:', apiUrl);
-                          
-                          const response = await fetch(apiUrl, {
-                            method: 'POST',
-                            headers: {
-                              'Content-Type': 'application/json',
-                              'Authorization': `Bearer ${token}`
-                            },
-                            body: JSON.stringify({
-                              rating: 5,
-                              comment: 'Test review from debug button'
-                            })
-                          });
-                          
-                          console.log('🔍 DEBUG: Raw response:', {
-                            status: response.status,
-                            statusText: response.statusText,
-                            ok: response.ok,
-                            headers: Object.fromEntries(response.headers.entries())
-                          });
-                          
-                          const responseText = await response.text();
-                          console.log('🔍 DEBUG: Response text:', responseText);
-                          
-                          try {
-                            const responseJson = JSON.parse(responseText);
-                            console.log('🔍 DEBUG: Response JSON:', responseJson);
-                          } catch (jsonError) {
-                            console.log('🔍 DEBUG: Response is not JSON');
-                          }
-                        } catch (fetchError) {
-                          console.error('🔍 DEBUG: Fetch error:', fetchError);
-                        }
-                      }}
-                      className="w-full mt-2"
-                    >
-                      🔍 Debug API Test
                     </Button>
                   </form>
                 </CardContent>

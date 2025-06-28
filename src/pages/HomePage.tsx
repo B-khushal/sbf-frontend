@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
-import { AlertTriangle, X } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import HomeHero from "../components/HomeHero";
 import Categories from "../components/Categories";
 import ProductGrid from "../components/ProductGrid";
@@ -51,12 +51,6 @@ const fadeInVariants = {
 const HomePage = () => {
   const cartHook = useCart();
   const { items, itemCount, isCartOpen, closeCart, updateItemQuantity, removeItem, openCart, addItem } = cartHook;
-  
-  // Testing mode banner state
-  const [showTestingBanner, setShowTestingBanner] = useState(true);
-  
-  // Check if we're in development/testing mode
-  const isTestingMode = import.meta.env.DEV || import.meta.env.VITE_TESTING_MODE === 'true';
   
   // Debug cart hook
   useEffect(() => {
@@ -273,82 +267,38 @@ const HomePage = () => {
   const enabledSections = homeSections.filter(section => section.enabled);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-purple-50">
-      {/* Testing Mode Banner */}
-      {isTestingMode && showTestingBanner && (
-        <motion.div
-          initial={{ opacity: 0, y: -50 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -50 }}
-          className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 text-white shadow-lg"
-        >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <AlertTriangle className="h-5 w-5 animate-pulse" />
-                <div>
-                  <p className="font-bold text-sm sm:text-base">
-                    🚧 TESTING MODE - DEVELOPMENT ENVIRONMENT
-                  </p>
-                  <p className="text-xs sm:text-sm opacity-90">
-                    This is a demo/testing environment. Orders and payments are not real. 
-                    <span className="hidden sm:inline"> Review submission and other features are being tested.</span>
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowTestingBanner(false)}
-                className="p-1 hover:bg-white/20 rounded-full transition-colors duration-200"
-                aria-label="Close testing banner"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Main Content with top padding when banner is shown */}
-      <div className={`${isTestingMode && showTestingBanner ? 'pt-20 sm:pt-16' : ''} transition-all duration-300`}>
-        {/* Offer Popup */}
+    <div className="bg-gradient-to-br from-bloom-blue-50 via-bloom-pink-50 to-bloom-green-50 min-h-screen">
+      
+      {isOfferOpen && currentOffer && (
         <OfferPopup 
           offer={currentOffer} 
           isOpen={isOfferOpen} 
           onClose={closeOffer} 
         />
-
-        {/* Main content wrapper */}
-        <motion.main
-          initial="hidden"
-          animate="visible"
-          variants={containerVariants}
-          className="space-y-12 sm:space-y-16 md:space-y-20 lg:space-y-24 xl:space-y-28 pb-12 sm:pb-16 md:pb-20"
-        >
-          {/* Render sections based on settings */}
-          {settingsLoading ? (
-            <div className="min-h-screen flex items-center justify-center">
-              <div className="text-center">
-                <div className="inline-block w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
-                <p className="text-gray-600">Loading...</p>
-              </div>
+      )}
+      
+      <motion.div 
+        className="space-y-12 sm:space-y-16 md:space-y-20 lg:space-y-24 xl:space-y-28 pb-12 sm:pb-16 md:pb-20"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        {enabledSections.length === 0 && !settingsLoading ? (
+          <div className="text-center py-20 px-4">
+            <AlertTriangle className="mx-auto h-12 w-12 text-yellow-500" />
+            <h2 className="mt-4 text-2xl font-bold text-gray-800">No sections to display</h2>
+            <p className="mt-2 text-gray-600">
+              The homepage sections may be loading or are not configured.
+            </p>
+          </div>
+        ) : (
+          enabledSections.map((section, index) => (
+            <div key={section.id || index} className="overflow-hidden">
+              {renderSection(section, index)}
             </div>
-          ) : enabledSections.length === 0 ? (
-            <div className="text-center py-20 px-4">
-              <AlertTriangle className="mx-auto h-12 w-12 text-yellow-500" />
-              <h2 className="mt-4 text-2xl font-bold text-gray-800">No sections to display</h2>
-              <p className="mt-2 text-gray-600">
-                The homepage sections may be loading or are not configured.
-              </p>
-            </div>
-          ) : (
-            enabledSections.map((section, index) => (
-              <div key={section.id || index} className="overflow-hidden">
-                {renderSection(section, index)}
-              </div>
-            ))
-          )}
-        </motion.main>
-      </div>
+          ))
+        )}
+      </motion.div>
     </div>
   );
 };

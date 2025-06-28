@@ -92,9 +92,6 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
   const cartHook = useCart();
   const { itemCount: actualCartCount, toggleCart, isCartOpen, items } = cartHook;
   
-  // Check if we're in development/testing mode
-  const isTestingMode = import.meta.env.DEV || import.meta.env.VITE_TESTING_MODE === 'true';
-
   // Debug cart state with detailed logging
   useEffect(() => {
     console.log('Navigation - Cart state:', { 
@@ -222,13 +219,8 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
 
   return (
     <>
-      {/* Top Banner with Testing Mode Indicator */}
-      <div className={cn(
-        "text-white text-center py-2 text-xs sm:text-sm font-medium z-50 relative",
-        isTestingMode 
-          ? "bg-gradient-to-r from-orange-500 via-red-500 to-pink-500"
-          : "bg-gradient-to-r from-primary via-secondary to-accent"
-      )}>
+      {/* Top Banner */}
+      <div className="bg-gradient-to-r from-primary via-secondary to-accent text-white text-center py-2 text-xs sm:text-sm font-medium z-50 relative">
         <div className="container mx-auto px-4 flex items-center justify-center gap-4">
           <motion.div 
             className="flex items-center gap-2"
@@ -236,19 +228,9 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            {isTestingMode ? (
-              <>
-                <Zap size={14} className="animate-pulse" />
-                <span>🧪 TESTING MODE - Review features being tested</span>
-                <Zap size={14} className="animate-pulse" />
-              </>
-            ) : (
-              <>
-                <Sparkles size={14} />
-                <span>🌸 Free Delivery on Your First Order </span>
-                <Truck size={14} />
-              </>
-            )}
+            <Sparkles size={14} />
+            <span>🌸 Free Delivery on Your First Order </span>
+            <Truck size={14} />
           </motion.div>
         </div>
       </div>
