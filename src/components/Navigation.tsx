@@ -295,52 +295,77 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
             {/* Search Bar - Desktop/Tablet */}
             <motion.div 
               className="hidden md:flex relative flex-1 max-w-md lg:max-w-lg xl:max-w-xl mx-6"
-              initial={{ opacity: 0, scale: 0.8 }}
+              initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
+              transition={{ duration: 0.4, delay: 0.2, ease: "easeOut" }}
             >
               <form onSubmit={handleSearchSubmit} className="w-full relative">
-                <div className="relative group">
-                  <Search size={18} className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-primary z-10" />
+                <div className="relative group isolate">
+                  <Search 
+                    size={18} 
+                    className={cn(
+                      "absolute left-4 top-1/2 transform -translate-y-1/2 transition-colors duration-200 z-10",
+                      isSearchFocused ? "text-primary" : "text-gray-400"
+                    )} 
+                  />
                   <Input
                     type="text"
                     placeholder="Search for flowers, bouquets, gifts..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onFocus={handleSearchFocus}
-                    onBlur={() => {
-                      setTimeout(() => {
-                        setIsSearchFocused(false);
-                        setShowSuggestions(false);
-                      }, 200);
+                    onBlur={(e) => {
+                      // Only hide if not clicking on dropdown
+                      if (!e.relatedTarget?.closest('[data-search-dropdown]')) {
+                        setTimeout(() => {
+                          setIsSearchFocused(false);
+                          setShowSuggestions(false);
+                        }, 150);
+                      }
                     }}
-                    className="w-full pl-12 pr-12 py-3 text-sm border-2 border-gray-200 rounded-2xl bg-gray-50/50 backdrop-blur-sm focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all duration-300 placeholder:text-gray-400"
+                    className={cn(
+                      "w-full pl-12 pr-12 py-3 text-sm border-2 rounded-2xl transition-all duration-200 placeholder:text-gray-400",
+                      "bg-gray-50/80 border-gray-200",
+                      "focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20",
+                      "hover:bg-gray-50 hover:border-gray-300"
+                    )}
                   />
                   
-                  {isSearching ? (
-                    <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                      <RefreshCw size={16} className="animate-spin text-primary" />
-                    </div>
-                  ) : (
-                    <motion.button
-                      type="submit"
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-primary to-secondary text-white p-2 rounded-xl hover:shadow-lg transition-all duration-300"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <ArrowRight size={14} />
-                    </motion.button>
-                  )}
+                  <div className="absolute right-2 top-1/2 transform -translate-y-1/2 z-10">
+                    {isSearching ? (
+                      <div className="p-2">
+                        <RefreshCw size={16} className="animate-spin text-primary" />
+                      </div>
+                    ) : (
+                      <motion.button
+                        type="submit"
+                        className="bg-gradient-to-r from-primary to-secondary text-white p-2 rounded-xl hover:shadow-md transition-all duration-200"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        transition={{ duration: 0.1 }}
+                      >
+                        <ArrowRight size={14} />
+                      </motion.button>
+                    )}
+                  </div>
                   
                   {/* Enhanced Search Suggestions Dropdown */}
-                  <AnimatePresence>
+                  <AnimatePresence mode="wait">
                     {(showSuggestions && isSearchFocused) && (
                       <motion.div
-                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        data-search-dropdown
+                        initial={{ opacity: 0, y: 8, scale: 0.96 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        transition={{ duration: 0.2 }}
-                        className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-100 rounded-2xl shadow-2xl z-60 max-h-96 overflow-hidden"
+                        exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                        transition={{ 
+                          duration: 0.15, 
+                          ease: "easeOut"
+                        }}
+                        className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-100 rounded-2xl shadow-xl z-[100] max-h-96 overflow-hidden will-change-transform"
+                        style={{ 
+                          transform: 'translateZ(0)', // Force hardware acceleration
+                          contain: 'layout style paint' // Optimize rendering
+                        }}
                       >
                         {searchQuery.length >= 2 && searchSuggestions.length > 0 && (
                           <div className="p-3">
@@ -349,12 +374,23 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                               <span>Search Results</span>
                             </div>
                             <div className="space-y-1">
-                              {searchSuggestions.map((suggestion) => (
+                              {searchSuggestions.map((suggestion, index) => (
                                 <motion.button
                                   key={suggestion.id}
                                   onClick={() => handleSuggestionClick(suggestion)}
-                                  className="w-full text-left px-3 py-3 hover:bg-gradient-to-r hover:from-primary/5 hover:to-secondary/5 rounded-xl transition-all duration-200 flex items-center gap-3 group"
-                                  whileHover={{ x: 4 }}
+                                  className="w-full text-left px-3 py-3 hover:bg-gradient-to-r hover:from-primary/5 hover:to-secondary/5 rounded-xl transition-all duration-150 flex items-center gap-3 group"
+                                  initial={{ opacity: 0, x: -10 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  transition={{ 
+                                    duration: 0.2, 
+                                    delay: index * 0.05,
+                                    ease: "easeOut"
+                                  }}
+                                  whileHover={{ 
+                                    x: 2,
+                                    transition: { duration: 0.1 }
+                                  }}
+                                  whileTap={{ scale: 0.98 }}
                                 >
                                   <div className="w-10 h-10 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex-shrink-0 overflow-hidden">
                                     {suggestion.image && (
@@ -362,18 +398,19 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                                         src={suggestion.image} 
                                         alt={suggestion.title}
                                         className="w-full h-full object-cover"
+                                        loading="lazy"
                                       />
                                     )}
                                   </div>
                                   <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium text-gray-900 truncate group-hover:text-primary transition-colors">
+                                    <p className="text-sm font-medium text-gray-900 truncate group-hover:text-primary transition-colors duration-150">
                                       {suggestion.title}
                                     </p>
                                     <p className="text-xs text-gray-500 capitalize">{suggestion.category}</p>
                                   </div>
-                                  <div className="text-right">
+                                  <div className="text-right flex flex-col items-end gap-1">
                                     <p className="text-sm font-bold text-primary">₹{suggestion.price}</p>
-                                    <ArrowRight size={12} className="text-gray-400 group-hover:text-primary transition-colors ml-auto" />
+                                    <ArrowRight size={12} className="text-gray-400 group-hover:text-primary transition-colors duration-150" />
                                   </div>
                                 </motion.button>
                               ))}
@@ -388,16 +425,27 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                               <span>Popular Searches</span>
                             </div>
                             <div className="grid grid-cols-2 gap-2">
-                              {popularSearches.slice(0, 6).map((item) => (
+                              {popularSearches.slice(0, 6).map((item, index) => (
                                 <motion.button
                                   key={item.term}
                                   onClick={() => handlePopularSearchClick(item.term)}
-                                  className="text-left px-3 py-2 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-primary/5 hover:to-secondary/5 rounded-xl transition-all duration-200 flex items-center gap-2 group"
-                                  whileHover={{ x: 2 }}
+                                  className="text-left px-3 py-2 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-primary/5 hover:to-secondary/5 rounded-xl transition-all duration-150 flex items-center gap-2 group"
+                                  initial={{ opacity: 0, y: 10 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ 
+                                    duration: 0.2, 
+                                    delay: index * 0.05,
+                                    ease: "easeOut"
+                                  }}
+                                  whileHover={{ 
+                                    x: 2,
+                                    transition: { duration: 0.1 }
+                                  }}
+                                  whileTap={{ scale: 0.98 }}
                                 >
                                   <span className="text-lg">{item.icon}</span>
                                   <div className="flex-1">
-                                    <span className="group-hover:text-primary transition-colors">{item.term}</span>
+                                    <span className="group-hover:text-primary transition-colors duration-150">{item.term}</span>
                                     <span className="text-xs text-gray-400 ml-1">({item.count})</span>
                                   </div>
                                 </motion.button>
@@ -502,13 +550,13 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                             <ShoppingCart className="w-4 h-4 mr-2" />
                             My Orders
                           </Link>
-                          {user.isAdmin && (
+                          {user.role === 'admin' && (
                             <Link to="/admin/dashboard" className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
                               <Store className="w-4 h-4 mr-2" />
                               Admin Dashboard
                             </Link>
                           )}
-                          {user.isVendor && (
+                          {user.role === 'vendor' && (
                             <Link to="/vendor/dashboard" className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
                               <Store className="w-4 h-4 mr-2" />
                               Vendor Dashboard
@@ -603,13 +651,18 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
       </header>
 
       {/* Mobile Search Modal */}
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {showMobileSearch && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
-            className="fixed inset-0 bg-white z-[100] p-4 flex flex-col"
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="fixed inset-0 bg-white z-[100] p-4 flex flex-col will-change-transform"
+            style={{ 
+              transform: 'translateZ(0)', // Force hardware acceleration
+              contain: 'layout style paint' // Optimize rendering
+            }}
           >
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">Search</h2>
@@ -624,7 +677,7 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                 placeholder="Search for flowers, bouquets, gifts..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:border-primary"
+                className="w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:border-primary transition-all duration-200"
                 autoFocus
               />
             </form>
