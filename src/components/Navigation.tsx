@@ -7,7 +7,7 @@ import {
   Shield, Truck, RefreshCw, Gift
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import CurrencyConverter from './CurrencyConverter';
 import { Input } from '@/components/ui/input';
@@ -81,26 +81,6 @@ const NavLink: React.FC<{ to: string; active: boolean; children: React.ReactNode
         />
       )}
     </Link>
-  );
-};
-
-const MobileNavLink: React.FC<{ to: string; active: boolean; onClick: () => void; children: React.ReactNode; }> = 
-  ({ to, active, onClick, children }) => {
-  return (
-    <motion.div variants={{ open: { x: 0, opacity: 1 }, closed: { x: -20, opacity: 0 } }}>
-      <Link
-        to={to}
-        onClick={onClick}
-        className={cn(
-          'flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all',
-          active
-            ? 'bg-primary/10 text-primary'
-            : 'text-gray-700 hover:bg-gray-100'
-        )}
-      >
-        {children}
-      </Link>
-    </motion.div>
   );
 };
 
@@ -614,44 +594,27 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                   </SheetTrigger>
                   <SheetContent 
                     side="right" 
-                    className="w-full max-w-[320px] sm:max-w-xs p-0 z-[60] bg-white/70 backdrop-blur-lg border-l"
+                    className="w-full max-w-xs p-0 z-[100] bg-white"
                   >
-                    <motion.div 
-                      className="flex flex-col h-full"
-                      initial="closed"
-                      animate="open"
-                      exit="closed"
-                      variants={{
-                        open: { transition: { staggerChildren: 0.07, delayChildren: 0.2 } },
-                        closed: { transition: { staggerChildren: 0.05, staggerDirection: -1 } }
-                      }}
-                    >
+                    <div className="flex flex-col h-full">
                       {/* Header */}
-                      <motion.div
-                        variants={{ open: { y: 0, opacity: 1 }, closed: { y: -20, opacity: 0 } }}
-                        className="p-4 border-b flex justify-between items-center"
-                      >
-                        <Link 
-                          to="/" 
-                          onClick={() => setMobileMenuOpen(false)}
-                          className="flex items-center gap-2"
-                        >
-                          <span className="text-2xl font-black bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-                            SBF
-                          </span>
-                        </Link>
-                        <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)}>
-                          <X size={20} />
-                        </Button>
-                      </motion.div>
+                      <div className="p-4 border-b flex justify-between items-center">
+                          <Link to="/" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2">
+                            <span className="text-2xl font-black bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+                              SBF
+                            </span>
+                          </Link>
+                          <SheetClose asChild>
+                            <Button variant="ghost" size="icon">
+                              <X size={20} />
+                            </Button>
+                          </SheetClose>
+                      </div>
 
                       <div className="flex-1 overflow-y-auto p-4 space-y-6">
                         {/* User Profile */}
-                        {user && (
-                          <motion.div 
-                            variants={{ open: { x: 0, opacity: 1 }, closed: { x: -20, opacity: 0 } }}
-                            className="bg-gradient-to-r from-primary/5 to-secondary/5 p-4 rounded-xl"
-                          >
+                        {user ? (
+                          <div className="bg-gray-50 p-4 rounded-xl">
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center text-white font-bold">
                                 {user.name.charAt(0).toUpperCase()}
@@ -661,66 +624,62 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                                 <p className="text-xs text-gray-500 truncate">{user.email}</p>
                               </div>
                             </div>
-                          </motion.div>
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-2 gap-2">
+                             <Button asChild><Link to="/login" onClick={() => setMobileMenuOpen(false)}>Sign In</Link></Button>
+                             <Button asChild variant="outline"><Link to="/signup" onClick={() => setMobileMenuOpen(false)}>Sign Up</Link></Button>
+                          </div>
                         )}
 
                         {/* Navigation */}
-                        <nav className="space-y-2">
+                        <nav className="space-y-1">
                           <p className="px-3 text-xs font-semibold text-gray-400 uppercase">Menu</p>
                           {headerSettings?.navigationItems
                             ?.filter(item => item.enabled)
                             ?.sort((a,b) => a.order - b.order)
                             ?.map((item) => (
-                              <MobileNavLink
+                              <Link
                                 key={item.href}
                                 to={item.href}
-                                active={pathname === item.href}
                                 onClick={() => setMobileMenuOpen(false)}
+                                className={cn(
+                                  'flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors',
+                                  pathname === item.href ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100'
+                                )}
                               >
                                 {item.label}
-                              </MobileNavLink>
+                              </Link>
                           ))}
                         </nav>
 
                         {/* Account Links */}
                         {user && (
-                          <nav className="space-y-2">
+                          <nav className="space-y-1">
                             <p className="px-3 text-xs font-semibold text-gray-400 uppercase">Account</p>
-                            <MobileNavLink to="/profile" active={pathname === '/profile'} onClick={() => setMobileMenuOpen(false)}>
+                            <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className={cn('flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors', pathname === '/profile' ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100')}>
                               <User size={16} /> My Account
-                            </MobileNavLink>
-                            <MobileNavLink to="/profile#orders" active={false} onClick={() => setMobileMenuOpen(false)}>
+                            </Link>
+                            <Link to="/profile#orders" onClick={() => setMobileMenuOpen(false)} className='flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors text-gray-700 hover:bg-gray-100'>
                               <ShoppingCart size={16} /> My Orders
-                            </MobileNavLink>
+                            </Link>
                             {user.role === 'admin' && (
-                              <MobileNavLink to="/admin/dashboard" active={pathname.startsWith('/admin')} onClick={() => setMobileMenuOpen(false)}>
+                              <Link to="/admin/dashboard" onClick={() => setMobileMenuOpen(false)} className={cn('flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors', pathname.startsWith('/admin') ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100')}>
                                 <Store size={16} /> Admin Dashboard
-                              </MobileNavLink>
+                              </Link>
                             )}
                             {user.role === 'vendor' && (
-                              <MobileNavLink to="/vendor/dashboard" active={pathname.startsWith('/vendor')} onClick={() => setMobileMenuOpen(false)}>
+                              <Link to="/vendor/dashboard" onClick={() => setMobileMenuOpen(false)} className={cn('flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors', pathname.startsWith('/vendor') ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100')}>
                                 <Store size={16} /> Vendor Dashboard
-                              </MobileNavLink>
+                              </Link>
                             )}
                           </nav>
                         )}
                       </div>
 
                       {/* Footer */}
-                      <motion.div 
-                        variants={{ open: { y: 0, opacity: 1 }, closed: { y: 20, opacity: 0 } }}
-                        className="p-4 border-t"
-                      >
-                        {!user ? (
-                          <div className="space-y-2">
-                            <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="block">
-                              <Button className="w-full bg-gradient-to-r from-primary to-secondary text-white">Sign In</Button>
-                            </Link>
-                            <Link to="/signup" onClick={() => setMobileMenuOpen(false)} className="block">
-                              <Button variant="outline" className="w-full">Sign Up</Button>
-                            </Link>
-                          </div>
-                        ) : (
+                      {user && (
+                        <div className="p-4 border-t">
                           <Button 
                             onClick={() => {
                               logout();
@@ -732,9 +691,9 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                             <LogIn size={16} className="mr-2" />
                             Sign Out
                           </Button>
-                        )}
-                      </motion.div>
-                    </motion.div>
+                        </div>
+                      )}
+                    </div>
                   </SheetContent>
                 </Sheet>
               </div>
@@ -744,18 +703,14 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
       </header>
 
       {/* Mobile Search Modal */}
-      <AnimatePresence mode="wait">
+      <AnimatePresence>
         {showMobileSearch && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="fixed inset-0 bg-white z-[100] p-4 flex flex-col will-change-transform"
-            style={{ 
-              transform: 'translateZ(0)', // Force hardware acceleration
-              contain: 'layout style paint' // Optimize rendering
-            }}
+            className="fixed inset-0 bg-white z-[100] p-4 flex flex-col"
           >
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">Search</h2>
@@ -775,7 +730,7 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
               />
             </form>
             <div className="mt-4 overflow-y-auto">
-              {searchQuery.length >= 2 && searchSuggestions.length > 0 ? (
+              {searchQuery.length > 0 && searchSuggestions.length > 0 ? (
                 <div className="space-y-2">
                   {searchSuggestions.map((suggestion) => (
                     <button
