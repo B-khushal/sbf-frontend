@@ -592,42 +592,182 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                       <Menu size={18} />
                     </Button>
                   </SheetTrigger>
-                  <SheetContent side="right" className="w-full sm:w-80 p-0">
-                    <div className="flex flex-col h-full">
-                      <div className="p-6 border-b">
-                        <Link to="/" onClick={() => setMobileMenuOpen(false)}>
-                          <span className="text-xl font-bold">SBF</span>
+                  <SheetContent side="right" className="w-full sm:w-80 p-0 z-[60]">
+                    <div className="flex flex-col h-full bg-white">
+                      
+                      {/* Header Section */}
+                      <motion.div 
+                        className="p-6 border-b bg-gradient-to-r from-primary/5 to-secondary/5"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <Link 
+                          to="/" 
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="flex items-center gap-2"
+                        >
+                          <span className="text-2xl font-black bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+                            SBF
+                          </span>
+                          <Sparkles size={20} className="text-primary" />
                         </Link>
-                      </div>
-                      <div className="flex-1 p-6">
-                        <nav className="space-y-2">
-                          {headerSettings?.navigationItems
-                            ?.filter(item => item.enabled)
-                            .sort((a,b) => a.order - b.order)
-                            .map((item) => (
-                            <Link
-                              key={item.href}
-                              to={item.href}
-                              onClick={() => setMobileMenuOpen(false)}
-                              className={cn(
-                                'block px-4 py-2 text-sm rounded-md',
-                                pathname === item.href ? 'bg-primary text-white' : 'text-gray-700 hover:bg-gray-100'
+                      </motion.div>
+                      
+                      {/* User Profile Section (if logged in) */}
+                      {user && (
+                        <motion.div 
+                          className="p-4 border-b bg-gray-50/50"
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.3, delay: 0.1 }}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center text-white font-bold">
+                              {user.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-semibold text-sm truncate">{user.name}</p>
+                              <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                              <span className={cn(
+                                "inline-block px-2 py-0.5 rounded-full text-xs font-medium mt-1",
+                                user.role === 'admin' ? "bg-purple-100 text-purple-800" :
+                                user.role === 'vendor' ? "bg-blue-100 text-blue-800" :
+                                "bg-green-100 text-green-800"
+                              )}>
+                                {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                              </span>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                      
+                      {/* Navigation Section */}
+                      <div className="flex-1 overflow-y-auto">
+                        
+                        {/* Main Navigation */}
+                        <motion.div 
+                          className="p-4"
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.3, delay: 0.2 }}
+                        >
+                          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-2">
+                            Browse
+                          </h3>
+                          <nav className="space-y-1">
+                            {headerSettings?.navigationItems
+                              ?.filter(item => item.enabled)
+                              .sort((a,b) => a.order - b.order)
+                              .map((item, index) => (
+                              <motion.div
+                                key={item.href}
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ duration: 0.2, delay: 0.3 + (index * 0.05) }}
+                              >
+                                <Link
+                                  to={item.href}
+                                  onClick={() => setMobileMenuOpen(false)}
+                                  className={cn(
+                                    'flex items-center gap-3 px-3 py-3 text-sm rounded-xl transition-all duration-200',
+                                    pathname === item.href 
+                                      ? 'bg-gradient-to-r from-primary to-secondary text-white shadow-lg' 
+                                      : 'text-gray-700 hover:bg-gray-100 active:bg-gray-200'
+                                  )}
+                                >
+                                  <span>{item.label}</span>
+                                  {pathname === item.href && (
+                                    <ArrowRight size={14} className="ml-auto" />
+                                  )}
+                                </Link>
+                              </motion.div>
+                            ))}
+                          </nav>
+                        </motion.div>
+                        
+                        {/* User Actions (if logged in) */}
+                        {user && (
+                          <motion.div 
+                            className="p-4 border-t"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.3, delay: 0.4 }}
+                          >
+                            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-2">
+                              Account
+                            </h3>
+                            <nav className="space-y-1">
+                              <Link
+                                to="/profile"
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="flex items-center gap-3 px-3 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-xl transition-all duration-200"
+                              >
+                                <User size={16} />
+                                <span>My Profile</span>
+                              </Link>
+                              <Link
+                                to="/profile#orders"
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="flex items-center gap-3 px-3 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-xl transition-all duration-200"
+                              >
+                                <ShoppingCart size={16} />
+                                <span>My Orders</span>
+                              </Link>
+                              {user.role === 'admin' && (
+                                <Link
+                                  to="/admin/dashboard"
+                                  onClick={() => setMobileMenuOpen(false)}
+                                  className="flex items-center gap-3 px-3 py-3 text-sm text-purple-700 hover:bg-purple-50 rounded-xl transition-all duration-200"
+                                >
+                                  <Store size={16} />
+                                  <span>Admin Dashboard</span>
+                                </Link>
                               )}
-                            >
-                              {item.label}
-                            </Link>
-                          ))}
-                        </nav>
+                              {user.role === 'vendor' && (
+                                <Link
+                                  to="/vendor/dashboard"
+                                  onClick={() => setMobileMenuOpen(false)}
+                                  className="flex items-center gap-3 px-3 py-3 text-sm text-blue-700 hover:bg-blue-50 rounded-xl transition-all duration-200"
+                                >
+                                  <Store size={16} />
+                                  <span>Vendor Dashboard</span>
+                                </Link>
+                              )}
+                            </nav>
+                          </motion.div>
+                        )}
                       </div>
-                      <div className="p-6 border-t">
+                      
+                      {/* Footer Actions */}
+                      <motion.div 
+                        className="p-4 border-t bg-gray-50/50"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.3, delay: 0.5 }}
+                      >
                         {!user ? (
-                          <div className="space-y-2">
-                            <Button asChild className="w-full" onClick={() => setMobileMenuOpen(false)}>
-                              <Link to="/login">Sign In</Link>
-                            </Button>
-                            <Button variant="outline" asChild className="w-full" onClick={() => setMobileMenuOpen(false)}>
-                              <Link to="/signup">Sign Up</Link>
-                            </Button>
+                          <div className="space-y-3">
+                            <Link 
+                              to="/login"
+                              onClick={() => setMobileMenuOpen(false)}
+                              className="w-full"
+                            >
+                              <Button className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white">
+                                <LogIn size={16} className="mr-2" />
+                                Sign In
+                              </Button>
+                            </Link>
+                            <Link 
+                              to="/signup"
+                              onClick={() => setMobileMenuOpen(false)}
+                              className="w-full"
+                            >
+                              <Button variant="outline" className="w-full border-2">
+                                <User size={16} className="mr-2" />
+                                Sign Up
+                              </Button>
+                            </Link>
                           </div>
                         ) : (
                           <Button 
@@ -635,12 +775,14 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                               logout();
                               setMobileMenuOpen(false);
                             }}
-                            className="w-full"
+                            variant="outline"
+                            className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
                           >
+                            <LogIn size={16} className="mr-2" />
                             Sign Out
                           </Button>
                         )}
-                      </div>
+                      </motion.div>
                     </div>
                   </SheetContent>
                 </Sheet>
