@@ -298,11 +298,55 @@ export const getTopProducts = async () => {
 };
 
 // Create product review
-export const createProductReview = async (productId: string, review: {
-  rating: number;
-  comment: string;
-}) => {
-  const config = createAuthConfig();
-  const response = await axios.post<{ message: string }>(`${API_URL}/products/${productId}/reviews`, review, config);
-  return response.data;
+export const createProductReview = async (productId: string, reviewData: { rating: number; comment: string }) => {
+  console.log('🔍 ProductService: createProductReview called with:', {
+    productId,
+    reviewData,
+    hasToken: !!localStorage.getItem('token'),
+    token: localStorage.getItem('token')?.substring(0, 20) + '...',
+    baseURL: API_URL
+  });
+
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.error('❌ ProductService: No authentication token found');
+      throw new Error('No authentication token found');
+    }
+
+    const config = {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    };
+
+    const url = `${API_URL}/products/${productId}/reviews`;
+    console.log('📡 ProductService: Making POST request to:', url);
+    console.log('📡 ProductService: Request config:', config);
+    console.log('📡 ProductService: Request data:', reviewData);
+
+    const response = await axios.post(url, reviewData, config);
+    
+    console.log('✅ ProductService: Review creation successful');
+    console.log('📥 ProductService: Response status:', response.status);
+    console.log('📥 ProductService: Response data:', response.data);
+    
+    return response.data;
+  } catch (error: any) {
+    console.error('❌ ProductService: Error in createProductReview:', error);
+    console.error('❌ ProductService: Error message:', error.message);
+    console.error('❌ ProductService: Error response:', error.response?.data);
+    console.error('❌ ProductService: Error status:', error.response?.status);
+    console.error('❌ ProductService: Error headers:', error.response?.headers);
+    console.error('❌ ProductService: Full error object:', error);
+    
+    if (error.response?.status === 401) {
+      console.error('❌ ProductService: Authentication failed - redirecting to login');
+      // Optional: redirect to login
+      // window.location.href = '/login';
+    }
+    
+    throw error;
+  }
 };
