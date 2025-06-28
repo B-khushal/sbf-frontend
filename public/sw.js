@@ -78,6 +78,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Skip unsupported schemes (chrome-extension, moz-extension, etc.)
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+    return;
+  }
+
   // Handle different types of requests
   if (request.url.includes('/api/')) {
     // API requests - Network First with cache fallback
@@ -135,6 +140,12 @@ async function handleAPIRequest(request) {
 
 // Handle image requests with Cache First strategy
 async function handleImageRequest(request) {
+  // Skip caching for unsupported schemes
+  const url = new URL(request.url);
+  if (url.protocol === 'chrome-extension:' || url.protocol === 'moz-extension:' || url.protocol === 'safari-extension:') {
+    return fetch(request);
+  }
+
   const cachedResponse = await caches.match(request);
   
   if (cachedResponse) {
@@ -144,7 +155,7 @@ async function handleImageRequest(request) {
   try {
     const networkResponse = await fetch(request);
     
-    if (networkResponse.ok) {
+    if (networkResponse.ok && url.protocol === 'https:' || url.protocol === 'http:') {
       const cache = await caches.open(STATIC_CACHE_NAME);
       cache.put(request, networkResponse.clone());
     }

@@ -222,6 +222,7 @@ const LoginPage = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="h-12 rounded-2xl border-2 border-gray-200 focus:border-primary transition-all"
+                    autoComplete="email"
                     required
                   />
                 </motion.div>
@@ -250,6 +251,7 @@ const LoginPage = () => {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       className="h-12 rounded-2xl border-2 border-gray-200 focus:border-primary transition-all pr-12"
+                      autoComplete="current-password"
                       required
                     />
                     <motion.button
@@ -311,7 +313,7 @@ const LoginPage = () => {
                   onError={handleGoogleError}
                   theme="outline"
                   size="large"
-                  width="100%"
+                  width={350}
                   text="signin_with"
                   shape="rectangular"
                 />

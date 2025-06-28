@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, TouchSensor } from "@dnd-kit/core";
-import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { useEffect, useState } from "react";
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, TouchSensor } from "@dnd-kit/core";
+import { arrayMove, SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { SortableItem } from "../components/ui/SortableItem";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
@@ -169,13 +169,10 @@ const AdminSettingsPage: React.FC = () => {
     mapEmbedUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3807.3484898316306!2d78.43144207424317!3d17.395055702585967!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bcb971c17e5196b%3A0x78305a92a4153749!2sSpring%20Blossoms%20Florist!5e0!3m2!1sen!2sin!4v1744469050804!5m2!1sen!2sin"
   });
 
-  // Create sensors conditionally to avoid keyboard interference with input elements
-  const [isInputFocused, setIsInputFocused] = useState(false);
-  
+  // Simplified sensors configuration to avoid conflicts
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        // delay: 250, // Enable for touch screen testing
         distance: 10,
       },
     }),
@@ -184,39 +181,9 @@ const AdminSettingsPage: React.FC = () => {
         delay: 250,
         tolerance: 5,
       },
-    }),
-    // Only include KeyboardSensor when not focusing on input elements
-    ...(!isInputFocused ? [
-      useSensor(KeyboardSensor, {
-        coordinateGetter: sortableKeyboardCoordinates,
-      })
-    ] : [])
+    })
+    // Removed KeyboardSensor to prevent input interference
   );
-
-  // Handle focus/blur events to track input focus state
-  React.useEffect(() => {
-    const handleFocusIn = (e: FocusEvent) => {
-      const target = e.target as HTMLElement;
-      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.contentEditable === 'true') {
-        setIsInputFocused(true);
-      }
-    };
-
-    const handleFocusOut = (e: FocusEvent) => {
-      const target = e.target as HTMLElement;
-      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.contentEditable === 'true') {
-        setIsInputFocused(false);
-      }
-    };
-
-    document.addEventListener('focusin', handleFocusIn);
-    document.addEventListener('focusout', handleFocusOut);
-
-    return () => {
-      document.removeEventListener('focusin', handleFocusIn);
-      document.removeEventListener('focusout', handleFocusOut);
-    };
-  }, []);
 
   useEffect(() => {
   const fetchAllSettings = async () => {

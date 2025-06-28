@@ -62,20 +62,35 @@ export const preloadCriticalFonts = (): void => {
   });
 };
 
-// Preload critical images
+// Preload critical images (only on homepage)
 export const preloadCriticalImages = (): void => {
+  // Only preload images if we're on the homepage or likely to use them
+  const currentPath = window.location.pathname;
+  const isHomePage = currentPath === '/' || currentPath === '/home';
+  
+  if (!isHomePage) return;
+
   const criticalImages = [
-    '/images/logosbf.png', // Logo
-    '/images/1.jpg', // Hero image
-    '/images/placeholder.svg', // Placeholder
+    '/images/logosbf.png', // Logo - always needed
   ];
 
+  // Only preload hero images on homepage
+  if (isHomePage) {
+    criticalImages.push('/images/1.jpg'); // First hero image only
+  }
+
   criticalImages.forEach(imageUrl => {
-    preloadResource(imageUrl, {
-      as: 'image',
-      onload: () => console.log(`Preloaded: ${imageUrl}`),
-      onerror: () => console.warn(`Failed to preload: ${imageUrl}`)
-    });
+    // Check if image actually exists before preloading
+    const img = new Image();
+    img.onload = () => {
+      preloadResource(imageUrl, {
+        as: 'image',
+        onload: () => console.log(`Preloaded: ${imageUrl}`),
+        onerror: () => console.warn(`Failed to preload: ${imageUrl}`)
+      });
+    };
+    img.onerror = () => console.warn(`Image not found, skipping preload: ${imageUrl}`);
+    img.src = imageUrl;
   });
 };
 
@@ -160,7 +175,7 @@ export const optimizeResourceLoading = () => {
   preloadCriticalImages();
   setupDNSPrefetch();
 
-  // Setup intersection observer for lazy loading
+  // Setup intersection observer for lazy loading with performance optimizations
   const observerOptions = {
     root: null,
     rootMargin: '50px',
@@ -168,24 +183,27 @@ export const optimizeResourceLoading = () => {
   };
 
   const lazyLoadObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        const target = entry.target as HTMLElement;
-        
-        // Handle lazy loading for images
-        if (target.tagName === 'IMG' && target.dataset.src) {
-          (target as HTMLImageElement).src = target.dataset.src;
-          target.removeAttribute('data-src');
-          lazyLoadObserver.unobserve(target);
+    // Use requestAnimationFrame to avoid forced reflows
+    requestAnimationFrame(() => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const target = entry.target as HTMLElement;
+          
+          // Handle lazy loading for images
+          if (target.tagName === 'IMG' && target.dataset.src) {
+            (target as HTMLImageElement).src = target.dataset.src;
+            target.removeAttribute('data-src');
+            lazyLoadObserver.unobserve(target);
+          }
+          
+          // Handle lazy loading for iframes
+          if (target.tagName === 'IFRAME' && target.dataset.src) {
+            (target as HTMLIFrameElement).src = target.dataset.src;
+            target.removeAttribute('data-src');
+            lazyLoadObserver.unobserve(target);
+          }
         }
-        
-        // Handle lazy loading for iframes
-        if (target.tagName === 'IFRAME' && target.dataset.src) {
-          (target as HTMLIFrameElement).src = target.dataset.src;
-          target.removeAttribute('data-src');
-          lazyLoadObserver.unobserve(target);
-        }
-      }
+      });
     });
   }, observerOptions);
 
@@ -194,7 +212,62 @@ export const optimizeResourceLoading = () => {
     lazyLoadObserver.observe(el);
   });
 
+  // Optimize layout thrashing
+  optimizeLayoutPerformance();
+
   return lazyLoadObserver;
+};
+
+// Optimize layout performance to reduce forced reflows
+export const optimizeLayoutPerformance = () => {
+  // Add critical CSS for above-the-fold content
+  const criticalCSS = `
+    /* Prevent layout shift for images */
+    img {
+      content-visibility: auto;
+      contain-intrinsic-size: 300px 200px;
+    }
+    
+    /* Optimize transform and opacity for animations */
+    .transform-gpu {
+      transform: translateZ(0);
+      will-change: transform, opacity;
+    }
+    
+    /* Reduce paint complexity */
+    * {
+      backface-visibility: hidden;
+      perspective: 1000px;
+    }
+    
+    /* Optimize scrolling */
+    .scroll-smooth {
+      scroll-behavior: smooth;
+      overflow-scrolling: touch;
+    }
+  `;
+
+  // Inject critical CSS
+  const style = document.createElement('style');
+  style.textContent = criticalCSS;
+  document.head.appendChild(style);
+
+  // Debounce resize events to prevent thrashing
+  let resizeTimeout: number;
+  const handleResize = () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = window.setTimeout(() => {
+      // Handle resize logic here
+      window.dispatchEvent(new Event('optimized-resize'));
+    }, 250);
+  };
+
+  window.addEventListener('resize', handleResize, { passive: true });
+
+  return () => {
+    window.removeEventListener('resize', handleResize);
+    clearTimeout(resizeTimeout);
+  };
 };
 
 // Memory management utilities
