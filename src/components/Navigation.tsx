@@ -551,7 +551,7 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                             My Orders
                           </Link>
                           {user.role === 'admin' && (
-                            <Link to="/admin/dashboard" className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                            <Link to="/admin" className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
                               <Store className="w-4 h-4 mr-2" />
                               Admin Dashboard
                             </Link>
@@ -664,7 +664,7 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                               <ShoppingCart size={16} /> My Orders
                             </Link>
                             {user.role === 'admin' && (
-                              <Link to="/admin/dashboard" onClick={() => setMobileMenuOpen(false)} className={cn('flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors', pathname.startsWith('/admin') ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100')}>
+                              <Link to="/admin" onClick={() => setMobileMenuOpen(false)} className={cn('flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors', pathname.startsWith('/admin') ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100')}>
                                 <Store size={16} /> Admin Dashboard
                               </Link>
                             )}
