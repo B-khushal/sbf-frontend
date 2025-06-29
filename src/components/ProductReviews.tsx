@@ -541,7 +541,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
                 <form onSubmit={handleSubmitReview} className="space-y-6">
                   {/* Overall Rating */}
                   <div>
-                    <label className="text-base font-medium block mb-2">Overall Rating *</label>
+                    <div className="text-base font-medium block mb-2">Overall Rating *</div>
                     <div className="mt-2">
                       {renderStars(formData.rating, true, (rating) => 
                         setFormData(prev => ({ ...prev, rating }))
@@ -554,6 +554,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
                     <label htmlFor="title" className="text-base font-medium block mb-2">Review Title *</label>
                     <Input
                       id="title"
+                      name="title"
                       value={formData.title}
                       onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                       placeholder="Summarize your experience..."
@@ -567,6 +568,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
                     <label htmlFor="comment" className="text-base font-medium block mb-2">Your Review *</label>
                     <Textarea
                       id="comment"
+                      name="comment"
                       value={formData.comment}
                       onChange={(e) => setFormData(prev => ({ ...prev, comment: e.target.value }))}
                       placeholder="Tell others about your experience with this product..."
@@ -578,10 +580,10 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
 
                   {/* Additional Ratings */}
                   <div>
-                    <label className="text-base font-medium block mb-2">Detailed Ratings (Optional)</label>
+                    <div className="text-base font-medium block mb-2">Detailed Ratings (Optional)</div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
                       <div>
-                        <label className="text-sm block mb-1">Quality</label>
+                        <div className="text-sm block mb-1">Quality</div>
                         <div className="mt-1">
                           {renderStars(formData.qualityRating, true, (rating) => 
                             setFormData(prev => ({ ...prev, qualityRating: rating }))
@@ -589,7 +591,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
                         </div>
                       </div>
                       <div>
-                        <label className="text-sm block mb-1">Value for Money</label>
+                        <div className="text-sm block mb-1">Value for Money</div>
                         <div className="mt-1">
                           {renderStars(formData.valueRating, true, (rating) => 
                             setFormData(prev => ({ ...prev, valueRating: rating }))
@@ -597,7 +599,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
                         </div>
                       </div>
                       <div>
-                        <label className="text-sm block mb-1">Delivery Experience</label>
+                        <div className="text-sm block mb-1">Delivery Experience</div>
                         <div className="mt-1">
                           {renderStars(formData.deliveryRating, true, (rating) => 
                             setFormData(prev => ({ ...prev, deliveryRating: rating }))
@@ -610,11 +612,13 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
                   {/* Pros and Cons */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="text-base font-medium block mb-2">What did you like? (Optional)</label>
+                      <label htmlFor="pro-0" className="text-base font-medium block mb-2">What did you like? (Optional)</label>
                       <div className="space-y-2 mt-2">
                         {formData.pros.map((pro, index) => (
                           <Input
                             key={index}
+                            id={`pro-${index}`}
+                            name={`pro-${index}`}
                             value={pro}
                             onChange={(e) => {
                               const newPros = [...formData.pros];
@@ -638,11 +642,13 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
                     </div>
 
                     <div>
-                      <label className="text-base font-medium block mb-2">What could be improved? (Optional)</label>
+                      <label htmlFor="con-0" className="text-base font-medium block mb-2">What could be improved? (Optional)</label>
                       <div className="space-y-2 mt-2">
                         {formData.cons.map((con, index) => (
                           <Input
                             key={index}
+                            id={`con-${index}`}
+                            name={`con-${index}`}
                             value={con}
                             onChange={(e) => {
                               const newCons = [...formData.cons];
