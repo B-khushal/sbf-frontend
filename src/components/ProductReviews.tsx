@@ -555,7 +555,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
                   <div>
                     <div className="text-base font-medium block mb-2">Overall Rating *</div>
                     <div className="mt-2">
-                      {renderStars(formData.rating, true, (rating) => 
+                      {renderStars(formData.rating, true, (rating) =>
                         setFormData(prev => ({ ...prev, rating }))
                       )}
                     </div>
@@ -597,7 +597,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
                       <div>
                         <div className="text-sm block mb-1">Quality</div>
                         <div className="mt-1">
-                          {renderStars(formData.qualityRating, true, (rating) => 
+                          {renderStars(formData.qualityRating, true, (rating) =>
                             setFormData(prev => ({ ...prev, qualityRating: rating }))
                           )}
                         </div>
@@ -605,7 +605,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
                       <div>
                         <div className="text-sm block mb-1">Value for Money</div>
                         <div className="mt-1">
-                          {renderStars(formData.valueRating, true, (rating) => 
+                          {renderStars(formData.valueRating, true, (rating) =>
                             setFormData(prev => ({ ...prev, valueRating: rating }))
                           )}
                         </div>
@@ -613,7 +613,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
                       <div>
                         <div className="text-sm block mb-1">Delivery Experience</div>
                         <div className="mt-1">
-                          {renderStars(formData.deliveryRating, true, (rating) => 
+                          {renderStars(formData.deliveryRating, true, (rating) =>
                             setFormData(prev => ({ ...prev, deliveryRating: rating }))
                           )}
                         </div>
@@ -686,8 +686,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
 
                   <Button
                     type="submit"
-                    onClick={() => console.log("🔘 Submit button clicked!")}
-                    disabled={isSubmitDisabled}
+                    disabled={submitting || formData.rating === 0 || formData.title.trim() === '' || formData.comment.trim() === ''}
                     className="w-full"
                   >
                     {submitting ? 'Submitting...' : 'Submit Review'}
