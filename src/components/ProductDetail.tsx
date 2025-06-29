@@ -55,7 +55,6 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
   const [selectedImage, setSelectedImage] = useState(0);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
-  const [title, setTitle] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { formatPrice, convertPrice } = useCurrency();
@@ -264,7 +263,6 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
     
     console.log('🔍 Review submission started:', { 
       rating, 
-      title,
       comment: comment.length, 
       productId: product._id,
       userLoggedIn: !!user 
@@ -292,16 +290,6 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
       return;
     }
 
-    if (title.trim().length < 5) {
-      console.log('❌ Title too short');
-      toast({
-        title: "Title required",
-        description: "Please enter a title (minimum 5 characters).",
-        variant: "destructive"
-      });
-      return;
-    }
-
     if (comment.trim() === '') {
       console.log('❌ No comment provided');
       toast({
@@ -312,7 +300,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
       return;
     }
 
-    console.log('✅ Rating, title and comment are valid:', { rating, title, commentLength: comment.trim().length });
+    console.log('✅ Rating and comment are valid:', { rating, commentLength: comment.trim().length });
 
     setIsSubmitting(true);
     try {
@@ -321,7 +309,6 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
       
       const result = await productService.createProductReview(product._id, { 
         rating, 
-        title: title.trim(),
         comment: comment.trim() 
       });
       
@@ -334,7 +321,6 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
       
       // Reset form
       setRating(0);
-      setTitle('');
       setComment('');
       
       // Refresh the product data
@@ -553,68 +539,6 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
         onClose={closeContactModal}
         productTitle={contactModalProduct}
       />
-
-      {/* Review Form */}
-      <div className="mt-8 max-w-2xl mx-auto">
-        <h3 className="text-2xl font-semibold mb-4">Write a Review</h3>
-        <form onSubmit={handleReviewSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">Rating</label>
-            <div className="flex gap-2">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <button
-                  key={star}
-                  type="button"
-                  onClick={() => setRating(star)}
-                  className={`text-2xl ${
-                    star <= rating ? 'text-yellow-400' : 'text-gray-300'
-                  }`}
-                >
-                  ★
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <label htmlFor="title" className="block text-sm font-medium mb-2">Title</label>
-            <input
-              type="text"
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Summarize your experience..."
-              className="w-full px-3 py-2 border rounded-md"
-              required
-              minLength={5}
-              maxLength={100}
-            />
-          </div>
-
-          <div>
-            <label htmlFor="comment" className="block text-sm font-medium mb-2">Review</label>
-            <textarea
-              id="comment"
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="Share your thoughts about the product..."
-              className="w-full px-3 py-2 border rounded-md"
-              rows={4}
-              required
-              minLength={10}
-              maxLength={1000}
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 disabled:opacity-50"
-          >
-            {isSubmitting ? 'Submitting...' : 'Submit Review'}
-          </button>
-        </form>
-      </div>
 
       {/* Enhanced Reviews Section */}
       <div className="max-w-6xl mx-auto mt-16">
