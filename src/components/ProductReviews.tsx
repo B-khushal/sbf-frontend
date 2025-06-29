@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Star, ThumbsUp, ThumbsDown, Camera, Verified, Filter, SortAsc, MessageSquare, TrendingUp, Award } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -87,6 +87,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
 
   const { user } = useAuth();
   const { toast } = useToast();
+  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     fetchReviews();
@@ -234,6 +235,11 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleButtonClick = () => {
+    console.log('--- Button onClick event fired! ---');
+    formRef.current?.requestSubmit();
   };
 
   const renderStars = (rating: number, interactive = false, onRatingChange?: (rating: number) => void) => {
@@ -548,7 +554,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
                 <CardTitle>Write a Review</CardTitle>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleSubmitReview} className="space-y-6">
+                <form ref={formRef} onSubmit={handleSubmitReview} className="space-y-6">
                   {/* Overall Rating */}
                   <div>
                     <div className="text-base font-medium block mb-2">Overall Rating *</div>
@@ -683,7 +689,8 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
                   </div>
 
                   <Button
-                    type="submit"
+                    type="button"
+                    onClick={handleButtonClick}
                     disabled={submitting || formData.rating === 0 || formData.title.trim() === '' || formData.comment.trim() === ''}
                     className="w-full"
                   >
