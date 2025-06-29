@@ -63,6 +63,8 @@ interface ProductReviewsProps {
 }
 
 const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubmit }) => {
+  console.log("✅ ProductReviews component rendered for productId:", productId);
+
   const [reviews, setReviews] = useState<Review[]>([]);
   const [stats, setStats] = useState<ReviewStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -129,6 +131,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
   };
 
   const handleSubmitReview = async (e: React.FormEvent) => {
+    console.log("🚀 handleSubmitReview function started.");
     e.preventDefault();
     
     if (!user) {
@@ -288,6 +291,15 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
       </div>
     );
   }
+
+  const isSubmitDisabled = submitting || formData.rating === 0 || formData.title.trim() === '' || formData.comment.trim() === '';
+  console.log("🤔 Submit button disabled state:", {
+    isDisabled: isSubmitDisabled,
+    submitting,
+    rating: formData.rating,
+    isTitleEmpty: formData.title.trim() === '',
+    isCommentEmpty: formData.comment.trim() === '',
+  });
 
   return (
     <div className="space-y-6">
@@ -674,7 +686,8 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
 
                   <Button
                     type="submit"
-                    disabled={submitting || formData.rating === 0 || formData.title.trim() === '' || formData.comment.trim() === ''}
+                    onClick={() => console.log("🔘 Submit button clicked!")}
+                    disabled={isSubmitDisabled}
                     className="w-full"
                   >
                     {submitting ? 'Submitting...' : 'Submit Review'}
