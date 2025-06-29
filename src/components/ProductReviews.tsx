@@ -237,8 +237,9 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
     }
   };
 
-  const handleButtonClick = () => {
-    console.log('--- Button onClick event fired! ---');
+  const handleTriggerSubmit = () => {
+    console.log("Submit button clicked, triggering form submission.");
+    console.log("Form Ref:", formRef.current);
     formRef.current?.requestSubmit();
   };
 
@@ -690,7 +691,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
 
                   <Button
                     type="button"
-                    onClick={handleButtonClick}
+                    onClick={handleTriggerSubmit}
                     disabled={submitting || formData.rating === 0 || formData.title.trim() === '' || formData.comment.trim() === ''}
                     className="w-full"
                   >
