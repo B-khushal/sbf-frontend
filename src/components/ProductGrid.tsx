@@ -356,9 +356,9 @@ const ProductCard = ({ product, onAddToCart, onOpenCart }: {
           <p className="text-xs sm:text-sm text-gray-500 capitalize">{product.category}</p>
         </div>
 
-        {/* Rating */}
-        {averageRating > 0 && (
-          <div className="flex items-center gap-1 mb-2 sm:mb-3">
+        {/* Rating and Reviews */}
+        <div className="flex items-center gap-1 mb-2 sm:mb-3">
+          {averageRating > 0 && (
             <div className="flex items-center">
               {[...Array(5)].map((_, i) => (
                 <Star
@@ -372,12 +372,15 @@ const ProductCard = ({ product, onAddToCart, onOpenCart }: {
                 />
               ))}
             </div>
-            <span className="text-xs sm:text-sm text-gray-500">
-              {averageRating.toFixed(1)}
-              {product.numReviews && ` (${product.numReviews})`}
-            </span>
-          </div>
-        )}
+          )}
+          <span className="text-xs sm:text-sm text-gray-500">
+            {averageRating > 0 && `${averageRating.toFixed(1)} • `}
+            {product.numReviews && product.numReviews > 0 
+              ? `${product.numReviews} review${product.numReviews !== 1 ? 's' : ''}`
+              : 'No Reviews'
+            }
+          </span>
+        </div>
 
         {/* Price */}
         <div className="flex items-center gap-2 mb-3 sm:mb-4">
