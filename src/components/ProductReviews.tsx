@@ -102,19 +102,24 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
         ...(filterRating && { rating: filterRating })
       });
 
+      console.log('🔍 Fetching reviews for product:', productId);
       const response = await fetch(`/api/products/${productId}/reviews?${queryParams}`);
       
       if (response.ok) {
         const data = await response.json();
+        console.log('✅ Reviews fetched successfully:', data);
         setReviews(data.reviews || []);
         setStats(data.stats || null);
       } else {
+        console.log('❌ Failed to fetch reviews, status:', response.status);
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        console.log('Error data:', errorData);
         // Fallback for when new API isn't available yet
         setReviews([]);
         setStats(null);
       }
     } catch (error) {
-      console.error('Error fetching reviews:', error);
+      console.error('❌ Error fetching reviews:', error);
       // Use existing reviews if available
       setReviews([]);
       setStats(null);
@@ -175,6 +180,10 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
         cons: formData.cons.filter(con => con.trim() !== '')
       };
 
+      console.log('📤 Submitting review:', reviewData);
+      console.log('🔗 API endpoint:', `/api/products/${productId}/reviews`);
+      console.log('🔑 Auth token:', localStorage.getItem('token') ? 'Present' : 'Missing');
+
       const response = await fetch(`/api/products/${productId}/reviews`, {
         method: 'POST',
         headers: {
@@ -184,7 +193,12 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
         body: JSON.stringify(reviewData)
       });
 
+      console.log('📡 Response status:', response.status);
+
       if (response.ok) {
+        const responseData = await response.json();
+        console.log('✅ Review submitted successfully:', responseData);
+        
         toast({
           title: "Review submitted!",
           description: "Thank you for your feedback"
@@ -205,10 +219,12 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
         fetchReviews();
         onReviewSubmit();
       } else {
-        const data = await response.json();
-        throw new Error(data.message);
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        console.log('❌ Review submission failed:', errorData);
+        throw new Error(errorData.message || 'Failed to submit review');
       }
     } catch (error: any) {
+      console.error('❌ Review submission error:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to submit review",
