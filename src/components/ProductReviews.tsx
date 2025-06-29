@@ -63,7 +63,6 @@ interface ProductReviewsProps {
 }
 
 const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubmit }) => {
-  console.log(`--- ProductReviews Component Rendered at ${new Date().toLocaleTimeString()} ---`);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [stats, setStats] = useState<ReviewStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -685,11 +684,10 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
 
                   <Button
                     type="submit"
-                    onClick={() => console.log(`--- Submit Button Clicked at ${new Date().toLocaleTimeString()} ---`)}
                     disabled={submitting || formData.rating === 0 || formData.title.trim() === '' || formData.comment.trim() === ''}
                     className="w-full"
                   >
-                    {submitting ? 'Submitting...' : 'Submit Review'}
+                    {submitting ? 'Submitting...' : 'Submit Review (Live Test)'}
                   </Button>
                 </form>
               </CardContent>
