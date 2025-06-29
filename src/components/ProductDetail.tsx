@@ -59,7 +59,8 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
   const { toast } = useToast();
   const { formatPrice, convertPrice } = useCurrency();
   const { user } = useAuth();
-  const { showContactModal, contactModalProduct, closeContactModal } = useCart();
+  const { onAddToCart: addToCart } = useCart();
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
 
   // Debug log to check properties
   console.log(`Product Detail ${product.title}:`, {
@@ -114,7 +115,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
     }
 
     try {
-      onAddToCart({
+      addToCart({
         id: product._id,
         productId: product._id,
         title: product.title,
@@ -248,9 +249,10 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
           duration: 3000,
         });
       } catch (clipboardError) {
+        console.error("Error copying to clipboard:", clipboardError);
         toast({
-          title: "Share failed",
-          description: "Unable to share or copy link. Please copy the URL manually.",
+          title: "Error",
+          description: "Failed to share or copy link",
           variant: "destructive",
           duration: 3000,
         });
@@ -532,13 +534,6 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
           </div>
         </div>
       </div>
-
-      {/* Contact Modal */}
-      <ContactModal 
-        isOpen={showContactModal}
-        onClose={closeContactModal}
-        productTitle={contactModalProduct}
-      />
 
       {/* Enhanced Reviews Section */}
       <div className="max-w-6xl mx-auto mt-16">
