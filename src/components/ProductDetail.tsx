@@ -11,6 +11,7 @@ import productService from '@/services/productService';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import ProductReviews from './ProductReviews';
 
 type Review = {
   _id: string;
@@ -539,111 +540,12 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
         productTitle={contactModalProduct}
       />
 
-      {/* Reviews Section */}
+      {/* Enhanced Reviews Section */}
       <div className="max-w-6xl mx-auto mt-16">
-        <h2 className="text-3xl font-bold mb-6">Reviews ({product.numReviews})</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-          <div>
-            {product.reviews.length === 0 ? (
-              <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
-                <div className="text-gray-400 mb-2">
-                  <Star className="h-12 w-12 mx-auto" />
-                </div>
-                <p className="text-gray-600 font-medium">No reviews yet</p>
-                <p className="text-sm text-gray-500 mt-1">Be the first to review this product!</p>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {product.reviews.map((review) => (
-                  <Card key={review._id}>
-                    <CardHeader>
-                      <CardTitle className="text-lg">{review.name}</CardTitle>
-                      <div className="flex items-center">
-                        {[...Array(5)].map((_, i) => (
-                          <Star key={i} className={cn("h-5 w-5", i < review.rating ? "text-yellow-400 fill-yellow-400" : "text-gray-300")} />
-                        ))}
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <p>{review.comment}</p>
-                      <p className="text-sm text-muted-foreground mt-2">
-                        {new Date(review.createdAt).toLocaleDateString()}
-                      </p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </div>
-          <div>
-            {user ? (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Write a Review</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleReviewSubmit} className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Rating <span className="text-red-500">*</span>
-                      </label>
-                      <div className="flex items-center gap-1">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className={cn(
-                              "h-8 w-8 cursor-pointer transition-colors duration-200",
-                              i < rating ? "text-yellow-400 fill-yellow-400" : "text-gray-300 hover:text-yellow-200"
-                            )}
-                            onClick={() => setRating(i + 1)}
-                          />
-                        ))}
-                        {rating > 0 && (
-                          <span className="ml-2 text-sm text-gray-600">({rating}/5)</span>
-                        )}
-                      </div>
-                    </div>
-                    <div>
-                      <label htmlFor="comment" className="block text-sm font-medium text-gray-700 mb-2">
-                        Comment <span className="text-red-500">*</span>
-                      </label>
-                      <Textarea
-                        id="comment"
-                        value={comment}
-                        onChange={(e) => setComment(e.target.value)}
-                        placeholder="Share your thoughts about the product..."
-                        rows={4}
-                        className={cn(
-                          "transition-colors duration-200",
-                          comment.trim() === '' ? "border-gray-300" : "border-green-300"
-                        )}
-                      />
-                      <div className="text-sm text-gray-500 mt-1">
-                        {comment.length}/500 characters
-                      </div>
-                    </div>
-                    <Button 
-                      type="submit" 
-                      disabled={isSubmitting || rating === 0 || comment.trim() === ''}
-                      className="w-full bg-primary hover:bg-primary/90 text-white font-medium py-2 px-4 rounded-md transition-colors"
-                    >
-                      {isSubmitting ? (
-                        <div className="flex items-center gap-2">
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          Submitting...
-                        </div>
-                      ) : (
-                        'Submit Review'
-                      )}
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
-            ) : (
-              <p>Please <a href="/login" className="underline">log in</a> to write a review.</p>
-            )}
-          </div>
-        </div>
+        <ProductReviews 
+          productId={product._id} 
+          onReviewSubmit={onReviewSubmit}
+        />
       </div>
     </section>
   );
