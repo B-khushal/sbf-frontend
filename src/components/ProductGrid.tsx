@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { Heart, ShoppingBag, Eye, Star, ArrowRight, Sparkles } from "lucide-react";
@@ -8,8 +8,6 @@ import { toast } from "sonner";
 import useCart from "@/hooks/use-cart";
 import { useAuth } from "@/hooks/use-auth";
 import { getImageUrl } from "@/config";
-import { Card } from './ui/card';
-import { OptimizedImage } from './ui/OptimizedImage';
 
 export type Product = {
   _id: string;
@@ -46,30 +44,6 @@ type ProductGridProps = {
 };
 
 const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCart, onOpenCart }: ProductGridProps) => {
-  if (loading) {
-    return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {[...Array(8)].map((_, index) => (
-          <Card key={index} className="animate-pulse">
-            <div className="h-48 bg-gray-200"></div>
-            <div className="p-4 space-y-3">
-              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-            </div>
-          </Card>
-        ))}
-      </div>
-    );
-  }
-
-  if (!products?.length) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-gray-500">No products found</p>
-      </div>
-    );
-  }
-
   return (
     <section className={cn("py-8 sm:py-12 lg:py-16 xl:py-20 px-3 sm:px-4 md:px-6 lg:px-8", className)}>
       {(title || subtitle) && (
@@ -87,66 +61,23 @@ const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCar
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {products.map((product) => {
-          const discountedPrice = product.discount > 0 
-            ? product.price - (product.price * product.discount / 100)
-            : product.price;
-
-          return (
-            <Link key={product._id} to={`/product/${product._id}`}>
-              <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                <div className="relative h-48">
-                  <OptimizedImage
-                    src={product.images[0]}
-                    alt={product.title}
-                    className="object-cover w-full h-full"
-                  />
-                  {(product.isFeatured || product.isNewArrival || product.discount) && (
-                    <div className="absolute top-2 left-2 flex flex-col gap-1">
-                      {product.isFeatured && (
-                        <span className="bg-yellow-500 text-white px-2 py-1 rounded-md text-xs">
-                          Featured
-                        </span>
-                      )}
-                      {product.isNewArrival && (
-                        <span className="bg-green-500 text-white px-2 py-1 rounded-md text-xs">
-                          New
-                        </span>
-                      )}
-                      {product.discount && (
-                        <span className="bg-red-500 text-white px-2 py-1 rounded-md text-xs">
-                          {product.discount}% OFF
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </div>
-                <div className="p-4">
-                  <h3 className="font-semibold text-lg mb-2 line-clamp-2">{product.title}</h3>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      {product.discount ? (
-                        <div className="space-x-2">
-                          <span className="text-lg font-bold text-green-600">
-                            ₹{discountedPrice.toFixed(2)}
-                          </span>
-                          <span className="text-sm text-gray-500 line-through">
-                            ₹{product.price.toFixed(2)}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-lg font-bold">₹{product.price.toFixed(2)}</span>
-                      )}
-                    </div>
-                    <span className="text-sm text-gray-500">{product.category}</span>
-                  </div>
-                </div>
-              </Card>
-            </Link>
-          );
-        })}
-      </div>
+      {loading ? (
+        <div className="text-center py-8 sm:py-12 lg:py-16">
+          <div className="inline-block w-8 h-8 sm:w-12 sm:h-12 lg:w-16 lg:h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mb-3 sm:mb-4"></div>
+          <p className="text-gray-600 text-sm sm:text-base lg:text-lg">Loading products...</p>
+        </div>
+      ) : products.length === 0 ? (
+        <div className="text-center py-8 sm:py-12 lg:py-16">
+          <div className="text-3xl sm:text-4xl lg:text-6xl mb-3 sm:mb-4">🌸</div>
+          <p className="text-muted-foreground text-sm sm:text-base lg:text-lg">No products available at the moment.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 sm:gap-5 md:gap-6 lg:gap-7 xl:gap-9">
+          {products.map((product) => (
+            <ProductCard key={product._id} product={product} onAddToCart={onAddToCart} onOpenCart={onOpenCart} />
+          ))}
+        </div>
+      )}
     </section>
   );
 };

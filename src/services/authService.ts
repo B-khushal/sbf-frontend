@@ -1,11 +1,5 @@
-import axios from 'axios';
+import api from './api';
 
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'https://sbf-backend.onrender.com/api',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
 
 interface LoginCredentials {
   email: string;
@@ -92,17 +86,15 @@ export const register = async (userData: RegisterData) => {
 };
 
 // Logout user
-export const logout = async () => {
+export const logout = () => {
   localStorage.removeItem('user');
   localStorage.removeItem('token');
   localStorage.removeItem('isAuthenticated');
   
   try {
-    const response = await api.post('/auth/logout');
-    return response.data;
+    api.post('/auth/logout');
   } catch (error) {
     console.error('Logout error:', error);
-    throw error;
   }
 };
 
@@ -143,7 +135,7 @@ export const updateUserProfile = async (profileData: UserProfile) => {
 
 // Change password
 export const changePassword = async (oldPassword: string, newPassword: string) => {
-  const response = await api.post('/auth/change-password', { oldPassword, newPassword });
+  const response = await api.put('/auth/change-password', { oldPassword, newPassword });
   return response.data;
 };
 
@@ -229,139 +221,5 @@ export const checkAuthToken = async () => {
     
     return false;
   }
-};
-
-export const authService = {
-  login: async (email: string, password: string) => {
-    try {
-      const response = await api.post('/auth/login', { email, password });
-      return response.data;
-    } catch (error) {
-      console.error('Error during login:', error);
-      throw error;
-    }
-  },
-
-  register: async (userData: any) => {
-    try {
-      const response = await api.post('/auth/register', userData);
-      return response.data;
-    } catch (error) {
-      console.error('Error during registration:', error);
-      throw error;
-    }
-  },
-
-  forgotPassword: async (email: string) => {
-    try {
-      const response = await api.post('/auth/forgot-password', { email });
-      return response.data;
-    } catch (error) {
-      console.error('Error during forgot password:', error);
-      throw error;
-    }
-  },
-
-  resetPassword: async (token: string, password: string) => {
-    try {
-      const response = await api.post('/auth/reset-password', { token, password });
-      return response.data;
-    } catch (error) {
-      console.error('Error during password reset:', error);
-      throw error;
-    }
-  },
-
-  refreshToken: async (refreshToken: string) => {
-    try {
-      const response = await api.post('/auth/refresh-token', { refreshToken });
-      return response.data;
-    } catch (error) {
-      console.error('Error refreshing token:', error);
-      throw error;
-    }
-  },
-
-  logout: async () => {
-    try {
-      const response = await api.post('/auth/logout');
-      return response.data;
-    } catch (error) {
-      console.error('Error during logout:', error);
-      throw error;
-    }
-  },
-
-  verifyEmail: async (token: string) => {
-    try {
-      const response = await api.post('/auth/verify-email', { token });
-      return response.data;
-    } catch (error) {
-      console.error('Error during email verification:', error);
-      throw error;
-    }
-  },
-
-  resendVerificationEmail: async (email: string) => {
-    try {
-      const response = await api.post('/auth/resend-verification', { email });
-      return response.data;
-    } catch (error) {
-      console.error('Error resending verification email:', error);
-      throw error;
-    }
-  },
-
-  changePassword: async (oldPassword: string, newPassword: string) => {
-    try {
-      const response = await api.post('/auth/change-password', { oldPassword, newPassword });
-      return response.data;
-    } catch (error) {
-      console.error('Error changing password:', error);
-      throw error;
-    }
-  },
-
-  updateProfile: async (userData: any) => {
-    try {
-      const response = await api.put('/auth/profile', userData);
-      return response.data;
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      throw error;
-    }
-  },
-
-  getProfile: async () => {
-    try {
-      const response = await api.get('/auth/profile');
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-      throw error;
-    }
-  },
-
-  // Google OAuth
-  googleLogin: async (token: string) => {
-    try {
-      const response = await api.post('/auth/google', { token });
-      return response.data;
-    } catch (error) {
-      console.error('Error during Google login:', error);
-      throw error;
-    }
-  },
-
-  // Check auth status
-  checkAuthStatus: async () => {
-    try {
-      const response = await api.get('/auth/status');
-      return response.data;
-    } catch (error) {
-      console.error('Error checking auth status:', error);
-      throw error;
-    }
-  },
 };
 

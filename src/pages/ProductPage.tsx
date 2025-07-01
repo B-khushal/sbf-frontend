@@ -1,83 +1,121 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import ProductDetail from '../components/ProductDetail';
-import { Skeleton } from '../components/ui/skeleton';
-import { useToast } from '../components/ui/use-toast';
-import axios from 'axios';
+import { useParams, useNavigate } from 'react-router-dom';
+import ProductDetail from '@/components/ProductDetail';
+import ProductGrid from '@/components/ProductGrid';
+import useCart from '@/hooks/use-cart';
+import api from '@/services/api';
+import productService, { ProductData } from '@/services/productService';
 
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-interface Product {
+type Product = ProductData & {
   _id: string;
-  title: string;
-  description: string;
-  price: number;
-  images: string[];
-  category: string;
-  countInStock: number;
-  discount?: number;
-  details?: Map<string, string>;
-}
+};
 
 const ProductPage = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id, productId } = useParams<{ id?: string; productId?: string }>();
+  const navigate = useNavigate();
   const [product, setProduct] = useState<Product | null>(null);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
+  
+  const { 
+    addItem, 
+    openCart, 
+  } = useCart();
+  
+  // Use either id or productId parameter
+  const actualId = id || productId;
+
+  const fetchProduct = async () => {
+    try {
+      setLoading(true);
+      // Fetch product using productService (includes care instructions)
+      const productData = await productService.getProductById(actualId!);
+      setProduct(productData);
+      console.log("ProductPage - Product with care instructions:", productData);
+
+      // Fetch related products
+      const relatedResponse = await api.get(`/products?category=${productData.category}`);
+      setRelatedProducts(
+        relatedResponse.data.products
+          .filter((p: Product) => p._id !== actualId)
+          .slice(0, 4)
+      );
+    } catch (error) {
+      console.error("Error fetching product:", error);
+      // Redirect to shop instead of showing not found
+      navigate('/shop', { replace: true });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        setLoading(true);
-        const response = await api.get(`/products/${id}`);
-        setProduct(response.data);
-      } catch (error) {
-        console.error('Error fetching product:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load product details",
-          variant: "destructive"
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (id) {
-      fetchProduct();
+    // If no valid ID is provided, redirect to shop immediately
+    if (!actualId || actualId.trim() === '') {
+      navigate('/shop', { replace: true });
+      return;
     }
-  }, [id, toast]);
+
+    fetchProduct();
+    window.scrollTo(0, 0);
+  }, [actualId, navigate]);
+
+  const handleAddToCart = (item: {
+    id: string;
+    productId: string;
+    title: string;
+    price: number;
+    originalPrice: number;
+    image: string;
+    quantity: number;
+  }) => {
+    try {
+      const success = addItem({
+        id: item.id,
+        productId: item.productId,
+        title: item.title,
+        price: item.price,
+        originalPrice: item.originalPrice,
+        image: item.image,
+      }, item.quantity);
+      
+      if (success) {
+        setTimeout(() => openCart(), 300);
+      }
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      throw error;
+    }
+  };
 
   if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <Skeleton className="h-[400px] w-full" />
-          <div className="space-y-4">
-            <Skeleton className="h-8 w-3/4" />
-            <Skeleton className="h-6 w-1/4" />
-            <Skeleton className="h-24 w-full" />
-            <Skeleton className="h-10 w-1/3" />
-          </div>
-        </div>
-      </div>
-    );
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
+  // If no product and not loading, redirect to shop (this should rarely happen due to the redirect in useEffect)
   if (!product) {
-    return (
-      <div className="container mx-auto px-4 py-8 text-center">
-        <h2 className="text-2xl font-bold text-gray-800">Product not found</h2>
-      </div>
-    );
+    navigate('/shop', { replace: true });
+    return null;
   }
 
-  return <ProductDetail product={product} />;
+  return (
+    <div className="min-h-screen flex flex-col">
+      
+      <main className="flex-1">
+        <ProductDetail product={product} onAddToCart={handleAddToCart} onReviewSubmit={fetchProduct} />
+        
+        {relatedProducts.length > 0 && (
+          <ProductGrid 
+            products={relatedProducts} 
+            title="You Might Also Like"
+            subtitle="Similar products you may be interested in"
+            className="bg-muted/30"
+          />
+        )}
+      </main>
+      
+    </div>
+  );
 };
 
 export default ProductPage;

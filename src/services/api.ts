@@ -2,7 +2,7 @@ import axios from 'axios';
 import { toast } from '../hooks/use-toast';
 
 // Create an axios instance with base URL and default headers
-export const api = axios.create({
+const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'https://sbf-backend.onrender.com/api',
   timeout: 30000, // Increased to 30 seconds
   maxRedirects: 0, // Prevent redirect issues
@@ -16,10 +16,42 @@ export const api = axios.create({
 // Add a request interceptor to include the auth token in requests
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    // Try multiple token sources like in ProductForm
+    let token = localStorage.getItem('token');
+    
+    if (!token) {
+      // Try userData
+      const userData = localStorage.getItem('userData') || sessionStorage.getItem('userData');
+      if (userData) {
+        try {
+          const parsed = JSON.parse(userData);
+          if (parsed.token) token = parsed.token;
+        } catch (err) {
+          console.error('Error parsing userData in interceptor:', err);
+        }
+      }
+    }
+    
+    if (!token) {
+      // Try user
+      const user = localStorage.getItem('user');
+      if (user) {
+        try {
+          const parsed = JSON.parse(user);
+          if (parsed.token) token = parsed.token;
+        } catch (err) {
+          console.error('Error parsing user in interceptor:', err);
+        }
+      }
+    }
+    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('API Interceptor: Added token to request', config.url);
+    } else {
+      console.log('API Interceptor: No token found for request', config.url);
     }
+    
     return config;
   },
   (error) => {
@@ -30,36 +62,7 @@ api.interceptors.request.use(
 // Add a response interceptor to handle errors
 api.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-
-    // If the error status is 401 and there is no originalRequest._retry flag,
-    // it means the token has expired and we need to refresh it
-    if (error.response.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-
-      try {
-        const refreshToken = localStorage.getItem('refreshToken');
-        const response = await axios.post('https://sbf-backend.onrender.com/api/auth/refresh-token', {
-          refreshToken,
-        });
-
-        const { token } = response.data;
-
-        localStorage.setItem('token', token);
-
-        // Retry the original request with the new token
-        originalRequest.headers.Authorization = `Bearer ${token}`;
-        return axios(originalRequest);
-      } catch (error) {
-        // If refresh token fails, redirect to login
-        localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
-        window.location.href = '/login';
-        return Promise.reject(error);
-      }
-    }
-
+  (error) => {
     // Handle network errors
     if (error.code === 'ECONNABORTED') {
       toast({
@@ -108,3 +111,5 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+export default api;
