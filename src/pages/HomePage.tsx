@@ -52,21 +52,11 @@ const HomePage = () => {
   const cartHook = useCart();
   const { items, itemCount, isCartOpen, closeCart, updateItemQuantity, removeItem, openCart, addItem } = cartHook;
   
-  // Debug cart hook
+  // Debug cart hook - reduced logging
   useEffect(() => {
-    console.log('HomePage - Cart hook values:', {
-      items: items.length,
-      itemCount,
-      isCartOpen,
-      functionsAvailable: {
-        closeCart: typeof closeCart,
-        updateItemQuantity: typeof updateItemQuantity,
-        removeItem: typeof removeItem,
-        openCart: typeof openCart,
-        addItem: typeof addItem
-      }
-    });
-  }, [items, itemCount, isCartOpen]);
+    console.log('HomePage cart items:', items.length);
+  }, [items.length]);
+  
   const { homeSections, loading: settingsLoading } = useSettings();
   const { currentOffer, isOpen: isOfferOpen, closeOffer } = useOfferPopup();
   
@@ -207,37 +197,24 @@ const HomePage = () => {
           </motion.section>
         );
       
-      case 'custom':
-        return (
-          <motion.section 
-            variants={itemVariants}
-            className="px-3 xs:px-4 sm:px-6 md:px-8 lg:px-12 py-8 sm:py-12 md:py-16 lg:py-20 text-center bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10"
-          >
-            <div className="max-w-4xl mx-auto">
-              <h2 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-gray-800 mb-3 sm:mb-4 md:mb-5 lg:mb-6">
-                {section.title || "Custom Section"}
-              </h2>
-              <p className="text-sm xs:text-base sm:text-lg md:text-xl lg:text-2xl text-gray-600 mb-4 sm:mb-6 md:mb-8 leading-relaxed px-2">
-                {section.subtitle || "This is a custom section that can be configured from the admin panel."}
-              </p>
-            </div>
-          </motion.section>
-        );
-      
       default:
         return null;
     }
   };
 
+  // ⚡ OPTIMIZED: Single API call for all homepage data
   useEffect(() => {
-    const fetchProducts = async (retryCount = 0) => {
+    const fetchHomepageData = async (retryCount = 0) => {
       try {
+        console.time('homepage-load');
         setLoading(true);
         setError("");
-        const [featuredResponse, newResponse] = await Promise.all([
-          api.get('/products/featured'),
-          api.get('/products/new')
-        ]);
+        
+        // 🚀 Single optimized API call instead of 2 separate calls
+        const response = await api.get('/products/homepage-data');
+        
+        console.timeEnd('homepage-load');
+        console.log('✅ Homepage data loaded:', response.data.meta);
         
         const processProducts = (products) => {
           if (!Array.isArray(products)) return [];
@@ -247,21 +224,46 @@ const HomePage = () => {
           }));
         };
 
-        setFeaturedProducts(processProducts(featuredResponse.data.products || featuredResponse.data || []));
-        setNewProducts(processProducts(newResponse.data.products || newResponse.data || []));
+        setFeaturedProducts(processProducts(response.data.featured || []));
+        setNewProducts(processProducts(response.data.new || []));
+        
       } catch (error) {
-        console.error("Error fetching products:", error);
+        console.error("❌ Error fetching homepage data:", error);
         setError("Failed to load products. Please try again later.");
         
-        if (retryCount < 2) {
-          setTimeout(() => fetchProducts(retryCount + 1), 2000);
+        // ⚡ Fallback: Use individual endpoints if the optimized one fails
+        if (retryCount < 1) {
+          console.log("🔄 Falling back to individual API calls...");
+          try {
+            const [featuredResponse, newResponse] = await Promise.all([
+              api.get('/products/featured'),
+              api.get('/products/new')
+            ]);
+            
+            const processProducts = (products) => {
+              if (!Array.isArray(products)) return [];
+              return products.map(product => ({
+                ...product,
+                _id: product._id || product.id
+              }));
+            };
+
+            setFeaturedProducts(processProducts(featuredResponse.data.products || featuredResponse.data || []));
+            setNewProducts(processProducts(newResponse.data.products || newResponse.data || []));
+            setError(""); // Clear error if fallback succeeds
+          } catch (fallbackError) {
+            console.error("❌ Fallback also failed:", fallbackError);
+            if (retryCount < 2) {
+              setTimeout(() => fetchHomepageData(retryCount + 1), 2000);
+            }
+          }
         }
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProducts();
+    fetchHomepageData();
   }, []);
 
   const enabledSections = homeSections.filter(section => section.enabled);
