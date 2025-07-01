@@ -1,8 +1,15 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode, useRef } from 'react';
 import { playNotificationSound } from '@/utils/notificationSound';
 import { useToast } from '@/hooks/use-toast';
-import api from '@/services/api';
+import axios from 'axios';
 import { getSessionId } from '@/utils/sessionManager';
+
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || 'https://sbf-backend.onrender.com/api',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
 
 export interface NotificationItem {
   id: string;
@@ -34,6 +41,7 @@ interface NotificationContextType {
   toggleSounds: () => void;
   syncNotifications: () => Promise<void>;
   lastSyncTime: string | null;
+  loading: boolean;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -47,6 +55,7 @@ export const NotificationProvider: React.FC<{children: ReactNode}> = ({ children
   const pollingInterval = useRef<NodeJS.Timeout | null>(null);
   const lastNotificationCheck = useRef<string>(new Date().toISOString());
   const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
 
   const MAX_RETRIES = 3;
 
@@ -673,15 +682,16 @@ export const NotificationProvider: React.FC<{children: ReactNode}> = ({ children
         unreadCount,
         isConnected,
         addNotification, 
-              markAsRead,
-      markAllAsRead,
-      clearNotifications,
-      clearReadNotifications,
-      clearNotification,
+        markAsRead,
+        markAllAsRead,
+        clearNotifications,
+        clearReadNotifications,
+        clearNotification,
         enableSounds,
         toggleSounds,
         syncNotifications,
-        lastSyncTime
+        lastSyncTime,
+        loading
       }}
     >
       {children}

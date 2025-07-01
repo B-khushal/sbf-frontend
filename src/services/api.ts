@@ -3,7 +3,7 @@ import { toast } from '../hooks/use-toast';
 
 // Create an axios instance with base URL and default headers
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  baseURL: import.meta.env.VITE_API_URL || 'https://sbf-backend.onrender.com/api',
   timeout: 30000, // Increased to 30 seconds
   maxRedirects: 0, // Prevent redirect issues
   maxContentLength: 1000000, // Increase max payload size
@@ -40,7 +40,7 @@ api.interceptors.response.use(
 
       try {
         const refreshToken = localStorage.getItem('refreshToken');
-        const response = await axios.post(`${api.defaults.baseURL}/auth/refresh-token`, {
+        const response = await axios.post('https://sbf-backend.onrender.com/api/auth/refresh-token', {
           refreshToken,
         });
 
@@ -50,7 +50,7 @@ api.interceptors.response.use(
 
         // Retry the original request with the new token
         originalRequest.headers.Authorization = `Bearer ${token}`;
-        return api(originalRequest);
+        return axios(originalRequest);
       } catch (error) {
         // If refresh token fails, redirect to login
         localStorage.removeItem('token');

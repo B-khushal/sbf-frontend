@@ -2,7 +2,7 @@ import axios from 'axios';
 import { API_URL } from '@/config';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  baseURL: import.meta.env.VITE_API_URL ||'https://sbf-backend.onrender.com/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -518,7 +518,7 @@ export const productService = {
   getProductsByCategory: async (category: string, page = 1) => {
     try {
       const response = await api.get(`/products/category/${category}`, {
-        params: { page },
+        params: { page }
       });
       return response.data;
     } catch (error) {
@@ -533,7 +533,7 @@ export const productService = {
       const response = await api.post(`/products/${productId}/wishlist`);
       return response.data;
     } catch (error) {
-      console.error('Error adding to wishlist:', error);
+      console.error('Error adding product to wishlist:', error);
       throw error;
     }
   },
@@ -544,7 +544,7 @@ export const productService = {
       const response = await api.delete(`/products/${productId}/wishlist`);
       return response.data;
     } catch (error) {
-      console.error('Error removing from wishlist:', error);
+      console.error('Error removing product from wishlist:', error);
       throw error;
     }
   },
@@ -586,7 +586,7 @@ export const productService = {
   getAdminProducts: async (page = 1) => {
     try {
       const response = await api.get('/products/admin/list', {
-        params: { page },
+        params: { page }
       });
       return response.data;
     } catch (error) {
@@ -596,9 +596,9 @@ export const productService = {
   },
 
   // Admin: Toggle product visibility
-  toggleProductVisibility: async (id: string) => {
+  toggleProductVisibility: async (productId: string) => {
     try {
-      const response = await api.put(`/products/admin/${id}/toggle-visibility`);
+      const response = await api.put(`/products/admin/${productId}/toggle-visibility`);
       return response.data;
     } catch (error) {
       console.error('Error toggling product visibility:', error);
