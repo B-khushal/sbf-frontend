@@ -292,11 +292,11 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
       return;
     }
 
-    if (comment.trim() === '') {
-      console.log('❌ No comment provided');
+    if (comment.trim().length < 10) {
+      console.log('❌ Comment too short');
       toast({
-        title: "Comment required",
-        description: "Please write a comment about the product.",
+        title: "Comment too short",
+        description: "Please write at least 10 characters about the product.",
         variant: "destructive"
       });
       return;
@@ -309,10 +309,13 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
       console.log('📡 Sending review to server...');
       console.log('🔗 API URL will be:', `/api/products/${product._id}/reviews`);
       
-      const result = await productService.createProductReview(product._id, { 
+      const reviewData = {
         rating, 
-        comment: comment.trim() 
-      });
+        title: `Review for ${product.title}`,
+        comment: comment.trim()
+      };
+      
+      const result = await productService.createProductReview(product._id, reviewData);
       
       console.log('✅ Review submitted successfully:', result);
       

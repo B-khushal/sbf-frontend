@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Textarea } from './ui/textarea';
 import { Input } from './ui/input';
+import productService from '@/services/productService';
 
 interface Review {
   _id: string;
@@ -151,10 +152,10 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
       return;
     }
 
-    if (formData.title.trim().length < 5) {
+    if (formData.title.trim().length < 3) {
       toast({
         title: "Title too short", 
-        description: "Title must be at least 5 characters",
+        description: "Title must be at least 3 characters",
         variant: "destructive"
       });
       return;
@@ -182,54 +183,47 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
         cons: formData.cons.filter(con => con.trim() !== '')
       };
 
-      console.log('📤 Submitting review:', reviewData);
-      console.log('🔗 API endpoint:', `/api/products/${productId}/reviews`);
-      console.log('🔑 Auth token:', localStorage.getItem('token') ? 'Present' : 'Missing');
+      console.log('📤 Submitting review via productService:', reviewData);
+      console.log('🔗 Product ID:', productId);
 
-      const response = await fetch(`/api/products/${productId}/reviews`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify(reviewData)
+      const result = await productService.createProductReview(productId, reviewData);
+      
+      console.log('✅ Review submitted successfully:', result);
+      
+      toast({
+        title: "Review submitted!",
+        description: result.message || "Thank you for your feedback"
       });
-
-      console.log('📡 Response status:', response.status);
-
-      if (response.ok) {
-        const responseData = await response.json();
-        console.log('✅ Review submitted successfully:', responseData);
-        
-        toast({
-          title: "Review submitted!",
-          description: "Thank you for your feedback"
-        });
-        
-        setFormData({
-          rating: 0,
-          title: '',
-          comment: '',
-          qualityRating: 0,
-          valueRating: 0,
-          deliveryRating: 0,
-          pros: [''],
-          cons: ['']
-        });
-        
-        setActiveTab('reviews');
-        fetchReviews();
-        onReviewSubmit();
-      } else {
-        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-        console.log('❌ Review submission failed:', errorData);
-        throw new Error(errorData.message || 'Failed to submit review');
-      }
+      
+      setFormData({
+        rating: 0,
+        title: '',
+        comment: '',
+        qualityRating: 0,
+        valueRating: 0,
+        deliveryRating: 0,
+        pros: [''],
+        cons: ['']
+      });
+      
+      setActiveTab('reviews');
+      fetchReviews();
+      onReviewSubmit();
+      
     } catch (error: any) {
       console.error('❌ Review submission error:', error);
+      
+      let errorMessage = "Failed to submit review. Please try again.";
+      
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: "Error",
-        description: error.message || "Failed to submit review",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {

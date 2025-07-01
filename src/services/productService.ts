@@ -109,12 +109,19 @@ const getAuthToken = () => {
   return null;
 };
 
-// Helper function to create config with auth header
+// 🔧 Enhanced auth config with better error handling
 const createAuthConfig = () => {
-  const token = getAuthToken();
+  const token = localStorage.getItem('token');
+  console.log('🔑 Creating auth config, token present:', !!token);
+  
+  if (!token) {
+    throw new Error('No authentication token found. Please log in.');
+  }
+  
   return {
     headers: {
-      Authorization: token ? `Bearer ${token}` : '',
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
     }
   };
 };
@@ -318,7 +325,7 @@ export const getTopProducts = async () => {
   return response.data;
 };
 
-// Create product review with enhanced features
+// 🔧 FIXED: Create product review with enhanced error handling
 export const createProductReview = async (productId: string, review: {
   rating: number;
   title: string;
@@ -330,13 +337,55 @@ export const createProductReview = async (productId: string, review: {
   cons?: string[];
   images?: string[];
 }) => {
-  const config = createAuthConfig();
-  const response = await axios.post<{ 
-    message: string;
-    review: ProductReview;
-    isVerifiedPurchase: boolean;
-  }>(`${API_URL}/products/${productId}/reviews`, review, config);
-  return response.data;
+  try {
+    console.log('🚀 productService.createProductReview called');
+    console.log('📍 API_URL:', API_URL);
+    console.log('📦 Product ID:', productId);
+    console.log('📝 Review data:', review);
+    
+    const config = createAuthConfig();
+    console.log('🔧 Request config:', {
+      url: `${API_URL}/products/${productId}/reviews`,
+      headers: config.headers,
+      data: review
+    });
+    
+    const response = await axios.post<{ 
+      success: boolean;
+      message: string;
+      review: ProductReview;
+      stats?: {
+        totalReviews: number;
+        isVerifiedPurchase: boolean;
+        hasAdditionalRatings: boolean;
+      };
+    }>(`${API_URL}/products/${productId}/reviews`, review, config);
+    
+    console.log('✅ Review API response:', response.data);
+    return response.data;
+    
+  } catch (error: any) {
+    console.error('❌ Review submission failed in productService:', error);
+    
+    if (error.response) {
+      console.error('📡 Response error:', {
+        status: error.response.status,
+        statusText: error.response.statusText,
+        data: error.response.data,
+        headers: error.response.headers
+      });
+      
+      // Re-throw with server error message
+      const serverMessage = error.response.data?.message || error.response.statusText;
+      throw new Error(serverMessage);
+    } else if (error.request) {
+      console.error('📡 Request error (no response):', error.request);
+      throw new Error('Network error: Unable to connect to server. Please check your internet connection.');
+    } else {
+      console.error('⚙️ Config error:', error.message);
+      throw new Error(error.message);
+    }
+  }
 };
 
 // Get product reviews with filtering
