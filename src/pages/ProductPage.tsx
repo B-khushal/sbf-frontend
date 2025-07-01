@@ -3,7 +3,14 @@ import { useParams } from 'react-router-dom';
 import ProductDetail from '../components/ProductDetail';
 import { Skeleton } from '../components/ui/skeleton';
 import { useToast } from '../components/ui/use-toast';
-import { api } from '../services/api';
+import axios from 'axios';
+
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
 
 interface Product {
   _id: string;

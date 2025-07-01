@@ -2,8 +2,8 @@ import axios from 'axios';
 import { toast } from '../hooks/use-toast';
 
 // Create an axios instance with base URL and default headers
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'https://sbf-backend.onrender.com/api',
+export const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
   timeout: 30000, // Increased to 30 seconds
   maxRedirects: 0, // Prevent redirect issues
   maxContentLength: 1000000, // Increase max payload size
@@ -108,5 +108,3 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
-export default api;
