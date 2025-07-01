@@ -131,101 +131,126 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
   };
 
   const handleSubmitReview = async (e: React.FormEvent) => {
-    console.log("🚀 handleSubmitReview function started.");
     e.preventDefault();
     
     if (!user) {
-      toast({
-        title: "Authentication required",
-        description: "Please log in to submit a review",
-        variant: "destructive"
-      });
+      alert('Please log in to submit a review');
       return;
     }
 
     if (formData.rating === 0) {
-      toast({
-        title: "Rating required",
-        description: "Please select a rating",
-        variant: "destructive"
-      });
+      alert('Please provide a rating');
       return;
     }
 
     if (formData.title.trim().length < 3) {
-      toast({
-        title: "Title too short", 
-        description: "Title must be at least 3 characters",
-        variant: "destructive"
-      });
+      alert('Review title must be at least 3 characters long');
       return;
     }
 
-    if (formData.comment.trim().length < 10) {
-      toast({
-        title: "Comment too short",
-        description: "Comment must be at least 10 characters", 
-        variant: "destructive"
-      });
+    if (formData.comment.trim().length < 3) {
+      alert('Review comment must be at least 3 characters long');
       return;
     }
 
     setSubmitting(true);
+    console.log('🔍 Submitting review:', {
+      productId,
+      userId: user._id,
+      title: formData.title,
+      comment: formData.comment,
+      rating: formData.rating
+    });
+
     try {
+      // Enhanced review data with all required fields
       const reviewData = {
-        rating: formData.rating,
         title: formData.title.trim(),
         comment: formData.comment.trim(),
-        qualityRating: formData.qualityRating || null,
-        valueRating: formData.valueRating || null,
-        deliveryRating: formData.deliveryRating || null,
+        rating: formData.rating,
+        qualityRating: formData.qualityRating,
+        valueRating: formData.valueRating,
+        deliveryRating: formData.deliveryRating,
         pros: formData.pros.filter(pro => pro.trim() !== ''),
         cons: formData.cons.filter(con => con.trim() !== '')
       };
 
-      console.log('📤 Submitting review via productService:', reviewData);
-      console.log('🔗 Product ID:', productId);
+      console.log('📤 Sending review data:', reviewData);
 
-      const result = await productService.createProductReview(productId, reviewData);
+      // 🔄 RETRY LOGIC: Try multiple times if server is temporarily down
+      let lastError;
+      const maxRetries = 3;
       
-      console.log('✅ Review submitted successfully:', result);
-      
-      toast({
-        title: "Review submitted!",
-        description: result.message || "Thank you for your feedback"
-      });
-      
-      setFormData({
-        rating: 0,
-        title: '',
-        comment: '',
-        qualityRating: 0,
-        valueRating: 0,
-        deliveryRating: 0,
-        pros: [''],
-        cons: ['']
-      });
-      
-      setActiveTab('reviews');
-      fetchReviews();
-      onReviewSubmit();
-      
-    } catch (error: any) {
-      console.error('❌ Review submission error:', error);
-      
-      let errorMessage = "Failed to submit review. Please try again.";
-      
-      if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error.message) {
-        errorMessage = error.message;
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          console.log(`🔄 Review submission attempt ${attempt}/${maxRetries}`);
+          
+          const response = await productService.createReview(productId, reviewData);
+          
+          console.log('✅ Review submitted successfully:', response);
+          
+          alert('Thank you! Your review has been submitted and is pending approval.');
+          
+          // Reset form
+          setFormData({
+            rating: 0,
+            title: '',
+            comment: '',
+            qualityRating: 0,
+            valueRating: 0,
+            deliveryRating: 0,
+            pros: [''],
+            cons: ['']
+          });
+          
+          // Switch back to reviews tab and refresh
+          setActiveTab('reviews');
+          onReviewSubmit();
+          
+          return; // Success - exit retry loop
+          
+        } catch (attemptError: any) {
+          lastError = attemptError;
+          console.log(`❌ Attempt ${attempt} failed:`, attemptError.message);
+          
+          // If it's a server error (5xx) or network error, retry
+          if (attempt < maxRetries && (
+            attemptError.message.includes('500') || 
+            attemptError.message.includes('503') ||
+            attemptError.message.includes('Network Error') ||
+            attemptError.message.includes('fetch')
+          )) {
+            console.log(`⏳ Retrying in ${attempt * 2} seconds...`);
+            await new Promise(resolve => setTimeout(resolve, attempt * 2000));
+            continue;
+          }
+          
+          // If it's a client error (4xx) or final attempt, break
+          break;
+        }
       }
       
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive"
-      });
+      // All retries failed
+      throw lastError;
+      
+    } catch (error: any) {
+      console.error('❌ Final review submission error:', error);
+      
+      let errorMessage = 'Failed to submit review. ';
+      
+      if (error.message?.includes('Network Error') || error.message?.includes('fetch')) {
+        errorMessage += 'Please check your internet connection and try again.';
+      } else if (error.message?.includes('500') || error.message?.includes('503')) {
+        errorMessage += 'Server is temporarily unavailable. Please try again in a few minutes.';
+      } else if (error.message?.includes('401')) {
+        errorMessage += 'Please log in again.';
+      } else if (error.message?.includes('400')) {
+        errorMessage += 'Please check your review details.';
+      } else {
+        errorMessage += 'Please try again later.';
+      }
+      
+      alert(errorMessage);
     } finally {
       setSubmitting(false);
     }
@@ -565,11 +590,12 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
                     <label htmlFor="title" className="text-base font-medium block mb-2">Review Title *</label>
                     <Input
                       id="title"
-                      name="title"
+                      name="reviewTitle"
                       value={formData.title}
                       onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                       placeholder="Summarize your experience..."
                       maxLength={100}
+                      required
                     />
                     <p className="text-xs text-gray-500 mt-1">{formData.title.length}/100 characters</p>
                   </div>
@@ -579,12 +605,13 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
                     <label htmlFor="comment" className="text-base font-medium block mb-2">Your Review *</label>
                     <Textarea
                       id="comment"
-                      name="comment"
+                      name="reviewComment"
                       value={formData.comment}
                       onChange={(e) => setFormData(prev => ({ ...prev, comment: e.target.value }))}
                       placeholder="Tell others about your experience with this product..."
                       rows={4}
                       maxLength={1000}
+                      required
                     />
                     <p className="text-xs text-gray-500 mt-1">{formData.comment.length}/1000 characters</p>
                   </div>
