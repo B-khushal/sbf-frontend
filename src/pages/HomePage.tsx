@@ -11,7 +11,6 @@ import { useSettings } from "../contexts/SettingsContext";
 import { useOfferPopup } from "../hooks/use-offer-popup";
 import OfferPopup from "../components/ui/OfferPopup";
 import api from "../services/api";
-import { useToast } from "../hooks/use-toast";
 
 // Animation variants
 const containerVariants = {
@@ -65,7 +64,6 @@ const HomePage = () => {
   const [newProducts, setNewProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const { toast } = useToast();
 
   // Intersection observer hooks for scroll animations
   const [philosophyRef, philosophyInView] = useInView({
@@ -206,52 +204,59 @@ const HomePage = () => {
 
   // ⚡ OPTIMIZED: Single API call for all homepage data
   useEffect(() => {
-    const fetchHomepageData = async () => {
+    const fetchHomepageData = async (retryCount = 0) => {
       try {
-        setLoading(true);
         console.time('homepage-load');
+        setLoading(true);
+        setError("");
         
-        // 🚀 Try optimized endpoint first
+        // 🚀 Single optimized API call instead of 2 separate calls
         const response = await api.get('/products/homepage-data');
         
         console.timeEnd('homepage-load');
-        console.log('✅ Homepage data loaded via optimized endpoint');
+        console.log('✅ Homepage data loaded:', response.data.meta);
         
-        if (response.data.success) {
-          setFeaturedProducts(response.data.featured || []);
-          setNewProducts(response.data.new || []);
-        } else {
-          // Fallback to individual endpoints if optimized fails
-          console.log('⚠️ Optimized endpoint returned failure, trying fallback...');
-          throw new Error('Optimized endpoint failed');
-        }
+        const processProducts = (products) => {
+          if (!Array.isArray(products)) return [];
+          return products.map(product => ({
+            ...product,
+            _id: product._id || product.id
+          }));
+        };
+
+        setFeaturedProducts(processProducts(response.data.featured || []));
+        setNewProducts(processProducts(response.data.new || []));
         
       } catch (error) {
-        console.log('❌ Homepage-data failed, trying individual endpoints:', error.message);
+        console.error("❌ Error fetching homepage data:", error);
+        setError("Failed to load products. Please try again later.");
         
-        // 🔄 FALLBACK: Use individual endpoints if optimized one fails
-        try {
-          const [featuredResponse, newResponse] = await Promise.all([
-            api.get('/products/featured').catch(() => ({ data: [] })),
-            api.get('/products/new').catch(() => ({ data: [] }))
-          ]);
-          
-          console.log('✅ Fallback endpoints loaded');
-          setFeaturedProducts(featuredResponse.data || []);
-          setNewProducts(newResponse.data || []);
-          
-        } catch (fallbackError) {
-          console.error('❌ All endpoints failed:', fallbackError);
-          // Set empty arrays to prevent loading indefinitely
-          setFeaturedProducts([]);
-          setNewProducts([]);
-          
-          // Show user-friendly error using existing toast system
-          toast({
-            title: "Loading Issue",
-            description: "Having trouble loading products. Please refresh the page.",
-            variant: "destructive"
-          });
+        // ⚡ Fallback: Use individual endpoints if the optimized one fails
+        if (retryCount < 1) {
+          console.log("🔄 Falling back to individual API calls...");
+          try {
+            const [featuredResponse, newResponse] = await Promise.all([
+              api.get('/products/featured'),
+              api.get('/products/new')
+            ]);
+            
+            const processProducts = (products) => {
+              if (!Array.isArray(products)) return [];
+              return products.map(product => ({
+                ...product,
+                _id: product._id || product.id
+              }));
+            };
+
+            setFeaturedProducts(processProducts(featuredResponse.data.products || featuredResponse.data || []));
+            setNewProducts(processProducts(newResponse.data.products || newResponse.data || []));
+            setError(""); // Clear error if fallback succeeds
+          } catch (fallbackError) {
+            console.error("❌ Fallback also failed:", fallbackError);
+            if (retryCount < 2) {
+              setTimeout(() => fetchHomepageData(retryCount + 1), 2000);
+            }
+          }
         }
       } finally {
         setLoading(false);

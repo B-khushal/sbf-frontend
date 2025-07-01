@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { API_URL } from '@/config';
+import { api } from './api';
 
 export interface ProductReview {
   _id?: string;
@@ -109,19 +110,12 @@ const getAuthToken = () => {
   return null;
 };
 
-// 🔧 Enhanced auth config with better error handling
+// Helper function to create config with auth header
 const createAuthConfig = () => {
-  const token = localStorage.getItem('token');
-  console.log('🔑 Creating auth config, token present:', !!token);
-  
-  if (!token) {
-    throw new Error('No authentication token found. Please log in.');
-  }
-  
+  const token = getAuthToken();
   return {
     headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
+      Authorization: token ? `Bearer ${token}` : '',
     }
   };
 };
@@ -325,7 +319,7 @@ export const getTopProducts = async () => {
   return response.data;
 };
 
-// 🔧 FIXED: Create product review with enhanced error handling
+// Create product review with enhanced features
 export const createProductReview = async (productId: string, review: {
   rating: number;
   title: string;
@@ -337,55 +331,13 @@ export const createProductReview = async (productId: string, review: {
   cons?: string[];
   images?: string[];
 }) => {
-  try {
-    console.log('🚀 productService.createProductReview called');
-    console.log('📍 API_URL:', API_URL);
-    console.log('📦 Product ID:', productId);
-    console.log('📝 Review data:', review);
-    
-    const config = createAuthConfig();
-    console.log('🔧 Request config:', {
-      url: `${API_URL}/products/${productId}/reviews`,
-      headers: config.headers,
-      data: review
-    });
-    
-    const response = await axios.post<{ 
-      success: boolean;
-      message: string;
-      review: ProductReview;
-      stats?: {
-        totalReviews: number;
-        isVerifiedPurchase: boolean;
-        hasAdditionalRatings: boolean;
-      };
-    }>(`${API_URL}/products/${productId}/reviews`, review, config);
-    
-    console.log('✅ Review API response:', response.data);
-    return response.data;
-    
-  } catch (error: any) {
-    console.error('❌ Review submission failed in productService:', error);
-    
-    if (error.response) {
-      console.error('📡 Response error:', {
-        status: error.response.status,
-        statusText: error.response.statusText,
-        data: error.response.data,
-        headers: error.response.headers
-      });
-      
-      // Re-throw with server error message
-      const serverMessage = error.response.data?.message || error.response.statusText;
-      throw new Error(serverMessage);
-    } else if (error.request) {
-      console.error('📡 Request error (no response):', error.request);
-      throw new Error('Network error: Unable to connect to server. Please check your internet connection.');
-    } else {
-      console.error('⚙️ Config error:', error.message);
-      throw new Error(error.message);
-    }
-  }
+  const config = createAuthConfig();
+  const response = await axios.post<{ 
+    message: string;
+    review: ProductReview;
+    isVerifiedPurchase: boolean;
+  }>(`${API_URL}/products/${productId}/reviews`, review, config);
+  return response.data;
 };
 
 // Get product reviews with filtering
@@ -498,4 +450,164 @@ export const getUserReviews = async (page = 1, limit = 10) => {
     };
   }>(`${API_URL}/reviews/my-reviews?page=${page}&limit=${limit}`, config);
   return response.data;
+};
+
+export const productService = {
+  // Get all products with optional filters
+  getProducts: async (params = {}) => {
+    try {
+      const response = await api.get('/products', { params });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      throw error;
+    }
+  },
+
+  // Get a single product by ID
+  getProductById: async (id: string) => {
+    try {
+      const response = await api.get(`/products/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching product:', error);
+      throw error;
+    }
+  },
+
+  // Get featured products
+  getFeaturedProducts: async () => {
+    try {
+      const response = await api.get('/products/featured');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching featured products:', error);
+      throw error;
+    }
+  },
+
+  // Get new products
+  getNewProducts: async () => {
+    try {
+      const response = await api.get('/products/new');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching new products:', error);
+      throw error;
+    }
+  },
+
+  // Get product categories
+  getCategories: async () => {
+    try {
+      const response = await api.get('/products/categories');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      throw error;
+    }
+  },
+
+  // Get products by category
+  getProductsByCategory: async (category: string, page = 1) => {
+    try {
+      const response = await api.get(`/products/category/${category}`, {
+        params: { page },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching products by category:', error);
+      throw error;
+    }
+  },
+
+  // Add product to wishlist
+  addToWishlist: async (productId: string) => {
+    try {
+      const response = await api.post(`/products/${productId}/wishlist`);
+      return response.data;
+    } catch (error) {
+      console.error('Error adding to wishlist:', error);
+      throw error;
+    }
+  },
+
+  // Remove product from wishlist
+  removeFromWishlist: async (productId: string) => {
+    try {
+      const response = await api.delete(`/products/${productId}/wishlist`);
+      return response.data;
+    } catch (error) {
+      console.error('Error removing from wishlist:', error);
+      throw error;
+    }
+  },
+
+  // Admin: Create a new product
+  createProduct: async (productData: any) => {
+    try {
+      const response = await api.post('/products', productData);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating product:', error);
+      throw error;
+    }
+  },
+
+  // Admin: Update a product
+  updateProduct: async (id: string, productData: any) => {
+    try {
+      const response = await api.put(`/products/${id}`, productData);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating product:', error);
+      throw error;
+    }
+  },
+
+  // Admin: Delete a product
+  deleteProduct: async (id: string) => {
+    try {
+      const response = await api.delete(`/products/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      throw error;
+    }
+  },
+
+  // Admin: Get all products (including hidden)
+  getAdminProducts: async (page = 1) => {
+    try {
+      const response = await api.get('/products/admin/list', {
+        params: { page },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching admin products:', error);
+      throw error;
+    }
+  },
+
+  // Admin: Toggle product visibility
+  toggleProductVisibility: async (id: string) => {
+    try {
+      const response = await api.put(`/products/admin/${id}/toggle-visibility`);
+      return response.data;
+    } catch (error) {
+      console.error('Error toggling product visibility:', error);
+      throw error;
+    }
+  },
+
+  // Admin: Get low stock products
+  getLowStockProducts: async () => {
+    try {
+      const response = await api.get('/products/admin/low-stock');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching low stock products:', error);
+      throw error;
+    }
+  },
 };
