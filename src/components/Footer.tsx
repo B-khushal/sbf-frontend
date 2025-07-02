@@ -22,6 +22,7 @@ import { useSettings } from '@/contexts/SettingsContext';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { toast } from 'sonner';
+import api from '@/services/api';
 
 const Footer = () => {
   const { footerSettings, loading } = useSettings();
@@ -31,13 +32,28 @@ const Footer = () => {
   const whatsappNumber = "9949683222";
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=Hello! I'm interested in your flower arrangements.`;
 
-  const handleNewsletterSubmit = (e: React.FormEvent) => {
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Here you would typically handle the newsletter subscription
-    toast.success("Thanks for subscribing!", {
-      description: "We'll keep you updated with our latest offers.",
-    });
-    setEmail('');
+    
+    try {
+      const response = await api.post('/newsletter/subscribe', { email });
+      
+      if (response.data.success) {
+        toast.success("Thanks for subscribing!", {
+          description: "We'll keep you updated with our latest offers.",
+        });
+        setEmail('');
+      } else {
+        toast.error("Subscription failed", {
+          description: response.data.message || "Please try again later.",
+        });
+      }
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || "Something went wrong. Please try again.";
+      toast.error("Subscription failed", {
+        description: errorMessage,
+      });
+    }
   };
 
   if (loading) {
@@ -146,6 +162,8 @@ const Footer = () => {
                       <Link 
                         to={item.href} 
                         className="text-muted-foreground hover:text-primary transition-colors duration-200 flex items-center gap-2 group text-sm"
+                        target="_blank"
+                        rel="noopener noreferrer"
                       >
                         <ArrowRight className="w-4 h-4 opacity-0 -translate-x-3 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
                         {item.label}
@@ -167,6 +185,8 @@ const Footer = () => {
                   <a 
                     href={`mailto:${footerSettings.contactInfo.email}`} 
                     className="text-muted-foreground hover:text-primary transition-colors duration-200 text-sm"
+                    target="_blank"
+                    rel="noopener noreferrer"
                   >
                     {footerSettings.contactInfo.email}
                   </a>
@@ -179,6 +199,8 @@ const Footer = () => {
                   <a 
                     href={`tel:${footerSettings.contactInfo.phone}`} 
                     className="text-muted-foreground hover:text-primary transition-colors duration-200 text-sm"
+                    target="_blank"
+                    rel="noopener noreferrer"
                   >
                     {footerSettings.contactInfo.phone}
                   </a>
@@ -242,19 +264,44 @@ const Footer = () => {
             {footerSettings.copyright}
           </p>
           <div className="flex flex-wrap justify-center sm:justify-end gap-4 text-sm">
-            <Link to="/terms" className="text-muted-foreground hover:text-primary transition-colors duration-200">
+            <Link 
+              to="/terms" 
+              className="text-muted-foreground hover:text-primary transition-colors duration-200"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               Terms of Service
             </Link>
-            <Link to="/privacy" className="text-muted-foreground hover:text-primary transition-colors duration-200">
+            <Link 
+              to="/privacy" 
+              className="text-muted-foreground hover:text-primary transition-colors duration-200"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               Privacy Policy
             </Link>
-            <Link to="/shipping" className="text-muted-foreground hover:text-primary transition-colors duration-200">
+            <Link 
+              to="/shipping" 
+              className="text-muted-foreground hover:text-primary transition-colors duration-200"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               Shipping Policy
             </Link>
-            <Link to="/refund-policy" className="text-muted-foreground hover:text-primary transition-colors duration-200">
+            <Link 
+              to="/refund-policy" 
+              className="text-muted-foreground hover:text-primary transition-colors duration-200"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               Refund Policy
             </Link>
-            <Link to="/cancellation-policy" className="text-muted-foreground hover:text-primary transition-colors duration-200">
+            <Link 
+              to="/cancellation-policy" 
+              className="text-muted-foreground hover:text-primary transition-colors duration-200"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               Cancellation Policy
             </Link>
           </div>
