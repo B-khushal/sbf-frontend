@@ -426,7 +426,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
           {/* Product Images */}
           <div className="relative space-y-4">
-            <div className="relative pb-[125%] bg-secondary/20 overflow-hidden rounded-lg shadow-md">
+            <div className="relative pb-[125%] sm:pb-[100%] bg-secondary/20 overflow-hidden rounded-lg shadow-md">
               <img
                 src={imageUrl}
                 alt={product.title}
@@ -434,21 +434,21 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
               />
 
               {/* Badges for new and featured products */}
-              <div className="absolute top-3 left-3 flex flex-col gap-1">
+              <div className="absolute top-2 sm:top-3 left-2 sm:left-3 flex flex-col gap-1">
                 {(product.isNewArrival || (product as {isNew?: boolean}).isNew) && (
-                  <span className="bg-primary text-white text-sm px-3 py-1 rounded-md font-medium">
+                  <span className="bg-primary text-white text-xs sm:text-sm px-2 sm:px-3 py-0.5 sm:py-1 rounded-md font-medium">
                     New
                   </span>
                 )}
                 {product.isFeatured && (
-                  <span className="bg-amber-500 text-white text-sm px-3 py-1 rounded-md font-medium">
+                  <span className="bg-amber-500 text-white text-xs sm:text-sm px-2 sm:px-3 py-0.5 sm:py-1 rounded-md font-medium">
                     Featured
                   </span>
                 )}
               </div>
               
               {product.discount > 0 && (
-                <span className="absolute bottom-3 right-3 bg-red-500 text-white text-sm px-3 py-1 rounded-md font-medium">
+                <span className="absolute bottom-2 sm:bottom-3 right-2 sm:right-3 bg-red-500 text-white text-xs sm:text-sm px-2 sm:px-3 py-0.5 sm:py-1 rounded-md font-medium">
                   {product.discount}% Off
                 </span>
               )}
@@ -459,17 +459,17 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                   {/* Left Arrow */}
                   <button
                     onClick={prevImage}
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition-all"
+                    className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-2 sm:p-3 rounded-full hover:bg-black/70 transition-all"
                   >
-                    <ChevronLeft size={24} />
+                    <ChevronLeft size={20} className="w-4 h-4 sm:w-5 sm:h-5" />
                   </button>
 
                   {/* Right Arrow */}
                   <button
                     onClick={nextImage}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition-all"
+                    className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-2 sm:p-3 rounded-full hover:bg-black/70 transition-all"
                   >
-                    <ChevronRight size={24} />
+                    <ChevronRight size={20} className="w-4 h-4 sm:w-5 sm:h-5" />
                   </button>
                 </>
               )}
@@ -477,13 +477,13 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
 
             {/* Thumbnail Gallery - Only show if there are multiple images */}
             {product.images.length > 1 && (
-              <div className="flex gap-3 justify-center">
+              <div className="flex gap-2 sm:gap-3 justify-center">
                 {product.images.map((image, index) => (
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
                     className={cn(
-                      "w-16 h-20 relative overflow-hidden rounded-md shadow-md transition-all duration-300 ease-smooth",
+                      "w-14 h-16 sm:w-16 sm:h-20 relative overflow-hidden rounded-md shadow-md transition-all duration-300 ease-smooth",
                       selectedImage === index
                         ? "ring-2 ring-primary ring-offset-2"
                         : "opacity-70 hover:opacity-100"

@@ -194,7 +194,7 @@ const CategoryMenu = () => {
       <div className="container relative mx-auto px-3 sm:px-4 lg:px-6">
         <ScrollArea className="w-full whitespace-nowrap">
           <div className="flex items-center justify-start py-3 lg:py-4">
-            <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-4">
+            <div className="flex gap-2 px-2">
               {categories.map((category, index) => (
                 <div
                   key={category.path}
@@ -204,28 +204,28 @@ const CategoryMenu = () => {
                   <Link
                     to={category.path}
                     className={cn(
-                      "relative px-4 py-2.5 text-sm font-medium whitespace-nowrap rounded-lg transition-all duration-300 group flex items-center gap-2 border",
+                      "relative px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium whitespace-nowrap rounded-lg transition-all duration-300 group flex items-center gap-1.5 sm:gap-2 border",
                       isActive(category.path)
                         ? "text-white bg-primary shadow-lg"
                         : "text-gray-600 hover:text-primary bg-gray-50 hover:bg-white border-transparent hover:border-primary/30 hover:shadow-md"
                     )}
                   >
-                    <span className="text-lg group-hover:scale-110 transition-transform duration-200">
+                    <span className="text-base sm:text-lg group-hover:scale-110 transition-transform duration-200">
                       {category.emoji}
                     </span>
                     <span className="font-semibold">
                       {category.name.split(' ').slice(1).join(' ')}
                     </span>
                     <ChevronDown 
-                      size={14} 
+                      size={12} 
                       className={cn(
-                        "transition-transform duration-200",
+                        "transition-transform duration-200 hidden sm:block",
                         hoveredCategory === category.name ? "rotate-180" : ""
                       )}
                     />
                     {category.popular && (
-                      <div className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-yellow-400 rounded-full flex items-center justify-center border-2 border-white">
-                        <Sparkles size={10} className="text-white" />
+                      <div className="absolute -top-1.5 -right-1.5 w-3 h-3 sm:w-4 sm:h-4 bg-yellow-400 rounded-full flex items-center justify-center border-2 border-white">
+                        <Sparkles size={8} className="text-white hidden sm:block" />
                       </div>
                     )}
                   </Link>
@@ -244,21 +244,22 @@ const CategoryMenu = () => {
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="absolute top-full mt-2 bg-white rounded-xl shadow-lg border w-72 overflow-hidden z-[100]"
+              className="absolute top-full mt-2 bg-white rounded-xl shadow-lg border w-[90vw] sm:w-72 overflow-hidden z-[100]"
               style={{ 
                 left: `${dropdownPosition.left}px`,
                 transform: 'translateX(-50%)',
+                maxWidth: 'calc(100vw - 2rem)'
               }}
               onMouseEnter={() => handleMouseEnter(activeCategory.name)}
             >
-              <div className="p-4 border-b">
-                <div className="flex items-center gap-3">
-                  <span className="text-3xl">{activeCategory.emoji}</span>
+              <div className="p-3 sm:p-4 border-b">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <span className="text-2xl sm:text-3xl">{activeCategory.emoji}</span>
                   <div>
-                    <h3 className="font-bold text-gray-800">
+                    <h3 className="font-bold text-gray-800 text-sm sm:text-base">
                       {activeCategory.name.split(' ').slice(1).join(' ')}
                     </h3>
-                    <p className="text-sm text-gray-500">{activeCategory.description}</p>
+                    <p className="text-xs sm:text-sm text-gray-500">{activeCategory.description}</p>
                   </div>
                 </div>
               </div>

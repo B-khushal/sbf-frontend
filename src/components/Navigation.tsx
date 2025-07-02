@@ -4,10 +4,12 @@ import {
   Menu, Search, ShoppingCart, User, X, Heart, Sparkles, 
   TrendingUp, DollarSign, Store, LogIn, ChevronDown, 
   MapPin, Phone, Mail, Globe, ArrowRight, Star, Zap,
-  Shield, Truck, RefreshCw, Gift
+  Shield, Truck, RefreshCw, Gift, ShoppingBag, LogOut,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator,
+  UserPlus, Settings, Package
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import CurrencyConverter from './CurrencyConverter';
 import { Input } from '@/components/ui/input';
@@ -239,13 +241,14 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
       <header className="bg-white/95 backdrop-blur-xl border-b border-gray-100 sticky top-0 z-[70]">
         <div className="container mx-auto px-3 sm:px-4 lg:px-6">
           {/* Main Navigation Row */}
-          <div className="flex items-center justify-between h-16 sm:h-18 lg:h-20">
+          <div className="flex items-center justify-between h-14 sm:h-16 lg:h-20">
             
             {/* Logo */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6 }}
+              className="flex-shrink-0"
             >
               <Link to="/" className="flex items-center group">
                 {/* Desktop Logo */}
@@ -253,7 +256,7 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                   <img
                     src={headerSettings.logo || "/api/placeholder/200/60"}
                     alt="Spring Blossoms Florist"
-                    className="h-12 w-auto xl:h-14 transition-all duration-300 ease-in-out group-hover:scale-105 drop-shadow-sm"
+                    className="h-10 w-auto xl:h-12 transition-all duration-300 ease-in-out group-hover:scale-105 drop-shadow-sm"
                   />
                 </div>
                 
@@ -262,13 +265,13 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                   <img
                     src={headerSettings.logo || "/api/placeholder/160/50"}
                     alt="Spring Blossoms Florist"
-                    className="h-10 w-auto transition-all duration-300 ease-in-out group-hover:scale-105 drop-shadow-sm"
+                    className="h-8 w-auto transition-all duration-300 ease-in-out group-hover:scale-105 drop-shadow-sm"
                   />
                 </div>
                 
                 {/* Mobile Logo */}
                 <div className="md:hidden">
-                  <div className="text-xl sm:text-2xl font-black bg-gradient-to-r from-pink-500 via-purple-600 to-blue-600 bg-clip-text text-transparent tracking-wider transition-all duration-300 group-hover:from-blue-600 group-hover:via-pink-500 group-hover:to-purple-600">
+                  <div className="text-lg sm:text-xl font-black bg-gradient-to-r from-pink-500 via-purple-600 to-blue-600 bg-clip-text text-transparent tracking-wider transition-all duration-300 group-hover:from-blue-600 group-hover:via-pink-500 group-hover:to-purple-600">
                     SBF
                   </div>
                 </div>
@@ -276,21 +279,27 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
             </motion.div>
             
             {/* Desktop Navigation */}
-            <motion.nav 
-              className="hidden lg:flex items-center space-x-1 xl:space-x-2"
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-            >
+            <div className="hidden lg:flex items-center space-x-1">
               {headerSettings?.navigationItems
                 ?.filter(item => item.enabled)
                 ?.sort((a, b) => a.order - b.order)
                 ?.map((item) => (
-                <NavLink key={item.href} to={item.href} active={pathname === item.href}>
+                <NavLink
+                  key={item.href}
+                  to={item.href}
+                  className={({ isActive }) =>
+                    cn(
+                      "px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200",
+                      isActive
+                        ? "text-primary bg-primary/10"
+                        : "text-gray-600 hover:text-primary hover:bg-gray-100"
+                    )
+                  }
+                >
                   {item.label}
                 </NavLink>
               ))}
-            </motion.nav>
+            </div>
             
             {/* Search Bar - Desktop/Tablet */}
             <motion.div 
@@ -485,219 +494,143 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
             </motion.div>
             
             {/* Right Side Actions */}
-            <motion.div 
-              className="flex items-center space-x-1 sm:space-x-2"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.6 }}
-            >
-              <div className="hidden sm:block">
-                <CurrencyConverter />
-              </div>
-              
-              <div className="md:hidden">
-                <Button variant="ghost" size="icon" onClick={() => setShowMobileSearch(true)}>
-                  <Search size={18} />
-                </Button>
-              </div>
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              {/* Search */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 sm:h-9 sm:w-9"
+                onClick={() => setShowMobileSearch(true)}
+              >
+                <Search className="h-4 w-4 sm:h-5 sm:w-5" />
+              </Button>
 
-              {user && (
-                <Button variant="ghost" size="icon" asChild>
-                  <Link to="/wishlist" className="relative">
-                    <Heart size={18} />
-                    {wishlistCount > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                        {wishlistCount}
-                      </span>
-                    )}
-                  </Link>
-                </Button>
-              )}
-              
-              <Button variant="ghost" size="icon" onClick={handleCartClick} className="relative">
-                <ShoppingCart size={18} />
+              {/* Cart */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 sm:h-9 sm:w-9 relative"
+                onClick={handleCartClick}
+              >
+                <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5" />
                 {(actualCartCount > 0) && (
-                  <span className="absolute -top-1 -right-1 bg-primary text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 bg-primary text-[10px] text-white w-4 h-4 flex items-center justify-center rounded-full">
                     {actualCartCount}
                   </span>
                 )}
               </Button>
 
-              {user ? (
-                <div className="relative">
-                  <Button variant="ghost" size="icon" onClick={() => setShowUserMenu(!showUserMenu)}>
-                    <User size={18} />
-                  </Button>
-                  <AnimatePresence>
-                    {showUserMenu && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border p-2 z-50"
-                        onMouseLeave={() => setShowUserMenu(false)}
-                      >
-                        <div className="p-2 border-b">
-                          <p className="font-semibold text-sm">{user.name}</p>
-                          <p className="text-xs text-gray-500 truncate">{user.email}</p>
-                        </div>
-                        <div className="py-1">
-                          <Link to="/profile" className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
-                            <User className="w-4 h-4 mr-2" />
-                            My Account
-                          </Link>
-                          <Link to="/profile#orders" className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
-                            <ShoppingCart className="w-4 h-4 mr-2" />
-                            My Orders
-                          </Link>
-                          {user.role === 'admin' && (
-                            <Link to="/admin" className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
-                              <Store className="w-4 h-4 mr-2" />
-                              Admin Dashboard
-                            </Link>
-                          )}
-                          {user.role === 'vendor' && (
-                            <Link to="/vendor/dashboard" className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
-                              <Store className="w-4 h-4 mr-2" />
-                              Vendor Dashboard
-                            </Link>
-                          )}
-                          <button
-                            onClick={() => {
-                              logout();
-                              setShowUserMenu(false);
-                            }}
-                            className="flex items-center w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md"
-                          >
-                            <LogIn className="w-4 h-4 mr-2" />
-                            Sign Out
-                          </button>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              ) : (
-                <Button variant="ghost" size="icon" asChild>
-                  <Link to="/login">
-                    <LogIn size={18} />
-                  </Link>
-                </Button>
-              )}
-
-              <div className="lg:hidden">
-                <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-                  <SheetTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                      <Menu size={18} />
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent 
-                    side="right" 
-                    className="w-full max-w-xs p-0 z-[100] bg-white"
+              {/* User Menu */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 sm:h-9 sm:w-9"
                   >
-                    <div className="flex flex-col h-full">
-                      {/* Header */}
-                      <div className="p-4 border-b flex justify-between items-center">
-                          <Link to="/" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2">
-                            <span className="text-2xl font-black bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-                              SBF
-                            </span>
-                          </Link>
-                          <SheetClose asChild>
-                            <Button variant="ghost" size="icon">
-                              <X size={20} />
-                            </Button>
-                          </SheetClose>
-                      </div>
-
-                      <div className="flex-1 overflow-y-auto p-4 space-y-6">
-                        {/* User Profile */}
-                        {user ? (
-                          <div className="bg-gray-50 p-4 rounded-xl">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center text-white font-bold">
-                                {user.name.charAt(0).toUpperCase()}
-                              </div>
-                              <div>
-                                <p className="font-semibold text-sm truncate">{user.name}</p>
-                                <p className="text-xs text-gray-500 truncate">{user.email}</p>
-                              </div>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="grid grid-cols-2 gap-2">
-                             <Button asChild><Link to="/login" onClick={() => setMobileMenuOpen(false)}>Sign In</Link></Button>
-                             <Button asChild variant="outline"><Link to="/signup" onClick={() => setMobileMenuOpen(false)}>Sign Up</Link></Button>
-                          </div>
-                        )}
-
-                        {/* Navigation */}
-                        <nav className="space-y-1">
-                          <p className="px-3 text-xs font-semibold text-gray-400 uppercase">Menu</p>
-                          {headerSettings?.navigationItems
-                            ?.filter(item => item.enabled)
-                            ?.sort((a,b) => a.order - b.order)
-                            ?.map((item) => (
-                              <Link
-                                key={item.href}
-                                to={item.href}
-                                onClick={() => setMobileMenuOpen(false)}
-                                className={cn(
-                                  'flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors',
-                                  pathname === item.href ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100'
-                                )}
-                              >
-                                {item.label}
-                              </Link>
-                          ))}
-                        </nav>
-
-                        {/* Account Links */}
-                        {user && (
-                          <nav className="space-y-1">
-                            <p className="px-3 text-xs font-semibold text-gray-400 uppercase">Account</p>
-                            <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className={cn('flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors', pathname === '/profile' ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100')}>
-                              <User size={16} /> My Account
-                            </Link>
-                            <Link to="/profile#orders" onClick={() => setMobileMenuOpen(false)} className='flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors text-gray-700 hover:bg-gray-100'>
-                              <ShoppingCart size={16} /> My Orders
-                            </Link>
-                            {user.role === 'admin' && (
-                              <Link to="/admin" onClick={() => setMobileMenuOpen(false)} className={cn('flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors', pathname.startsWith('/admin') ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100')}>
-                                <Store size={16} /> Admin Dashboard
-                              </Link>
-                            )}
-                            {user.role === 'vendor' && (
-                              <Link to="/vendor/dashboard" onClick={() => setMobileMenuOpen(false)} className={cn('flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors', pathname.startsWith('/vendor') ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100')}>
-                                <Store size={16} /> Vendor Dashboard
-                              </Link>
-                            )}
-                          </nav>
-                        )}
-                      </div>
-
-                      {/* Footer */}
-                      {user && (
-                        <div className="p-4 border-t">
-                          <Button 
-                            onClick={() => {
-                              logout();
-                              setMobileMenuOpen(false);
-                            }}
-                            variant="outline"
-                            className="w-full"
-                          >
-                            <LogIn size={16} className="mr-2" />
-                            Sign Out
-                          </Button>
+                    <User className="h-4 w-4 sm:h-5 sm:w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  {user ? (
+                    <>
+                      <DropdownMenuLabel className="font-normal">
+                        <div className="flex flex-col space-y-1">
+                          <p className="text-sm font-medium leading-none">{user.name}</p>
+                          <p className="text-xs leading-none text-muted-foreground">
+                            {user.email}
+                          </p>
                         </div>
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link to="/profile">
+                          <User className="mr-2 h-4 w-4" />
+                          <span>Profile</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/orders">
+                          <Package className="mr-2 h-4 w-4" />
+                          <span>Orders</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      {user.role === 'admin' && (
+                        <DropdownMenuItem asChild>
+                          <Link to="/admin">
+                            <Settings className="mr-2 h-4 w-4" />
+                            <span>Admin</span>
+                          </Link>
+                        </DropdownMenuItem>
                       )}
-                    </div>
-                  </SheetContent>
-                </Sheet>
-              </div>
-            </motion.div>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        className="text-red-600 focus:text-red-600"
+                        onClick={() => {
+                          logout();
+                          setShowUserMenu(false);
+                        }}
+                      >
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>Logout</span>
+                      </DropdownMenuItem>
+                    </>
+                  ) : (
+                    <>
+                      <DropdownMenuItem asChild>
+                        <Link to="/login">
+                          <LogIn className="mr-2 h-4 w-4" />
+                          <span>Login</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/signup">
+                          <UserPlus className="mr-2 h-4 w-4" />
+                          <span>Sign up</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
+            {/* Mobile Navigation */}
+            <div className="lg:hidden">
+              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-9 w-9">
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-[80vw] sm:w-[300px]">
+                  <SheetHeader className="text-left mb-4">
+                    <SheetTitle>Menu</SheetTitle>
+                  </SheetHeader>
+                  <div className="flex flex-col space-y-2">
+                    {headerSettings?.navigationItems
+                      ?.filter(item => item.enabled)
+                      ?.sort((a, b) => a.order - b.order)
+                      ?.map((item) => (
+                      <NavLink
+                        key={item.href}
+                        to={item.href}
+                        className={({ isActive }) =>
+                          cn(
+                            "px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
+                            isActive
+                              ? "text-primary bg-primary/10"
+                              : "text-gray-600 hover:text-primary hover:bg-gray-100"
+                          )
+                        }
+                      >
+                        {item.label}
+                      </NavLink>
+                    ))}
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
           </div>
         </div>
       </header>
