@@ -57,7 +57,8 @@ const ProductPage = () => {
     }
 
     fetchProduct();
-    window.scrollTo(0, 0);
+    // Scroll to top with smooth behavior when product changes
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [actualId, navigate]);
 
   const handleAddToCart = (item: {
@@ -89,7 +90,14 @@ const ProductPage = () => {
   };
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading product details...</p>
+        </div>
+      </div>
+    );
   }
 
   // If no product and not loading, redirect to shop (this should rarely happen due to the redirect in useEffect)
@@ -100,7 +108,6 @@ const ProductPage = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      
       <main className="flex-1">
         <ProductDetail product={product} onAddToCart={handleAddToCart} onReviewSubmit={fetchProduct} />
         
@@ -113,7 +120,6 @@ const ProductPage = () => {
           />
         )}
       </main>
-      
     </div>
   );
 };

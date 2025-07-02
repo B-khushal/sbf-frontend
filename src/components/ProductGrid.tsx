@@ -109,7 +109,7 @@ const ProductCard = ({ product, onAddToCart, onOpenCart }: {
       return;
     }
     console.log("Card clicked, navigating to product:", product._id);
-    navigate(`/product/${product._id}`);
+    window.open(`/product/${product._id}`, '_blank', 'noopener,noreferrer');
   };
 
   // Handle add to cart
@@ -170,7 +170,7 @@ const ProductCard = ({ product, onAddToCart, onOpenCart }: {
     e.preventDefault();
     e.stopPropagation();
     console.log("View details clicked:", product._id);
-    navigate(`/product/${product._id}`);
+    window.open(`/product/${product._id}`, '_blank', 'noopener,noreferrer');
   };
 
   // Handle wishlist toggle

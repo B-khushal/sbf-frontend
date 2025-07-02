@@ -52,6 +52,12 @@ const RecommendedProducts: React.FC<{ productId: string; category: string }> = (
         setRecommendedProducts(products);
       } catch (error) {
         console.error('Error fetching recommended products:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load recommended products",
+          variant: "destructive",
+          duration: 3000,
+        });
       } finally {
         setLoading(false);
       }
@@ -102,15 +108,13 @@ const RecommendedProducts: React.FC<{ productId: string; category: string }> = (
   if (loading) {
     return (
       <div className="mt-16">
-        <h2 className="text-2xl font-bold text-center mb-8">You Might Also Like</h2>
+        <h2 className="text-2xl font-bold mb-6">Recommended Products</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="bg-white rounded-xl shadow-sm overflow-hidden animate-pulse">
-              <div className="aspect-square bg-gray-200"></div>
-              <div className="p-3">
-                <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded w-3/4"></div>
-              </div>
+            <div key={i} className="animate-pulse">
+              <div className="bg-gray-200 aspect-square rounded-lg mb-2"></div>
+              <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
             </div>
           ))}
         </div>
@@ -118,13 +122,13 @@ const RecommendedProducts: React.FC<{ productId: string; category: string }> = (
     );
   }
 
-  if (recommendedProducts.length === 0) {
+  if (!recommendedProducts.length) {
     return null;
   }
 
   return (
     <div className="mt-16">
-      <h2 className="text-2xl font-bold text-center mb-8 text-gray-800">You Might Also Like</h2>
+      <h2 className="text-2xl font-bold mb-6">Recommended Products</h2>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {recommendedProducts.map((product) => {
           const discountedPrice = product.discount 
@@ -153,6 +157,7 @@ const RecommendedProducts: React.FC<{ productId: string; category: string }> = (
                   src={getImageUrl(product.images[0]) || '/images/placeholder.svg'}
                   alt={product.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  loading="lazy"
                 />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
               </div>
