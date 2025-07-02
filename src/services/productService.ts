@@ -262,6 +262,49 @@ class ProductService {
     const response = await axios.get(`${API_URL}/products/search?q=${query}`);
     return response.data;
   }
+
+  async getRecommendedProducts(currentProductId: string, category: string, limit = 6): Promise<ProductData[]> {
+    try {
+      // First try to get products from the same category
+      const categoryProducts = await this.getProductsByCategory(category);
+      
+      // Filter out the current product and hidden products
+      const filteredProducts = categoryProducts.filter(product => 
+        product._id !== currentProductId && !product.hidden
+      );
+
+      // If we have enough products from the same category, return them
+      if (filteredProducts.length >= limit) {
+        return filteredProducts.slice(0, limit);
+      }
+
+      // If not enough products from the same category, get all products
+      const allProducts = await this.getProducts();
+      const allFiltered = allProducts.filter(product => 
+        product._id !== currentProductId && !product.hidden
+      );
+
+      // Prioritize products from the same category, then add others
+      const recommended = [
+        ...filteredProducts,
+        ...allFiltered.filter(product => product.category !== category)
+      ];
+
+      return recommended.slice(0, limit);
+    } catch (error) {
+      console.error('Error fetching recommended products:', error);
+      // Fallback: get featured products
+      try {
+        const featuredProducts = await this.getFeaturedProducts();
+        return featuredProducts.filter(product => 
+          product._id !== currentProductId && !product.hidden
+        ).slice(0, limit);
+      } catch (fallbackError) {
+        console.error('Error fetching featured products as fallback:', fallbackError);
+        return [];
+      }
+    }
+  }
 }
 
 export default new ProductService();

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ShoppingCart, Heart, Share2, Minus, Plus, ChevronLeft, ChevronRight, Star } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ShoppingCart, Heart, Share2, Minus, Plus, ChevronLeft, ChevronRight, Star, Eye, ShoppingBag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useCurrency } from '@/contexts/CurrencyContext';
@@ -8,6 +8,7 @@ import { getImageUrl, getProductImageUrl } from '@/config';
 import ContactModal from '@/components/ui/ContactModal';
 import useCart from '@/hooks/use-cart';
 import { Button } from './ui/button';
+import productService, { ProductData } from '@/services/productService';
 
 type ProductDetailProps = {
   product: {
@@ -33,6 +34,178 @@ type ProductDetailProps = {
     quantity: number;
   }) => void;
   onReviewSubmit: () => void;
+};
+
+// Recommended Products Component
+const RecommendedProducts: React.FC<{ productId: string; category: string }> = ({ productId, category }) => {
+  const [recommendedProducts, setRecommendedProducts] = useState<ProductData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { formatPrice, convertPrice } = useCurrency();
+  const { onAddToCart } = useCart();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchRecommendedProducts = async () => {
+      try {
+        setLoading(true);
+        const products = await productService.getRecommendedProducts(productId, category, 6);
+        setRecommendedProducts(products);
+      } catch (error) {
+        console.error('Error fetching recommended products:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRecommendedProducts();
+  }, [productId, category]);
+
+  const handleProductClick = (product: ProductData) => {
+    // Open product in new tab for better optimization
+    window.open(`/product/${product._id}`, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleAddToCart = (e: React.MouseEvent, product: ProductData) => {
+    e.stopPropagation();
+    
+    const discountedPrice = product.discount 
+      ? product.price * (1 - product.discount / 100)
+      : product.price;
+
+    try {
+      onAddToCart({
+        id: product._id!,
+        productId: product._id!,
+        title: product.title,
+        price: discountedPrice,
+        originalPrice: product.price,
+        image: product.images[0] || '',
+        quantity: 1
+      });
+      
+      toast({
+        title: "Added to cart",
+        description: `${product.title} added to your cart`,
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add item to cart",
+        variant: "destructive",
+        duration: 3000,
+      });
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="mt-16">
+        <h2 className="text-2xl font-bold text-center mb-8">You Might Also Like</h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="bg-white rounded-xl shadow-sm overflow-hidden animate-pulse">
+              <div className="aspect-square bg-gray-200"></div>
+              <div className="p-3">
+                <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (recommendedProducts.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="mt-16">
+      <h2 className="text-2xl font-bold text-center mb-8 text-gray-800">You Might Also Like</h2>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        {recommendedProducts.map((product) => {
+          const discountedPrice = product.discount 
+            ? product.price * (1 - product.discount / 100)
+            : product.price;
+
+          return (
+            <div
+              key={product._id}
+              onClick={() => handleProductClick(product)}
+              className="group bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer hover:-translate-y-1"
+            >
+              {/* Product Image */}
+              <div className="relative aspect-square overflow-hidden bg-gray-100">
+                {product.discount > 0 && (
+                  <div className="absolute top-2 left-2 z-10 bg-red-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+                    -{product.discount}%
+                  </div>
+                )}
+                {product.isNewArrival && (
+                  <div className="absolute top-2 right-2 z-10 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+                    NEW
+                  </div>
+                )}
+                <img
+                  src={getImageUrl(product.images[0]) || '/images/placeholder.svg'}
+                  alt={product.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
+              </div>
+
+              {/* Product Info */}
+              <div className="p-3">
+                <h3 className="font-medium text-sm text-gray-900 mb-1 line-clamp-2 group-hover:text-primary transition-colors">
+                  {product.title}
+                </h3>
+                <p className="text-xs text-gray-500 mb-2 capitalize">{product.category}</p>
+                
+                {/* Price */}
+                <div className="flex items-center gap-1 mb-3">
+                  <span className="text-sm font-bold text-primary">
+                    {formatPrice(convertPrice(discountedPrice))}
+                  </span>
+                  {product.discount > 0 && (
+                    <span className="text-xs text-gray-500 line-through">
+                      {formatPrice(convertPrice(product.price))}
+                    </span>
+                  )}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-1">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex-1 text-xs py-1.5 h-8"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      window.open(`/product/${product._id}`, '_blank', 'noopener,noreferrer');
+                    }}
+                  >
+                    <Eye className="w-3 h-3 mr-1" />
+                    View
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="flex-1 text-xs py-1.5 h-8 bg-primary hover:bg-primary/90"
+                    onClick={(e) => handleAddToCart(e, product)}
+                  >
+                    <ShoppingBag className="w-3 h-3 mr-1" />
+                    Add
+                  </Button>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 };
 
 const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailProps) => {
@@ -418,7 +591,17 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
             )}
           </div>
         </div>
+        
+        {/* Recommended Products Section */}
+        <RecommendedProducts productId={product._id} category={product.category} />
       </div>
+      
+      {/* Contact Modal */}
+      <ContactModal 
+        isOpen={isContactModalOpen}
+        onClose={() => setIsContactModalOpen(false)}
+        productTitle={product.title}
+      />
     </section>
   );
 };
