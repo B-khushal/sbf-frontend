@@ -16,8 +16,7 @@ import {
   Gift,
   CreditCard,
   Truck,
-  ShieldCheck,
-  Loader2
+  ShieldCheck
 } from 'lucide-react';
 import { useSettings } from '@/contexts/SettingsContext';
 import { Button } from './ui/button';
@@ -28,9 +27,6 @@ import api from '@/services/api';
 const Footer = () => {
   const { footerSettings, loading } = useSettings();
   const [email, setEmail] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
 
   // WhatsApp contact number - using just the number without +91
   const whatsappNumber = "9949683222";
@@ -40,7 +36,6 @@ const Footer = () => {
     e.preventDefault();
     
     try {
-      setIsLoading(true);
       const response = await api.post('/newsletter/subscribe', { email });
       
       if (response.data.success) {
@@ -48,21 +43,16 @@ const Footer = () => {
           description: "We'll keep you updated with our latest offers.",
         });
         setEmail('');
-        setSuccess("Subscription successful!");
       } else {
         toast.error("Subscription failed", {
           description: response.data.message || "Please try again later.",
         });
-        setError(response.data.message || "Please try again later.");
       }
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || "Something went wrong. Please try again.";
       toast.error("Subscription failed", {
         description: errorMessage,
       });
-      setError(errorMessage);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -80,149 +70,256 @@ const Footer = () => {
   }
 
   return (
-    <footer className="bg-white border-t">
-      <div className="container mx-auto px-4 py-8 sm:py-12">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {/* Company Info */}
-          <div className="space-y-4">
-            <Link to="/" className="block">
-              <img
-                src={footerSettings.logo || "/api/placeholder/160/50"}
-                alt="Spring Blossoms Florist"
-                className="h-8 sm:h-10 w-auto"
-              />
-            </Link>
-            <p className="text-sm text-gray-600 leading-relaxed">
-              {footerSettings.description}
-            </p>
-            <div className="flex items-center gap-3">
-              {footerSettings.socialLinks?.map((link) => (
-                <a
-                  key={link.platform}
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-gray-400 hover:text-primary transition-colors"
-                >
-                  {getSocialIcon(link.platform)}
-                </a>
-              ))}
-            </div>
-          </div>
-
-          {/* Quick Links */}
-          <div>
-            <h3 className="text-sm font-semibold text-gray-900 mb-4">Quick Links</h3>
-            <ul className="space-y-2.5">
-              {footerSettings.quickLinks?.map((link) => (
-                <li key={link.label}>
-                  <Link
-                    to={link.url}
-                    className="text-sm text-gray-600 hover:text-primary transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Contact Info */}
-          <div>
-            <h3 className="text-sm font-semibold text-gray-900 mb-4">Contact Us</h3>
-            <ul className="space-y-3">
-              <li>
-                <a
-                  href={`tel:${footerSettings.phone}`}
-                  className="flex items-center gap-2 text-sm text-gray-600 hover:text-primary transition-colors"
-                >
-                  <Phone className="w-4 h-4" />
-                  <span>{footerSettings.phone}</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href={`mailto:${footerSettings.email}`}
-                  className="flex items-center gap-2 text-sm text-gray-600 hover:text-primary transition-colors"
-                >
-                  <Mail className="w-4 h-4" />
-                  <span>{footerSettings.email}</span>
-                </a>
-              </li>
-              <li className="flex items-start gap-2 text-sm text-gray-600">
-                <MapPin className="w-4 h-4 flex-shrink-0 mt-1" />
-                <span>{footerSettings.address}</span>
-              </li>
-            </ul>
-          </div>
-
-          {/* Newsletter */}
-          <div>
-            <h3 className="text-sm font-semibold text-gray-900 mb-4">Newsletter</h3>
-            <p className="text-sm text-gray-600 mb-4">
-              Subscribe to our newsletter for updates and exclusive offers.
-            </p>
-            <form onSubmit={handleNewsletterSubmit} className="space-y-2">
-              <div className="relative">
-                <input
+    <footer className="relative bg-gradient-to-br from-secondary/40 via-secondary/30 to-secondary/20 pt-16 pb-8">
+      {/* Newsletter Section */}
+      <div className="absolute top-0 left-0 right-0 transform -translate-y-1/2">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-gradient-to-r from-primary/90 to-secondary/90 rounded-2xl p-6 sm:p-8 shadow-xl backdrop-blur-sm">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+              <div className="text-white">
+                <h3 className="text-xl sm:text-2xl font-semibold mb-2">Subscribe to Our Newsletter</h3>
+                <p className="text-white/80 text-sm sm:text-base">Get updates on new arrivals and special offers!</p>
+              </div>
+              <form onSubmit={handleNewsletterSubmit} className="flex w-full sm:w-auto gap-2">
+                <Input
                   type="email"
                   placeholder="Enter your email"
+                  className="bg-white/10 border-white/20 text-white placeholder:text-white/60 min-w-[240px]"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  required
                 />
-                <Button
-                  type="submit"
-                  size="sm"
-                  disabled={isLoading}
-                  className="absolute right-1 top-1 h-8"
-                >
-                  {isLoading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <ArrowRight className="w-4 h-4" />
-                  )}
+                <Button type="submit" variant="secondary" className="bg-white text-primary hover:bg-white/90">
+                  <Send className="w-4 h-4 mr-2" />
+                  Subscribe
                 </Button>
-              </div>
-              {error && (
-                <p className="text-xs text-red-500">{error}</p>
-              )}
-              {success && (
-                <p className="text-xs text-green-500">{success}</p>
-              )}
-            </form>
-          </div>
-        </div>
-
-        {/* Bottom Bar */}
-        <div className="mt-8 pt-8 border-t">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-sm text-gray-600">
-              © {new Date().getFullYear()} Spring Blossoms Florist. All rights reserved.
-            </p>
-            <div className="flex flex-wrap items-center justify-center gap-4">
-              <Link
-                to="/privacy"
-                className="text-sm text-gray-600 hover:text-primary transition-colors"
-              >
-                Privacy Policy
-              </Link>
-              <Link
-                to="/terms"
-                className="text-sm text-gray-600 hover:text-primary transition-colors"
-              >
-                Terms of Service
-              </Link>
-              <Link
-                to="/shipping"
-                className="text-sm text-gray-600 hover:text-primary transition-colors"
-              >
-                Shipping Policy
-              </Link>
+              </form>
             </div>
           </div>
         </div>
       </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Main Footer Content */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 mb-12 pt-8">
+          {/* Brand & Info */}
+          <div>
+            <Link to="/" className="inline-flex items-center gap-2 text-xl font-semibold mb-4">
+              <Flower2 className="w-6 h-6 text-primary" />
+              {footerSettings.companyName}
+            </Link>
+            <p className="text-muted-foreground text-sm leading-relaxed mb-6">
+              {footerSettings.description}
+            </p>
+            <div className="flex items-center gap-3">
+              {/* WhatsApp Link */}
+              <a 
+                href={whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-10 h-10 flex items-center justify-center rounded-full bg-green-500/10 text-green-600 hover:bg-green-500/20 transition-colors duration-300"
+                aria-label="WhatsApp"
+                title="Chat with us on WhatsApp"
+              >
+                <MessageCircle className="w-5 h-5" />
+              </a>
+              
+              {/* Social Links */}
+              {footerSettings.socialLinks
+                .filter(link => link.enabled)
+                .map((link) => {
+                  const IconComponent = 
+                    link.platform === 'Instagram' ? Instagram :
+                    link.platform === 'Facebook' ? Facebook :
+                    link.platform === 'Twitter' ? Twitter : Instagram;
+                  
+                  return (
+                    <a 
+                      key={link.platform}
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer" 
+                      className="w-10 h-10 flex items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors duration-300"
+                      aria-label={link.platform}
+                    >
+                      <IconComponent className="w-5 h-5" />
+                    </a>
+                  );
+                })
+              }
+            </div>
+          </div>
+
+          {/* Quick Links */}
+          {footerSettings.links.map((section) => (
+            <div key={section.section}>
+              <h3 className="text-base font-semibold mb-4">{section.section}</h3>
+              <ul className="space-y-3">
+                {section.items
+                  .filter(item => item.enabled)
+                  .map((item) => (
+                    <li key={item.href}>
+                      <Link 
+                        to={item.href} 
+                        className="text-muted-foreground hover:text-primary transition-colors duration-200 flex items-center gap-2 group text-sm"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <ArrowRight className="w-4 h-4 opacity-0 -translate-x-3 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
+                        {item.label}
+                      </Link>
+                    </li>
+                  ))}
+              </ul>
+            </div>
+          ))}
+
+          {/* Contact Info */}
+          <div>
+            <h3 className="text-base font-semibold mb-4">Contact Us</h3>
+            <ul className="space-y-4">
+              <li className="flex items-start gap-3">
+                <Mail className="w-5 h-5 text-primary mt-0.5" />
+                <div>
+                  <p className="font-medium mb-1">Email Us</p>
+                  <a 
+                    href={`mailto:${footerSettings.contactInfo.email}`} 
+                    className="text-muted-foreground hover:text-primary transition-colors duration-200 text-sm"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {footerSettings.contactInfo.email}
+                  </a>
+                </div>
+              </li>
+              <li className="flex items-start gap-3">
+                <Phone className="w-5 h-5 text-primary mt-0.5" />
+                <div>
+                  <p className="font-medium mb-1">Call Us</p>
+                  <a 
+                    href={`tel:${footerSettings.contactInfo.phone}`} 
+                    className="text-muted-foreground hover:text-primary transition-colors duration-200 text-sm"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {footerSettings.contactInfo.phone}
+                  </a>
+                </div>
+              </li>
+              <li className="flex items-start gap-3">
+                <MapPin className="w-5 h-5 text-primary mt-0.5" />
+                <div>
+                  <p className="font-medium mb-1">Visit Us</p>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    {footerSettings.contactInfo.address}
+                  </p>
+                </div>
+              </li>
+              <li className="flex items-start gap-3">
+                <Clock className="w-5 h-5 text-primary mt-0.5" />
+                <div>
+                  <p className="font-medium mb-1">Business Hours</p>
+                  <p className="text-muted-foreground text-sm">Mon - Sun: 9:00 AM - 9:00 PM</p>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Features Section */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 py-8 border-y">
+          <div className="flex items-center gap-3">
+            <Truck className="w-8 h-8 text-primary" />
+            <div>
+              <p className="font-medium text-sm">Free Delivery</p>
+              <p className="text-xs text-muted-foreground">On orders above ₹999</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <ShieldCheck className="w-8 h-8 text-primary" />
+            <div>
+              <p className="font-medium text-sm">Secure Payment</p>
+              <p className="text-xs text-muted-foreground">100% secure checkout</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <Gift className="w-8 h-8 text-primary" />
+            <div>
+              <p className="font-medium text-sm">Special Offers</p>
+              <p className="text-xs text-muted-foreground">Save up to 25% off</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <Heart className="w-8 h-8 text-primary" />
+            <div>
+              <p className="font-medium text-sm">Made with Love</p>
+              <p className="text-xs text-muted-foreground">Handcrafted flowers</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Bar */}
+        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-sm text-muted-foreground text-center sm:text-left">
+            {footerSettings.copyright}
+          </p>
+          <div className="flex flex-wrap justify-center sm:justify-end gap-4 text-sm">
+            <Link 
+              to="/terms" 
+              className="text-muted-foreground hover:text-primary transition-colors duration-200"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Terms of Service
+            </Link>
+            <Link 
+              to="/privacy" 
+              className="text-muted-foreground hover:text-primary transition-colors duration-200"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Privacy Policy
+            </Link>
+            <Link 
+              to="/shipping" 
+              className="text-muted-foreground hover:text-primary transition-colors duration-200"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Shipping Policy
+            </Link>
+            <Link 
+              to="/refund-policy" 
+              className="text-muted-foreground hover:text-primary transition-colors duration-200"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Refund Policy
+            </Link>
+            <Link 
+              to="/cancellation-policy" 
+              className="text-muted-foreground hover:text-primary transition-colors duration-200"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Cancellation Policy
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* Map Section */}
+      {footerSettings.showMap && (
+        <div className="mt-12">
+          <iframe 
+            src={footerSettings.mapEmbedUrl} 
+            className="w-full h-[300px] border-0" 
+            allowFullScreen 
+            loading="lazy" 
+            referrerPolicy="no-referrer-when-downgrade"
+          ></iframe>
+        </div>
+      )}
     </footer>
   );
 };

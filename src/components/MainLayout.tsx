@@ -3,8 +3,8 @@ import { Outlet, useLocation } from 'react-router-dom';
 import Navigation from './Navigation';
 import Footer from './Footer';
 import Cart from './Cart';
-import { useCart } from '@/hooks/use-cart';
-import { useSettings } from '@/contexts/SettingsContext';
+import useCart from '../hooks/use-cart';
+import { useSettings } from '../contexts/SettingsContext';
 import CategoryMenu from './CategoryMenu';
 
 const MainLayout: React.FC = () => {
