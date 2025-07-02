@@ -42,7 +42,6 @@ const RecommendedProducts: React.FC<{ productId: string; category: string }> = (
   const [recommendedProducts, setRecommendedProducts] = useState<ProductData[]>([]);
   const [loading, setLoading] = useState(true);
   const { formatPrice, convertPrice } = useCurrency();
-  const { onAddToCart } = useCart();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -72,45 +71,11 @@ const RecommendedProducts: React.FC<{ productId: string; category: string }> = (
     window.open(`/product/${product._id}`, '_blank', 'noopener,noreferrer');
   };
 
-  const handleAddToCart = (e: React.MouseEvent, product: ProductData) => {
-    e.stopPropagation();
-    
-    const discountedPrice = product.discount 
-      ? product.price * (1 - product.discount / 100)
-      : product.price;
-
-    try {
-      onAddToCart({
-        id: product._id!,
-        productId: product._id!,
-        title: product.title,
-        price: discountedPrice,
-        originalPrice: product.price,
-        image: product.images[0] || '',
-        quantity: 1
-      });
-      
-      toast({
-        title: "Added to cart",
-        description: `${product.title} added to your cart`,
-        duration: 3000,
-      });
-    } catch (error) {
-      console.error('Error adding to cart:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add item to cart",
-        variant: "destructive",
-        duration: 3000,
-      });
-    }
-  };
-
   if (loading) {
     return (
       <div className="mt-16">
         <h2 className="text-2xl font-bold mb-6">Recommended Products</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {[...Array(6)].map((_, i) => (
             <div key={i} className="animate-pulse">
               <div className="bg-gray-200 aspect-square rounded-lg mb-2"></div>
@@ -130,7 +95,7 @@ const RecommendedProducts: React.FC<{ productId: string; category: string }> = (
   return (
     <div className="mt-16">
       <h2 className="text-2xl font-bold mb-6 text-center">Recommended Products</h2>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
         {recommendedProducts.map((product) => {
           const discountedPrice = product.discount 
             ? product.price * (1 - product.discount / 100)
@@ -168,10 +133,9 @@ const RecommendedProducts: React.FC<{ productId: string; category: string }> = (
                 <h3 className="font-medium text-sm text-gray-900 mb-1 line-clamp-2 group-hover:text-primary transition-colors">
                   {product.title}
                 </h3>
-                <p className="text-xs text-gray-500 mb-2 capitalize">{product.category}</p>
                 
                 {/* Price */}
-                <div className="flex items-center gap-1 mb-3">
+                <div className="flex items-center gap-1">
                   <span className="text-sm font-bold text-primary">
                     {formatPrice(convertPrice(discountedPrice))}
                   </span>
@@ -180,30 +144,6 @@ const RecommendedProducts: React.FC<{ productId: string; category: string }> = (
                       {formatPrice(convertPrice(product.price))}
                     </span>
                   )}
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex gap-1">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="flex-1 text-xs py-1.5 h-8"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      window.open(`/product/${product._id}`, '_blank', 'noopener,noreferrer');
-                    }}
-                  >
-                    <Eye className="w-3 h-3 mr-1" />
-                    View
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="flex-1 text-xs py-1.5 h-8 bg-primary hover:bg-primary/90"
-                    onClick={(e) => handleAddToCart(e, product)}
-                  >
-                    <ShoppingBag className="w-3 h-3 mr-1" />
-                    Add
-                  </Button>
                 </div>
               </div>
             </div>
