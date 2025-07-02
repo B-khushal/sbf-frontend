@@ -106,17 +106,27 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
   });
 
   // Safe function to normalize review stats
-  const normalizeReviewStats = (stats: any) => {
-    return {
-      totalReviews: Number(stats?.totalReviews) || 0,
-      averageRating: Number(stats?.averageRating) || 0,
-      ratingDistribution: {
-        5: Number(stats?.ratingDistribution?.[5]) || 0,
-        4: Number(stats?.ratingDistribution?.[4]) || 0,
-        3: Number(stats?.ratingDistribution?.[3]) || 0,
-        2: Number(stats?.ratingDistribution?.[2]) || 0,
-        1: Number(stats?.ratingDistribution?.[1]) || 0,
+  const normalizeReviewStats = (reviews: Review[]) => {
+    // Initialize distribution
+    const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    
+    // Count reviews for each rating
+    reviews.forEach(review => {
+      const rating = Math.round(Number(review.rating));
+      if (rating >= 1 && rating <= 5) {
+        distribution[rating as keyof typeof distribution]++;
       }
+    });
+
+    // Calculate total and average
+    const totalReviews = reviews.length;
+    const totalRating = reviews.reduce((sum, review) => sum + Number(review.rating), 0);
+    const averageRating = totalReviews > 0 ? totalRating / totalReviews : 0;
+
+    return {
+      totalReviews,
+      averageRating,
+      ratingDistribution: distribution
     };
   };
 
@@ -154,13 +164,14 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
         
         const data = await getProductReviews(productId);
         console.log('✅ Reviews fetched successfully:', data);
-        console.log('📊 Raw stats from API:', data?.stats);
         
-        const normalizedStats = normalizeReviewStats(data?.stats);
-        console.log('📊 Normalized stats:', normalizedStats);
+        const reviews = data?.reviews || [];
+        setReviews(reviews);
         
-        setReviews(data?.reviews || []);
-        setReviewStats(normalizedStats);
+        // Calculate stats from reviews array
+        const stats = normalizeReviewStats(reviews);
+        console.log('📊 Calculated stats:', stats);
+        setReviewStats(stats);
       } catch (error) {
         console.error('❌ Error fetching reviews:', error);
         setComponentError('Failed to load reviews');
@@ -247,7 +258,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
       console.log('🔄 Refreshing reviews...');
       const data = await getProductReviews(productId);
       setReviews(data?.reviews || []);
-      setReviewStats(normalizeReviewStats(data?.stats));
+      setReviewStats(normalizeReviewStats(data?.reviews || []));
       
       console.log('🔄 Calling onReviewSubmit callback...');
       if (onReviewSubmit) {
