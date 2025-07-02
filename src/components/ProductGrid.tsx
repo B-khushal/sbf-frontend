@@ -40,12 +40,12 @@ const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCar
       {(title || subtitle) && (
         <div className="text-center mb-6 sm:mb-8 lg:mb-12 xl:mb-16">
           {title && (
-            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold tracking-tight mb-2 sm:mb-3 lg:mb-4 bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">
+            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold tracking-tight mb-2 sm:mb-3 lg:mb-4 bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent text-center">
               {title}
             </h2>
           )}
           {subtitle && (
-            <p className="text-muted-foreground max-w-2xl mx-auto text-sm sm:text-base lg:text-lg xl:text-xl leading-relaxed px-2">
+            <p className="text-muted-foreground max-w-2xl mx-auto text-sm sm:text-base lg:text-lg xl:text-xl leading-relaxed px-2 text-center">
               {subtitle}
             </p>
           )}
@@ -55,12 +55,12 @@ const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCar
       {loading ? (
         <div className="text-center py-8 sm:py-12 lg:py-16">
           <div className="inline-block w-8 h-8 sm:w-12 sm:h-12 lg:w-16 lg:h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mb-3 sm:mb-4"></div>
-          <p className="text-gray-600 text-sm sm:text-base lg:text-lg">Loading products...</p>
+          <p className="text-gray-600 text-sm sm:text-base lg:text-lg text-center">Loading products...</p>
         </div>
       ) : products.length === 0 ? (
         <div className="text-center py-8 sm:py-12 lg:py-16">
-          <div className="text-3xl sm:text-4xl lg:text-6xl mb-3 sm:mb-4">🌸</div>
-          <p className="text-muted-foreground text-sm sm:text-base lg:text-lg">No products available at the moment.</p>
+          <div className="text-3xl sm:text-4xl lg:text-6xl mb-3 sm:mb-4 text-center">🌸</div>
+          <p className="text-muted-foreground text-sm sm:text-base lg:text-lg text-center">No products available at the moment.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 sm:gap-5 md:gap-6 lg:gap-7 xl:gap-9">

@@ -128,7 +128,7 @@ const RecommendedProducts: React.FC<{ productId: string; category: string }> = (
 
   return (
     <div className="mt-16">
-      <h2 className="text-2xl font-bold mb-6">Recommended Products</h2>
+      <h2 className="text-2xl font-bold mb-6 text-center">Recommended Products</h2>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {recommendedProducts.map((product) => {
           const discountedPrice = product.discount 
