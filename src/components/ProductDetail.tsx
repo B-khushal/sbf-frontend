@@ -426,7 +426,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
           {/* Product Images */}
           <div className="relative space-y-4">
-            <div className="relative pb-[100%] bg-secondary/20 overflow-hidden rounded-lg shadow-md">
+            <div className="relative pb-[150%] bg-secondary/20 overflow-hidden rounded-lg shadow-md">
               <img
                 src={imageUrl}
                 alt={product.title}
@@ -453,44 +453,51 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                 </span>
               )}
 
-              {/* Left Arrow */}
-              <button
-                onClick={prevImage}
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition-all"
-              >
-                <ChevronLeft size={24} />
-              </button>
+              {/* Navigation Arrows - Only show if there are multiple images */}
+              {product.images.length > 1 && (
+                <>
+                  {/* Left Arrow */}
+                  <button
+                    onClick={prevImage}
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition-all"
+                  >
+                    <ChevronLeft size={24} />
+                  </button>
 
-              {/* Right Arrow */}
-              <button
-                onClick={nextImage}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition-all"
-              >
-                <ChevronRight size={24} />
-              </button>
+                  {/* Right Arrow */}
+                  <button
+                    onClick={nextImage}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition-all"
+                  >
+                    <ChevronRight size={24} />
+                  </button>
+                </>
+              )}
             </div>
 
-            {/* Thumbnail Gallery */}
-            <div className="flex gap-3 justify-center">
-              {product.images.map((image, index) => (
-                <button
-                  key={index}
-                  onClick={() => setSelectedImage(index)}
-                  className={cn(
-                    "w-16 h-16 relative overflow-hidden rounded-md shadow-md transition-all duration-300 ease-smooth",
-                    selectedImage === index
-                      ? "ring-2 ring-primary ring-offset-2"
-                      : "opacity-70 hover:opacity-100"
-                  )}
-                >
-                  <img
-                    src={getImageUrl(image, { bustCache: false })}
-                    alt={`${product.title} view ${index + 1}`}
-                    className="w-full h-full object-cover rounded-md"
-                  />
-                </button>
-              ))}
-            </div>
+            {/* Thumbnail Gallery - Only show if there are multiple images */}
+            {product.images.length > 1 && (
+              <div className="flex gap-3 justify-center">
+                {product.images.map((image, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setSelectedImage(index)}
+                    className={cn(
+                      "w-16 h-24 relative overflow-hidden rounded-md shadow-md transition-all duration-300 ease-smooth",
+                      selectedImage === index
+                        ? "ring-2 ring-primary ring-offset-2"
+                        : "opacity-70 hover:opacity-100"
+                    )}
+                  >
+                    <img
+                      src={getImageUrl(image, { bustCache: false })}
+                      alt={`${product.title} view ${index + 1}`}
+                      className="w-full h-full object-cover rounded-md"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Product Info */}
