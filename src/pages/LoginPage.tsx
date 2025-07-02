@@ -440,16 +440,16 @@ const LoginPage = () => {
 
       {/* Terms and Conditions Dialog */}
       <Dialog open={showTermsDialog} onOpenChange={setShowTermsDialog}>
-        <DialogContent className="fixed inset-0 flex items-center justify-center z-50 p-4 sm:p-6 md:p-8">
-          <div className="relative w-full max-w-[90%] sm:max-w-[425px] bg-white rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+        <DialogContent className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 p-0 border-none bg-transparent shadow-none outline-none">
+          <div className="relative w-[90vw] max-w-[425px] bg-white rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
             <DialogHeader className="p-6 bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10 border-b">
-              <DialogTitle className="text-xl sm:text-2xl font-bold text-gray-900">Accept Terms & Conditions</DialogTitle>
+              <DialogTitle className="text-xl sm:text-2xl font-bold text-gray-900">Terms & Conditions</DialogTitle>
               <DialogDescription className="text-sm sm:text-base text-gray-600 mt-2">
                 Please review and accept our terms and conditions to continue.
               </DialogDescription>
             </DialogHeader>
             
-            <div className="p-6 space-y-6">
+            <div className="p-6">
               <div className="bg-gray-50 rounded-xl p-4 sm:p-6">
                 <div className="flex items-start space-x-3">
                   <Checkbox
@@ -458,7 +458,7 @@ const LoginPage = () => {
                     onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)}
                     className="mt-1"
                   />
-                  <div className="grid gap-2">
+                  <div className="grid gap-1.5">
                     <label
                       htmlFor="terms"
                       className="text-sm sm:text-base font-medium text-gray-900 cursor-pointer"
@@ -469,7 +469,7 @@ const LoginPage = () => {
                       I agree to the{" "}
                       <Link 
                         to="/terms" 
-                        className="text-primary hover:text-secondary underline" 
+                        className="text-primary hover:text-primary/80 underline" 
                         target="_blank"
                         onClick={(e) => e.stopPropagation()}
                       >
@@ -478,7 +478,7 @@ const LoginPage = () => {
                       and{" "}
                       <Link 
                         to="/privacy" 
-                        className="text-primary hover:text-secondary underline" 
+                        className="text-primary hover:text-primary/80 underline" 
                         target="_blank"
                         onClick={(e) => e.stopPropagation()}
                       >
@@ -491,18 +491,18 @@ const LoginPage = () => {
               </div>
             </div>
 
-            <DialogFooter className="p-6 bg-gray-50 border-t flex flex-col sm:flex-row gap-3 sm:gap-2">
+            <div className="p-6 bg-gray-50 border-t flex flex-col-reverse sm:flex-row gap-3 sm:gap-2 justify-end">
               <Button
                 variant="outline"
                 onClick={() => setShowTermsDialog(false)}
-                className="w-full sm:w-auto order-2 sm:order-1"
+                className="w-full sm:w-auto"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleTermsAccept}
                 disabled={!agreedToTerms || isLoading}
-                className="w-full sm:w-auto order-1 sm:order-2 bg-gradient-to-r from-primary via-secondary to-accent text-white"
+                className="w-full sm:w-auto bg-gradient-to-r from-primary via-secondary to-accent text-white hover:opacity-90 transition-opacity"
               >
                 {isLoading ? (
                   <div className="flex items-center gap-2">
@@ -513,7 +513,7 @@ const LoginPage = () => {
                   "Continue"
                 )}
               </Button>
-            </DialogFooter>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

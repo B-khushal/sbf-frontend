@@ -155,15 +155,17 @@ const HomePage = () => {
       initial="hidden"
       animate="visible"
       variants={containerVariants}
-      className="min-h-screen"
+      className="min-h-screen relative"
     >
-      {/* Offer Popup */}
+      {/* Offer Popup - Moved outside of animation container */}
       {currentOffer && (
-        <OfferPopup
-          isOpen={isOfferOpen}
-          onClose={closeOffer}
-          offer={currentOffer}
-        />
+        <div className="fixed inset-0 z-50">
+          <OfferPopup
+            isOpen={isOfferOpen}
+            onClose={closeOffer}
+            offer={currentOffer}
+          />
+        </div>
       )}
 
       {enabledSections.map((section, index) => {

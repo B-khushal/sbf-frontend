@@ -49,8 +49,8 @@ const OfferPopup: React.FC<OfferPopupProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="fixed inset-0 flex items-center justify-center z-50 p-4 sm:p-6 md:p-8">
-        <div className="relative w-full max-w-[90%] sm:max-w-[500px] bg-white rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+      <DialogContent className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 p-0 border-none bg-transparent shadow-none outline-none">
+        <div className="relative w-[90vw] max-w-[500px] bg-white rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
           <VisuallyHidden>
             <DialogTitle>{offer.title}</DialogTitle>
             <DialogDescription>{offer.description}</DialogDescription>
