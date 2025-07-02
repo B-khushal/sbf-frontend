@@ -49,6 +49,7 @@ class ReviewErrorBoundary extends React.Component<
   }
 
   static getDerivedStateFromError(error: Error) {
+    console.error('ReviewErrorBoundary caught error:', error);
     return { hasError: true, error };
   }
 
@@ -67,10 +68,13 @@ class ReviewErrorBoundary extends React.Component<
               Error: {this.state.error?.message || 'Unknown error'}
             </p>
             <Button 
-              onClick={() => this.setState({ hasError: false, error: undefined })}
+              onClick={() => {
+                this.setState({ hasError: false, error: undefined });
+                window.location.reload();
+              }}
               variant="outline"
             >
-              Try Again
+              Reload Page
             </Button>
           </div>
         </div>
@@ -86,6 +90,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [componentError, setComponentError] = useState<string | null>(null);
   
   // Review form state
   const [rating, setRating] = useState(0);
@@ -93,37 +98,71 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
   const [title, setTitle] = useState('');
   const [comment, setComment] = useState('');
   
-  // Statistics
+  // Statistics with safe defaults
   const [reviewStats, setReviewStats] = useState({
     totalReviews: 0,
     averageRating: 0,
     ratingDistribution: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }
   });
 
-  const { user } = useAuth();
-  const { toast } = useToast();
+  // Safe hooks with error handling
+  let user = null;
+  let toast = null;
+
+  try {
+    const authResult = useAuth();
+    user = authResult?.user || null;
+  } catch (error) {
+    console.error('Error with useAuth hook:', error);
+    setComponentError('Authentication system error');
+  }
+
+  try {
+    const toastResult = useToast();
+    toast = toastResult?.toast || (() => {});
+  } catch (error) {
+    console.error('Error with useToast hook:', error);
+    toast = () => {};
+  }
 
   useEffect(() => {
+    if (!productId) {
+      setComponentError('No product ID provided');
+      return;
+    }
+
+    const fetchReviews = async () => {
+      try {
+        setLoading(true);
+        setComponentError(null);
+        console.log('🔍 Fetching reviews for product:', productId);
+        
+        const data = await getProductReviews(productId);
+        console.log('✅ Reviews fetched successfully:', data);
+        
+        setReviews(data?.reviews || []);
+        setReviewStats(data?.stats || {
+          totalReviews: 0,
+          averageRating: 0,
+          ratingDistribution: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }
+        });
+      } catch (error) {
+        console.error('❌ Error fetching reviews:', error);
+        setComponentError('Failed to load reviews');
+        if (toast) {
+          toast({
+            title: "Error",
+            description: "Failed to load reviews",
+            variant: "destructive",
+          });
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchReviews();
   }, [productId]);
-
-  const fetchReviews = async () => {
-    try {
-      setLoading(true);
-      const data = await getProductReviews(productId);
-      setReviews(data.reviews);
-      setReviewStats(data.stats);
-    } catch (error) {
-      console.error('Error fetching reviews:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load reviews",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const submitReview = async () => {
     console.log('🔍 Starting review submission process...');
@@ -132,29 +171,35 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
     console.log('Review data:', { rating, title: title.trim(), comment: comment.trim() });
 
     if (!user) {
-      toast({
-        title: "Authentication Required",
-        description: "Please log in to submit a review",
-        variant: "destructive",
-      });
+      if (toast) {
+        toast({
+          title: "Authentication Required",
+          description: "Please log in to submit a review",
+          variant: "destructive",
+        });
+      }
       return;
     }
 
     if (rating === 0) {
-      toast({
-        title: "Rating Required",
-        description: "Please select a star rating",
-        variant: "destructive",
-      });
+      if (toast) {
+        toast({
+          title: "Rating Required",
+          description: "Please select a star rating",
+          variant: "destructive",
+        });
+      }
       return;
     }
 
     if (!title.trim() || !comment.trim()) {
-      toast({
-        title: "Review Content Required",
-        description: "Please provide both a title and comment",
-        variant: "destructive",
-      });
+      if (toast) {
+        toast({
+          title: "Review Content Required",
+          description: "Please provide both a title and comment",
+          variant: "destructive",
+        });
+      }
       return;
     }
 
@@ -170,10 +215,12 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
 
       console.log('✅ Review submission successful:', response);
 
-      toast({
-        title: "Review Submitted",
-        description: "Thank you for your review!",
-      });
+      if (toast) {
+        toast({
+          title: "Review Submitted",
+          description: "Thank you for your review!",
+        });
+      }
 
       // Reset form
       setRating(0);
@@ -183,10 +230,14 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
 
       // Refresh reviews
       console.log('🔄 Refreshing reviews...');
-      await fetchReviews();
+      const data = await getProductReviews(productId);
+      setReviews(data?.reviews || []);
+      setReviewStats(data?.stats || reviewStats);
       
       console.log('🔄 Calling onReviewSubmit callback...');
-      onReviewSubmit?.();
+      if (onReviewSubmit) {
+        onReviewSubmit();
+      }
       
       console.log('✅ Review submission process completed');
     } catch (error: any) {
@@ -210,11 +261,13 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
         errorMessage = error.response.data.message;
       }
       
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      if (toast) {
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
     } finally {
       setSubmitting(false);
       console.log('🔚 Review submission process ended');
@@ -222,36 +275,64 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
   };
 
   const renderStars = (rating: number, interactive = false, onStarClick?: (rating: number) => void, onStarHover?: (rating: number) => void) => {
-    return (
-      <div className="flex items-center gap-1">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <Star
-            key={star}
-            size={interactive ? 24 : 16}
-            className={cn(
-              "transition-colors",
-              interactive && "cursor-pointer hover:scale-110 transition-transform",
-              star <= rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
-            )}
-            onClick={() => interactive && onStarClick?.(star)}
-            onMouseEnter={() => interactive && onStarHover?.(star)}
-            onMouseLeave={() => interactive && onStarHover?.(0)}
-          />
-        ))}
-      </div>
-    );
+    try {
+      return (
+        <div className="flex items-center gap-1">
+          {[1, 2, 3, 4, 5].map((star) => (
+            <Star
+              key={star}
+              size={interactive ? 24 : 16}
+              className={cn(
+                "transition-colors",
+                interactive && "cursor-pointer hover:scale-110 transition-transform",
+                star <= rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
+              )}
+              onClick={() => interactive && onStarClick?.(star)}
+              onMouseEnter={() => interactive && onStarHover?.(star)}
+              onMouseLeave={() => interactive && onStarHover?.(0)}
+            />
+          ))}
+        </div>
+      );
+    } catch (error) {
+      console.error('Error rendering stars:', error);
+      return <span>★★★★★</span>;
+    }
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return dateString;
+    }
   };
 
-  // Check if current user has already reviewed this product
-  const userHasReviewed = reviews.some(review => review.user._id === user?.id);
+  // Component error state
+  if (componentError) {
+    return (
+      <div className="mt-16 bg-white rounded-lg p-6 shadow-sm border">
+        <div className="text-center py-8">
+          <h3 className="text-lg font-semibold text-red-600 mb-2">Review System Unavailable</h3>
+          <p className="text-gray-600 mb-4">{componentError}</p>
+          <Button 
+            onClick={() => window.location.reload()}
+            variant="outline"
+          >
+            Reload Page
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Safe check for user reviews
+  const userHasReviewed = user && reviews.some(review => review.user?._id === user?.id);
 
   return (
     <ReviewErrorBoundary>
@@ -429,7 +510,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
                   <div className="flex items-center gap-3">
                     <div className="flex items-center gap-2">
                       {renderStars(review.rating)}
-                      <span className="font-medium">{review.user.name}</span>
+                      <span className="font-medium">{review.user?.name || 'Anonymous'}</span>
                       {review.isVerifiedPurchase && (
                         <div className="flex items-center gap-1 text-green-600 text-xs">
                           <ShieldCheck className="w-3 h-3" />
@@ -497,7 +578,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
                 <div className="flex items-center gap-4 text-sm text-gray-500">
                   <button className="flex items-center gap-1 hover:text-gray-700 transition-colors">
                     <ThumbsUp className="w-4 h-4" />
-                    <span>Helpful ({review.helpfulVotes})</span>
+                    <span>Helpful ({review.helpfulVotes || 0})</span>
                   </button>
                 </div>
 
@@ -505,7 +586,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
                 {review.response && (
                   <div className="mt-4 bg-blue-50 rounded-lg p-4 border-l-4 border-blue-400">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="text-sm font-medium text-blue-900">Response from {review.response.respondedBy.name}</span>
+                      <span className="text-sm font-medium text-blue-900">Response from {review.response.respondedBy?.name}</span>
                       <span className="text-xs text-blue-600">{formatDate(review.response.respondedAt)}</span>
                     </div>
                     <p className="text-blue-800 text-sm">{review.response.text}</p>
