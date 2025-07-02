@@ -11,7 +11,17 @@ import {
   LogIn,
   UserPlus,
   Settings,
-  Package
+  Package,
+  Truck,
+  Heart,
+  MessageCircle,
+  Store,
+  ShieldCheck,
+  Gift,
+  MapPin,
+  Phone,
+  Mail,
+  Clock
 } from 'lucide-react';
 import {
   DropdownMenu,
