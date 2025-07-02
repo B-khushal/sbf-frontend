@@ -115,7 +115,7 @@ const App = () => {
         clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}
         onScriptLoadError={(err) => console.error('Google OAuth script failed to load:', err)}
       >
-        <AuthProvider>
+          <AuthProvider>
           <SettingsProvider>
             <CurrencyProvider>
               <CartProvider>
@@ -142,7 +142,7 @@ const App = () => {
                               <Route path="refund-policy" element={<RefundPolicyPage />} />
                               <Route path="cancellation-policy" element={<CancellationPolicyPage />} />
                             </Route>
-
+                            
                             {/* Auth Routes */}
                             <Route path="login" element={<LoginPage />} />
                             <Route path="signup" element={<SignupPage />} />
@@ -155,7 +155,7 @@ const App = () => {
                               <Route path="profile" element={<ProfilePage />} />
                               {/* ... other protected routes ... */}
                             </Route>
-
+                            
                             {/* 404 Route */}
                             <Route path="*" element={<NotFound />} />
                           </Routes>
@@ -169,8 +169,8 @@ const App = () => {
               </CartProvider>
             </CurrencyProvider>
           </SettingsProvider>
-        </AuthProvider>
-      </GoogleOAuthProvider>
+          </AuthProvider>
+        </GoogleOAuthProvider>
     </ErrorBoundary>
   );
 };
