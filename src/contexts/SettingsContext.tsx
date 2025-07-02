@@ -213,120 +213,65 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
   const [homeSections, setHomeSections] = useState<HomeSection[]>(defaultHomeSections);
   const [loading, setLoading] = useState(false); // Start with defaults, not loading
   const [error, setError] = useState<string | null>(null);
-  const [lastFetch, setLastFetch] = useState<number>(0);
 
-  // Cache settings for 10 minutes
-  const CACHE_DURATION = 10 * 60 * 1000;
-
-  const fetchSettings = useCallback(async (forceRefetch = false) => {
-    // Check if we need to fetch based on cache
-    const now = Date.now();
-    if (!forceRefetch && (now - lastFetch) < CACHE_DURATION) {
-      return; // Use cached data
-    }
-
-    let isMounted = true;
-    setLoading(true);
-    setError(null);
-
+  const fetchSettings = useCallback(async () => {
     try {
-      // Batch all settings requests
-      const requests = [
-        { method: 'get', url: '/settings/header' },
-        { method: 'get', url: '/settings/footer' },
-        { method: 'get', url: '/settings/categories' },
-        { method: 'get', url: '/settings/home-sections' }
-      ];
+      setLoading(true);
+      setError(null);
 
-      const startTime = performance.now();
-      const responses = await api.batch(requests);
-      
-      if (!isMounted) return;
+      // Fetch settings individually for better error handling
+      const [headerRes, footerRes, categoriesRes, sectionsRes] = await Promise.allSettled([
+        api.get('/settings/header'),
+        api.get('/settings/footer'),
+        api.get('/settings/categories'),
+        api.get('/settings/home-sections'),
+      ]);
 
-      // Track API performance
-      trackApiCall('/settings/batch', 'batch', startTime, 200);
+      // Handle header settings
+      if (headerRes.status === 'fulfilled' && headerRes.value.data) {
+        setHeaderSettings(prev => ({ ...prev, ...headerRes.value.data }));
+      }
 
-      // Process responses
-      const [headerResponse, footerResponse, categoriesResponse, homeSectionsResponse] = responses;
+      // Handle footer settings
+      if (footerRes.status === 'fulfilled' && footerRes.value.data) {
+        setFooterSettings(prev => ({ ...prev, ...footerRes.value.data }));
+      }
 
-      // Header settings
-      if (headerResponse.status === 'fulfilled') {
-        const headerData = headerResponse.value.data;
-        if (headerData && typeof headerData === 'object') {
-          setHeaderSettings(prev => ({ ...prev, ...headerData }));
+      // Handle categories
+      if (categoriesRes.status === 'fulfilled' && categoriesRes.value.data) {
+        const fetchedCategories = categoriesRes.value.data;
+        if (Array.isArray(fetchedCategories) && fetchedCategories.length > 0) {
+          const enabledCategories = fetchedCategories
+            .filter((cat: Category) => cat.enabled)
+            .sort((a: Category, b: Category) => a.order - b.order);
+          setCategories(enabledCategories);
         }
       }
 
-      // Footer settings
-      if (footerResponse.status === 'fulfilled') {
-        const footerData = footerResponse.value.data;
-        if (footerData && typeof footerData === 'object') {
-          setFooterSettings(prev => ({ ...prev, ...footerData }));
+      // Handle home sections
+      if (sectionsRes.status === 'fulfilled' && sectionsRes.value.data) {
+        const fetchedSections = sectionsRes.value.data;
+        if (Array.isArray(fetchedSections) && fetchedSections.length > 0) {
+          const enabledSections = fetchedSections
+            .filter((section: HomeSection) => section.enabled)
+            .sort((a: HomeSection, b: HomeSection) => a.order - b.order);
+          setHomeSections(enabledSections);
         }
       }
-
-      // Categories
-      if (categoriesResponse.status === 'fulfilled') {
-        const categoriesData = categoriesResponse.value.data;
-        if (Array.isArray(categoriesData)) {
-          const processedCategories = categoriesData
-            .filter(cat => cat.enabled)
-            .sort((a, b) => a.order - b.order);
-          
-          // Only update if different from current
-          if (JSON.stringify(processedCategories) !== JSON.stringify(categories)) {
-            setCategories(processedCategories);
-          }
-        }
-      }
-
-      // Home sections
-      if (homeSectionsResponse.status === 'fulfilled') {
-        const sectionsData = homeSectionsResponse.value.data;
-        if (Array.isArray(sectionsData)) {
-          const processedSections = sectionsData
-            .filter(section => section.enabled)
-            .sort((a, b) => a.order - b.order);
-          
-          // Only update if different from current
-          if (JSON.stringify(processedSections) !== JSON.stringify(homeSections)) {
-            setHomeSections(processedSections);
-          }
-        }
-      }
-
-      setLastFetch(now);
 
     } catch (error) {
-      if (!isMounted) return;
-      
-      // Silent error handling - keep defaults
       console.warn('Settings fetch failed, using defaults:', error);
       setError('Failed to load some settings');
-      
-      // Reset to defaults if no data exists
-      if (categories.length === 0) setCategories(defaultCategories);
-      if (homeSections.length === 0) setHomeSections(defaultHomeSections);
     } finally {
-      if (isMounted) {
-        setLoading(false);
-      }
+      setLoading(false);
     }
+  }, []);
 
-    return () => {
-      isMounted = false;
-    };
-  }, [lastFetch, categories, homeSections]);
+  const refetchSettings = useCallback(() => fetchSettings(), [fetchSettings]);
 
-  const refetchSettings = useCallback(() => fetchSettings(true), [fetchSettings]);
-
-  // Initial fetch with delay to prevent blocking
+  // Initial fetch
   useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchSettings();
-    }, 100);
-
-    return () => clearTimeout(timer);
+    fetchSettings();
   }, [fetchSettings]);
 
   // Memoize context value to prevent unnecessary re-renders

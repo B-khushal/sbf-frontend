@@ -1,12 +1,11 @@
-import React, { useEffect, useState, useMemo, Suspense, lazy } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 import { AlertTriangle } from "lucide-react";
 import HomeHero from "../components/HomeHero";
-// Lazy load heavy components
-const Categories = lazy(() => import("../components/Categories"));
-const ProductGrid = lazy(() => import("../components/ProductGrid"));
-const OffersSection = lazy(() => import("../components/OffersSection"));
+import Categories from "../components/Categories";
+import ProductGrid from "../components/ProductGrid";
+import OffersSection from "../components/OffersSection";
 import useCart from "../hooks/use-cart";
 import { useSettings } from "../contexts/SettingsContext";
 import { useOfferPopup } from "../hooks/use-offer-popup";
@@ -49,18 +48,6 @@ const fadeInVariants = {
   }
 };
 
-// Component loading wrapper
-const ComponentLoader = ({ children, fallback }: { children: React.ReactNode, fallback?: React.ReactNode }) => (
-  <Suspense fallback={fallback || (
-    <div className="text-center py-8">
-      <div className="inline-block w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-3"></div>
-      <p className="text-gray-600 text-sm">Loading...</p>
-    </div>
-  )}>
-    {children}
-  </Suspense>
-);
-
 const HomePage = () => {
   const { addItem, openCart } = useCart();
   const { homeSections, loading: settingsLoading } = useSettings();
@@ -78,16 +65,14 @@ const HomePage = () => {
     rootMargin: "50px"
   });
 
-  // Optimized data fetching with caching
+  // Data fetching for products
   useEffect(() => {
-    let isMounted = true;
-    
     const fetchProducts = async () => {
       try {
         setLoading(true);
         setError("");
         
-        // Check cache first
+        // Try to get cached data first
         const cacheKey = 'homepage_products';
         const cacheExpiry = 5 * 60 * 1000; // 5 minutes
         const cached = sessionStorage.getItem(cacheKey);
@@ -95,21 +80,17 @@ const HomePage = () => {
         
         if (cached && cacheTime && (Date.now() - parseInt(cacheTime)) < cacheExpiry) {
           const data = JSON.parse(cached);
-          if (isMounted) {
-            setFeaturedProducts(data.featured || []);
-            setNewProducts(data.new || []);
-            setLoading(false);
-          }
+          setFeaturedProducts(data.featured || []);
+          setNewProducts(data.new || []);
+          setLoading(false);
           return;
         }
         
-        // Batch API calls for better performance
+        // Fetch products from API
         const [featuredResponse, newResponse] = await Promise.allSettled([
           api.get('/products/featured'),
           api.get('/products/new')
         ]);
-        
-        if (!isMounted) return;
         
         const processProducts = (products) => {
           if (!Array.isArray(products)) return [];
@@ -138,21 +119,14 @@ const HomePage = () => {
         sessionStorage.setItem(`${cacheKey}_time`, Date.now().toString());
         
       } catch (error) {
-        if (!isMounted) return;
         console.error("Error fetching products:", error);
         setError("Failed to load products. Please try again later.");
       } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+        setLoading(false);
       }
     };
 
     fetchProducts();
-    
-    return () => {
-      isMounted = false;
-    };
   }, []);
 
   // Memoize enabled sections to prevent unnecessary re-renders
@@ -161,12 +135,13 @@ const HomePage = () => {
     [homeSections]
   );
 
-  // Function to render different section types with lazy loading
+  // Function to render different section types
   const renderSection = (section: any, index: number) => {
     switch (section.type) {
       case 'hero':
         return (
           <motion.div 
+            key={`hero-${index}`}
             variants={itemVariants} 
             className="relative w-full overflow-hidden"
           >
@@ -177,68 +152,65 @@ const HomePage = () => {
       case 'categories':
         return (
           <motion.section 
+            key={`categories-${index}`}
             variants={itemVariants}
             className="relative"
           >
-            <ComponentLoader>
-              <Categories />
-            </ComponentLoader>
+            <Categories />
           </motion.section>
         );
       
       case 'featured':
         return (
           <motion.section 
+            key={`featured-${index}`}
             variants={itemVariants}
             className="bg-white/30 backdrop-blur-sm"
           >
-            <ComponentLoader>
-              <ProductGrid
-                products={featuredProducts}
-                title={section.title || "✨ Featured Collection"}
-                subtitle={section.subtitle || "Explore our most popular floral arrangements"}
-                loading={loading}
-                onAddToCart={addItem}
-                onOpenCart={openCart}
-              />
-            </ComponentLoader>
+            <ProductGrid
+              products={featuredProducts}
+              title={section.title || "✨ Featured Collection"}
+              subtitle={section.subtitle || "Explore our most popular floral arrangements"}
+              loading={loading}
+              onAddToCart={addItem}
+              onOpenCart={openCart}
+            />
           </motion.section>
         );
       
       case 'offers':
         return (
           <motion.section 
+            key={`offers-${index}`}
             variants={itemVariants}
             className="relative"
           >
-            <ComponentLoader>
-              <OffersSection />
-            </ComponentLoader>
+            <OffersSection />
           </motion.section>
         );
       
       case 'new':
         return (
           <motion.section 
+            key={`new-${index}`}
             variants={itemVariants}
             className="bg-gradient-to-r from-primary/5 via-secondary/5 to-accent/5"
           >
-            <ComponentLoader>
-              <ProductGrid
-                products={newProducts}
-                title={section.title || "🌸 New Arrivals"}
-                subtitle={section.subtitle || "Discover our latest seasonal additions"}
-                loading={loading}
-                onAddToCart={addItem}
-                onOpenCart={openCart}
-              />
-            </ComponentLoader>
+            <ProductGrid
+              products={newProducts}
+              title={section.title || "🌸 New Arrivals"}
+              subtitle={section.subtitle || "Discover our latest seasonal additions"}
+              loading={loading}
+              onAddToCart={addItem}
+              onOpenCart={openCart}
+            />
           </motion.section>
         );
       
       case 'philosophy':
         return (
           <motion.section 
+            key={`philosophy-${index}`}
             ref={philosophyRef}
             initial="hidden"
             animate={philosophyInView ? "visible" : "hidden"}
@@ -292,6 +264,7 @@ const HomePage = () => {
       case 'custom':
         return (
           <motion.section 
+            key={`custom-${index}`}
             variants={itemVariants}
             className="px-3 xs:px-4 sm:px-6 md:px-8 lg:px-12 py-8 sm:py-12 md:py-16 lg:py-20 text-center bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10"
           >

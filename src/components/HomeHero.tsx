@@ -68,20 +68,27 @@ const HomeHero = () => {
 
   const totalSlides = enabledSlides.length;
 
-  // Fetch hero slides from API with caching
+  // Fetch hero slides from API
   useEffect(() => {
-    let isMounted = true;
-    
     const fetchHeroSlides = async () => {
       try {
         // Try to get cached data first
-        const response = await api.getCached('/settings/hero-slides', {
-          cache: true,
-          cacheTime: 10 * 60 * 1000 // Cache for 10 minutes
-        });
+        const cacheKey = 'hero_slides';
+        const cacheExpiry = 10 * 60 * 1000; // 10 minutes
+        const cached = sessionStorage.getItem(cacheKey);
+        const cacheTime = sessionStorage.getItem(`${cacheKey}_time`);
         
-        if (!isMounted) return;
+        if (cached && cacheTime && (Date.now() - parseInt(cacheTime)) < cacheExpiry) {
+          const slides = JSON.parse(cached);
+          if (slides && Array.isArray(slides) && slides.length > 0) {
+            setHeroSlides(slides);
+            setImagesLoaded(new Array(slides.length).fill(false));
+            return;
+          }
+        }
         
+        // Fetch from API
+        const response = await api.get('/settings/hero-slides');
         const slides = response.data?.filter((slide: HeroSlide) => slide.enabled)
                                 ?.sort((a: HeroSlide, b: HeroSlide) => a.order - b.order) || defaultSlides;
         
@@ -90,25 +97,20 @@ const HomeHero = () => {
           setHeroSlides(slides);
           setImagesLoaded(new Array(slides.length).fill(false));
           setCurrentSlide(0); // Reset to first slide
+          
+          // Cache the results
+          sessionStorage.setItem(cacheKey, JSON.stringify(slides));
+          sessionStorage.setItem(`${cacheKey}_time`, Date.now().toString());
         }
       } catch (error) {
         // Silent error handling - keep default slides
-        if (isMounted && heroSlides.length === 0) {
-          setHeroSlides(defaultSlides);
-          setImagesLoaded(new Array(defaultSlides.length).fill(false));
-        }
+        console.warn('Failed to fetch hero slides, using defaults:', error);
       } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+        setLoading(false);
       }
     };
 
     fetchHeroSlides();
-    
-    return () => {
-      isMounted = false;
-    };
   }, []);
   
   const goToNextSlide = useCallback(() => {
@@ -157,7 +159,7 @@ const HomeHero = () => {
     }
   }, [goToNextSlide, totalSlides]);
 
-  // Preload images with intersection observer for better performance
+  // Preload images with better performance
   useEffect(() => {
     if (enabledSlides.length > 0) {
       // Preload current and next images first
