@@ -1,35 +1,6 @@
 import axios from 'axios';
 import { API_URL } from '@/config';
 
-export interface ProductReview {
-  _id?: string;
-  user: string;
-  name: string;
-  email?: string;
-  rating: number;
-  title: string;
-  comment: string;
-  isVerifiedPurchase?: boolean;
-  images?: string[];
-  pros?: string[];
-  cons?: string[];
-  qualityRating?: number;
-  valueRating?: number;
-  deliveryRating?: number;
-  helpfulVotes?: number;
-  totalVotes?: number;
-  helpfulnessPercentage?: number;
-  createdAt: string;
-  response?: {
-    text: string;
-    respondedBy: {
-      name: string;
-      role: string;
-    };
-    respondedAt: string;
-  };
-}
-
 export interface ProductData {
   _id?: string;
   title: string;
@@ -46,9 +17,6 @@ export interface ProductData {
   isNewArrival?: boolean;
   isFeatured?: boolean;
   hidden?: boolean;
-  rating?: number;
-  numReviews?: number;
-  reviews?: ProductReview[];
   createdAt?: string;
   updatedAt?: string;
 }
@@ -70,9 +38,6 @@ interface BackendProductData {
   isNew?: boolean; // Backend uses isNew
   isFeatured?: boolean;
   hidden?: boolean;
-  rating?: number;
-  numReviews?: number;
-  reviews?: ProductReview[];
   createdAt?: string;
   updatedAt?: string;
   [key: string]: unknown; // Allow other properties with unknown type
@@ -318,135 +283,4 @@ export const getTopProducts = async () => {
   return response.data;
 };
 
-// Create product review with enhanced features
-export const createProductReview = async (productId: string, review: {
-  rating: number;
-  title: string;
-  comment: string;
-  qualityRating?: number;
-  valueRating?: number;
-  deliveryRating?: number;
-  pros?: string[];
-  cons?: string[];
-  images?: string[];
-}) => {
-  const config = createAuthConfig();
-  const response = await axios.post<{ 
-    message: string;
-    review: ProductReview;
-    isVerifiedPurchase: boolean;
-  }>(`${API_URL}/products/${productId}/reviews`, review, config);
-  return response.data;
-};
 
-// Get product reviews with filtering
-export const getProductReviews = async (productId: string, options?: {
-  page?: number;
-  limit?: number;
-  sort?: 'newest' | 'oldest' | 'highest_rating' | 'lowest_rating' | 'most_helpful';
-  rating?: number;
-  verified?: boolean;
-  withImages?: boolean;
-}) => {
-  const queryParams = new URLSearchParams();
-  
-  if (options?.page) queryParams.append('page', options.page.toString());
-  if (options?.limit) queryParams.append('limit', options.limit.toString());
-  if (options?.sort) queryParams.append('sort', options.sort);
-  if (options?.rating) queryParams.append('rating', options.rating.toString());
-  if (options?.verified !== undefined) queryParams.append('verified', options.verified.toString());
-  if (options?.withImages !== undefined) queryParams.append('withImages', options.withImages.toString());
-
-  const response = await axios.get<{
-    reviews: ProductReview[];
-    pagination: {
-      currentPage: number;
-      totalPages: number;
-      totalReviews: number;
-      hasNext: boolean;
-      hasPrev: boolean;
-    };
-    stats: {
-      totalReviews: number;
-      averageRating: number;
-      verifiedPurchases: number;
-      verifiedPurchasePercentage: number;
-      ratingDistribution: {
-        1: number;
-        2: number;
-        3: number;
-        4: number;
-        5: number;
-      };
-      averageQualityRating?: number;
-      averageValueRating?: number;
-      averageDeliveryRating?: number;
-    };
-    helpfulReviews: ProductReview[];
-  }>(`${API_URL}/products/${productId}/reviews?${queryParams}`);
-  
-  return response.data;
-};
-
-// Vote on review helpfulness
-export const voteOnReview = async (reviewId: string, vote: 'helpful' | 'not_helpful') => {
-  const config = createAuthConfig();
-  const response = await axios.post<{
-    message: string;
-    helpfulVotes: number;
-    totalVotes: number;
-    helpfulnessPercentage: number;
-    userVote: string | null;
-  }>(`${API_URL}/reviews/${reviewId}/vote`, { vote }, config);
-  return response.data;
-};
-
-// Update review
-export const updateReview = async (reviewId: string, reviewData: {
-  rating?: number;
-  title?: string;  
-  comment?: string;
-  qualityRating?: number;
-  valueRating?: number;
-  deliveryRating?: number;
-  pros?: string[];
-  cons?: string[];
-  images?: string[];
-}) => {
-  const config = createAuthConfig();
-  const response = await axios.put<{
-    message: string;
-    review: ProductReview;
-  }>(`${API_URL}/reviews/${reviewId}`, reviewData, config);
-  return response.data;
-};
-
-// Delete review
-export const deleteReview = async (reviewId: string) => {
-  const config = createAuthConfig();
-  const response = await axios.delete<{ message: string }>(`${API_URL}/reviews/${reviewId}`, config);
-  return response.data;
-};
-
-// Get user's reviews
-export const getUserReviews = async (page = 1, limit = 10) => {
-  const config = createAuthConfig();
-  const response = await axios.get<{
-    reviews: (ProductReview & {
-      product: {
-        _id: string;
-        title: string;
-        images: string[];
-        price: number;
-      };
-    })[];
-    pagination: {
-      currentPage: number;
-      totalPages: number;
-      totalReviews: number;
-      hasNext: boolean;
-      hasPrev: boolean;
-    };
-  }>(`${API_URL}/reviews/my-reviews?page=${page}&limit=${limit}`, config);
-  return response.data;
-};

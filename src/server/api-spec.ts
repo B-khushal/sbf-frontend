@@ -199,7 +199,6 @@ export const productEndpoints = {
           price: 'number',
           category: 'string',
           image: 'string',
-          rating: 'number',
           stock: 'number',
           createdAt: 'string'
         }
@@ -222,8 +221,6 @@ export const productEndpoints = {
       category: 'string',
       image: 'string',
       images: 'string[]',
-      rating: 'number',
-      reviews: 'number',
       stock: 'number',
       features: 'string[]',
       specifications: 'object',

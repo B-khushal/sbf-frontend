@@ -22,15 +22,6 @@ export type Product = {
   featured?: boolean;
   isNewArrival?: boolean;
   isFeatured?: boolean;
-  rating?: number;
-  numReviews?: number;
-  reviews?: Array<{
-    user: string;
-    name: string;
-    rating: number;
-    comment: string;
-    createdAt: string;
-  }>;
 };
 
 type ProductGridProps = {
@@ -274,11 +265,6 @@ const ProductCard = ({ product, onAddToCart, onOpenCart }: {
     ? product.price - (product.price * product.discount / 100)
     : product.price;
 
-  // Calculate average rating
-  const averageRating = product.reviews && product.reviews.length > 0
-    ? product.reviews.reduce((acc, review) => acc + review.rating, 0) / product.reviews.length
-    : product.rating || 0;
-
   return (
     <div
       onClick={handleCardClick}
@@ -354,32 +340,6 @@ const ProductCard = ({ product, onAddToCart, onOpenCart }: {
             {product.title}
           </h3>
           <p className="text-xs sm:text-sm text-gray-500 capitalize">{product.category}</p>
-        </div>
-
-        {/* Rating and Reviews */}
-        <div className="flex items-center gap-1 mb-2 sm:mb-3">
-          {averageRating > 0 && (
-            <div className="flex items-center">
-              {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  className={cn(
-                    "w-3 h-3 sm:w-4 sm:h-4",
-                    i < averageRating
-                      ? "text-yellow-400 fill-yellow-400"
-                      : "text-gray-300"
-                  )}
-                />
-              ))}
-            </div>
-          )}
-          <span className="text-xs sm:text-sm text-gray-500">
-            {averageRating > 0 && `${averageRating.toFixed(1)} • `}
-            {product.numReviews && product.numReviews > 0 
-              ? `${product.numReviews} review${product.numReviews !== 1 ? 's' : ''}`
-              : 'No Reviews'
-            }
-          </span>
         </div>
 
         {/* Price */}

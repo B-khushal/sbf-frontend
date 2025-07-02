@@ -43,12 +43,10 @@ type Vendor = {
     ifscCode?: string;
     upiId?: string;
   };
-  stats?: {
+    stats?: {
     totalProducts: number;
     totalOrders: number;
     totalRevenue: number;
-    rating: number;
-    totalReviews: number;
   };
   commission?: {
     type: 'percentage' | 'fixed';
@@ -432,9 +430,9 @@ const AdminVendorManagement: React.FC = () => {
                   <TableCell className="text-center">
                     <div className="flex items-center justify-center gap-1">
                       <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                      <span>{(vendor.stats?.rating ?? 0).toFixed(1)}</span>
+                      <span>-</span>
                     </div>
-                    <div className="text-xs text-muted-foreground">({vendor.stats?.totalReviews ?? 0} reviews)</div>
+                    
                   </TableCell>
                   <TableCell>{new Date(vendor.createdAt).toLocaleDateString()}</TableCell>
                   <TableCell className="text-right">
@@ -658,8 +656,8 @@ const AdminVendorManagement: React.FC = () => {
                       <div className="text-sm text-muted-foreground">Revenue</div>
                     </div>
                     <div className="text-center p-3 rounded-lg border">
-                      <div className="text-2xl font-bold">{(selectedVendor.stats?.rating ?? 0).toFixed(1)}</div>
-                      <div className="text-sm text-muted-foreground">Rating</div>
+                                      <div className="text-2xl font-bold">-</div>
+                <div className="text-sm text-muted-foreground">Rating</div>
                     </div>
                     <div className="text-center p-3 rounded-lg border">
                       <div className="text-2xl font-bold">{selectedVendor.stats?.totalReviews || 0}</div>

@@ -336,20 +336,12 @@ const ShopPage = () => {
     // Enhanced sorting logic
     filtered.sort((a, b) => {
       switch (sortBy) {
-        case "price-low":
+        case "price-asc":
           return a.price - b.price;
-        case "price-high":
+        case "price-desc":
           return b.price - a.price;
-        case "name-asc":
-          return a.title.localeCompare(b.title);
-        case "name-desc":
-          return b.title.localeCompare(a.title);
         case "newest":
           return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
-        case "trending":
-          return (b.orderCount || 0) - (a.orderCount || 0);
-        case "rating":
-          return (b.rating || 0) - (a.rating || 0);
         default:
           return 0;
       }
@@ -533,7 +525,7 @@ const ShopPage = () => {
                   </FilterSection>
 
                   <FilterSection title="Sort By">
-                    {["newest", "price-asc", "price-desc", "top-rated"].map((sortOption) => (
+                    {["newest", "price-asc", "price-desc"].map((sortOption) => (
                       <button
                         key={sortOption}
                         onClick={() => setSortBy(sortOption)}

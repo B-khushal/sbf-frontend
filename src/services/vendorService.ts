@@ -95,9 +95,7 @@ export interface VendorProfile {
     totalProducts: number;
     totalOrders: number;
     totalRevenue: number;
-    totalCommissionPaid: number;
-    averageRating: number;
-    totalReviews: number;
+        totalCommissionPaid: number;
   };
   socialMedia: {
     facebook?: string;

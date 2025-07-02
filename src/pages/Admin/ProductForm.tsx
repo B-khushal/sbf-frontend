@@ -112,12 +112,9 @@ const initialFormData: ProductData = {
   images: [],
   details: [],
   careInstructions: [],
-  isNewArrival: false,
-  isFeatured: false,
-  rating: 0,
-  numReviews: 0,
-  reviews: [],
-  hidden: true  // 🔒 New products are hidden by default until admin makes them visible
+      isNewArrival: false,
+    isFeatured: false,
+    hidden: true  // 🔒 New products are hidden by default until admin makes them visible
 };
 
 const ProductForm = () => {
