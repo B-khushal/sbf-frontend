@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Link } from 'react-router-dom';
 import { Minus, Plus } from 'lucide-react';
+import { useCart } from '@/hooks/use-cart';
 
 type CartItem = {
   id: string;

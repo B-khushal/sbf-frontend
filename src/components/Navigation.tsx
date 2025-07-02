@@ -1,23 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { 
-  Menu, Search, ShoppingCart, User, X, Heart, Sparkles, 
-  TrendingUp, DollarSign, Store, LogIn, ChevronDown, 
-  MapPin, Phone, Mail, Globe, ArrowRight, Star, Zap,
-  Shield, Truck, RefreshCw, Gift, ShoppingBag, LogOut,
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator,
-  UserPlus, Settings, Package
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Menu,
+  X,
+  Search,
+  User,
+  ShoppingBag,
+  LogOut,
+  LogIn,
+  UserPlus,
+  Settings,
+  Package
 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import CurrencyConverter from './CurrencyConverter';
 import { Input } from '@/components/ui/input';
 import api from '@/services/api';
-import useCart from '@/hooks/use-cart';
+import { useCart } from '@/hooks/use-cart';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useAuth } from '@/hooks/use-auth';
-import { motion, AnimatePresence } from 'framer-motion';
 
 interface NavItem {
   href: string;
