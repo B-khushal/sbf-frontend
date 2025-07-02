@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo, Suspense, lazy } from "react";
 import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 import { AlertTriangle } from "lucide-react";
 import HomeHero from "../components/HomeHero";
-import Categories from "../components/Categories";
-import ProductGrid from "../components/ProductGrid";
-import OffersSection from "../components/OffersSection";
+// Lazy load heavy components
+const Categories = lazy(() => import("../components/Categories"));
+const ProductGrid = lazy(() => import("../components/ProductGrid"));
+const OffersSection = lazy(() => import("../components/OffersSection"));
 import useCart from "../hooks/use-cart";
 import { useSettings } from "../contexts/SettingsContext";
 import { useOfferPopup } from "../hooks/use-offer-popup";
@@ -18,55 +19,50 @@ const containerVariants = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.3,
-      delayChildren: 0.2
+      staggerChildren: 0.2,
+      delayChildren: 0.1
     }
   }
 };
 
 const itemVariants = {
-  hidden: { y: 40, opacity: 0 },
+  hidden: { y: 20, opacity: 0 },
   visible: {
     y: 0,
     opacity: 1,
     transition: {
-      duration: 0.8,
+      duration: 0.6,
       ease: [0.25, 0.46, 0.45, 0.94]
     }
   }
 };
 
 const fadeInVariants = {
-  hidden: { opacity: 0, scale: 0.95 },
+  hidden: { opacity: 0, scale: 0.98 },
   visible: {
     opacity: 1,
     scale: 1,
     transition: { 
-      duration: 1.2,
+      duration: 0.8,
       ease: [0.25, 0.46, 0.45, 0.94]
     }
   }
 };
 
+// Component loading wrapper
+const ComponentLoader = ({ children, fallback }: { children: React.ReactNode, fallback?: React.ReactNode }) => (
+  <Suspense fallback={fallback || (
+    <div className="text-center py-8">
+      <div className="inline-block w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-3"></div>
+      <p className="text-gray-600 text-sm">Loading...</p>
+    </div>
+  )}>
+    {children}
+  </Suspense>
+);
+
 const HomePage = () => {
-  const cartHook = useCart();
-  const { items, itemCount, isCartOpen, closeCart, updateItemQuantity, removeItem, openCart, addItem } = cartHook;
-  
-  // Debug cart hook
-  useEffect(() => {
-    console.log('HomePage - Cart hook values:', {
-      items: items.length,
-      itemCount,
-      isCartOpen,
-      functionsAvailable: {
-        closeCart: typeof closeCart,
-        updateItemQuantity: typeof updateItemQuantity,
-        removeItem: typeof removeItem,
-        openCart: typeof openCart,
-        addItem: typeof addItem
-      }
-    });
-  }, [items, itemCount, isCartOpen]);
+  const { addItem, openCart } = useCart();
   const { homeSections, loading: settingsLoading } = useSettings();
   const { currentOffer, isOpen: isOfferOpen, closeOffer } = useOfferPopup();
   
@@ -78,10 +74,94 @@ const HomePage = () => {
   // Intersection observer hooks for scroll animations
   const [philosophyRef, philosophyInView] = useInView({
     triggerOnce: true,
-    threshold: 0.2
+    threshold: 0.1,
+    rootMargin: "50px"
   });
 
-  // Function to render different section types
+  // Optimized data fetching with caching
+  useEffect(() => {
+    let isMounted = true;
+    
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        setError("");
+        
+        // Check cache first
+        const cacheKey = 'homepage_products';
+        const cacheExpiry = 5 * 60 * 1000; // 5 minutes
+        const cached = sessionStorage.getItem(cacheKey);
+        const cacheTime = sessionStorage.getItem(`${cacheKey}_time`);
+        
+        if (cached && cacheTime && (Date.now() - parseInt(cacheTime)) < cacheExpiry) {
+          const data = JSON.parse(cached);
+          if (isMounted) {
+            setFeaturedProducts(data.featured || []);
+            setNewProducts(data.new || []);
+            setLoading(false);
+          }
+          return;
+        }
+        
+        // Batch API calls for better performance
+        const [featuredResponse, newResponse] = await Promise.allSettled([
+          api.get('/products/featured'),
+          api.get('/products/new')
+        ]);
+        
+        if (!isMounted) return;
+        
+        const processProducts = (products) => {
+          if (!Array.isArray(products)) return [];
+          return products.map(product => ({
+            ...product,
+            _id: product._id || product.id
+          }));
+        };
+
+        const featuredData = featuredResponse.status === 'fulfilled' 
+          ? processProducts(featuredResponse.value.data.products || featuredResponse.value.data || [])
+          : [];
+          
+        const newData = newResponse.status === 'fulfilled'
+          ? processProducts(newResponse.value.data.products || newResponse.value.data || [])
+          : [];
+
+        setFeaturedProducts(featuredData);
+        setNewProducts(newData);
+        
+        // Cache the results
+        sessionStorage.setItem(cacheKey, JSON.stringify({
+          featured: featuredData,
+          new: newData
+        }));
+        sessionStorage.setItem(`${cacheKey}_time`, Date.now().toString());
+        
+      } catch (error) {
+        if (!isMounted) return;
+        console.error("Error fetching products:", error);
+        setError("Failed to load products. Please try again later.");
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchProducts();
+    
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Memoize enabled sections to prevent unnecessary re-renders
+  const enabledSections = useMemo(() => 
+    homeSections.filter(section => section.enabled),
+    [homeSections]
+  );
+
+  // Function to render different section types with lazy loading
   const renderSection = (section: any, index: number) => {
     switch (section.type) {
       case 'hero':
@@ -100,14 +180,9 @@ const HomePage = () => {
             variants={itemVariants}
             className="relative"
           >
-            {loading ? (
-              <div className="text-center py-12 sm:py-16">
-                <div className="inline-block w-12 h-12 sm:w-16 sm:h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
-                <p className="text-gray-600 text-sm sm:text-base">Loading categories...</p>
-              </div>
-            ) : (
+            <ComponentLoader>
               <Categories />
-            )}
+            </ComponentLoader>
           </motion.section>
         );
       
@@ -117,14 +192,16 @@ const HomePage = () => {
             variants={itemVariants}
             className="bg-white/30 backdrop-blur-sm"
           >
-            <ProductGrid
-              products={featuredProducts}
-              title={section.title || "✨ Featured Collection"}
-              subtitle={section.subtitle || "Explore our most popular floral arrangements"}
-              loading={loading}
-              onAddToCart={addItem}
-              onOpenCart={openCart}
-            />
+            <ComponentLoader>
+              <ProductGrid
+                products={featuredProducts}
+                title={section.title || "✨ Featured Collection"}
+                subtitle={section.subtitle || "Explore our most popular floral arrangements"}
+                loading={loading}
+                onAddToCart={addItem}
+                onOpenCart={openCart}
+              />
+            </ComponentLoader>
           </motion.section>
         );
       
@@ -134,7 +211,9 @@ const HomePage = () => {
             variants={itemVariants}
             className="relative"
           >
-            <OffersSection />
+            <ComponentLoader>
+              <OffersSection />
+            </ComponentLoader>
           </motion.section>
         );
       
@@ -144,14 +223,16 @@ const HomePage = () => {
             variants={itemVariants}
             className="bg-gradient-to-r from-primary/5 via-secondary/5 to-accent/5"
           >
-            <ProductGrid
-              products={newProducts}
-              title={section.title || "🌸 New Arrivals"}
-              subtitle={section.subtitle || "Discover our latest seasonal additions"}
-              loading={loading}
-              onAddToCart={addItem}
-              onOpenCart={openCart}
-            />
+            <ComponentLoader>
+              <ProductGrid
+                products={newProducts}
+                title={section.title || "🌸 New Arrivals"}
+                subtitle={section.subtitle || "Discover our latest seasonal additions"}
+                loading={loading}
+                onAddToCart={addItem}
+                onOpenCart={openCart}
+              />
+            </ComponentLoader>
           </motion.section>
         );
       
@@ -176,6 +257,7 @@ const HomePage = () => {
                       alt="Artisan Florist" 
                       className="object-cover w-full h-full transition-transform duration-700 hover:scale-105"
                       loading="lazy"
+                      decoding="async"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
                   </div>
@@ -229,43 +311,6 @@ const HomePage = () => {
     }
   };
 
-  useEffect(() => {
-    const fetchProducts = async (retryCount = 0) => {
-      try {
-        setLoading(true);
-        setError("");
-        const [featuredResponse, newResponse] = await Promise.all([
-          api.get('/products/featured'),
-          api.get('/products/new')
-        ]);
-        
-        const processProducts = (products) => {
-          if (!Array.isArray(products)) return [];
-          return products.map(product => ({
-            ...product,
-            _id: product._id || product.id
-          }));
-        };
-
-        setFeaturedProducts(processProducts(featuredResponse.data.products || featuredResponse.data || []));
-        setNewProducts(processProducts(newResponse.data.products || newResponse.data || []));
-      } catch (error) {
-        console.error("Error fetching products:", error);
-        setError("Failed to load products. Please try again later.");
-        
-        if (retryCount < 2) {
-          setTimeout(() => fetchProducts(retryCount + 1), 2000);
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProducts();
-  }, []);
-
-  const enabledSections = homeSections.filter(section => section.enabled);
-
   return (
     <div className="bg-gradient-to-br from-bloom-blue-50 via-bloom-pink-50 to-bloom-green-50 min-h-screen">
       
@@ -278,7 +323,7 @@ const HomePage = () => {
       )}
       
       <motion.div 
-        className="space-y-12 sm:space-y-16 md:space-y-20 lg:space-y-24 xl:space-y-28 pb-12 sm:pb-16 md:pb-20"
+        className="space-y-8 sm:space-y-12 md:space-y-16 lg:space-y-20 xl:space-y-24 pb-12 sm:pb-16 md:pb-20"
         variants={containerVariants}
         initial="hidden"
         animate="visible"

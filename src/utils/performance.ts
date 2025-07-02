@@ -9,6 +9,272 @@ interface PreloadOptions {
   onerror?: () => void;
 }
 
+// Performance monitoring utility for tracking page load times and user interactions
+
+interface PerformanceMetrics {
+  pageLoadTime: number;
+  firstContentfulPaint: number;
+  largestContentfulPaint: number;
+  firstInputDelay: number;
+  cumulativeLayoutShift: number;
+  timeToInteractive: number;
+}
+
+interface ApiCallMetrics {
+  url: string;
+  method: string;
+  duration: number;
+  status: number;
+  timestamp: number;
+}
+
+class PerformanceMonitor {
+  private static instance: PerformanceMonitor;
+  private apiCalls: ApiCallMetrics[] = [];
+  private metrics: Partial<PerformanceMetrics> = {};
+  private isProduction = import.meta.env.PROD;
+
+  private constructor() {
+    if (!this.isProduction) {
+      this.initializePerformanceObserver();
+      this.trackPageLoad();
+    }
+  }
+
+  public static getInstance(): PerformanceMonitor {
+    if (!PerformanceMonitor.instance) {
+      PerformanceMonitor.instance = new PerformanceMonitor();
+    }
+    return PerformanceMonitor.instance;
+  }
+
+  private initializePerformanceObserver() {
+    if (typeof window === 'undefined' || !('PerformanceObserver' in window)) {
+      return;
+    }
+
+    try {
+      // Track Web Vitals
+      const observer = new PerformanceObserver((entryList) => {
+        for (const entry of entryList.getEntries()) {
+          if (entry.entryType === 'largest-contentful-paint') {
+            this.metrics.largestContentfulPaint = entry.startTime;
+          }
+          
+          if (entry.entryType === 'first-input') {
+            this.metrics.firstInputDelay = (entry as any).processingStart - entry.startTime;
+          }
+          
+          if (entry.entryType === 'layout-shift' && !(entry as any).hadRecentInput) {
+            this.metrics.cumulativeLayoutShift = (this.metrics.cumulativeLayoutShift || 0) + (entry as any).value;
+          }
+        }
+      });
+
+      observer.observe({ entryTypes: ['largest-contentful-paint', 'first-input', 'layout-shift'] });
+    } catch (error) {
+      // Silent fail in production
+    }
+  }
+
+  private trackPageLoad() {
+    if (typeof window === 'undefined') return;
+
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
+        
+        if (navigation) {
+          this.metrics.pageLoadTime = navigation.loadEventEnd - navigation.navigationStart;
+          this.metrics.timeToInteractive = navigation.domInteractive - navigation.navigationStart;
+        }
+
+        // Track First Contentful Paint
+        const paintEntries = performance.getEntriesByType('paint');
+        const fcpEntry = paintEntries.find(entry => entry.name === 'first-contentful-paint');
+        if (fcpEntry) {
+          this.metrics.firstContentfulPaint = fcpEntry.startTime;
+        }
+
+        this.logMetrics();
+      }, 0);
+    });
+  }
+
+  public trackApiCall(url: string, method: string, startTime: number, status: number) {
+    if (this.isProduction) return;
+
+    const duration = performance.now() - startTime;
+    const metric: ApiCallMetrics = {
+      url,
+      method,
+      duration,
+      status,
+      timestamp: Date.now()
+    };
+
+    this.apiCalls.push(metric);
+
+    // Keep only last 50 API calls to prevent memory issues
+    if (this.apiCalls.length > 50) {
+      this.apiCalls = this.apiCalls.slice(-50);
+    }
+
+    // Log slow API calls
+    if (duration > 2000) {
+      console.warn(`🐌 Slow API call detected: ${method} ${url} took ${duration.toFixed(2)}ms`);
+    }
+  }
+
+  public getSlowApiCalls(threshold = 1000): ApiCallMetrics[] {
+    return this.apiCalls.filter(call => call.duration > threshold);
+  }
+
+  public getAverageApiCallTime(): number {
+    if (this.apiCalls.length === 0) return 0;
+    const total = this.apiCalls.reduce((sum, call) => sum + call.duration, 0);
+    return total / this.apiCalls.length;
+  }
+
+  public trackMemoryUsage() {
+    if (typeof window === 'undefined' || !('performance' in window) || !(performance as any).memory) {
+      return null;
+    }
+
+    const memory = (performance as any).memory;
+    return {
+      used: Math.round((memory.usedJSHeapSize / 1048576) * 100) / 100, // MB
+      total: Math.round((memory.totalJSHeapSize / 1048576) * 100) / 100, // MB
+      limit: Math.round((memory.jsHeapSizeLimit / 1048576) * 100) / 100, // MB
+    };
+  }
+
+  public trackComponentRender(componentName: string, startTime: number) {
+    if (this.isProduction) return;
+
+    const renderTime = performance.now() - startTime;
+    if (renderTime > 16) { // More than one frame (16ms at 60fps)
+      console.warn(`🎨 Slow component render: ${componentName} took ${renderTime.toFixed(2)}ms`);
+    }
+  }
+
+  public trackLargeBundle() {
+    if (typeof window === 'undefined') return;
+
+    // Track when main bundle loads
+    const scripts = Array.from(document.querySelectorAll('script[src]'));
+    scripts.forEach(script => {
+      const src = (script as HTMLScriptElement).src;
+      if (src.includes('index') || src.includes('main')) {
+        fetch(src, { method: 'HEAD' })
+          .then(response => {
+            const size = response.headers.get('content-length');
+            if (size && parseInt(size) > 500000) { // 500KB
+              console.warn(`📦 Large bundle detected: ${src} is ${(parseInt(size) / 1024).toFixed(2)}KB`);
+            }
+          })
+          .catch(() => {}); // Silent fail
+      }
+    });
+  }
+
+  private logMetrics() {
+    if (this.isProduction) return;
+
+    console.group('📊 Performance Metrics');
+    console.log('Page Load Time:', this.metrics.pageLoadTime?.toFixed(2), 'ms');
+    console.log('First Contentful Paint:', this.metrics.firstContentfulPaint?.toFixed(2), 'ms');
+    console.log('Largest Contentful Paint:', this.metrics.largestContentfulPaint?.toFixed(2), 'ms');
+    console.log('Time to Interactive:', this.metrics.timeToInteractive?.toFixed(2), 'ms');
+    console.log('First Input Delay:', this.metrics.firstInputDelay?.toFixed(2), 'ms');
+    console.log('Cumulative Layout Shift:', this.metrics.cumulativeLayoutShift?.toFixed(4));
+    
+    const memory = this.trackMemoryUsage();
+    if (memory) {
+      console.log('Memory Usage:', `${memory.used}MB / ${memory.total}MB (limit: ${memory.limit}MB)`);
+    }
+    
+    const avgApiTime = this.getAverageApiCallTime();
+    if (avgApiTime > 0) {
+      console.log('Average API Call Time:', avgApiTime.toFixed(2), 'ms');
+    }
+    
+    const slowCalls = this.getSlowApiCalls();
+    if (slowCalls.length > 0) {
+      console.warn('Slow API Calls:', slowCalls);
+    }
+    
+    console.groupEnd();
+  }
+
+  public getPerformanceReport() {
+    return {
+      metrics: this.metrics,
+      apiCalls: this.apiCalls,
+      slowApiCalls: this.getSlowApiCalls(),
+      averageApiTime: this.getAverageApiCallTime(),
+      memoryUsage: this.trackMemoryUsage()
+    };
+  }
+
+  // Clean up resources
+  public cleanup() {
+    this.apiCalls = [];
+    this.metrics = {};
+  }
+}
+
+// Helper functions for easy usage
+export const performanceMonitor = PerformanceMonitor.getInstance();
+
+export const trackApiCall = (url: string, method: string, startTime: number, status: number) => {
+  performanceMonitor.trackApiCall(url, method, startTime, status);
+};
+
+export const trackComponentRender = (componentName: string) => {
+  const startTime = performance.now();
+  return () => performanceMonitor.trackComponentRender(componentName, startTime);
+};
+
+export const trackMemoryUsage = () => performanceMonitor.trackMemoryUsage();
+
+export const getPerformanceReport = () => performanceMonitor.getPerformanceReport();
+
+// Utility to measure function execution time
+export const measureExecutionTime = <T extends (...args: any[]) => any>(
+  fn: T,
+  name: string
+): T => {
+  return ((...args: any[]) => {
+    const start = performance.now();
+    const result = fn(...args);
+    const end = performance.now();
+    
+    if (!import.meta.env.PROD && end - start > 10) {
+      console.log(`⏱️ ${name} execution time: ${(end - start).toFixed(2)}ms`);
+    }
+    
+    return result;
+  }) as T;
+};
+
+// Cache performance tracking
+export const trackCacheHit = (key: string, hit: boolean) => {
+  if (!import.meta.env.PROD) {
+    console.log(`💾 Cache ${hit ? 'HIT' : 'MISS'} for key: ${key}`);
+  }
+};
+
+// Image loading performance
+export const trackImageLoad = (src: string, startTime: number) => {
+  if (!import.meta.env.PROD) {
+    const loadTime = performance.now() - startTime;
+    if (loadTime > 1000) {
+      console.warn(`🖼️ Slow image load: ${src} took ${loadTime.toFixed(2)}ms`);
+    }
+  }
+};
+
 // Preload critical resources
 export const preloadResource = (href: string, options: PreloadOptions): void => {
   if (typeof window === 'undefined') return;

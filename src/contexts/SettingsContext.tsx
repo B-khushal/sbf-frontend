@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo, useCallback } from 'react';
 import api from '../services/api';
+import { trackApiCall } from '../utils/performance';
 
 interface NavigationItem {
   id: string;
@@ -182,6 +183,15 @@ const defaultCategories: Category[] = [
   },
 ];
 
+const defaultHomeSections: HomeSection[] = [
+  { id: 'hero', type: 'hero', title: 'Hero Section', subtitle: '', enabled: true, order: 0 },
+  { id: 'categories', type: 'categories', title: 'Categories', subtitle: '', enabled: true, order: 1 },
+  { id: 'featured', type: 'featured', title: 'Featured Products', subtitle: '', enabled: true, order: 2 },
+  { id: 'offers', type: 'offers', title: 'Special Offers', subtitle: '', enabled: true, order: 3 },
+  { id: 'new', type: 'new', title: 'New Arrivals', subtitle: '', enabled: true, order: 4 },
+  { id: 'philosophy', type: 'philosophy', title: 'Our Philosophy', subtitle: '', enabled: true, order: 5 },
+];
+
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
 export const useSettings = () => {
@@ -200,98 +210,135 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
   const [headerSettings, setHeaderSettings] = useState<HeaderSettings>(defaultHeaderSettings);
   const [footerSettings, setFooterSettings] = useState<FooterSettings>(defaultFooterSettings);
   const [categories, setCategories] = useState<Category[]>(defaultCategories);
-  const [homeSections, setHomeSections] = useState<HomeSection[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [homeSections, setHomeSections] = useState<HomeSection[]>(defaultHomeSections);
+  const [loading, setLoading] = useState(false); // Start with defaults, not loading
   const [error, setError] = useState<string | null>(null);
+  const [lastFetch, setLastFetch] = useState<number>(0);
 
-  const fetchSettings = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  // Cache settings for 10 minutes
+  const CACHE_DURATION = 10 * 60 * 1000;
 
-      // Fetch all settings in parallel
-      const [headerRes, footerRes, categoriesRes, sectionsRes] = await Promise.allSettled([
-        api.get('/settings/header'),
-        api.get('/settings/footer'),
-        api.get('/settings/categories'),
-        api.get('/settings/home-sections'),
-      ]);
-
-      // Handle header settings
-      if (headerRes.status === 'fulfilled') {
-        setHeaderSettings(headerRes.value.data);
-      } else {
-        console.warn('Failed to fetch header settings, using defaults');
-      }
-
-      // Handle footer settings
-      if (footerRes.status === 'fulfilled') {
-        setFooterSettings(footerRes.value.data);
-      } else {
-        console.warn('Failed to fetch footer settings, using defaults');
-      }
-
-      // Handle categories
-      if (categoriesRes.status === 'fulfilled') {
-        const fetchedCategories = categoriesRes.value.data || [];
-        // Only show enabled categories, sorted by order
-        const enabledCategories = fetchedCategories
-          .filter((cat: Category) => cat.enabled)
-          .sort((a: Category, b: Category) => a.order - b.order);
-        setCategories(enabledCategories.length > 0 ? enabledCategories : defaultCategories);
-      } else {
-        console.warn('Failed to fetch categories, using defaults');
-      }
-
-      // Handle home sections
-      if (sectionsRes.status === 'fulfilled') {
-        let fetchedSections = sectionsRes.value.data || [];
-        
-        // Ensure "offers" section exists
-        const offersSectionExists = fetchedSections.some((section: HomeSection) => section.type === 'offers');
-        if (!offersSectionExists) {
-          fetchedSections.push({
-            id: "offers",
-            type: "offers",
-            title: "Exclusive Offers",
-            subtitle: "Don't miss out on our special deals",
-            enabled: true,
-            order: 3 // Default order, can be adjusted
-          });
-        }
-        
-        // Only show enabled sections, sorted by order
-        const enabledSections = fetchedSections
-          .filter((section: HomeSection) => section.enabled)
-          .sort((a: HomeSection, b: HomeSection) => a.order - b.order);
-        
-        setHomeSections(enabledSections);
-      } else {
-        console.warn('Failed to fetch home sections, using defaults');
-        setHomeSections([]);
-      }
-
-    } catch (err) {
-      console.error('Error fetching settings:', err);
-      setError('Failed to load website settings');
-    } finally {
-      setLoading(false);
+  const fetchSettings = useCallback(async (forceRefetch = false) => {
+    // Check if we need to fetch based on cache
+    const now = Date.now();
+    if (!forceRefetch && (now - lastFetch) < CACHE_DURATION) {
+      return; // Use cached data
     }
-  };
 
+    let isMounted = true;
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Batch all settings requests
+      const requests = [
+        { method: 'get', url: '/settings/header' },
+        { method: 'get', url: '/settings/footer' },
+        { method: 'get', url: '/settings/categories' },
+        { method: 'get', url: '/settings/home-sections' }
+      ];
+
+      const startTime = performance.now();
+      const responses = await api.batch(requests);
+      
+      if (!isMounted) return;
+
+      // Track API performance
+      trackApiCall('/settings/batch', 'batch', startTime, 200);
+
+      // Process responses
+      const [headerResponse, footerResponse, categoriesResponse, homeSectionsResponse] = responses;
+
+      // Header settings
+      if (headerResponse.status === 'fulfilled') {
+        const headerData = headerResponse.value.data;
+        if (headerData && typeof headerData === 'object') {
+          setHeaderSettings(prev => ({ ...prev, ...headerData }));
+        }
+      }
+
+      // Footer settings
+      if (footerResponse.status === 'fulfilled') {
+        const footerData = footerResponse.value.data;
+        if (footerData && typeof footerData === 'object') {
+          setFooterSettings(prev => ({ ...prev, ...footerData }));
+        }
+      }
+
+      // Categories
+      if (categoriesResponse.status === 'fulfilled') {
+        const categoriesData = categoriesResponse.value.data;
+        if (Array.isArray(categoriesData)) {
+          const processedCategories = categoriesData
+            .filter(cat => cat.enabled)
+            .sort((a, b) => a.order - b.order);
+          
+          // Only update if different from current
+          if (JSON.stringify(processedCategories) !== JSON.stringify(categories)) {
+            setCategories(processedCategories);
+          }
+        }
+      }
+
+      // Home sections
+      if (homeSectionsResponse.status === 'fulfilled') {
+        const sectionsData = homeSectionsResponse.value.data;
+        if (Array.isArray(sectionsData)) {
+          const processedSections = sectionsData
+            .filter(section => section.enabled)
+            .sort((a, b) => a.order - b.order);
+          
+          // Only update if different from current
+          if (JSON.stringify(processedSections) !== JSON.stringify(homeSections)) {
+            setHomeSections(processedSections);
+          }
+        }
+      }
+
+      setLastFetch(now);
+
+    } catch (error) {
+      if (!isMounted) return;
+      
+      // Silent error handling - keep defaults
+      console.warn('Settings fetch failed, using defaults:', error);
+      setError('Failed to load some settings');
+      
+      // Reset to defaults if no data exists
+      if (categories.length === 0) setCategories(defaultCategories);
+      if (homeSections.length === 0) setHomeSections(defaultHomeSections);
+    } finally {
+      if (isMounted) {
+        setLoading(false);
+      }
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [lastFetch, categories, homeSections]);
+
+  const refetchSettings = useCallback(() => fetchSettings(true), [fetchSettings]);
+
+  // Initial fetch with delay to prevent blocking
   useEffect(() => {
-    fetchSettings();
-  }, []);
+    const timer = setTimeout(() => {
+      fetchSettings();
+    }, 100);
 
-  const contextValue: SettingsContextType = {
+    return () => clearTimeout(timer);
+  }, [fetchSettings]);
+
+  // Memoize context value to prevent unnecessary re-renders
+  const contextValue = useMemo((): SettingsContextType => ({
     headerSettings,
     footerSettings,
     categories,
     homeSections,
     loading,
     error,
-    refetchSettings: fetchSettings,
-  };
+    refetchSettings,
+  }), [headerSettings, footerSettings, categories, homeSections, loading, error, refetchSettings]);
 
   return (
     <SettingsContext.Provider value={contextValue}>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -18,131 +18,181 @@ interface HeroSlide {
   order: number;
 }
 
+// Default slides for immediate rendering
+const defaultSlides: HeroSlide[] = [
+  {
+    id: 1,
+    title: "Spring Collection",
+    subtitle: "Freshly picked arrangements to brighten your day",
+    image: "/images/1.jpg",
+    ctaText: "Shop Now",
+    ctaLink: "/shop",
+    enabled: true,
+    order: 0
+  },
+  {
+    id: 2,
+    title: "Signature Bouquets",
+    subtitle: "Handcrafted with love and attention to detail",
+    image: "/images/2.jpg",
+    ctaText: "Shop Now",
+    ctaLink: "/shop",
+    enabled: true,
+    order: 1
+  },
+  {
+    id: 3,
+    title: "Seasonal Specials",
+    subtitle: "Limited edition arrangements for every occasion",
+    image: "/images/3.jpg",
+    ctaText: "Shop Now",
+    ctaLink: "/shop",
+    enabled: true,
+    order: 2
+  }
+];
+
 const HomeHero = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
-  const [imagesLoaded, setImagesLoaded] = useState<boolean[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [heroSlides, setHeroSlides] = useState<HeroSlide[]>(defaultSlides);
+  const [imagesLoaded, setImagesLoaded] = useState<boolean[]>(new Array(defaultSlides.length).fill(false));
+  const [loading, setLoading] = useState(false); // Start with default slides
   const navigate = useNavigate();
 
-  // Fetch hero slides from API
+  // Memoize slide operations for better performance
+  const enabledSlides = useMemo(() => 
+    heroSlides.filter(slide => slide.enabled).sort((a, b) => a.order - b.order),
+    [heroSlides]
+  );
+
+  const totalSlides = enabledSlides.length;
+
+  // Fetch hero slides from API with caching
   useEffect(() => {
+    let isMounted = true;
+    
     const fetchHeroSlides = async () => {
       try {
-        const response = await api.get('/settings/hero-slides');
-        const slides = response.data.filter((slide: HeroSlide) => slide.enabled)
-                                .sort((a: HeroSlide, b: HeroSlide) => a.order - b.order);
-        setHeroSlides(slides);
-        setImagesLoaded(new Array(slides.length).fill(false));
+        // Try to get cached data first
+        const response = await api.getCached('/settings/hero-slides', {
+          cache: true,
+          cacheTime: 10 * 60 * 1000 // Cache for 10 minutes
+        });
+        
+        if (!isMounted) return;
+        
+        const slides = response.data?.filter((slide: HeroSlide) => slide.enabled)
+                                ?.sort((a: HeroSlide, b: HeroSlide) => a.order - b.order) || defaultSlides;
+        
+        // Only update if slides are different from current
+        if (JSON.stringify(slides) !== JSON.stringify(heroSlides)) {
+          setHeroSlides(slides);
+          setImagesLoaded(new Array(slides.length).fill(false));
+          setCurrentSlide(0); // Reset to first slide
+        }
       } catch (error) {
-        console.error('Error fetching hero slides:', error);
-        // Fallback to default slides if API fails
-        const defaultSlides = [
-          {
-            id: 1,
-            title: "Spring Collection",
-            subtitle: "Freshly picked arrangements to brighten your day",
-            image: "/images/1.jpg",
-            ctaText: "Shop Now",
-            ctaLink: "/shop",
-            enabled: true,
-            order: 0
-          },
-          {
-            id: 2,
-            title: "Signature Bouquets",
-            subtitle: "Handcrafted with love and attention to detail",
-            image: "/images/2.jpg",
-            ctaText: "Shop Now",
-            ctaLink: "/shop",
-            enabled: true,
-            order: 1
-          },
-          {
-            id: 3,
-            title: "Seasonal Specials",
-            subtitle: "Limited edition arrangements for every occasion",
-            image: "/images/3.jpg",
-            ctaText: "Shop Now",
-            ctaLink: "/shop",
-            enabled: true,
-            order: 2
-          }
-        ];
-        setHeroSlides(defaultSlides);
-        setImagesLoaded(new Array(defaultSlides.length).fill(false));
+        // Silent error handling - keep default slides
+        if (isMounted && heroSlides.length === 0) {
+          setHeroSlides(defaultSlides);
+          setImagesLoaded(new Array(defaultSlides.length).fill(false));
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchHeroSlides();
+    
+    return () => {
+      isMounted = false;
+    };
   }, []);
   
-  const goToNextSlide = () => {
-    if (!isTransitioning && heroSlides.length > 0) {
+  const goToNextSlide = useCallback(() => {
+    if (!isTransitioning && totalSlides > 0) {
       setIsTransitioning(true);
-      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+      setCurrentSlide((prev) => (prev + 1) % totalSlides);
     }
-  };
+  }, [isTransitioning, totalSlides]);
   
-  const goToPrevSlide = () => {
-    if (!isTransitioning && heroSlides.length > 0) {
+  const goToPrevSlide = useCallback(() => {
+    if (!isTransitioning && totalSlides > 0) {
       setIsTransitioning(true);
-      setCurrentSlide((prev) => (prev - 1 + heroSlides.length) % heroSlides.length);
+      setCurrentSlide((prev) => (prev - 1 + totalSlides) % totalSlides);
     }
-  };
+  }, [isTransitioning, totalSlides]);
 
-  const handleImageLoad = (index: number) => {
+  const handleImageLoad = useCallback((index: number) => {
     setImagesLoaded(prev => {
       const newLoaded = [...prev];
       newLoaded[index] = true;
       return newLoaded;
     });
-  };
+  }, []);
 
-  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>, index: number) => {
-    console.error(`Failed to load image for slide ${index}:`, heroSlides[index]?.image);
+  const handleImageError = useCallback((e: React.SyntheticEvent<HTMLImageElement>, index: number) => {
     const target = e.target as HTMLImageElement;
     target.src = 'https://placehold.co/800x400?text=Image+Not+Found';
     handleImageLoad(index);
-  };
+  }, [handleImageLoad]);
   
   useEffect(() => {
-    if (heroSlides.length > 0) {
+    if (totalSlides > 0) {
       const timer = setTimeout(() => {
         setIsTransitioning(false);
-      }, 700);
+      }, 500); // Reduced transition time
       
       return () => clearTimeout(timer);
     }
-  }, [currentSlide, heroSlides.length]);
+  }, [currentSlide, totalSlides]);
   
+  // Auto-slide with cleanup
   useEffect(() => {
-    if (heroSlides.length > 1) {
-      const interval = setInterval(goToNextSlide, 6000);
+    if (totalSlides > 1) {
+      const interval = setInterval(goToNextSlide, 5000); // Reduced from 6s to 5s
       return () => clearInterval(interval);
     }
-  }, [currentSlide, isTransitioning, heroSlides.length]);
+  }, [goToNextSlide, totalSlides]);
 
-  // Preload images
+  // Preload images with intersection observer for better performance
   useEffect(() => {
-    if (heroSlides.length > 0) {
-      heroSlides.forEach((slide, index) => {
+    if (enabledSlides.length > 0) {
+      // Preload current and next images first
+      const preloadImage = (slide: HeroSlide, index: number) => {
         const img = new Image();
         img.onload = () => handleImageLoad(index);
-        img.onerror = () => {
-          console.error(`Failed to preload image: ${slide.image}`);
-          handleImageLoad(index);
-        };
+        img.onerror = () => handleImageLoad(index);
         img.src = slide.image;
-      });
-    }
-  }, [heroSlides]);
+      };
 
-  // Show loading state
-  if (loading) {
+      // Preload current slide immediately
+      if (enabledSlides[currentSlide]) {
+        preloadImage(enabledSlides[currentSlide], currentSlide);
+      }
+
+      // Preload next slide
+      if (enabledSlides[(currentSlide + 1) % totalSlides]) {
+        setTimeout(() => {
+          preloadImage(enabledSlides[(currentSlide + 1) % totalSlides], (currentSlide + 1) % totalSlides);
+        }, 100);
+      }
+
+      // Preload remaining slides with delay
+      setTimeout(() => {
+        enabledSlides.forEach((slide, index) => {
+          if (index !== currentSlide && index !== (currentSlide + 1) % totalSlides) {
+            preloadImage(slide, index);
+          }
+        });
+      }, 500);
+    }
+  }, [enabledSlides, currentSlide, totalSlides, handleImageLoad]);
+
+  // Show loading state only if no slides available
+  if (loading && enabledSlides.length === 0) {
     return (
       <div className="relative h-[50vh] xs:h-[55vh] sm:h-[60vh] md:h-[65vh] lg:h-[70vh] xl:h-[75vh] 2xl:h-[80vh] overflow-hidden bg-gray-200 rounded-xl sm:rounded-2xl lg:rounded-3xl mx-3 sm:mx-4 md:mx-6 lg:mx-8 shadow-lg sm:shadow-xl lg:shadow-2xl animate-pulse">
         <div className="absolute inset-0 flex items-center justify-center">
@@ -153,7 +203,7 @@ const HomeHero = () => {
   }
 
   // Show fallback if no slides
-  if (heroSlides.length === 0) {
+  if (enabledSlides.length === 0) {
     return (
       <div className="relative h-[50vh] xs:h-[55vh] sm:h-[60vh] md:h-[65vh] lg:h-[70vh] xl:h-[75vh] 2xl:h-[80vh] overflow-hidden bg-gradient-to-br from-primary/20 to-secondary/20 rounded-xl sm:rounded-2xl lg:rounded-3xl mx-3 sm:mx-4 md:mx-6 lg:mx-8 shadow-lg sm:shadow-xl lg:shadow-2xl">
         <div className="absolute inset-0 flex items-center justify-center text-center text-gray-600 px-6">
@@ -173,11 +223,11 @@ const HomeHero = () => {
     <div className="relative">
       {/* Hero Slides */}
       <div className="relative h-[50vh] xs:h-[55vh] sm:h-[60vh] md:h-[65vh] lg:h-[70vh] xl:h-[75vh] 2xl:h-[80vh] overflow-hidden bg-gray-900 rounded-xl sm:rounded-2xl lg:rounded-3xl mx-3 sm:mx-4 md:mx-6 lg:mx-8 shadow-lg sm:shadow-xl lg:shadow-2xl">
-        {heroSlides.map((slide, index) => (
+        {enabledSlides.map((slide, index) => (
           <div
             key={slide.id}
             className={cn(
-              "absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out",
+              "absolute inset-0 w-full h-full transition-opacity duration-500 ease-in-out",
               index === currentSlide ? "opacity-100 z-10" : "opacity-0 z-0"
             )}
           >
@@ -193,81 +243,76 @@ const HomeHero = () => {
               src={slide.image}
               alt={slide.title}
               className={cn(
-                "absolute inset-0 w-full h-full object-cover transition-all duration-700 rounded-xl sm:rounded-2xl lg:rounded-3xl",
+                "absolute inset-0 w-full h-full object-cover transition-all duration-500 rounded-xl sm:rounded-2xl lg:rounded-3xl",
                 imagesLoaded[index] ? "opacity-100 scale-100" : "opacity-0 scale-105"
               )}
               onLoad={() => handleImageLoad(index)}
               onError={(e) => handleImageError(e, index)}
               loading={index === 0 ? "eager" : "lazy"}
+              decoding="async"
             />
             
-            {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-black/20 rounded-xl sm:rounded-2xl lg:rounded-3xl" />
-        
+            {/* Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent rounded-xl sm:rounded-2xl lg:rounded-3xl" />
+            
             {/* Content */}
-            <div className="absolute inset-0 flex items-center justify-center z-10">
-              <div className="text-center text-white max-w-6xl mx-auto px-3 xs:px-4 sm:px-6 md:px-8 lg:px-12">
-                <div className={cn(
-                  "transition-all duration-700 ease-out",
-                  index === currentSlide 
-                    ? "opacity-100 transform translate-y-0" 
-                    : "opacity-0 transform translate-y-8"
-                )}>
-                  <h1 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl font-bold mb-2 xs:mb-3 sm:mb-4 md:mb-5 lg:mb-6 leading-tight drop-shadow-lg">
-                    {slide.title}
-                  </h1>
-                  <p className="text-xs xs:text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl mb-4 xs:mb-5 sm:mb-6 md:mb-7 lg:mb-8 opacity-90 max-w-4xl mx-auto leading-relaxed drop-shadow-md">
-                    {slide.subtitle}
-                  </p>
-                  <Button
-                    size="lg"
-                    className="bg-white text-primary hover:bg-gray-100 px-4 xs:px-5 sm:px-6 md:px-7 lg:px-8 py-2 xs:py-2.5 sm:py-3 md:py-3.5 lg:py-4 text-xs xs:text-sm sm:text-base md:text-lg lg:text-xl font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                    onClick={() => navigate(slide.ctaLink)}
-                  >
-                    {slide.ctaText}
-                    <ArrowRight className="ml-1.5 xs:ml-2 w-3 h-3 xs:w-4 xs:h-4 sm:w-5 sm:h-5" />
-                  </Button>
-                </div>
+            <div className="absolute inset-0 flex items-center justify-start px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20">
+              <div className="max-w-lg lg:max-w-xl xl:max-w-2xl text-white">
+                <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black mb-3 sm:mb-4 lg:mb-6 leading-tight">
+                  {slide.title}
+                </h1>
+                <p className="text-sm xs:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl text-white/90 mb-6 sm:mb-8 lg:mb-10 leading-relaxed">
+                  {slide.subtitle}
+                </p>
+                <Button
+                  onClick={() => navigate(slide.ctaLink)}
+                  size="lg"
+                  className="bg-white text-gray-800 hover:bg-white/90 hover:scale-105 transition-all duration-300 text-sm sm:text-base lg:text-lg px-6 sm:px-8 lg:px-10 py-2 sm:py-3 lg:py-4"
+                >
+                  {slide.ctaText}
+                  <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6" />
+                </Button>
               </div>
             </div>
           </div>
         ))}
         
-        {/* Navigation Controls - Only show if multiple slides */}
-        {heroSlides.length > 1 && (
-          <div className="absolute bottom-3 xs:bottom-4 sm:bottom-5 md:bottom-6 left-1/2 transform -translate-x-1/2 flex items-center gap-2 xs:gap-3 sm:gap-4 z-20">
-            <Button
-              variant="outline"
-              size="icon"
-              className="w-8 h-8 xs:w-9 xs:h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 lg:w-12 lg:h-12 bg-white/20 hover:bg-white/30 border-white/30 text-white backdrop-blur-sm rounded-full transition-all duration-300 hover:scale-110"
+        {/* Navigation Arrows */}
+        {totalSlides > 1 && (
+          <>
+            <button
               onClick={goToPrevSlide}
+              className="absolute left-4 sm:left-6 lg:left-8 top-1/2 transform -translate-y-1/2 z-20 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full p-2 sm:p-3 lg:p-4 transition-all duration-300 hover:scale-110"
+              aria-label="Previous slide"
             >
-              <ChevronLeft className="w-4 h-4 xs:w-5 xs:h-5 sm:w-6 sm:h-6" />
-            </Button>
-            
-            <div className="flex gap-1.5 xs:gap-2">
-              {heroSlides.map((_, index) => (
-                <button
-                  key={index}
-                  className={cn(
-                    "w-2 h-2 xs:w-2.5 xs:h-2.5 sm:w-3 sm:h-3 md:w-4 md:h-4 rounded-full transition-all duration-300",
-                    index === currentSlide 
-                      ? 'bg-white scale-125 shadow-lg'
-                      : 'bg-white/50 hover:bg-white/75 hover:scale-110'
-                  )}
-                  onClick={() => setCurrentSlide(index)}
-                />
-              ))}
-            </div>
-            
-            <Button
-              variant="outline"
-              size="icon"
-              className="w-8 h-8 xs:w-9 xs:h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 lg:w-12 lg:h-12 bg-white/20 hover:bg-white/30 border-white/30 text-white backdrop-blur-sm rounded-full transition-all duration-300 hover:scale-110"
+              <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-white" />
+            </button>
+            <button
               onClick={goToNextSlide}
+              className="absolute right-4 sm:right-6 lg:right-8 top-1/2 transform -translate-y-1/2 z-20 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full p-2 sm:p-3 lg:p-4 transition-all duration-300 hover:scale-110"
+              aria-label="Next slide"
             >
-              <ChevronRight className="w-4 h-4 xs:w-5 xs:h-5 sm:w-6 sm:h-6" />
-            </Button>
+              <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-white" />
+            </button>
+          </>
+        )}
+        
+        {/* Slide Indicators */}
+        {totalSlides > 1 && (
+          <div className="absolute bottom-4 sm:bottom-6 lg:bottom-8 left-1/2 transform -translate-x-1/2 z-20 flex space-x-2 sm:space-x-3">
+            {enabledSlides.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => !isTransitioning && setCurrentSlide(index)}
+                className={cn(
+                  "w-2 h-2 sm:w-3 sm:h-3 lg:w-4 lg:h-4 rounded-full transition-all duration-300",
+                  index === currentSlide
+                    ? "bg-white scale-125"
+                    : "bg-white/50 hover:bg-white/75 hover:scale-110"
+                )}
+                aria-label={`Go to slide ${index + 1}`}
+              />
+            ))}
           </div>
         )}
       </div>
