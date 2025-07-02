@@ -426,7 +426,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
           {/* Product Images */}
           <div className="relative space-y-4">
-            <div className="relative pb-[150%] bg-secondary/20 overflow-hidden rounded-lg shadow-md">
+            <div className="relative pb-[125%] bg-secondary/20 overflow-hidden rounded-lg shadow-md">
               <img
                 src={imageUrl}
                 alt={product.title}
@@ -483,7 +483,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                     key={index}
                     onClick={() => setSelectedImage(index)}
                     className={cn(
-                      "w-16 h-24 relative overflow-hidden rounded-md shadow-md transition-all duration-300 ease-smooth",
+                      "w-16 h-20 relative overflow-hidden rounded-md shadow-md transition-all duration-300 ease-smooth",
                       selectedImage === index
                         ? "ring-2 ring-primary ring-offset-2"
                         : "opacity-70 hover:opacity-100"
