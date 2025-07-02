@@ -362,7 +362,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
   };
 
   return (
-    <section className="pt-24 pb-16 px-6 md:px-8 animate-fade-in">
+    <section className="pt-12 sm:pt-16 pb-16 px-6 md:px-8 animate-fade-in">
       <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
           {/* Product Images */}

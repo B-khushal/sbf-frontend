@@ -14,7 +14,6 @@ const ProductPage = () => {
   const { id, productId } = useParams<{ id?: string; productId?: string }>();
   const navigate = useNavigate();
   const [product, setProduct] = useState<Product | null>(null);
-  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   
   const { 
@@ -32,14 +31,6 @@ const ProductPage = () => {
       const productData = await productService.getProductById(actualId!);
       setProduct(productData);
       console.log("ProductPage - Product with care instructions:", productData);
-
-      // Fetch related products
-      const relatedResponse = await api.get(`/products?category=${productData.category}`);
-      setRelatedProducts(
-        relatedResponse.data.products
-          .filter((p: Product) => p._id !== actualId)
-          .slice(0, 4)
-      );
     } catch (error) {
       console.error("Error fetching product:", error);
       // Redirect to shop instead of showing not found
@@ -110,15 +101,6 @@ const ProductPage = () => {
     <div className="min-h-screen flex flex-col">
       <main className="flex-1">
         <ProductDetail product={product} onAddToCart={handleAddToCart} onReviewSubmit={fetchProduct} />
-        
-        {relatedProducts.length > 0 && (
-          <ProductGrid 
-            products={relatedProducts} 
-            title="You Might Also Like"
-            subtitle="Similar products you may be interested in"
-            className="bg-muted/30"
-          />
-        )}
       </main>
     </div>
   );

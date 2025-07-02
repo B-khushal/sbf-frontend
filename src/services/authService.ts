@@ -152,12 +152,18 @@ export const forgotPassword = async (email: string) => {
 };
 
 // Social login - updated to use real Google OAuth
-export const socialLogin = async (provider: string, credential?: string) => {
+export const socialLogin = async (provider: string, credential?: string, agreedToTerms?: boolean) => {
   try {
     const response = await api.post('/auth/google', { 
       provider,
-      credential 
+      credential,
+      agreedToTerms 
     });
+    
+    // If this is a new user and they haven't accepted terms yet
+    if (response.data.isNewUser && !agreedToTerms) {
+      return response.data;
+    }
     
     if (response.data && response.data.token) {
       localStorage.setItem('user', JSON.stringify(response.data));

@@ -33,7 +33,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<{ success: boolean; redirectTo?: string }>;
   signup: (data: SignupData) => Promise<{ success: boolean; redirectTo?: string }>;
   logout: () => void;
-  socialLogin: (provider: string, credential?: string) => Promise<{ success: boolean; redirectTo?: string }>;
+  socialLogin: (provider: string, credential?: string, agreedToTerms?: boolean) => Promise<{ success: boolean; redirectTo?: string; isNewUser?: boolean }>;
 }
 
 // Create the context with a default value
@@ -235,10 +235,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Social login function
-  const handleSocialLogin = async (provider: string, credential?: string) => {
+  const handleSocialLogin = async (provider: string, credential?: string, agreedToTerms?: boolean) => {
     try {
       setIsLoading(true);
-      const socialLoginResponse = await socialLogin(provider, credential);
+      const socialLoginResponse = await socialLogin(provider, credential, agreedToTerms);
+      
+      // If this is a new user and they haven't accepted terms yet
+      if (socialLoginResponse.isNewUser && !agreedToTerms) {
+        return { success: false, isNewUser: true };
+      }
+      
       const profileData = await getUserProfile();
       
       const user = {
@@ -256,7 +262,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       localStorage.setItem('isAuthenticated', 'true');
       localStorage.setItem('user', JSON.stringify(profileData));
-      localStorage.setItem('token', socialLoginResponse.token); // Also store the token separately
+      localStorage.setItem('token', socialLoginResponse.token);
       
       // Determine redirect destination based on user role
       let redirectTo = '/';
