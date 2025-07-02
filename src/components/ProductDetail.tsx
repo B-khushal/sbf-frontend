@@ -9,6 +9,7 @@ import ContactModal from '@/components/ui/ContactModal';
 import useCart from '@/hooks/use-cart';
 import { Button } from './ui/button';
 import productService, { ProductData } from '@/services/productService';
+import ProductReviews from '@/components/ProductReviews';
 
 type ProductDetailProps = {
   product: {
@@ -603,6 +604,9 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
             )}
           </div>
         </div>
+        
+        {/* Product Reviews Section */}
+        <ProductReviews productId={product._id} onReviewSubmit={onReviewSubmit} />
         
         {/* Recommended Products Section */}
         <RecommendedProducts productId={product._id} category={product.category} />
