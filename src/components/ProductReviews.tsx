@@ -105,6 +105,21 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
     ratingDistribution: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }
   });
 
+  // Safe function to normalize review stats
+  const normalizeReviewStats = (stats: any) => {
+    return {
+      totalReviews: Number(stats?.totalReviews) || 0,
+      averageRating: Number(stats?.averageRating) || 0,
+      ratingDistribution: {
+        5: Number(stats?.ratingDistribution?.[5]) || 0,
+        4: Number(stats?.ratingDistribution?.[4]) || 0,
+        3: Number(stats?.ratingDistribution?.[3]) || 0,
+        2: Number(stats?.ratingDistribution?.[2]) || 0,
+        1: Number(stats?.ratingDistribution?.[1]) || 0,
+      }
+    };
+  };
+
   // Safe hooks with error handling
   let user = null;
   let toast = null;
@@ -139,13 +154,13 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
         
         const data = await getProductReviews(productId);
         console.log('✅ Reviews fetched successfully:', data);
+        console.log('📊 Raw stats from API:', data?.stats);
+        
+        const normalizedStats = normalizeReviewStats(data?.stats);
+        console.log('📊 Normalized stats:', normalizedStats);
         
         setReviews(data?.reviews || []);
-        setReviewStats(data?.stats || {
-          totalReviews: 0,
-          averageRating: 0,
-          ratingDistribution: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }
-        });
+        setReviewStats(normalizedStats);
       } catch (error) {
         console.error('❌ Error fetching reviews:', error);
         setComponentError('Failed to load reviews');
@@ -232,7 +247,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
       console.log('🔄 Refreshing reviews...');
       const data = await getProductReviews(productId);
       setReviews(data?.reviews || []);
-      setReviewStats(data?.stats || reviewStats);
+      setReviewStats(normalizeReviewStats(data?.stats));
       
       console.log('🔄 Calling onReviewSubmit callback...');
       if (onReviewSubmit) {
@@ -347,32 +362,37 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, onReviewSubm
                 {/* Average Rating */}
                 <div className="text-center md:text-left">
                   <div className="flex items-center gap-2 justify-center md:justify-start mb-2">
-                    <span className="text-3xl font-bold">{reviewStats.averageRating.toFixed(1)}</span>
-                    {renderStars(Math.round(reviewStats.averageRating))}
-                    <span className="text-gray-600">({reviewStats.totalReviews} reviews)</span>
+                    <span className="text-3xl font-bold">{Number(reviewStats.averageRating).toFixed(1)}</span>
+                    {renderStars(Math.round(Number(reviewStats.averageRating)))}
+                    <span className="text-gray-600">({Number(reviewStats.totalReviews)} reviews)</span>
                   </div>
                 </div>
 
                 {/* Rating Distribution */}
                 <div className="space-y-2">
-                  {[5, 4, 3, 2, 1].map((star) => (
-                    <div key={star} className="flex items-center gap-2 text-sm">
-                      <span className="w-8">{star}★</span>
-                      <div className="flex-1 bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-yellow-400 h-2 rounded-full"
-                          style={{
-                            width: `${reviewStats.totalReviews > 0 
-                              ? (reviewStats.ratingDistribution[star as keyof typeof reviewStats.ratingDistribution] / reviewStats.totalReviews) * 100 
-                              : 0}%`
-                          }}
-                        />
+                  {[5, 4, 3, 2, 1].map((star) => {
+                    // Safe access to rating distribution with fallback
+                    const starCount = reviewStats.ratingDistribution?.[star] || 0;
+                    const safeStarCount = typeof starCount === 'number' ? starCount : 0;
+                    const percentage = reviewStats.totalReviews > 0 ? (safeStarCount / reviewStats.totalReviews) * 100 : 0;
+                    
+                    return (
+                      <div key={star} className="flex items-center gap-2 text-sm">
+                        <span className="w-8">{star}★</span>
+                        <div className="flex-1 bg-gray-200 rounded-full h-2">
+                          <div
+                            className="bg-yellow-400 h-2 rounded-full"
+                            style={{
+                              width: `${percentage}%`
+                            }}
+                          />
+                        </div>
+                        <span className="w-8 text-gray-600">
+                          {safeStarCount}
+                        </span>
                       </div>
-                      <span className="w-8 text-gray-600">
-                        {reviewStats.ratingDistribution[star as keyof typeof reviewStats.ratingDistribution]}
-                      </span>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>
