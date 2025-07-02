@@ -440,56 +440,81 @@ const LoginPage = () => {
 
       {/* Terms and Conditions Dialog */}
       <Dialog open={showTermsDialog} onOpenChange={setShowTermsDialog}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Accept Terms & Conditions</DialogTitle>
-            <DialogDescription>
-              Please review and accept our terms and conditions to continue.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="flex items-start space-x-3">
-              <Checkbox
-                id="terms"
-                checked={agreedToTerms}
-                onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)}
-              />
-              <div className="grid gap-1.5 leading-none">
-                <label
-                  htmlFor="terms"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  Accept terms and conditions
-                </label>
-                <p className="text-sm text-muted-foreground">
-                  I agree to the{" "}
-                  <Link to="/terms" className="text-primary hover:underline" target="_blank">
-                    terms of service
-                  </Link>{" "}
-                  and{" "}
-                  <Link to="/privacy" className="text-primary hover:underline" target="_blank">
-                    privacy policy
-                  </Link>
-                  .
-                </p>
+        <DialogContent className="fixed inset-0 flex items-center justify-center z-50 p-4 sm:p-6 md:p-8">
+          <div className="relative w-full max-w-[90%] sm:max-w-[425px] bg-white rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+            <DialogHeader className="p-6 bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10 border-b">
+              <DialogTitle className="text-xl sm:text-2xl font-bold text-gray-900">Accept Terms & Conditions</DialogTitle>
+              <DialogDescription className="text-sm sm:text-base text-gray-600 mt-2">
+                Please review and accept our terms and conditions to continue.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="p-6 space-y-6">
+              <div className="bg-gray-50 rounded-xl p-4 sm:p-6">
+                <div className="flex items-start space-x-3">
+                  <Checkbox
+                    id="terms"
+                    checked={agreedToTerms}
+                    onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)}
+                    className="mt-1"
+                  />
+                  <div className="grid gap-2">
+                    <label
+                      htmlFor="terms"
+                      className="text-sm sm:text-base font-medium text-gray-900 cursor-pointer"
+                    >
+                      Accept terms and conditions
+                    </label>
+                    <p className="text-xs sm:text-sm text-gray-600">
+                      I agree to the{" "}
+                      <Link 
+                        to="/terms" 
+                        className="text-primary hover:text-secondary underline" 
+                        target="_blank"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        terms of service
+                      </Link>{" "}
+                      and{" "}
+                      <Link 
+                        to="/privacy" 
+                        className="text-primary hover:text-secondary underline" 
+                        target="_blank"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        privacy policy
+                      </Link>
+                      .
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
+
+            <DialogFooter className="p-6 bg-gray-50 border-t flex flex-col sm:flex-row gap-3 sm:gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowTermsDialog(false)}
+                className="w-full sm:w-auto order-2 sm:order-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleTermsAccept}
+                disabled={!agreedToTerms || isLoading}
+                className="w-full sm:w-auto order-1 sm:order-2 bg-gradient-to-r from-primary via-secondary to-accent text-white"
+              >
+                {isLoading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Processing...</span>
+                  </div>
+                ) : (
+                  "Continue"
+                )}
+              </Button>
+            </DialogFooter>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowTermsDialog(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleTermsAccept} disabled={!agreedToTerms || isLoading}>
-              {isLoading ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Processing...
-                </div>
-              ) : (
-                "Continue"
-              )}
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
