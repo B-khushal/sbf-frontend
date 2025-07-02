@@ -22,13 +22,16 @@ export const useOfferPopup = () => {
 
   useEffect(() => {
     const fetchActiveOffers = async () => {
+      // Reset state when location changes
+      setIsOpen(false);
+      setCurrentOffer(null);
+
       // Rule 1: Only show popups on the homepage ('/')
       if (location.pathname !== '/') {
-        if (isOpen) setIsOpen(false); // Close popup if navigating away
         return;
       }
 
-      // Rule 2: Don't show if it has already been shown in this session.
+      // Rule 2: Don't show if it has already been shown in this session
       const shownThisSession = sessionStorage.getItem('offerShownThisSession');
       if (shownThisSession) {
         return;
@@ -38,7 +41,7 @@ export const useOfferPopup = () => {
         const { data: offers } = await api.get('/offers/active');
 
         if (offers && offers.length > 0) {
-          // Rule 3: Check localStorage for offers that should only be shown once ever.
+          // Rule 3: Check localStorage for offers that should only be shown once ever
           const seenOffers = JSON.parse(localStorage.getItem('seenOffers') || '{}');
           
           const offerToShow = offers.find(offer => 
@@ -46,13 +49,18 @@ export const useOfferPopup = () => {
           );
 
           if (offerToShow) {
+            // Set the offer first
             setCurrentOffer(offerToShow);
-            setIsOpen(true);
+            
+            // Then set isOpen after a short delay to ensure proper animation
+            setTimeout(() => {
+              setIsOpen(true);
+            }, 500);
             
             // Mark as shown for this session
             sessionStorage.setItem('offerShownThisSession', 'true');
 
-            // If it's a "show only once" offer, add it to localStorage.
+            // If it's a "show only once" offer, add it to localStorage
             if (offerToShow.showOnlyOnce) {
               seenOffers[offerToShow._id] = true;
               localStorage.setItem('seenOffers', JSON.stringify(seenOffers));
@@ -64,17 +72,24 @@ export const useOfferPopup = () => {
       }
     };
 
-    // Use a small delay to prevent race conditions on initial load
+    // Initial delay to ensure proper page load
     const timer = setTimeout(() => {
-        fetchActiveOffers();
-    }, 100);
+      fetchActiveOffers();
+    }, 1500);
 
-    return () => clearTimeout(timer);
-
+    return () => {
+      clearTimeout(timer);
+      setIsOpen(false);
+      setCurrentOffer(null);
+    };
   }, [location.pathname]);
 
   const closeOffer = () => {
     setIsOpen(false);
+    // Remove offer after animation
+    setTimeout(() => {
+      setCurrentOffer(null);
+    }, 300);
   };
 
   return {

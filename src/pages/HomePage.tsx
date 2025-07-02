@@ -157,6 +157,15 @@ const HomePage = () => {
       variants={containerVariants}
       className="min-h-screen"
     >
+      {/* Offer Popup */}
+      {currentOffer && (
+        <OfferPopup
+          isOpen={isOfferOpen}
+          onClose={closeOffer}
+          offer={currentOffer}
+        />
+      )}
+
       {enabledSections.map((section, index) => {
         switch (section.type) {
           case 'hero':
@@ -278,15 +287,6 @@ const HomePage = () => {
             return null;
         }
       })}
-
-      {/* Offer Popup */}
-      {currentOffer && (
-        <OfferPopup
-          isOpen={isOfferOpen}
-          onClose={closeOffer}
-          offer={currentOffer}
-        />
-      )}
     </motion.div>
   );
 };

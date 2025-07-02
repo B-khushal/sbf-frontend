@@ -1,9 +1,15 @@
 // Service Worker for SBF Florist
 // Version 1.0.0
 
-const CACHE_NAME = 'sbf-florist-v1.0.0';
+const CACHE_NAME = 'sbf-cache-v1';
 const STATIC_CACHE_NAME = 'sbf-static-v1.0.0';
 const API_CACHE_NAME = 'sbf-api-v1.0.0';
+
+// Add Google OAuth URLs to the allowed list
+const allowedOrigins = [
+  'https://accounts.google.com',
+  'https://oauth2.googleapis.com'
+];
 
 // Assets to cache immediately
 const PRECACHE_ASSETS = [
@@ -28,7 +34,7 @@ self.addEventListener('install', (event) => {
   console.log('Service Worker installing...');
   
   event.waitUntil(
-    caches.open(STATIC_CACHE_NAME)
+    caches.open(CACHE_NAME)
       .then((cache) => {
         console.log('Precaching static assets...');
         return cache.addAll(PRECACHE_ASSETS);
@@ -70,6 +76,18 @@ self.addEventListener('activate', (event) => {
 
 // Fetch event - handle requests with caching strategies
 self.addEventListener('fetch', (event) => {
+  // Skip cross-origin requests
+  if (!event.request.url.startsWith(self.location.origin) && 
+      !allowedOrigins.some(origin => event.request.url.startsWith(origin))) {
+    return;
+  }
+
+  // Don't cache Google OAuth requests
+  if (event.request.url.includes('accounts.google.com') || 
+      event.request.url.includes('oauth2.googleapis.com')) {
+    return;
+  }
+
   const { request } = event;
   const url = new URL(request.url);
 
