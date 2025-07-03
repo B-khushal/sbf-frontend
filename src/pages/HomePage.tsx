@@ -10,6 +10,10 @@ import useCart from "../hooks/use-cart";
 import { useSettings } from "../contexts/SettingsContext";
 import { useOfferPopup } from "../hooks/use-offer-popup";
 import OfferPopup from "../components/ui/OfferPopup";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Link } from "react-router-dom";
 import api from "../services/api";
 
 // Animation variants
@@ -57,6 +61,22 @@ const HomePage = () => {
   const [newProducts, setNewProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // TEMPORARY: Test popup states
+  const [showTestOffer, setShowTestOffer] = useState(false);
+  const [showTestTerms, setShowTestTerms] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+
+  const testOffer = {
+    title: "🌸 Special Spring Sale!",
+    description: "Get 25% off on all floral arrangements. Limited time offer!",
+    imageUrl: "",
+    backgroundColor: "#ff6b9d",
+    textColor: "#ffffff",
+    buttonText: "Shop Now",
+    buttonLink: "/shop",
+    theme: "sale" as const
+  };
 
   // Intersection observer hooks for scroll animations
   const [philosophyRef, philosophyInView] = useInView({
@@ -157,16 +177,94 @@ const HomePage = () => {
       variants={containerVariants}
       className="min-h-screen relative"
     >
-      {/* Offer Popup - Moved outside of animation container */}
-      {currentOffer && (
-        <div className="fixed inset-0 z-50">
-          <OfferPopup
-            isOpen={isOfferOpen}
-            onClose={closeOffer}
-            offer={currentOffer}
-          />
-        </div>
-      )}
+      {/* Offer Popup */}
+      <OfferPopup
+        isOpen={isOfferOpen && currentOffer !== null}
+        onClose={closeOffer}
+        offer={currentOffer}
+      />
+
+      {/* TEST POPUPS - TEMPORARY */}
+      <OfferPopup
+        isOpen={showTestOffer}
+        onClose={() => setShowTestOffer(false)}
+        offer={testOffer}
+      />
+
+      <Dialog open={showTestTerms} onOpenChange={setShowTestTerms}>
+        <DialogContent className="max-w-md sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-gray-900">Terms & Conditions</DialogTitle>
+            <DialogDescription className="text-sm text-gray-600">
+              Please review and accept our terms and conditions to continue.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <div className="bg-gray-50 rounded-lg p-4">
+              <div className="flex items-start space-x-3">
+                <Checkbox
+                  id="terms"
+                  checked={agreedToTerms}
+                  onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)}
+                  className="mt-1"
+                />
+                <div className="grid gap-1.5">
+                  <label
+                    htmlFor="terms"
+                    className="text-sm font-medium text-gray-900 cursor-pointer"
+                  >
+                    Accept terms and conditions
+                  </label>
+                  <p className="text-xs text-gray-600">
+                    I agree to the{" "}
+                    <Link 
+                      to="/terms" 
+                      className="text-primary hover:text-primary/80 underline" 
+                      target="_blank"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      terms of service
+                    </Link>{" "}
+                    and{" "}
+                    <Link 
+                      to="/privacy" 
+                      className="text-primary hover:text-primary/80 underline" 
+                      target="_blank"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      privacy policy
+                    </Link>
+                    .
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-2 justify-end pt-4">
+            <Button
+              variant="outline"
+              onClick={() => setShowTestTerms(false)}
+              className="w-full sm:w-auto"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (agreedToTerms) {
+                  setShowTestTerms(false);
+                  setAgreedToTerms(false);
+                }
+              }}
+              disabled={!agreedToTerms}
+              className="w-full sm:w-auto bg-gradient-to-r from-primary via-secondary to-accent text-white hover:opacity-90 transition-opacity"
+            >
+              Continue
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {enabledSections.map((section, index) => {
         switch (section.type) {
@@ -289,6 +387,25 @@ const HomePage = () => {
             return null;
         }
       })}
+
+      {/* TEMPORARY TEST BUTTONS */}
+      <motion.div 
+        variants={itemVariants}
+        className="fixed bottom-4 right-4 z-40 flex flex-col gap-2"
+      >
+        <Button
+          onClick={() => setShowTestOffer(true)}
+          className="bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+        >
+          Test Offer Popup
+        </Button>
+        <Button
+          onClick={() => setShowTestTerms(true)}
+          className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+        >
+          Test Terms Popup
+        </Button>
+      </motion.div>
     </motion.div>
   );
 };

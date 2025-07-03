@@ -440,18 +440,16 @@ const LoginPage = () => {
 
       {/* Terms and Conditions Dialog */}
       <Dialog open={showTermsDialog} onOpenChange={setShowTermsDialog}>
-        <DialogContent 
-          className="fixed left-[50%] top-[50%] z-[9999] grid w-full max-w-[425px] translate-x-[-50%] translate-y-[-50%] gap-4 border bg-white p-0 shadow-2xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] rounded-2xl overflow-hidden"
-        >
-          <DialogHeader className="p-6 bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10 border-b">
-            <DialogTitle className="text-xl sm:text-2xl font-bold text-gray-900">Terms & Conditions</DialogTitle>
-            <DialogDescription className="text-sm sm:text-base text-gray-600 mt-2">
+        <DialogContent className="max-w-md sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-gray-900">Terms & Conditions</DialogTitle>
+            <DialogDescription className="text-sm text-gray-600">
               Please review and accept our terms and conditions to continue.
             </DialogDescription>
           </DialogHeader>
           
-          <div className="p-6">
-            <div className="bg-gray-50 rounded-xl p-4 sm:p-6">
+          <div className="py-4">
+            <div className="bg-gray-50 rounded-lg p-4">
               <div className="flex items-start space-x-3">
                 <Checkbox
                   id="terms"
@@ -462,11 +460,11 @@ const LoginPage = () => {
                 <div className="grid gap-1.5">
                   <label
                     htmlFor="terms"
-                    className="text-sm sm:text-base font-medium text-gray-900 cursor-pointer"
+                    className="text-sm font-medium text-gray-900 cursor-pointer"
                   >
                     Accept terms and conditions
                   </label>
-                  <p className="text-xs sm:text-sm text-gray-600">
+                  <p className="text-xs text-gray-600">
                     I agree to the{" "}
                     <Link 
                       to="/terms" 
@@ -492,7 +490,7 @@ const LoginPage = () => {
             </div>
           </div>
 
-          <div className="p-6 bg-gray-50 border-t flex flex-col-reverse sm:flex-row gap-3 sm:gap-2 justify-end">
+          <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-2 justify-end pt-4">
             <Button
               variant="outline"
               onClick={() => setShowTermsDialog(false)}
