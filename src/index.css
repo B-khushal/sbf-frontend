@@ -5,6 +5,19 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Ensure dialogs are always visible */
+[data-radix-portal] {
+  z-index: 9999 !important;
+}
+
+.dialog-overlay {
+  z-index: 9998 !important;
+}
+
+.dialog-content {
+  z-index: 9999 !important;
+}
+
 @layer base {
   :root {
     /* Light Blue, Pink, Green & White Color Scheme */

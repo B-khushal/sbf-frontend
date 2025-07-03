@@ -440,7 +440,9 @@ const LoginPage = () => {
 
       {/* Terms and Conditions Dialog */}
       <Dialog open={showTermsDialog} onOpenChange={setShowTermsDialog}>
-        <DialogContent className="max-w-[425px] p-0 bg-white rounded-2xl shadow-2xl overflow-hidden">
+        <DialogContent 
+          className="fixed left-[50%] top-[50%] z-[9999] grid w-full max-w-[425px] translate-x-[-50%] translate-y-[-50%] gap-4 border bg-white p-0 shadow-2xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] rounded-2xl overflow-hidden"
+        >
           <DialogHeader className="p-6 bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10 border-b">
             <DialogTitle className="text-xl sm:text-2xl font-bold text-gray-900">Terms & Conditions</DialogTitle>
             <DialogDescription className="text-sm sm:text-base text-gray-600 mt-2">
