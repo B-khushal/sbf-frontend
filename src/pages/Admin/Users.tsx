@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Search, UserPlus, Edit, Trash2, Store, Eye, Filter } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import api from '@/services/api'; // ✅ Import API service
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/enhanced-dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
@@ -532,7 +532,7 @@ const AdminUsers: React.FC = () => {
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent variant="popup">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit User</DialogTitle>
             <DialogDescription>
