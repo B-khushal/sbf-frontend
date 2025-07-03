@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { X, Gift, Tag, Calendar, Sparkles } from 'lucide-react';
@@ -64,10 +64,8 @@ const OfferPopup: React.FC<OfferPopupProps> = ({
     }
   };
 
-  // Copy offer code to clipboard
   const handleCopyCode = (code: string) => {
     navigator.clipboard.writeText(code);
-    // You could add a toast notification here
   };
 
   if (!offer) return null;
@@ -76,7 +74,7 @@ const OfferPopup: React.FC<OfferPopupProps> = ({
     <Modal 
       isOpen={isOpen} 
       onClose={onClose}
-      className="p-0 w-full max-w-lg overflow-hidden"
+      className="p-0 w-full max-w-lg"
       showCloseButton={false}
     >
       <AnimatePresence>
@@ -86,7 +84,7 @@ const OfferPopup: React.FC<OfferPopupProps> = ({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className={`relative bg-gradient-to-br ${themeConfig[offer.theme].gradient} rounded-xl overflow-hidden`}
+            className={`relative bg-gradient-to-br ${themeConfig[offer.theme].gradient} rounded-xl overflow-hidden shadow-2xl`}
             style={{
               backgroundColor: offer.backgroundColor,
               color: offer.textColor
@@ -132,6 +130,7 @@ const OfferPopup: React.FC<OfferPopupProps> = ({
                     src={offer.imageUrl}
                     alt="Offer"
                     className="w-full h-48 sm:h-56 object-cover rounded-lg shadow-lg"
+                    loading="eager"
                   />
                 </motion.div>
               )}

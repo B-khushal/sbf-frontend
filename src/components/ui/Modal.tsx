@@ -18,27 +18,17 @@ const Modal: React.FC<ModalProps> = ({
   showCloseButton = true,
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
-  const scrollPositionRef = useRef(0);
 
   useEffect(() => {
     if (isOpen) {
-      // Store current scroll position
-      scrollPositionRef.current = window.scrollY;
       document.body.style.overflow = 'hidden';
-      
-      // Ensure modal is in viewport
+      // Ensure modal is visible in viewport
       setTimeout(() => {
         if (modalRef.current) {
-          const modalRect = modalRef.current.getBoundingClientRect();
-          const viewportHeight = window.innerHeight;
-          
-          // If modal is not fully visible in viewport, scroll to it
-          if (modalRect.top < 0 || modalRect.bottom > viewportHeight) {
-            window.scrollTo({
-              top: window.scrollY + modalRect.top - (viewportHeight - modalRect.height) / 2,
-              behavior: 'smooth'
-            });
-          }
+          modalRef.current.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+          });
         }
       }, 100);
     } else {
@@ -49,7 +39,6 @@ const Modal: React.FC<ModalProps> = ({
         behavior: 'smooth'
       });
     }
-    
     return () => {
       document.body.style.overflow = '';
     };
@@ -73,28 +62,44 @@ const Modal: React.FC<ModalProps> = ({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+      className="fixed inset-0 z-[9999] overflow-y-auto"
       onClick={onClose}
       role="presentation"
     >
-      <div
-        ref={modalRef}
-        className={`relative bg-white rounded-xl shadow-2xl w-full max-h-full overflow-y-auto ${className}`}
-        style={{ maxWidth: '500px' }}
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-      >
-        {children}
-        {showCloseButton && (
-          <button
-            onClick={onClose}
-            className="absolute top-2 right-2 p-1 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-            aria-label="Close dialog"
-          >
-            <X size={20} />
-          </button>
-        )}
+      <div className="min-h-screen px-4 text-center">
+        {/* Background overlay */}
+        <div
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm"
+          aria-hidden="true"
+        />
+
+        {/* This element is to trick the browser into centering the modal contents. */}
+        <span
+          className="inline-block h-screen align-middle"
+          aria-hidden="true"
+        >
+          &#8203;
+        </span>
+
+        <div
+          ref={modalRef}
+          className={`inline-block align-middle w-full text-left transform transition-all ${className}`}
+          style={{ maxWidth: '500px' }}
+          onClick={(e) => e.stopPropagation()}
+          role="dialog"
+          aria-modal="true"
+        >
+          {children}
+          {showCloseButton && (
+            <button
+              onClick={onClose}
+              className="absolute top-2 right-2 p-1 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+              aria-label="Close dialog"
+            >
+              <X size={20} />
+            </button>
+          )}
+        </div>
       </div>
     </div>,
     document.body
