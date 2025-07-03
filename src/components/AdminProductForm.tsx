@@ -5,7 +5,24 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Save, X, Upload, Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import api from "@/services/api";
+
+// Predefined categories
+const CATEGORIES = [
+  { value: "flowers", label: "Flowers" },
+  { value: "birthday", label: "Birthday" },
+  { value: "anniversary", label: "Anniversary" },
+  { value: "baskets", label: "Baskets" },
+  { value: "gifts", label: "Gifts" },
+  { value: "plants", label: "Plants" },
+];
 
 type Product = {
   _id?: string;
@@ -162,14 +179,24 @@ const AdminProductForm: React.FC<Props> = ({ product, onClose, onSave }) => {
             />
           </div>
 
-          {/* Category */}
+          {/* Category Dropdown */}
           <div>
             <label className="text-sm font-medium">Category</label>
-            <Input 
-              placeholder="Enter category" 
-              value={formData.category} 
-              onChange={(e) => setFormData({ ...formData, category: e.target.value })} 
-            />
+            <Select
+              value={formData.category}
+              onValueChange={(value) => setFormData({ ...formData, category: value })}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select a category" />
+              </SelectTrigger>
+              <SelectContent>
+                {CATEGORIES.map((category) => (
+                  <SelectItem key={category.value} value={category.value}>
+                    {category.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Price & Discount */}
@@ -257,6 +284,40 @@ const AdminProductForm: React.FC<Props> = ({ product, onClose, onSave }) => {
                   No details added yet
                 </p>
               )}
+            </div>
+          </div>
+
+          {/* Featured and New Checkboxes */}
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="isFeatured"
+                checked={formData.isFeatured}
+                onCheckedChange={(checked) => 
+                  setFormData({ ...formData, isFeatured: checked as boolean })
+                }
+              />
+              <label
+                htmlFor="isFeatured"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Featured Product
+              </label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="isNew"
+                checked={formData.isNew}
+                onCheckedChange={(checked) => 
+                  setFormData({ ...formData, isNew: checked as boolean })
+                }
+              />
+              <label
+                htmlFor="isNew"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                New Arrival
+              </label>
             </div>
           </div>
 
