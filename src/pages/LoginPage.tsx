@@ -10,8 +10,8 @@ import Footer from '@/components/Footer';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { GoogleLogin } from '@react-oauth/google';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
+import Modal from '@/components/ui/Modal';
 
 // Animation variants
 const containerVariants = {
@@ -438,17 +438,17 @@ const LoginPage = () => {
         <Footer />
       </div>
 
-      {/* Terms and Conditions Dialog */}
-      <Dialog open={showTermsDialog} onOpenChange={setShowTermsDialog}>
-        <DialogContent className="max-w-md sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-gray-900">Terms & Conditions</DialogTitle>
-            <DialogDescription className="text-sm text-gray-600">
+      {/* Terms and Conditions Modal */}
+      <Modal isOpen={showTermsDialog} onClose={() => setShowTermsDialog(false)}>
+        <div className="p-6">
+          <div className="mb-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Terms & Conditions</h2>
+            <p className="text-sm text-gray-600">
               Please review and accept our terms and conditions to continue.
-            </DialogDescription>
-          </DialogHeader>
+            </p>
+          </div>
           
-          <div className="py-4">
+          <div className="mb-6">
             <div className="bg-gray-50 rounded-lg p-4">
               <div className="flex items-start space-x-3">
                 <Checkbox
@@ -490,7 +490,7 @@ const LoginPage = () => {
             </div>
           </div>
 
-          <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-2 justify-end pt-4">
+          <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-2 justify-end">
             <Button
               variant="outline"
               onClick={() => setShowTermsDialog(false)}
@@ -513,8 +513,8 @@ const LoginPage = () => {
               )}
             </Button>
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      </Modal>
 
 
     </>

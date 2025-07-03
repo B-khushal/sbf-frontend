@@ -10,10 +10,10 @@ import useCart from "../hooks/use-cart";
 import { useSettings } from "../contexts/SettingsContext";
 import { useOfferPopup } from "../hooks/use-offer-popup";
 import OfferPopup from "../components/ui/OfferPopup";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Link } from "react-router-dom";
+import Modal from "@/components/ui/Modal";
 import api from "../services/api";
 
 // Animation variants
@@ -191,27 +191,27 @@ const HomePage = () => {
         offer={testOffer}
       />
 
-      <Dialog open={showTestTerms} onOpenChange={setShowTestTerms}>
-        <DialogContent className="max-w-md sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-gray-900">Terms & Conditions</DialogTitle>
-            <DialogDescription className="text-sm text-gray-600">
+      <Modal isOpen={showTestTerms} onClose={() => setShowTestTerms(false)}>
+        <div className="p-6">
+          <div className="mb-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Terms & Conditions (TEST)</h2>
+            <p className="text-sm text-gray-600">
               Please review and accept our terms and conditions to continue.
-            </DialogDescription>
-          </DialogHeader>
+            </p>
+          </div>
           
-          <div className="py-4">
+          <div className="mb-6">
             <div className="bg-gray-50 rounded-lg p-4">
               <div className="flex items-start space-x-3">
                 <Checkbox
-                  id="terms"
+                  id="test-terms"
                   checked={agreedToTerms}
                   onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)}
                   className="mt-1"
                 />
                 <div className="grid gap-1.5">
                   <label
-                    htmlFor="terms"
+                    htmlFor="test-terms"
                     className="text-sm font-medium text-gray-900 cursor-pointer"
                   >
                     Accept terms and conditions
@@ -242,7 +242,7 @@ const HomePage = () => {
             </div>
           </div>
 
-          <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-2 justify-end pt-4">
+          <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-2 justify-end">
             <Button
               variant="outline"
               onClick={() => setShowTestTerms(false)}
@@ -263,8 +263,8 @@ const HomePage = () => {
               Continue
             </Button>
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      </Modal>
 
       {enabledSections.map((section, index) => {
         switch (section.type) {
