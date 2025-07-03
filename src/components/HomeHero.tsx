@@ -267,14 +267,14 @@ const HomeHero = () => {
                   {slide.subtitle}
                 </p>
                 <div className="flex justify-center">
-                  <Button
-                    onClick={() => navigate(slide.ctaLink)}
-                    size="lg"
-                    className="bg-white text-gray-800 hover:bg-white/90 hover:scale-105 transition-all duration-300 text-sm sm:text-base lg:text-lg px-6 sm:px-8 lg:px-10 py-2 sm:py-3 lg:py-4"
-                  >
-                    {slide.ctaText}
-                    <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6" />
-                  </Button>
+                <Button
+                  onClick={() => navigate(slide.ctaLink)}
+                  size="lg"
+                  className="bg-white text-gray-800 hover:bg-white/90 hover:scale-105 transition-all duration-300 text-sm sm:text-base lg:text-lg px-6 sm:px-8 lg:px-10 py-2 sm:py-3 lg:py-4"
+                >
+                  {slide.ctaText}
+                  <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6" />
+                </Button>
                 </div>
               </div>
             </div>

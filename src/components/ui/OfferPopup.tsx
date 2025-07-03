@@ -60,7 +60,7 @@ const OfferPopup: React.FC<OfferPopupProps> = ({
   const handleButtonClick = () => {
     onClose();
     if (offer?.buttonLink) {
-      navigate(offer.buttonLink);
+    navigate(offer.buttonLink);
     }
   };
 
@@ -85,26 +85,26 @@ const OfferPopup: React.FC<OfferPopupProps> = ({
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.2 }}
             className={`relative bg-gradient-to-br ${themeConfig[offer.theme].gradient} rounded-xl overflow-hidden shadow-2xl`}
-            style={{
-              backgroundColor: offer.backgroundColor,
-              color: offer.textColor
-            }}
-          >
+                style={{
+                  backgroundColor: offer.backgroundColor,
+                  color: offer.textColor
+                }}
+              >
             {/* Background Pattern */}
             <div 
               className="absolute inset-0 opacity-20"
               style={{ backgroundImage: themeConfig[offer.theme].pattern }}
             />
 
-            {/* Close Button */}
-            <button
-              onClick={onClose}
+                {/* Close Button */}
+                <button
+                  onClick={onClose}
               className="absolute right-4 top-4 text-current opacity-70 hover:opacity-100 transition-all z-10 
                        bg-black/10 hover:bg-black/20 rounded-full p-2 hover:rotate-90 duration-300"
               aria-label="Close offer"
-            >
+                >
               <X className="h-5 w-5" />
-            </button>
+                </button>
 
             {/* Content Container */}
             <div className="relative z-10 p-6 sm:p-8">
@@ -126,9 +126,9 @@ const OfferPopup: React.FC<OfferPopupProps> = ({
                   transition={{ delay: 0.2 }}
                   className="mb-6"
                 >
-                  <img
-                    src={offer.imageUrl}
-                    alt="Offer"
+                      <img
+                        src={offer.imageUrl}
+                        alt="Offer"
                     className="w-full h-48 sm:h-56 object-cover rounded-lg shadow-lg"
                     loading="eager"
                   />
@@ -154,29 +154,29 @@ const OfferPopup: React.FC<OfferPopupProps> = ({
                   >
                     Copy Code
                   </Button>
-                </div>
-              )}
+                    </div>
+                  )}
 
               {/* Expiry Date */}
               {offer.expiryDate && (
                 <p className="text-sm opacity-75 mb-4">
                   Offer valid until {new Date(offer.expiryDate).toLocaleDateString()}
-                </p>
+                    </p>
               )}
 
               {/* Action Button */}
-              <Button
-                onClick={handleButtonClick}
+                    <Button
+                      onClick={handleButtonClick}
                 className="w-full py-4 text-base font-semibold rounded-xl hover:scale-105 
                          transition-all duration-300 shadow-lg hover:shadow-xl"
-                style={{
-                  backgroundColor: offer.textColor,
-                  color: offer.backgroundColor
-                }}
-              >
-                {offer.buttonText}
-              </Button>
-            </div>
+                      style={{
+                        backgroundColor: offer.textColor,
+                        color: offer.backgroundColor
+                      }}
+                    >
+                      {offer.buttonText}
+                    </Button>
+                  </div>
 
             {/* Decorative Corner Elements */}
             <div className="absolute top-0 left-0 w-24 h-24 border-t-4 border-l-4 border-current opacity-20 rounded-tl-xl transform -translate-x-12 -translate-y-12 rotate-45" />

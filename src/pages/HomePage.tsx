@@ -162,11 +162,11 @@ const HomePage = () => {
       className="min-h-screen relative"
     >
       {/* Offer Popup */}
-      <OfferPopup
+          <OfferPopup
         isOpen={isOfferOpen && currentOffer !== null}
-        onClose={closeOffer}
-        offer={currentOffer}
-      />
+            onClose={closeOffer}
+            offer={currentOffer}
+          />
 
 
 

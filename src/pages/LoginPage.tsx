@@ -444,76 +444,76 @@ const LoginPage = () => {
           <div className="mb-6">
             <h2 className="text-xl font-bold text-gray-900 mb-2">Terms & Conditions</h2>
             <p className="text-sm text-gray-600">
-              Please review and accept our terms and conditions to continue.
+                    Please review and accept our terms and conditions to continue.
             </p>
           </div>
-          
+                
           <div className="mb-6">
             <div className="bg-gray-50 rounded-lg p-4">
-              <div className="flex items-start space-x-3">
-                <Checkbox
-                  id="terms"
-                  checked={agreedToTerms}
-                  onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)}
-                  className="mt-1"
-                />
-                <div className="grid gap-1.5">
-                  <label
-                    htmlFor="terms"
+                    <div className="flex items-start space-x-3">
+                      <Checkbox
+                        id="terms"
+                        checked={agreedToTerms}
+                        onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)}
+                        className="mt-1"
+                      />
+                      <div className="grid gap-1.5">
+                        <label
+                          htmlFor="terms"
                     className="text-sm font-medium text-gray-900 cursor-pointer"
-                  >
-                    Accept terms and conditions
-                  </label>
+                        >
+                          Accept terms and conditions
+                        </label>
                   <p className="text-xs text-gray-600">
-                    I agree to the{" "}
-                    <Link 
-                      to="/terms" 
-                      className="text-primary hover:text-primary/80 underline" 
-                      target="_blank"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      terms of service
-                    </Link>{" "}
-                    and{" "}
-                    <Link 
-                      to="/privacy" 
-                      className="text-primary hover:text-primary/80 underline" 
-                      target="_blank"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      privacy policy
-                    </Link>
-                    .
-                  </p>
+                          I agree to the{" "}
+                          <Link 
+                            to="/terms" 
+                            className="text-primary hover:text-primary/80 underline" 
+                            target="_blank"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            terms of service
+                          </Link>{" "}
+                          and{" "}
+                          <Link 
+                            to="/privacy" 
+                            className="text-primary hover:text-primary/80 underline" 
+                            target="_blank"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            privacy policy
+                          </Link>
+                          .
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </div>
 
           <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-2 justify-end">
-            <Button
-              variant="outline"
-              onClick={() => setShowTermsDialog(false)}
-              className="w-full sm:w-auto"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleTermsAccept}
-              disabled={!agreedToTerms || isLoading}
-              className="w-full sm:w-auto bg-gradient-to-r from-primary via-secondary to-accent text-white hover:opacity-90 transition-opacity"
-            >
-              {isLoading ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Processing...</span>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowTermsDialog(false)}
+                    className="w-full sm:w-auto"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleTermsAccept}
+                    disabled={!agreedToTerms || isLoading}
+                    className="w-full sm:w-auto bg-gradient-to-r from-primary via-secondary to-accent text-white hover:opacity-90 transition-opacity"
+                  >
+                    {isLoading ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span>Processing...</span>
+                      </div>
+                    ) : (
+                      "Continue"
+                    )}
+                  </Button>
                 </div>
-              ) : (
-                "Continue"
-              )}
-            </Button>
-          </div>
-        </div>
+              </div>
       </Modal>
 
 
