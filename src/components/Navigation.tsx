@@ -243,71 +243,32 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
             
             {/* Logo */}
             <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
               transition={{ duration: 0.6 }}
             >
               <Link to="/" className="flex items-center group">
-                {/* Desktop Logo */}
-                <div className="hidden lg:block">
-                  <img
-                    src={headerSettings.logo || "/api/placeholder/200/60"}
-                    alt="Spring Blossoms Florist"
-                    className="h-12 w-auto xl:h-14 transition-all duration-300 ease-in-out group-hover:scale-105 drop-shadow-sm"
-                  />
-                </div>
-                
-                {/* Tablet Logo */}
-                <div className="hidden md:block lg:hidden">
-                  <img
-                    src={headerSettings.logo || "/api/placeholder/160/50"}
-                    alt="Spring Blossoms Florist"
-                    className="h-10 w-auto transition-all duration-300 ease-in-out group-hover:scale-105 drop-shadow-sm"
-                  />
-                </div>
-                
-                {/* Mobile Logo */}
-                <div className="md:hidden">
-                  <div className="text-xl sm:text-2xl font-black bg-gradient-to-r from-pink-500 via-purple-600 to-blue-600 bg-clip-text text-transparent tracking-wider transition-all duration-300 group-hover:from-blue-600 group-hover:via-pink-500 group-hover:to-purple-600">
-                    SBF
-                  </div>
-                </div>
+                <img src="/images/logo.png" alt="Spring Blossoms Florist" className="h-10 sm:h-12 md:h-14 w-auto transition-transform duration-300 group-hover:scale-105" />
               </Link>
             </motion.div>
             
             {/* Desktop Navigation */}
-            <motion.nav 
-              className="hidden lg:flex items-center space-x-1 xl:space-x-2"
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-            >
-              {headerSettings?.navigationItems
-                ?.filter(item => item.enabled)
-                ?.sort((a, b) => a.order - b.order)
-                ?.map((item) => (
-                <NavLink key={item.href} to={item.href} active={pathname === item.href}>
-                  {item.label}
-                </NavLink>
-              ))}
-            </motion.nav>
+            <nav className="hidden lg:flex items-center space-x-2">
+              <NavLink to="/" active={pathname === '/'}>Home</NavLink>
+              <NavLink to="/shop" active={pathname.startsWith('/shop')}>Shop</NavLink>
+              <NavLink to="/about" active={pathname === '/about'}>About</NavLink>
+              <NavLink to="/contact" active={pathname === '/contact'}>Contact</NavLink>
+            </nav>
             
-            {/* Search Bar - Desktop/Tablet */}
-            <motion.div 
-              className="hidden md:flex relative flex-1 max-w-md lg:max-w-lg xl:max-w-xl mx-6"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.4, delay: 0.2, ease: "easeOut" }}
-            >
-              <form onSubmit={handleSearchSubmit} className="w-full relative">
-                <div className="relative group isolate">
-                  <Search 
-                    size={18} 
-                    className={cn(
-                      "absolute left-4 top-1/2 transform -translate-y-1/2 transition-colors duration-200 z-10",
-                      isSearchFocused ? "text-primary" : "text-gray-400"
-                    )} 
-                  />
+            {/* Desktop Icons & Search */}
+            <div className="hidden lg:flex items-center gap-1">
+              <motion.div
+                className="relative"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+              >
+                <form onSubmit={handleSearchSubmit} className="relative">
                   <Input
                     type="text"
                     placeholder="Search for flowers, bouquets, gifts..."
@@ -480,296 +441,182 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                       </motion.div>
                     )}
                   </AnimatePresence>
-                </div>
-              </form>
-            </motion.div>
-            
-            {/* Right Side Actions */}
-            <motion.div 
-              className="flex items-center space-x-1 sm:space-x-2"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.6 }}
-            >
-              <div className="hidden sm:block">
-                <CurrencyConverter />
-              </div>
-              
-              <div className="md:hidden">
-                <Button variant="ghost" size="icon" onClick={() => setShowMobileSearch(true)}>
-                  <Search size={18} />
-                </Button>
-              </div>
+                </form>
+              </motion.div>
 
-              {user && (
-                <Button variant="ghost" size="icon" asChild>
-                  <Link to="/wishlist" className="relative">
-                    <Heart size={18} />
-                    {wishlistCount > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                        {wishlistCount}
-                      </span>
-                    )}
-                  </Link>
+              <motion.div
+                className="flex items-center gap-1"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+              >
+                <Button variant="ghost" size="icon" className="rounded-full" onClick={() => navigate('/wishlist')}>
+                  <Heart className="h-5 w-5" />
+                  {wishlistCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                      {wishlistCount}
+                    </span>
+                  )}
                 </Button>
-              )}
-              
-              <Button variant="ghost" size="icon" onClick={handleCartClick} className="relative">
-                <ShoppingCart size={18} />
-                {(actualCartCount > 0) && (
-                  <span className="absolute -top-1 -right-1 bg-primary text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+
+                <Button variant="ghost" size="icon" className="rounded-full" onClick={handleCartClick}>
+                  <ShoppingCart className="h-5 w-5" />
+                  {actualCartCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-primary text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                      {actualCartCount}
+                    </span>
+                  )}
+                  <span className="sr-only">Cart</span>
+                </Button>
+
+                {user ? (
+                  <div className="relative">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="rounded-full"
+                      onClick={() => setShowUserMenu(!showUserMenu)}
+                    >
+                      <img src={user.avatar || '/images/default-avatar.png'} alt="User" className="h-7 w-7 rounded-full" />
+                    </Button>
+                    <AnimatePresence>
+                      {showUserMenu && (
+                        <motion.div
+                          className="absolute right-0 mt-2 w-56 origin-top-right rounded-2xl bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <div className="py-2 px-2">
+                            <div className="flex items-center gap-3 px-3 py-2">
+                              <img src={user.avatar || '/images/default-avatar.png'} alt="User" className="h-9 w-9 rounded-full" />
+                              <div>
+                                <p className="font-semibold text-sm text-gray-800">{user.name}</p>
+                                <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                              </div>
+                            </div>
+                            <div className="my-1 h-px bg-gray-100" />
+                            
+                            {user.role === 'admin' && (
+                              <SheetClose asChild>
+                                <Link to="/admin" className="flex items-center w-full px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-100">
+                                  <Store className="w-4 h-4 mr-2" /> Admin Dashboard
+                                </Link>
+                              </SheetClose>
+                            )}
+                            <SheetClose asChild>
+                              <Link to="/profile" className="flex items-center w-full px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-100">
+                                <User className="w-4 h-4 mr-2" /> My Profile
+                              </Link>
+                            </SheetClose>
+                            <button
+                              onClick={logout}
+                              className="flex items-center w-full px-3 py-2 text-sm text-red-600 rounded-lg hover:bg-red-50"
+                            >
+                              <LogIn className="w-4 h-4 mr-2" /> Logout
+                            </button>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                ) : (
+                  <Button variant="ghost" size="icon" className="rounded-full" onClick={() => navigate('/login')}>
+                    <User className="h-5 w-5" />
+                    <span className="sr-only">Login</span>
+                  </Button>
+                )}
+              </motion.div>
+            </div>
+
+            {/* Mobile Menu Trigger */}
+            <div className="flex items-center lg:hidden">
+              <Button variant="ghost" size="icon" className="rounded-full" onClick={handleCartClick}>
+                <ShoppingCart className="h-6 w-6" />
+                {actualCartCount > 0 && (
+                  <span className="absolute top-0 right-0 block h-4 w-4 rounded-full bg-red-500 text-white text-xs flex items-center justify-center transform translate-x-1/2 -translate-y-1/2">
                     {actualCartCount}
                   </span>
                 )}
               </Button>
-
-              {user ? (
-                <div className="relative">
-                  <Button variant="ghost" size="icon" onClick={() => setShowUserMenu(!showUserMenu)}>
-                    <User size={18} />
+              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full">
+                    <Menu className="h-6 w-6" />
                   </Button>
-                  <AnimatePresence>
-                    {showUserMenu && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border p-2 z-50"
-                        onMouseLeave={() => setShowUserMenu(false)}
-                      >
-                        <div className="p-2 border-b">
-                          <p className="font-semibold text-sm">{user.name}</p>
-                          <p className="text-xs text-gray-500 truncate">{user.email}</p>
-                        </div>
-                        <div className="py-1">
-                          <Link to="/profile" className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
-                            <User className="w-4 h-4 mr-2" />
-                            My Account
-                          </Link>
-                          <Link to="/profile#orders" className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
-                            <ShoppingCart className="w-4 h-4 mr-2" />
-                            My Orders
-                          </Link>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-full max-w-sm bg-white p-0">
+                  <div className="flex flex-col h-full">
+                    <div className="p-4 flex justify-between items-center border-b">
+                      <Link to="/" onClick={() => setMobileMenuOpen(false)}>
+                        <img src="/images/logo.png" alt="Spring Blossoms" className="h-10" />
+                      </Link>
+                      <SheetClose asChild>
+                        <Button variant="ghost" size="icon" className="rounded-full">
+                          <X className="h-5 w-5" />
+                        </Button>
+                      </SheetClose>
+                    </div>
+                    <div className="flex-grow overflow-y-auto p-4">
+                      <nav className="flex flex-col space-y-2">
+                        <SheetClose asChild><NavLink to="/" active={pathname === '/'}>Home</NavLink></SheetClose>
+                        <SheetClose asChild><NavLink to="/shop" active={pathname.startsWith('/shop')}>Shop</NavLink></SheetClose>
+                        <SheetClose asChild><NavLink to="/about" active={pathname === '/about'}>About</NavLink></SheetClose>
+                        <SheetClose asChild><NavLink to="/contact" active={pathname === '/contact'}>Contact</NavLink></SheetClose>
+                        <SheetClose asChild><NavLink to="/wishlist" active={pathname === '/wishlist'}>Wishlist ({wishlistCount})</NavLink></SheetClose>
+                      </nav>
+                      <div className="my-4 h-px bg-gray-200" />
+                      {user ? (
+                        <div className="space-y-2">
+                          <p className="font-semibold px-4">{user.name}</p>
                           {user.role === 'admin' && (
-                            <Link to="/admin" className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
-                              <Store className="w-4 h-4 mr-2" />
-                              Admin Dashboard
-                            </Link>
+                            <SheetClose asChild>
+                              <Link to="/admin" className="flex items-center w-full px-4 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-100">
+                                <Store className="w-4 h-4 mr-2" /> Admin Dashboard
+                              </Link>
+                            </SheetClose>
                           )}
-                          {user.role === 'vendor' && (
-                            <Link to="/vendor/dashboard" className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
-                              <Store className="w-4 h-4 mr-2" />
-                              Vendor Dashboard
+                          <SheetClose asChild>
+                            <Link to="/profile" className="flex items-center w-full px-4 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-100">
+                              <User className="w-4 h-4 mr-2" /> My Profile
                             </Link>
-                          )}
+                          </SheetClose>
                           <button
-                            onClick={() => {
-                              logout();
-                              setShowUserMenu(false);
-                            }}
-                            className="flex items-center w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md"
+                            onClick={logout}
+                            className="flex items-center w-full px-4 py-2 text-sm text-red-600 rounded-lg hover:bg-red-50"
                           >
-                            <LogIn className="w-4 h-4 mr-2" />
-                            Sign Out
+                            <LogIn className="w-4 h-4 mr-2" /> Logout
                           </button>
                         </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              ) : (
-                <Button variant="ghost" size="icon" asChild>
-                  <Link to="/login">
-                    <LogIn size={18} />
-                  </Link>
-                </Button>
-              )}
-
-              <div className="lg:hidden">
-                <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-                  <SheetTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                      <Menu size={18} />
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent 
-                    side="right" 
-                    className="w-full max-w-xs p-0 z-[100] bg-white"
-                  >
-                    <div className="flex flex-col h-full">
-                      {/* Header */}
-                      <div className="p-4 border-b flex justify-between items-center">
-                          <Link to="/" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2">
-                            <span className="text-2xl font-black bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-                              SBF
-                            </span>
+                      ) : (
+                        <SheetClose asChild>
+                          <Link to="/login" className="flex items-center w-full px-4 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-100">
+                            <LogIn className="w-4 h-4 mr-2" /> Login / Sign Up
                           </Link>
-                          <SheetClose asChild>
-                            <Button variant="ghost" size="icon">
-                              <X size={20} />
-                            </Button>
-                          </SheetClose>
-                      </div>
-
-                      <div className="flex-1 overflow-y-auto p-4 space-y-6">
-                        {/* User Profile */}
-                        {user ? (
-                          <div className="bg-gray-50 p-4 rounded-xl">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center text-white font-bold">
-                                {user.name.charAt(0).toUpperCase()}
-                              </div>
-                              <div>
-                                <p className="font-semibold text-sm truncate">{user.name}</p>
-                                <p className="text-xs text-gray-500 truncate">{user.email}</p>
-                              </div>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="grid grid-cols-2 gap-2">
-                             <Button asChild><Link to="/login" onClick={() => setMobileMenuOpen(false)}>Sign In</Link></Button>
-                             <Button asChild variant="outline"><Link to="/signup" onClick={() => setMobileMenuOpen(false)}>Sign Up</Link></Button>
-                          </div>
-                        )}
-
-                        {/* Navigation */}
-                        <nav className="space-y-1">
-                          <p className="px-3 text-xs font-semibold text-gray-400 uppercase">Menu</p>
-                          {headerSettings?.navigationItems
-                            ?.filter(item => item.enabled)
-                            ?.sort((a,b) => a.order - b.order)
-                            ?.map((item) => (
-                              <Link
-                                key={item.href}
-                                to={item.href}
-                                onClick={() => setMobileMenuOpen(false)}
-                                className={cn(
-                                  'flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors',
-                                  pathname === item.href ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100'
-                                )}
-                              >
-                                {item.label}
-                              </Link>
-                          ))}
-                        </nav>
-
-                        {/* Account Links */}
-                        {user && (
-                          <nav className="space-y-1">
-                            <p className="px-3 text-xs font-semibold text-gray-400 uppercase">Account</p>
-                            <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className={cn('flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors', pathname === '/profile' ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100')}>
-                              <User size={16} /> My Account
-                            </Link>
-                            <Link to="/profile#orders" onClick={() => setMobileMenuOpen(false)} className='flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors text-gray-700 hover:bg-gray-100'>
-                              <ShoppingCart size={16} /> My Orders
-                            </Link>
-                            {user.role === 'admin' && (
-                              <Link to="/admin" onClick={() => setMobileMenuOpen(false)} className={cn('flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors', pathname.startsWith('/admin') ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100')}>
-                                <Store size={16} /> Admin Dashboard
-                              </Link>
-                            )}
-                            {user.role === 'vendor' && (
-                              <Link to="/vendor/dashboard" onClick={() => setMobileMenuOpen(false)} className={cn('flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors', pathname.startsWith('/vendor') ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100')}>
-                                <Store size={16} /> Vendor Dashboard
-                              </Link>
-                            )}
-                          </nav>
-                        )}
-                      </div>
-
-                      {/* Footer */}
-                      {user && (
-                        <div className="p-4 border-t">
-                          <Button 
-                            onClick={() => {
-                              logout();
-                              setMobileMenuOpen(false);
-                            }}
-                            variant="outline"
-                            className="w-full"
-                          >
-                            <LogIn size={16} className="mr-2" />
-                            Sign Out
-                          </Button>
-                        </div>
+                        </SheetClose>
                       )}
                     </div>
-                  </SheetContent>
-                </Sheet>
-              </div>
-            </motion.div>
+                    <div className="p-4 border-t mt-auto">
+                      <CurrencyConverter />
+                    </div>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
           </div>
         </div>
       </header>
 
-      {/* Mobile Search Modal */}
       <AnimatePresence>
-        {showMobileSearch && (
+        {isSearchFocused && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-            className="fixed inset-0 bg-white z-[100] p-4 flex flex-col"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">Search</h2>
-              <Button variant="ghost" size="icon" onClick={() => setShowMobileSearch(false)}>
-                <X size={20} />
-              </Button>
-            </div>
-            <form onSubmit={handleSearchSubmit} className="relative">
-              <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <Input
-                type="text"
-                placeholder="Search for flowers, bouquets, gifts..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:border-primary transition-all duration-200"
-                autoFocus
-              />
-            </form>
-            <div className="mt-4 overflow-y-auto">
-              {searchQuery.length > 0 && searchSuggestions.length > 0 ? (
-                <div className="space-y-2">
-                  {searchSuggestions.map((suggestion) => (
-                    <button
-                      key={suggestion.id}
-                      onClick={() => {
-                        handleSuggestionClick(suggestion);
-                        setShowMobileSearch(false);
-                      }}
-                      className="w-full text-left p-3 hover:bg-gray-100 rounded-lg flex items-center gap-3"
-                    >
-                      <img src={suggestion.image} alt={suggestion.title} className="w-12 h-12 rounded-md object-cover" />
-                      <div>
-                        <p className="font-semibold">{suggestion.title}</p>
-                        <p className="text-sm text-gray-500">₹{suggestion.price}</p>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-600 mb-2">Popular Searches</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {popularSearches.map((item) => (
-                      <button
-                        key={item.term}
-                        onClick={() => {
-                          handlePopularSearchClick(item.term);
-                          setShowMobileSearch(false);
-                        }}
-                        className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-full text-sm"
-                      >
-                        {item.term}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </motion.div>
+            className="fixed inset-0 bg-black/50 z-40"
+            onClick={() => setIsSearchFocused(false)}
+          />
         )}
       </AnimatePresence>
     </>
