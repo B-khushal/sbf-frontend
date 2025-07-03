@@ -37,7 +37,7 @@ const DialogContent = React.forwardRef<
   <DialogPortal>
     <DialogOverlay />
     <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="min-h-screen px-4 text-center">
+      <div className="min-h-screen px-4 py-4 text-center">
         {/* This element is to trick the browser into centering the modal contents. */}
         <span
           className="inline-block h-screen align-middle"
@@ -49,8 +49,9 @@ const DialogContent = React.forwardRef<
           ref={ref}
           className={cn(
             "inline-block align-middle w-full text-left transform transition-all duration-200",
-            variant === 'default' && "max-w-lg border bg-background p-6 shadow-lg sm:rounded-lg",
-            variant === 'popup' && "max-w-lg p-0",
+            "max-w-[90vw] max-h-[80vh] overflow-y-auto",
+            variant === 'default' && "border bg-background p-6 shadow-lg sm:rounded-lg",
+            variant === 'popup' && "p-0",
             "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]",
             className
           )}
