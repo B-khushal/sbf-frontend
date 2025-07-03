@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import { createPortal } from 'react-dom';
 
@@ -17,63 +17,61 @@ const Modal: React.FC<ModalProps> = ({
   className = '',
   showCloseButton = true,
 }) => {
+  const modalRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    const handleResize = () => {
-      if (isOpen) {
-        document.body.style.overflow = 'hidden';
-      } else {
-        document.body.style.overflow = '';
-      }
-    };
-    
-    handleResize(); // Initial check
-    window.addEventListener('resize', handleResize);
-    
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
     return () => {
       document.body.style.overflow = '';
-      window.removeEventListener('resize', handleResize);
     };
   }, [isOpen]);
 
   useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isOpen) {
         onClose();
       }
     };
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!isOpen) {
+    return null;
+  }
 
   return createPortal(
-    <>
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+      onClick={onClose}
+      role="presentation"
+    >
       <div
-        className="fixed inset-0 z-[9998] bg-black/30 backdrop-blur-sm"
-        onClick={onClose}
-      />
-      <div
+        ref={modalRef}
+        className={`relative bg-white rounded-xl shadow-2xl w-full max-h-full overflow-y-auto ${className}`}
+        style={{ maxWidth: '500px' }}
+        onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
-        className={`fixed z-[9999] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 
-                    bg-white rounded-lg shadow-2xl 
-                    w-full max-w-lg max-h-[90vh] overflow-y-auto 
-                    ${className}`}
-        onClick={(e) => e.stopPropagation()}
       >
         {children}
         {showCloseButton && (
           <button
             onClick={onClose}
-            className="absolute right-3 top-3 z-10 p-1 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-            aria-label="Close modal"
+            className="absolute top-2 right-2 p-1 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+            aria-label="Close dialog"
           >
-            <X className="h-5 w-5" />
+            <X size={20} />
           </button>
         )}
       </div>
-    </>,
+    </div>,
     document.body
   );
 };
