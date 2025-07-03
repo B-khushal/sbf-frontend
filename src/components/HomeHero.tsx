@@ -258,22 +258,24 @@ const HomeHero = () => {
             <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent rounded-xl sm:rounded-2xl lg:rounded-3xl" />
             
             {/* Content */}
-            <div className="absolute inset-0 flex items-center justify-start px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20">
-              <div className="max-w-lg lg:max-w-xl xl:max-w-2xl text-white">
+            <div className="absolute inset-0 flex items-center justify-center px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20">
+              <div className="w-full max-w-lg lg:max-w-xl xl:max-w-2xl text-white text-center">
                 <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black mb-3 sm:mb-4 lg:mb-6 leading-tight">
                   {slide.title}
                 </h1>
                 <p className="text-sm xs:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl text-white/90 mb-6 sm:mb-8 lg:mb-10 leading-relaxed">
                   {slide.subtitle}
                 </p>
-                <Button
-                  onClick={() => navigate(slide.ctaLink)}
-                  size="lg"
-                  className="bg-white text-gray-800 hover:bg-white/90 hover:scale-105 transition-all duration-300 text-sm sm:text-base lg:text-lg px-6 sm:px-8 lg:px-10 py-2 sm:py-3 lg:py-4"
-                >
-                  {slide.ctaText}
-                  <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6" />
-                </Button>
+                <div className="flex justify-center">
+                  <Button
+                    onClick={() => navigate(slide.ctaLink)}
+                    size="lg"
+                    className="bg-white text-gray-800 hover:bg-white/90 hover:scale-105 transition-all duration-300 text-sm sm:text-base lg:text-lg px-6 sm:px-8 lg:px-10 py-2 sm:py-3 lg:py-4"
+                  >
+                    {slide.ctaText}
+                    <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6" />
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
