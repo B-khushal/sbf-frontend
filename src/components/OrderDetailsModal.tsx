@@ -5,7 +5,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@/components/ui/enhanced-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -253,35 +253,11 @@ export default function OrderDetailsModal({ isOpen, onClose, order, onStatusUpda
   });
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+    <Dialog open={isOpen} onOpenChange={() => onClose()}>
+      <DialogContent variant="popup" className="max-w-4xl">
         <DialogHeader>
-          <DialogTitle className="flex justify-between items-center">
-            <span>Order #{localOrder.orderNumber}</span>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Status:</span>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="h-8">
-                    <Badge variant={getStatusBadgeVariant(localOrder.status)}>
-                      {localOrder.status.toUpperCase()}
-                    </Badge>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {orderStatuses.map((status) => (
-                    <DropdownMenuItem
-                      key={status.value}
-                      onClick={() => handleStatusUpdate(localOrder._id, status.value as Order['status'])}
-                    >
-                      <Badge variant={getStatusBadgeVariant(status.value as Order['status'])}>
-                        {status.label}
-                      </Badge>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+          <DialogTitle className="text-2xl font-bold">
+            Order #{localOrder.orderNumber}
           </DialogTitle>
         </DialogHeader>
 

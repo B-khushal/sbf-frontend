@@ -4,7 +4,7 @@ import { Command as CommandPrimitive } from "cmdk"
 import { Search } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/enhanced-dialog"
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
 
 const Command = React.forwardRef<
@@ -27,7 +27,7 @@ interface CommandDialogProps extends DialogProps {}
 const CommandDialog = ({ children, ...props }: CommandDialogProps) => {
   return (
     <Dialog {...props}>
-      <DialogContent className="overflow-hidden p-0 shadow-lg">
+      <DialogContent variant="popup" className="overflow-hidden p-0 shadow-lg">
         <VisuallyHidden>
           <DialogTitle>Command Menu</DialogTitle>
           <DialogDescription>Search and execute commands</DialogDescription>
