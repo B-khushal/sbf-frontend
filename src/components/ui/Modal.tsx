@@ -18,20 +18,38 @@ const Modal: React.FC<ModalProps> = ({
   showCloseButton = true,
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
+  const scrollPositionRef = useRef(0);
 
   useEffect(() => {
     if (isOpen) {
+      // Store current scroll position
+      scrollPositionRef.current = window.scrollY;
       document.body.style.overflow = 'hidden';
+      
+      // Ensure modal is in viewport
       setTimeout(() => {
-        modalRef.current?.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center',
-          inline: 'center'
-        });
+        if (modalRef.current) {
+          const modalRect = modalRef.current.getBoundingClientRect();
+          const viewportHeight = window.innerHeight;
+          
+          // If modal is not fully visible in viewport, scroll to it
+          if (modalRect.top < 0 || modalRect.bottom > viewportHeight) {
+            window.scrollTo({
+              top: window.scrollY + modalRect.top - (viewportHeight - modalRect.height) / 2,
+              behavior: 'smooth'
+            });
+          }
+        }
       }, 100);
     } else {
       document.body.style.overflow = '';
+      // Scroll to top when modal closes
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
     }
+    
     return () => {
       document.body.style.overflow = '';
     };
