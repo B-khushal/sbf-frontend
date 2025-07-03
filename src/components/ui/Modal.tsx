@@ -22,6 +22,13 @@ const Modal: React.FC<ModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
+      setTimeout(() => {
+        modalRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+          inline: 'center'
+        });
+      }, 100);
     } else {
       document.body.style.overflow = '';
     }
