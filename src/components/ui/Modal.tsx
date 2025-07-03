@@ -55,8 +55,13 @@ const Modal: React.FC<ModalProps> = ({
     <div 
       className={`fixed inset-0 z-[9999] flex items-center justify-center p-4 ${overlayClassName}`}
       style={{ 
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        backdropFilter: 'blur(4px)'
+        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+        backdropFilter: 'blur(2px)',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0
       }}
       onClick={(e) => {
         if (e.target === e.currentTarget) {
@@ -66,6 +71,10 @@ const Modal: React.FC<ModalProps> = ({
     >
       <div
         className={`relative bg-white rounded-lg shadow-2xl max-w-lg w-full max-h-[90vh] overflow-auto ${className}`}
+        style={{
+          maxHeight: 'calc(100vh - 2rem)',
+          margin: 'auto'
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {showCloseButton && (
