@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Save, X, Upload, Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import api from "@/services/api";
 
 type Product = {
@@ -14,7 +15,7 @@ type Product = {
   discount?: number;
   countInStock: number;
   description: string;
-  details: string[];  // ✅ Add details field
+  details: string[];
   images: string[];
   isFeatured: boolean;
   isNew: boolean;
@@ -38,7 +39,7 @@ const AdminProductForm: React.FC<Props> = ({ product, onClose, onSave }) => {
     discount: product?.discount || 0,
     countInStock: product?.countInStock || 0,
     description: product?.description || "",
-    details: product?.details || [],  // ✅ Initialize details array
+    details: product?.details || [],
     images: product?.images || [],
     isFeatured: product?.isFeatured || false,
     isNew: product?.isNew || false,
@@ -46,35 +47,34 @@ const AdminProductForm: React.FC<Props> = ({ product, onClose, onSave }) => {
 
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [newDetail, setNewDetail] = useState(""); // ✅ State for adding new details
+  const [newDetail, setNewDetail] = useState("");
 
- // ✅ Handle Image Uploads
-const handleImageUpload = async (): Promise<string[]> => {
-  // If no new files are selected, return the current images
-  if (selectedFiles.length === 0) {
-    return formData.images;
-  }
-
-  const uploadedUrls: string[] = [];
-
-  for (const file of selectedFiles) {
-    const fileData = new FormData();
-    fileData.append("image", file);
-
-    try {
-      const { data } = await api.post("/uploads", fileData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      uploadedUrls.push(data.imageUrl);
-    } catch (error: any) {
-      toast({ title: "Upload failed", description: "Error uploading image." });
-      return formData.images; // Return existing images if upload fails
+  // ✅ Handle Image Uploads
+  const handleImageUpload = async (): Promise<string[]> => {
+    // If no new files are selected, return the current images
+    if (selectedFiles.length === 0) {
+      return formData.images;
     }
-  }
 
-  return [...formData.images, ...uploadedUrls];
-};
+    const uploadedUrls: string[] = [];
 
+    for (const file of selectedFiles) {
+      const fileData = new FormData();
+      fileData.append("image", file);
+
+      try {
+        const { data } = await api.post("/uploads", fileData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        uploadedUrls.push(data.imageUrl);
+      } catch (error: any) {
+        toast({ title: "Upload failed", description: "Error uploading image." });
+        return formData.images; // Return existing images if upload fails
+      }
+    }
+
+    return [...formData.images, ...uploadedUrls];
+  };
 
   // ✅ Handle Product Submission
   const handleSubmit = async () => {
@@ -128,7 +128,7 @@ const handleImageUpload = async (): Promise<string[]> => {
   const addDetail = () => {
     if (newDetail.trim() !== "") {
       setFormData({ ...formData, details: [...formData.details, newDetail] });
-      setNewDetail(""); // Clear input field after adding
+      setNewDetail("");
     }
   };
 
@@ -137,94 +137,161 @@ const handleImageUpload = async (): Promise<string[]> => {
     setFormData({ ...formData, details: formData.details.filter((_, i) => i !== index) });
   };
 
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addDetail();
+    }
+  };
+
   return (
-    <div className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
-      <h2 className="text-xl font-semibold">{isEditing ? "Edit Product" : "Add New Product"}</h2>
-
-      {/* ✅ Product Name */}
-      <div>
-        <label className="text-sm font-medium">Product Name</label>
-        <Input 
-          placeholder="Enter product name" 
-          value={formData.title} 
-          onChange={(e) => setFormData({ ...formData, title: e.target.value })} 
-        />
+    <div className="flex flex-col h-[80vh]">
+      <div className="flex-none p-6 pb-2">
+        <h2 className="text-xl font-semibold mb-4">{isEditing ? "Edit Product" : "Add New Product"}</h2>
       </div>
 
-      {/* ✅ Category */}
-      <div>
-        <label className="text-sm font-medium">Category</label>
-        <Input 
-          placeholder="Enter category" 
-          value={formData.category} 
-          onChange={(e) => setFormData({ ...formData, category: e.target.value })} 
-        />
-      </div>
+      <ScrollArea className="flex-grow px-6">
+        <div className="space-y-4 pr-4">
+          {/* Product Name */}
+          <div>
+            <label className="text-sm font-medium">Product Name</label>
+            <Input 
+              placeholder="Enter product name" 
+              value={formData.title} 
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })} 
+            />
+          </div>
 
-      {/* ✅ Price & Discount */}
-      <div className="grid grid-cols-2 gap-4">
-        <Input type="number" placeholder="Price (INR)" value={formData.price} 
-          onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })} />
-        <Input type="number" placeholder="Discount (%)" value={formData.discount} 
-          onChange={(e) => setFormData({ ...formData, discount: Number(e.target.value) })} />
-      </div>
+          {/* Category */}
+          <div>
+            <label className="text-sm font-medium">Category</label>
+            <Input 
+              placeholder="Enter category" 
+              value={formData.category} 
+              onChange={(e) => setFormData({ ...formData, category: e.target.value })} 
+            />
+          </div>
 
-      {/* ✅ Stock Quantity */}
-      <Input type="number" placeholder="Stock Quantity" value={formData.countInStock} 
-        onChange={(e) => setFormData({ ...formData, countInStock: Number(e.target.value) })} />
+          {/* Price & Discount */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium">Price (INR)</label>
+              <Input 
+                type="number" 
+                value={formData.price} 
+                onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })} 
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Discount (%)</label>
+              <Input 
+                type="number" 
+                value={formData.discount} 
+                onChange={(e) => setFormData({ ...formData, discount: Number(e.target.value) })} 
+              />
+            </div>
+          </div>
 
-      {/* ✅ Product Description */}
-      <div>
-        <label className="text-sm font-medium">Description</label>
-        <textarea 
-          placeholder="Enter product description"
-          value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          className="border rounded-md p-2 w-full"
-        />
-      </div>
+          {/* Stock Quantity */}
+          <div>
+            <label className="text-sm font-medium">Stock Quantity</label>
+            <Input 
+              type="number" 
+              value={formData.countInStock} 
+              onChange={(e) => setFormData({ ...formData, countInStock: Number(e.target.value) })} 
+            />
+          </div>
 
-      {/* ✅ Product Details (Array) */}
-      <div>
-        <label className="text-sm font-medium">Details</label>
-        <div className="flex gap-2">
-          <Input placeholder="Add a detail" value={newDetail} 
-            onChange={(e) => setNewDetail(e.target.value)} />
-          <Button variant="outline" onClick={addDetail}><Plus /></Button>
+          {/* Description */}
+          <div>
+            <label className="text-sm font-medium">Description</label>
+            <textarea 
+              placeholder="Enter product description"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="min-h-[100px] border rounded-md p-2 w-full resize-y"
+              rows={4}
+            />
+          </div>
+
+          {/* Details */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Details & Care Instructions</label>
+            <div className="flex gap-2">
+              <Input 
+                placeholder="Add details or care instructions" 
+                value={newDetail} 
+                onChange={(e) => setNewDetail(e.target.value)}
+                onKeyPress={handleKeyPress}
+              />
+              <Button 
+                variant="outline" 
+                onClick={addDetail}
+                className="flex-none"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="max-h-[200px] overflow-y-auto rounded-md border bg-background p-1">
+              {formData.details.length > 0 ? (
+                <ul className="space-y-1">
+                  {formData.details.map((detail, index) => (
+                    <li 
+                      key={index} 
+                      className="flex items-center justify-between p-2 rounded-md bg-muted/40 hover:bg-muted/60 transition-colors"
+                    >
+                      <span className="text-sm">{detail}</span>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => removeDetail(index)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground p-2 text-center">
+                  No details added yet
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Image Upload */}
+          <div>
+            <label className="text-sm font-medium">Upload Images</label>
+            <Input
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={(e) => {
+                if (e.target.files) {
+                  setSelectedFiles(Array.from(e.target.files));
+                }
+              }}
+            />
+            {selectedFiles.length > 0 && (
+              <p className="text-sm text-muted-foreground mt-2">
+                {selectedFiles.length} image(s) selected
+              </p>
+            )}
+          </div>
         </div>
-        <ul className="mt-2 space-y-2">
-          {formData.details.map((detail, index) => (
-            <li key={index} className="flex items-center justify-between border p-2 rounded-md">
-              {detail}
-              <Button variant="ghost" size="sm" onClick={() => removeDetail(index)}><Trash2 /></Button>
-            </li>
-          ))}
-        </ul>
-      </div>
+      </ScrollArea>
 
-      {/* ✅ Image Upload */}
-<div>
-  <label className="text-sm font-medium">Upload Images</label>
-  <Input
-    type="file"
-    multiple
-    accept="image/*"
-    onChange={(e) => {
-      if (e.target.files) {
-        setSelectedFiles(Array.from(e.target.files));
-      }
-    }}
-  />
-  {selectedFiles.length > 0 && (
-    <p className="text-sm text-muted-foreground mt-2">
-      {selectedFiles.length} image(s) selected
-    </p>
-  )}
-</div>
-      {/* ✅ Submit Buttons */}
-      <div className="flex justify-end gap-2">
-        <Button variant="ghost" onClick={onClose} disabled={isSubmitting}><X /> Cancel</Button>
-        <Button onClick={handleSubmit} disabled={isSubmitting}><Save /> {isEditing ? "Update Product" : "Save Product"}</Button>
+      {/* Submit Buttons - Fixed at bottom */}
+      <div className="flex-none p-6 pt-2 border-t bg-background">
+        <div className="flex justify-end gap-2">
+          <Button variant="ghost" onClick={onClose} disabled={isSubmitting}>
+            <X className="h-4 w-4 mr-2" /> Cancel
+          </Button>
+          <Button onClick={handleSubmit} disabled={isSubmitting}>
+            <Save className="h-4 w-4 mr-2" /> {isEditing ? "Update Product" : "Save Product"}
+          </Button>
+        </div>
       </div>
     </div>
   );
