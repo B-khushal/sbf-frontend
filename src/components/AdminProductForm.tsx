@@ -40,26 +40,35 @@ type Product = {
 
 type Props = {
   product?: Product | null;
-  onClose: () => void;
-  onSave: () => void;
+  productToEdit?: Product | null;  // Alternative prop name used in VendorProducts
+  onClose?: () => void;
+  onSave?: () => void;
+  onSuccess?: () => void;  // Alternative callback used in VendorProducts
 };
 
-const AdminProductForm: React.FC<Props> = ({ product, onClose, onSave }) => {
+const AdminProductForm: React.FC<Props> = ({ 
+  product, 
+  productToEdit,
+  onClose, 
+  onSave,
+  onSuccess 
+}) => {
   const { toast } = useToast();
-  const isEditing = !!product;
+  const productData = product || productToEdit;
+  const isEditing = !!productData;
 
   const [formData, setFormData] = useState<Product>({
-    _id: product?._id || undefined,
-    title: product?.title || "",
-    category: product?.category || "",
-    price: product?.price || 0,
-    discount: product?.discount || 0,
-    countInStock: product?.countInStock || 0,
-    description: product?.description || "",
-    details: product?.details || [],
-    images: product?.images || [],
-    isFeatured: product?.isFeatured || false,
-    isNew: product?.isNew || false,
+    _id: productData?._id || undefined,
+    title: productData?.title || "",
+    category: productData?.category || "",
+    price: productData?.price || 0,
+    discount: productData?.discount || 0,
+    countInStock: productData?.countInStock || 0,
+    description: productData?.description || "",
+    details: productData?.details || [],
+    images: productData?.images || [],
+    isFeatured: productData?.isFeatured || false,
+    isNew: productData?.isNew || false,
   });
 
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -126,15 +135,20 @@ const AdminProductForm: React.FC<Props> = ({ product, onClose, onSave }) => {
     try {
       let response;
       if (isEditing) {
-        response = await api.put(`/products/${product?._id}`, updatedProduct);
+        response = await api.put(`/products/${productData?._id}`, updatedProduct);
         toast({ title: "Product updated", description: "Changes saved successfully." });
       } else {
         response = await api.post("/products", updatedProduct);
         toast({ title: "Product added", description: "New product created." });
       }
 
-      onSave();
-      onClose();
+      // Call the appropriate callback
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        onSave?.();
+        onClose?.();
+      }
     } catch (error: any) {
       toast({ title: "Error", description: "Failed to save product." });
     }
@@ -346,7 +360,11 @@ const AdminProductForm: React.FC<Props> = ({ product, onClose, onSave }) => {
       {/* Submit Buttons - Fixed at bottom */}
       <div className="flex-none p-6 pt-2 border-t bg-background">
         <div className="flex justify-end gap-2">
-          <Button variant="ghost" onClick={onClose} disabled={isSubmitting}>
+          <Button 
+            variant="ghost" 
+            onClick={onSuccess ? () => onSuccess() : onClose} 
+            disabled={isSubmitting}
+          >
             <X className="h-4 w-4 mr-2" /> Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={isSubmitting}>

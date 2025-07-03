@@ -213,7 +213,8 @@ const VendorProducts: React.FC = () => {
             </DialogDescription>
           </DialogHeader>
           <AdminProductForm
-            productToEdit={selectedProduct}
+            product={selectedProduct}
+            onClose={() => setIsFormOpen(false)}
             onSuccess={handleFormSuccess}
           />
         </DialogContent>
