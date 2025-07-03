@@ -13,6 +13,10 @@ interface Offer {
   buttonLink: string;
   theme: 'festive' | 'sale' | 'holiday' | 'general';
   showOnlyOnce: boolean;
+  expiryDate?: string;
+  code?: string;
+  startDate?: string;
+  priority?: number;
 }
 
 export const useOfferPopup = () => {
@@ -44,9 +48,34 @@ export const useOfferPopup = () => {
           // Rule 3: Check localStorage for offers that should only be shown once ever
           const seenOffers = JSON.parse(localStorage.getItem('seenOffers') || '{}');
           
-          const offerToShow = offers.find(offer => 
-            !offer.showOnlyOnce || !seenOffers[offer._id]
-          );
+          // Filter valid offers
+          const validOffers = offers.filter(offer => {
+            // Check if offer should be shown only once
+            if (offer.showOnlyOnce && seenOffers[offer._id]) {
+              return false;
+            }
+
+            // Check expiry date
+            if (offer.expiryDate && new Date(offer.expiryDate) < new Date()) {
+              return false;
+            }
+
+            // Check start date
+            if (offer.startDate && new Date(offer.startDate) > new Date()) {
+              return false;
+            }
+
+            return true;
+          });
+
+          // Sort by priority if available
+          const sortedOffers = validOffers.sort((a, b) => {
+            const priorityA = a.priority ?? 0;
+            const priorityB = b.priority ?? 0;
+            return priorityB - priorityA;
+          });
+
+          const offerToShow = sortedOffers[0];
 
           if (offerToShow) {
             // Set the offer first
@@ -55,7 +84,7 @@ export const useOfferPopup = () => {
             // Then set isOpen after a short delay to ensure proper animation
             setTimeout(() => {
               setIsOpen(true);
-            }, 500);
+            }, 1000); // Increased delay for better UX
             
             // Mark as shown for this session
             sessionStorage.setItem('offerShownThisSession', 'true');
@@ -64,6 +93,13 @@ export const useOfferPopup = () => {
             if (offerToShow.showOnlyOnce) {
               seenOffers[offerToShow._id] = true;
               localStorage.setItem('seenOffers', JSON.stringify(seenOffers));
+            }
+
+            // Track offer impression
+            try {
+              await api.post(`/offers/${offerToShow._id}/impression`);
+            } catch (error) {
+              console.error('Failed to track offer impression:', error);
             }
           }
         }
@@ -84,8 +120,18 @@ export const useOfferPopup = () => {
     };
   }, [location.pathname]);
 
-  const closeOffer = () => {
+  const closeOffer = async () => {
     setIsOpen(false);
+
+    // Track offer close if there's a current offer
+    if (currentOffer) {
+      try {
+        await api.post(`/offers/${currentOffer._id}/close`);
+      } catch (error) {
+        console.error('Failed to track offer close:', error);
+      }
+    }
+
     // Remove offer after animation
     setTimeout(() => {
       setCurrentOffer(null);
