@@ -232,6 +232,11 @@ class ProductService {
     return response.data;
   }
 
+  async getCategoriesWithCounts(): Promise<{ name: string; count: number }[]> {
+    const response = await axios.get(`${API_URL}/products/categories-with-counts`);
+    return response.data;
+  }
+
   async getNewArrivals(): Promise<ProductData[]> {
     const response = await axios.get(`${API_URL}/products/new-arrivals`);
     console.log('New arrivals response:', response.data);

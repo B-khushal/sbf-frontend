@@ -1,15 +1,18 @@
-import React, { useState, useRef, useLayoutEffect } from 'react';
+import React, { useState, useRef, useLayoutEffect, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronRight, Sparkles } from 'lucide-react';
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { productService } from '@/services/productService';
 
 const CategoryMenu = () => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
   const [dropdownPosition, setDropdownPosition] = useState({ left: 0 });
+  const [categoryCounts, setCategoryCounts] = useState<{ [key: string]: number }>({});
+  const [isLoadingCounts, setIsLoadingCounts] = useState(true);
   const navRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
   const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -27,6 +30,27 @@ const CategoryMenu = () => {
     }, 200);
   };
 
+  // Fetch category counts on component mount
+  useEffect(() => {
+    const fetchCategoryCounts = async () => {
+      try {
+        setIsLoadingCounts(true);
+        const counts = await productService.getCategoriesWithCounts();
+        const countsMap: { [key: string]: number } = {};
+        counts.forEach(item => {
+          countsMap[item.name.toLowerCase()] = item.count;
+        });
+        setCategoryCounts(countsMap);
+      } catch (error) {
+        console.error('Error fetching category counts:', error);
+      } finally {
+        setIsLoadingCounts(false);
+      }
+    };
+
+    fetchCategoryCounts();
+  }, []);
+
   useLayoutEffect(() => {
     if (hoveredCategory && navRef.current) {
       const categoryIndex = categories.findIndex(c => c.name === hoveredCategory);
@@ -40,6 +64,12 @@ const CategoryMenu = () => {
       }
     }
   }, [hoveredCategory]);
+
+  // Helper function to get count for a category
+  const getCategoryCount = (categoryName: string): number => {
+    const key = categoryName.toLowerCase();
+    return categoryCounts[key] || 0;
+  };
   
   const categories = [
     { 
@@ -49,11 +79,11 @@ const CategoryMenu = () => {
       description: "Fresh blooms for every occasion",
       popular: true,
       subcategories: [
-        { name: "Roses", path: "/shop?category=roses", count: 25 },
-        { name: "Lilies", path: "/shop?category=lilies", count: 18 },
-        { name: "Tulips", path: "/shop?category=tulips", count: 12 },
-        { name: "Orchids", path: "/shop?category=orchids", count: 15 },
-        { name: "Sunflowers", path: "/shop?category=sunflowers", count: 10 },
+        { name: "Roses", path: "/shop?category=roses", count: getCategoryCount("roses") },
+        { name: "Lilies", path: "/shop?category=lilies", count: getCategoryCount("lilies") },
+        { name: "Tulips", path: "/shop?category=tulips", count: getCategoryCount("tulips") },
+        { name: "Orchids", path: "/shop?category=orchids", count: getCategoryCount("orchids") },
+        { name: "Sunflowers", path: "/shop?category=sunflowers", count: getCategoryCount("sunflowers") },
       ]
     },
     { 
@@ -63,10 +93,10 @@ const CategoryMenu = () => {
       description: "Delicious chocolate arrangements",
       popular: true,
       subcategories: [
-        { name: "Chocolate Baskets", path: "/shop?category=chocolate-baskets", count: 15 },
-        { name: "Chocolate Bouquets", path: "/shop?category=chocolate-bouquets", count: 12 },
-        { name: "Chocolate Gift Sets", path: "/shop?category=chocolate-gift-sets", count: 8 },
-        { name: "Premium Chocolates", path: "/shop?category=premium-chocolates", count: 10 },
+        { name: "Chocolate Baskets", path: "/shop?category=chocolate-baskets", count: getCategoryCount("chocolate baskets") },
+        { name: "Chocolate Bouquets", path: "/shop?category=chocolate-bouquets", count: getCategoryCount("chocolate bouquets") },
+        { name: "Chocolate Gift Sets", path: "/shop?category=chocolate-gift-sets", count: getCategoryCount("chocolate gift sets") },
+        { name: "Premium Chocolates", path: "/shop?category=premium-chocolates", count: getCategoryCount("premium chocolates") },
       ]
     },
     { 
@@ -76,10 +106,10 @@ const CategoryMenu = () => {
       description: "Celebrate special moments",
       popular: true,
       subcategories: [
-        { name: "Birthday Bouquets", path: "/shop?category=birthday-bouquets", count: 20 },
-        { name: "Party Arrangements", path: "/shop?category=party-arrangements", count: 14 },
-        { name: "Kids Birthday", path: "/shop?category=kids-birthday", count: 8 },
-        { name: "Birthday Cakes", path: "/shop?category=birthday-cakes", count: 6 },
+        { name: "Birthday Bouquets", path: "/shop?category=birthday-bouquets", count: getCategoryCount("birthday bouquets") },
+        { name: "Party Arrangements", path: "/shop?category=party-arrangements", count: getCategoryCount("party arrangements") },
+        { name: "Kids Birthday", path: "/shop?category=kids-birthday", count: getCategoryCount("kids birthday") },
+        { name: "Birthday Cakes", path: "/shop?category=birthday-cakes", count: getCategoryCount("birthday cakes") },
       ]
     },
     { 
@@ -89,10 +119,10 @@ const CategoryMenu = () => {
       description: "Romantic gestures made perfect",
       popular: false,
       subcategories: [
-        { name: "Romantic Bouquets", path: "/shop?category=romantic-bouquets", count: 22 },
-        { name: "Premium Roses", path: "/shop?category=premium-roses", count: 16 },
-        { name: "Love Arrangements", path: "/shop?category=love-arrangements", count: 11 },
-        { name: "Anniversary Gifts", path: "/shop?category=anniversary-gifts", count: 9 },
+        { name: "Romantic Bouquets", path: "/shop?category=romantic-bouquets", count: getCategoryCount("romantic bouquets") },
+        { name: "Premium Roses", path: "/shop?category=premium-roses", count: getCategoryCount("premium roses") },
+        { name: "Love Arrangements", path: "/shop?category=love-arrangements", count: getCategoryCount("love arrangements") },
+        { name: "Anniversary Gifts", path: "/shop?category=anniversary-gifts", count: getCategoryCount("anniversary gifts") },
       ]
     },
     { 
@@ -102,10 +132,10 @@ const CategoryMenu = () => {
       description: "Elegant gift baskets",
       popular: false,
       subcategories: [
-        { name: "Fruit Baskets", path: "/shop?category=fruit-baskets", count: 12 },
-        { name: "Flower Baskets", path: "/shop?category=flower-baskets", count: 18 },
-        { name: "Mixed Baskets", path: "/shop?category=mixed-baskets", count: 9 },
-        { name: "Gift Hampers", path: "/shop?category=gift-hampers", count: 11 },
+        { name: "Fruit Baskets", path: "/shop?category=fruit-baskets", count: getCategoryCount("fruit baskets") },
+        { name: "Flower Baskets", path: "/shop?category=flower-baskets", count: getCategoryCount("flower baskets") },
+        { name: "Mixed Baskets", path: "/shop?category=mixed-baskets", count: getCategoryCount("mixed baskets") },
+        { name: "Gift Hampers", path: "/shop?category=gift-hampers", count: getCategoryCount("gift hampers") },
       ]
     },
     { 
@@ -115,10 +145,10 @@ const CategoryMenu = () => {
       description: "Thoughtful gift collections",
       popular: true,
       subcategories: [
-        { name: "Gift Sets", path: "/shop?category=gift-sets", count: 15 },
-        { name: "Chocolates", path: "/shop?category=chocolates", count: 8 },
-        { name: "Combo Packs", path: "/shop?category=combo-packs", count: 12 },
-        { name: "Premium Collections", path: "/shop?category=premium-collections", count: 7 },
+        { name: "Gift Sets", path: "/shop?category=gift-sets", count: getCategoryCount("gift sets") },
+        { name: "Chocolates", path: "/shop?category=chocolates", count: getCategoryCount("chocolates") },
+        { name: "Combo Packs", path: "/shop?category=combo-packs", count: getCategoryCount("combo packs") },
+        { name: "Premium Collections", path: "/shop?category=premium-collections", count: getCategoryCount("premium collections") },
       ]
     },
     { 
@@ -128,10 +158,10 @@ const CategoryMenu = () => {
       description: "Indoor & outdoor plants",
       popular: false,
       subcategories: [
-        { name: "Indoor Plants", path: "/shop?category=indoor-plants", count: 20 },
-        { name: "Succulents", path: "/shop?category=succulents", count: 14 },
-        { name: "Garden Plants", path: "/shop?category=garden-plants", count: 10 },
-        { name: "Air Purifying", path: "/shop?category=air-purifying", count: 8 },
+        { name: "Indoor Plants", path: "/shop?category=indoor-plants", count: getCategoryCount("indoor plants") },
+        { name: "Succulents", path: "/shop?category=succulents", count: getCategoryCount("succulents") },
+        { name: "Garden Plants", path: "/shop?category=garden-plants", count: getCategoryCount("garden plants") },
+        { name: "Air Purifying", path: "/shop?category=air-purifying", count: getCategoryCount("air purifying") },
       ]
     },
     { 
@@ -141,10 +171,10 @@ const CategoryMenu = () => {
       description: "Comforting arrangements",
       popular: false,
       subcategories: [
-        { name: "Sympathy Bouquets", path: "/shop?category=sympathy-bouquets", count: 15 },
-        { name: "Condolence Arrangements", path: "/shop?category=condolence", count: 12 },
-        { name: "Memorial Flowers", path: "/shop?category=memorial-flowers", count: 8 },
-        { name: "Peaceful Arrangements", path: "/shop?category=peaceful-arrangements", count: 6 },
+        { name: "Sympathy Bouquets", path: "/shop?category=sympathy-bouquets", count: getCategoryCount("sympathy bouquets") },
+        { name: "Condolence Arrangements", path: "/shop?category=condolence", count: getCategoryCount("condolence") },
+        { name: "Memorial Flowers", path: "/shop?category=memorial-flowers", count: getCategoryCount("memorial flowers") },
+        { name: "Peaceful Arrangements", path: "/shop?category=peaceful-arrangements", count: getCategoryCount("peaceful arrangements") },
       ]
     },
     { 
@@ -154,10 +184,10 @@ const CategoryMenu = () => {
       description: "Special celebrations",
       popular: false,
       subcategories: [
-        { name: "Wedding", path: "/shop?category=wedding", count: 18 },
-        { name: "Graduation", path: "/shop?category=graduation", count: 10 },
-        { name: "Baby Shower", path: "/shop?category=baby-shower", count: 12 },
-        { name: "Housewarming", path: "/shop?category=housewarming", count: 8 },
+        { name: "Wedding", path: "/shop?category=wedding", count: getCategoryCount("wedding") },
+        { name: "Graduation", path: "/shop?category=graduation", count: getCategoryCount("graduation") },
+        { name: "Baby Shower", path: "/shop?category=baby-shower", count: getCategoryCount("baby shower") },
+        { name: "Housewarming", path: "/shop?category=housewarming", count: getCategoryCount("housewarming") },
       ]
     },
   ];
@@ -330,7 +360,13 @@ const CategoryMenu = () => {
                       </span>
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-gray-400 group-hover:text-primary/60 transition-colors duration-200 bg-gray-50 group-hover:bg-primary/10 px-2 py-1 rounded-full">
-                          {sub.count}
+                          {isLoadingCounts ? (
+                            <div className="w-4 h-3 flex items-center justify-center">
+                              <div className="w-2 h-2 border border-gray-300 border-t-transparent rounded-full animate-spin"></div>
+                            </div>
+                          ) : (
+                            sub.count
+                          )}
                         </span>
                         <motion.div
                           whileHover={{ x: 2 }}
