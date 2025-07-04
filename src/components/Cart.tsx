@@ -1,4 +1,4 @@
-import { Sheet, SheetContent } from '@/src/components/ui/sheet';
+import { Sheet, SheetContent } from './ui/sheet';
 
 const Cart = (props: any) => {
   return (
