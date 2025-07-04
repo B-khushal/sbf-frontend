@@ -11,7 +11,7 @@ import TimeSlotSelector from '@/components/TimeSlotSelector';
 import MessageCard from '@/components/MessageCard';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
-import useCart from '@/hooks/use-cart';
+import useCart, { useCartSelectors } from '@/hooks/use-cart';
 import { useToast } from '@/hooks/use-toast';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { Alert, AlertDescription } from '@/components/ui/alert'; // Make sure these are imported
@@ -23,7 +23,8 @@ import PinCodeInput from '@/components/ui/PinCodeInput';
 
 const CheckoutShippingPage = () => {
   const navigate = useNavigate();
-  const { items, subtotal } = useCart();
+  const { items } = useCart();
+  const { subtotal } = useCartSelectors();
   const { toast } = useToast();
   
   const [deliveryOption, setDeliveryOption] = useState<'self' | 'gift'>('self');

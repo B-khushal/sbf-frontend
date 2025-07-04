@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
-import useCart from '@/hooks/use-cart';
+import useCart, { useCartSelectors } from '@/hooks/use-cart';
 import { useToast } from '@/hooks/use-toast';
 import api from '@/services/api';
 import { useCurrency } from '@/contexts/CurrencyContext';
@@ -87,7 +87,8 @@ declare global {
 
 const CheckoutPaymentPage = () => {
   const navigate = useNavigate();
-  const { items, subtotal, clearCart } = useCart();
+  const { items, clearCart } = useCart();
+  const { subtotal } = useCartSelectors();
   const { toast } = useToast();
   const { formatPrice, convertPrice, currency, rate } = useCurrency();
   const [isRazorpayLoaded, setIsRazorpayLoaded] = useState(false);
