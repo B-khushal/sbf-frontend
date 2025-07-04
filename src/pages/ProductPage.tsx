@@ -17,7 +17,7 @@ const ProductPage = () => {
   const [loading, setLoading] = useState(true);
   
   const { 
-    addItem, 
+    addToCart, 
     openCart, 
   } = useCart();
   
@@ -62,18 +62,27 @@ const ProductPage = () => {
     quantity: number;
   }) => {
     try {
-      const success = addItem({
+      const cartItem = {
+        _id: item.id,
         id: item.id,
         productId: item.productId,
         title: item.title,
         price: item.price,
         originalPrice: item.originalPrice,
         image: item.image,
-      }, item.quantity);
+        quantity: item.quantity,
+        category: product?.category || '',
+        discount: product?.discount || 0,
+        images: product?.images || [item.image],
+        description: product?.description || '',
+        details: product?.details || [],
+        careInstructions: product?.careInstructions || [],
+        isNewArrival: product?.isNewArrival || false,
+        isFeatured: product?.isFeatured || false
+      };
       
-      if (success) {
-        setTimeout(() => openCart(), 300);
-      }
+      addToCart(cartItem);
+      setTimeout(() => openCart(), 300);
     } catch (error) {
       console.error('Error adding to cart:', error);
       throw error;

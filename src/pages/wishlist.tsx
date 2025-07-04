@@ -40,7 +40,7 @@ const itemVariants = {
 
 const WishlistPage = () => {
   const navigate = useNavigate();
-  const { addItem } = useCart();
+  const { addToCart } = useCart();
   const [items, setItems] = useState<WishlistItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
@@ -97,14 +97,26 @@ const WishlistPage = () => {
 
   // Move item to cart and remove from wishlist
   const moveToCart = (item: WishlistItem) => {
-    addItem({
+    const cartItem = {
+      _id: item.id,
       id: item.id,
       productId: item.id,
       title: item.title,
       price: item.price,
       originalPrice: item.price,
-      image: item.image
-    });
+      image: item.image,
+      quantity: 1,
+      category: '',
+      discount: 0,
+      images: [item.image],
+      description: '',
+      details: [],
+      careInstructions: [],
+      isNewArrival: false,
+      isFeatured: false
+    };
+    
+    addToCart(cartItem);
     
     removeFromWishlist(item.id);
     toast({

@@ -47,7 +47,7 @@ const ShopPage = () => {
   const [showFilters, setShowFilters] = useState(false);
 
   const {
-    addItem,
+    addToCart,
     showContactModal,
     contactModalProduct,
     closeContactModal,
@@ -184,14 +184,26 @@ const ShopPage = () => {
               </div>
               <button
                 onClick={() => {
-                  addItem({
+                  const cartItem = {
+                    _id: product._id,
                     id: product._id,
                     productId: product._id,
                     title: product.title,
                     price: product.price,
                     originalPrice: product.price,
-                    image: product.images?.[0] || '/images/placeholder.svg'
-                  }, 1);
+                    image: product.images?.[0] || '/images/placeholder.svg',
+                    quantity: 1,
+                    category: product.category,
+                    discount: product.discount,
+                    images: product.images,
+                    description: product.description,
+                    categories: product.categories,
+                    createdAt: product.createdAt,
+                    featured: product.featured,
+                    isNewArrival: product.isNewArrival,
+                    isFeatured: product.isFeatured
+                  };
+                  addToCart(cartItem);
                   onClose();
                 }}
                 className="w-full bg-primary text-white py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors text-sm sm:text-base"

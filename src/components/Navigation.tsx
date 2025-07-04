@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils';
 import CurrencyConverter from './CurrencyConverter';
 import { Input } from '@/components/ui/input';
 import api from '@/services/api';
-import useCart from '@/hooks/use-cart';
+import useCart, { useCartSelectors } from '@/hooks/use-cart';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useAuth } from '@/hooks/use-auth';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -90,7 +90,8 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
   const { pathname } = useLocation();
   const [wishlistCount, setWishlistCount] = useState(0);
   const cartHook = useCart();
-  const { itemCount: actualCartCount, toggleCart, isCartOpen, items } = cartHook;
+  const { itemCount: actualCartCount } = useCartSelectors();
+  const { toggleCart, isCartOpen, items } = cartHook;
   
   // Debug cart state with detailed logging
   useEffect(() => {

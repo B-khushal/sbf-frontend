@@ -3,12 +3,13 @@ import { Outlet, useLocation } from 'react-router-dom';
 import Navigation from './Navigation';
 import Footer from './Footer';
 import Cart from './Cart';
-import useCart from '../hooks/use-cart';
+import useCart, { useCartSelectors } from '../hooks/use-cart';
 import { useSettings } from '../contexts/SettingsContext';
 import CategoryMenu from './CategoryMenu';
 
 const MainLayout: React.FC = () => {
   const cartHook = useCart();
+  const { itemCount } = useCartSelectors();
   const { homeSections } = useSettings();
   const { pathname } = useLocation();
 
@@ -28,7 +29,7 @@ const MainLayout: React.FC = () => {
         items={cartHook.items}
         onUpdateQuantity={cartHook.updateItemQuantity}
         onRemoveItem={cartHook.removeItem}
-        itemCount={cartHook.itemCount}
+        itemCount={itemCount}
       />
       <main className="flex-grow">
         <Outlet />

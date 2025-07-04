@@ -3,42 +3,43 @@ import useCart from '@/hooks/use-cart';
 import { useAuth } from '@/hooks/use-auth';
 
 const CartDebugger = () => {
-  const cartHook = useCart();
-  const { items, itemCount, isCartOpen, toggleCart, addItem, removeItem, forceUpdate } = cartHook;
   const { user } = useAuth();
-  
-  console.log('🐛 CartDebugger - Cart hook instance:', cartHook);
-
-  const testProduct = {
-    id: 'test-product-1',
-    productId: 'test-product-1',
-    title: 'Test Rose Bouquet',
-    price: 599,
-    originalPrice: 799,
-    image: '/api/placeholder/200/200'
-  };
+  const cartHook = useCart();
+  const { items, isCartOpen, toggleCart, addToCart, removeItem } = cartHook;
 
   const handleAddTestItem = () => {
-    addItem(testProduct, 1);
+    const testProduct = {
+      _id: 'test-product-1',
+      id: 'test-product-1',
+      productId: 'test-product-1',
+      title: 'Test Product',
+      price: 999,
+      originalPrice: 999,
+      image: '/images/placeholder.svg',
+      quantity: 1,
+      category: 'test',
+      discount: 0,
+      images: ['/images/placeholder.svg'],
+      description: 'Test product for debugging',
+      details: [],
+      careInstructions: [],
+      isNewArrival: false,
+      isFeatured: false
+    };
+    addToCart(testProduct);
   };
 
   const handleToggleCart = () => {
-    console.log('Debug: Toggling cart from debugger');
     toggleCart();
   };
 
   return (
-    <div className="fixed bottom-4 left-4 bg-white p-4 border border-gray-300 rounded-lg shadow-lg z-50 min-w-64">
-      <h3 className="font-bold text-sm mb-2">Cart Debugger</h3>
-      <div className="text-xs space-y-1 mb-3">
-        <div>User: {user ? user.name || user.email : 'Not logged in'}</div>
-        <div>Cart Open: {isCartOpen ? 'Yes' : 'No'}</div>
-        <div>Item Count: {itemCount}</div>
-        <div>Items in Cart: {items.length}</div>
-        <div>Force Update: {forceUpdate}</div>
-        <div className="border-t pt-1 mt-1">
-          <div>Raw Items: {JSON.stringify(items)}</div>
-        </div>
+    <div className="fixed bottom-4 right-4 bg-white p-4 rounded-lg shadow-lg border z-50">
+      <h3 className="text-sm font-bold mb-2">Cart Debugger</h3>
+      <div className="text-xs space-y-1 mb-2">
+        <div>Items: {items.length}</div>
+        <div>Open: {isCartOpen ? 'Yes' : 'No'}</div>
+        <div>User: {user ? user.name : 'None'}</div>
       </div>
       <div className="space-y-2">
         <button
@@ -56,7 +57,7 @@ const CartDebugger = () => {
         </button>
         {items.length > 0 && (
           <button
-            onClick={() => removeItem(items[0].id)}
+            onClick={() => removeItem(items[0]._id)}
             className="w-full bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600"
           >
             Remove First Item

@@ -160,7 +160,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
   const { toast } = useToast();
   const { formatPrice, convertPrice } = useCurrency();
   const { user } = useAuth();
-  const { onAddToCart: addToCart } = useCart();
+  const { addToCart } = useCart();
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
 
   // Debug log to check properties
@@ -216,15 +216,26 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
     }
 
     try {
-      addToCart({
+      const cartItem = {
+        _id: product._id,
         id: product._id,
         productId: product._id,
         title: product.title,
         price: discountedPrice,
         originalPrice: originalPrice,
         image: imageUrl,
-        quantity
-      });
+        quantity: quantity,
+        category: product.category,
+        discount: product.discount,
+        images: product.images,
+        description: product.description,
+        details: product.details,
+        careInstructions: product.careInstructions,
+        isNewArrival: product.isNewArrival,
+        isFeatured: product.isFeatured
+      };
+      
+      addToCart(cartItem);
       toast({
         title: "Added to cart",
         description: `${quantity} × ${product.title} added to your cart`,

@@ -79,7 +79,7 @@ const ProductCard = ({ product, onAddToCart, onOpenCart }: {
   onOpenCart?: () => void;
 }) => {
   const { formatPrice, convertPrice } = useCurrency();
-  const { addItem, openCart } = useCart();
+  const { addToCart, openCart } = useCart();
   const navigate = useNavigate();
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
@@ -137,32 +137,43 @@ const ProductCard = ({ product, onAddToCart, onOpenCart }: {
     
     try {
       // Use the passed onAddToCart function if available, otherwise use the hook
-      const addToCartFunction = onAddToCart || addItem;
+      const addToCartFunction = onAddToCart || addToCart;
       const openCartFunction = onOpenCart || openCart;
       
-      const success = addToCartFunction({
+      const cartItem = {
+        _id: product._id,
         id: product._id,
         productId: product._id,
         title: product.title,
         price: discountedPrice,
         originalPrice: product.price,
-        image: product.images?.[0] || '/images/placeholder.svg'
-      }, 1);
+        image: product.images?.[0] || '/images/placeholder.svg',
+        quantity: 1,
+        category: product.category,
+        discount: product.discount,
+        images: product.images,
+        categories: product.categories,
+        description: product.description,
+        createdAt: product.createdAt,
+        featured: product.featured,
+        isNewArrival: product.isNewArrival,
+        isFeatured: product.isFeatured
+      };
       
-      if (success) {
-        toast.success("🛒 Added to cart!", {
-          description: `${product.title} has been added to your cart`,
-          duration: 3000,
-        });
-        setTimeout(() => openCartFunction(), 300);
-      }
+      addToCartFunction(cartItem);
+      
+      toast.success("🛒 Added to cart!", {
+        description: `${product.title} has been added to your cart`,
+        duration: 3000,
+      });
+      setTimeout(() => openCartFunction(), 300);
     } catch (error) {
       console.error("Error adding to cart:", error);
-        toast.error("Failed to add to cart", {
+      toast.error("Failed to add to cart", {
         description: "Please try again",
-          duration: 3000,
-        });
-      }
+        duration: 3000,
+      });
+    }
   };
 
   // Handle view details

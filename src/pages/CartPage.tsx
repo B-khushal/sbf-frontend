@@ -74,11 +74,25 @@ const CartPage: React.FC = () => {
   };
 
   const handleQuantityChange = (itemId: string, newQuantity: number) => {
-    if (newQuantity < 1) return;
+    if (newQuantity < 1) {
+      removeItem(itemId);
+      return;
+    }
+    
     updateItemQuantity(itemId, newQuantity);
     
     // Clear promo code when cart changes to avoid incorrect calculations
     // User will need to re-apply promo code with new cart total
+    if (appliedPromoCode) {
+      setAppliedPromoCode(null);
+      localStorage.removeItem('appliedPromoCode');
+    }
+  };
+
+  const handleRemoveItem = (itemId: string) => {
+    removeItem(itemId);
+    
+    // Clear promo code when cart changes
     if (appliedPromoCode) {
       setAppliedPromoCode(null);
       localStorage.removeItem('appliedPromoCode');
@@ -270,7 +284,7 @@ const CartPage: React.FC = () => {
                                   {formatPrice(convertPrice(item.price * item.quantity))}
                                 </div>
                                 <motion.button
-                                  onClick={() => removeItem(item.id)}
+                                  onClick={() => handleRemoveItem(item.id)}
                                   className="inline-flex items-center gap-1 sm:gap-2 text-red-500 hover:text-red-700 transition-colors font-medium text-xs sm:text-sm"
                                   whileHover={{ scale: 1.05 }}
                                   whileTap={{ scale: 0.95 }}
