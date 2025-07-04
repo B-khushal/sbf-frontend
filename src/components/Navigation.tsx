@@ -215,7 +215,8 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
   };
 
   const handleCartClick = () => {
-    navigate('/cart');
+    console.log('🛒 Cart button clicked, toggling cart sidebar');
+    toggleCart();
   };
 
   return (
