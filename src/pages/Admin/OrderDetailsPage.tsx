@@ -46,11 +46,34 @@ const OrderDetailsPage: React.FC = () => {
         </CardHeader>
         <CardContent className="space-y-6">
           <div>
-            <h3 className="font-semibold mb-2">Customer</h3>
-            <div>Name: {order.shippingDetails.fullName}</div>
-            <div>Email: {order.shippingDetails.email}</div>
-            <div>Phone: {order.shippingDetails.phone}</div>
-            <div>Address: {order.shippingDetails.address}</div>
+            <h3 className="font-semibold mb-2">Delivery Address</h3>
+            <div className="bg-gray-50 p-3 rounded border">
+              <div className="flex items-center gap-2 mb-2">
+                <Badge variant="outline">
+                  {order.shippingDetails.notes?.toLowerCase().includes('gift') ? '🎁 Gift Delivery' : '📦 Deliver to Myself'}
+                </Badge>
+              </div>
+              <div className="space-y-1 text-sm">
+                <div><strong>Recipient:</strong> {order.shippingDetails.fullName}</div>
+                <div><strong>Email:</strong> {order.shippingDetails.email}</div>
+                <div><strong>Phone:</strong> {order.shippingDetails.phone}</div>
+                <div><strong>Address:</strong></div>
+                <div className="ml-4">
+                  {order.shippingDetails.address}
+                  {order.shippingDetails.apartment && <div>{order.shippingDetails.apartment}</div>}
+                  <div>{order.shippingDetails.city}, {order.shippingDetails.state} {order.shippingDetails.zipCode}</div>
+                </div>
+                {order.shippingDetails.notes && (
+                  <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded">
+                    <strong>Notes:</strong> {order.shippingDetails.notes}
+                  </div>
+                )}
+                <div className="mt-2 text-xs text-gray-600">
+                  <div><strong>Delivery Date:</strong> {format(new Date(order.shippingDetails.deliveryDate), 'PPP')}</div>
+                  <div><strong>Time Slot:</strong> {order.shippingDetails.timeSlot}</div>
+                </div>
+              </div>
+            </div>
           </div>
           <div>
             <h3 className="font-semibold mb-2">Order Items</h3>
