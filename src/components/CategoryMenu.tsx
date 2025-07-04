@@ -53,6 +53,20 @@ const CategoryMenu = () => {
         { name: "Lilies", path: "/shop?category=lilies", count: 18 },
         { name: "Tulips", path: "/shop?category=tulips", count: 12 },
         { name: "Orchids", path: "/shop?category=orchids", count: 15 },
+        { name: "Sunflowers", path: "/shop?category=sunflowers", count: 10 },
+      ]
+    },
+    { 
+      name: "🍫 Chocolate", 
+      path: "/shop?category=chocolate", 
+      emoji: "🍫",
+      description: "Delicious chocolate arrangements",
+      popular: true,
+      subcategories: [
+        { name: "Chocolate Baskets", path: "/shop?category=chocolate-baskets", count: 15 },
+        { name: "Chocolate Bouquets", path: "/shop?category=chocolate-bouquets", count: 12 },
+        { name: "Chocolate Gift Sets", path: "/shop?category=chocolate-gift-sets", count: 8 },
+        { name: "Premium Chocolates", path: "/shop?category=premium-chocolates", count: 10 },
       ]
     },
     { 
@@ -65,6 +79,7 @@ const CategoryMenu = () => {
         { name: "Birthday Bouquets", path: "/shop?category=birthday-bouquets", count: 20 },
         { name: "Party Arrangements", path: "/shop?category=party-arrangements", count: 14 },
         { name: "Kids Birthday", path: "/shop?category=kids-birthday", count: 8 },
+        { name: "Birthday Cakes", path: "/shop?category=birthday-cakes", count: 6 },
       ]
     },
     { 
@@ -77,6 +92,7 @@ const CategoryMenu = () => {
         { name: "Romantic Bouquets", path: "/shop?category=romantic-bouquets", count: 22 },
         { name: "Premium Roses", path: "/shop?category=premium-roses", count: 16 },
         { name: "Love Arrangements", path: "/shop?category=love-arrangements", count: 11 },
+        { name: "Anniversary Gifts", path: "/shop?category=anniversary-gifts", count: 9 },
       ]
     },
     { 
@@ -89,6 +105,7 @@ const CategoryMenu = () => {
         { name: "Fruit Baskets", path: "/shop?category=fruit-baskets", count: 12 },
         { name: "Flower Baskets", path: "/shop?category=flower-baskets", count: 18 },
         { name: "Mixed Baskets", path: "/shop?category=mixed-baskets", count: 9 },
+        { name: "Gift Hampers", path: "/shop?category=gift-hampers", count: 11 },
       ]
     },
     { 
@@ -101,6 +118,7 @@ const CategoryMenu = () => {
         { name: "Gift Sets", path: "/shop?category=gift-sets", count: 15 },
         { name: "Chocolates", path: "/shop?category=chocolates", count: 8 },
         { name: "Combo Packs", path: "/shop?category=combo-packs", count: 12 },
+        { name: "Premium Collections", path: "/shop?category=premium-collections", count: 7 },
       ]
     },
     { 
@@ -113,6 +131,33 @@ const CategoryMenu = () => {
         { name: "Indoor Plants", path: "/shop?category=indoor-plants", count: 20 },
         { name: "Succulents", path: "/shop?category=succulents", count: 14 },
         { name: "Garden Plants", path: "/shop?category=garden-plants", count: 10 },
+        { name: "Air Purifying", path: "/shop?category=air-purifying", count: 8 },
+      ]
+    },
+    { 
+      name: "💙 Sympathy", 
+      path: "/shop?category=sympathy", 
+      emoji: "💙",
+      description: "Comforting arrangements",
+      popular: false,
+      subcategories: [
+        { name: "Sympathy Bouquets", path: "/shop?category=sympathy-bouquets", count: 15 },
+        { name: "Condolence Arrangements", path: "/shop?category=condolence", count: 12 },
+        { name: "Memorial Flowers", path: "/shop?category=memorial-flowers", count: 8 },
+        { name: "Peaceful Arrangements", path: "/shop?category=peaceful-arrangements", count: 6 },
+      ]
+    },
+    { 
+      name: "🎉 Occasions", 
+      path: "/shop?category=occasions", 
+      emoji: "🎉",
+      description: "Special celebrations",
+      popular: false,
+      subcategories: [
+        { name: "Wedding", path: "/shop?category=wedding", count: 18 },
+        { name: "Graduation", path: "/shop?category=graduation", count: 10 },
+        { name: "Baby Shower", path: "/shop?category=baby-shower", count: 12 },
+        { name: "Housewarming", path: "/shop?category=housewarming", count: 8 },
       ]
     },
   ];

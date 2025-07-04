@@ -28,6 +28,8 @@ const CATEGORIES = [
   'Gifts',
   'Occasions',
   'Baskets',
+  'Chocolate Baskets',
+  'Chocolate Bouquets',
   'Anniversary',
   'Birthday',
   'Wedding',
@@ -41,7 +43,27 @@ const CATEGORIES = [
   'Orchids',
   'Lilies',
   'Cakes',
-  'Bunches'
+  'Bunches',
+  'Gift Hampers',
+  'Fruit Baskets',
+  'Mixed Arrangements',
+  'Premium Collections',
+  'Seasonal Specials',
+  'Corporate Gifts',
+  'Baby Shower',
+  'Housewarming',
+  'Thank You',
+  'Apology',
+  'Condolence',
+  'Graduation',
+  'Valentine\'s Day',
+  'Mother\'s Day',
+  'Father\'s Day',
+  'Christmas',
+  'New Year',
+  'Diwali',
+  'Holi',
+  'Raksha Bandhan'
 ];
 
 const PRODUCT_DETAILS_OPTIONS = [

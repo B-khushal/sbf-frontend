@@ -327,6 +327,8 @@ const AdminProducts: React.FC = () => {
                 <SelectItem value="all">All Categories</SelectItem>
                 <SelectItem value="cakes">🎂 Cakes</SelectItem>
                 <SelectItem value="baskets">🧺 Baskets</SelectItem>
+                <SelectItem value="chocolate-baskets">🍫 Chocolate Baskets</SelectItem>
+                <SelectItem value="chocolate-bouquets">🍫 Chocolate Bouquets</SelectItem>
                 <SelectItem value="bunches">💐 Bunches</SelectItem>
                 <SelectItem value="anniversary">💕 Anniversary</SelectItem>
                 <SelectItem value="birthday">🎈 Birthday</SelectItem>
@@ -335,11 +337,31 @@ const AdminProducts: React.FC = () => {
                 <SelectItem value="congratulations">🎉 Congratulations</SelectItem>
                 <SelectItem value="get-well">🌸 Get Well</SelectItem>
                 <SelectItem value="sympathy">💙 Sympathy</SelectItem>
+                <SelectItem value="condolence">🕊️ Condolence</SelectItem>
                 <SelectItem value="roses">🌹 Roses</SelectItem>
                 <SelectItem value="sunflowers">🌻 Sunflowers</SelectItem>
                 <SelectItem value="tulips">🌷 Tulips</SelectItem>
                 <SelectItem value="orchids">🌺 Orchids</SelectItem>
                 <SelectItem value="lilies">🌼 Lilies</SelectItem>
+                <SelectItem value="gift-hampers">🎁 Gift Hampers</SelectItem>
+                <SelectItem value="fruit-baskets">🍎 Fruit Baskets</SelectItem>
+                <SelectItem value="mixed-arrangements">🌸 Mixed Arrangements</SelectItem>
+                <SelectItem value="premium-collections">⭐ Premium Collections</SelectItem>
+                <SelectItem value="seasonal-specials">🍂 Seasonal Specials</SelectItem>
+                <SelectItem value="corporate-gifts">🏢 Corporate Gifts</SelectItem>
+                <SelectItem value="baby-shower">👶 Baby Shower</SelectItem>
+                <SelectItem value="housewarming">🏠 Housewarming</SelectItem>
+                <SelectItem value="thank-you">🙏 Thank You</SelectItem>
+                <SelectItem value="apology">😔 Apology</SelectItem>
+                <SelectItem value="graduation">🎓 Graduation</SelectItem>
+                <SelectItem value="valentines-day">💝 Valentine's Day</SelectItem>
+                <SelectItem value="mothers-day">🌷 Mother's Day</SelectItem>
+                <SelectItem value="fathers-day">👨‍👧‍👦 Father's Day</SelectItem>
+                <SelectItem value="christmas">🎄 Christmas</SelectItem>
+                <SelectItem value="new-year">🎆 New Year</SelectItem>
+                <SelectItem value="diwali">🪔 Diwali</SelectItem>
+                <SelectItem value="holi">🎨 Holi</SelectItem>
+                <SelectItem value="raksha-bandhan">🪢 Raksha Bandhan</SelectItem>
                 {categories.map((category) => (
                   <SelectItem key={category} value={category.toLowerCase()}>
                     {category.charAt(0).toUpperCase() + category.slice(1)}
