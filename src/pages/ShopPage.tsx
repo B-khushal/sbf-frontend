@@ -96,7 +96,6 @@ const ShopPage = () => {
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [quickViewProduct, setQuickViewProduct] = useState(null);
   const [wishlist, setWishlist] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -181,96 +180,6 @@ const ShopPage = () => {
   const handleCategoryClick = (categoryName: string) => {
     const categoryUrl = `/shop/${categoryName}`;
     navigate(categoryUrl);
-  };
-
-  // Handle quick view
-  const handleQuickView = (product: any) => {
-    setQuickViewProduct(product);
-  };
-
-  // Quick View Modal Component - Mobile Responsive
-  const QuickViewModal = ({ product, onClose }: { product: any; onClose: () => void }) => {
-    if (!product) return null;
-
-    return (
-      <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-3 sm:p-4">
-        <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg sm:text-xl lg:text-2xl font-bold pr-2">{product.title}</h3>
-            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full flex-shrink-0">
-              <X size={20} />
-            </button>
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-            <img 
-              src={getSquareImageUrl(product.images?.[0], 500, false)}
-              alt={product.title}
-              className="w-full h-48 sm:h-64 object-cover rounded-lg"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                // Try different URL constructions if the first one fails
-                if (!target.src.includes('placeholder')) {
-                  if (product.images?.[0]?.startsWith('/uploads/')) {
-                    target.src = `https://sbf-backend.onrender.com${product.images[0]}`;
-                  } else if (product.images?.[0] && !product.images[0].startsWith('http')) {
-                    target.src = `https://sbf-backend.onrender.com/uploads/${product.images[0]}`;
-                  } else {
-                    target.src = "/images/placeholder.svg";
-                  }
-                } else if (!target.src.includes('placeholder.svg')) {
-                  target.src = "/images/placeholder.svg";
-                }
-              }}
-            />
-            <div>
-              <p className="text-gray-600 mb-4 text-sm sm:text-base">{product.description || "Beautiful floral arrangement"}</p>
-              <div className="mb-4">
-                {product.discount > 0 ? (
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                    <span className="text-xl sm:text-2xl font-bold text-red-600">
-                      {formatPrice(convertPrice(product.price * (1 - product.discount / 100)))}
-                    </span>
-                    <span className="text-base sm:text-lg text-gray-500 line-through">
-                      {formatPrice(convertPrice(product.price))}
-                    </span>
-                  </div>
-                ) : (
-                  <span className="text-xl sm:text-2xl font-bold text-primary">{formatPrice(convertPrice(product.price))}</span>
-                )}
-              </div>
-              <button
-                onClick={() => {
-                  const cartItem = {
-                    _id: product._id,
-                    id: product._id,
-                    productId: product._id,
-                    title: product.title,
-                    price: product.price,
-                    originalPrice: product.price,
-                    image: product.images?.[0] || '/images/placeholder.svg',
-                    quantity: 1,
-                    category: product.category,
-                    discount: product.discount,
-                    images: product.images,
-                    description: product.description,
-                    categories: product.categories,
-                    createdAt: product.createdAt,
-                    featured: product.featured,
-                    isNewArrival: product.isNewArrival,
-                    isFeatured: product.isFeatured
-                  };
-                  addToCart(cartItem);
-                  onClose();
-                }}
-                className="w-full bg-primary text-white py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors text-sm sm:text-base"
-              >
-                Add to Cart
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
   };
 
   // Initialize from URL parameters
@@ -420,8 +329,6 @@ const ShopPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-bloom-blue-50 via-bloom-pink-50 to-bloom-green-50">
-      <QuickViewModal product={quickViewProduct} onClose={() => setQuickViewProduct(null)} />
-
       <main className="pt-20">
         <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Search Results Header */}

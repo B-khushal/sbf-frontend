@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { Heart, ShoppingBag, Eye, Star, ArrowRight, Sparkles } from "lucide-react";
+import { Heart, ShoppingBag, Star, ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import useCart from "@/hooks/use-cart";
@@ -170,14 +170,6 @@ const ProductCard = ({ product, onAddToCart, onOpenCart }: {
         duration: 3000,
       });
     }
-  };
-
-  // Handle view details
-  const handleViewDetails = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log("View details clicked:", product._id);
-    window.open(`/product/${product._id}`, '_blank', 'noopener,noreferrer');
   };
 
   // Handle wishlist toggle
@@ -364,23 +356,12 @@ const ProductCard = ({ product, onAddToCart, onOpenCart }: {
         {/* Action Buttons */}
         <div className="flex gap-2">
           <Button
-            onClick={handleViewDetails}
-            variant="outline"
-            size="sm"
-            className="flex-1 text-xs sm:text-sm py-2 sm:py-2.5 rounded-lg sm:rounded-xl hover:bg-gray-50 border-gray-200 transition-all duration-200"
-          >
-            <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-            <span className="hidden xs:inline">Quick View</span>
-            <span className="xs:hidden">View</span>
-          </Button>
-          <Button
             onClick={handleAddToCart}
             size="sm"
-            className="flex-1 text-xs sm:text-sm py-2 sm:py-2.5 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white rounded-lg sm:rounded-xl transition-all duration-200 hover:shadow-lg"
+            className="w-full text-xs sm:text-sm py-2 sm:py-2.5 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white rounded-lg sm:rounded-xl transition-all duration-200 hover:shadow-lg"
           >
             <ShoppingBag className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-            <span className="hidden xs:inline">Add to Cart</span>
-            <span className="xs:hidden">Add</span>
+            Add to Cart
           </Button>
         </div>
       </div>
