@@ -27,77 +27,12 @@ type CartProps = {
 };
 
 const Cart = (props: any) => {
-  // Debug logging
-  React.useEffect(() => {
-    console.log('Cart component rendered with:', {
-      isOpen: props.isOpen,
-      cartItems: props.cartItems,
-      cartTotal: props.cartTotal,
-    });
-  }, [props.isOpen, props.cartItems, props.cartTotal]);
-
-  // Ref for scrollable area
-  const scrollRef = React.useRef<HTMLDivElement>(null);
-
-  // Scroll to top when cart is opened
-  React.useEffect(() => {
-    if (props.isOpen && scrollRef.current) {
-      scrollRef.current.scrollTop = 0;
-    }
-  }, [props.isOpen]);
-
   return (
-    <Sheet open={props.isOpen} onOpenChange={props.onClose}>
+    <Sheet open={true} onOpenChange={() => {}}>
       <SheetContent className="flex flex-col w-full sm:w-96 bg-white">
-        {/* DEBUG HEADER */}
-        <div className="p-2 bg-yellow-100 text-yellow-800 text-xs text-center font-bold border-b">
-          DEBUG: cartItems={JSON.stringify(props.cartItems)}, cartTotal={props.cartTotal}
+        <div className="p-4 bg-red-100 text-red-800 font-bold text-center">
+          IF YOU SEE THIS, THE CART COMPONENT IS RENDERING.
         </div>
-        <SheetHeader className="px-6 pt-6">
-          <SheetTitle className="flex items-center gap-2 text-lg font-semibold text-gray-900">
-            <span>Your Cart</span>
-            {props.cartItems && props.cartItems.length > 0 && (
-              <span className="ml-2 text-sm text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
-                {props.cartItems.length} {props.cartItems.length === 1 ? 'item' : 'items'}
-              </span>
-            )}
-          </SheetTitle>
-        </SheetHeader>
-        <div ref={scrollRef} className="flex-1 overflow-y-auto py-4 px-6">
-          {props.cartItems && props.cartItems.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-center">
-              <h3 className="text-xl font-semibold mb-2 text-gray-900">Your cart is empty</h3>
-              <p className="text-gray-500 mb-8 max-w-xs">
-                Discover our beautiful floral arrangements and add them to your cart.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {props.cartItems && props.cartItems.map((item: CartItem) => (
-                <CartItemRow
-                  key={item._id}
-                  item={item}
-                  onRemove={() => props.onRemove(item._id)}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-        <SheetFooter className="bg-gray-50 px-6 py-4 border-t">
-          <div className="w-full space-y-4">
-            <div className="flex justify-between items-center text-lg font-semibold">
-              <span>Total</span>
-              <span className="text-primary">₹{props.cartTotal || 0}</span>
-            </div>
-            <button
-              className="w-full bg-purple-600 text-white py-3 rounded font-bold text-lg disabled:opacity-50"
-              onClick={props.onCheckout}
-              disabled={!props.cartItems || props.cartItems.length === 0}
-            >
-              Checkout
-            </button>
-          </div>
-        </SheetFooter>
       </SheetContent>
     </Sheet>
   );
