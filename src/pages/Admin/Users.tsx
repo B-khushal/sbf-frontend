@@ -6,20 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Search, UserPlus, Edit, Trash2, Store, Eye, Filter } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import api from '@/services/api'; // ✅ Import API service
-import { 
-  EnhancedContextualDialog, 
-  EnhancedContextualDialogContent, 
-  EnhancedContextualDialogHeader, 
-  EnhancedContextualDialogTitle, 
-  EnhancedContextualDialogFooter, 
-  EnhancedContextualDialogDescription 
-} from '@/components/ui/enhanced-contextual-dialog';
+import api from '@/services/api';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { getAllVendors, updateVendorStatus } from '@/services/vendorService';
+import { useNavigate } from 'react-router-dom';
 
 
 type User = {
@@ -78,11 +71,9 @@ const AdminUsers: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [updatingVendor, setUpdatingVendor] = useState<string | null>(null);
   const { formatPrice, convertPrice } = useCurrency();
+  const navigate = useNavigate();
 
   // Trigger refs for contextual positioning
-  const addUserButtonRef = useRef<HTMLButtonElement>(null);
-  const editButtonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
-  const deleteButtonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
   const vendorDetailButtonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
 
   // Fetch users and vendors with better error handling
@@ -179,50 +170,7 @@ const AdminUsers: React.FC = () => {
   };
 
   const handleEditClick = (user: User) => {
-    if (editButtonRefs.current[user._id]) {
-      editButtonRefs.current[user._id]?.scrollIntoView({ block: 'center', behavior: 'smooth' });
-    }
-    setSelectedUser(user);
-    setEditForm({
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      status: user.status
-    });
-    setIsEditDialogOpen(true);
-  };
-
-  const handleEditSubmit = async () => {
-    if (!selectedUser) return;
-    setIsLoading(true);
-
-    try {
-      console.log("Updating user:", selectedUser._id, editForm);
-
-      const response = await api.put(`/users/${selectedUser._id}`, editForm);
-
-      console.log("Update response:", response.data);
-
-      setUsers(users.map(user => 
-        user._id === selectedUser._id ? response.data : user
-      ));
-
-      setIsEditDialogOpen(false);
-      setSelectedUser(null);
-      toast({
-        title: "Success",
-        description: "User updated successfully",
-      });
-    } catch (error: any) {
-      console.error("Error updating user:", error.response || error);
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to update user",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    navigate(`/admin/users/edit/${user._id}`);
   };
 
   const handleDeleteClick = (userId: string) => {
@@ -341,8 +289,7 @@ const AdminUsers: React.FC = () => {
   };
 
   const handleAddUserClick = () => {
-    addUserButtonRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
-    setIsAddDialogOpen(true);
+    navigate('/admin/users/add');
   };
 
   // ✅ Search and Role Filter
@@ -364,7 +311,7 @@ const AdminUsers: React.FC = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Users</h1>
-        <Button ref={addUserButtonRef} onClick={handleAddUserClick}>
+        <Button onClick={handleAddUserClick}>
           <UserPlus className="mr-2 h-4 w-4" /> Add User
         </Button>
       </div>
@@ -521,7 +468,6 @@ const AdminUsers: React.FC = () => {
                       </Button>
                     )}
                     <Button
-                      ref={(el) => editButtonRefs.current[user._id] = el}
                       variant="ghost"
                       size="sm"
                       onClick={() => handleEditClick(user)}
@@ -530,7 +476,6 @@ const AdminUsers: React.FC = () => {
                       <Edit className="h-4 w-4" />
                     </Button>
                     <Button
-                      ref={(el) => deleteButtonRefs.current[user._id] = el}
                       variant="ghost"
                       size="sm"
                       onClick={() => handleDeleteClick(user._id)}
@@ -554,85 +499,6 @@ const AdminUsers: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Edit Dialog */}
-      <EnhancedContextualDialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <EnhancedContextualDialogContent 
-          triggerRef={selectedUser ? editButtonRefs.current[selectedUser._id] : undefined}
-          useContextualPositioning={true}
-          margin={16}
-          className="max-w-[90vw] max-h-[80vh] overflow-y-auto"
-        >
-          <EnhancedContextualDialogHeader>
-            <EnhancedContextualDialogTitle>Edit User</EnhancedContextualDialogTitle>
-            <EnhancedContextualDialogDescription>
-              Update user information and permissions.
-            </EnhancedContextualDialogDescription>
-          </EnhancedContextualDialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                value={editForm.name}
-                onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                disabled={isLoading}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={editForm.email}
-                onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                disabled={isLoading}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="role">Role</Label>
-              <Select
-                value={editForm.role}
-                onValueChange={(value) => setEditForm({ ...editForm, role: value })}
-                disabled={isLoading}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="user">User</SelectItem>
-                  <SelectItem value="vendor">Vendor</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Select
-                value={editForm.status}
-                onValueChange={(value) => setEditForm({ ...editForm, status: value })}
-                disabled={isLoading}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <EnhancedContextualDialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} disabled={isLoading}>
-              Cancel
-            </Button>
-            <Button onClick={handleEditSubmit} disabled={isLoading}>
-              {isLoading ? "Saving..." : "Save Changes"}
-            </Button>
-          </EnhancedContextualDialogFooter>
-        </EnhancedContextualDialogContent>
-      </EnhancedContextualDialog>
-
       {/* Delete Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
@@ -652,220 +518,102 @@ const AdminUsers: React.FC = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Add User Dialog */}
-      <EnhancedContextualDialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <EnhancedContextualDialogContent 
-          className="sm:max-w-[425px] max-w-[90vw] max-h-[80vh] overflow-y-auto"
-          triggerRef={addUserButtonRef}
-          useContextualPositioning={true}
-          margin={16}
-        >
-          <EnhancedContextualDialogHeader>
-            <EnhancedContextualDialogTitle>Add New User</EnhancedContextualDialogTitle>
-            <EnhancedContextualDialogDescription>
-              Create a new user account with the specified details.
-            </EnhancedContextualDialogDescription>
-          </EnhancedContextualDialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                value={newUser.name}
-                onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
-                placeholder="John Doe"
-                disabled={isLoading}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={newUser.email}
-                onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                placeholder="john@example.com"
-                disabled={isLoading}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={newUser.password}
-                onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
-                placeholder="••••••••"
-                disabled={isLoading}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="role">Role</Label>
-              <Select
-                value={newUser.role}
-                onValueChange={(value) => setNewUser({ ...newUser, role: value })}
-                disabled={isLoading}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="user">User</SelectItem>
-                  <SelectItem value="vendor">Vendor</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="status">Status</Label>
-              <Select
-                value={newUser.status}
-                onValueChange={(value) => setNewUser({ ...newUser, status: value })}
-                disabled={isLoading}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <EnhancedContextualDialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsAddDialogOpen(false)}
-              disabled={isLoading}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleAddUser}
-              disabled={isLoading || !newUser.name || !newUser.email || !newUser.password}
-            >
-              {isLoading ? (
-                <>
-                  <span className="mr-2">Adding...</span>
-                </>
-              ) : (
-                'Add User'
-              )}
-            </Button>
-          </EnhancedContextualDialogFooter>
-        </EnhancedContextualDialogContent>
-      </EnhancedContextualDialog>
-
       {/* Vendor Detail Dialog */}
-      <EnhancedContextualDialog open={isVendorDetailDialogOpen} onOpenChange={setIsVendorDetailDialogOpen}>
-        <EnhancedContextualDialogContent 
-          className="max-w-2xl max-w-[90vw] max-h-[80vh] overflow-y-auto"
-          triggerRef={selectedVendor ? vendorDetailButtonRefs.current[selectedVendor._id] : undefined}
-          useContextualPositioning={true}
-          margin={16}
-        >
-          <EnhancedContextualDialogHeader>
-            <EnhancedContextualDialogTitle className="flex items-center gap-2">
-              <Store className="h-5 w-5" />
-              {selectedVendor?.storeName}
-            </EnhancedContextualDialogTitle>
-            <EnhancedContextualDialogDescription>
-              Vendor details and management
-            </EnhancedContextualDialogDescription>
-          </EnhancedContextualDialogHeader>
-          
-          {selectedVendor && (
-            <div className="space-y-6">
-              {/* Status and Actions */}
-              <div className="flex items-center justify-between p-4 rounded-lg border">
-                <div className="flex items-center gap-3">
-                  <Badge variant={
-                    selectedVendor.status === 'approved' ? 'default' :
-                    selectedVendor.status === 'pending' ? 'secondary' :
-                    'destructive'
-                  }>
-                    {selectedVendor.status}
-                  </Badge>
-                  {selectedVendor.verification?.isVerified && (
-                    <Badge variant="outline">Verified</Badge>
-                  )}
-                </div>
-                <div className="flex gap-2">
-                  {selectedVendor.status === 'pending' && (
-                    <>
-                      <Button
-                        size="sm"
-                        onClick={() => handleVendorStatusUpdate(selectedVendor._id, 'approved')}
-                        disabled={updatingVendor === selectedVendor._id}
-                      >
-                        Approve
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleVendorStatusUpdate(selectedVendor._id, 'rejected')}
-                        disabled={updatingVendor === selectedVendor._id}
-                      >
-                        Reject
-                      </Button>
-                    </>
-                  )}
-                  {selectedVendor.status === 'approved' && (
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => handleVendorStatusUpdate(selectedVendor._id, 'suspended')}
-                      disabled={updatingVendor === selectedVendor._id}
-                    >
-                      Suspend
-                    </Button>
-                  )}
-                  {selectedVendor.status === 'suspended' && (
-                    <Button
-                      size="sm"
-                      onClick={() => handleVendorStatusUpdate(selectedVendor._id, 'approved')}
-                      disabled={updatingVendor === selectedVendor._id}
-                    >
-                      Reactivate
-                    </Button>
-                  )}
-                </div>
-              </div>
-
-              {/* Store Information */}
-              <div>
-                <h3 className="font-semibold mb-3">Store Information</h3>
-                <div className="space-y-2 text-sm">
-                  <p><strong>Description:</strong> {selectedVendor.storeDescription}</p>
-                  <p><strong>Owner:</strong> {selectedVendor.user?.name} ({selectedVendor.user?.email})</p>
-                </div>
-              </div>
-
-              {/* Statistics */}
-              <div>
-                <h3 className="font-semibold mb-3">Statistics</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-3 rounded-lg border text-center">
-                    <p className="text-2xl font-bold">{selectedVendor.stats?.totalProducts || 0}</p>
-                    <p className="text-sm text-gray-500">Products</p>
+      <AlertDialog open={isVendorDetailDialogOpen} onOpenChange={setIsVendorDetailDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Vendor Details</AlertDialogTitle>
+            <AlertDialogDescription>
+              {selectedVendor && (
+                <div className="space-y-6">
+                  {/* Status and Actions */}
+                  <div className="flex items-center justify-between p-4 rounded-lg border">
+                    <div className="flex items-center gap-3">
+                      <Badge variant={
+                        selectedVendor.status === 'approved' ? 'default' :
+                        selectedVendor.status === 'pending' ? 'secondary' :
+                        'destructive'
+                      }>
+                        {selectedVendor.status}
+                      </Badge>
+                      {selectedVendor.verification?.isVerified && (
+                        <Badge variant="outline">Verified</Badge>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      {selectedVendor.status === 'pending' && (
+                        <>
+                          <Button
+                            size="sm"
+                            onClick={() => handleVendorStatusUpdate(selectedVendor._id, 'approved')}
+                            disabled={updatingVendor === selectedVendor._id}
+                          >
+                            Approve
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleVendorStatusUpdate(selectedVendor._id, 'rejected')}
+                            disabled={updatingVendor === selectedVendor._id}
+                          >
+                            Reject
+                          </Button>
+                        </>
+                      )}
+                      {selectedVendor.status === 'approved' && (
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleVendorStatusUpdate(selectedVendor._id, 'suspended')}
+                          disabled={updatingVendor === selectedVendor._id}
+                        >
+                          Suspend
+                        </Button>
+                      )}
+                      {selectedVendor.status === 'suspended' && (
+                        <Button
+                          size="sm"
+                          onClick={() => handleVendorStatusUpdate(selectedVendor._id, 'approved')}
+                          disabled={updatingVendor === selectedVendor._id}
+                        >
+                          Reactivate
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                  <div className="p-3 rounded-lg border text-center">
-                    <p className="text-2xl font-bold">{selectedVendor.stats?.totalOrders || 0}</p>
-                    <p className="text-sm text-gray-500">Orders</p>
+
+                  {/* Store Information */}
+                  <div>
+                    <h3 className="font-semibold mb-3">Store Information</h3>
+                    <div className="space-y-2 text-sm">
+                      <p><strong>Description:</strong> {selectedVendor.storeDescription}</p>
+                      <p><strong>Owner:</strong> {selectedVendor.user?.name} ({selectedVendor.user?.email})</p>
+                    </div>
+                  </div>
+
+                  {/* Statistics */}
+                  <div>
+                    <h3 className="font-semibold mb-3">Statistics</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="p-3 rounded-lg border text-center">
+                        <p className="text-2xl font-bold">{selectedVendor.stats?.totalProducts || 0}</p>
+                        <p className="text-sm text-gray-500">Products</p>
+                      </div>
+                      <div className="p-3 rounded-lg border text-center">
+                        <p className="text-2xl font-bold">{selectedVendor.stats?.totalOrders || 0}</p>
+                        <p className="text-sm text-gray-500">Orders</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
-          )}
-          
-          <EnhancedContextualDialogFooter>
-            <Button variant="outline" onClick={() => setIsVendorDetailDialogOpen(false)}>
-              Close
-            </Button>
-          </EnhancedContextualDialogFooter>
-        </EnhancedContextualDialogContent>
-      </EnhancedContextualDialog>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Close</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

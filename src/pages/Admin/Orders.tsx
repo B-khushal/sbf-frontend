@@ -11,7 +11,6 @@ import { Search, Eye, Download, Calendar, Clock, AlertTriangle, Filter, X, Chevr
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useCurrency } from '@/contexts/CurrencyContext';
-import OrderDetailsModal from '@/components/OrderDetailsModal';
 import api from '@/services/api';
 import { Order } from '@/services/orderService';
 import {
@@ -25,6 +24,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 interface ExtendedOrder extends Order {
   deliveryHighlight?: {
@@ -57,8 +57,6 @@ const AdminOrders = () => {
   const [upcomingDeliveries, setUpcomingDeliveries] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [highlight3Days, setHighlight3Days] = useState(true);
   
@@ -92,6 +90,8 @@ const AdminOrders = () => {
     { value: 50, label: '50 per page' },
     { value: 100, label: '100 per page' },
   ];
+
+  const navigate = useNavigate();
 
   // Helper function to format price with specific currency
   const formatPriceWithCurrency = (amount: number, targetCurrency: string) => {
@@ -229,8 +229,7 @@ const AdminOrders = () => {
   };
 
   const handleViewDetails = (order: Order) => {
-    setSelectedOrder(order);
-    setIsModalOpen(true);
+    navigate(`/admin/orders/${order._id}`);
   };
 
   const handleStatusUpdate = async (orderId: string, newStatus: Order['status']) => {
@@ -885,16 +884,6 @@ const AdminOrders = () => {
           )}
         </CardContent>
       </Card>
-
-      {/* Order Details Modal */}
-      {selectedOrder && (
-        <OrderDetailsModal
-          order={selectedOrder}
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          onStatusUpdate={handleStatusUpdate}
-        />
-      )}
     </div>
   );
 };
