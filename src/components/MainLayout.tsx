@@ -34,7 +34,7 @@ const MainLayout: React.FC = () => {
         isOpen={cartHook.isCartOpen}
         onClose={cartHook.closeCart}
         cartItems={cartHook.items}
-        cartTotal={cartHook.total}
+        cartTotal={typeof cartHook.total === 'number' ? cartHook.total : 0}
         onRemove={cartHook.removeItem}
         onCheckout={cartHook.checkout}
       />
