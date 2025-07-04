@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -7,7 +7,14 @@ import { Badge } from '@/components/ui/badge';
 import { Search, UserPlus, Edit, Trash2, Store, Eye, Filter } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import api from '@/services/api'; // ✅ Import API service
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { 
+  EnhancedContextualDialog, 
+  EnhancedContextualDialogContent, 
+  EnhancedContextualDialogHeader, 
+  EnhancedContextualDialogTitle, 
+  EnhancedContextualDialogFooter, 
+  EnhancedContextualDialogDescription 
+} from '@/components/ui/enhanced-contextual-dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
@@ -71,6 +78,12 @@ const AdminUsers: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [updatingVendor, setUpdatingVendor] = useState<string | null>(null);
   const { formatPrice, convertPrice } = useCurrency();
+
+  // Trigger refs for contextual positioning
+  const addUserButtonRef = useRef<HTMLButtonElement>(null);
+  const editButtonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
+  const deleteButtonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
+  const vendorDetailButtonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
 
   // Fetch users and vendors with better error handling
   useEffect(() => {
@@ -343,7 +356,7 @@ const AdminUsers: React.FC = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Users</h1>
-        <Button onClick={() => setIsAddDialogOpen(true)}>
+        <Button ref={addUserButtonRef} onClick={() => setIsAddDialogOpen(true)}>
           <UserPlus className="mr-2 h-4 w-4" /> Add User
         </Button>
       </div>
@@ -490,6 +503,7 @@ const AdminUsers: React.FC = () => {
                   <TableCell className="text-right space-x-2">
                     {user.role === 'vendor' && user.vendorInfo && (
                       <Button
+                        ref={(el) => vendorDetailButtonRefs.current[user._id] = el}
                         variant="ghost"
                         size="sm"
                         onClick={() => handleVendorDetailClick(user)}
@@ -499,6 +513,7 @@ const AdminUsers: React.FC = () => {
                       </Button>
                     )}
                     <Button
+                      ref={(el) => editButtonRefs.current[user._id] = el}
                       variant="ghost"
                       size="sm"
                       onClick={() => handleEditClick(user)}
@@ -507,6 +522,7 @@ const AdminUsers: React.FC = () => {
                       <Edit className="h-4 w-4" />
                     </Button>
                     <Button
+                      ref={(el) => deleteButtonRefs.current[user._id] = el}
                       variant="ghost"
                       size="sm"
                       onClick={() => handleDeleteClick(user._id)}
@@ -531,14 +547,17 @@ const AdminUsers: React.FC = () => {
       </Card>
 
       {/* Edit Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit User</DialogTitle>
-            <DialogDescription>
+      <EnhancedContextualDialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <EnhancedContextualDialogContent 
+          triggerRef={selectedUser ? editButtonRefs.current[selectedUser._id] : undefined}
+          useContextualPositioning={true}
+        >
+          <EnhancedContextualDialogHeader>
+            <EnhancedContextualDialogTitle>Edit User</EnhancedContextualDialogTitle>
+            <EnhancedContextualDialogDescription>
               Update user information and permissions.
-            </DialogDescription>
-          </DialogHeader>
+            </EnhancedContextualDialogDescription>
+          </EnhancedContextualDialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="name">Name</Label>
@@ -593,16 +612,16 @@ const AdminUsers: React.FC = () => {
               </Select>
             </div>
           </div>
-          <DialogFooter>
+          <EnhancedContextualDialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} disabled={isLoading}>
               Cancel
             </Button>
             <Button onClick={handleEditSubmit} disabled={isLoading}>
               {isLoading ? "Saving..." : "Save Changes"}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </EnhancedContextualDialogFooter>
+        </EnhancedContextualDialogContent>
+      </EnhancedContextualDialog>
 
       {/* Delete Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
@@ -624,14 +643,18 @@ const AdminUsers: React.FC = () => {
       </AlertDialog>
 
       {/* Add User Dialog */}
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Add New User</DialogTitle>
-            <DialogDescription>
+      <EnhancedContextualDialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <EnhancedContextualDialogContent 
+          className="sm:max-w-[425px]"
+          triggerRef={addUserButtonRef}
+          useContextualPositioning={true}
+        >
+          <EnhancedContextualDialogHeader>
+            <EnhancedContextualDialogTitle>Add New User</EnhancedContextualDialogTitle>
+            <EnhancedContextualDialogDescription>
               Create a new user account with the specified details.
-            </DialogDescription>
-          </DialogHeader>
+            </EnhancedContextualDialogDescription>
+          </EnhancedContextualDialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="name">Name</Label>
@@ -699,7 +722,7 @@ const AdminUsers: React.FC = () => {
               </Select>
             </div>
           </div>
-          <DialogFooter>
+          <EnhancedContextualDialogFooter>
             <Button
               variant="outline"
               onClick={() => setIsAddDialogOpen(false)}
@@ -719,22 +742,26 @@ const AdminUsers: React.FC = () => {
                 'Add User'
               )}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </EnhancedContextualDialogFooter>
+        </EnhancedContextualDialogContent>
+      </EnhancedContextualDialog>
 
       {/* Vendor Detail Dialog */}
-      <Dialog open={isVendorDetailDialogOpen} onOpenChange={setIsVendorDetailDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+      <EnhancedContextualDialog open={isVendorDetailDialogOpen} onOpenChange={setIsVendorDetailDialogOpen}>
+        <EnhancedContextualDialogContent 
+          className="max-w-2xl max-h-[80vh] overflow-y-auto"
+          triggerRef={selectedVendor ? vendorDetailButtonRefs.current[selectedVendor._id] : undefined}
+          useContextualPositioning={true}
+        >
+          <EnhancedContextualDialogHeader>
+            <EnhancedContextualDialogTitle className="flex items-center gap-2">
               <Store className="h-5 w-5" />
               {selectedVendor?.storeName}
-            </DialogTitle>
-            <DialogDescription>
+            </EnhancedContextualDialogTitle>
+            <EnhancedContextualDialogDescription>
               Vendor details and management
-            </DialogDescription>
-          </DialogHeader>
+            </EnhancedContextualDialogDescription>
+          </EnhancedContextualDialogHeader>
           
           {selectedVendor && (
             <div className="space-y-6">
@@ -820,13 +847,13 @@ const AdminUsers: React.FC = () => {
             </div>
           )}
           
-          <DialogFooter>
+          <EnhancedContextualDialogFooter>
             <Button variant="outline" onClick={() => setIsVendorDetailDialogOpen(false)}>
               Close
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </EnhancedContextualDialogFooter>
+        </EnhancedContextualDialogContent>
+      </EnhancedContextualDialog>
     </div>
   );
 };

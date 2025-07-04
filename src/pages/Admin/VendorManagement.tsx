@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -6,7 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Search, Store, Eye, Check, X, Pause, Play, Filter, Download, RefreshCw, Users, Star } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { 
+  EnhancedContextualDialog, 
+  EnhancedContextualDialogContent, 
+  EnhancedContextualDialogHeader, 
+  EnhancedContextualDialogTitle, 
+  EnhancedContextualDialogFooter, 
+  EnhancedContextualDialogDescription 
+} from '@/components/ui/enhanced-contextual-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 import { useCurrency } from '@/contexts/CurrencyContext';
@@ -78,6 +85,10 @@ const AdminVendorManagement: React.FC = () => {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   
   const { formatPrice } = useCurrency();
+
+  // Trigger refs for contextual positioning
+  const vendorDetailButtonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
+  const statusButtonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
 
   // Fetch vendors
   useEffect(() => {
@@ -438,6 +449,7 @@ const AdminVendorManagement: React.FC = () => {
                   <TableCell className="text-right">
                     <div className="flex gap-1 justify-end">
                       <Button
+                        ref={(el) => vendorDetailButtonRefs.current[vendor._id] = el}
                         variant="ghost"
                         size="sm"
                         onClick={() => handleViewDetails(vendor._id)}
@@ -448,6 +460,7 @@ const AdminVendorManagement: React.FC = () => {
                       {vendor.status === 'pending' && (
                         <>
                           <Button
+                            ref={(el) => statusButtonRefs.current[`${vendor._id}-approve`] = el}
                             variant="ghost"
                             size="sm"
                             onClick={() => openStatusDialog(vendor, 'approved')}
@@ -458,6 +471,7 @@ const AdminVendorManagement: React.FC = () => {
                             <Check className="h-4 w-4" />
                           </Button>
                           <Button
+                            ref={(el) => statusButtonRefs.current[`${vendor._id}-reject`] = el}
                             variant="ghost"
                             size="sm"
                             onClick={() => openStatusDialog(vendor, 'rejected')}
@@ -471,6 +485,7 @@ const AdminVendorManagement: React.FC = () => {
                       )}
                       {vendor.status === 'approved' && (
                         <Button
+                          ref={(el) => statusButtonRefs.current[`${vendor._id}-suspend`] = el}
                           variant="ghost"
                           size="sm"
                           onClick={() => openStatusDialog(vendor, 'suspended')}
@@ -483,6 +498,7 @@ const AdminVendorManagement: React.FC = () => {
                       )}
                       {vendor.status === 'suspended' && (
                         <Button
+                          ref={(el) => statusButtonRefs.current[`${vendor._id}-reactivate`] = el}
                           variant="ghost"
                           size="sm"
                           onClick={() => openStatusDialog(vendor, 'approved')}
@@ -510,17 +526,21 @@ const AdminVendorManagement: React.FC = () => {
       </Card>
 
       {/* Vendor Detail Dialog */}
-      <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+      <EnhancedContextualDialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
+        <EnhancedContextualDialogContent 
+          className="max-w-4xl max-h-[80vh] overflow-y-auto"
+          triggerRef={selectedVendor ? vendorDetailButtonRefs.current[selectedVendor._id] : undefined}
+          useContextualPositioning={true}
+        >
+          <EnhancedContextualDialogHeader>
+            <EnhancedContextualDialogTitle className="flex items-center gap-2">
               <Store className="h-5 w-5" />
               {selectedVendor?.storeName}
-            </DialogTitle>
-            <DialogDescription>
+            </EnhancedContextualDialogTitle>
+            <EnhancedContextualDialogDescription>
               Comprehensive vendor information and management
-            </DialogDescription>
-          </DialogHeader>
+            </EnhancedContextualDialogDescription>
+          </EnhancedContextualDialogHeader>
           
           {selectedVendor && (
             <div className="space-y-6">
@@ -710,13 +730,13 @@ const AdminVendorManagement: React.FC = () => {
             </div>
           )}
           
-          <DialogFooter>
+          <EnhancedContextualDialogFooter>
             <Button variant="outline" onClick={() => setIsDetailsModalOpen(false)}>
               Close
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </EnhancedContextualDialogFooter>
+        </EnhancedContextualDialogContent>
+      </EnhancedContextualDialog>
 
       {/* Status Change Confirmation Dialog */}
       <AlertDialog open={isStatusDialogOpen} onOpenChange={setIsStatusDialogOpen}>

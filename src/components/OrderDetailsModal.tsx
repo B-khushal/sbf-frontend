@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { X } from "lucide-react";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/enhanced-dialog";
+  EnhancedContextualDialog,
+  EnhancedContextualDialogContent,
+  EnhancedContextualDialogHeader,
+  EnhancedContextualDialogTitle,
+} from "@/components/ui/enhanced-contextual-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -253,13 +253,13 @@ export default function OrderDetailsModal({ isOpen, onClose, order, onStatusUpda
   });
 
   return (
-    <Dialog open={isOpen} onOpenChange={() => onClose()}>
-      <DialogContent variant="popup" className="max-w-4xl">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">
+    <EnhancedContextualDialog open={isOpen} onOpenChange={() => onClose()}>
+      <EnhancedContextualDialogContent variant="popup" className="max-w-4xl">
+        <EnhancedContextualDialogHeader>
+          <EnhancedContextualDialogTitle className="text-2xl font-bold">
             Order #{localOrder.orderNumber}
-          </DialogTitle>
-        </DialogHeader>
+          </EnhancedContextualDialogTitle>
+        </EnhancedContextualDialogHeader>
 
         <div className="mt-6 space-y-6">
           {/* Customer Info Cards */}
@@ -515,7 +515,7 @@ export default function OrderDetailsModal({ isOpen, onClose, order, onStatusUpda
             </p>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </EnhancedContextualDialogContent>
+    </EnhancedContextualDialog>
   );
 } 

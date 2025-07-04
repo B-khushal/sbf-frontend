@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { 
+  EnhancedContextualDialog, 
+  EnhancedContextualDialogContent, 
+  EnhancedContextualDialogHeader, 
+  EnhancedContextualDialogTitle 
+} from '@/components/ui/enhanced-contextual-dialog';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
@@ -120,10 +125,10 @@ const NotificationHistoryModal: React.FC<NotificationHistoryModalProps> = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[80vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+    <EnhancedContextualDialog open={open} onOpenChange={onOpenChange}>
+      <EnhancedContextualDialogContent className="max-w-4xl max-h-[80vh] flex flex-col">
+        <EnhancedContextualDialogHeader>
+          <EnhancedContextualDialogTitle className="flex items-center gap-2">
             <Clock className="h-5 w-5" />
             Notification History
             {stats && (
@@ -131,8 +136,8 @@ const NotificationHistoryModal: React.FC<NotificationHistoryModalProps> = ({
                 {stats.total} total
               </Badge>
             )}
-          </DialogTitle>
-        </DialogHeader>
+          </EnhancedContextualDialogTitle>
+        </EnhancedContextualDialogHeader>
 
         <div className="flex flex-col gap-4 flex-1 min-h-0">
           {/* Statistics */}
@@ -269,8 +274,8 @@ const NotificationHistoryModal: React.FC<NotificationHistoryModalProps> = ({
             Close
           </Button>
         </div>
-      </DialogContent>
-    </Dialog>
+      </EnhancedContextualDialogContent>
+    </EnhancedContextualDialog>
   );
 };
 

@@ -1,5 +1,11 @@
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './dialog';
+import { 
+  EnhancedContextualDialog, 
+  EnhancedContextualDialogContent, 
+  EnhancedContextualDialogHeader, 
+  EnhancedContextualDialogTitle, 
+  EnhancedContextualDialogDescription 
+} from './enhanced-contextual-dialog';
 import { Button } from './button';
 import { Mail } from 'lucide-react';
 
@@ -15,16 +21,16 @@ const GmailLoginDialog: React.FC<GmailLoginDialogProps> = ({
   onGmailLogin,
 }) => {
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-center">
+    <EnhancedContextualDialog open={isOpen} onOpenChange={onClose}>
+      <EnhancedContextualDialogContent className="sm:max-w-[425px]">
+        <EnhancedContextualDialogHeader>
+          <EnhancedContextualDialogTitle className="text-2xl font-bold text-center">
             Sign in with Gmail
-          </DialogTitle>
-          <DialogDescription className="text-center pt-2">
+          </EnhancedContextualDialogTitle>
+          <EnhancedContextualDialogDescription className="text-center pt-2">
             Join our community to access exclusive features and personalized shopping experience
-          </DialogDescription>
-        </DialogHeader>
+          </EnhancedContextualDialogDescription>
+        </EnhancedContextualDialogHeader>
 
         <div className="flex flex-col items-center gap-6 py-6">
           {/* Gmail Logo and Text */}
@@ -56,8 +62,8 @@ const GmailLoginDialog: React.FC<GmailLoginDialogProps> = ({
             By continuing, you agree to our Terms of Service and Privacy Policy. We'll never post without your permission.
           </p>
         </div>
-      </DialogContent>
-    </Dialog>
+      </EnhancedContextualDialogContent>
+    </EnhancedContextualDialog>
   );
 };
 
