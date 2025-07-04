@@ -36,6 +36,16 @@ const Cart = (props: any) => {
     });
   }, [props.isOpen, props.cartItems, props.cartTotal]);
 
+  // Ref for scrollable area
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+
+  // Scroll to top when cart is opened
+  React.useEffect(() => {
+    if (props.isOpen && scrollRef.current) {
+      scrollRef.current.scrollTop = 0;
+    }
+  }, [props.isOpen]);
+
   return (
     <Sheet open={props.isOpen} onOpenChange={props.onClose}>
       <SheetContent className="flex flex-col w-full sm:w-96 bg-white">
@@ -53,7 +63,7 @@ const Cart = (props: any) => {
             )}
           </SheetTitle>
         </SheetHeader>
-        <div className="flex-1 overflow-y-auto py-4 px-6">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto py-4 px-6">
           {props.cartItems && props.cartItems.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center">
               <h3 className="text-xl font-semibold mb-2 text-gray-900">Your cart is empty</h3>
