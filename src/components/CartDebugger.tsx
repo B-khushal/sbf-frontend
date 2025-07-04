@@ -57,7 +57,7 @@ const CartDebugger = () => {
         </button>
         {items.length > 0 && (
           <button
-            onClick={() => removeItem(items[0].id)}
+            onClick={() => removeItem(items[0]._id)}
             className="w-full bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600"
           >
             Remove First Item
