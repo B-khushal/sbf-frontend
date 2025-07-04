@@ -9,6 +9,46 @@ import { toast } from "sonner";
 import { getImageUrl, getSquareImageUrl } from "@/config";
 import ContactModal from "@/components/ui/ContactModal";
 
+const CATEGORY_SLUG_MAP: Record<string, string> = {
+  "chocolate-baskets": "Chocolate Baskets",
+  "chocolate-bouquets": "Chocolate Bouquets",
+  "chocolate-gift-sets": "Chocolate Gift Sets",
+  "premium-chocolates": "Premium Chocolates",
+  "gift-hampers": "Gift Hampers",
+  "fruit-baskets": "Fruit Baskets",
+  "flower-baskets": "Flower Baskets",
+  "mixed-baskets": "Mixed Baskets",
+  "mixed-arrangements": "Mixed Arrangements",
+  "premium-collections": "Premium Collections",
+  "seasonal-specials": "Seasonal Specials",
+  "corporate-gifts": "Corporate Gifts",
+  "baby-shower": "Baby Shower",
+  "housewarming": "Housewarming",
+  "thank-you": "Thank You",
+  "party-arrangements": "Party Arrangements",
+  "kids-birthday": "Kids Birthday",
+  "birthday-cakes": "Birthday Cakes",
+  "romantic-bouquets": "Romantic Bouquets",
+  "love-arrangements": "Love Arrangements",
+  "anniversary-gifts": "Anniversary Gifts",
+  "gift-sets": "Gift Sets",
+  "combo-packs": "Combo Packs",
+  "indoor-plants": "Indoor Plants",
+  "succulents": "Succulents",
+  "garden-plants": "Garden Plants",
+  "air-purifying": "Air Purifying",
+  "sympathy-bouquets": "Sympathy Bouquets",
+  "condolence-arrangements": "Condolence Arrangements",
+  "memorial-flowers": "Memorial Flowers",
+  "peaceful-arrangements": "Peaceful Arrangements",
+  "valentines-day": "Valentine's Day",
+  "mothers-day": "Mother's Day",
+  "fathers-day": "Father's Day",
+  "new-year": "New Year",
+  "raksha-bandhan": "Raksha Bandhan",
+  // Add more as needed
+};
+
 const FilterSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => {
   const [isOpen, setIsOpen] = useState(true);
   return (
@@ -36,7 +76,11 @@ const ShopPage = () => {
   
   // Get category from both path params and query params
   const queryCategory = searchParams.get('category');
-  const category = pathCategory || queryCategory || "";
+  // Normalize the category from the URL slug to the actual category name
+  const normalizedCategory = pathCategory && CATEGORY_SLUG_MAP[pathCategory.toLowerCase()]
+    ? CATEGORY_SLUG_MAP[pathCategory.toLowerCase()]
+    : pathCategory;
+  const category = normalizedCategory || queryCategory || "";
   
   // Redirect from query parameter to path parameter if needed
   useEffect(() => {
