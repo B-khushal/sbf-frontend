@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cart Toggle Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Cart Toggle Test</h1>
+        <p>This page tests the cart toggle functionality. Open the browser console to see detailed logs.</p>
+        
+        <div id="status"></div>
+        
+        <button class="test-button" onclick="testCartToggle()">Test Cart Toggle</button>
+        <button class="test-button" onclick="testAddToCart()">Test Add to Cart</button>
+        <button class="test-button" onclick="testCartState()">Check Cart State</button>
+        <button class="test-button" onclick="clearCart()">Clear Cart</button>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        // Mock cart state for testing
+        let cartState = {
+            items: [],
+            isCartOpen: false
+        };
+
+        function log(message, type = 'info') {
+            console.log(`[Cart Test] ${message}`);
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        function testCartToggle() {
+            log('Testing cart toggle...', 'info');
+            cartState.isCartOpen = !cartState.isCartOpen;
+            log(`Cart is now ${cartState.isCartOpen ? 'open' : 'closed'}`, 'success');
+        }
+
+        function testAddToCart() {
+            log('Testing add to cart...', 'info');
+            const testItem = {
+                id: 'test-item-' + Date.now(),
+                productId: 'test-product-1',
+                title: 'Test Flower Bouquet',
+                price: 999,
+                originalPrice: 999,
+                image: '/images/placeholder.svg',
+                quantity: 1
+            };
+            
+            cartState.items.push(testItem);
+            log(`Added item: ${testItem.title}`, 'success');
+            log(`Cart now has ${cartState.items.length} items`, 'info');
+        }
+
+        function testCartState() {
+            log('Current cart state:', 'info');
+            log(`Items: ${cartState.items.length}`, 'info');
+            log(`Is Open: ${cartState.isCartOpen}`, 'info');
+            console.log('Full cart state:', cartState);
+        }
+
+        function clearCart() {
+            cartState.items = [];
+            cartState.isCartOpen = false;
+            log('Cart cleared', 'success');
+        }
+
+        // Test localStorage functionality
+        function testLocalStorage() {
+            try {
+                localStorage.setItem('test-cart', JSON.stringify(cartState));
+                const retrieved = JSON.parse(localStorage.getItem('test-cart'));
+                log('LocalStorage test passed', 'success');
+                return true;
+            } catch (error) {
+                log('LocalStorage test failed: ' + error.message, 'error');
+                return false;
+            }
+        }
+
+        // Run initial tests
+        window.onload = function() {
+            log('Cart toggle test page loaded', 'info');
+            testLocalStorage();
+        };
+    </script>
+</body>
+</html> 
