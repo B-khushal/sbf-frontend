@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Navigation from './Navigation';
 import Footer from './Footer';
@@ -13,13 +13,6 @@ const MainLayout: React.FC = () => {
   const { homeSections } = useSettings();
   const { pathname } = useLocation();
 
-  // Automatically close cart sidebar on /cart page
-  useEffect(() => {
-    if (pathname === '/cart' && cartHook.isCartOpen) {
-      cartHook.closeCart();
-    }
-  }, [pathname, cartHook]);
-
   const enabledSections = homeSections.filter(section => section.enabled);
   const showFooter = enabledSections.some(section => section.type !== 'hero');
   const isHomePage = pathname === '/';
@@ -33,10 +26,10 @@ const MainLayout: React.FC = () => {
       <Cart
         isOpen={cartHook.isCartOpen}
         onClose={cartHook.closeCart}
-        cartItems={cartHook.items}
-        cartTotal={typeof cartHook.total === 'number' ? cartHook.total : 0}
-        onRemove={cartHook.removeItem}
-        onCheckout={cartHook.checkout}
+        items={cartHook.items}
+        onUpdateQuantity={cartHook.updateItemQuantity}
+        onRemoveItem={cartHook.removeItem}
+        itemCount={itemCount}
       />
       <main className="flex-grow">
         <Outlet />

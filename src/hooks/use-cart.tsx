@@ -21,7 +21,6 @@ interface CartState {
   clearCart: () => void;
   openCart: () => void;
   closeCart: () => void;
-  toggleCart: () => void;
   loadCart: () => void;
   saveCart: (cart: CartItem[]) => void;
   showContactModal: boolean;
@@ -93,7 +92,6 @@ export const useCart = create<CartState>((set, get) => ({
 
   openCart: () => set({ isCartOpen: true }),
   closeCart: () => set({ isCartOpen: false }),
-  toggleCart: () => set((state) => ({ isCartOpen: !state.isCartOpen })),
 
   closeContactModal: () => set({ showContactModal: false, contactModalProduct: '' }),
 
