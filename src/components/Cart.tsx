@@ -2,7 +2,7 @@ import { Sheet, SheetContent } from './ui/sheet';
 
 const Cart = (props: any) => {
   return (
-    <Sheet open={props.isOpen} onOpenChange={props.onClose}>
+    <Sheet open={true} onOpenChange={() => {}}>
       <SheetContent
         style={{
           position: 'fixed',
