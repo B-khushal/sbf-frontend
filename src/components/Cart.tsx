@@ -4,6 +4,9 @@ const Cart = (props: any) => {
   return (
     <Sheet open={props.isOpen} onOpenChange={props.onClose}>
       <SheetContent className="w-full sm:w-96 flex flex-col h-full">
+        <div className="p-4 bg-yellow-100 text-yellow-800 font-bold">
+          DEBUG: cartItems={JSON.stringify(props.cartItems)}, cartTotal={props.cartTotal}
+        </div>
         {/* Cart Header */}
         <div className="bg-purple-100 text-purple-600 font-bold p-4 border-b-2 border-purple-600 text-center text-xl">
           Your Cart
