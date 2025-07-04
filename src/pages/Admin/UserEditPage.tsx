@@ -6,6 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
+import { useToast } from '@/hooks/use-toast';
+import { Trash2 } from 'lucide-react';
 
 const UserEditPage: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -14,6 +17,9 @@ const UserEditPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({ name: '', email: '', role: '', status: '' });
   const [saving, setSaving] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -49,11 +55,40 @@ const UserEditPage: React.FC = () => {
     setSaving(true);
     try {
       await api.put(`/users/${userId}`, form);
+      toast({
+        title: "Success",
+        description: "User updated successfully",
+      });
       navigate('/admin/users');
     } catch (error) {
-      // handle error
+      toast({
+        title: "Error",
+        description: "Failed to update user",
+        variant: "destructive",
+      });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      await api.delete(`/users/${userId}`);
+      toast({
+        title: "Success",
+        description: "User deleted successfully",
+      });
+      navigate('/admin/users');
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete user",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleting(false);
+      setIsDeleteDialogOpen(false);
     }
   };
 
@@ -103,12 +138,39 @@ const UserEditPage: React.FC = () => {
               </Select>
             </div>
             <div className="flex gap-2 justify-end">
+              <Button 
+                variant="destructive" 
+                type="button" 
+                onClick={() => setIsDeleteDialogOpen(true)}
+                className="flex items-center gap-2"
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete User
+              </Button>
               <Button variant="outline" type="button" onClick={() => navigate('/admin/users')}>Cancel</Button>
               <Button type="submit" disabled={saving}>{saving ? 'Saving...' : 'Save Changes'}</Button>
             </div>
           </form>
         </CardContent>
       </Card>
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the user
+              account and remove their data from our servers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} disabled={deleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {deleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

@@ -58,6 +58,7 @@ const PromoCodes = lazy(() => import("./pages/Admin/PromoCodes"));
 const OffersManager = lazy(() => import("./pages/Admin/OffersManager"));
 const ProductForm = lazy(() => import('@/pages/Admin/ProductForm'));
 const UserViewPage = lazy(() => import('./pages/Admin/UserViewPage'));
+const UserEditPage = lazy(() => import('./pages/Admin/UserEditPage'));
 
 // Vendor Pages (lazy loaded as they're vendor-only)
 const VendorPage = lazy(() => import("./pages/VendorPage"));
@@ -275,6 +276,11 @@ const App = () => {
                               <Route path="users/view/:userId" element={
                                 <Suspense fallback={<LoadingFallback message="Loading user details..." />}>
                                   <UserViewPage />
+                                </Suspense>
+                              } />
+                              <Route path="users/edit/:userId" element={
+                                <Suspense fallback={<LoadingFallback message="Loading user edit form..." />}>
+                                  <UserEditPage />
                                 </Suspense>
                               } />
                               <Route path="vendors" element={
