@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronRight, Sparkles } from 'lucide-react';
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { productService } from '@/services/productService';
+import productService from '@/services/productService';
 
 const CategoryMenu = () => {
   const { pathname } = useLocation();
