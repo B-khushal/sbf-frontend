@@ -239,7 +239,7 @@ const TimeSlotSelector = ({
               {formatDisplayDate(date)}
             </Button>
           </PopoverTrigger>
-          <PopoverContent portalled={false} className="w-auto min-w-[320px] p-0" align="start">
+          <PopoverContent className="w-auto min-w-[320px] p-0 z-50" align="start">
             <Calendar
               mode="single"
               selected={date || undefined}
