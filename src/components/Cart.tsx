@@ -3,19 +3,7 @@ import { Sheet, SheetContent } from './ui/sheet';
 const Cart = (props: any) => {
   return (
     <Sheet open={props.isOpen} onOpenChange={props.onClose}>
-      <SheetContent
-        style={{
-          width: '400px',
-          background: 'white',
-          border: '4px solid purple',
-          zIndex: 999999,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'stretch',
-          justifyContent: 'flex-start',
-          overflowY: 'auto',
-        }}
-      >
+      <SheetContent className="w-full sm:w-96">
         {/* Cart Header */}
         <div style={{
           background: '#f3e8ff',
