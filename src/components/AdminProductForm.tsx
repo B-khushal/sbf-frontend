@@ -74,6 +74,23 @@ const AdminProductForm: React.FC<Props> = ({
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newDetail, setNewDetail] = useState("");
+  const [uploadProgress, setUploadProgress] = useState<string>("");
+
+  // Debug function to test upload connection
+  const testUploadConnection = async () => {
+    try {
+      console.log('🔍 Testing upload connection...');
+      const response = await api.get('/uploads');
+      console.log('✅ Upload endpoint accessible:', response.data);
+    } catch (error: any) {
+      console.error('❌ Upload endpoint test failed:', error.response?.status, error.response?.data);
+    }
+  };
+
+  // Test connection on component mount
+  React.useEffect(() => {
+    testUploadConnection();
+  }, []);
 
   // ✅ Handle Image Uploads
   const handleImageUpload = async (): Promise<string[]> => {
@@ -84,21 +101,42 @@ const AdminProductForm: React.FC<Props> = ({
 
     const uploadedUrls: string[] = [];
 
-    for (const file of selectedFiles) {
+    for (let i = 0; i < selectedFiles.length; i++) {
+      const file = selectedFiles[i];
       const fileData = new FormData();
       fileData.append("image", file);
 
       try {
-        const { data } = await api.post("/uploads", fileData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-        uploadedUrls.push(data.imageUrl);
+        setUploadProgress(`Uploading image ${i + 1} of ${selectedFiles.length}: ${file.name}`);
+        console.log('📸 Uploading image:', file.name, 'Size:', file.size);
+        
+        const { data } = await api.post("/uploads", fileData);
+        
+        if (data && data.imageUrl) {
+          console.log('✅ Image uploaded successfully:', data.imageUrl);
+          uploadedUrls.push(data.imageUrl);
+        } else {
+          console.error('❌ Invalid response from upload service:', data);
+          toast({ 
+            title: "Upload failed", 
+            description: "Invalid response from server." 
+          });
+          setUploadProgress("");
+          return formData.images; // Return existing images if upload fails
+        }
       } catch (error: any) {
-        toast({ title: "Upload failed", description: "Error uploading image." });
+        console.error('❌ Upload error:', error);
+        const errorMessage = error.response?.data?.message || error.message || "Error uploading image.";
+        toast({ 
+          title: "Upload failed", 
+          description: errorMessage 
+        });
+        setUploadProgress("");
         return formData.images; // Return existing images if upload fails
       }
     }
 
+    setUploadProgress("");
     return [...formData.images, ...uploadedUrls];
   };
 
@@ -114,17 +152,23 @@ const AdminProductForm: React.FC<Props> = ({
 
     let finalImages = formData.images; // Keep existing images
 
-    // ✅ Only upload images if new images are selected
+    // ✅ Upload new images if selected
     if (selectedFiles.length > 0) {
+      console.log('📸 Starting image upload process...');
       const uploadedImages = await handleImageUpload();
+      
       if (uploadedImages.length === 0) {
-        toast({ title: "Image Upload Failed", description: "Please try again." });
+        toast({ 
+          title: "Image Upload Failed", 
+          description: "Please try uploading images again." 
+        });
         setIsSubmitting(false);
         return;
       }
-      finalImages = [...uploadedImages]; // ✅ Replace with newly uploaded images
+      
+      finalImages = uploadedImages;
+      console.log('✅ Final images array:', finalImages);
     }
-  
 
     const updatedProduct = { 
       ...formData,
@@ -133,6 +177,8 @@ const AdminProductForm: React.FC<Props> = ({
     };
 
     try {
+      console.log('💾 Saving product with images:', finalImages.length);
+      
       let response;
       if (isEditing) {
         response = await api.put(`/products/${productData?._id}`, updatedProduct);
@@ -142,6 +188,8 @@ const AdminProductForm: React.FC<Props> = ({
         toast({ title: "Product added", description: "New product created." });
       }
 
+      console.log('✅ Product saved successfully:', response.data);
+
       // Call the appropriate callback
       if (onSuccess) {
         onSuccess();
@@ -150,7 +198,9 @@ const AdminProductForm: React.FC<Props> = ({
         onClose?.();
       }
     } catch (error: any) {
-      toast({ title: "Error", description: "Failed to save product." });
+      console.error('❌ Product save error:', error);
+      const errorMessage = error.response?.data?.message || error.message || "Failed to save product.";
+      toast({ title: "Error", description: errorMessage });
     }
     setIsSubmitting(false);
   };
@@ -344,14 +394,63 @@ const AdminProductForm: React.FC<Props> = ({
               accept="image/*"
               onChange={(e) => {
                 if (e.target.files) {
-                  setSelectedFiles(Array.from(e.target.files));
+                  const files = Array.from(e.target.files);
+                  console.log('📁 Selected files:', files.map(f => ({ name: f.name, size: f.size })));
+                  setSelectedFiles(files);
                 }
               }}
             />
             {selectedFiles.length > 0 && (
               <p className="text-sm text-muted-foreground mt-2">
-                {selectedFiles.length} image(s) selected
+                {selectedFiles.length} new image(s) selected for upload
               </p>
+            )}
+            
+            {/* Test Upload Button */}
+            {selectedFiles.length > 0 && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={async () => {
+                  try {
+                    const testFile = selectedFiles[0];
+                    const fileData = new FormData();
+                    fileData.append("image", testFile);
+                    
+                    console.log('🧪 Testing upload with file:', testFile.name);
+                    const response = await api.post("/uploads", fileData);
+                    console.log('✅ Test upload successful:', response.data);
+                    toast({ title: "Test Upload Success", description: "Upload is working correctly!" });
+                  } catch (error: any) {
+                    console.error('❌ Test upload failed:', error);
+                    toast({ 
+                      title: "Test Upload Failed", 
+                      description: error.response?.data?.message || error.message 
+                    });
+                  }
+                }}
+                className="mt-2"
+              >
+                Test Upload
+              </Button>
+            )}
+            
+            {/* Show current images if editing */}
+            {isEditing && formData.images.length > 0 && (
+              <div className="mt-4">
+                <p className="text-sm font-medium mb-2">Current Images ({formData.images.length})</p>
+                <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto">
+                  {formData.images.map((image, index) => (
+                    <div key={index} className="relative">
+                      <img 
+                        src={image} 
+                        alt={`Product ${index + 1}`}
+                        className="w-full h-20 object-cover rounded border"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
           </div>
         </div>
@@ -359,6 +458,11 @@ const AdminProductForm: React.FC<Props> = ({
 
       {/* Submit Buttons - Fixed at bottom */}
       <div className="flex-none p-6 pt-2 border-t bg-background">
+        {uploadProgress && (
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+            <p className="text-sm text-blue-700">{uploadProgress}</p>
+          </div>
+        )}
         <div className="flex justify-end gap-2">
           <Button 
             variant="ghost" 
@@ -368,7 +472,15 @@ const AdminProductForm: React.FC<Props> = ({
             <X className="h-4 w-4 mr-2" /> Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={isSubmitting}>
-            <Save className="h-4 w-4 mr-2" /> {isEditing ? "Update Product" : "Save Product"}
+            <Save className="h-4 w-4 mr-2" /> 
+            {isSubmitting 
+              ? uploadProgress 
+                ? "Uploading..." 
+                : "Saving..." 
+              : isEditing 
+                ? "Update Product" 
+                : "Save Product"
+            }
           </Button>
         </div>
       </div>
