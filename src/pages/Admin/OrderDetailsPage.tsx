@@ -101,6 +101,24 @@ const OrderDetailsPage: React.FC = () => {
               <div>Razorpay Signature: {order.paymentDetails.razorpaySignature}</div>
             )}
           </div>
+          {/* Delivery Info Section */}
+          {order.trackingHistory && order.trackingHistory.length > 0 && (
+            <div>
+              <h3 className="font-semibold mb-2">Delivery & Tracking History</h3>
+              <ul className="space-y-2">
+                {order.trackingHistory.map((track, idx) => (
+                  <li key={idx} className="border rounded p-2 bg-gray-50">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary">{track.status.replace(/_/g, ' ')}</Badge>
+                      <span className="text-xs text-gray-500">{format(new Date(track.timestamp), 'PPpp')}</span>
+                    </div>
+                    {track.message && <div className="text-sm mt-1">{track.message}</div>}
+                    {track.updatedBy && <div className="text-xs text-gray-400">Updated by: {track.updatedBy}</div>}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
