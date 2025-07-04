@@ -22,22 +22,8 @@ const Modal: React.FC<ModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
-      // Ensure modal is visible in viewport
-      setTimeout(() => {
-        if (modalRef.current) {
-          modalRef.current.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center'
-          });
-        }
-      }, 100);
     } else {
       document.body.style.overflow = '';
-      // Scroll to top when modal closes
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
     }
     return () => {
       document.body.style.overflow = '';
@@ -92,6 +78,7 @@ const Modal: React.FC<ModalProps> = ({
           {children}
           {showCloseButton && (
             <button
+              type="button"
               onClick={onClose}
               className="absolute top-2 right-2 p-1 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
               aria-label="Close dialog"

@@ -9,39 +9,39 @@
   :root {
     /* Light Blue, Pink, Green & White Color Scheme */
     --background: 0 0% 100%; /* Pure white */
-    --foreground: 220 20% 25%; /* Soft dark blue-gray for text */
+    --foreground: 222.2 84% 4.9%; /* Soft dark blue-gray for text */
     
     --card: 0 0% 100%; /* Pure white cards */
-    --card-foreground: 220 20% 25%;
+    --card-foreground: 222.2 84% 4.9%;
     
     --popover: 0 0% 100%;
-    --popover-foreground: 220 20% 25%;
+    --popover-foreground: 222.2 84% 4.9%;
     
     /* Light Blue Primary */
-    --primary: 200 100% 75%; /* Light blue */
-    --primary-foreground: 220 30% 15%; /* Dark blue-gray text */
+    --primary: 221.2 83.2% 53.3%; /* Light blue */
+    --primary-foreground: 210 40% 98%; /* Dark blue-gray text */
     
     /* Light Pink Secondary */
-    --secondary: 320 60% 85%; /* Light pink */
-    --secondary-foreground: 320 30% 25%; /* Dark pink text */
+    --secondary: 210 40% 96%; /* Light pink */
+    --secondary-foreground: 222.2 84% 4.9%; /* Dark pink text */
     
     /* Light muted tones */
     --muted: 210 40% 96%; /* Very light blue-gray */
-    --muted-foreground: 220 15% 45%; /* Medium blue-gray */
+    --muted-foreground: 215.4 16.3% 46.9%; /* Medium blue-gray */
     
     /* Light Green Accent */
-    --accent: 140 50% 80%; /* Light green */
-    --accent-foreground: 140 40% 25%; /* Dark green text */
+    --accent: 210 40% 96%; /* Light green */
+    --accent-foreground: 222.2 84% 4.9%; /* Dark green text */
     
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive-foreground: 210 40% 98%;
     
     /* Light borders and inputs */
-    --border: 200 30% 90%; /* Light blue-gray borders */
-    --input: 200 30% 95%; /* Very light blue input backgrounds */
-    --ring: 200 100% 60%; /* Light blue focus rings */
+    --border: 214.3 31.8% 91.4%; /* Light blue-gray borders */
+    --input: 214.3 31.8% 91.4%; /* Very light blue input backgrounds */
+    --ring: 221.2 83.2% 53.3%; /* Light blue focus rings */
     
-    --radius: 0.75rem;
+    --radius: 0.5rem;
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
@@ -90,6 +90,21 @@
   body {
     @apply bg-background text-foreground antialiased;
     overflow-x: hidden;
+  }
+
+  /* Prevent unwanted scrolling on dropdown and popover content */
+  [data-radix-popper-content-wrapper],
+  [data-radix-popover-content],
+  [data-radix-dropdown-menu-content],
+  [data-radix-select-content] {
+    scroll-behavior: auto;
+  }
+
+  /* Prevent focus scrolling on dropdown triggers */
+  [data-radix-trigger]:focus,
+  [role="button"]:focus,
+  [aria-haspopup="true"]:focus {
+    scroll-behavior: auto;
   }
 
   ::selection {
