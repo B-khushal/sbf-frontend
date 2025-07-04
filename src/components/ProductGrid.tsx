@@ -123,7 +123,6 @@ const ProductCard = ({ product, onAddToCart, onOpenCart }: {
         description: "You'll be redirected to the login page",
         duration: 3000,
       });
-      // Redirect to login page with current page as redirect path
       setTimeout(() => {
         navigate('/login', { 
           state: { 
@@ -136,32 +135,19 @@ const ProductCard = ({ product, onAddToCart, onOpenCart }: {
     }
     
     try {
-      // Use the passed onAddToCart function if available, otherwise use the hook
       const addToCartFunction = onAddToCart || addToCart;
       const openCartFunction = onOpenCart || openCart;
-      
+      // Calculate discounted price if needed
+      const discountedPrice = product.discount > 0
+        ? Math.round(product.price * (1 - product.discount / 100))
+        : product.price;
+      // Only use _id for Zustand cart
       const cartItem = {
-        _id: product._id,
-        id: product._id,
-        productId: product._id,
-        title: product.title,
+        ...product,
         price: discountedPrice,
-        originalPrice: product.price,
-        image: product.images?.[0] || '/images/placeholder.svg',
         quantity: 1,
-        category: product.category,
-        discount: product.discount,
-        images: product.images,
-        categories: product.categories,
-        description: product.description,
-        createdAt: product.createdAt,
-        featured: product.featured,
-        isNewArrival: product.isNewArrival,
-        isFeatured: product.isFeatured
       };
-      
       addToCartFunction(cartItem);
-      
       toast.success("🛒 Added to cart!", {
         description: `${product.title} has been added to your cart`,
         duration: 3000,
