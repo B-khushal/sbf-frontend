@@ -161,12 +161,28 @@ const HomePage = () => {
       variants={containerVariants}
       className="min-h-screen relative"
     >
+      {/* Testing Mode Banner */}
+      <motion.div
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-yellow-400 to-orange-500 text-white shadow-lg"
+      >
+        <div className="max-w-7xl mx-auto px-4 py-3">
+          <div className="flex items-center justify-center gap-3 text-sm font-medium">
+            <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+            <span>🧪 TESTING MODE - This is a development environment. Orders and payments are for testing purposes only.</span>
+            <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+          </div>
+        </div>
+      </motion.div>
+
       {/* Offer Popup */}
-          <OfferPopup
+      <OfferPopup
         isOpen={isOfferOpen && currentOffer !== null}
-            onClose={closeOffer}
-            offer={currentOffer}
-          />
+        onClose={closeOffer}
+        offer={currentOffer}
+      />
 
 
 
