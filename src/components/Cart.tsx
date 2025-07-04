@@ -3,61 +3,37 @@ import { Sheet, SheetContent } from './ui/sheet';
 const Cart = (props: any) => {
   return (
     <Sheet open={props.isOpen} onOpenChange={props.onClose}>
-      <SheetContent className="w-full sm:w-96">
+      <SheetContent className="w-full sm:w-96 flex flex-col h-full">
         {/* Cart Header */}
-        <div style={{
-          background: '#f3e8ff',
-          color: '#7c3aed',
-          fontWeight: 'bold',
-          padding: '16px',
-          borderBottom: '2px solid #7c3aed',
-          textAlign: 'center',
-          fontSize: '24px',
-        }}>
+        <div className="bg-purple-100 text-purple-600 font-bold p-4 border-b-2 border-purple-600 text-center text-xl">
           Your Cart
         </div>
         {/* Cart Items */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
+        <div className="flex-1 overflow-y-auto p-4">
           {props.cartItems && props.cartItems.length > 0 ? (
             props.cartItems.map((item: any) => (
-              <div key={item._id} style={{
-                display: 'flex',
-                alignItems: 'center',
-                marginBottom: '16px',
-                borderBottom: '1px solid #eee',
-                paddingBottom: '8px',
-              }}>
-                <img src={item.images?.[0] || ''} alt={item.name} style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, marginRight: 16 }} />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 'bold' }}>{item.name}</div>
-                  <div style={{ color: '#888' }}>Qty: {item.quantity}</div>
-                  <div style={{ color: '#7c3aed', fontWeight: 'bold' }}>₹{item.price}</div>
+              <div key={item._id} className="flex items-center mb-4 border-b pb-2">
+                <img src={item.images?.[0] || ''} alt={item.name} className="w-16 h-16 object-cover rounded mr-4" />
+                <div className="flex-1">
+                  <div className="font-bold">{item.name}</div>
+                  <div className="text-gray-500">Qty: {item.quantity}</div>
+                  <div className="text-purple-600 font-bold">₹{item.price}</div>
                 </div>
-                <button onClick={() => props.onRemove(item._id)} style={{ marginLeft: 8, color: '#f43f5e', background: 'none', border: 'none', fontSize: 20, cursor: 'pointer' }}>×</button>
+                <button onClick={() => props.onRemove(item._id)} className="ml-2 text-pink-600 text-2xl font-bold">&times;</button>
               </div>
             ))
           ) : (
-            <div style={{ color: '#888', textAlign: 'center', marginTop: 32 }}>Your cart is empty.</div>
+            <div className="text-gray-500 text-center mt-8">Your cart is empty.</div>
           )}
         </div>
         {/* Cart Footer */}
-        <div style={{ padding: '16px', borderTop: '1px solid #eee', background: '#fafafa' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', marginBottom: 12 }}>
+        <div className="p-4 border-t bg-gray-50">
+          <div className="flex justify-between font-bold mb-3">
             <span>Total</span>
             <span>₹{props.cartTotal || 0}</span>
           </div>
           <button
-            style={{
-              width: '100%',
-              background: '#7c3aed',
-              color: 'white',
-              padding: '12px',
-              border: 'none',
-              borderRadius: 8,
-              fontWeight: 'bold',
-              fontSize: 18,
-              cursor: 'pointer',
-            }}
+            className="w-full bg-purple-600 text-white py-3 rounded font-bold text-lg disabled:opacity-50"
             onClick={props.onCheckout}
             disabled={!props.cartItems || props.cartItems.length === 0}
           >
