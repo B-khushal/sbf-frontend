@@ -137,17 +137,27 @@ const ProductCard = ({ product, onAddToCart, onOpenCart }: {
     try {
       const addToCartFunction = onAddToCart || addToCart;
       const openCartFunction = onOpenCart || openCart;
+      
       // Calculate discounted price if needed
-      const discountedPrice = product.discount > 0
+      const discountedPrice = product.discount && product.discount > 0
         ? Math.round(product.price * (1 - product.discount / 100))
         : product.price;
-      // Only use _id for Zustand cart
+      
+      // Create cart item with proper structure
       const cartItem = {
-        ...product,
+        _id: product._id,
+        title: product.title,
         price: discountedPrice,
+        images: product.images || [],
         quantity: 1,
+        discount: product.discount || 0,
+        category: product.category,
+        description: product.description,
       };
+      
+      console.log("Adding to cart:", cartItem);
       addToCartFunction(cartItem);
+      
       toast.success("🛒 Added to cart!", {
         description: `${product.title} has been added to your cart`,
         duration: 3000,

@@ -5,32 +5,28 @@ import { useAuth } from '@/hooks/use-auth';
 const CartDebugger = () => {
   const { user } = useAuth();
   const cartHook = useCart();
-  const { items, isCartOpen, toggleCart, addToCart, removeItem } = cartHook;
+  const { items, isCartOpen, openCart, closeCart, addToCart, removeItem } = cartHook;
 
   const handleAddTestItem = () => {
     const testProduct = {
       _id: 'test-product-1',
-      id: 'test-product-1',
-      productId: 'test-product-1',
       title: 'Test Product',
       price: 999,
-      originalPrice: 999,
-      image: '/images/placeholder.svg',
+      images: ['/images/placeholder.svg'],
       quantity: 1,
       category: 'test',
       discount: 0,
-      images: ['/images/placeholder.svg'],
-      description: 'Test product for debugging',
-      details: [],
-      careInstructions: [],
-      isNewArrival: false,
-      isFeatured: false
+      description: 'Test product for debugging'
     };
     addToCart(testProduct);
   };
 
   const handleToggleCart = () => {
-    toggleCart();
+    if (isCartOpen) {
+      closeCart();
+    } else {
+      openCart();
+    }
   };
 
   return (

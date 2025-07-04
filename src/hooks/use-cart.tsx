@@ -1,8 +1,14 @@
 import { create } from 'zustand';
-import { Product } from '@/types/product'; // Assuming you have a Product type
 
-interface CartItem extends Product {
+interface CartItem {
+  _id: string;
+  title: string;
+  price: number;
+  images: string[];
   quantity: number;
+  discount?: number;
+  category?: string;
+  description?: string;
 }
 
 interface CartState {
@@ -30,17 +36,24 @@ export const useCart = create<CartState>((set, get) => ({
 
   addToCart: (item) => {
     const { items } = get();
+    
+    // Validate item has required fields
+    if (!item._id || !item.title || typeof item.price !== 'number' || typeof item.quantity !== 'number') {
+      console.error('Invalid cart item:', item);
+      return;
+    }
+    
     const existingItem = items.find((i) => i._id === item._id);
 
     let updatedCart;
     if (existingItem) {
       updatedCart = items.map((i) =>
         i._id === item._id
-          ? { ...i, quantity: i.quantity + item.quantity }
+          ? { ...i, quantity: (i.quantity || 0) + (item.quantity || 1) }
           : i
       );
     } else {
-      updatedCart = [...items, item];
+      updatedCart = [...items, { ...item, quantity: item.quantity || 1 }];
     }
     set({ items: updatedCart });
     get().saveCart(updatedCart);
@@ -86,10 +99,19 @@ export const useCart = create<CartState>((set, get) => ({
     try {
       const cartData = localStorage.getItem('cart');
       if (cartData) {
-        set({ items: JSON.parse(cartData) });
+        const parsedCart = JSON.parse(cartData);
+        // Validate cart data structure
+        if (Array.isArray(parsedCart)) {
+          const validItems = parsedCart.filter(item => 
+            item && item._id && item.title && typeof item.price === 'number' && typeof item.quantity === 'number'
+          );
+          set({ items: validItems });
+        }
       }
     } catch (error) {
       console.error('Error loading cart:', error);
+      // Clear invalid cart data
+      localStorage.removeItem('cart');
     }
   },
 
@@ -107,8 +129,8 @@ export const useCartSelectors = () => {
   const items = useCart((state) => state.items);
   
   return {
-    itemCount: items.reduce((total, item) => total + item.quantity, 0),
-    subtotal: items.reduce((total, item) => total + item.price * item.quantity, 0),
+    itemCount: items.reduce((total, item) => total + (item.quantity || 0), 0),
+    subtotal: items.reduce((total, item) => total + ((item.price || 0) * (item.quantity || 0)), 0),
   };
 };
 

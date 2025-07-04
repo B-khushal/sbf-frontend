@@ -478,22 +478,25 @@ const CheckoutConfirmationPage = () => {
                   <div key={item.id} className="flex items-center gap-3">
                     <div className="h-16 w-16 bg-secondary/20 rounded-md relative overflow-hidden flex-shrink-0">
                       <img 
-                        src={formatImageUrl(item.image)} 
+                        src={item.images && item.images.length > 0 ? item.images[0] : '/api/placeholder/64/64'} 
                         alt={item.title}
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = '/api/placeholder/64/64';
+                        }}
                       />
                       <div className="absolute top-0 right-0 h-5 w-5 bg-primary text-primary-foreground text-xs font-medium flex items-center justify-center rounded-full -mt-1 -mr-1">
-                        {item.quantity}
+                        {item.quantity || 0}
                       </div>
                     </div>
                     <div className="flex-1 min-w-0">
                       <h4 className="text-sm font-medium">{item.title}</h4>
                       <div className="text-muted-foreground text-xs">
-                        {displayPrice(item.price, order.currency, order.currencyRate)} × {item.quantity}
+                        {displayPrice(item.price || 0, order.currency, order.currencyRate)} × {item.quantity || 0}
                       </div>
                     </div>
                     <div className="text-sm font-medium">
-                      {displayPrice(item.price * item.quantity, order.currency, order.currencyRate)}
+                      {displayPrice((item.price || 0) * (item.quantity || 0), order.currency, order.currencyRate)}
                     </div>
                   </div>
                 ))}

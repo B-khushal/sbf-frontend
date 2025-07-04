@@ -56,7 +56,7 @@ const CartPage: React.FC = () => {
   });
   
   const subtotal = items.reduce(
-    (total, item) => total + item.price * item.quantity, 
+    (total, item) => total + (item.price || 0) * (item.quantity || 0), 
     0
   );
 
@@ -214,13 +214,13 @@ const CartPage: React.FC = () => {
                     
                     <div className="space-y-4 sm:space-y-6">
                       {items.map((item, index) => {
-                        const imageUrl = item.image?.startsWith("/")
-                          ? item.image
-                          : item.image;
+                        const imageUrl = item.images && item.images.length > 0
+                          ? item.images[0]
+                          : '/api/placeholder/64/64';
 
                         return (
                           <motion.div
-                            key={item.id}
+                            key={item._id}
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: index * 0.1 }}
@@ -234,6 +234,9 @@ const CartPage: React.FC = () => {
                                   src={imageUrl} 
                                   alt={item.title}
                                   className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    e.currentTarget.src = '/api/placeholder/64/64';
+                                  }}
                                 />
                               </div>
                               
@@ -241,13 +244,13 @@ const CartPage: React.FC = () => {
                               <div className="flex-1 min-w-0 text-center sm:text-left">
                                 <h4 className="text-base sm:text-lg font-bold text-gray-800 mb-2 line-clamp-2">{item.title}</h4>
                                 <div className="flex items-center justify-center sm:justify-start gap-2 mb-3">
-                                  {item.originalPrice !== item.price && (
+                                  {item.discount && item.discount > 0 && (
                                     <span className="text-xs sm:text-sm text-gray-500 line-through">
-                                      {formatPrice(convertPrice(item.originalPrice))}
+                                      {formatPrice(convertPrice(Math.round((item.price || 0) / (1 - item.discount / 100))))}
                                     </span>
                                   )}
                                   <span className="text-base sm:text-lg font-bold text-primary">
-                                    {formatPrice(convertPrice(item.price))}
+                                    {formatPrice(convertPrice(item.price || 0))}
                                   </span>
                                 </div>
                                 
@@ -256,21 +259,21 @@ const CartPage: React.FC = () => {
                                   <span className="text-xs sm:text-sm font-semibold text-gray-700">Qty:</span>
                                   <div className="flex items-center gap-1 sm:gap-2">
                                     <motion.button
-                                      onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                                      onClick={() => handleQuantityChange(item._id, (item.quantity || 0) - 1)}
                                       className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-primary to-secondary text-white rounded-full flex items-center justify-center hover:shadow-lg transition-all text-sm"
                                       whileHover={{ scale: 1.1 }}
                                       whileTap={{ scale: 0.9 }}
-                                      disabled={item.quantity <= 1}
+                                      disabled={(item.quantity || 0) <= 1}
                                     >
                                       <Minus className="w-3 h-3 sm:w-4 sm:h-4" />
                                     </motion.button>
-                                    <span className="w-8 sm:w-12 text-center font-bold text-gray-800 text-sm sm:text-base">{item.quantity}</span>
+                                    <span className="w-8 sm:w-12 text-center font-bold text-gray-800 text-sm sm:text-base">{item.quantity || 0}</span>
                                     <motion.button
-                                      onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                                      onClick={() => handleQuantityChange(item._id, (item.quantity || 0) + 1)}
                                       className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-primary to-secondary text-white rounded-full flex items-center justify-center hover:shadow-lg transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                                      whileHover={{ scale: item.quantity >= 5 ? 1 : 1.1 }}
-                                      whileTap={{ scale: item.quantity >= 5 ? 1 : 0.9 }}
-                                      disabled={item.quantity >= 5}
+                                      whileHover={{ scale: (item.quantity || 0) >= 5 ? 1 : 1.1 }}
+                                      whileTap={{ scale: (item.quantity || 0) >= 5 ? 1 : 0.9 }}
+                                      disabled={(item.quantity || 0) >= 5}
                                     >
                                       <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
                                     </motion.button>
@@ -281,10 +284,10 @@ const CartPage: React.FC = () => {
                               {/* Price and Remove */}
                               <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2 sm:gap-3">
                                 <div className="text-lg sm:text-xl font-black text-gray-800">
-                                  {formatPrice(convertPrice(item.price * item.quantity))}
+                                  {formatPrice(convertPrice((item.price || 0) * (item.quantity || 0)))}
                                 </div>
                                 <motion.button
-                                  onClick={() => handleRemoveItem(item.id)}
+                                  onClick={() => handleRemoveItem(item._id)}
                                   className="inline-flex items-center gap-1 sm:gap-2 text-red-500 hover:text-red-700 transition-colors font-medium text-xs sm:text-sm"
                                   whileHover={{ scale: 1.05 }}
                                   whileTap={{ scale: 0.95 }}

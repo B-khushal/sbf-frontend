@@ -845,30 +845,33 @@ const CheckoutShippingPage = () => {
                  {/* Display items */}
 <div className="space-y-4 max-h-80 overflow-y-auto mb-4">
   {items.map((item) => {
-    const imageUrl = item.image?.startsWith("/")
-                      ? item.image
-      : item.image;
+    const imageUrl = item.images && item.images.length > 0
+      ? item.images[0]
+      : '/api/placeholder/64/64';
 
     return (
-      <div key={item.id} className="flex items-center gap-3">
+      <div key={item._id} className="flex items-center gap-3">
         <div className="h-16 w-16 bg-secondary/20 rounded-md relative overflow-hidden flex-shrink-0">
           <img 
             src={imageUrl} 
             alt={item.title}
             className="w-full h-full object-cover"
+            onError={(e) => {
+              e.currentTarget.src = '/api/placeholder/64/64';
+            }}
           />
           <div className="absolute top-0 right-0 h-5 w-5 bg-primary text-primary-foreground text-xs font-medium flex items-center justify-center rounded-full -mt-1 -mr-1">
-            {item.quantity}
+            {item.quantity || 0}
           </div>
         </div>
         <div className="flex-1 min-w-0">
           <h4 className="text-sm font-medium truncate">{item.title}</h4>
           <div className="text-muted-foreground text-xs">
-            {formatPrice(convertPrice(item.price))} × {item.quantity}
+            {formatPrice(convertPrice(item.price || 0))} × {item.quantity || 0}
           </div>
         </div>
         <div className="text-sm font-medium">
-          {formatPrice(convertPrice(item.price * item.quantity))}
+          {formatPrice(convertPrice((item.price || 0) * (item.quantity || 0)))}
         </div>
       </div>
     );

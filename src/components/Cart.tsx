@@ -17,14 +17,14 @@ import {
 import { Button } from '@/components/ui/button';
 
 type CartItem = {
-  id: string;
-  productId: string;
+  _id: string;
   title: string;
   price: number;
-  originalPrice: number;
-  image: string;
+  images: string[];
   quantity: number;
   discount?: number;
+  category?: string;
+  description?: string;
 };
 
 type CartProps = {
@@ -59,7 +59,7 @@ const Cart = ({
   
   // Calculate subtotal
   const subtotal = items.reduce(
-    (total, item) => total + item.price * item.quantity, 
+    (total, item) => total + (item.price || 0) * (item.quantity || 0), 
     0
   );
 
@@ -152,10 +152,10 @@ const Cart = ({
             <div className="space-y-4">
               {items.map((item) => (
                 <CartItem 
-                  key={item.id} 
+                  key={item._id} 
                   item={item} 
                   onUpdateQuantity={onUpdateQuantity} 
-                  onRemove={() => handleRemoveItem(item.id)} 
+                  onRemove={() => handleRemoveItem(item._id)} 
                 />
               ))}
             </div>
@@ -213,11 +213,16 @@ const CartItem = ({
 }) => {
   const { formatPrice, convertPrice } = useCurrency();
   
+  // Calculate original price if discount exists
+  const originalPrice = item.discount && item.discount > 0 
+    ? Math.round(item.price / (1 - item.discount / 100))
+    : item.price;
+  
   return (
     <div className="flex items-start gap-4 p-4 bg-white border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition-shadow">
       <div className="w-16 h-16 bg-gray-100 relative overflow-hidden rounded-lg flex-shrink-0">
         <img 
-          src={item.image} 
+          src={item.images && item.images.length > 0 ? item.images[0] : '/api/placeholder/64/64'} 
           alt={item.title}
           className="w-full h-full object-cover"
           onError={(e) => {
@@ -228,9 +233,9 @@ const CartItem = ({
       <div className="flex-1 min-w-0">
         <h4 className="text-sm font-medium text-gray-900 mb-1 line-clamp-2">{item.title}</h4>
         <div className="text-sm text-gray-500 mb-2">
-          {item.originalPrice !== item.price && (
+          {item.discount && item.discount > 0 && (
             <span className="line-through mr-2 text-gray-400">
-              {formatPrice(convertPrice(item.originalPrice))}
+              {formatPrice(convertPrice(originalPrice))}
             </span>
           )}
           <span className="font-medium text-primary">
@@ -240,7 +245,7 @@ const CartItem = ({
         <div className="flex items-center justify-between">
           <select 
             value={item.quantity}
-            onChange={(e) => onUpdateQuantity(item.id, parseInt(e.target.value))}
+            onChange={(e) => onUpdateQuantity(item._id, parseInt(e.target.value))}
             className="text-sm h-8 px-2 border border-gray-200 rounded-md bg-white focus:border-primary focus:outline-none"
           >
             {[1,2,3,4,5].map((num) => (
@@ -259,7 +264,7 @@ const CartItem = ({
         </div>
       </div>
       <div className="text-sm font-semibold text-gray-900">
-        {formatPrice(convertPrice(item.price * item.quantity))}
+        {formatPrice(convertPrice((item.price || 0) * (item.quantity || 0)))}
       </div>
     </div>
   );
