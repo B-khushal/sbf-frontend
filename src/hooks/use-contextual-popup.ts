@@ -4,12 +4,13 @@ interface UseContextualPopupOptions {
   preventScroll?: boolean;
   closeOnEscape?: boolean;
   closeOnOutsideClick?: boolean;
+  margin?: number; // Minimum margin from viewport edges
 }
 
 interface PopupPosition {
   top: number;
   left: number;
-  side: 'top' | 'bottom' | 'left' | 'right';
+  side: 'top' | 'bottom' | 'left' | 'right' | 'center';
   align: 'start' | 'center' | 'end';
 }
 
@@ -18,6 +19,7 @@ export function useContextualPopup(options: UseContextualPopupOptions = {}) {
     preventScroll = true,
     closeOnEscape = true,
     closeOnOutsideClick = true,
+    margin = 16,
   } = options;
 
   const [isOpen, setIsOpen] = useState(false);
@@ -29,6 +31,9 @@ export function useContextualPopup(options: UseContextualPopupOptions = {}) {
   });
   const triggerRef = useRef<HTMLElement>(null);
   const popupRef = useRef<HTMLElement>(null);
+
+  // Helper: clamp value between min and max
+  const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(value, max));
 
   // Calculate optimal position for popup
   const calculatePosition = useCallback((triggerElement: HTMLElement, popupElement: HTMLElement) => {
@@ -42,66 +47,113 @@ export function useContextualPopup(options: UseContextualPopupOptions = {}) {
     // Available space in each direction
     const spaceBelow = viewportHeight - triggerRect.bottom;
     const spaceAbove = triggerRect.top;
-    const spaceRight = viewportWidth - triggerRect.left;
-    const spaceLeft = triggerRect.right;
+    const spaceRight = viewportWidth - triggerRect.right;
+    const spaceLeft = triggerRect.left;
 
-    // Determine optimal side
-    let side: 'top' | 'bottom' | 'left' | 'right' = 'bottom';
-    let align: 'start' | 'center' | 'end' = 'center';
+    // Try all directions, prefer the one with most space
+    const directions: Array<'bottom' | 'top' | 'right' | 'left'> = [
+      'bottom', 'top', 'right', 'left'
+    ];
+    const spaceMap = {
+      bottom: spaceBelow,
+      top: spaceAbove,
+      right: spaceRight,
+      left: spaceLeft,
+    };
+    // Sort directions by available space (descending)
+    directions.sort((a, b) => spaceMap[b] - spaceMap[a]);
 
-    if (spaceBelow >= popupRect.height || spaceBelow > spaceAbove) {
-      side = 'bottom';
-    } else if (spaceAbove >= popupRect.height) {
-      side = 'top';
-    } else if (spaceRight >= popupRect.width || spaceRight > spaceLeft) {
-      side = 'right';
-    } else if (spaceLeft >= popupRect.width) {
-      side = 'left';
-    } else {
-      // Fallback to center if no space available
-      side = 'bottom';
-    }
-
-    // Calculate position based on side
+    let chosenSide: PopupPosition['side'] = 'bottom';
     let top = 0;
     let left = 0;
+    let align: PopupPosition['align'] = 'center';
+    let foundFit = false;
 
-    switch (side) {
-      case 'bottom':
-        top = triggerRect.bottom + scrollY + 8; // 8px offset
-        left = triggerRect.left + scrollX + (triggerRect.width / 2) - (popupRect.width / 2);
-        break;
-      case 'top':
-        top = triggerRect.top + scrollY - popupRect.height - 8;
-        left = triggerRect.left + scrollX + (triggerRect.width / 2) - (popupRect.width / 2);
-        break;
-      case 'right':
-        top = triggerRect.top + scrollY + (triggerRect.height / 2) - (popupRect.height / 2);
-        left = triggerRect.right + scrollX + 8;
-        break;
-      case 'left':
-        top = triggerRect.top + scrollY + (triggerRect.height / 2) - (popupRect.height / 2);
-        left = triggerRect.left + scrollX - popupRect.width - 8;
-        break;
+    for (const side of directions) {
+      switch (side) {
+        case 'bottom':
+          if (spaceBelow >= popupRect.height + margin) {
+            top = triggerRect.bottom + scrollY + 8;
+            left = triggerRect.left + scrollX + (triggerRect.width / 2) - (popupRect.width / 2);
+            chosenSide = 'bottom';
+            foundFit = true;
+          }
+          break;
+        case 'top':
+          if (spaceAbove >= popupRect.height + margin) {
+            top = triggerRect.top + scrollY - popupRect.height - 8;
+            left = triggerRect.left + scrollX + (triggerRect.width / 2) - (popupRect.width / 2);
+            chosenSide = 'top';
+            foundFit = true;
+          }
+          break;
+        case 'right':
+          if (spaceRight >= popupRect.width + margin) {
+            top = triggerRect.top + scrollY + (triggerRect.height / 2) - (popupRect.height / 2);
+            left = triggerRect.right + scrollX + 8;
+            chosenSide = 'right';
+            foundFit = true;
+          }
+          break;
+        case 'left':
+          if (spaceLeft >= popupRect.width + margin) {
+            top = triggerRect.top + scrollY + (triggerRect.height / 2) - (popupRect.height / 2);
+            left = triggerRect.left + scrollX - popupRect.width - 8;
+            chosenSide = 'left';
+            foundFit = true;
+          }
+          break;
+      }
+      if (foundFit) break;
     }
 
-    // Ensure popup stays within viewport bounds
-    if (left < scrollX) {
-      left = scrollX + 8;
-      align = 'start';
-    } else if (left + popupRect.width > scrollX + viewportWidth) {
-      left = scrollX + viewportWidth - popupRect.width - 8;
-      align = 'end';
+    // If no direction fits, fallback to the direction with the most space and clamp
+    if (!foundFit) {
+      const bestSide = directions[0];
+      switch (bestSide) {
+        case 'bottom':
+          top = triggerRect.bottom + scrollY + 8;
+          left = triggerRect.left + scrollX + (triggerRect.width / 2) - (popupRect.width / 2);
+          chosenSide = 'bottom';
+          break;
+        case 'top':
+          top = triggerRect.top + scrollY - popupRect.height - 8;
+          left = triggerRect.left + scrollX + (triggerRect.width / 2) - (popupRect.width / 2);
+          chosenSide = 'top';
+          break;
+        case 'right':
+          top = triggerRect.top + scrollY + (triggerRect.height / 2) - (popupRect.height / 2);
+          left = triggerRect.right + scrollX + 8;
+          chosenSide = 'right';
+          break;
+        case 'left':
+          top = triggerRect.top + scrollY + (triggerRect.height / 2) - (popupRect.height / 2);
+          left = triggerRect.left + scrollX - popupRect.width - 8;
+          chosenSide = 'left';
+          break;
+      }
     }
 
-    if (top < scrollY) {
-      top = scrollY + 8;
-    } else if (top + popupRect.height > scrollY + viewportHeight) {
-      top = scrollY + viewportHeight - popupRect.height - 8;
+    // Clamp to viewport with margin
+    left = clamp(left, scrollX + margin, scrollX + viewportWidth - popupRect.width - margin);
+    top = clamp(top, scrollY + margin, scrollY + viewportHeight - popupRect.height - margin);
+
+    // If popup is still out of bounds, fallback to centered
+    if (
+      left < scrollX + margin ||
+      left + popupRect.width > scrollX + viewportWidth - margin ||
+      top < scrollY + margin ||
+      top + popupRect.height > scrollY + viewportHeight - margin
+    ) {
+      // Centered fallback
+      left = scrollX + (viewportWidth - popupRect.width) / 2;
+      top = scrollY + (viewportHeight - popupRect.height) / 2;
+      chosenSide = 'center';
+      align = 'center';
     }
 
-    return { top, left, side, align };
-  }, []);
+    return { top, left, side: chosenSide, align };
+  }, [margin]);
 
   // Handle escape key
   useEffect(() => {

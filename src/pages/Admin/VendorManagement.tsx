@@ -149,6 +149,9 @@ const AdminVendorManagement: React.FC = () => {
 
   // Handle vendor details view
   const handleViewDetails = (vendorId: string) => {
+    if (vendorDetailButtonRefs.current[vendorId]) {
+      vendorDetailButtonRefs.current[vendorId]?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
     const vendor = vendors.find((v) => v._id === vendorId);
     if (vendor) {
       setSelectedVendor(vendor);
@@ -528,9 +531,10 @@ const AdminVendorManagement: React.FC = () => {
       {/* Vendor Detail Dialog */}
       <EnhancedContextualDialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
         <EnhancedContextualDialogContent 
-          className="max-w-4xl max-h-[80vh] overflow-y-auto"
+          className="max-w-4xl max-w-[90vw] max-h-[80vh] overflow-y-auto"
           triggerRef={selectedVendor ? vendorDetailButtonRefs.current[selectedVendor._id] : undefined}
           useContextualPositioning={true}
+          margin={16}
         >
           <EnhancedContextualDialogHeader>
             <EnhancedContextualDialogTitle className="flex items-center gap-2">

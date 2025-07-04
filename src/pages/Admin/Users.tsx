@@ -168,7 +168,8 @@ const AdminUsers: React.FC = () => {
   };
 
   const handleVendorDetailClick = (user: User) => {
-    if (user.vendorInfo) {
+    if (user.vendorInfo && vendorDetailButtonRefs.current[user._id]) {
+      vendorDetailButtonRefs.current[user._id]?.scrollIntoView({ block: 'center', behavior: 'smooth' });
       setSelectedVendor({
         ...user.vendorInfo,
         user: { name: user.name, email: user.email }
@@ -178,7 +179,9 @@ const AdminUsers: React.FC = () => {
   };
 
   const handleEditClick = (user: User) => {
-    console.log("Edit clicked for user:", user);
+    if (editButtonRefs.current[user._id]) {
+      editButtonRefs.current[user._id]?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
     setSelectedUser(user);
     setEditForm({
       name: user.name,
@@ -337,6 +340,11 @@ const AdminUsers: React.FC = () => {
     }
   };
 
+  const handleAddUserClick = () => {
+    addUserButtonRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    setIsAddDialogOpen(true);
+  };
+
   // ✅ Search and Role Filter
   const filteredUsers = (users || []).filter((user) => {
     const matchesSearch = 
@@ -356,7 +364,7 @@ const AdminUsers: React.FC = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Users</h1>
-        <Button ref={addUserButtonRef} onClick={() => setIsAddDialogOpen(true)}>
+        <Button ref={addUserButtonRef} onClick={handleAddUserClick}>
           <UserPlus className="mr-2 h-4 w-4" /> Add User
         </Button>
       </div>
@@ -551,6 +559,8 @@ const AdminUsers: React.FC = () => {
         <EnhancedContextualDialogContent 
           triggerRef={selectedUser ? editButtonRefs.current[selectedUser._id] : undefined}
           useContextualPositioning={true}
+          margin={16}
+          className="max-w-[90vw] max-h-[80vh] overflow-y-auto"
         >
           <EnhancedContextualDialogHeader>
             <EnhancedContextualDialogTitle>Edit User</EnhancedContextualDialogTitle>
@@ -645,9 +655,10 @@ const AdminUsers: React.FC = () => {
       {/* Add User Dialog */}
       <EnhancedContextualDialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <EnhancedContextualDialogContent 
-          className="sm:max-w-[425px]"
+          className="sm:max-w-[425px] max-w-[90vw] max-h-[80vh] overflow-y-auto"
           triggerRef={addUserButtonRef}
           useContextualPositioning={true}
+          margin={16}
         >
           <EnhancedContextualDialogHeader>
             <EnhancedContextualDialogTitle>Add New User</EnhancedContextualDialogTitle>
@@ -749,9 +760,10 @@ const AdminUsers: React.FC = () => {
       {/* Vendor Detail Dialog */}
       <EnhancedContextualDialog open={isVendorDetailDialogOpen} onOpenChange={setIsVendorDetailDialogOpen}>
         <EnhancedContextualDialogContent 
-          className="max-w-2xl max-h-[80vh] overflow-y-auto"
+          className="max-w-2xl max-w-[90vw] max-h-[80vh] overflow-y-auto"
           triggerRef={selectedVendor ? vendorDetailButtonRefs.current[selectedVendor._id] : undefined}
           useContextualPositioning={true}
+          margin={16}
         >
           <EnhancedContextualDialogHeader>
             <EnhancedContextualDialogTitle className="flex items-center gap-2">
