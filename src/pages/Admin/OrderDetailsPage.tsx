@@ -54,12 +54,27 @@ const OrderDetailsPage: React.FC = () => {
           </div>
           <div>
             <h3 className="font-semibold mb-2">Order Items</h3>
-            <ul className="space-y-2">
+            <ul className="space-y-4">
               {order.items.map((item, idx) => (
-                <li key={idx} className="border-b pb-2">
-                  <div className="font-medium">{item.product.name}</div>
-                  <div>Qty: {item.quantity}</div>
-                  <div>Price: {formatPrice(item.finalPrice)}</div>
+                <li key={idx} className="flex gap-4 items-center border-b pb-4">
+                  {item.product.images && item.product.images.length > 0 && (
+                    <img
+                      src={item.product.images[0]}
+                      alt={item.product.title}
+                      className="w-20 h-20 object-cover rounded border"
+                    />
+                  )}
+                  <div className="flex-1">
+                    <div className="font-medium text-lg">{item.product.title}</div>
+                    <div className="text-xs text-gray-500">Product ID: {item.product._id}</div>
+                    <div className="text-sm">Qty: {item.quantity}</div>
+                    <div className="text-sm">
+                      Price: {formatPrice(item.price)}
+                      {item.finalPrice !== item.price && (
+                        <span className="ml-2 text-green-600">Final: {formatPrice(item.finalPrice)}</span>
+                      )}
+                    </div>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -76,9 +91,14 @@ const OrderDetailsPage: React.FC = () => {
           <div>
             <h3 className="font-semibold mb-2">Payment</h3>
             <div>Method: {order.paymentDetails.method}</div>
-            <div>Status: {order.paymentDetails.status}</div>
-            {order.paymentDetails.transactionId && (
-              <div>Transaction ID: {order.paymentDetails.transactionId}</div>
+            {order.paymentDetails.razorpayOrderId && (
+              <div>Razorpay Order ID: {order.paymentDetails.razorpayOrderId}</div>
+            )}
+            {order.paymentDetails.razorpayPaymentId && (
+              <div>Razorpay Payment ID: {order.paymentDetails.razorpayPaymentId}</div>
+            )}
+            {order.paymentDetails.razorpaySignature && (
+              <div>Razorpay Signature: {order.paymentDetails.razorpaySignature}</div>
             )}
           </div>
         </CardContent>
