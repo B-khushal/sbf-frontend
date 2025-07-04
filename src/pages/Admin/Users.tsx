@@ -173,6 +173,10 @@ const AdminUsers: React.FC = () => {
     navigate(`/admin/users/edit/${user._id}`);
   };
 
+  const handleViewClick = (user: User) => {
+    navigate(`/admin/users/view/${user._id}`);
+  };
+
   const handleDeleteClick = (userId: string) => {
     const user = users.find(u => u._id === userId);
     if (user) {
@@ -456,6 +460,14 @@ const AdminUsers: React.FC = () => {
                     {user.lastLogin ? user.lastLogin : "N/A"}
                   </TableCell>
                   <TableCell className="text-right space-x-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleViewClick(user)}
+                      disabled={isLoading}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
                     {user.role === 'vendor' && user.vendorInfo && (
                       <Button
                         ref={(el) => vendorDetailButtonRefs.current[user._id] = el}
@@ -464,7 +476,7 @@ const AdminUsers: React.FC = () => {
                         onClick={() => handleVendorDetailClick(user)}
                         disabled={isLoading}
                       >
-                        <Eye className="h-4 w-4" />
+                        <Store className="h-4 w-4" />
                       </Button>
                     )}
                     <Button
