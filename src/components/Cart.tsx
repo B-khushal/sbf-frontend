@@ -13,10 +13,10 @@ const Cart = (props: any) => {
             borderBottom: '2px solid #7c3aed',
             textAlign: 'center',
             zIndex: 9999999,
-            position: 'fixed',
-            top: 0,
-            right: 0,
-            width: '400px'
+            position: 'relative',
+            width: '100%',
+            height: '100px',
+            fontSize: '32px'
           }}>
             SHEET ROOT TEST: If you see this, Sheet/SheetContent works globally.
           </div>
