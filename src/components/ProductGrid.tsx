@@ -117,8 +117,10 @@ const ProductCard = ({ product, onAddToCart, onOpenCart }: {
     e.preventDefault();
     e.stopPropagation();
     console.log("Add to cart clicked:", product.title);
+    console.log("User status:", user ? "Logged in" : "Not logged in");
     
     if (!user) {
+      console.log("User not logged in, redirecting to login");
       toast.error("Please login first to add items to your cart", {
         description: "You'll be redirected to the login page",
         duration: 3000,
@@ -138,6 +140,9 @@ const ProductCard = ({ product, onAddToCart, onOpenCart }: {
       const addToCartFunction = onAddToCart || addToCart;
       const openCartFunction = onOpenCart || openCart;
       
+      console.log("Using addToCart function:", addToCartFunction === addToCart ? "Default" : "Custom");
+      console.log("Using openCart function:", openCartFunction === openCart ? "Default" : "Custom");
+      
       // Calculate discounted price if needed
       const discountedPrice = product.discount && product.discount > 0
         ? Math.round(product.price * (1 - product.discount / 100))
@@ -155,14 +160,23 @@ const ProductCard = ({ product, onAddToCart, onOpenCart }: {
         description: product.description,
       };
       
-      console.log("Adding to cart:", cartItem);
+      console.log("Cart item to be added:", cartItem);
+      console.log("Current cart state before adding:", addToCartFunction === addToCart ? "Using Zustand store" : "Using custom function");
+      
       addToCartFunction(cartItem);
+      
+      console.log("Item added to cart successfully");
       
       toast.success("🛒 Added to cart!", {
         description: `${product.title} has been added to your cart`,
         duration: 3000,
       });
-      setTimeout(() => openCartFunction(), 300);
+      
+      console.log("Opening cart in 300ms");
+      setTimeout(() => {
+        console.log("Opening cart now");
+        openCartFunction();
+      }, 300);
     } catch (error) {
       console.error("Error adding to cart:", error);
       toast.error("Failed to add to cart", {

@@ -13,6 +13,7 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 import MainLayout from './components/MainLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import useCart from '@/hooks/use-cart';
+import CartDebugger from '@/components/CartDebugger';
 
 // Core pages that should load immediately
 import HomePage from "./pages/HomePage";
@@ -114,7 +115,9 @@ const App = () => {
   // Load cart from localStorage on app start
   const loadCart = useCart((state) => state.loadCart);
   useEffect(() => {
+    console.log("App: Loading cart from localStorage on app start");
     loadCart();
+    console.log("App: Cart loading initiated");
   }, [loadCart]);
 
   return (
@@ -380,6 +383,7 @@ const App = () => {
           </AuthProvider>
         </GoogleOAuthProvider>
       </QueryClientProvider>
+      <CartDebugger />
     </ErrorBoundary>
   );
 };
