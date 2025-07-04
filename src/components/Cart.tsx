@@ -43,30 +43,10 @@ const Cart = ({
   onRemoveItem 
 }: CartProps) => {
   const navigate = useNavigate();
-  const currencyContext = useCurrency();
-  const authContext = useAuth();
-  const toastContext = useToast();
-
-  // Defensive: If any context is missing, show an error
-  if (!currencyContext || !authContext || !toastContext) {
-    return (
-      <Sheet open={isOpen} onOpenChange={onClose}>
-        <SheetContent className="flex flex-col w-full sm:w-96 items-center justify-center text-center p-8">
-          <div style={{ color: "red", fontWeight: "bold", fontSize: 18, marginBottom: 16 }}>
-            Cart failed to render
-          </div>
-          <div style={{ color: "#b91c1c", fontSize: 14 }}>
-            One or more required providers are missing (CurrencyProvider, AuthProvider, or ToastProvider).
-          </div>
-        </SheetContent>
-      </Sheet>
-    );
-  }
-
-  const { formatPrice, convertPrice } = currencyContext;
-  const { user } = authContext;
-  const { toast } = toastContext;
-
+  const { formatPrice, convertPrice } = useCurrency();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  
   // Debug logging
   React.useEffect(() => {
     console.log('Cart component rendered with:', {
@@ -76,7 +56,7 @@ const Cart = ({
       user: user ? { id: user.id, name: user.name } : null
     });
   }, [isOpen, items, user]);
-
+  
   // Calculate subtotal
   const subtotal = items.reduce(
     (total, item) => total + item.price * item.quantity, 
@@ -95,6 +75,7 @@ const Cart = ({
 
   const handleCheckout = () => {
     console.log('Checkout clicked with items:', items);
+    
     if (items.length === 0) {
       toast({
         title: "Cart is empty",
@@ -104,6 +85,7 @@ const Cart = ({
       });
       return;
     }
+
     if (!user) {
       toast({
         title: "Authentication required",
@@ -114,6 +96,7 @@ const Cart = ({
       navigate('/login', { state: { redirect: '/checkout/shipping' } });
       return;
     }
+
     navigate('/checkout/shipping');
     onClose();
   };
@@ -132,6 +115,7 @@ const Cart = ({
             )}
           </SheetTitle>
         </SheetHeader>
+        
         <div className="flex-1 overflow-y-auto py-4 px-6">
           {!user ? (
             <div className="h-full flex flex-col items-center justify-center text-center">
@@ -177,6 +161,7 @@ const Cart = ({
             </div>
           )}
         </div>
+        
         {items.length > 0 && user && (
           <SheetFooter className="bg-gray-50 px-6 py-4 border-t">
             <div className="w-full space-y-4">
@@ -184,6 +169,7 @@ const Cart = ({
                 <span>Subtotal</span>
                 <span className="text-primary">{formatPrice(convertPrice(subtotal))}</span>
               </div>
+              
               <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <div className="flex items-center gap-2 text-blue-700 text-sm">
                   <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -201,6 +187,7 @@ const Cart = ({
                   Go to cart page to apply promo codes
                 </button>
               </div>
+              
               <Button 
                 className="w-full h-12 bg-gradient-to-r from-primary to-secondary text-white font-medium"
                 onClick={handleCheckout}
