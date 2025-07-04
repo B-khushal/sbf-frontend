@@ -29,11 +29,23 @@ const FilterSection: React.FC<{ title: string; children: React.ReactNode }> = ({
 };
 
 const ShopPage = () => {
-  const { category } = useParams<{ category: string }>();
+  const { category: pathCategory } = useParams<{ category: string }>();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { convertPrice, formatPrice, currency } = useCurrency();
-  const [selectedCategory, setSelectedCategory] = useState(category || "");
+  
+  // Get category from both path params and query params
+  const queryCategory = searchParams.get('category');
+  const category = pathCategory || queryCategory || "";
+  
+  // Redirect from query parameter to path parameter if needed
+  useEffect(() => {
+    if (queryCategory && !pathCategory) {
+      navigate(`/shop/${queryCategory}`, { replace: true });
+    }
+  }, [queryCategory, pathCategory, navigate]);
+  
+  const [selectedCategory, setSelectedCategory] = useState(category);
   const [sortBy, setSortBy] = useState("newest");
   const [viewMode, setViewMode] = useState("grid");
   const [priceRange, setPriceRange] = useState("all");
@@ -263,8 +275,8 @@ const ShopPage = () => {
   }, []);
 
   useEffect(() => {
-    setSelectedCategory(category || "");
-  }, [category]);
+    setSelectedCategory(category);
+  }, [category, pathCategory, queryCategory]);
 
   // Load wishlist from localStorage on component mount
   useEffect(() => {
