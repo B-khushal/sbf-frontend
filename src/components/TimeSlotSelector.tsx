@@ -229,18 +229,22 @@ const TimeSlotSelector = ({
                 "w-full sm:w-[280px] justify-start text-left font-normal border-dashed",
                 !date && "text-muted-foreground"
               )}
+              onClick={e => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsCalendarOpen(true);
+              }}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
               {formatDisplayDate(date)}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
+          <PopoverContent className="w-auto min-w-[320px] p-0" align="start">
             <Calendar
               mode="single"
               selected={date || undefined}
               onSelect={handleDateSelect}
               disabled={(date) => isBefore(date, today) || isBefore(maxDate, date)}
-              initialFocus
               className={cn("p-3 pointer-events-auto")}
             />
           </PopoverContent>
