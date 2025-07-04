@@ -41,8 +41,8 @@ const Cart = (props: any) => {
     <Sheet open={props.isOpen} onOpenChange={props.onClose}>
       <SheetContent className="flex flex-col w-full sm:w-96 h-full bg-white">
         {/* Cart Header */}
-        <div className="bg-purple-100 text-purple-600 font-bold p-4 border-b-2 border-purple-600 text-center text-xl">
-          Your Cart
+        <div style={{ color: 'black', background: 'yellow', fontWeight: 'bold', fontSize: 24, padding: 16 }}>
+          TEST HEADER: Your Cart
         </div>
         {/* Cart Items */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto p-4">
