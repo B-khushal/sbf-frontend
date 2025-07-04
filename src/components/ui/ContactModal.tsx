@@ -1,6 +1,12 @@
 import React from 'react';
 import { X, MessageCircle, Mail, Phone } from 'lucide-react';
 import { Button } from './button';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle 
+} from './dialog';
 
 interface ContactModalProps {
   isOpen: boolean;
@@ -9,8 +15,6 @@ interface ContactModalProps {
 }
 
 const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose, productTitle }) => {
-  if (!isOpen) return null;
-
   const handleWhatsAppClick = () => {
     const message = `Hi! I would like to order more than 5 units of "${productTitle}". Can you help me with bulk pricing and availability?`;
     const whatsappUrl = `https://wa.me/9949683222?text=${encodeURIComponent(message)}`;
@@ -41,43 +45,17 @@ Best regards`;
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="min-h-screen px-4 py-4 text-center">
-        {/* This element is to trick the browser into centering the modal contents. */}
-        <span
-          className="inline-block h-screen align-middle"
-          aria-hidden="true"
-        >
-          &#8203;
-        </span>
-        
-        {/* Modal */}
-        <div className="inline-block align-middle w-full text-left transform transition-all max-w-[90vw] max-h-[80vh] overflow-y-auto">
-      {/* Backdrop */}
-      <div 
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
-      />
-      
-          {/* Modal Content */}
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full mx-auto overflow-hidden">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-primary via-secondary to-accent p-6 text-white relative">
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 text-white/80 hover:text-white transition-colors"
-          >
-            <X size={24} />
-          </button>
-          <div className="pr-8">
-            <h2 className="text-2xl font-bold mb-2">Need More Than 5 Items?</h2>
-            <p className="text-white/90 text-sm">
-              For bulk orders, please contact us directly for special pricing and availability.
-            </p>
-          </div>
-        </div>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-md p-0 overflow-hidden">
+        <DialogHeader className="bg-gradient-to-r from-primary via-secondary to-accent p-6 text-white relative">
+          <DialogTitle className="text-2xl font-bold mb-2 text-white">
+            Need More Than 5 Items?
+          </DialogTitle>
+          <p className="text-white/90 text-sm">
+            For bulk orders, please contact us directly for special pricing and availability.
+          </p>
+        </DialogHeader>
 
-        {/* Content */}
         <div className="p-6 space-y-4">
           <div className="text-center mb-6">
             <p className="text-gray-600 text-sm">
@@ -136,12 +114,10 @@ Best regards`;
               <li>• Customization options available</li>
               <li>• Dedicated customer support</li>
             </ul>
-              </div>
-            </div>
           </div>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 

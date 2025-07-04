@@ -62,7 +62,7 @@ const Modal: React.FC<ModalProps> = ({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[9999] overflow-y-auto"
+      className="fixed inset-0 z-50 overflow-y-auto"
       onClick={onClose}
       role="presentation"
     >
@@ -83,7 +83,7 @@ const Modal: React.FC<ModalProps> = ({
 
         <div
           ref={modalRef}
-          className={`inline-block align-middle w-full text-left transform transition-all ${className}`}
+          className={`inline-block align-middle w-full text-left transform transition-all duration-200 ${className}`}
           style={{ maxWidth: '500px' }}
           onClick={(e) => e.stopPropagation()}
           role="dialog"

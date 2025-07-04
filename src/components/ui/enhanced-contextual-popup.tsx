@@ -95,35 +95,29 @@ const EnhancedContextualPopup: React.FC<EnhancedContextualPopupProps> = ({
             left: position.left,
           }}
         >
-          <AnimatePresence>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.2 }}
-              className={cn(
-                variant === 'popup' && "relative bg-gradient-to-br from-background to-muted rounded-xl overflow-hidden shadow-2xl"
-              )}
-            >
-              {children}
-              {showCloseButton && (
-                <button
-                  onClick={handleClose}
-                  className={cn(
-                    "absolute right-4 top-4 rounded-sm transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none",
-                    variant === 'default' && "opacity-70 ring-offset-background data-[state=open]:bg-accent data-[state=open]:text-muted-foreground",
-                    variant === 'popup' && "text-current opacity-70 hover:opacity-100 z-10 bg-black/10 hover:bg-black/20 rounded-full p-2 hover:rotate-90 duration-300"
-                  )}
-                >
-                  <X className={cn(
-                    variant === 'default' && "h-4 w-4",
-                    variant === 'popup' && "h-5 w-5"
-                  )} />
-                  <span className="sr-only">Close</span>
-                </button>
-              )}
-            </motion.div>
-          </AnimatePresence>
+          <div
+            className={cn(
+              variant === 'popup' && "relative bg-gradient-to-br from-background to-muted rounded-xl overflow-hidden shadow-2xl"
+            )}
+          >
+            {children}
+            {showCloseButton && (
+              <button
+                onClick={handleClose}
+                className={cn(
+                  "absolute right-4 top-4 rounded-sm transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none",
+                  variant === 'default' && "opacity-70 ring-offset-background data-[state=open]:bg-accent data-[state=open]:text-muted-foreground",
+                  variant === 'popup' && "text-current opacity-70 hover:opacity-100 z-10 bg-black/10 hover:bg-black/20 rounded-full p-2 hover:rotate-90 duration-300"
+                )}
+              >
+                <X className={cn(
+                  variant === 'default' && "h-4 w-4",
+                  variant === 'popup' && "h-5 w-5"
+                )} />
+                <span className="sr-only">Close</span>
+              </button>
+            )}
+          </div>
         </div>,
         document.body
       )}
