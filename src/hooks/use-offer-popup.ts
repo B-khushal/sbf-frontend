@@ -97,9 +97,13 @@ export const useOfferPopup = () => {
 
             // Track offer impression
             try {
-              await api.post(`/offers/${offerToShow._id}/impression`);
+              await api.post(`/offers/${offerToShow._id}/impression`).catch((err) => {
+                if (err?.response?.status !== 404) {
+                  console.error('Failed to track offer impression:', err);
+                }
+              });
             } catch (error) {
-              console.error('Failed to track offer impression:', error);
+              // Silently ignore 404 errors
             }
           }
         }
@@ -126,9 +130,13 @@ export const useOfferPopup = () => {
     // Track offer close if there's a current offer
     if (currentOffer) {
       try {
-        await api.post(`/offers/${currentOffer._id}/close`);
+        await api.post(`/offers/${currentOffer._id}/close`).catch((err) => {
+          if (err?.response?.status !== 404) {
+            console.error('Failed to track offer close:', err);
+          }
+        });
       } catch (error) {
-        console.error('Failed to track offer close:', error);
+        // Silently ignore 404 errors
       }
     }
 
