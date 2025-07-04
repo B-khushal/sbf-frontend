@@ -223,6 +223,7 @@ const TimeSlotSelector = ({
         <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
           <PopoverTrigger asChild>
             <Button
+              type="button"
               variant="outline"
               className={cn(
                 "w-full sm:w-[280px] justify-start text-left font-normal border-dashed",
