@@ -33,10 +33,10 @@ const MainLayout: React.FC = () => {
       <Cart
         isOpen={cartHook.isCartOpen}
         onClose={cartHook.closeCart}
-        items={cartHook.items}
-        onUpdateQuantity={cartHook.updateItemQuantity}
-        onRemoveItem={cartHook.removeItem}
-        itemCount={itemCount}
+        cartItems={cartHook.items}
+        cartTotal={cartHook.total}
+        onRemove={cartHook.removeItem}
+        onCheckout={cartHook.checkout}
       />
       <main className="flex-grow">
         <Outlet />
