@@ -31,10 +31,9 @@ type ProductGridProps = {
   className?: string;
   loading?: boolean;
   onAddToCart?: (item: any, quantity: number) => boolean;
-  onOpenCart?: () => void;
 };
 
-const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCart, onOpenCart }: ProductGridProps) => {
+const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCart }: ProductGridProps) => {
   return (
     <section className={cn("py-8 sm:py-12 lg:py-16 xl:py-20 px-3 sm:px-4 md:px-6 lg:px-8", className)}>
       {(title || subtitle) && (
@@ -65,7 +64,7 @@ const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCar
       ) : (
         <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 sm:gap-5 md:gap-6 lg:gap-7 xl:gap-9">
           {products.map((product) => (
-            <ProductCard key={product._id} product={product} onAddToCart={onAddToCart} onOpenCart={onOpenCart} />
+            <ProductCard key={product._id} product={product} onAddToCart={onAddToCart} />
           ))}
         </div>
       )}
@@ -73,13 +72,12 @@ const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCar
   );
 };
 
-const ProductCard = ({ product, onAddToCart, onOpenCart }: { 
+const ProductCard = ({ product, onAddToCart }: { 
   product: Product; 
   onAddToCart?: (item: any, quantity: number) => boolean;
-  onOpenCart?: () => void;
 }) => {
   const { formatPrice, convertPrice } = useCurrency();
-  const { addToCart, openCart } = useCart();
+  const { addToCart } = useCart();
   const navigate = useNavigate();
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
@@ -136,7 +134,6 @@ const ProductCard = ({ product, onAddToCart, onOpenCart }: {
     
     try {
       const addToCartFunction = onAddToCart || addToCart;
-      const openCartFunction = onOpenCart || openCart;
       
       // Calculate discounted price if needed
       const discountedPrice = product.discount && product.discount > 0
@@ -156,13 +153,12 @@ const ProductCard = ({ product, onAddToCart, onOpenCart }: {
       };
       
       console.log("Adding to cart:", cartItem);
-      addToCartFunction(cartItem);
+      addToCartFunction(cartItem, 1);
       
       toast.success("🛒 Added to cart!", {
         description: `${product.title} has been added to your cart`,
         duration: 3000,
       });
-      setTimeout(() => openCartFunction(), 300);
     } catch (error) {
       console.error("Error adding to cart:", error);
       toast.error("Failed to add to cart", {

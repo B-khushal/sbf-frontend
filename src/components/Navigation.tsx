@@ -91,7 +91,7 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
   const [wishlistCount, setWishlistCount] = useState(0);
   const cartHook = useCart();
   const { itemCount: actualCartCount } = useCartSelectors();
-  const { toggleCart, isCartOpen, items } = cartHook;
+  const { items } = cartHook;
   
   // Debug cart state with detailed logging
   useEffect(() => {

@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/use-auth';
 const CartDebugger = () => {
   const { user } = useAuth();
   const cartHook = useCart();
-  const { items, isCartOpen, openCart, closeCart, addToCart, removeItem } = cartHook;
+  const { items, addToCart, removeItem } = cartHook;
 
   const handleAddTestItem = () => {
     const testProduct = {
@@ -21,20 +21,11 @@ const CartDebugger = () => {
     addToCart(testProduct);
   };
 
-  const handleToggleCart = () => {
-    if (isCartOpen) {
-      closeCart();
-    } else {
-      openCart();
-    }
-  };
-
   return (
     <div className="fixed bottom-4 right-4 bg-white p-4 rounded-lg shadow-lg border z-50">
       <h3 className="text-sm font-bold mb-2">Cart Debugger</h3>
       <div className="text-xs space-y-1 mb-2">
         <div>Items: {items.length}</div>
-        <div>Open: {isCartOpen ? 'Yes' : 'No'}</div>
         <div>User: {user ? user.name : 'None'}</div>
       </div>
       <div className="space-y-2">
@@ -44,12 +35,6 @@ const CartDebugger = () => {
           disabled={!user}
         >
           {user ? 'Add Test Item' : 'Login Required'}
-        </button>
-        <button
-          onClick={handleToggleCart}
-          className="w-full bg-blue-500 text-white px-2 py-1 rounded text-xs hover:bg-blue-600"
-        >
-          Toggle Cart
         </button>
         {items.length > 0 && (
           <button

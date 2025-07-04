@@ -18,7 +18,6 @@ const ProductPage = () => {
   
   const { 
     addToCart, 
-    openCart, 
   } = useCart();
   
   // Use either id or productId parameter
@@ -82,7 +81,6 @@ const ProductPage = () => {
       };
       
       addToCart(cartItem);
-      setTimeout(() => openCart(), 300);
     } catch (error) {
       console.error('Error adding to cart:', error);
       throw error;

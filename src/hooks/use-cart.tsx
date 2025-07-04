@@ -13,14 +13,11 @@ interface CartItem {
 
 interface CartState {
   items: CartItem[];
-  isCartOpen: boolean;
   addToCart: (item: CartItem) => void;
   removeFromCart: (productId: string) => void;
   removeItem: (itemId: string) => void;
   updateItemQuantity: (itemId: string, quantity: number) => void;
   clearCart: () => void;
-  openCart: () => void;
-  closeCart: () => void;
   loadCart: () => void;
   saveCart: (cart: CartItem[]) => void;
   showContactModal: boolean;
@@ -30,7 +27,6 @@ interface CartState {
 
 export const useCart = create<CartState>((set, get) => ({
   items: [],
-  isCartOpen: false,
   showContactModal: false,
   contactModalProduct: '',
 
@@ -89,9 +85,6 @@ export const useCart = create<CartState>((set, get) => ({
     set({ items: [] });
     get().saveCart([]);
   },
-
-  openCart: () => set({ isCartOpen: true }),
-  closeCart: () => set({ isCartOpen: false }),
 
   closeContactModal: () => set({ showContactModal: false, contactModalProduct: '' }),
 
