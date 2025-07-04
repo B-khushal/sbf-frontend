@@ -215,7 +215,7 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
   };
 
   const handleCartClick = () => {
-    cartHook.toggleCart();
+    navigate('/cart');
   };
 
   return (

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Navigation from './Navigation';
 import Footer from './Footer';
@@ -12,11 +12,6 @@ const MainLayout: React.FC = () => {
   const { itemCount } = useCartSelectors();
   const { homeSections } = useSettings();
   const { pathname } = useLocation();
-
-  // Load cart from localStorage on component mount
-  useEffect(() => {
-    cartHook.loadCart();
-  }, [cartHook]);
 
   const enabledSections = homeSections.filter(section => section.enabled);
   const showFooter = enabledSections.some(section => section.type !== 'hero');

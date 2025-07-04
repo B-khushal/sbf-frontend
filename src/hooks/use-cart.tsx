@@ -15,7 +15,6 @@ interface CartState {
   clearCart: () => void;
   openCart: () => void;
   closeCart: () => void;
-  toggleCart: () => void;
   loadCart: () => void;
   saveCart: (cart: CartItem[]) => void;
   showContactModal: boolean;
@@ -31,12 +30,12 @@ export const useCart = create<CartState>((set, get) => ({
 
   addToCart: (item) => {
     const { items } = get();
-    const existingItem = items.find((i) => i.id === item.id);
+    const existingItem = items.find((i) => i._id === item._id);
 
     let updatedCart;
     if (existingItem) {
       updatedCart = items.map((i) =>
-        i.id === item.id
+        i._id === item._id
           ? { ...i, quantity: i.quantity + item.quantity }
           : i
       );
@@ -48,13 +47,13 @@ export const useCart = create<CartState>((set, get) => ({
   },
 
   removeFromCart: (productId) => {
-    const updatedCart = get().items.filter((item) => item.id !== productId);
+    const updatedCart = get().items.filter((item) => item._id !== productId);
     set({ items: updatedCart });
     get().saveCart(updatedCart);
   },
 
   removeItem: (itemId) => {
-    const updatedCart = get().items.filter((item) => item.id !== itemId);
+    const updatedCart = get().items.filter((item) => item._id !== itemId);
     set({ items: updatedCart });
     get().saveCart(updatedCart);
   },
@@ -67,7 +66,7 @@ export const useCart = create<CartState>((set, get) => ({
     
     const { items } = get();
     const updatedCart = items.map((item) =>
-      item.id === itemId ? { ...item, quantity } : item
+      item._id === itemId ? { ...item, quantity } : item
     );
     set({ items: updatedCart });
     get().saveCart(updatedCart);
@@ -80,7 +79,6 @@ export const useCart = create<CartState>((set, get) => ({
 
   openCart: () => set({ isCartOpen: true }),
   closeCart: () => set({ isCartOpen: false }),
-  toggleCart: () => set((state) => ({ isCartOpen: !state.isCartOpen })),
 
   closeContactModal: () => set({ showContactModal: false, contactModalProduct: '' }),
 
