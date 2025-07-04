@@ -15,6 +15,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { format, addDays, isBefore, startOfDay, isValid } from 'date-fns';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import { useFloating, offset, flip, shift, useClick, useDismiss, useRole, useInteractions, FloatingPortal } from '@floating-ui/react';
 
 export type TimeSlot = {
   id: string;
@@ -211,6 +212,22 @@ const TimeSlotSelector = ({
     return null;
   };
   
+  // Floating UI setup
+  const { x, y, reference, floating, strategy, context } = useFloating({
+    open: isCalendarOpen,
+    onOpenChange: setIsCalendarOpen,
+    middleware: [offset(4), flip(), shift({ padding: 8 })],
+    placement: 'bottom-start',
+  });
+  const click = useClick(context);
+  const dismiss = useDismiss(context);
+  const role = useRole(context);
+  const { getReferenceProps, getFloatingProps } = useInteractions([
+    click,
+    dismiss,
+    role,
+  ]);
+  
   return (
     <div className={cn("space-y-5", className)}>
       {/* Date Selection */}
@@ -219,37 +236,49 @@ const TimeSlotSelector = ({
           <CalendarIcon size={18} />
           <span>Select Delivery Date</span>
         </div>
-        
-        <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              type="button"
-              variant="outline"
-              className={cn(
-                "w-full sm:w-[280px] justify-start text-left font-normal border-dashed",
-                !date && "text-muted-foreground"
-              )}
-              onClick={e => {
-                e.preventDefault();
-                e.stopPropagation();
-                setIsCalendarOpen(true);
-              }}
-            >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {formatDisplayDate(date)}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto min-w-[320px] p-0 z-50" align="start">
-            <Calendar
-              mode="single"
-              selected={date || undefined}
-              onSelect={handleDateSelect}
-              disabled={(date) => isBefore(date, today) || isBefore(maxDate, date)}
-              className={cn("p-3 pointer-events-auto")}
-            />
-          </PopoverContent>
-        </Popover>
-        
+        <div>
+          <Button
+            type="button"
+            variant="outline"
+            className={cn(
+              "w-full sm:w-[280px] justify-start text-left font-normal border-dashed",
+              !date && "text-muted-foreground"
+            )}
+            ref={reference}
+            {...getReferenceProps()}
+            onClick={() => setIsCalendarOpen((v) => !v)}
+          >
+            <CalendarIcon className="mr-2 h-4 w-4" />
+            {formatDisplayDate(date)}
+          </Button>
+          {isCalendarOpen && (
+            <FloatingPortal>
+              <div
+                ref={floating}
+                style={{
+                  position: strategy,
+                  top: y ?? 0,
+                  left: x ?? 0,
+                  zIndex: 1000,
+                  minWidth: 320,
+                  background: 'white',
+                  borderRadius: 12,
+                  boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
+                  padding: 0,
+                }}
+                {...getFloatingProps()}
+              >
+                <Calendar
+                  mode="single"
+                  selected={date || undefined}
+                  onSelect={handleDateSelect}
+                  disabled={(date) => isBefore(date, today) || isBefore(maxDate, date)}
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </div>
+            </FloatingPortal>
+          )}
+        </div>
         <p className="text-sm text-muted-foreground">
           Select a delivery date within the next 30 days
         </p>
