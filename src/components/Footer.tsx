@@ -70,10 +70,10 @@ const Footer = () => {
   }
 
   return (
-    <footer className="relative bg-gradient-to-br from-secondary/40 via-secondary/30 to-secondary/20 pt-20 pb-8">
-      {/* Newsletter Section */}
-      <div className="absolute top-0 left-0 right-0 transform -translate-y-1/2 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
+    <footer className="relative bg-gradient-to-br from-secondary/40 via-secondary/30 to-secondary/20 pt-16 pb-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Newsletter Section */}
+        <div className="mb-12">
           <div className="bg-gradient-to-r from-primary/90 to-secondary/90 rounded-2xl p-5 sm:p-6 lg:p-8 shadow-xl backdrop-blur-sm">
             <div className="flex flex-col lg:flex-row items-center justify-between gap-5 sm:gap-6">
               <div className="text-center lg:text-left w-full lg:w-auto">
@@ -97,11 +97,9 @@ const Footer = () => {
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Main Footer Content */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-8 xl:gap-12 mb-10 sm:mb-12 pt-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-8 xl:gap-12 mb-10 sm:mb-12">
           {/* Brand & Info */}
           <div className="text-center sm:text-left space-y-5 sm:space-y-6">
             <Link to="/" className="inline-flex items-center gap-3 text-2xl font-bold text-gray-900 hover:text-primary transition-colors duration-300">
