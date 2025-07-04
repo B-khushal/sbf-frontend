@@ -103,7 +103,12 @@ const Cart = ({
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className="flex flex-col w-full sm:w-96">
+      <SheetContent className="flex flex-col w-full sm:w-96 border-4 border-red-500 bg-white z-[9999]">
+        {/* DEBUG: Cart Rendered */}
+        <div style={{ background: '#fffae6', color: '#b91c1c', fontWeight: 'bold', padding: '8px', borderBottom: '2px solid #b91c1c', textAlign: 'center', zIndex: 10000 }}>
+          DEBUG: Cart Rendered | items: {items.length} | user: {user ? user.email || user.name : 'NO USER'}
+        </div>
+        {/* END DEBUG */}
         <SheetHeader className="px-6 pt-6">
           <SheetTitle className="flex items-center gap-2 text-lg font-semibold text-gray-900">
             <ShoppingBag size={20} />
