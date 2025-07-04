@@ -101,9 +101,11 @@ const Cart = ({
     onClose();
   };
 
-  return (
-    <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className="flex flex-col w-full sm:w-96 border-4 border-red-500 bg-white z-[9999]">
+  let errorMessage = null;
+  let cartContent = null;
+  try {
+    cartContent = (
+      <>
         {/* DEBUG: Cart Rendered */}
         <div style={{ background: '#fffae6', color: '#b91c1c', fontWeight: 'bold', padding: '8px', borderBottom: '2px solid #b91c1c', textAlign: 'center', zIndex: 10000 }}>
           DEBUG: Cart Rendered | items: {items.length} | user: {user ? user.email || user.name : 'NO USER'}
@@ -120,7 +122,6 @@ const Cart = ({
             )}
           </SheetTitle>
         </SheetHeader>
-        
         <div className="flex-1 overflow-y-auto py-4 px-6">
           {!user ? (
             <div className="h-full flex flex-col items-center justify-center text-center">
@@ -166,7 +167,6 @@ const Cart = ({
             </div>
           )}
         </div>
-        
         {items.length > 0 && user && (
           <SheetFooter className="bg-gray-50 px-6 py-4 border-t">
             <div className="w-full space-y-4">
@@ -174,7 +174,6 @@ const Cart = ({
                 <span>Subtotal</span>
                 <span className="text-primary">{formatPrice(convertPrice(subtotal))}</span>
               </div>
-              
               <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <div className="flex items-center gap-2 text-blue-700 text-sm">
                   <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -192,7 +191,6 @@ const Cart = ({
                   Go to cart page to apply promo codes
                 </button>
               </div>
-              
               <Button 
                 className="w-full h-12 bg-gradient-to-r from-primary to-secondary text-white font-medium"
                 onClick={handleCheckout}
@@ -202,6 +200,20 @@ const Cart = ({
             </div>
           </SheetFooter>
         )}
+      </>
+    );
+  } catch (err) {
+    errorMessage = err instanceof Error ? err.message : String(err);
+  }
+
+  return (
+    <Sheet open={isOpen} onOpenChange={onClose}>
+      <SheetContent className="flex flex-col w-full sm:w-96 border-4 border-red-500 bg-white z-[9999]">
+        {errorMessage ? (
+          <div style={{ background: '#fee2e2', color: '#b91c1c', fontWeight: 'bold', padding: '16px', borderBottom: '2px solid #b91c1c', textAlign: 'center' }}>
+            ERROR: {errorMessage}
+          </div>
+        ) : cartContent}
       </SheetContent>
     </Sheet>
   );
