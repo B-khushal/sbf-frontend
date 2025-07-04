@@ -42,66 +42,84 @@ const Cart = ({
   onUpdateQuantity, 
   onRemoveItem 
 }: CartProps) => {
-  let content;
-  try {
-    const navigate = useNavigate();
-    const currencyContext = useCurrency();
-    const authContext = useAuth();
-    const toastContext = useToast();
-    if (!currencyContext) throw new Error('useCurrency() returned undefined. Is CurrencyProvider missing?');
-    if (!authContext) throw new Error('useAuth() returned undefined. Is AuthProvider missing?');
-    if (!toastContext) throw new Error('useToast() returned undefined. Is ToastProvider missing?');
-    const { formatPrice, convertPrice } = currencyContext;
-    const { user } = authContext;
-    const { toast } = toastContext;
-    // Debug logging
-    React.useEffect(() => {
-      console.log('Cart component rendered with:', {
-        isOpen,
-        itemsCount: items.length,
-        items,
-        user: user ? { id: user.id, name: user.name } : null
-      });
-    }, [isOpen, items, user]);
-    // Calculate subtotal
-    const subtotal = items.reduce(
-      (total, item) => total + item.price * item.quantity, 
-      0
+  const navigate = useNavigate();
+  const currencyContext = useCurrency();
+  const authContext = useAuth();
+  const toastContext = useToast();
+
+  // Defensive: If any context is missing, show an error
+  if (!currencyContext || !authContext || !toastContext) {
+    return (
+      <Sheet open={isOpen} onOpenChange={onClose}>
+        <SheetContent className="flex flex-col w-full sm:w-96 items-center justify-center text-center p-8">
+          <div style={{ color: "red", fontWeight: "bold", fontSize: 18, marginBottom: 16 }}>
+            Cart failed to render
+          </div>
+          <div style={{ color: "#b91c1c", fontSize: 14 }}>
+            One or more required providers are missing (CurrencyProvider, AuthProvider, or ToastProvider).
+          </div>
+        </SheetContent>
+      </Sheet>
     );
-    const handleRemoveItem = (id: string) => {
-      console.log('Removing item with id:', id);
-      onRemoveItem(id);
+  }
+
+  const { formatPrice, convertPrice } = currencyContext;
+  const { user } = authContext;
+  const { toast } = toastContext;
+
+  // Debug logging
+  React.useEffect(() => {
+    console.log('Cart component rendered with:', {
+      isOpen,
+      itemsCount: items.length,
+      items,
+      user: user ? { id: user.id, name: user.name } : null
+    });
+  }, [isOpen, items, user]);
+
+  // Calculate subtotal
+  const subtotal = items.reduce(
+    (total, item) => total + item.price * item.quantity, 
+    0
+  );
+
+  const handleRemoveItem = (id: string) => {
+    console.log('Removing item with id:', id);
+    onRemoveItem(id);
+    toast({
+      title: "Item removed",
+      description: "Item has been removed from your cart",
+      duration: 2000,
+    });
+  };
+
+  const handleCheckout = () => {
+    console.log('Checkout clicked with items:', items);
+    if (items.length === 0) {
       toast({
-        title: "Item removed",
-        description: "Item has been removed from your cart",
-        duration: 2000,
+        title: "Cart is empty",
+        description: "Please add some items to your cart before checkout",
+        variant: "destructive",
+        duration: 3000,
       });
-    };
-    const handleCheckout = () => {
-      console.log('Checkout clicked with items:', items);
-      if (items.length === 0) {
-        toast({
-          title: "Cart is empty",
-          description: "Please add some items to your cart before checkout",
-          variant: "destructive",
-          duration: 3000,
-        });
-        return;
-      }
-      if (!user) {
-        toast({
-          title: "Authentication required",
-          description: "Please login or signup to proceed with checkout",
-          duration: 3000,
-        });
-        onClose();
-        navigate('/login', { state: { redirect: '/checkout/shipping' } });
-        return;
-      }
-      navigate('/checkout/shipping');
+      return;
+    }
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please login or signup to proceed with checkout",
+        duration: 3000,
+      });
       onClose();
-    };
-    content = (
+      navigate('/login', { state: { redirect: '/checkout/shipping' } });
+      return;
+    }
+    navigate('/checkout/shipping');
+    onClose();
+  };
+
+  return (
+    <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent className="flex flex-col w-full sm:w-96">
         <SheetHeader className="px-6 pt-6">
           <SheetTitle className="flex items-center gap-2 text-lg font-semibold text-gray-900">
@@ -193,23 +211,6 @@ const Cart = ({
           </SheetFooter>
         )}
       </SheetContent>
-    );
-  } catch (err) {
-    console.error("Error rendering Cart:", err);
-    content = (
-      <SheetContent className="flex flex-col w-full sm:w-96 items-center justify-center text-center p-8">
-        <div style={{ color: "red", fontWeight: "bold", fontSize: 18, marginBottom: 16 }}>
-          Cart failed to render
-        </div>
-        <div style={{ color: "#b91c1c", fontSize: 14 }}>
-          {String(err)}
-        </div>
-      </SheetContent>
-    );
-  }
-  return (
-    <Sheet open={isOpen} onOpenChange={onClose}>
-      {content}
     </Sheet>
   );
 };
