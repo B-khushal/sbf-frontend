@@ -49,9 +49,9 @@ const Cart = (props: any) => {
           {props.cartItems && props.cartItems.length > 0 ? (
             props.cartItems.map((item: any) => (
               <div key={item._id} className="flex items-center mb-4 border-b pb-2">
-                <img src={item.images?.[0] || ''} alt={item.name} className="w-16 h-16 object-cover rounded mr-4" />
+                <img src={item.images?.[0] || ''} alt={item.name || item.title} className="w-16 h-16 object-cover rounded mr-4" />
                 <div className="flex-1">
-                  <div className="font-bold">{item.name}</div>
+                  <div className="font-bold">{item.name || item.title}</div>
                   <div className="text-gray-500">Qty: {item.quantity}</div>
                   <div className="text-purple-600 font-bold">₹{item.price}</div>
                 </div>
