@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Navigation from './Navigation';
 import Footer from './Footer';
@@ -12,6 +12,13 @@ const MainLayout: React.FC = () => {
   const { itemCount } = useCartSelectors();
   const { homeSections } = useSettings();
   const { pathname } = useLocation();
+
+  // Automatically close cart sidebar on /cart page
+  useEffect(() => {
+    if (pathname === '/cart' && cartHook.isCartOpen) {
+      cartHook.closeCart();
+    }
+  }, [pathname, cartHook]);
 
   const enabledSections = homeSections.filter(section => section.enabled);
   const showFooter = enabledSections.some(section => section.type !== 'hero');
