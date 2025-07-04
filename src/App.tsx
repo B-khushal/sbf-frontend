@@ -12,6 +12,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import MainLayout from './components/MainLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import useCart from '@/hooks/use-cart';
 
 // Core pages that should load immediately
 import HomePage from "./pages/HomePage";
@@ -109,6 +110,12 @@ const App = () => {
       console.error('App: Error checking for backup order data:', error);
     }
   }, []);
+
+  // Load cart from localStorage on app start
+  const loadCart = useCart((state) => state.loadCart);
+  useEffect(() => {
+    loadCart();
+  }, [loadCart]);
 
   return (
     <ErrorBoundary>
