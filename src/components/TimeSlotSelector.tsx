@@ -15,7 +15,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { format, addDays, isBefore, startOfDay, isValid } from 'date-fns';
 import { useCurrency } from '@/contexts/CurrencyContext';
-import { useFloating, offset, flip, shift, useClick, useDismiss, useRole, useInteractions, FloatingPortal } from '@floating-ui/react';
+import { useFloating, offset, flip, shift, useClick, useDismiss, useRole, useInteractions, FloatingPortal, whileElementsMounted, autoUpdate } from '@floating-ui/react';
 
 export type TimeSlot = {
   id: string;
@@ -218,6 +218,8 @@ const TimeSlotSelector = ({
     onOpenChange: setIsCalendarOpen,
     middleware: [offset(4), flip(), shift({ padding: 8 })],
     placement: 'bottom-start',
+    strategy: 'fixed',
+    whileElementsMounted: autoUpdate,
   });
   const click = useClick(context);
   const dismiss = useDismiss(context);
