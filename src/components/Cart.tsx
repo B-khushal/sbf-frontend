@@ -17,8 +17,7 @@ import {
 import { Button } from '@/components/ui/button';
 
 type CartItem = {
-  _id: string;
-  id?: string;
+  id: string;
   productId: string;
   title: string;
   price: number;
@@ -26,13 +25,6 @@ type CartItem = {
   image: string;
   quantity: number;
   discount?: number;
-  category?: string;
-  images?: string[];
-  description?: string;
-  details?: string[];
-  careInstructions?: string[];
-  isNewArrival?: boolean;
-  isFeatured?: boolean;
 };
 
 type CartProps = {
@@ -57,10 +49,10 @@ const Cart = ({
   
   // Debug logging
   React.useEffect(() => {
-    console.log('🛒 Cart component rendered with:', {
+    console.log('Cart component rendered with:', {
       isOpen,
       itemsCount: items.length,
-      items: items,
+      items,
       user: user ? { id: user.id, name: user.name } : null
     });
   }, [isOpen, items, user]);
@@ -72,7 +64,7 @@ const Cart = ({
   );
 
   const handleRemoveItem = (id: string) => {
-    console.log('🗑️ Removing item with id:', id);
+    console.log('Removing item with id:', id);
     onRemoveItem(id);
     toast({
       title: "Item removed",
@@ -160,10 +152,10 @@ const Cart = ({
             <div className="space-y-4">
               {items.map((item) => (
                 <CartItem 
-                  key={item._id} 
+                  key={item.id} 
                   item={item} 
                   onUpdateQuantity={onUpdateQuantity} 
-                  onRemove={() => handleRemoveItem(item._id)} 
+                  onRemove={() => handleRemoveItem(item.id)} 
                 />
               ))}
             </div>
@@ -248,7 +240,7 @@ const CartItem = ({
         <div className="flex items-center justify-between">
           <select 
             value={item.quantity}
-            onChange={(e) => onUpdateQuantity(item._id, parseInt(e.target.value))}
+            onChange={(e) => onUpdateQuantity(item.id, parseInt(e.target.value))}
             className="text-sm h-8 px-2 border border-gray-200 rounded-md bg-white focus:border-primary focus:outline-none"
           >
             {[1,2,3,4,5].map((num) => (

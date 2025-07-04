@@ -29,7 +29,6 @@ export const useCart = create<CartState>((set, get) => ({
   contactModalProduct: '',
 
   addToCart: (item) => {
-    console.log('🛒 Adding item to cart:', item);
     const { items } = get();
     const existingItem = items.find((i) => i._id === item._id);
 
@@ -40,33 +39,26 @@ export const useCart = create<CartState>((set, get) => ({
           ? { ...i, quantity: i.quantity + item.quantity }
           : i
       );
-      console.log('🔄 Updated existing item quantity:', existingItem.title, 'new quantity:', existingItem.quantity + item.quantity);
     } else {
       updatedCart = [...items, item];
-      console.log('➕ Added new item to cart:', item.title);
     }
-    
-    console.log('📦 Updated cart items:', updatedCart);
     set({ items: updatedCart });
     get().saveCart(updatedCart);
   },
 
   removeFromCart: (productId) => {
-    console.log('🗑️ Removing item from cart:', productId);
     const updatedCart = get().items.filter((item) => item._id !== productId);
     set({ items: updatedCart });
     get().saveCart(updatedCart);
   },
 
   removeItem: (itemId) => {
-    console.log('🗑️ Removing item from cart:', itemId);
     const updatedCart = get().items.filter((item) => item._id !== itemId);
     set({ items: updatedCart });
     get().saveCart(updatedCart);
   },
 
   updateItemQuantity: (itemId, quantity) => {
-    console.log('📝 Updating item quantity:', itemId, 'to:', quantity);
     if (quantity <= 0) {
       get().removeItem(itemId);
       return;
@@ -93,11 +85,8 @@ export const useCart = create<CartState>((set, get) => ({
   loadCart: () => {
     try {
       const cartData = localStorage.getItem('cart');
-      console.log('📥 Loading cart from localStorage:', cartData);
       if (cartData) {
-        const parsedCart = JSON.parse(cartData);
-        console.log('📦 Parsed cart items:', parsedCart);
-        set({ items: parsedCart });
+        set({ items: JSON.parse(cartData) });
       }
     } catch (error) {
       console.error('Error loading cart:', error);
@@ -106,7 +95,6 @@ export const useCart = create<CartState>((set, get) => ({
 
   saveCart: (cart) => {
     try {
-      console.log('💾 Saving cart to localStorage:', cart);
       localStorage.setItem('cart', JSON.stringify(cart));
     } catch (error) {
       console.error('Error saving cart:', error);
