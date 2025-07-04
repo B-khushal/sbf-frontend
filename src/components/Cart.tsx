@@ -27,6 +27,16 @@ type CartProps = {
 };
 
 const Cart = (props: any) => {
+  // Debug: Log props to console and show visible debug info
+  console.log('Cart props:', props);
+
+  // Show debug info in the UI
+  return (
+    <div style={{ background: '#ffe066', color: '#333', padding: 8, fontWeight: 'bold', textAlign: 'center' }}>
+      DEBUG: Cart props: {JSON.stringify(props)}
+    </div>
+  );
+
   // Ref for scrollable area
   const scrollRef = React.useRef<HTMLDivElement>(null);
 
