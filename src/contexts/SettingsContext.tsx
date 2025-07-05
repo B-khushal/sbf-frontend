@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect, ReactNode, useMe
 import api from '../services/api';
 import { trackApiCall } from '../utils/performance';
 
+console.log("SettingsContext loaded");
+
 interface NavigationItem {
   id: string;
   label: string;
