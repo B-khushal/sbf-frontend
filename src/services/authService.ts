@@ -87,6 +87,16 @@ export const register = async (userData: RegisterData) => {
 
 // Logout user
 export const logout = () => {
+  // Get user ID before clearing user data
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const userId = user._id || user.id;
+  
+  // Clear user-specific cart if user was logged in
+  if (userId) {
+    localStorage.removeItem(`cart_${userId}`);
+    console.log(`🧹 Cleared cart for user: ${userId} during logout`);
+  }
+  
   localStorage.removeItem('user');
   localStorage.removeItem('token');
   localStorage.removeItem('isAuthenticated');

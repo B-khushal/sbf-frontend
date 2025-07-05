@@ -1,15 +1,11 @@
 import { create } from 'zustand';
-
-interface CartItem {
-  _id: string;
-  title: string;
-  price: number;
-  images: string[];
-  quantity: number;
-  discount?: number;
-  category?: string;
-  description?: string;
-}
+import { 
+  getCurrentUserId, 
+  loadUserCart, 
+  saveUserCart, 
+  migrateOldCartData,
+  type CartItem 
+} from '@/utils/cartManager';
 
 interface CartState {
   items: CartItem[];
@@ -18,12 +14,14 @@ interface CartState {
   removeItem: (itemId: string) => void;
   updateItemQuantity: (itemId: string, quantity: number) => void;
   clearCart: () => void;
-  loadCart: () => void;
-  saveCart: (cart: CartItem[]) => void;
+  loadCart: (userId?: string) => void;
+  saveCart: (cart: CartItem[], userId?: string) => void;
   showContactModal: boolean;
   contactModalProduct: string;
   closeContactModal: () => void;
 }
+
+
 
 export const useCart = create<CartState>((set, get) => ({
   items: [],
@@ -52,19 +50,28 @@ export const useCart = create<CartState>((set, get) => ({
       updatedCart = [...items, { ...item, quantity: item.quantity || 1 }];
     }
     set({ items: updatedCart });
-    get().saveCart(updatedCart);
+    
+    // Get current user ID for saving
+    const userId = getCurrentUserId();
+    saveUserCart(updatedCart, userId);
   },
 
   removeFromCart: (productId) => {
     const updatedCart = get().items.filter((item) => item._id !== productId);
     set({ items: updatedCart });
-    get().saveCart(updatedCart);
+    
+    // Get current user ID for saving
+    const userId = getCurrentUserId();
+    saveUserCart(updatedCart, userId);
   },
 
   removeItem: (itemId) => {
     const updatedCart = get().items.filter((item) => item._id !== itemId);
     set({ items: updatedCart });
-    get().saveCart(updatedCart);
+    
+    // Get current user ID for saving
+    const userId = getCurrentUserId();
+    saveUserCart(updatedCart, userId);
   },
 
   updateItemQuantity: (itemId, quantity) => {
@@ -78,19 +85,33 @@ export const useCart = create<CartState>((set, get) => ({
       item._id === itemId ? { ...item, quantity } : item
     );
     set({ items: updatedCart });
-    get().saveCart(updatedCart);
+    
+    // Get current user ID for saving
+    const userId = getCurrentUserId();
+    saveUserCart(updatedCart, userId);
   },
 
   clearCart: () => {
     set({ items: [] });
-    get().saveCart([]);
+    
+    // Get current user ID for saving
+    const userId = getCurrentUserId();
+    saveUserCart([], userId);
   },
 
   closeContactModal: () => set({ showContactModal: false, contactModalProduct: '' }),
 
-  loadCart: () => {
+  loadCart: (userId) => {
     try {
-      const cartData = localStorage.getItem('cart');
+      // If no userId provided, try to get from localStorage
+      if (!userId) {
+        userId = getCurrentUserId();
+      }
+      
+      // If still no userId, use generic cart (for non-authenticated users)
+      const cartKey = userId ? `cart_${userId}` : 'cart';
+      const cartData = localStorage.getItem(cartKey);
+      
       if (cartData) {
         const parsedCart = JSON.parse(cartData);
         // Validate cart data structure
@@ -99,18 +120,55 @@ export const useCart = create<CartState>((set, get) => ({
             item && item._id && item.title && typeof item.price === 'number' && typeof item.quantity === 'number'
           );
           set({ items: validItems });
+          console.log(`🛒 Loaded cart for user: ${userId || 'anonymous'}, items: ${validItems.length}`);
+        }
+      } else if (userId) {
+        // Try to migrate old cart data for authenticated users
+        const migratedItems = migrateOldCartData(userId);
+        if (migratedItems.length > 0) {
+          set({ items: migratedItems });
+          console.log(`🔄 Loaded migrated cart for user: ${userId}, items: ${migratedItems.length}`);
+        } else {
+          // Clear cart if no data found for this user
+          set({ items: [] });
+          console.log(`🧹 Cleared cart for user: ${userId}`);
+        }
+      } else {
+        // For anonymous users, try to load from generic cart
+        const genericCartData = localStorage.getItem('cart');
+        if (genericCartData) {
+          const parsedCart = JSON.parse(genericCartData);
+          if (Array.isArray(parsedCart)) {
+            const validItems = parsedCart.filter(item => 
+              item && item._id && item.title && typeof item.price === 'number' && typeof item.quantity === 'number'
+            );
+            set({ items: validItems });
+            console.log(`🛒 Loaded generic cart for anonymous user, items: ${validItems.length}`);
+          }
+        } else {
+          set({ items: [] });
+          console.log(`🧹 Cleared cart for anonymous user`);
         }
       }
     } catch (error) {
       console.error('Error loading cart:', error);
       // Clear invalid cart data
-      localStorage.removeItem('cart');
+      const cartKey = userId ? `cart_${userId}` : 'cart';
+      localStorage.removeItem(cartKey);
     }
   },
 
-  saveCart: (cart) => {
+  saveCart: (cart, userId) => {
     try {
-      localStorage.setItem('cart', JSON.stringify(cart));
+      // If no userId provided, try to get from localStorage
+      if (!userId) {
+        userId = getCurrentUserId();
+      }
+      
+      // If still no userId, use generic cart (for non-authenticated users)
+      const cartKey = userId ? `cart_${userId}` : 'cart';
+      localStorage.setItem(cartKey, JSON.stringify(cart));
+      console.log(`💾 Saved cart for user: ${userId || 'anonymous'}, items: ${cart.length}`);
     } catch (error) {
       console.error('Error saving cart:', error);
     }
