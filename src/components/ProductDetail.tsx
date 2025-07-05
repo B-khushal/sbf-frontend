@@ -10,6 +10,7 @@ import useCart from '@/hooks/use-cart';
 import { Button } from './ui/button';
 import productService, { ProductData } from '@/services/productService';
 import ProductReviews from '@/components/ProductReviews';
+import { addToUserWishlist } from '@/utils/wishlistManager';
 
 type ProductDetailProps = {
   product: {
@@ -279,7 +280,6 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
       console.log("Adding to wishlist from ProductDetail:", wishlistItem);
       
       // Use the wishlist manager to add item
-      const { addToUserWishlist } = await import('@/utils/wishlistManager');
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       const userId = user._id || user.id;
       
