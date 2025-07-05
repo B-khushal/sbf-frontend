@@ -172,6 +172,11 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
         api.get('/settings/home-sections'),
       ]);
 
+      console.log('Header:', headerRes);
+      console.log('Footer:', footerRes);
+      console.log('Categories:', categoriesRes);
+      console.log('Sections:', sectionsRes);
+
       // Handle header settings
       if (headerRes.status === 'fulfilled' && headerRes.value.data) {
         setHeaderSettings(prev => ({ ...prev, ...headerRes.value.data }));
@@ -209,6 +214,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
       setError('Failed to load some settings');
     } finally {
       setLoading(false);
+      console.log('Settings loading complete');
     }
   }, []);
 
