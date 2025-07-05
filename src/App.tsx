@@ -13,7 +13,7 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 import MainLayout from './components/MainLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import useCart from '@/hooks/use-cart';
-import { useAuth } from '@/hooks/use-auth';
+import CartLoader from '@/components/CartLoader';
 
 // Core pages that should load immediately
 import HomePage from "./pages/HomePage";
@@ -112,21 +112,12 @@ const App = () => {
     }
   }, []);
 
-  // Load cart from localStorage on app start and when user changes
-  const loadCart = useCart((state) => state.loadCart);
-  const { user } = useAuth();
-  
-  useEffect(() => {
-    // Load cart for current user (or anonymous if no user)
-    const userId = user?.id;
-    loadCart(userId);
-  }, [loadCart, user]);
-
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || "your-google-client-id"}>
           <AuthProvider>
+            <CartLoader />
             <CurrencyProvider>
               <SettingsProvider>
                 <NotificationProvider>
