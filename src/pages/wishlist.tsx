@@ -1,18 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 import { Trash2, ShoppingBag, RefreshCw, Heart, Sparkles, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import useCart from "@/hooks/use-cart";
+import useWishlist from "@/hooks/use-wishlist";
 import { useToast } from "@/hooks/use-toast";
 
-interface WishlistItem {
-  id: string;
-  title: string;
-  image: string;
-  price: number;
-}
+import type { WishlistItem } from "@/utils/wishlistManager";
 
 // Animation variants
 const containerVariants = {
@@ -41,8 +37,7 @@ const itemVariants = {
 const WishlistPage = () => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
-  const [items, setItems] = useState<WishlistItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { items, isLoading, removeItem, refreshWishlist } = useWishlist();
   const { toast } = useToast();
 
   // Intersection observer for animations
@@ -50,50 +45,6 @@ const WishlistPage = () => {
     triggerOnce: true,
     threshold: 0.2
   });
-
-  // Load wishlist items directly from localStorage
-  const loadWishlist = () => {
-    setIsLoading(true);
-    try {
-      let wishlist = [];
-      const wishlistData = localStorage.getItem("wishlist");
-      
-      if (wishlistData && wishlistData !== "null" && wishlistData !== "undefined") {
-        try {
-          const parsed = JSON.parse(wishlistData);
-          if (Array.isArray(parsed)) {
-            // Validate each item has required properties
-            wishlist = parsed.filter(item => 
-              item && 
-              typeof item === 'object' && 
-              item.id && 
-              item.title && 
-              typeof item.price === 'number'
-            );
-          } else {
-            console.error("Wishlist is not an array:", parsed);
-            wishlist = [];
-          }
-        } catch (e) {
-          console.error("Error parsing wishlist:", e);
-          wishlist = [];
-          // Clear corrupted data
-          localStorage.removeItem("wishlist");
-        }
-      }
-      
-      setItems(wishlist);
-    } catch (error) {
-      console.error("Error loading wishlist:", error);
-      setItems([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadWishlist();
-  }, []);
 
   // Move item to cart and remove from wishlist
   const moveToCart = (item: WishlistItem) => {
@@ -128,9 +79,7 @@ const WishlistPage = () => {
 
   // Remove item from wishlist
   const removeFromWishlist = (id: string) => {
-    const newItems = items.filter(item => item.id !== id);
-    setItems(newItems);
-    localStorage.setItem("wishlist", JSON.stringify(newItems));
+    removeItem(id);
     toast({
       title: "Removed from Wishlist 💔",
       description: "Item has been removed from your wishlist",
@@ -186,7 +135,7 @@ const WishlistPage = () => {
                   <span className="text-base sm:text-lg font-bold text-gray-800">{items.length} item(s) saved</span>
                 </div>
                 <motion.button
-                  onClick={loadWishlist}
+                  onClick={refreshWishlist}
                   disabled={isLoading}
                   className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-primary to-secondary text-white font-medium rounded-xl sm:rounded-2xl hover:shadow-lg transition-all text-sm sm:text-base"
                   whileHover={{ scale: 1.05 }}

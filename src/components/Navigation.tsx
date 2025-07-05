@@ -111,11 +111,16 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 
-  // Get wishlist count directly from localStorage
+  // Get wishlist count using the wishlist manager
   useEffect(() => {
     const updateWishlistCount = () => {
       try {
-        const wishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const userId = user._id || user.id;
+        
+        // Get wishlist count for current user
+        const wishlistKey = userId ? `wishlist_${userId}` : 'wishlist';
+        const wishlist = JSON.parse(localStorage.getItem(wishlistKey) || "[]");
         setWishlistCount(Array.isArray(wishlist) ? wishlist.length : 0);
       } catch (error) {
         console.error("Error reading wishlist:", error);
@@ -126,7 +131,7 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
     updateWishlistCount();
     
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'wishlist') {
+      if (e.key && e.key.startsWith('wishlist')) {
         updateWishlistCount();
       }
     };
