@@ -28,7 +28,6 @@ import api from "../services/api";
 import { uploadImage } from "../services/uploadService";
 import { useToast } from "../hooks/use-toast";
 import { ImageUpload } from "@/components/ui/ImageUpload";
-import CategoryManager from '@/components/Admin/CategoryManager';
 
 interface HeroSlide {
   id: number;
@@ -486,42 +485,6 @@ const AdminSettingsPage: React.FC = () => {
     }
   };
 
-  const handleAddCategory = async (category) => {
-    try {
-      const response = await api.post('/api/settings/categories', category);
-      setCategories(prev => [...prev, response.data]);
-    } catch (error) {
-      throw error;
-    }
-  };
-
-  const handleUpdateCategory = async (id, category) => {
-    try {
-      const response = await api.put(`/api/settings/categories/${id}`, category);
-      setCategories(prev => prev.map(cat => cat._id === id ? response.data : cat));
-    } catch (error) {
-      throw error;
-    }
-  };
-
-  const handleDeleteCategory = async (id) => {
-    try {
-      await api.delete(`/api/settings/categories/${id}`);
-      setCategories(prev => prev.filter(cat => cat._id !== id));
-    } catch (error) {
-      throw error;
-    }
-  };
-
-  const handleReorderCategories = async (categoryIds) => {
-    try {
-      const response = await api.post('/api/settings/categories/reorder', { categoryIds });
-      setCategories(response.data);
-    } catch (error) {
-      throw error;
-    }
-  };
-
   if (loading) {
     return (
       <div className="container mx-auto p-6">
@@ -907,13 +870,96 @@ const AdminSettingsPage: React.FC = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <CategoryManager
-                categories={categories}
-                onAddCategory={handleAddCategory}
-                onUpdateCategory={handleUpdateCategory}
-                onDeleteCategory={handleDeleteCategory}
-                onReorderCategories={handleReorderCategories}
-              />
+              <DndContext 
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleCategoriesDragEnd}
+              >
+                <SortableContext items={categories.map(c => c.id)} strategy={verticalListSortingStrategy}>
+                  <div className="space-y-4">
+                    {categories.map((category) => (
+                      <SortableItem key={category.id} id={category.id}>
+                        <Card key={category.id} className="border-2 border-dashed border-gray-200 hover:border-primary/50 transition-colors">
+                          <CardContent className="p-6">
+                            <div className="flex items-center gap-4 mb-4">
+                              <GripVertical className="w-5 h-5 text-gray-400 cursor-grab" />
+                              <Badge variant={category.enabled ? "default" : "secondary"}>
+                                {category.name}
+                              </Badge>
+                                  <Switch
+                                    checked={category.enabled}
+                                onCheckedChange={() => toggleCategoryEnabled(category.id)}
+                              />
+                              <Label className="text-sm">
+                                {category.enabled ? 'Enabled' : 'Disabled'}
+                              </Label>
+                              <div className="ml-auto flex gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => deleteCategory(category.id)}
+                                  className="text-red-600 hover:text-red-700"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                              {/* Image Upload */}
+                              <div className="space-y-4">
+                                <div className="relative">
+                                  <ImageUpload
+                                    currentImage={category.image}
+                                    onImageUpload={(file) => handleCategoryImageUpload(category.id, file)}
+                                    isUploading={uploadingImage === `category-${category.id}`}
+                                    aspectRatio="landscape"
+                                    placeholder="Upload category image"
+                                  />
+                                </div>
+                              </div>
+
+                              {/* Content Section */}
+                              <div className="space-y-4">
+                                <div className="space-y-2">
+                                  <Label htmlFor={`category-name-${category.id}`}>Category Name</Label>
+                                    <Input
+                                    id={`category-name-${category.id}`}
+                                      value={category.name}
+                                    onChange={(e) => updateCategoryContent(category.id, 'name', e.target.value)}
+                                    placeholder="Enter category name"
+                                    />
+                                  </div>
+
+                                <div className="space-y-2">
+                                  <Label htmlFor={`category-description-${category.id}`}>Description</Label>
+                                  <Textarea
+                                    id={`category-description-${category.id}`}
+                                      value={category.description}
+                                    onChange={(e) => updateCategoryContent(category.id, 'description', e.target.value)}
+                                    placeholder="Enter category description"
+                                    rows={2}
+                                    />
+                                  </div>
+
+                                <div className="space-y-2">
+                                  <Label htmlFor={`category-link-${category.id}`}>Category Link</Label>
+                                    <Input
+                                    id={`category-link-${category.id}`}
+                                      value={category.link}
+                                    onChange={(e) => updateCategoryContent(category.id, 'link', e.target.value)}
+                                    placeholder="/shop/category-name"
+                                    />
+                                  </div>
+                                </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </SortableItem>
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
             </CardContent>
           </Card>
         </TabsContent>
