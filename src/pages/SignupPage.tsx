@@ -3,13 +3,15 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from "framer-motion";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Eye, EyeOff, User, Mail, Lock, Shield, Sparkles, Heart, CheckCircle } from 'lucide-react';
+import { Eye, EyeOff, User, Mail, Lock, Shield, Sparkles, Heart, CheckCircle, ArrowRight } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { GoogleLogin } from '@react-oauth/google';
+import { cn } from '@/lib/utils';
 
 // Animation variants
 const containerVariants = {
@@ -193,328 +195,213 @@ const SignupPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-blue-50 relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 rounded-full blur-3xl animate-spin-slow" />
-        <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-gradient-to-tl from-accent/5 via-transparent to-primary/5 rounded-full blur-3xl animate-reverse-spin" />
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-secondary/3 to-accent/3 rounded-full blur-2xl animate-pulse" />
-      </div>
-
-      <Navigation cartItemCount={0} />
-      
-      <motion.main 
-        className="relative flex-1 pt-24 pb-12 z-10"
+    <div className="min-h-screen bg-gradient-to-b from-white to-gray-50/50 flex items-center justify-center p-4 sm:p-6 lg:p-8">
+      <motion.div
+        variants={containerVariants}
         initial="hidden"
         animate="visible"
-        variants={containerVariants}
+        className="w-full max-w-md space-y-8 relative"
       >
-        <div className="container mx-auto px-6 md:px-8">
-          <div className="max-w-4xl mx-auto">
-            {/* Welcome Header */}
-            <motion.div 
-              variants={itemVariants}
-              className="text-center mb-12"
-            >
-              <div className="relative mb-6">
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-gray-800 leading-tight">
-                  Join <span className="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">Spring Blossoms</span>
-                </h1>
-                <div className="absolute -top-2 -right-4 text-2xl">🌺</div>
-                <div className="absolute -bottom-2 -left-4 text-2xl">🌸</div>
-              </div>
-              <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
-                Create your account and discover a world of beautiful floral arrangements
-              </p>
-            </motion.div>
+        {/* Logo and Title */}
+        <motion.div variants={itemVariants} className="text-center space-y-4">
+          <div className="flex justify-center">
+            <Sparkles className="h-12 w-12 text-primary" />
+          </div>
+          <h2 className="text-2xl font-bold tracking-tight text-gray-900">
+            Create your account
+          </h2>
+          <p className="text-sm text-gray-500">
+            Join Spring Blossoms and start your floral journey
+          </p>
+        </motion.div>
 
-            <div className="grid lg:grid-cols-2 gap-12 items-start">
-              {/* Signup Form */}
-              <motion.div 
-                variants={itemVariants}
-                className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-lg border border-white/20 p-8"
-              >
-                <div className="text-center mb-8">
-                  <div className="w-16 h-16 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center mx-auto mb-4">
-                    <User className="w-8 h-8 text-white" />
-                  </div>
-                  <h2 className="text-2xl font-black text-gray-800 mb-2">Create Account</h2>
-                  <p className="text-gray-600">Enter your information to get started</p>
-                </div>
-
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <motion.div 
-                    className="space-y-2"
-                    whileFocus={{ scale: 1.02 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <label htmlFor="name" className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                      <User className="w-4 h-4" />
-                      Full Name
-                    </label>
-                    <Input 
-                      id="name" 
-                      placeholder="Your Full Name" 
-                      type="text" 
-                      name="name"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      autoComplete="name"
-                      required
-                      className="h-12 rounded-2xl border-2 border-gray-200 focus:border-primary transition-all"
-                    />
-                  </motion.div>
-
-                  <motion.div 
-                    className="space-y-2"
-                    whileFocus={{ scale: 1.02 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <label htmlFor="email" className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                      <Mail className="w-4 h-4" />
-                      Email Address
-                    </label>
-                    <Input 
-                      id="email" 
-                      placeholder="name@example.com" 
-                      type="email" 
-                      name="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      autoComplete="email"
-                      required
-                      className="h-12 rounded-2xl border-2 border-gray-200 focus:border-primary transition-all"
-                    />
-                  </motion.div>
-
-                  <motion.div 
-                    className="space-y-2"
-                    whileFocus={{ scale: 1.02 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <label htmlFor="password" className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                      <Lock className="w-4 h-4" />
-                      Create Password
-                    </label>
-                    <div className="relative">
-                      <Input 
-                        id="password" 
-                        type={showPassword ? "text" : "password"} 
-                        name="password"
-                        placeholder="••••••••"
-                        value={formData.password}
-                        onChange={handleInputChange}
-                        autoComplete="new-password"
-                        required
-                        className="h-12 rounded-2xl border-2 border-gray-200 focus:border-primary transition-all pr-12"
-                      />
-                      <motion.button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                      >
-                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                      </motion.button>
-                    </div>
-                  </motion.div>
-
-                  <motion.div 
-                    className="space-y-2"
-                    whileFocus={{ scale: 1.02 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <label htmlFor="confirmPassword" className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                      <Shield className="w-4 h-4" />
-                      Confirm Password
-                    </label>
-                    <div className="relative">
-                      <Input 
-                        id="confirmPassword" 
-                        type={showConfirmPassword ? "text" : "password"} 
-                        name="confirmPassword"
-                        placeholder="••••••••"
-                        value={formData.confirmPassword}
-                        onChange={handleInputChange}
-                        autoComplete="new-password"
-                        required
-                        className="h-12 rounded-2xl border-2 border-gray-200 focus:border-primary transition-all pr-12"
-                      />
-                      <motion.button
-                        type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                      >
-                        {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                      </motion.button>
-                    </div>
-                  </motion.div>
-
-                  <motion.div 
-                    className="flex items-start space-x-3"
-                    whileHover={{ scale: 1.01 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <Checkbox 
-                      id="terms" 
-                      checked={formData.agreedToTerms}
-                      onCheckedChange={(checked) => handleCheckboxChange(checked === true)}
-                      required
-                      className="mt-1"
-                    />
-                    <label htmlFor="terms" className="text-sm text-gray-600 leading-relaxed">
-                      I agree to the{" "}
-                      <Link to="/terms" className="text-primary font-semibold hover:underline">
-                        Terms and Conditions
-                      </Link>
-                      {" "}and{" "}
-                      <Link to="/privacy" className="text-primary font-semibold hover:underline">
-                        Privacy Policy
-                      </Link>
-                    </label>
-                  </motion.div>
-
-                  <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <Button 
-                      className="w-full h-12 text-lg font-bold bg-gradient-to-r from-primary via-secondary to-accent text-white rounded-2xl hover:shadow-lg transition-all duration-300" 
-                      type="submit" 
-                      disabled={isLoading}
-                    >
-                      {isLoading ? (
-                        <div className="flex items-center gap-2">
-                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          Creating account...
-                        </div>
-                      ) : (
-                        "Create account"
-                                          )}
-                  </Button>
-                </motion.div>
-              </form>
-
-              {/* Divider */}
-              <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-gray-200" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="bg-white px-4 text-gray-500 font-medium">Or continue with</span>
-                </div>
-              </div>
-
-              {/* Google Signup */}
-              <motion.div
-                className="w-full mb-6"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <GoogleLogin
-                  onSuccess={handleGoogleSuccess}
-                  onError={handleGoogleError}
-                  theme="outline"
-                  size="large"
-                  width={350}
-                  text="signup_with"
-                  shape="rectangular"
+        {/* Signup Form */}
+        <motion.form variants={itemVariants} onSubmit={handleSubmit} className="mt-8 space-y-6">
+          <div className="space-y-4">
+            {/* Name Input */}
+            <div>
+              <Label htmlFor="name" className="sr-only">Full Name</Label>
+              <div className="relative">
+                <Input
+                  id="name"
+                  name="name"
+                  type="text"
+                  placeholder="Full Name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  className="bg-white/70 border-gray-200 focus:ring-primary/20 pl-10"
+                  autoComplete="name"
+                  required
                 />
-              </motion.div>
-
-              <div className="text-center">
-                <p className="text-gray-600">
-                  Already have an account?{" "}
-                  <Link 
-                    to="/login" 
-                    className="text-primary font-semibold hover:underline"
-                  >
-                    Sign in
-                  </Link>
-                </p>
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               </div>
-              </motion.div>
+            </div>
 
-              {/* Feature Highlights */}
-              <motion.div 
-                variants={itemVariants}
-                className="space-y-6"
-              >
-                <div className="text-center mb-8">
-                  <h3 className="text-2xl font-black text-gray-800 mb-4">Why Join Spring Blossoms?</h3>
-                  <p className="text-gray-600">Discover the benefits of being part of our community</p>
-                </div>
+            {/* Email Input */}
+            <div>
+              <Label htmlFor="email" className="sr-only">Email</Label>
+              <div className="relative">
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="Email address"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  className="bg-white/70 border-gray-200 focus:ring-primary/20 pl-10"
+                  autoComplete="email"
+                  required
+                />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              </div>
+            </div>
 
-                <div className="space-y-4">
-                  <motion.div 
-                    className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20 hover:shadow-xl transition-all duration-300"
-                    whileHover={{ scale: 1.02 }}
-                  >
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-emerald-500 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <CheckCircle className="w-6 h-6 text-white" />
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-gray-800 mb-2">Easy Account Management</h4>
-                        <p className="text-gray-600 text-sm">Track orders, manage addresses, and update preferences all in one place.</p>
-                      </div>
-                    </div>
-                  </motion.div>
-
-                  <motion.div 
-                    className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20 hover:shadow-xl transition-all duration-300"
-                    whileHover={{ scale: 1.02 }}
-                  >
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <Heart className="w-6 h-6 text-white" />
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-gray-800 mb-2">Personalized Experience</h4>
-                        <p className="text-gray-600 text-sm">Save favorites, get recommendations, and enjoy a tailored shopping experience.</p>
-                      </div>
-                    </div>
-                  </motion.div>
-
-                  <motion.div 
-                    className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20 hover:shadow-xl transition-all duration-300"
-                    whileHover={{ scale: 1.02 }}
-                  >
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-pink-500 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <Sparkles className="w-6 h-6 text-white" />
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-gray-800 mb-2">Exclusive Benefits</h4>
-                        <p className="text-gray-600 text-sm">Get early access to new collections and special member-only discounts.</p>
-                      </div>
-                    </div>
-                  </motion.div>
-                </div>
-
-                {/* Back to Shop */}
-                <motion.div 
-                  className="text-center pt-6"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+            {/* Password Input */}
+            <div>
+              <Label htmlFor="password" className="sr-only">Password</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  className="bg-white/70 border-gray-200 focus:ring-primary/20 pl-10 pr-10"
+                  autoComplete="new-password"
+                  required
+                />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
-                  <Link 
-                    to="/shop" 
-                    className="inline-flex items-center gap-2 text-primary font-semibold hover:underline"
-                  >
-                    🛍️ Browse our collection first
-                  </Link>
-                </motion.div>
-              </motion.div>
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Confirm Password Input */}
+            <div>
+              <Label htmlFor="confirmPassword" className="sr-only">Confirm Password</Label>
+              <div className="relative">
+                <Input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Confirm Password"
+                  value={formData.confirmPassword}
+                  onChange={handleInputChange}
+                  className="bg-white/70 border-gray-200 focus:ring-primary/20 pl-10 pr-10"
+                  autoComplete="new-password"
+                  required
+                />
+                <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Terms Checkbox */}
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="terms"
+                checked={formData.agreedToTerms}
+                onCheckedChange={handleCheckboxChange}
+                className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+              />
+              <label
+                htmlFor="terms"
+                className="text-sm text-gray-600 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                I agree to the{' '}
+                <Link
+                  to="/terms"
+                  className="text-primary hover:text-primary/80"
+                  target="_blank"
+                >
+                  Terms of Service
+                </Link>{' '}
+                and{' '}
+                <Link
+                  to="/privacy"
+                  className="text-primary hover:text-primary/80"
+                  target="_blank"
+                >
+                  Privacy Policy
+                </Link>
+              </label>
             </div>
           </div>
-        </div>
-      </motion.main>
-      
-      <Footer />
+
+          {/* Submit Button */}
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="w-full bg-primary hover:bg-primary/90 text-white transition-all duration-200 py-6"
+          >
+            {isLoading ? (
+              <motion.div
+                className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin"
+              />
+            ) : (
+              <span className="flex items-center justify-center gap-2">
+                Create Account <CheckCircle className="h-4 w-4" />
+              </span>
+            )}
+          </Button>
+
+          {/* Divider */}
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-200" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-gradient-to-b from-white to-gray-50/50 text-gray-500">
+                Or continue with
+              </span>
+            </div>
+          </div>
+
+          {/* Google Signup */}
+          <div className="flex justify-center">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={handleGoogleError}
+              theme="outline"
+              shape="pill"
+              size="large"
+              text="continue_with"
+              useOneTap
+            />
+          </div>
+
+          {/* Login Link */}
+          <p className="text-center text-sm text-gray-500">
+            Already have an account?{' '}
+            <Link
+              to="/login"
+              className="font-medium text-primary hover:text-primary/80 transition-colors"
+            >
+              Sign in <ArrowRight className="inline h-4 w-4" />
+            </Link>
+          </p>
+        </motion.form>
+      </motion.div>
     </div>
   );
 };
