@@ -278,29 +278,42 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
       
       console.log("Adding to wishlist from ProductDetail:", wishlistItem);
       
-      // Use the wishlist manager to add item
-      const { addToUserWishlist } = await import('@/utils/wishlistManager');
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
-      const userId = user._id || user.id;
+      // Get existing wishlist with error handling
+      let existingWishlist = [];
+      try {
+        const wishlistStr = localStorage.getItem("wishlist");
+        existingWishlist = wishlistStr ? JSON.parse(wishlistStr) : [];
+        if (!Array.isArray(existingWishlist)) {
+          console.error("Wishlist is not an array, resetting");
+          existingWishlist = [];
+        }
+      } catch (error) {
+        console.error("Error parsing wishlist:", error);
+        existingWishlist = [];
+      }
       
-      const success = addToUserWishlist(wishlistItem, userId);
-      
-      if (success) {
-        // Trigger storage event for Navigation to update count
-        window.dispatchEvent(new Event('storage'));
-        
-        toast({
-          title: "Added to wishlist",
-          description: `${product.title} has been added to your wishlist`,
-          duration: 3000,
-        });
-      } else {
+      // Check if already exists
+      if (existingWishlist.some(item => item.id === String(product._id))) {
         toast({
           title: "Already in wishlist",
           description: "This product is already in your wishlist",
           duration: 3000,
         });
+        return;
       }
+      
+      // Add new item and save directly
+      const updatedWishlist = [...existingWishlist, wishlistItem];
+      localStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
+      
+      // Trigger storage event for Navigation to update count
+      window.dispatchEvent(new Event('storage'));
+      
+      toast({
+        title: "Added to wishlist",
+        description: `${product.title} has been added to your wishlist`,
+        duration: 3000,
+      });
     } catch (error) {
       console.error("Error adding to wishlist:", error);
       toast({

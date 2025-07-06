@@ -86,10 +86,7 @@ const ProductCard = ({ product, onAddToCart }: {
   // Load wishlist from localStorage
   useEffect(() => {
     try {
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
-      const userId = user._id || user.id;
-      const wishlistKey = userId ? `wishlist_${userId}` : 'wishlist';
-      const wishlistStr = localStorage.getItem(wishlistKey);
+      const wishlistStr = localStorage.getItem("wishlist");
       if (wishlistStr) {
         const wishlistItems = JSON.parse(wishlistStr);
         if (Array.isArray(wishlistItems)) {
@@ -204,10 +201,7 @@ const ProductCard = ({ product, onAddToCart }: {
         dateAdded: new Date().toISOString()
       };
 
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
-      const userId = user._id || user.id;
-      const wishlistKey = userId ? `wishlist_${userId}` : 'wishlist';
-      const currentWishlist = JSON.parse(localStorage.getItem(wishlistKey) || "[]");
+      const currentWishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
       let updatedWishlist;
       let message;
 
@@ -221,7 +215,7 @@ const ProductCard = ({ product, onAddToCart }: {
         setWishlist(prev => [...prev, product._id]);
       }
 
-      localStorage.setItem(wishlistKey, JSON.stringify(updatedWishlist));
+      localStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
       
       // Dispatch custom event for wishlist updates
       const event = new CustomEvent('wishlist-update', { 

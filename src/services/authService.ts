@@ -91,11 +91,10 @@ export const logout = () => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const userId = user._id || user.id;
   
-  // Clear user-specific cart and wishlist if user was logged in
+  // Clear user-specific cart if user was logged in
   if (userId) {
     localStorage.removeItem(`cart_${userId}`);
-    localStorage.removeItem(`wishlist_${userId}`);
-    console.log(`🧹 Cleared cart and wishlist for user: ${userId} during logout`);
+    console.log(`🧹 Cleared cart for user: ${userId} during logout`);
   }
   
   localStorage.removeItem('user');

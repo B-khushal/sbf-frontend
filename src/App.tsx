@@ -14,7 +14,6 @@ import MainLayout from './components/MainLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import useCart from '@/hooks/use-cart';
 import CartLoader from '@/components/CartLoader';
-import WishlistLoader from '@/components/WishlistLoader';
 
 // Core pages that should load immediately
 import HomePage from "./pages/HomePage";
@@ -119,7 +118,6 @@ const App = () => {
         <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || "your-google-client-id"}>
           <AuthProvider>
             <CartLoader />
-            <WishlistLoader />
             <CurrencyProvider>
               <SettingsProvider>
                 <NotificationProvider>

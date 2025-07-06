@@ -1,52 +1,34 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  getCurrentUserId, 
-  loadUserWishlist, 
-  saveUserWishlist, 
-  addToUserWishlist as addToUserWishlistUtil,
-  removeFromUserWishlist as removeFromUserWishlistUtil,
-  isInUserWishlist as isInUserWishlistUtil,
-  migrateOldWishlistData,
-  type WishlistItem 
-} from '@/utils/wishlistManager';
+
+export type WishlistItem = {
+  id: string;
+  title: string;
+  image: string;
+  price: number;
+};
 
 const useWishlist = () => {
   const { toast } = useToast();
-  const [items, setItems] = useState<WishlistItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  
-  // Load wishlist for current user
-  const loadWishlist = (userId?: string) => {
-    setIsLoading(true);
+  const [items, setItems] = useState<WishlistItem[]>(() => {
     try {
-      // If no userId provided, try to get from localStorage
-      if (!userId) {
-        userId = getCurrentUserId();
-      }
-      
-      // Load user-specific wishlist
-      let wishlistItems = loadUserWishlist(userId);
-      
-      // If no user-specific wishlist exists and user is authenticated, try to migrate old data
-      if (wishlistItems.length === 0 && userId) {
-        wishlistItems = migrateOldWishlistData(userId);
-      }
-      
-      setItems(wishlistItems);
-      console.log(`💖 Loaded wishlist for user: ${userId || 'anonymous'}, items: ${wishlistItems.length}`);
+      const savedWishlist = localStorage.getItem('wishlist');
+      return savedWishlist ? JSON.parse(savedWishlist) : [];
     } catch (error) {
-      console.error('Error loading wishlist:', error);
-      setItems([]);
-    } finally {
-      setIsLoading(false);
+      console.error('Error loading wishlist from localStorage:', error);
+      return [];
     }
-  };
+  });
   
-  // Initialize wishlist on mount
+  // Update localStorage when wishlist changes
   useEffect(() => {
-    loadWishlist();
-  }, []);
+    try {
+      localStorage.setItem('wishlist', JSON.stringify(items));
+      console.log('Wishlist saved to localStorage:', items);
+    } catch (error) {
+      console.error('Error saving wishlist to localStorage:', error);
+    }
+  }, [items]);
   
   const addItem = (item: WishlistItem) => {
     console.log('Adding item to wishlist:', item);
@@ -58,77 +40,59 @@ const useWishlist = () => {
         description: "Could not add item to wishlist - invalid format",
         variant: "destructive"
       });
-      return false;
+      return;
     }
     
-    const userId = getCurrentUserId();
-    const success = addToUserWishlistUtil(item, userId);
-    
-    if (success) {
-      // Update local state
-      setItems(prevItems => [...prevItems, { ...item, dateAdded: new Date().toISOString() }]);
+    setItems(prevItems => {
+      // Check if item already exists in wishlist
+      const exists = prevItems.some(existingItem => existingItem.id === item.id);
       
+      if (exists) {
+        toast({
+          title: "Already in wishlist",
+          description: "This item is already in your wishlist",
+        });
+        return prevItems;
+      }
+      
+      // Add the new item
       toast({
         title: "Added to wishlist",
         description: "Item has been added to your wishlist",
       });
-    } else {
-      toast({
-        title: "Already in wishlist",
-        description: "This item is already in your wishlist",
-      });
-    }
-    
-    return success;
+      return [...prevItems, item];
+    });
   };
   
   const removeItem = (id: string) => {
-    const userId = getCurrentUserId();
-    const success = removeFromUserWishlistUtil(id, userId);
-    
-    if (success) {
-      // Update local state
-      setItems(prevItems => prevItems.filter(item => item.id !== id));
+    setItems(prevItems => {
+      const newItems = prevItems.filter(item => item.id !== id);
       
-      toast({
-        title: "Removed from wishlist",
-        description: "Item has been removed from your wishlist",
-      });
-    }
-    
-    return success;
+      if (newItems.length !== prevItems.length) {
+        toast({
+          title: "Removed from wishlist",
+          description: "Item has been removed from your wishlist",
+        });
+      }
+      
+      return newItems;
+    });
   };
   
   const clearWishlist = () => {
-    const userId = getCurrentUserId();
     setItems([]);
-    saveUserWishlist([], userId);
-    
     toast({
       title: "Wishlist cleared",
       description: "Your wishlist has been cleared",
     });
   };
   
-  const isInWishlist = (itemId: string): boolean => {
-    const userId = getCurrentUserId();
-    return isInUserWishlistUtil(itemId, userId);
-  };
-  
-  const refreshWishlist = () => {
-    loadWishlist();
-  };
-  
   return {
     items,
     itemCount: items.length,
-    isLoading,
     addItem,
     removeItem,
     clearWishlist,
-    isInWishlist,
-    refreshWishlist,
-    loadWishlist,
   };
 };
 
