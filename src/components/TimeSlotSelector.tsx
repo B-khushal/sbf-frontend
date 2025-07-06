@@ -8,10 +8,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { Calendar } from '@/components/ui/calendar';
 import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { format, addDays, isBefore, startOfDay, isValid } from 'date-fns';
 import { useCurrency } from '@/contexts/CurrencyContext';
@@ -70,7 +70,7 @@ const TimeSlotSelector = ({
   onSelectDate
 }: TimeSlotSelectorProps) => {
   const [date, setDate] = useState<Date | null>(selectedDate || new Date());
-  const [isDateDialogOpen, setIsDateDialogOpen] = useState(false);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const { formatPrice, convertPrice } = useCurrency();
   
   const today = startOfDay(new Date());
@@ -86,7 +86,7 @@ const TimeSlotSelector = ({
     if (newDate && isValid(newDate) && onSelectDate) {
       setDate(newDate);
       onSelectDate(newDate);
-      setIsDateDialogOpen(false);
+      setIsCalendarOpen(false);
     }
   };
 
@@ -209,8 +209,8 @@ const TimeSlotSelector = ({
     <Card className={cn("w-full", className)}>
       <CardContent className="p-6">
         <div className="space-y-4">
-          <Dialog open={isDateDialogOpen} onOpenChange={setIsDateDialogOpen}>
-            <DialogTrigger asChild>
+          <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+            <PopoverTrigger asChild>
               <Button 
                 variant="outline" 
                 className={cn(
@@ -221,8 +221,8 @@ const TimeSlotSelector = ({
                 <CalendarIcon className="mr-2 h-4 w-4" />
                 {formatDisplayDate(date)}
               </Button>
-            </DialogTrigger>
-            <DialogContent className="p-0 max-w-[350px] rounded-lg">
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
                 selected={date || undefined}
@@ -231,8 +231,8 @@ const TimeSlotSelector = ({
                 initialFocus
                 className="rounded-lg border-0"
               />
-            </DialogContent>
-          </Dialog>
+            </PopoverContent>
+          </Popover>
 
           <div className="space-y-4">
             {timeSlots.map((slot) => {
