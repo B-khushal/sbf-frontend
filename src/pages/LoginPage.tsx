@@ -12,7 +12,6 @@ import { useToast } from '@/hooks/use-toast';
 import { GoogleLogin } from '@react-oauth/google';
 import { Checkbox } from '@/components/ui/checkbox';
 import Modal from '@/components/ui/Modal';
-import { cn } from '@/lib/utils';
 
 // Animation variants
 const containerVariants = {
@@ -205,189 +204,320 @@ const LoginPage = () => {
   };
   
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-gray-50/50 flex items-center justify-center p-4 sm:p-6 lg:p-8">
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="w-full max-w-md space-y-8 relative"
-      >
-        {/* Logo and Title */}
-        <motion.div variants={itemVariants} className="text-center space-y-4">
-          <div className="flex justify-center">
-            <Sparkles className="h-12 w-12 text-primary" />
-          </div>
-          <h2 className="text-2xl font-bold tracking-tight text-gray-900">
-            Welcome back
-          </h2>
-          <p className="text-sm text-gray-500">
-            Sign in to your account to continue
-          </p>
-        </motion.div>
-
-        {/* Login Form */}
-        <motion.form variants={itemVariants} onSubmit={handleLogin} className="mt-8 space-y-6">
-          <div className="space-y-4">
-            {/* Email Input */}
-            <div>
-              <Label htmlFor="email" className="sr-only">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="Email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="bg-white/70 border-gray-200 focus:ring-primary/20"
-                autoComplete="email"
-              />
-            </div>
-
-            {/* Password Input */}
-            <div className="relative">
-              <Label htmlFor="password" className="sr-only">Password</Label>
-              <Input
-                id="password"
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="bg-white/70 border-gray-200 focus:ring-primary/20 pr-10"
-                autoComplete="current-password"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Forgot Password Link */}
-          <div className="flex items-center justify-end">
-            <Link
-              to="/forgot-password"
-              className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
-            >
-              Forgot your password?
-            </Link>
-          </div>
-
-          {/* Submit Button */}
-          <Button
-            type="submit"
-            disabled={isLoading}
-            className="w-full bg-primary hover:bg-primary/90 text-white transition-all duration-200 py-6"
-          >
-            {isLoading ? (
-              <motion.div
-                className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin"
-              />
-            ) : (
-              <span className="flex items-center justify-center gap-2">
-                Sign in <LogIn className="h-4 w-4" />
-              </span>
-            )}
-          </Button>
-
-          {/* Divider */}
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-gradient-to-b from-white to-gray-50/50 text-gray-500">
-                Or continue with
-              </span>
-            </div>
-          </div>
-
-          {/* Google Login */}
-          <div className="flex justify-center">
-            <GoogleLogin
-              onSuccess={handleGoogleSuccess}
-              onError={handleGoogleError}
-              theme="outline"
-              shape="pill"
-              size="large"
-              text="continue_with"
-              useOneTap
-            />
-          </div>
-
-          {/* Sign Up Link */}
-          <p className="text-center text-sm text-gray-500">
-            Don't have an account?{' '}
-            <Link
-              to="/signup"
-              className="font-medium text-primary hover:text-primary/80 transition-colors"
-            >
-              Sign up <ArrowRight className="inline h-4 w-4" />
-            </Link>
-          </p>
-        </motion.form>
-      </motion.div>
-
-      {/* Terms Dialog */}
-      <Modal
-        isOpen={showTermsDialog}
-        onClose={() => setShowTermsDialog(false)}
-        title="Accept Terms & Conditions"
-      >
-        <div className="space-y-4">
-          <p className="text-sm text-gray-500">
-            Please accept our Terms of Service and Privacy Policy to continue.
-          </p>
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="terms"
-              checked={agreedToTerms}
-              onCheckedChange={setAgreedToTerms}
-            />
-            <label
-              htmlFor="terms"
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-            >
-              I agree to the{' '}
-              <Link
-                to="/terms"
-                className="text-primary hover:text-primary/80"
-                target="_blank"
-              >
-                Terms of Service
-              </Link>{' '}
-              and{' '}
-              <Link
-                to="/privacy"
-                className="text-primary hover:text-primary/80"
-                target="_blank"
-              >
-                Privacy Policy
-              </Link>
-            </label>
-          </div>
-          <div className="flex justify-end space-x-2 mt-4">
-            <Button
-              variant="outline"
-              onClick={() => setShowTermsDialog(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleTermsAccept}
-              disabled={!agreedToTerms || isLoading}
-            >
-              {isLoading ? 'Processing...' : 'Continue'}
-            </Button>
-          </div>
+    <>
+      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 relative overflow-hidden">
+        {/* Animated Background Elements */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 rounded-full blur-3xl animate-spin-slow" />
+          <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-gradient-to-tl from-accent/5 via-transparent to-primary/5 rounded-full blur-3xl animate-reverse-spin" />
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-secondary/3 to-accent/3 rounded-full blur-2xl animate-pulse" />
         </div>
+
+        <Navigation cartItemCount={0} />
+        
+        <motion.main 
+          className="relative flex-1 flex items-center justify-center p-4 sm:p-6 md:p-8 min-h-screen pt-24 z-10"
+          initial="hidden"
+          animate="visible"
+          variants={containerVariants}
+        >
+          <motion.div 
+            variants={itemVariants}
+            className="w-full max-w-md mx-auto"
+          >
+            {/* Welcome Header */}
+            <motion.div 
+              className="text-center mb-8"
+              variants={itemVariants}
+            >
+              <div className="relative">
+                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-4">
+                  <div className="text-3xl">🌸</div>
+                </div>
+                <h1 className="text-4xl md:text-5xl font-black text-gray-800 mb-4 pt-6">
+                  Welcome <span className="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">Back</span>
+                </h1>
+              </div>
+              <p className="text-lg text-gray-600 leading-relaxed">
+                Sign in to your Spring Blossoms account and continue your floral journey
+              </p>
+            </motion.div>
+
+            {/* Login Card */}
+            <motion.div 
+              variants={itemVariants}
+              className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/20 overflow-hidden"
+            >
+              <div className="p-8">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-12 h-12 bg-gradient-to-r from-primary to-secondary rounded-2xl flex items-center justify-center">
+                    <LogIn className="w-6 h-6 text-white" />
+                  </div>
+                  <h2 className="text-2xl font-black text-gray-800">Sign In</h2>
+                </div>
+                
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  handleLogin(e);
+                }} className="space-y-6">
+                  <motion.div 
+                    className="space-y-2"
+                    whileFocus={{ scale: 1.02 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Label htmlFor="email" className="text-sm font-semibold text-gray-700">
+                      Email Address
+                    </Label>
+                    <Input 
+                      id="email" 
+                      placeholder="your.email@example.com" 
+                      type="email" 
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="h-12 rounded-2xl border-2 border-gray-200 focus:border-primary transition-all"
+                      autoComplete="email"
+                      required
+                    />
+                  </motion.div>
+                  
+                  <motion.div 
+                    className="space-y-2"
+                    whileFocus={{ scale: 1.02 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="password" className="text-sm font-semibold text-gray-700">
+                        Password
+                      </Label>
+                      <Link 
+                        to="/forgot-password" 
+                        className="text-sm text-primary hover:text-secondary transition-colors font-medium"
+                      >
+                        Forgot password?
+                      </Link>
+                    </div>
+                    <div className="relative">
+                      <Input 
+                        id="password" 
+                        type={showPassword ? "text" : "password"} 
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="h-12 rounded-2xl border-2 border-gray-200 focus:border-primary transition-all pr-12"
+                        autoComplete="current-password"
+                        required
+                      />
+                      <motion.button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                      >
+                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                      </motion.button>
+                    </div>
+                  </motion.div>
+                  
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Button 
+                      className="w-full h-14 bg-gradient-to-r from-primary via-secondary to-accent text-white font-bold text-lg rounded-2xl hover:shadow-2xl transition-all duration-300 disabled:opacity-50" 
+                      type="submit"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <div className="flex items-center gap-2">
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          Signing in...
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <LogIn className="w-5 h-5" />
+                          Sign In
+                          <ArrowRight className="w-5 h-5" />
+                        </div>
+                      )}
+                    </Button>
+                  </motion.div>
+                </form>
+
+                {/* Divider */}
+                <div className="relative my-6">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-gray-200" />
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="bg-white px-4 text-gray-500 font-medium">Or continue with</span>
+                  </div>
+                </div>
+
+                {/* Google Login */}
+                <motion.div
+                  className="w-full"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <GoogleLogin
+                    onSuccess={handleGoogleSuccess}
+                    onError={handleGoogleError}
+                    theme="outline"
+                    size="large"
+                    width={350}
+                    text="signin_with"
+                    shape="rectangular"
+                  />
+                </motion.div>
+              </div>
+              
+              {/* Footer */}
+              <div className="bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10 px-8 py-6 border-t border-white/20">
+                <div className="text-center">
+                  <span className="text-gray-600">Don't have an account? </span>
+                  <Link 
+                    to="/signup" 
+                    state={{ redirect: redirectPath }}
+                    className="text-primary hover:text-secondary font-semibold transition-colors"
+                  >
+                    Sign up here
+                  </Link>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Features */}
+            <motion.div 
+              variants={itemVariants}
+              className="grid grid-cols-3 gap-4 mt-8"
+            >
+              <motion.div 
+                className="text-center bg-white/50 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-white/20"
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="text-2xl mb-2">🛡️</div>
+                <p className="text-sm font-medium text-gray-700">Secure Login</p>
+              </motion.div>
+              <motion.div 
+                className="text-center bg-white/50 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-white/20"
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="text-2xl mb-2">🚀</div>
+                <p className="text-sm font-medium text-gray-700">Fast Access</p>
+              </motion.div>
+              <motion.div 
+                className="text-center bg-white/50 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-white/20"
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="text-2xl mb-2">🌸</div>
+                <p className="text-sm font-medium text-gray-700">Floral Journey</p>
+              </motion.div>
+            </motion.div>
+
+            {/* Back to Shop */}
+            <motion.div 
+              variants={itemVariants}
+              className="text-center mt-8"
+            >
+              <Link 
+                to="/shop"
+                className="inline-flex items-center gap-2 text-gray-600 hover:text-primary transition-colors font-medium"
+              >
+                <ArrowRight className="w-4 h-4 rotate-180" />
+                Back to Shop
+              </Link>
+            </motion.div>
+          </motion.div>
+        </motion.main>
+        
+        <Footer />
+      </div>
+
+      {/* Terms and Conditions Modal */}
+      <Modal isOpen={showTermsDialog} onClose={() => setShowTermsDialog(false)}>
+        <div className="p-6">
+          <div className="mb-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Terms & Conditions</h2>
+            <p className="text-sm text-gray-600">
+                    Please review and accept our terms and conditions to continue.
+            </p>
+          </div>
+                
+          <div className="mb-6">
+            <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="flex items-start space-x-3">
+                      <Checkbox
+                        id="terms"
+                        checked={agreedToTerms}
+                        onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)}
+                        className="mt-1"
+                      />
+                      <div className="grid gap-1.5">
+                        <label
+                          htmlFor="terms"
+                    className="text-sm font-medium text-gray-900 cursor-pointer"
+                        >
+                          Accept terms and conditions
+                        </label>
+                  <p className="text-xs text-gray-600">
+                          I agree to the{" "}
+                          <Link 
+                            to="/terms" 
+                            className="text-primary hover:text-primary/80 underline" 
+                            target="_blank"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            terms of service
+                          </Link>{" "}
+                          and{" "}
+                          <Link 
+                            to="/privacy" 
+                            className="text-primary hover:text-primary/80 underline" 
+                            target="_blank"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            privacy policy
+                          </Link>
+                          .
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+          <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-2 justify-end">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowTermsDialog(false)}
+                    className="w-full sm:w-auto"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleTermsAccept}
+                    disabled={!agreedToTerms || isLoading}
+                    className="w-full sm:w-auto bg-gradient-to-r from-primary via-secondary to-accent text-white hover:opacity-90 transition-opacity"
+                  >
+                    {isLoading ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span>Processing...</span>
+                      </div>
+                    ) : (
+                      "Continue"
+                    )}
+                  </Button>
+                </div>
+              </div>
       </Modal>
-    </div>
+
+
+    </>
   );
 };
 

@@ -1,16 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Check, Truck, ArrowRight, User, MapPin, Package, Clock, Gift, Plus, X, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
+import { Check, Truck, ArrowRight, User, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import TimeSlotSelector from '@/components/TimeSlotSelector';
 import MessageCard from '@/components/MessageCard';
 import Navigation from '@/components/Navigation';
@@ -18,52 +14,27 @@ import Footer from '@/components/Footer';
 import useCart, { useCartSelectors } from '@/hooks/use-cart';
 import { useToast } from '@/hooks/use-toast';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import { Alert, AlertDescription } from '@/components/ui/alert'; // Make sure these are imported
+import { Info } from 'lucide-react';
 import api from '@/services/api';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import PinCodeInput from '@/components/ui/PinCodeInput';
 
-// Animation variants
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.2
-    }
-  }
-};
-
-const itemVariants = {
-  hidden: { y: 20, opacity: 0 },
-  visible: {
-    y: 0,
-    opacity: 1,
-    transition: {
-      duration: 0.5,
-      ease: [0.25, 0.46, 0.45, 0.94]
-    }
-  }
-};
 
 const CheckoutShippingPage = () => {
   const navigate = useNavigate();
   const { items } = useCart();
   const { subtotal } = useCartSelectors();
   const { toast } = useToast();
-  const { formatPrice, convertPrice } = useCurrency();
   
   const [deliveryOption, setDeliveryOption] = useState<'self' | 'gift'>('self');
   const [giftMessage, setGiftMessage] = useState('');
+  const { formatPrice, convertPrice } = useCurrency();
   const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
   const [showSavedAddresses, setShowSavedAddresses] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [shippingMethod, setShippingMethod] = useState('standard');
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
-  const [isPinCodeValid, setIsPinCodeValid] = useState(true);
-  const [pinCodeValidationMessage, setPinCodeValidationMessage] = useState('');
-  const [showOrderSummary, setShowOrderSummary] = useState(false);
-  
   const [formData, setFormData] = useState({
     // Sender details
     firstName: '',
@@ -89,9 +60,13 @@ const CheckoutShippingPage = () => {
     receiverPhone: '',
     receiverEmail: '',
   });
+
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
+  const [isPinCodeValid, setIsPinCodeValid] = useState(true);
+  const [pinCodeValidationMessage, setPinCodeValidationMessage] = useState('');
   
   // Calculate midnight delivery fee
-  const midnightDeliveryFee = 100.00;
+  const midnightDeliveryFee = 100.00; // ₹100
   const hasMidnightFee = selectedTimeSlot === 'midnight';
   const deliveryFee = hasMidnightFee ? midnightDeliveryFee : 0;
 
@@ -147,7 +122,7 @@ const CheckoutShippingPage = () => {
   const handlePinCodeValidation = (isValid: boolean, message?: string) => {
     setIsPinCodeValid(isValid);
     setPinCodeValidationMessage(message || '');
-  };
+  };  
 
   const handleSavedAddressSelect = (address: any) => {
     if (address.deliveryOption === 'self') {
@@ -187,6 +162,7 @@ const CheckoutShippingPage = () => {
       }
     }
     
+    // Switch to the correct delivery option if needed
     setDeliveryOption(address.deliveryOption);
     setShowSavedAddresses(false);
     
@@ -194,32 +170,6 @@ const CheckoutShippingPage = () => {
       title: "Address loaded",
       description: "Your saved address has been applied",
     });
-  };
-
-  const handleDeleteAddress = (addressId: string) => {
-    const updatedAddresses = savedAddresses.filter(addr => addr.id !== addressId);
-    setSavedAddresses(updatedAddresses);
-    localStorage.setItem('savedAddresses', JSON.stringify(updatedAddresses));
-    
-    toast({
-      title: "Address deleted",
-      description: "The address has been removed from your saved addresses",
-    });
-  };
-
-  const handleTimeSlotSelect = (slotId: string) => {
-    setSelectedTimeSlot(slotId);
-    
-    if (slotId === 'midnight') {
-      toast({
-        title: "Midnight Delivery Selected",
-        description: `Additional fee of ${formatPrice(midnightDeliveryFee)} will be added`,
-      });
-    }
-  };
-
-  const handleDateSelect = (date: Date) => {
-    setSelectedDate(date);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -234,6 +184,7 @@ const CheckoutShippingPage = () => {
       return;
     }
     
+    // Check PIN code validation first
     if (!isPinCodeValid) {
       toast({
         title: "Invalid PIN code",
@@ -247,718 +198,737 @@ const CheckoutShippingPage = () => {
     if (deliveryOption === 'self') {
       if (!formData.firstName || !formData.lastName || !formData.address || 
           !formData.city || !formData.state || !formData.zipCode || 
-          !formData.phone || !formData.email) {
+          !formData.phone) {
         toast({
-          title: "Please fill in all required fields",
-          description: "All fields marked with * are required",
+          title: "Missing information",
+          description: "Please fill out all required fields",
           variant: "destructive"
         });
         return;
       }
     } else {
-      if (!formData.firstName || !formData.lastName || !formData.phone || 
-          !formData.email || !formData.receiverFirstName || !formData.receiverLastName || 
-          !formData.receiverAddress || !formData.receiverCity || !formData.receiverState || 
-          !formData.receiverZipCode || !formData.receiverPhone) {
+      // For gift option, validate both sender and receiver
+      if (!formData.firstName || !formData.lastName || !formData.phone ||
+          !formData.receiverFirstName || !formData.receiverLastName || !formData.receiverAddress ||
+          !formData.receiverCity || !formData.receiverState || !formData.receiverZipCode ||
+          !formData.receiverPhone) {
         toast({
-          title: "Please fill in all required fields",
-          description: "All fields marked with * are required for both sender and receiver",
+          title: "Missing information",
+          description: "Please fill out all required fields for both sender and recipient",
           variant: "destructive"
         });
         return;
       }
     }
-
-    // Save address if requested
-    if (formData.saveInfo) {
-      const addressToSave = {
-        id: Date.now().toString(),
-        ...formData,
-        deliveryOption,
-        giftMessage: deliveryOption === 'gift' ? giftMessage : '',
-        createdAt: new Date().toISOString()
-      };
-      
-      const updatedAddresses = [...savedAddresses, addressToSave];
-      setSavedAddresses(updatedAddresses);
-      localStorage.setItem('savedAddresses', JSON.stringify(updatedAddresses));
-    }
-
-    // Save shipping info to localStorage
-    const shippingInfo = {
+    
+    // Store shipping info in localStorage for the payment page
+    const shippingData = {
       ...formData,
+      timeSlot: selectedTimeSlot,
       deliveryOption,
       giftMessage: deliveryOption === 'gift' ? giftMessage : '',
-      timeSlot: selectedTimeSlot,
-      deliveryFee,
-      selectedDate: selectedDate.toISOString(),
+      selectedDate,
+      deliveryFee: hasMidnightFee ? midnightDeliveryFee : 0
     };
-    
-    localStorage.setItem('shippingInfo', JSON.stringify(shippingInfo));
-    
-    // Navigate to payment page
-    navigate('/checkout/payment');
+
+    try {
+      console.log('Saving shipping data:', shippingData); // Debug log
+      localStorage.setItem('shippingInfo', JSON.stringify(shippingData));
+      
+      // Save shipping information if checkbox is checked
+      if (formData.saveInfo) {
+        const savedAddresses = JSON.parse(localStorage.getItem('savedAddresses') || '[]');
+        // Get user from local storage if available
+        const userString = localStorage.getItem('user');
+        let userId = undefined;
+        
+        if (userString) {
+          try {
+            const user = JSON.parse(userString);
+            userId = user.id;
+          } catch (e) {
+            console.error('Error parsing user from localStorage', e);
+          }
+        }
+        
+        const newAddress = {
+          ...formData,
+          deliveryOption,
+          giftMessage: deliveryOption === 'gift' ? giftMessage : '',
+          id: Date.now().toString(),
+          ...(userId && { userId }) // Add userId if available
+        };
+        
+        // Check if this address already exists
+        const existingIndex = savedAddresses.findIndex((addr: any) => 
+          addr.deliveryOption === deliveryOption &&
+          addr.firstName === formData.firstName &&
+          addr.lastName === formData.lastName &&
+          addr.address === formData.address &&
+          addr.city === formData.city &&
+          addr.state === formData.state &&
+          addr.zipCode === formData.zipCode
+        );
+
+        if (existingIndex === -1) {
+          savedAddresses.push(newAddress);
+          localStorage.setItem('savedAddresses', JSON.stringify(savedAddresses));
+          toast({
+            title: "Success",
+            description: "Shipping information saved for future use.",
+          });
+        }
+      }
+      
+      // Navigate to payment
+      navigate('/checkout/payment');
+    } catch (error: any) {
+      console.error('Error saving shipping info:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save shipping information",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // Add a function to delete a saved address
+  const handleDeleteAddress = (addressId: string) => {
+    try {
+      // Get saved addresses from localStorage
+      const savedAddresses = JSON.parse(localStorage.getItem('savedAddresses') || '[]');
+      
+      // Filter out the address to delete
+      const updatedAddresses = savedAddresses.filter((addr: any) => addr.id !== addressId);
+      
+      // Save back to localStorage
+      localStorage.setItem('savedAddresses', JSON.stringify(updatedAddresses));
+      
+      // Update state
+      setSavedAddresses(updatedAddresses);
+      
+      toast({
+        title: "Address deleted",
+        description: "The saved address has been removed",
+      });
+    } catch (error) {
+      console.error('Error deleting address:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete the address",
+        variant: "destructive",
+      });
+    }
   };
 
+  // Handler for time slot selection
+  const handleTimeSlotSelect = (slotId: string) => {
+    setSelectedTimeSlot(slotId);
+    // Update shipping method based on time slot
+    if (slotId === 'midnight') {
+      setShippingMethod('midnight');
+    } else {
+      setShippingMethod('standard');
+    }
+  };
+
+  // Add a function to navigate to profile page
+  const navigateToProfile = () => {
+    navigate('/profile');
+  };
+
+  // If cart is empty, redirect to cart page
+  if (items.length === 0) {
+    navigate('/cart');
+    return null;
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      <Navigation />
-      
-      <motion.div 
-        className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl"
-        initial="hidden"
-        animate="visible"
-        variants={containerVariants}
-      >
-        {/* Progress Bar */}
-        <motion.div variants={itemVariants} className="mb-8">
-          <div className="flex items-center justify-center space-x-4 mb-6">
-            <div className="flex items-center">
-              <div className="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center text-sm font-semibold">
-                1
+    <div className="min-h-screen flex flex-col">
+      <Navigation cartItemCount={items.length} />
+      <main className="flex-grow pt-24 pb-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+           {/* Alert for Delivery Info */}
+           <Alert className="mb-8 border-yellow-400 bg-yellow-50 text-yellow-800">
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              Currently, we only deliver to Hyderabad, Telangana. We're working on expanding our delivery network soon!
+            </AlertDescription>
+          </Alert>
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-3xl font-bold">Checkout</h1>
+
+            {/* Checkout Steps */}
+            <div className="hidden md:flex items-center space-x-2">
+              <div className="flex items-center">
+                <div className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm">
+                  <Check size={14} />
+                </div>
+                <span className="ml-2 font-medium">Cart</span>
               </div>
-              <span className="ml-2 text-sm font-medium text-primary">Shipping</span>
-            </div>
-            <div className="w-12 h-0.5 bg-gray-300"></div>
-            <div className="flex items-center">
-              <div className="w-8 h-8 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center text-sm font-semibold">
-                2
+              
+              <div className="h-px w-8 bg-primary" />
+              
+              <div className="flex items-center">
+                <div className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm">
+                  <Truck size={14} />
+                </div>
+                <span className="ml-2 font-medium">Shipping</span>
               </div>
-              <span className="ml-2 text-sm font-medium text-gray-600">Payment</span>
-            </div>
-            <div className="w-12 h-0.5 bg-gray-300"></div>
-            <div className="flex items-center">
-              <div className="w-8 h-8 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center text-sm font-semibold">
-                3
+              
+              <div className="h-px w-8 bg-muted" />
+              
+              <div className="flex items-center">
+                <div className="h-6 w-6 rounded-full bg-muted text-muted-foreground flex items-center justify-center text-sm">
+                  3
+                </div>
+                <span className="ml-2 text-muted-foreground">Payment</span>
               </div>
-              <span className="ml-2 text-sm font-medium text-gray-600">Confirmation</span>
+              
+              <div className="h-px w-8 bg-muted" />
+              
+              <div className="flex items-center">
+                <div className="h-6 w-6 rounded-full bg-muted text-muted-foreground flex items-center justify-center text-sm">
+                  4
+                </div>
+                <span className="ml-2 text-muted-foreground">Confirmation</span>
+              </div>
             </div>
           </div>
-        </motion.div>
-
-        {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Forms */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Delivery Option Selection */}
-            <motion.div variants={itemVariants}>
-              <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Package className="w-5 h-5 text-primary" />
-                    Delivery Option
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <motion.div
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <label className={`block p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                        deliveryOption === 'self' 
-                          ? 'border-primary bg-primary/5 shadow-md' 
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}>
-                        <div className="flex items-center space-x-3">
-                          <input
-                            type="radio"
-                            name="deliveryOption"
-                            value="self"
-                            checked={deliveryOption === 'self'}
-                            onChange={(e) => setDeliveryOption(e.target.value as 'self' | 'gift')}
-                            className="w-4 h-4 text-primary"
-                          />
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <User className="w-4 h-4 text-primary" />
-                              <span className="font-medium">For Myself</span>
-                            </div>
-                            <p className="text-sm text-gray-600 mt-1">Deliver to my address</p>
-                          </div>
-                        </div>
-                      </label>
-                    </motion.div>
-
-                    <motion.div
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <label className={`block p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                        deliveryOption === 'gift' 
-                          ? 'border-primary bg-primary/5 shadow-md' 
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}>
-                        <div className="flex items-center space-x-3">
-                          <input
-                            type="radio"
-                            name="deliveryOption"
-                            value="gift"
-                            checked={deliveryOption === 'gift'}
-                            onChange={(e) => setDeliveryOption(e.target.value as 'self' | 'gift')}
-                            className="w-4 h-4 text-primary"
-                          />
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <Gift className="w-4 h-4 text-primary" />
-                              <span className="font-medium">As a Gift</span>
-                            </div>
-                            <p className="text-sm text-gray-600 mt-1">Send to someone else</p>
-                          </div>
-                        </div>
-                      </label>
-                    </motion.div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* Saved Addresses */}
-            {savedAddresses.length > 0 && (
-              <motion.div variants={itemVariants}>
-                <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
-                  <CardHeader>
-                    <CardTitle className="flex items-center justify-between">
-                      <span className="flex items-center gap-2 text-lg">
-                        <MapPin className="w-5 h-5 text-primary" />
-                        Saved Addresses
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setShowSavedAddresses(!showSavedAddresses)}
-                      >
-                        {showSavedAddresses ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                      </Button>
-                    </CardTitle>
-                  </CardHeader>
-                  <AnimatePresence>
-                    {showSavedAddresses && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <CardContent className="space-y-3">
-                          {savedAddresses.map((address) => (
-                            <div
-                              key={address.id}
-                              className="p-3 border rounded-lg hover:bg-gray-50 transition-colors"
-                            >
-                              <div className="flex items-start justify-between">
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <span className="font-medium">
-                                      {address.firstName} {address.lastName}
-                                    </span>
-                                    <Badge variant="outline" className="text-xs">
-                                      {address.deliveryOption === 'self' ? 'Self' : 'Gift'}
-                                    </Badge>
-                                  </div>
-                                  <p className="text-sm text-gray-600">
-                                    {address.deliveryOption === 'self' 
-                                      ? `${address.address}, ${address.city}, ${address.state} - ${address.zipCode}`
-                                      : `To: ${address.receiverFirstName} ${address.receiverLastName}, ${address.receiverAddress}, ${address.receiverCity}`
-                                    }
-                                  </p>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleSavedAddressSelect(address)}
-                                  >
-                                    Use
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleDeleteAddress(address.id)}
-                                  >
-                                    <X className="w-4 h-4" />
-                                  </Button>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </CardContent>
-                      </motion.div>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="md:col-span-2">
+              <Card>
+                <form onSubmit={handleSubmit}>
+                  <CardContent className="p-6">
+                    {/* Notification about saved addresses - replace with link to profile */}
+                    {savedAddresses.length > 0 && (
+                      <Alert className="mb-6 border-primary/20 bg-primary/5">
+                        <Info className="h-4 w-4 text-primary" />
+                        <AlertDescription className="flex justify-between items-center">
+                          <span>You have {savedAddresses.length} saved address{savedAddresses.length > 1 ? 'es' : ''}.</span>
+                          <Button 
+                            type="button" 
+                            variant="secondary" 
+                            size="sm" 
+                            onClick={() => setShowSavedAddresses(true)}
+                          >
+                            Use Saved Address
+                          </Button>
+                        </AlertDescription>
+                      </Alert>
                     )}
-                  </AnimatePresence>
-                </Card>
-              </motion.div>
-            )}
-
-            {/* Address Form */}
-            <motion.div variants={itemVariants}>
-              <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <MapPin className="w-5 h-5 text-primary" />
-                    {deliveryOption === 'self' ? 'Your Details' : 'Sender & Receiver Details'}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Sender Details */}
-                    <div className="space-y-4">
-                      <h3 className="font-medium text-gray-900">Your Information</h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            First Name *
-                          </label>
-                          <Input
-                            name="firstName"
-                            value={formData.firstName}
-                            onChange={handleInputChange}
-                            required
-                            className="w-full"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Last Name *
-                          </label>
-                          <Input
-                            name="lastName"
-                            value={formData.lastName}
-                            onChange={handleInputChange}
-                            required
-                            className="w-full"
-                          />
-                        </div>
+                    
+                    {/* Saved Addresses Dialog */}
+                    {showSavedAddresses && (
+                      <Dialog open={showSavedAddresses} onOpenChange={setShowSavedAddresses}>
+                        <DialogContent className="sm:max-w-md">
+                          <DialogHeader>
+                            <DialogTitle>Select a Saved Address</DialogTitle>
+                            <DialogDescription>
+                              Choose from your saved addresses to use for this order.
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="max-h-80 overflow-y-auto space-y-4 py-4">
+                            {savedAddresses.map((address: any) => (
+                              <Card key={address.id} className="cursor-pointer hover:border-primary" onClick={() => {
+                                handleSavedAddressSelect(address);
+                                setShowSavedAddresses(false);
+                              }}>
+                                <CardContent className="p-4">
+                                  <div className="flex flex-col">
+                                    <div className="font-medium">
+                                      {address.firstName} {address.lastName}
+                                      {address.deliveryOption === 'gift' && ` → ${address.receiverFirstName} ${address.receiverLastName}`}
+                                    </div>
+                                    <div className="text-sm text-muted-foreground">
+                                      {address.deliveryOption === 'self' 
+                                        ? address.address 
+                                        : address.receiverAddress}
+                                      {', '}
+                                      {address.deliveryOption === 'self' 
+                                        ? address.city 
+                                        : address.receiverCity}
+                                      {', '}
+                                      {address.deliveryOption === 'self' 
+                                        ? address.state 
+                                        : address.receiverState}
+                                      {' '}
+                                      {address.deliveryOption === 'self' 
+                                        ? address.zipCode 
+                                        : address.receiverZipCode}
+                                    </div>
+                                    <div className="text-xs text-primary mt-1">
+                                      {address.deliveryOption === 'gift' ? 'Gift' : 'Self Delivery'}
+                                      {address.isDefault && ' • Default'}
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))}
+                          </div>
+                          <DialogFooter>
+                            <Button variant="outline" onClick={() => setShowSavedAddresses(false)}>
+                              Cancel
+                            </Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
+                    )}
+                    
+                    {/* Delivery Options */}
+                    <div className="mb-6">
+                      <Tabs defaultValue="self" onValueChange={(value) => setDeliveryOption(value as 'self' | 'gift')}>
+                        <TabsList className="grid grid-cols-2 mb-4">
+                          <TabsTrigger value="self">Delivery for myself</TabsTrigger>
+                          <TabsTrigger value="gift">Send as a gift</TabsTrigger>
+                        </TabsList>
+                        
+                        <TabsContent value="self">
+                          <p className="text-sm text-muted-foreground mb-4">
+                            Enter your shipping details below.
+                          </p>
+                        </TabsContent>
+                        
+                        <TabsContent value="gift">
+                          <p className="text-sm text-muted-foreground mb-4">
+                            Send this order as a gift to someone else. You'll need to provide both your information and the recipient's.
+                          </p>
+                        </TabsContent>
+                      </Tabs>
+                    </div>
+                    
+                    {/* Sender Information */}
+                    <div className="mb-6">
+                      <div className="flex items-center gap-2 mb-4">
+                        <User size={18} className="text-primary" />
+                        <h2 className="text-lg font-medium">
+                          {deliveryOption === 'self' ? 'Your Information' : 'Sender Information'}
+                        </h2>
                       </div>
                       
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Phone Number *
-                          </label>
-                          <Input
-                            name="phone"
-                            type="tel"
-                            value={formData.phone}
-                            onChange={handleInputChange}
-                            required
-                            className="w-full"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Email Address *
-                          </label>
-                          <Input
-                            name="email"
-                            type="email"
-                            value={formData.email}
-                            onChange={handleInputChange}
-                            required
-                            className="w-full"
-                          />
-                        </div>
-                      </div>
-
-                      {deliveryOption === 'self' && (
-                        <>
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Address *
+                            <label htmlFor="firstName" className="block text-sm font-medium mb-1">
+                              First Name *
                             </label>
                             <Input
-                              name="address"
-                              value={formData.address}
+                              id="firstName"
+                              name="firstName"
+                              value={formData.firstName}
                               onChange={handleInputChange}
                               required
-                              className="w-full"
-                              placeholder="Street address"
                             />
                           </div>
                           
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Apartment, suite, etc. (optional)
+                            <label htmlFor="lastName" className="block text-sm font-medium mb-1">
+                              Last Name *
                             </label>
                             <Input
-                              name="apartment"
-                              value={formData.apartment}
+                              id="lastName"
+                              name="lastName"
+                              value={formData.lastName}
                               onChange={handleInputChange}
-                              className="w-full"
+                              required
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <label htmlFor="phone" className="block text-sm font-medium mb-1">
+                              Phone *
+                            </label>
+                            <Input
+                              id="phone"
+                              name="phone"
+                              type="tel"
+                              value={formData.phone}
+                              onChange={handleInputChange}
+                              required
                             />
                           </div>
                           
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                City *
-                              </label>
-                              <Input
-                                name="city"
-                                value={formData.city}
-                                onChange={handleInputChange}
-                                required
-                                className="w-full"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                State *
-                              </label>
-                              <Input
-                                name="state"
-                                value={formData.state}
-                                onChange={handleInputChange}
-                                required
-                                className="w-full"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                PIN Code *
-                              </label>
-                              <PinCodeInput
-                                value={formData.zipCode}
-                                onChange={handleZipCodeChange}
-                                onValidation={handlePinCodeValidation}
-                                className="w-full"
-                              />
-                            </div>
+                          <div>
+                            <label htmlFor="email" className="block text-sm font-medium mb-1">
+                              Email (optional)
+                            </label>
+                            <Input
+                              id="email"
+                              name="email"
+                              type="email"
+                              value={formData.email}
+                              onChange={handleInputChange}
+                            />
                           </div>
-                        </>
-                      )}
+                        </div>
+                        
+                        {deliveryOption === 'self' && (
+                          <>
+                            <div>
+                              <label htmlFor="address" className="block text-sm font-medium mb-1">
+                                Address *
+                              </label>
+                              <Input
+                                id="address"
+                                name="address"
+                                value={formData.address}
+                                onChange={handleInputChange}
+                                required
+                              />
+                            </div>
+                            
+                            <div>
+                              <label htmlFor="apartment" className="block text-sm font-medium mb-1">
+                                Apartment, suite, etc. (optional)
+                              </label>
+                              <Input
+                                id="apartment"
+                                name="apartment"
+                                value={formData.apartment}
+                                onChange={handleInputChange}
+                              />
+                            </div>
+                            
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                              <div>
+                                <label htmlFor="city" className="block text-sm font-medium mb-1">
+                                  City *
+                                </label>
+                                <Input
+                                  id="city"
+                                  name="city"
+                                  value={formData.city} disabled
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                              
+                              <div>
+                                <label htmlFor="state" className="block text-sm font-medium mb-1">
+                                  State/Province *
+                                </label>
+                                <Input
+                                  id="state"
+                                  name="state"
+                                  value={formData.state} disabled
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                              
+                              <div>
+                                <label htmlFor="zipCode" className="block text-sm font-medium mb-1">
+                                  Zip/Postal Code *
+                                </label>
+                                <PinCodeInput
+                                  value={formData.zipCode}
+                                  onChange={handleZipCodeChange}
+                                  placeholder="Enter PIN code"
+                                  required
+                                  onValidationChange={handlePinCodeValidation}
+                                />
+                              </div>
+                            </div>
+                            
+                            <div>
+                              <label htmlFor="notes" className="block text-sm font-medium mb-1">
+                                Delivery Notes (optional)
+                              </label>
+                              <Textarea
+                                id="notes"
+                                name="notes"
+                                value={formData.notes}
+                                onChange={handleInputChange}
+                                placeholder="Add any special instructions or notes for delivery"
+                                className="resize-none"
+                              />
+                            </div>
+                          </>
+                        )}
+                      </div>
                     </div>
-
-                    {/* Receiver Details (for gift option) */}
+                    
+                    {/* Recipient Information (for gift option) */}
                     {deliveryOption === 'gift' && (
-                      <>
-                        <Separator />
+                      <div className="mb-6">
+                        <div className="flex items-center gap-2 mb-4">
+                          <MapPin size={18} className="text-primary" />
+                          <h2 className="text-lg font-medium">Recipient Information</h2>
+                        </div>
+                        
                         <div className="space-y-4">
-                          <h3 className="font-medium text-gray-900">Receiver Information</h3>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                              <label htmlFor="receiverFirstName" className="block text-sm font-medium mb-1">
                                 First Name *
                               </label>
                               <Input
+                                id="receiverFirstName"
                                 name="receiverFirstName"
                                 value={formData.receiverFirstName}
                                 onChange={handleInputChange}
-                                required
-                                className="w-full"
+                                required={deliveryOption === 'gift'}
                               />
                             </div>
+                            
                             <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                              <label htmlFor="receiverLastName" className="block text-sm font-medium mb-1">
                                 Last Name *
                               </label>
                               <Input
+                                id="receiverLastName"
                                 name="receiverLastName"
                                 value={formData.receiverLastName}
                                 onChange={handleInputChange}
-                                required
-                                className="w-full"
+                                required={deliveryOption === 'gift'}
                               />
                             </div>
                           </div>
                           
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Phone Number *
-                              </label>
-                              <Input
-                                name="receiverPhone"
-                                type="tel"
-                                value={formData.receiverPhone}
-                                onChange={handleInputChange}
-                                required
-                                className="w-full"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Email Address
-                              </label>
-                              <Input
-                                name="receiverEmail"
-                                type="email"
-                                value={formData.receiverEmail}
-                                onChange={handleInputChange}
-                                className="w-full"
-                              />
-                            </div>
-                          </div>
-
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="receiverAddress" className="block text-sm font-medium mb-1">
                               Address *
                             </label>
                             <Input
+                              id="receiverAddress"
                               name="receiverAddress"
                               value={formData.receiverAddress}
                               onChange={handleInputChange}
-                              required
-                              className="w-full"
-                              placeholder="Street address"
+                              required={deliveryOption === 'gift'}
                             />
                           </div>
                           
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="receiverApartment" className="block text-sm font-medium mb-1">
                               Apartment, suite, etc. (optional)
                             </label>
                             <Input
+                              id="receiverApartment"
                               name="receiverApartment"
                               value={formData.receiverApartment}
                               onChange={handleInputChange}
-                              className="w-full"
                             />
                           </div>
                           
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                              <label htmlFor="receiverCity" className="block text-sm font-medium mb-1">
                                 City *
                               </label>
                               <Input
+                                id="receiverCity"
                                 name="receiverCity"
-                                value={formData.receiverCity}
+                                value={formData.receiverCity}disabled
                                 onChange={handleInputChange}
-                                required
-                                className="w-full"
+                                required={deliveryOption === 'gift'}
                               />
                             </div>
+                            
                             <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                State *
+                              <label htmlFor="receiverState" className="block text-sm font-medium mb-1">
+                                State/Province *
                               </label>
                               <Input
+                                id="receiverState"
                                 name="receiverState"
-                                value={formData.receiverState}
+                                value={formData.receiverState}disabled
                                 onChange={handleInputChange}
-                                required
-                                className="w-full"
+                                required={deliveryOption === 'gift'}
                               />
                             </div>
+                            
                             <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                PIN Code *
+                              <label htmlFor="receiverZipCode" className="block text-sm font-medium mb-1">
+                                Zip/Postal Code *
                               </label>
                               <PinCodeInput
                                 value={formData.receiverZipCode}
                                 onChange={handleReceiverZipCodeChange}
-                                onValidation={handlePinCodeValidation}
-                                className="w-full"
+                                placeholder="Enter PIN code"
+                                required={deliveryOption === 'gift'}
+                                onValidationChange={handlePinCodeValidation}
                               />
                             </div>
                           </div>
-                        </div>
-                      </>
-                    )}
-
-                    {/* Gift Message */}
-                    {deliveryOption === 'gift' && (
-                      <>
-                        <Separator />
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Gift Message (optional)
-                          </label>
-                          <Textarea
-                            value={giftMessage}
-                            onChange={(e) => setGiftMessage(e.target.value)}
-                            placeholder="Add a personal message for the recipient..."
-                            className="w-full"
-                            rows={3}
+                          
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                              <label htmlFor="receiverPhone" className="block text-sm font-medium mb-1">
+                                Phone *
+                              </label>
+                              <Input
+                                id="receiverPhone"
+                                name="receiverPhone"
+                                type="tel"
+                                value={formData.receiverPhone}
+                                onChange={handleInputChange}
+                                required={deliveryOption === 'gift'}
+                              />
+                            </div>
+                            
+                            <div>
+                              <label htmlFor="receiverEmail" className="block text-sm font-medium mb-1">
+                                Email (optional)
+                              </label>
+                              <Input
+                                id="receiverEmail"
+                                name="receiverEmail"
+                                type="email"
+                                value={formData.receiverEmail}
+                                onChange={handleInputChange}
+                              />
+                            </div>
+                          </div>
+                          
+                          {/* Gift Message Card */}
+                          <MessageCard 
+                            message={giftMessage}
+                            onChange={setGiftMessage}
+                            className="mt-2"
                           />
                         </div>
-                      </>
+                      </div>
                     )}
-
-                    {/* Additional Notes */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Special Instructions (optional)
-                      </label>
-                      <Textarea
-                        name="notes"
-                        value={formData.notes}
-                        onChange={handleInputChange}
-                        placeholder="Any special delivery instructions..."
-                        className="w-full"
-                        rows={2}
+                    
+                    {/* Time Slot Selector */}
+                    <div className="mt-6">
+                      <TimeSlotSelector
+                        selectedSlot={selectedTimeSlot}
+                        onSelectSlot={handleTimeSlotSelect}
+                        onSelectDate={setSelectedDate}
+                        selectedDate={selectedDate}
                       />
                     </div>
-
-                    {/* Save Address Option */}
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="saveInfo"
+                    
+                    {/* Save Information Checkbox */}
+                    <div className="mt-6 flex items-center space-x-2">
+                      <Checkbox 
+                        id="saveInfo" 
                         checked={formData.saveInfo}
                         onCheckedChange={handleCheckboxChange}
                       />
-                      <label htmlFor="saveInfo" className="text-sm text-gray-700">
-                        Save this address for future orders
+                      <label
+                        htmlFor="saveInfo"
+                        className="text-sm font-medium leading-none cursor-pointer"
+                      >
+                        Save this information for next time
                       </label>
                     </div>
-                  </form>
-                </CardContent>
+                  </CardContent>
+                  
+                  <CardFooter className="px-6 py-4 flex justify-between items-center border-t">
+                    <Button
+                      variant="outline"
+                      type="button"
+                      onClick={() => navigate('/cart')}
+                    >
+                      Back to Cart
+                    </Button>
+                    
+                    <Button type="submit" className="gap-2">
+                      Continue to Payment
+                      <ArrowRight size={16} />
+                    </Button>
+                  </CardFooter>
+                </form>
               </Card>
-            </motion.div>
+            </div>
+            
+            <div className="md:col-span-1">
+              <Card className="sticky top-24">
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-medium mb-4">Order Summary</h3>
+                  
+                 {/* Display items */}
+<div className="space-y-4 max-h-80 overflow-y-auto mb-4">
+  {items.map((item) => {
+    const imageUrl = item.images && item.images.length > 0
+      ? item.images[0]
+      : '/api/placeholder/64/64';
 
-            {/* Time Slot Selection */}
-            <motion.div variants={itemVariants}>
-              <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Clock className="w-5 h-5 text-primary" />
-                    Delivery Time
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <TimeSlotSelector
-                    selectedSlot={selectedTimeSlot}
-                    onSelectSlot={handleTimeSlotSelect}
-                    selectedDate={selectedDate}
-                    onSelectDate={handleDateSelect}
-                  />
-                  {hasMidnightFee && (
-                    <Alert className="mt-4">
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertDescription>
-                        Midnight delivery incurs an additional fee of {formatPrice(midnightDeliveryFee)}
-                      </AlertDescription>
-                    </Alert>
-                  )}
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* Continue Button */}
-            <motion.div variants={itemVariants}>
-              <Button
-                onClick={handleSubmit}
-                className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition-all duration-300"
-                size="lg"
-              >
-                Continue to Payment
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
-            </motion.div>
-          </div>
-
-          {/* Right Column - Order Summary */}
-          <div className="lg:col-span-1">
-            <motion.div variants={itemVariants} className="sticky top-8">
-              <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
-                <CardHeader className="lg:hidden">
-                  <CardTitle 
-                    className="flex items-center justify-between cursor-pointer"
-                    onClick={() => setShowOrderSummary(!showOrderSummary)}
-                  >
-                    <span className="flex items-center gap-2">
-                      <Package className="w-5 h-5 text-primary" />
-                      Order Summary
-                    </span>
-                    {showOrderSummary ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                  </CardTitle>
-                </CardHeader>
-                
-                <div className="hidden lg:block">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Package className="w-5 h-5 text-primary" />
-                      Order Summary
-                    </CardTitle>
-                  </CardHeader>
-                </div>
-
-                <AnimatePresence>
-                  <motion.div
-                    initial={{ height: showOrderSummary ? 'auto' : 0 }}
-                    animate={{ height: showOrderSummary || window.innerWidth >= 1024 ? 'auto' : 0 }}
-                    className="lg:!h-auto overflow-hidden"
-                  >
-                    <CardContent className="space-y-4">
-                      {/* Order Items */}
-                      <div className="space-y-3">
-                        {items.map((item) => (
-                          <div key={item._id} className="flex items-center space-x-3">
-                            <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden">
-                              <img
-                                src={item.images && item.images.length > 0 ? item.images[0] : '/api/placeholder/64/64'}
-                                alt={item.title}
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  e.currentTarget.src = '/api/placeholder/64/64';
-                                }}
-                              />
-                            </div>
-                            <div className="flex-1">
-                              <h4 className="text-sm font-medium text-gray-900 line-clamp-1">
-                                {item.title}
-                              </h4>
-                              <p className="text-sm text-gray-600">
-                                Qty: {item.quantity}
-                              </p>
-                            </div>
-                            <div className="text-sm font-medium">
-                              {formatPrice(item.price * item.quantity)}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
-                      <Separator />
-
-                      {/* Order Totals */}
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span>Subtotal</span>
-                          <span>{formatPrice(subtotal)}</span>
-                        </div>
-                        
-                        {hasMidnightFee && (
-                          <div className="flex justify-between text-sm">
-                            <span>Midnight Delivery Fee</span>
-                            <span>{formatPrice(deliveryFee)}</span>
-                          </div>
-                        )}
-                        
-                        {appliedPromoCode && (
-                          <div className="flex justify-between text-sm text-green-600">
-                            <span>Promo Discount ({appliedPromoCode.code})</span>
-                            <span>-{formatPrice(promoDiscount)}</span>
-                          </div>
-                        )}
-                        
-                        <Separator />
-                        
-                        <div className="flex justify-between text-lg font-semibold">
-                          <span>Total</span>
-                          <span>{formatPrice(orderTotal)}</span>
-                        </div>
-                      </div>
-
-                      {/* Delivery Info */}
-                      <div className="bg-blue-50 p-3 rounded-lg">
-                        <div className="flex items-center gap-2 text-blue-700 text-sm font-medium mb-1">
-                          <Truck className="w-4 h-4" />
-                          Delivery Information
-                        </div>
-                        <p className="text-blue-600 text-xs">
-                          Currently delivering to Hyderabad, Telangana only
-                        </p>
-                      </div>
-                    </CardContent>
-                  </motion.div>
-                </AnimatePresence>
-              </Card>
-            </motion.div>
+    return (
+      <div key={item._id} className="flex items-center gap-3">
+        <div className="h-16 w-16 bg-secondary/20 rounded-md relative overflow-hidden flex-shrink-0">
+          <img 
+            src={imageUrl} 
+            alt={item.title}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              e.currentTarget.src = '/api/placeholder/64/64';
+            }}
+          />
+          <div className="absolute top-0 right-0 h-5 w-5 bg-primary text-primary-foreground text-xs font-medium flex items-center justify-center rounded-full -mt-1 -mr-1">
+            {item.quantity || 0}
           </div>
         </div>
-      </motion.div>
+        <div className="flex-1 min-w-0">
+          <h4 className="text-sm font-medium truncate">{item.title}</h4>
+          <div className="text-muted-foreground text-xs">
+            {formatPrice(convertPrice(item.price || 0))} × {item.quantity || 0}
+          </div>
+        </div>
+        <div className="text-sm font-medium">
+          {formatPrice(convertPrice((item.price || 0) * (item.quantity || 0)))}
+        </div>
+      </div>
+    );
+  })}
+</div>
+
+                  
+                  {/* Order totals */}
+                  <div className="space-y-2 border-t pt-4">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Subtotal</span>
+                      <span>{formatPrice(convertPrice(subtotal))}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Delivery</span>
+                      <span>
+                        {hasMidnightFee ? formatPrice(convertPrice(midnightDeliveryFee)) : 'Free'}
+                      </span>                    
+                    </div>
+                    {appliedPromoCode && (
+                      <div className="flex justify-between text-sm text-green-600">
+                        <span>Promo code ({appliedPromoCode.code})</span>
+                        <span>-{formatPrice(convertPrice(appliedPromoCode.discount))}</span>
+                      </div>
+                    )}
+                    
+                    {/* Promo Code Reminder - only show if no promo code applied */}
+                    {!appliedPromoCode && (
+                      <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
+                        <div className="flex items-center gap-2 text-blue-700 text-xs">
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                          </svg>
+                          <span className="font-medium">Have a promo code?</span>
+                        </div>
+                        <button 
+                          onClick={() => navigate('/cart')}
+                          className="text-blue-600 text-xs underline mt-1 hover:text-blue-800"
+                        >
+                          Go to cart to apply it
+                        </button>
+                      </div>
+                    )}
+                    
+                    <div className="flex justify-between font-medium pt-2 border-t mt-2">
+                      <span>Total</span>
+                      <span>
+                        {formatPrice(convertPrice(orderTotal))}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </main>
       
       <Footer />
     </div>

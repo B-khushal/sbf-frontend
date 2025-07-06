@@ -7,11 +7,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { Calendar } from '@/components/ui/calendar';
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+import * as Popover from '@radix-ui/react-popover';
 import { Button } from '@/components/ui/button';
 import { format, addDays, isBefore, startOfDay, isValid } from 'date-fns';
 import { useCurrency } from '@/contexts/CurrencyContext';
@@ -69,24 +65,30 @@ const TimeSlotSelector = ({
   selectedDate,
   onSelectDate
 }: TimeSlotSelectorProps) => {
+  // Set default date to today or provided selectedDate
   const [date, setDate] = useState<Date | null>(selectedDate || new Date());
-  const [isDateDialogOpen, setIsDateDialogOpen] = useState(false);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const { formatPrice, convertPrice } = useCurrency();
   
+  // Create a minimum date for the calendar (today)
   const today = startOfDay(new Date());
+  
+  // Create a maximum date for the calendar (30 days from today)
   const maxDate = addDays(today, 30);
   
+  // Sync date state with selectedDate prop
   useEffect(() => {
     if (selectedDate && isValid(selectedDate)) {
       setDate(selectedDate);
     }
   }, [selectedDate]);
   
+  // Handle date selection
   const handleDateSelect = (newDate: Date | undefined) => {
     if (newDate && isValid(newDate) && onSelectDate) {
       setDate(newDate);
       onSelectDate(newDate);
-      setIsDateDialogOpen(false);
+      setIsCalendarOpen(false);
     }
   };
 
@@ -206,85 +208,125 @@ const TimeSlotSelector = ({
   };
   
   return (
-    <Card className={cn("w-full", className)}>
-      <CardContent className="p-6">
-        <div className="space-y-4">
-          <Dialog open={isDateDialogOpen} onOpenChange={setIsDateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button 
-                variant="outline" 
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !date && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {formatDisplayDate(date)}
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="p-0 max-w-[350px] rounded-lg">
-              <Calendar
-                mode="single"
-                selected={date || undefined}
-                onSelect={handleDateSelect}
-                disabled={(date) => isBefore(date, today) || isBefore(maxDate, date)}
-                initialFocus
-                className="rounded-lg border-0"
-              />
-            </DialogContent>
-          </Dialog>
-
-          <div className="space-y-4">
-            {timeSlots.map((slot) => {
-              const isAvailable = isSlotAvailable(slot);
-              const unavailableReason = !isAvailable ? getUnavailableReason(slot) : null;
-              
-              return (
-                <div
-                  key={slot.id}
-                  className={cn(
-                    "flex items-center space-x-4 rounded-lg border p-4",
-                    selectedSlot === slot.id && "border-primary bg-primary/5",
-                    !isAvailable && "opacity-50 cursor-not-allowed"
-                  )}
-                >
-                  <Checkbox
-                    id={slot.id}
-                    checked={selectedSlot === slot.id}
-                    onCheckedChange={() => isAvailable && onSelectSlot(slot.id)}
-                    disabled={!isAvailable}
-                  />
-                  <div className="flex-1 space-y-1">
-                    <div className="flex items-center justify-between">
-                      <label
-                        htmlFor={slot.id}
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                      >
-                        {slot.label}
-                      </label>
-                      {slot.price && (
-                        <span className="text-sm text-muted-foreground">
+    <div className={cn("space-y-5", className)}>
+      {/* Date Selection */}
+      <div className="space-y-3">
+        <div className="font-medium flex items-center gap-2">
+          <CalendarIcon size={18} />
+          <span>Select Delivery Date</span>
+        </div>
+        <Popover.Root open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+          <Popover.Trigger asChild>
+            <Button
+              type="button"
+              variant="outline"
+              className={cn(
+                "w-full sm:w-[280px] justify-start text-left font-normal border-dashed",
+                !date && "text-muted-foreground"
+              )}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {formatDisplayDate(date)}
+            </Button>
+          </Popover.Trigger>
+          <Popover.Content side="bottom" align="start" className="w-auto min-w-[320px] p-0 z-50 bg-white rounded-xl shadow-xl border">
+            <Calendar
+              mode="single"
+              selected={date || undefined}
+              onSelect={handleDateSelect}
+              disabled={(date) => isBefore(date, today) || isBefore(maxDate, date)}
+              className={cn("p-3 pointer-events-auto")}
+            />
+          </Popover.Content>
+        </Popover.Root>
+        <p className="text-sm text-muted-foreground">
+          Select a delivery date within the next 30 days
+        </p>
+      </div>
+      
+      {/* Time Slot Selection */}
+      <div className="space-y-3">
+        <div className="font-medium flex items-center gap-2">
+          <Clock size={18} />
+          <span>Select Delivery Time</span>
+        </div>
+        
+        {date && isValid(date) && (() => {
+          const now = new Date();
+          const isToday = (
+            date.getDate() === now.getDate() &&
+            date.getMonth() === now.getMonth() &&
+            date.getFullYear() === now.getFullYear()
+          );
+          
+          return isToday ? (
+            <p className="text-sm text-amber-500">
+              Notice required: Morning (5+ hrs), Midnight (2+ hrs), Others (30+ min). Current time: {now.getHours()}:{now.getMinutes().toString().padStart(2, '0')}
+            </p>
+          ) : null;
+        })()}
+        
+        <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4">
+          {timeSlots.map((slot) => {
+            const available = isSlotAvailable(slot);
+            const unavailableReason = !available ? getUnavailableReason(slot) : null;
+            
+            return (
+            <Card 
+              key={slot.id}
+              className={cn(
+                  "cursor-pointer transition-all hover:border-primary relative",
+                selectedSlot === slot.id && "border-primary ring-1 ring-primary",
+                  !available && "opacity-60 cursor-not-allowed"
+              )}
+                onClick={() => available && onSelectSlot(slot.id)}
+            >
+              <CardContent className="p-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <div className="font-medium">{slot.label}</div>
+                    <div className="text-sm text-muted-foreground">{slot.time}</div>
+                    {slot.price && (
+                      <div className="text-sm text-primary font-medium mt-1">
                           +{formatPrice(convertPrice(slot.price))}
-                        </span>
+                        </div>
                       )}
-                    </div>
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <Clock className="mr-2 h-4 w-4" />
-                      {slot.time}
-                    </div>
-                    {unavailableReason && (
-                      <p className="text-xs text-red-500 mt-1">
-                        {unavailableReason}
-                      </p>
+                      {unavailableReason && (
+                        <div className="text-xs text-red-500 mt-1">
+                          {unavailableReason}
+                      </div>
                     )}
                   </div>
+                  <Checkbox 
+                    checked={selectedSlot === slot.id} 
+                      disabled={!available}
+                    className="mt-1"
+                      onClick={(e) => {
+                        // Prevent the click from reaching the card
+                        e.stopPropagation();
+                        if (available) onSelectSlot(slot.id);
+                      }}
+                  />
                 </div>
-              );
-            })}
-          </div>
+              </CardContent>
+            </Card>
+            );
+          })}
         </div>
-      </CardContent>
-    </Card>
+        
+        {selectedSlot === 'midnight' && (
+          <p className="text-sm text-muted-foreground">
+            Midnight Express delivery has an additional fee of {formatPrice(convertPrice(100.00))}
+          </p>
+        )}
+        
+        {!date && (
+          <p className="text-sm text-amber-500 font-medium">
+            Please select a delivery date first
+          </p>
+        )}
+      </div>
+    </div>
   );
 };
 
