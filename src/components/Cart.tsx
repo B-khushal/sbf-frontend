@@ -25,6 +25,23 @@ type CartItem = {
   discount?: number;
   category?: string;
   description?: string;
+  customization?: {
+    uploadedPhoto?: File;
+    customNumber?: number;
+    selectedFlowers: string[];
+    selectedChocolates: string[];
+    messageCard: string;
+    includeMessageCard: boolean;
+    totalPrice: number;
+    basePrice: number;
+    customizations: {
+      photo: string | null;
+      number: string | null;
+      flowers: string[];
+      chocolates: string[];
+      messageCard: string | null;
+    };
+  };
 };
 
 type CartProps = {
@@ -232,6 +249,43 @@ const CartItem = ({
       </div>
       <div className="flex-1 min-w-0">
         <h4 className="text-sm font-medium text-gray-900 mb-1 line-clamp-2">{item.title}</h4>
+        
+        {/* Customization Details */}
+        {item.customization && (
+          <div className="text-xs text-gray-600 mb-2 space-y-1">
+            {item.customization.customizations.photo && (
+              <div className="flex items-center gap-1">
+                <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+                <span>Photo uploaded</span>
+              </div>
+            )}
+            {item.customization.customizations.number && (
+              <div className="flex items-center gap-1">
+                <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                <span>{item.customization.customizations.number}</span>
+              </div>
+            )}
+            {item.customization.customizations.flowers.length > 0 && (
+              <div className="flex items-center gap-1">
+                <span className="w-2 h-2 bg-pink-500 rounded-full"></span>
+                <span>{item.customization.customizations.flowers.length} flower addon(s)</span>
+              </div>
+            )}
+            {item.customization.customizations.chocolates.length > 0 && (
+              <div className="flex items-center gap-1">
+                <span className="w-2 h-2 bg-yellow-500 rounded-full"></span>
+                <span>{item.customization.customizations.chocolates.length} chocolate addon(s)</span>
+              </div>
+            )}
+            {item.customization.customizations.messageCard && (
+              <div className="flex items-center gap-1">
+                <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                <span>Message card included</span>
+              </div>
+            )}
+          </div>
+        )}
+        
         <div className="text-sm text-gray-500 mb-2">
           {item.discount && item.discount > 0 && (
             <span className="line-through mr-2 text-gray-400">
@@ -241,6 +295,11 @@ const CartItem = ({
           <span className="font-medium text-primary">
             {formatPrice(convertPrice(item.price))}
           </span>
+          {item.customization && item.customization.basePrice !== item.price && (
+            <span className="text-xs text-gray-400 ml-1">
+              (includes customizations)
+            </span>
+          )}
         </div>
         <div className="flex items-center justify-between">
           <select 

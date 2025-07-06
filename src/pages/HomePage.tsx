@@ -56,6 +56,7 @@ const HomePage = () => {
   
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [newProducts, setNewProducts] = useState([]);
+  const [customizableProducts, setCustomizableProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -88,9 +89,10 @@ const HomePage = () => {
         setError("");
         
         // Fetch products from API
-        const [featuredResponse, newResponse] = await Promise.allSettled([
+        const [featuredResponse, newResponse, customizableResponse] = await Promise.allSettled([
           api.get('/products/featured'),
-          api.get('/products/new')
+          api.get('/products/new'),
+          api.get('/products?isCustomizable=true')
         ]);
         
         const processProducts = (products) => {
@@ -109,8 +111,13 @@ const HomePage = () => {
           ? processProducts(newResponse.value.data.products || newResponse.value.data || [])
           : [];
 
+        const customizableData = customizableResponse.status === 'fulfilled'
+          ? processProducts(customizableResponse.value.data.products || customizableResponse.value.data || [])
+          : [];
+
         setFeaturedProducts(featuredData);
         setNewProducts(newData);
+        setCustomizableProducts(customizableData);
         
       } catch (error) {
         console.error("Error fetching products:", error);
@@ -249,6 +256,23 @@ const HomePage = () => {
                   products={newProducts}
                   title={section.title || "🌸 New Arrivals"}
                   subtitle={section.subtitle || "Discover our latest seasonal additions"}
+                  loading={loading}
+                  onAddToCart={handleAddToCart}
+                />
+              </motion.section>
+            );
+          
+          case 'customizable':
+            return (
+              <motion.section 
+                key={`customizable-${index}`}
+                variants={itemVariants}
+                className="bg-gradient-to-r from-purple-50 via-pink-50 to-indigo-50 py-16 md:py-24"
+              >
+                <ProductGrid
+                  products={customizableProducts}
+                  title={section.title || "🎨 Customizable Bouquets & Gifts"}
+                  subtitle={section.subtitle || "Personalize your perfect arrangement with photos, messages, and custom add-ons"}
                   loading={loading}
                   onAddToCart={handleAddToCart}
                 />
