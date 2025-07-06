@@ -130,7 +130,7 @@ const CheckoutConfirmationPage = () => {
       return formatPriceWithCurrency(convertedAmount, currency);
     }
   };
-
+  
   // First useEffect for authentication and order processing
   useEffect(() => {
     console.log('CheckoutConfirmationPage: Initializing...');
@@ -210,7 +210,7 @@ const CheckoutConfirmationPage = () => {
         }
       }
       
-      if (savedOrder) {
+    if (savedOrder) {
         console.log('CheckoutConfirmationPage: Found order data, displaying confirmation');
         try {
           const orderData = JSON.parse(savedOrder);
@@ -241,13 +241,13 @@ const CheckoutConfirmationPage = () => {
       } else {
         console.log('CheckoutConfirmationPage: No order data found, redirecting to home');
         if (!redirectAttempted.current) {
-          redirectAttempted.current = true;
+        redirectAttempted.current = true;
           navigate('/');
         }
       }
     }
   }, [navigate, addNotification, notificationSent, isOrderDataFetched]);
-
+  
   const handleContinueShopping = () => {
     // Clear any remaining order data
     localStorage.removeItem('lastOrder');
@@ -290,13 +290,13 @@ const CheckoutConfirmationPage = () => {
       });
     }
   };
-
+  
   const getTimeSlot = (slotId: string) => {
-    return DEFAULT_TIME_SLOTS[slotId] || {
-      id: slotId,
+    return DEFAULT_TIME_SLOTS[slotId] || { 
+      id: slotId, 
       label: slotId,
       time: slotId,
-      available: true
+      available: true 
     };
   };
 
@@ -309,10 +309,10 @@ const CheckoutConfirmationPage = () => {
   if (isAuthChecking || !isOrderDataFetched) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-blue-50 to-purple-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-gray-600 text-lg">Loading your order confirmation...</p>
-        </div>
+          </div>
       </div>
     );
   }
@@ -438,9 +438,9 @@ const CheckoutConfirmationPage = () => {
                             {displayPrice(item.price * item.quantity, order.currency, order.currencyRate)}
                           </p>
                         </div>
-                      </div>
+                </div>
                     ))}
-                  </div>
+              </div>
                 </CardContent>
               </Card>
             </motion.div>
@@ -467,27 +467,27 @@ const CheckoutConfirmationPage = () => {
                         <p>{order.shipping?.address}</p>
                         {order.shipping?.apartment && <p>{order.shipping.apartment}</p>}
                         <p>{order.shipping?.city}, {order.shipping?.state} - {order.shipping?.zipCode}</p>
-                      </div>
-                    </div>
-                    
+                </div>
+              </div>
+              
                     <div>
                       <div className="flex items-center gap-2 mb-2">
                         <User className="w-4 h-4 text-primary" />
                         <span className="font-medium">Contact Information</span>
-                      </div>
+                </div>
                       <div className="text-sm text-gray-600 space-y-1">
                         <div className="flex items-center gap-2">
                           <Phone className="w-3 h-3" />
                           <span>{order.shipping?.phone}</span>
-                        </div>
+              </div>
                         <div className="flex items-center gap-2">
                           <Mail className="w-3 h-3" />
                           <span>{order.shipping?.email}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
+                </div>
+              </div>
+            </div>
+          </div>
+          
                   <Separator />
 
                   {/* Delivery Time */}
@@ -496,7 +496,7 @@ const CheckoutConfirmationPage = () => {
                       <div className="flex items-center gap-2 mb-2">
                         <Clock className="w-4 h-4 text-primary" />
                         <span className="font-medium">Delivery Time</span>
-                      </div>
+              </div>
                       <div className="text-sm text-gray-600">
                         <p>{getTimeSlot(order.shipping?.timeSlot || '').time}</p>
                         {order.shipping?.timeSlot === 'midnight' && (
@@ -504,14 +504,14 @@ const CheckoutConfirmationPage = () => {
                             Midnight Delivery
                           </Badge>
                         )}
-                      </div>
-                    </div>
-                    
-                    <div>
+                  </div>
+                </div>
+                
+                <div>
                       <div className="flex items-center gap-2 mb-2">
                         <Calendar className="w-4 h-4 text-primary" />
                         <span className="font-medium">Order Date</span>
-                      </div>
+                    </div>
                       <div className="text-sm text-gray-600">
                         <p>{new Date(order.createdAt || order.date).toLocaleDateString('en-US', {
                           weekday: 'long',
@@ -530,11 +530,11 @@ const CheckoutConfirmationPage = () => {
                       <div>
                         <span className="font-medium text-sm">Special Instructions:</span>
                         <p className="text-sm text-gray-600 mt-1 italic">"{order.shipping.notes}"</p>
-                      </div>
+                </div>
                     </>
                   )}
-                </CardContent>
-              </Card>
+            </CardContent>
+          </Card>
             </motion.div>
 
             {/* What's Next */}
@@ -551,7 +551,7 @@ const CheckoutConfirmationPage = () => {
                     <div className="flex items-start gap-3">
                       <div className="w-6 h-6 bg-primary text-white rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0 mt-0.5">
                         1
-                      </div>
+              </div>
                       <div>
                         <p className="font-medium">Order Confirmation</p>
                         <p className="text-sm text-gray-600">You'll receive an email confirmation shortly with your order details.</p>
@@ -581,8 +581,8 @@ const CheckoutConfirmationPage = () => {
                 </CardContent>
               </Card>
             </motion.div>
-          </div>
-
+              </div>
+              
           {/* Right Column - Order Summary & Actions */}
           <div className="lg:col-span-1 space-y-6">
             {/* Order Summary */}
@@ -592,16 +592,16 @@ const CheckoutConfirmationPage = () => {
                   <CardTitle>Order Summary</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-sm">
                     <span>Subtotal</span>
-                    <span>{displayPrice(order.subtotal, order.currency, order.currencyRate)}</span>
-                  </div>
+                  <span>{displayPrice(order.subtotal, order.currency, order.currencyRate)}</span>
+                </div>
                   
                   {order.deliveryFee && order.deliveryFee > 0 && (
-                    <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-sm">
                       <span>Delivery Fee</span>
                       <span>{displayPrice(order.deliveryFee, order.currency, order.currencyRate)}</span>
-                    </div>
+              </div>
                   )}
                   
                   {order.promoCode && (
@@ -620,28 +620,28 @@ const CheckoutConfirmationPage = () => {
                   
                   <div className="text-xs text-gray-500 text-center">
                     Payment Method: {order.payment?.method || 'Razorpay'}
-                  </div>
-                </CardContent>
-              </Card>
+              </div>
+            </CardContent>
+          </Card>
             </motion.div>
-
+          
             {/* Actions */}
             <motion.div variants={itemVariants} className="space-y-3">
-              <Button
+            <Button 
                 onClick={handleDownloadInvoice}
-                variant="outline"
+              variant="outline"
                 className="w-full"
-              >
+            >
                 <Download className="w-4 h-4 mr-2" />
                 Download Invoice
-              </Button>
-              
-              <Button
-                onClick={handleContinueShopping}
+            </Button>
+            
+            <Button 
+              onClick={handleContinueShopping}
                 className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90"
-              >
+            >
                 <ShoppingBag className="w-4 h-4 mr-2" />
-                Continue Shopping
+              Continue Shopping
               </Button>
             </motion.div>
 
@@ -660,7 +660,7 @@ const CheckoutConfirmationPage = () => {
                     className="w-full"
                   >
                     Contact Support
-                  </Button>
+            </Button>
                 </CardContent>
               </Card>
             </motion.div>

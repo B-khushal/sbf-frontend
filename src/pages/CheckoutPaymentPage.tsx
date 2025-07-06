@@ -113,32 +113,32 @@ declare global {
   }
 }
 
-interface ShippingInfo {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  address: string;
-  apartment?: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  notes?: string;
-  timeSlot: string;
-  deliveryOption?: string;
-  deliveryFee?: number;
-  selectedDate?: string;
-  giftMessage?: string;
-  receiverFirstName?: string;
-  receiverLastName?: string;
-  receiverEmail?: string;
-  receiverPhone?: string;
-  receiverAddress?: string;
-  receiverApartment?: string;
-  receiverCity?: string;
-  receiverState?: string;
-  receiverZipCode?: string;
-}
+  interface ShippingInfo {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    address: string;
+    apartment?: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    notes?: string;
+    timeSlot: string;
+    deliveryOption?: string;
+    deliveryFee?: number;
+    selectedDate?: string;
+    giftMessage?: string;
+    receiverFirstName?: string;
+    receiverLastName?: string;
+    receiverEmail?: string;
+    receiverPhone?: string;
+    receiverAddress?: string;
+    receiverApartment?: string;
+    receiverCity?: string;
+    receiverState?: string;
+    receiverZipCode?: string;
+  }
 
 const CheckoutPaymentPage = () => {
   const navigate = useNavigate();
@@ -181,7 +181,7 @@ const CheckoutPaymentPage = () => {
 
     return () => {
       if (document.body.contains(script)) {
-        document.body.removeChild(script);
+      document.body.removeChild(script);
       }
     };
   }, [toast]);
@@ -242,16 +242,16 @@ const CheckoutPaymentPage = () => {
   const deliveryFee = shippingInfo?.deliveryFee || 0;
   const promoDiscount = appliedPromoCode ? appliedPromoCode.discount : 0;
   const orderTotal = subtotal + deliveryFee - promoDiscount;
-
+  
   const handlePayment = async () => {
-    if (!isRazorpayLoaded) {
-      toast({
+      if (!isRazorpayLoaded) {
+        toast({
         title: "Payment gateway not ready",
         description: "Please wait a moment and try again.",
-        variant: "destructive",
-      });
-      return;
-    }
+          variant: "destructive",
+        });
+        return;
+      }
 
     if (!shippingInfo) {
       toast({
@@ -333,8 +333,8 @@ const CheckoutPaymentPage = () => {
               navigate('/checkout/confirmation?order=true');
             } else {
               throw new Error('Payment verification failed');
-            }
-          } catch (error) {
+        }
+      } catch (error) {
             console.error('Payment verification error:', error);
             toast({
               title: "Payment verification failed",
@@ -399,21 +399,21 @@ const CheckoutPaymentPage = () => {
         {/* Progress Bar */}
         <motion.div variants={itemVariants} className="mb-8">
           <div className="flex items-center justify-center space-x-4 mb-6">
-            <div className="flex items-center">
+              <div className="flex items-center">
               <div className="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-semibold">
                 <Check className="w-4 h-4" />
               </div>
               <span className="ml-2 text-sm font-medium text-green-600">Shipping</span>
             </div>
             <div className="w-12 h-0.5 bg-green-500"></div>
-            <div className="flex items-center">
+              <div className="flex items-center">
               <div className="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center text-sm font-semibold">
                 2
               </div>
               <span className="ml-2 text-sm font-medium text-primary">Payment</span>
-            </div>
+                </div>
             <div className="w-12 h-0.5 bg-gray-300"></div>
-            <div className="flex items-center">
+              <div className="flex items-center">
               <div className="w-8 h-8 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center text-sm font-semibold">
                 3
               </div>
@@ -453,8 +453,8 @@ const CheckoutPaymentPage = () => {
                         </div>
                         <p className="text-sm font-medium text-center">Cards</p>
                         <p className="text-xs text-gray-600 text-center">Visa, Mastercard, etc.</p>
-                      </div>
-                      
+          </div>
+          
                       <div className="p-4 border-2 border-primary bg-primary/5 rounded-lg">
                         <div className="flex items-center justify-center mb-2">
                           <Smartphone className="w-8 h-8 text-primary" />
@@ -469,8 +469,8 @@ const CheckoutPaymentPage = () => {
                         </div>
                         <p className="text-sm font-medium text-center">Net Banking</p>
                         <p className="text-xs text-gray-600 text-center">All major banks</p>
-                      </div>
-                      
+                  </div>
+                  
                       <div className="p-4 border-2 border-primary bg-primary/5 rounded-lg">
                         <div className="flex items-center justify-center mb-2">
                           <Wallet className="w-8 h-8 text-primary" />
@@ -628,13 +628,13 @@ const CheckoutPaymentPage = () => {
 
                           {/* Edit Button */}
                           <div className="pt-2">
-                            <Button
+                  <Button 
                               variant="outline"
                               size="sm"
                               onClick={() => navigate('/checkout/shipping')}
                             >
                               Edit Details
-                            </Button>
+                  </Button>
                           </div>
                         </>
                       )}
@@ -643,8 +643,8 @@ const CheckoutPaymentPage = () => {
                 </AnimatePresence>
               </Card>
             </motion.div>
-          </div>
-
+            </div>
+            
           {/* Right Column - Order Summary */}
           <div className="lg:col-span-1">
             <motion.div variants={itemVariants} className="sticky top-8">
@@ -683,15 +683,15 @@ const CheckoutPaymentPage = () => {
                          {items.map((item) => (
                            <div key={item._id} className="flex items-center space-x-3">
                              <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden">
-                               <img
-                                 src={item.images && item.images.length > 0 ? item.images[0] : '/api/placeholder/64/64'}
-                                 alt={item.title}
-                                 className="w-full h-full object-cover"
-                                 onError={(e) => {
-                                   e.currentTarget.src = '/api/placeholder/64/64';
-                                 }}
-                               />
-                             </div>
+                          <img 
+                            src={item.images && item.images.length > 0 ? item.images[0] : '/api/placeholder/64/64'} 
+                            alt={item.title}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.src = '/api/placeholder/64/64';
+                            }}
+                          />
+                          </div>
                              <div className="flex-1">
                                <h4 className="text-sm font-medium text-gray-900 line-clamp-1">
                                  {item.title}
@@ -699,28 +699,28 @@ const CheckoutPaymentPage = () => {
                                <p className="text-sm text-gray-600">
                                  Qty: {item.quantity}
                                </p>
-                             </div>
-                             <div className="text-sm font-medium">
+                        </div>
+                        <div className="text-sm font-medium">
                                {formatPrice(item.price * item.quantity)}
-                             </div>
-                           </div>
-                         ))}
-                       </div>
-
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
                       <Separator />
 
                       {/* Order Totals */}
                       <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
+                    <div className="flex justify-between text-sm">
                           <span>Subtotal</span>
                           <span>{formatPrice(subtotal)}</span>
-                        </div>
-                        
+                    </div>
+
                         {deliveryFee > 0 && (
                           <div className="flex justify-between text-sm">
                             <span>Midnight Delivery Fee</span>
                             <span>{formatPrice(deliveryFee)}</span>
-                          </div>
+                    </div>
                         )}
                         
                         {appliedPromoCode && (
@@ -735,8 +735,8 @@ const CheckoutPaymentPage = () => {
                         <div className="flex justify-between text-lg font-semibold">
                           <span>Total</span>
                           <span>{formatPrice(orderTotal)}</span>
-                        </div>
-                      </div>
+                    </div>
+                  </div>
 
                       {/* Security Badge */}
                       <div className="bg-green-50 p-3 rounded-lg">
@@ -748,7 +748,7 @@ const CheckoutPaymentPage = () => {
                           Protected by 256-bit SSL encryption
                         </p>
                       </div>
-                    </CardContent>
+                </CardContent>
                   </motion.div>
                 </AnimatePresence>
               </Card>
