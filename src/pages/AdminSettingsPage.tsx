@@ -28,7 +28,7 @@ import api from "../services/api";
 import { uploadImage } from "../services/uploadService";
 import { useToast } from "../hooks/use-toast";
 import { ImageUpload } from "@/components/ui/ImageUpload";
-import CategoryManager from '@/components/Admin/CategoryManager';
+import { CategoryManager } from '@/components/Admin/CategoryManager';
 
 interface HeroSlide {
   id: number;
