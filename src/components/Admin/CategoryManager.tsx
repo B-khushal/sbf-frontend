@@ -1,5 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
@@ -25,7 +41,174 @@ interface CategoryManagerProps {
   onSave: (categories: Category[]) => Promise<void>;
 }
 
-export const CategoryManager: React.FC<CategoryManagerProps> = ({ initialCategories, onSave }) => {
+interface SortableItemProps {
+  category: Category;
+  onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
+  onToggleExpand: (id: string) => void;
+  onToggleActive: (id: string, active: boolean) => void;
+  onUpdate: (id: string, updates: Partial<Category>) => void;
+  onAddSubcategory: (id: string) => void;
+  isExpanded: boolean;
+  isEditing: boolean;
+}
+
+const SortableItem: React.FC<SortableItemProps> = ({
+  category,
+  onEdit,
+  onDelete,
+  onToggleExpand,
+  onToggleActive,
+  onUpdate,
+  onAddSubcategory,
+  isExpanded,
+  isEditing
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({ id: category._id || '' });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes}>
+      <Card className="p-4 mb-2">
+        <div className="flex items-center justify-between" {...listeners}>
+          {isEditing ? (
+            <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input
+                value={category.name}
+                onChange={(e) => onUpdate(category._id!, { name: e.target.value })}
+                placeholder="Category Name"
+              />
+              <Input
+                value={category.slug}
+                onChange={(e) => onUpdate(category._id!, { slug: e.target.value })}
+                placeholder="Slug"
+              />
+              <div className="md:col-span-2">
+                <Textarea
+                  value={category.description}
+                  onChange={(e) => onUpdate(category._id!, { description: e.target.value })}
+                  placeholder="Description"
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="flex-1">
+              <h4 className="font-semibold">{category.name}</h4>
+              <p className="text-sm text-gray-500">{category.slug}</p>
+            </div>
+          )}
+          <div className="flex items-center space-x-2">
+            <Switch
+              checked={category.isActive}
+              onCheckedChange={(checked) => onToggleActive(category._id!, checked)}
+            />
+            {isEditing ? (
+              <>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => onEdit(category._id!)}
+                >
+                  <Save className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => onEdit(category._id!)}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </>
+            ) : (
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => onEdit(category._id!)}
+              >
+                <Edit2 className="w-4 h-4" />
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => onToggleExpand(category._id!)}
+            >
+              {isExpanded ? (
+                <ChevronUp className="w-4 h-4" />
+              ) : (
+                <ChevronDown className="w-4 h-4" />
+              )}
+            </Button>
+            <Button
+              variant="destructive"
+              size="icon"
+              onClick={() => onDelete(category._id!)}
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+
+        {isExpanded && category.subcategories && (
+          <div className="mt-4 pl-6 border-l-2 border-gray-200">
+            <div className="mb-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onAddSubcategory(category._id!)}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Subcategory
+              </Button>
+            </div>
+            {category.subcategories.map((subcategory, index) => (
+              <Card key={subcategory._id || index} className="p-4 mb-2">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h5 className="font-medium">{subcategory.name}</h5>
+                    <p className="text-sm text-gray-500">{subcategory.slug}</p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      checked={subcategory.isActive}
+                      onCheckedChange={(checked) =>
+                        onToggleActive(subcategory._id!, checked)
+                      }
+                    />
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      onClick={() => onDelete(subcategory._id!)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+};
+
+export const CategoryManager: React.FC<CategoryManagerProps> = ({
+  initialCategories,
+  onSave
+}) => {
   const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
@@ -36,25 +219,33 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ initialCategor
     isActive: true,
   });
 
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
   useEffect(() => {
     setCategories(initialCategories);
   }, [initialCategories]);
 
-  const handleDragEnd = (result: any) => {
-    if (!result.destination) return;
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (!over || active.id === over.id) {
+      return;
+    }
 
-    const items = Array.from(categories);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
+    const oldIndex = categories.findIndex(cat => cat._id === active.id);
+    const newIndex = categories.findIndex(cat => cat._id === over.id);
 
-    // Update order numbers
-    const updatedItems = items.map((item, index) => ({
-      ...item,
-      order: index,
-    }));
+    const updatedCategories = arrayMove(categories, oldIndex, newIndex).map(
+      (cat, index) => ({ ...cat, order: index })
+    );
 
-    setCategories(updatedItems);
-    handleSaveCategories(updatedItems);
+    setCategories(updatedCategories);
+    handleSaveCategories(updatedCategories);
   };
 
   const handleAddCategory = () => {
@@ -202,151 +393,33 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({ initialCategor
         </div>
       </Card>
 
-      <DragDropContext onDragEnd={handleDragEnd}>
-        <Droppable droppableId="categories">
-          {(provided) => (
-            <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-4">
-              {categories.map((category, index) => (
-                <Draggable
-                  key={category._id || index.toString()}
-                  draggableId={category._id || index.toString()}
-                  index={index}
-                >
-                  {(provided) => (
-                    <div
-                      ref={provided.innerRef}
-                      {...provided.draggableProps}
-                      {...provided.dragHandleProps}
-                    >
-                      <Card className="p-4">
-                        <div className="flex items-center justify-between">
-                          {editingCategory === category._id ? (
-                            <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <Input
-                                value={category.name}
-                                onChange={(e) => handleUpdateCategory(category._id!, { name: e.target.value })}
-                                placeholder="Category Name"
-                              />
-                              <Input
-                                value={category.slug}
-                                onChange={(e) => handleUpdateCategory(category._id!, { slug: e.target.value })}
-                                placeholder="Slug"
-                              />
-                              <div className="md:col-span-2">
-                                <Textarea
-                                  value={category.description}
-                                  onChange={(e) => handleUpdateCategory(category._id!, { description: e.target.value })}
-                                  placeholder="Description"
-                                />
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="flex-1">
-                              <h4 className="font-semibold">{category.name}</h4>
-                              <p className="text-sm text-gray-500">{category.slug}</p>
-                            </div>
-                          )}
-                          <div className="flex items-center space-x-2">
-                            <Switch
-                              checked={category.isActive}
-                              onCheckedChange={(checked) => handleUpdateCategory(category._id!, { isActive: checked })}
-                            />
-                            {editingCategory === category._id ? (
-                              <>
-                                <Button
-                                  variant="outline"
-                                  size="icon"
-                                  onClick={() => setEditingCategory(null)}
-                                >
-                                  <Save className="w-4 h-4" />
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="icon"
-                                  onClick={() => setEditingCategory(null)}
-                                >
-                                  <X className="w-4 h-4" />
-                                </Button>
-                              </>
-                            ) : (
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                onClick={() => setEditingCategory(category._id!)}
-                              >
-                                <Edit2 className="w-4 h-4" />
-                              </Button>
-                            )}
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() => toggleExpanded(category._id!)}
-                            >
-                              {expandedCategories.has(category._id!) ? (
-                                <ChevronUp className="w-4 h-4" />
-                              ) : (
-                                <ChevronDown className="w-4 h-4" />
-                              )}
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              size="icon"
-                              onClick={() => handleDeleteCategory(category._id!)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-
-                        {expandedCategories.has(category._id!) && (
-                          <div className="mt-4 pl-6 border-l-2 border-gray-200">
-                            <div className="mb-4">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleAddSubcategory(category._id!)}
-                              >
-                                <Plus className="w-4 h-4 mr-2" />
-                                Add Subcategory
-                              </Button>
-                            </div>
-                            {category.subcategories?.map((subcategory, subIndex) => (
-                              <Card key={subcategory._id || subIndex} className="p-4 mb-2">
-                                <div className="flex items-center justify-between">
-                                  <div>
-                                    <h5 className="font-medium">{subcategory.name}</h5>
-                                    <p className="text-sm text-gray-500">{subcategory.slug}</p>
-                                  </div>
-                                  <div className="flex items-center space-x-2">
-                                    <Switch
-                                      checked={subcategory.isActive}
-                                      onCheckedChange={(checked) =>
-                                        handleUpdateCategory(subcategory._id!, { isActive: checked })
-                                      }
-                                    />
-                                    <Button
-                                      variant="destructive"
-                                      size="icon"
-                                      onClick={() => handleDeleteCategory(subcategory._id!)}
-                                    >
-                                      <Trash2 className="w-4 h-4" />
-                                    </Button>
-                                  </div>
-                                </div>
-                              </Card>
-                            ))}
-                          </div>
-                        )}
-                      </Card>
-                    </div>
-                  )}
-                </Draggable>
-              ))}
-              {provided.placeholder}
-            </div>
-          )}
-        </Droppable>
-      </DragDropContext>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext
+          items={categories.map(cat => cat._id || '')}
+          strategy={verticalListSortingStrategy}
+        >
+          <div className="space-y-4">
+            {categories.map((category) => (
+              <SortableItem
+                key={category._id}
+                category={category}
+                onEdit={setEditingCategory}
+                onDelete={handleDeleteCategory}
+                onToggleExpand={toggleExpanded}
+                onToggleActive={(id, active) => handleUpdateCategory(id, { isActive: active })}
+                onUpdate={handleUpdateCategory}
+                onAddSubcategory={handleAddSubcategory}
+                isExpanded={expandedCategories.has(category._id!)}
+                isEditing={editingCategory === category._id}
+              />
+            ))}
+          </div>
+        </SortableContext>
+      </DndContext>
     </div>
   );
 }; 
