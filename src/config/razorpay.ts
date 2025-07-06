@@ -4,6 +4,11 @@ export const RAZORPAY_CONFIG = {
   keyId: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_live_D9vJLrTA4TaxBf',
   keySecret: import.meta.env.VITE_RAZORPAY_KEY_SECRET || 'lZEQbuduY11quBXY0JAkUHnj',
   
+  // Business information
+  businessName: 'Deepak Kumar Badodhe',
+  businessDescription: 'Flower Delivery Service',
+  logoUrl: 'https://deepakkumarbadodhe.com/logo.png',
+  
   // Configuration options
   currency: 'INR',
   timeout: 120, // 2 minutes

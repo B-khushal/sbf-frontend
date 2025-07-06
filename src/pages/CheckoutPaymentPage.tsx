@@ -363,10 +363,10 @@ const CheckoutPaymentPage = () => {
         key: RAZORPAY_CONFIG.keyId,
         amount: amount,
         currency: orderCurrency,
-        name: "Spring Blossoms Florist",
-        description: "Flower Delivery Service",
+        name: RAZORPAY_CONFIG.businessName,
+        description: RAZORPAY_CONFIG.businessDescription,
         order_id: order_id,
-        image: "https://springblossomsflorist.com/logo.png", // Add your logo URL to fix EMPTY_WORDMARK
+        image: RAZORPAY_CONFIG.logoUrl, // Add your logo URL to fix EMPTY_WORDMARK
         handler: async (response: RazorpayResponse) => {
           try {
             console.log('Razorpay payment response:', response);
