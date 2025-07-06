@@ -1,19 +1,5 @@
-import axios, { AxiosInstance } from 'axios';
+import axios from 'axios';
 import { toast } from '../hooks/use-toast';
-
-// Extend AxiosInstance with our custom methods
-interface CustomAxiosInstance extends AxiosInstance {
-  getCached: (url: string, options?: { 
-    cache?: boolean;
-    cacheTime?: number;
-    params?: any;
-  }) => Promise<any>;
-  batch: (requests: Array<{ 
-    method: string;
-    url: string;
-    params?: any;
-  }>) => Promise<any>;
-}
 
 // Create an axios instance with base URL and default headers
 const api = axios.create({
@@ -25,7 +11,7 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
   withCredentials: true, // Enable sending cookies with requests
-}) as CustomAxiosInstance;
+});
 
 // Add a request interceptor to include the auth token in requests
 api.interceptors.request.use(
@@ -170,32 +156,6 @@ api.batch = async (requests: Array<{ method: string, url: string, params?: any }
   });
   
   return Promise.allSettled(promises);
-};
-
-// Category management functions
-export const getCategories = async () => {
-  const response = await api.get('/settings/categories');
-  return response.data;
-};
-
-export const updateCategories = async (categories: any[]) => {
-  const response = await api.put('/settings/categories', { categories });
-  return response.data;
-};
-
-export const addCategory = async (category: any) => {
-  const response = await api.post('/settings/categories', category);
-  return response.data;
-};
-
-export const updateCategory = async (categoryId: string, category: any) => {
-  const response = await api.put(`/settings/categories/${categoryId}`, category);
-  return response.data;
-};
-
-export const deleteCategory = async (categoryId: string) => {
-  const response = await api.delete(`/settings/categories/${categoryId}`);
-  return response.data;
 };
 
 export default api;
