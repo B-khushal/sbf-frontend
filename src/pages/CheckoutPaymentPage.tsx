@@ -250,6 +250,7 @@ const CheckoutPaymentPage = () => {
       let response;
       try {
         console.log('Sending Razorpay order request with amount (INR):', Math.round(razorpayAmount * 100));
+        
         response = await api.post('/orders/create-razorpay-order', {
           amount: Math.round(razorpayAmount * 100), // Convert to paise (INR)
           currency: 'INR' // Always use INR for Razorpay
