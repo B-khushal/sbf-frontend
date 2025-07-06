@@ -162,30 +162,73 @@ const CheckoutPaymentPage = () => {
 
   const [shippingInfo, setShippingInfo] = useState<ShippingInfo | null>(null);
   
-  // Load Razorpay script
+  // Load Razorpay script with enhanced error handling
   useEffect(() => {
-    const script = document.createElement('script');
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    script.async = true;
-    script.onload = () => {
-      setIsRazorpayLoaded(true);
-      console.log('Razorpay script loaded successfully');
-    };
-    script.onerror = (error) => {
-      console.error('Failed to load Razorpay script:', error);
-      toast({
-        title: "Payment Gateway Error",
-        description: "Failed to load payment gateway. Please refresh the page and try again.",
-        variant: "destructive",
-      });
-    };
-    document.body.appendChild(script);
+    const loadRazorpayScript = async () => {
+      try {
+        // Check if Razorpay is already loaded
+        if (window.Razorpay) {
+          setIsRazorpayLoaded(true);
+          console.log('Razorpay already loaded');
+          return;
+        }
 
-    return () => {
-      if (document.body.contains(script)) {
-        document.body.removeChild(script);
+        const script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.async = true;
+        script.crossOrigin = 'anonymous';
+        
+        script.onload = () => {
+          setIsRazorpayLoaded(true);
+          console.log('✅ Razorpay script loaded successfully');
+        };
+        
+        script.onerror = (error) => {
+          console.error('❌ Failed to load Razorpay script:', error);
+          toast({
+            title: "Payment Gateway Error",
+            description: "Failed to load payment gateway. Please check your internet connection and try again.",
+            variant: "destructive",
+          });
+        };
+
+        // Add timeout for script loading
+        const timeout = setTimeout(() => {
+          if (!window.Razorpay) {
+            console.error('❌ Razorpay script loading timeout');
+            toast({
+              title: "Payment Gateway Timeout",
+              description: "Payment gateway is taking too long to load. Please refresh the page.",
+              variant: "destructive",
+            });
+          }
+        }, 10000); // 10 second timeout
+
+        script.onload = () => {
+          clearTimeout(timeout);
+          setIsRazorpayLoaded(true);
+          console.log('✅ Razorpay script loaded successfully');
+        };
+
+        document.body.appendChild(script);
+
+        return () => {
+          clearTimeout(timeout);
+          if (document.body.contains(script)) {
+            document.body.removeChild(script);
+          }
+        };
+      } catch (error) {
+        console.error('❌ Error in Razorpay script loading:', error);
+        toast({
+          title: "Payment Gateway Error",
+          description: "Failed to initialize payment gateway. Please refresh the page.",
+          variant: "destructive",
+        });
       }
     };
+
+    loadRazorpayScript();
   }, [toast]);
   
   useEffect(() => {
@@ -308,7 +351,19 @@ const CheckoutPaymentPage = () => {
         exchangeRate: rate
       };
 
-      // Configure Razorpay options
+      // Validate Razorpay configuration
+      if (!RAZORPAY_CONFIG.keyId || RAZORPAY_CONFIG.keyId === 'YOUR_KEY_ID') {
+        throw new Error('Razorpay configuration is incomplete. Please check your API keys.');
+      }
+
+      console.log('🔧 Razorpay Configuration:', {
+        keyId: RAZORPAY_CONFIG.keyId,
+        amount,
+        currency: orderCurrency,
+        orderId: order_id
+      });
+
+      // Configure Razorpay options with enhanced error handling
       const options: RazorpayOptions = {
         key: RAZORPAY_CONFIG.keyId,
         amount: amount,
@@ -393,9 +448,44 @@ const CheckoutPaymentPage = () => {
         }
       };
 
-      // Open Razorpay
-      const rzp = new window.Razorpay(options);
-      rzp.open();
+      // Validate Razorpay instance
+      if (!window.Razorpay) {
+        throw new Error('Razorpay is not loaded. Please refresh the page and try again.');
+      }
+
+      console.log('🚀 Opening Razorpay checkout...');
+      
+      // Open Razorpay with error handling
+      try {
+        const rzp = new window.Razorpay(options);
+        
+        // Add error handling for Razorpay instance
+        rzp.on('payment.failed', (response: any) => {
+          console.error('❌ Payment failed:', response.error);
+          toast({
+            title: "Payment Failed",
+            description: response.error.description || "Payment was unsuccessful. Please try again.",
+            variant: "destructive",
+          });
+          setIsProcessing(false);
+        });
+
+        rzp.on('payment.cancelled', () => {
+          console.log('❌ Payment cancelled by user');
+          toast({
+            title: "Payment Cancelled",
+            description: "Payment was cancelled. You can try again.",
+            variant: "default",
+          });
+          setIsProcessing(false);
+        });
+
+        rzp.open();
+        console.log('✅ Razorpay checkout opened successfully');
+      } catch (rzpError) {
+        console.error('❌ Error opening Razorpay:', rzpError);
+        throw new Error('Failed to open payment gateway. Please try again.');
+      }
 
     } catch (error: any) {
       console.error('Payment initiation error:', error);
