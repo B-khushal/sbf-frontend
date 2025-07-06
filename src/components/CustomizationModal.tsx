@@ -96,20 +96,28 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({
     // Add flower addon prices (quantity * price)
     Object.entries(customization.flowerAddonQuantities).forEach(([flowerName, qty]) => {
       const flower = product.customizationOptions.flowerAddons.find(f => f.name === flowerName);
-      if (flower && qty > 0) total += flower.price * qty;
+      if (flower && qty > 0) {
+        total += flower.price * qty;
+        console.log(`🌹 Added ${flowerName} x${qty} = ${flower.price * qty}`);
+      }
     });
 
     // Add chocolate addon prices (quantity * price)
     Object.entries(customization.chocolateAddonQuantities).forEach(([chocolateName, qty]) => {
       const chocolate = product.customizationOptions.chocolateAddons.find(c => c.name === chocolateName);
-      if (chocolate && qty > 0) total += chocolate.price * qty;
+      if (chocolate && qty > 0) {
+        total += chocolate.price * qty;
+        console.log(`🍫 Added ${chocolateName} x${qty} = ${chocolate.price * qty}`);
+      }
     });
 
     // Add message card price
     if (customization.includeMessageCard) {
       total += product.customizationOptions.messageCardPrice;
+      console.log(`💌 Added message card = ${product.customizationOptions.messageCardPrice}`);
     }
 
+    console.log(`💰 Total price calculation: Base ${product.price} + customizations = ${total}`);
     return total;
   };
 
@@ -132,9 +140,11 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({
 
   // Handle flower quantity change
   const handleFlowerQuantityChange = (flowerName: string, delta: number) => {
+    console.log(`🌹 Changing ${flowerName} quantity by ${delta}`);
     setCustomization(prev => {
       const current = prev.flowerAddonQuantities[flowerName] || 0;
       const next = Math.max(0, current + delta);
+      console.log(`🌹 ${flowerName}: ${current} -> ${next}`);
       return {
         ...prev,
         flowerAddonQuantities: {
@@ -147,9 +157,11 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({
 
   // Handle chocolate quantity change
   const handleChocolateQuantityChange = (chocolateName: string, delta: number) => {
+    console.log(`🍫 Changing ${chocolateName} quantity by ${delta}`);
     setCustomization(prev => {
       const current = prev.chocolateAddonQuantities[chocolateName] || 0;
       const next = Math.max(0, current + delta);
+      console.log(`🍫 ${chocolateName}: ${current} -> ${next}`);
       return {
         ...prev,
         chocolateAddonQuantities: {
@@ -163,10 +175,21 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({
   // Handle add to cart
   const handleAddToCart = () => {
     const customizedProduct = {
-      ...product,
+      _id: product._id,
+      title: product.title,
       price: calculateTotalPrice(),
+      images: product.images,
+      quantity: 1,
+      discount: product.discount || 0,
+      category: product.category,
+      description: product.description,
       customization: {
-        ...customization,
+        uploadedPhoto: customization.uploadedPhoto,
+        customNumber: customization.customNumber,
+        flowerAddonQuantities: customization.flowerAddonQuantities,
+        chocolateAddonQuantities: customization.chocolateAddonQuantities,
+        messageCard: customization.messageCard,
+        includeMessageCard: customization.includeMessageCard,
         totalPrice: calculateTotalPrice(),
         basePrice: product.price,
         customizations: {

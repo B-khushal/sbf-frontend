@@ -377,11 +377,23 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
 
   // Handler for customized add to cart
   const handleCustomizedAddToCart = (customizedProduct: any) => {
-    addToCart({
+    console.log('🎨 Adding customized product to cart:', customizedProduct);
+    
+    // Ensure the customized product has all required fields
+    const cartItem = {
       ...customizedProduct,
-      quantity,
-    });
-    setIsCustomizationModalOpen(false);
+      quantity: quantity, // Use the quantity from ProductDetail state
+    };
+    
+    console.log('🛒 Final cart item:', cartItem);
+    
+    try {
+      addToCart(cartItem);
+      setIsCustomizationModalOpen(false);
+      console.log('✅ Customized product added to cart successfully');
+    } catch (error) {
+      console.error('❌ Error adding customized product to cart:', error);
+    }
   };
 
   return (
