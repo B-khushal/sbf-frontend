@@ -163,14 +163,14 @@ const WishlistPage = () => {
               <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2 sm:-translate-y-4">
                 <div className="text-2xl sm:text-4xl text-red-400">💖</div>
               </div>
-              <h1 className="text-2xl sm:text-4xl md:text-6xl lg:text-7xl font-black text-gray-800 mb-4 sm:mb-6 pt-6 sm:pt-8 leading-tight">
+              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-black text-gray-800 mb-4 sm:mb-6 pt-6 sm:pt-8 leading-tight">
                 Your <span className="bg-gradient-to-r from-red-400 via-pink-500 to-purple-600 bg-clip-text text-transparent">Wishlist</span>
               </h1>
               <div className="absolute top-0 right-1/2 transform translate-x-16 sm:translate-x-32 -translate-y-2 sm:-translate-y-4">
                 <div className="text-2xl sm:text-4xl text-yellow-400">✨</div>
               </div>
             </div>
-            <p className="text-base sm:text-xl md:text-2xl text-gray-600 max-w-4xl mx-auto leading-relaxed mb-6 sm:mb-8 px-4">
+            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed mb-6 sm:mb-8 px-4">
               Your collection of favorite floral arrangements
             </p>
             

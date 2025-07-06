@@ -138,14 +138,14 @@ const CartPage: React.FC = () => {
               <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2 sm:-translate-y-4">
                 <div className="text-2xl sm:text-4xl text-yellow-400">🛒</div>
               </div>
-              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl xl:text-7xl font-black text-gray-800 mb-4 sm:mb-6 pt-6 sm:pt-8 leading-tight">
+              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-black text-gray-800 mb-4 sm:mb-6 pt-6 sm:pt-8 leading-tight">
                 Your <span className="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">Cart</span>
               </h1>
               <div className="absolute top-0 right-1/2 transform translate-x-16 sm:translate-x-32 -translate-y-2 sm:-translate-y-4">
                 <div className="text-2xl sm:text-4xl text-yellow-400">✨</div>
               </div>
             </div>
-            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-600 max-w-4xl mx-auto leading-relaxed mb-8 sm:mb-12">
+            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed mb-8 sm:mb-12">
               Review your beautiful selection before checkout
             </p>
 

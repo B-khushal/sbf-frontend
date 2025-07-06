@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, CreditCard, ArrowRight, AlertTriangle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Check, CreditCard, ArrowRight, AlertTriangle, Shield, Lock, Smartphone, Wallet, Building2, ChevronDown, ChevronUp, Package, MapPin, Clock, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import useCart, { useCartSelectors } from '@/hooks/use-cart';
@@ -14,7 +18,31 @@ import PromoCodeInput from '@/components/PromoCodeInput';
 import type { PromoCodeValidationResult } from '@/services/promoCodeService';
 import { RAZORPAY_CONFIG } from '@/config/razorpay';
 
-// Add Razorpay script to window
+// Animation variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      duration: 0.5,
+      ease: [0.25, 0.46, 0.45, 0.94]
+    }
+  }
+};
+
+// Razorpay types
 interface RazorpayOptions {
   key: string;
   amount: number;
@@ -85,13 +113,45 @@ declare global {
   }
 }
 
+interface ShippingInfo {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  address: string;
+  apartment?: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  notes?: string;
+  timeSlot: string;
+  deliveryOption?: string;
+  deliveryFee?: number;
+  selectedDate?: string;
+  giftMessage?: string;
+  receiverFirstName?: string;
+  receiverLastName?: string;
+  receiverEmail?: string;
+  receiverPhone?: string;
+  receiverAddress?: string;
+  receiverApartment?: string;
+  receiverCity?: string;
+  receiverState?: string;
+  receiverZipCode?: string;
+}
+
 const CheckoutPaymentPage = () => {
   const navigate = useNavigate();
   const { items, clearCart } = useCart();
   const { subtotal } = useCartSelectors();
   const { toast } = useToast();
   const { formatPrice, convertPrice, currency, rate } = useCurrency();
+  const { addNotification } = useNotification();
+  
   const [isRazorpayLoaded, setIsRazorpayLoaded] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [showOrderSummary, setShowOrderSummary] = useState(false);
+  const [showShippingDetails, setShowShippingDetails] = useState(false);
   
   // State for promo code functionality
   const [appliedPromoCode, setAppliedPromoCode] = useState<{
@@ -99,35 +159,8 @@ const CheckoutPaymentPage = () => {
     discount: number;
     finalAmount: number;
   } | null>(null);
-  interface ShippingInfo {
-    firstName: string;
-    lastName: string;
-    email: string;
-    phone: string;
-    address: string;
-    apartment?: string;
-    city: string;
-    state: string;
-    zipCode: string;
-    notes?: string;
-    timeSlot: string;
-    deliveryOption?: string;
-    deliveryFee?: number;
-    selectedDate?: string;
-    giftMessage?: string;
-    receiverFirstName?: string;
-    receiverLastName?: string;
-    receiverEmail?: string;
-    receiverPhone?: string;
-    receiverAddress?: string;
-    receiverApartment?: string;
-    receiverCity?: string;
-    receiverState?: string;
-    receiverZipCode?: string;
-  }
 
   const [shippingInfo, setShippingInfo] = useState<ShippingInfo | null>(null);
-  const { addNotification } = useNotification();
   
   // Load Razorpay script
   useEffect(() => {
@@ -140,14 +173,16 @@ const CheckoutPaymentPage = () => {
     script.onerror = () => {
       toast({
         title: "Error",
-        description: "Failed to load Razorpay. Please try again.",
+        description: "Failed to load payment gateway. Please try again.",
         variant: "destructive",
       });
     };
     document.body.appendChild(script);
 
     return () => {
-      document.body.removeChild(script);
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
     };
   }, [toast]);
   
@@ -159,7 +194,6 @@ const CheckoutPaymentPage = () => {
       // Ensure deliveryFee is set correctly
       if (parsedInfo.timeSlot === 'midnight' && (!parsedInfo.deliveryFee || parsedInfo.deliveryFee !== 100)) {
         parsedInfo.deliveryFee = 100;
-        // Update localStorage
         localStorage.setItem('shippingInfo', JSON.stringify(parsedInfo));
       }
       
@@ -191,8 +225,8 @@ const CheckoutPaymentPage = () => {
     if (validationResult.success && validationResult.data) {
       const promoData = {
         code: validationResult.data.promoCode.code,
-        discount: validationResult.data.discount.amount, // INR amount from backend
-        finalAmount: validationResult.data.order.finalAmount // INR amount from backend
+        discount: validationResult.data.discount.amount,
+        finalAmount: validationResult.data.order.finalAmount
       };
       setAppliedPromoCode(promoData);
       localStorage.setItem('appliedPromoCode', JSON.stringify(promoData));
@@ -203,551 +237,522 @@ const CheckoutPaymentPage = () => {
     setAppliedPromoCode(null);
     localStorage.removeItem('appliedPromoCode');
   };
-  
+
+  // Calculate totals
+  const deliveryFee = shippingInfo?.deliveryFee || 0;
+  const promoDiscount = appliedPromoCode ? appliedPromoCode.discount : 0;
+  const orderTotal = subtotal + deliveryFee - promoDiscount;
+
   const handlePayment = async () => {
+    if (!isRazorpayLoaded) {
+      toast({
+        title: "Payment gateway not ready",
+        description: "Please wait a moment and try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!shippingInfo) {
+      toast({
+        title: "Missing shipping information",
+        description: "Please go back and complete your shipping details.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsProcessing(true);
+
     try {
-      if (!isRazorpayLoaded) {
-        toast({
-          title: "Error",
-          description: "Razorpay is not loaded yet. Please try again.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const shippingInfo = JSON.parse(localStorage.getItem('shippingInfo') || '{}');
-      
-      // Calculate totals with currency conversion
-      const convertedSubtotal = convertPrice(subtotal);
-      // Apply delivery fee for midnight delivery
-      const deliveryFee = shippingInfo.timeSlot === 'midnight' ? convertPrice(midnightDeliveryFee) : 0;
-      // Apply promo code discount if available (discount is already in INR, so convert it)
-      const promoDiscount = appliedPromoCode ? convertPrice(appliedPromoCode.discount) : 0;
-      // Calculate total with subtotal, delivery fee, and promo discount
-      const total = convertedSubtotal + deliveryFee - promoDiscount;
-
-      // For Razorpay payment, convert amount back to INR (base currency)
-      // since Razorpay primarily works with INR for Indian merchants
-      let razorpayAmount;
-      if (currency === 'INR') {
-        razorpayAmount = total;
-      } else {
-        // Convert USD back to INR for Razorpay
-        razorpayAmount = total / rate; // Divide by rate to get back to INR
-      }
-
-      console.log('Payment calculation:', {
-        subtotal: convertedSubtotal,
-        deliveryFee,
-        total,
-        currency,
-        rate,
-        razorpayAmountINR: razorpayAmount,
-        timeSlot: shippingInfo.timeSlot
+      // Create Razorpay order
+      const orderResponse = await api.post('/orders/create-razorpay-order', {
+        amount: Math.round(orderTotal * 100),
+        currency: 'INR',
+        receipt: `order_${Date.now()}`
       });
 
-      // Create order on your backend
-      let response;
-      try {
-        console.log('Sending Razorpay order request with amount (INR):', Math.round(razorpayAmount * 100));
-        response = await api.post('/orders/create-razorpay-order', {
-          amount: Math.round(razorpayAmount * 100), // Convert to paise (INR)
-          currency: 'INR' // Always use INR for Razorpay
-        });
-        
-        console.log('Razorpay order response:', response.data);
-        
-        if (!response?.data?.success) {
-          throw new Error(response?.data?.message || 'Failed to create order');
-        }
-      } catch (error) {
-        console.error('Order creation failed:', error);
-        throw new Error(
-          error instanceof Error ? error.message : 'Failed to create order'
-        );
-      }
+      const { order_id, amount, currency: orderCurrency } = orderResponse.data;
 
-      if (!response.data.success) {
-        throw new Error(response.data.message || 'Failed to create order');
-      }
+      // Prepare order data
+      const orderData = {
+        items: items.map(item => ({
+          productId: item._id || item.id,
+          title: item.title,
+          price: item.price,
+          quantity: item.quantity,
+          image: item.image || item.images?.[0] || ''
+        })),
+        shippingInfo,
+        subtotal,
+        deliveryFee,
+        promoCode: appliedPromoCode?.code || null,
+        promoDiscount,
+        total: orderTotal,
+        paymentMethod: 'razorpay',
+        currency: 'INR',
+        exchangeRate: rate
+      };
 
-      const options = {
+      // Configure Razorpay options
+      const options: RazorpayOptions = {
         key: RAZORPAY_CONFIG.keyId,
-        amount: response.data.amount,
-        currency: response.data.currency,
-        name: 'SBF Store',
-        description: `Purchase from SBF Store${currency !== 'INR' ? ` (Order total: ${formatPrice(total)} in ${currency})` : ''}`,
-        order_id: response.data.id,
+        amount: amount,
+        currency: orderCurrency,
+        name: "Spring Blossoms Florist",
+        description: "Flower Delivery Service",
+        order_id: order_id,
+        handler: async (response: RazorpayResponse) => {
+          try {
+            // Verify payment
+            const verificationResponse = await api.post('/orders/verify-payment', {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              orderData
+            });
+
+            if (verificationResponse.data.success) {
+              // Store order data for confirmation page
+              localStorage.setItem('lastOrder', JSON.stringify(verificationResponse.data.order));
+              
+              // Clear cart and promo code
+              clearCart();
+              localStorage.removeItem('appliedPromoCode');
+              localStorage.removeItem('shippingInfo');
+              
+              // Add notification
+              addNotification({
+                type: 'success',
+                title: 'Payment Successful!',
+                message: `Your order #${verificationResponse.data.order.orderNumber} has been confirmed.`,
+                timestamp: new Date().toISOString()
+              });
+
+              // Navigate to confirmation
+              navigate('/checkout/confirmation?order=true');
+            } else {
+              throw new Error('Payment verification failed');
+            }
+          } catch (error) {
+            console.error('Payment verification error:', error);
+            toast({
+              title: "Payment verification failed",
+              description: "Please contact support if amount was deducted.",
+              variant: "destructive",
+            });
+          } finally {
+            setIsProcessing(false);
+          }
+        },
         prefill: {
           name: `${shippingInfo.firstName} ${shippingInfo.lastName}`,
           email: shippingInfo.email,
-          contact: shippingInfo.phone,
+          contact: shippingInfo.phone
         },
         theme: {
-          color: '#000000'
-        },
-        config: {
-          display: {
-            blocks: {
-              utib: { // UPI
-                name: 'Pay using UPI',
-                instruments: [
-                  {
-                    method: 'upi'
-                  }
-                ]
-              },
-              other: { // Other payment methods
-                name: 'Other payment methods',
-                instruments: [
-                  {
-                    method: 'card'
-                  },
-                  {
-                    method: 'netbanking'
-                  },
-                  {
-                    method: 'wallet'
-                  }
-                ]
-              }
-            },
-            sequence: ['block.utib', 'block.other'],
-            preferences: {
-              show_default_blocks: true
-            }
-          }
-        },
-        method: {
-          upi: true,
-          card: true,
-          netbanking: true,
-          wallet: true
+          color: RAZORPAY_CONFIG.themeColor
         },
         modal: {
           confirm_close: true,
           ondismiss: () => {
-            console.log('Razorpay checkout dismissed');
+            setIsProcessing(false);
           }
-        },
-        handler: async (response: {
-          razorpay_order_id: string;
-          razorpay_payment_id: string; 
-          razorpay_signature: string;
-        }) => {
-          try {
-            // Verify payment on your backend
-            const verifyResponse = await api.post('/orders/verify-payment', {
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature
-            });
-
-            if (verifyResponse.data.success) {
-              // Create order in your database
-              const orderData = {
-                shippingDetails: {
-                  fullName: `${shippingInfo.firstName} ${shippingInfo.lastName}`,
-                  email: shippingInfo.email,
-                  phone: shippingInfo.phone,
-                  address: shippingInfo.address,
-                  apartment: shippingInfo.apartment || '',
-                  city: shippingInfo.city,
-                  state: shippingInfo.state,
-                  zipCode: shippingInfo.zipCode,
-                  notes: shippingInfo.notes || '',
-                  deliveryDate: shippingInfo.selectedDate,
-                  timeSlot: shippingInfo.timeSlot
-                },
-                items: items.map(item => ({
-                  product: item._id,
-                  quantity: item.quantity,
-                  price: convertPrice(item.price),
-                  finalPrice: convertPrice(item.price * item.quantity)
-                })),
-                paymentDetails: {
-                  method: 'razorpay',
-                  razorpayOrderId: response.razorpay_order_id,
-                  razorpayPaymentId: response.razorpay_payment_id,
-                  razorpaySignature: response.razorpay_signature
-                },
-                totalAmount: total,
-                currency: currency,
-                currencyRate: rate,
-                originalCurrency: currency,
-                subtotal: convertedSubtotal,
-                deliveryFee: deliveryFee,
-                promoCode: appliedPromoCode ? {
-                  code: appliedPromoCode.code,
-                  discount: appliedPromoCode.discount // Send INR amount to backend
-                } : null,
-                deliveryType: shippingInfo.timeSlot === 'midnight' ? 'midnight' : 'standard'
-              };
-
-              // Add gift details if it's a gift order
-              if (shippingInfo.deliveryOption === 'gift') {
-                const giftDetails = {
-                  message: shippingInfo.giftMessage || '',
-                  recipientName: `${shippingInfo.receiverFirstName} ${shippingInfo.receiverLastName}`,
-                  recipientEmail: shippingInfo.receiverEmail || '',
-                  recipientPhone: shippingInfo.receiverPhone,
-                  recipientAddress: shippingInfo.receiverAddress,
-                  recipientApartment: shippingInfo.receiverApartment || '',
-                  recipientCity: shippingInfo.receiverCity,
-                  recipientState: shippingInfo.receiverState,
-                  recipientZipCode: shippingInfo.receiverZipCode
-                };
-              }
-
-              const orderResponse = await api.post('/orders', orderData);
-              
-              if (orderResponse.data.success) {
-                // Add notification for new order
-                addNotification({
-                  type: 'order',
-                  title: 'New Order Received',
-                  message: `Order #${orderResponse.data.order.orderNumber} has been placed. Total amount: ${formatPrice(total)}`,
-                });
-
-                // Store order details for confirmation page
-                const orderConfirmation = {
-                  id: orderResponse.data.order._id,
-                  orderNumber: orderResponse.data.order.orderNumber,
-                  items: items.map(item => ({
-                    ...item,
-                    price: convertPrice(item.price)
-                  })),
-                  shipping: {
-                    firstName: shippingInfo.firstName,
-                    lastName: shippingInfo.lastName,
-                    email: shippingInfo.email,
-                    phone: shippingInfo.phone,
-                    address: shippingInfo.address,
-                    apartment: shippingInfo.apartment,
-                    city: shippingInfo.city,
-                    state: shippingInfo.state,
-                    zipCode: shippingInfo.zipCode,
-                    notes: shippingInfo.notes,
-                    timeSlot: shippingInfo.timeSlot,
-                    deliveryDate: shippingInfo.selectedDate,
-                    deliveryType: shippingInfo.timeSlot === 'midnight' ? 'midnight' : 'standard'
-                  },
-                  payment: {
-                    method: 'razorpay',
-                    paymentId: response.razorpay_payment_id,
-                    status: 'completed'
-                  },
-                  subtotal: convertedSubtotal,
-                  deliveryFee: deliveryFee,
-                  total: total,
-                  date: new Date().toISOString(),
-                  status: 'completed',
-                  createdAt: new Date().toISOString(),
-                  // Add currency information for proper display
-                  currency: currency,
-                  currencyRate: rate,
-                  originalCurrency: currency
-                };
-
-                // Store order details securely to ensure it's not lost during redirect
-                const orderData = JSON.stringify(orderConfirmation);
-                try {
-                  // Store order in both localStorage and sessionStorage for redundancy
-                  localStorage.setItem('lastOrder', orderData);
-                  sessionStorage.setItem('backup_order', orderData);
-                  console.log('Order data saved to localStorage and sessionStorage');
-                } catch (storageError) {
-                  console.error('Error saving order data:', storageError);
-                }
-                
-                // Store auth data directly in sessionStorage to preserve it
-                try {
-                  const token = localStorage.getItem('token');
-                  const user = localStorage.getItem('user');
-                  const isAuthenticated = localStorage.getItem('isAuthenticated');
-                  
-                  // Create auth data object - encode user data to prevent corruption
-                  const authData = {
-                    t: token,
-                    u: user ? btoa(encodeURIComponent(user)) : null,
-                    a: isAuthenticated
-                  };
-                  
-                  // Store in sessionStorage
-                  sessionStorage.setItem('auth_data', JSON.stringify(authData));
-                  console.log('Authentication data saved to sessionStorage');
-                } catch (authError) {
-                  console.error('Error saving auth data:', authError);
-                }
-                
-                // Clear cart before redirect 
-                clearCart();
-                localStorage.removeItem('shippingInfo');
-                
-                // Force redirect with both order and auth flags
-                console.log('Redirecting to confirmation page...');
-                
-                try {
-                  // Clear any existing confirmation flags
-                  sessionStorage.removeItem('confirmation_visited');
-                  
-                  // Set a flag indicating we're coming from payment
-                  sessionStorage.setItem('from_payment', 'true');
-                  
-                  // Use timeout to ensure storage operations complete
-                setTimeout(() => {
-                    // Force clear any cache-related issues
-                    for (const key of Object.keys(sessionStorage)) {
-                      if (key !== 'from_payment' && key !== 'auth_data' && key !== 'backup_order') {
-                        sessionStorage.removeItem(key);
-                      }
-                    }
-                    
-                    console.log('Checking from_payment flag before redirect:', sessionStorage.getItem('from_payment'));
-                    console.log('Checking order data before redirect:', localStorage.getItem('lastOrder') ? 'present' : 'missing');
-                    
-                    // Use navigate for cleaner routing
-                    console.log('Navigating to confirmation page...');
-                    navigate('/checkout/confirmation?order=true&from=payment');
-                  }, 500);
-                } catch (redirectError) {
-                  console.error('Error during redirect:', redirectError);
-                  // Fallback if the redirect fails
-                  alert('Payment successful! Please click OK to continue to the confirmation page.');
-                  navigate('/checkout/confirmation');
-                }
-              }
-            }
-          } catch (error: unknown) {
-            let errorMessage = "Payment verification failed. Please contact support.";
-            if (error instanceof Error) {
-              errorMessage = error.message;
-            } else if (typeof error === 'object' && error !== null && 'response' in error) {
-              const apiError = error as { response?: { data?: { message?: string } } };
-              errorMessage = apiError.response?.data?.message || errorMessage;
-            }
-            console.error('Error verifying payment:', error);
-            toast({
-              title: "Payment Verification Failed",
-              description: errorMessage,
-              variant: "destructive",
-            });
-          }
-        },
+        }
       };
 
-      try {
-        const razorpay = new window.Razorpay(options);
-        razorpay.open();
-      } catch (error) {
-        console.error('Razorpay initialization failed:', error);
-        toast({
-          title: "Payment Error",
-          description: "Failed to initialize payment gateway. Please try again.",
-          variant: "destructive",
-        });
-      }
-    } catch (error: unknown) {
-      let errorMessage = "There was an error processing your payment. Please try again.";
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      } else if (typeof error === 'object' && error !== null && 'response' in error) {
-        const apiError = error as { response?: { data?: { message?: string } } };
-        errorMessage = apiError.response?.data?.message || errorMessage;
-      }
-      console.error('Error creating payment:', error);
+      // Open Razorpay
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+
+    } catch (error: any) {
+      console.error('Payment initiation error:', error);
       toast({
-        title: "Payment Error",
-        description: errorMessage,
+        title: "Payment failed",
+        description: error.response?.data?.message || "Unable to process payment. Please try again.",
         variant: "destructive",
       });
+      setIsProcessing(false);
     }
   };
-  
-  if (items.length === 0 || !shippingInfo) {
-    return <div className="h-screen flex items-center justify-center">Loading...</div>;
-  }
 
-  // Within the CheckoutPaymentPage component, add a constant for the midnight delivery fee
-  const midnightDeliveryFee = 100.00; // Same value as in shipping page
+  const formatTimeSlot = (timeSlot: string) => {
+    const timeSlots: { [key: string]: string } = {
+      'morning': '9:00 AM - 12:00 PM',
+      'afternoon': '1:00 PM - 4:00 PM',
+      'evening': '5:00 PM - 8:00 PM',
+      'midnight': '12:00 AM - 3:00 AM'
+    };
+    return timeSlots[timeSlot] || timeSlot;
+  };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navigation cartItemCount={items.length} />
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50">
+      <Navigation />
       
-      <main className="flex-grow pt-20 pb-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl font-bold">Checkout</h1>
-            
-            <div className="hidden md:flex items-center space-x-2">
-              <div className="flex items-center">
-                <div className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm">
-                  <Check size={14} />
-                </div>
-                <span className="ml-2 font-medium">Cart</span>
+      <motion.div 
+        className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl"
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+      >
+        {/* Progress Bar */}
+        <motion.div variants={itemVariants} className="mb-8">
+          <div className="flex items-center justify-center space-x-4 mb-6">
+            <div className="flex items-center">
+              <div className="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-semibold">
+                <Check className="w-4 h-4" />
               </div>
-              
-              <div className="h-px w-8 bg-primary" />
-              
-              <div className="flex items-center">
-                <div className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm">
-                  <Check size={14} />
-                </div>
-                <span className="ml-2 font-medium">Shipping</span>
+              <span className="ml-2 text-sm font-medium text-green-600">Shipping</span>
+            </div>
+            <div className="w-12 h-0.5 bg-green-500"></div>
+            <div className="flex items-center">
+              <div className="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center text-sm font-semibold">
+                2
               </div>
-              
-              <div className="h-px w-8 bg-primary" />
-              
-              <div className="flex items-center">
-                <div className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm">
-                  <CreditCard size={14} />
-                </div>
-                <span className="ml-2 font-medium">Payment</span>
+              <span className="ml-2 text-sm font-medium text-primary">Payment</span>
+            </div>
+            <div className="w-12 h-0.5 bg-gray-300"></div>
+            <div className="flex items-center">
+              <div className="w-8 h-8 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center text-sm font-semibold">
+                3
               </div>
-              
-              <div className="h-px w-8 bg-muted" />
-              
-              <div className="flex items-center">
-                <div className="h-6 w-6 rounded-full bg-muted text-muted-foreground flex items-center justify-center text-sm">
-                  4
-                </div>
-                <span className="ml-2 text-muted-foreground">Confirmation</span>
-              </div>
+              <span className="ml-2 text-sm font-medium text-gray-600">Confirmation</span>
             </div>
           </div>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="md:col-span-2">
-              <Card>
-                <CardContent className="p-6">
-                  <h2 className="text-lg font-medium mb-4">Payment</h2>
-                  
-                  <div className="mt-6 p-4 bg-secondary/20 rounded-md">
-                    <p className="text-center">You'll be redirected to Razorpay to complete your payment.</p>
-                  </div>
-                  
-                  <div className="mt-6">
-                    <h3 className="text-sm font-medium mb-2">Shipping Address</h3>
-                    <div className="bg-secondary/10 rounded-md p-4">
-                      <p>
-                        {shippingInfo.firstName} {shippingInfo.lastName}
-                      </p>
-                      <p>{shippingInfo.address}</p>
-                      {shippingInfo.apartment && <p>{shippingInfo.apartment}</p>}
-                      <p>
-                        {shippingInfo.city}, {shippingInfo.state} {shippingInfo.zipCode}
-                      </p>
-                      <p>{shippingInfo.phone}</p>
-                      <p>{shippingInfo.email}</p>
+        </motion.div>
+
+        {/* Main Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column - Payment & Details */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Payment Methods */}
+            <motion.div variants={itemVariants}>
+              <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <CreditCard className="w-5 h-5 text-primary" />
+                    Payment Method
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {/* Security Notice */}
+                    <Alert className="border-green-200 bg-green-50">
+                      <Shield className="h-4 w-4 text-green-600" />
+                      <AlertDescription className="text-green-700">
+                        Your payment is secured with 256-bit SSL encryption. We don't store your card details.
+                      </AlertDescription>
+                    </Alert>
+
+                    {/* Payment Options */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                      <div className="p-4 border-2 border-primary bg-primary/5 rounded-lg">
+                        <div className="flex items-center justify-center mb-2">
+                          <CreditCard className="w-8 h-8 text-primary" />
+                        </div>
+                        <p className="text-sm font-medium text-center">Cards</p>
+                        <p className="text-xs text-gray-600 text-center">Visa, Mastercard, etc.</p>
+                      </div>
+                      
+                      <div className="p-4 border-2 border-primary bg-primary/5 rounded-lg">
+                        <div className="flex items-center justify-center mb-2">
+                          <Smartphone className="w-8 h-8 text-primary" />
+                        </div>
+                        <p className="text-sm font-medium text-center">UPI</p>
+                        <p className="text-xs text-gray-600 text-center">GPay, PhonePe, etc.</p>
+                      </div>
+                      
+                      <div className="p-4 border-2 border-primary bg-primary/5 rounded-lg">
+                        <div className="flex items-center justify-center mb-2">
+                          <Building2 className="w-8 h-8 text-primary" />
+                        </div>
+                        <p className="text-sm font-medium text-center">Net Banking</p>
+                        <p className="text-xs text-gray-600 text-center">All major banks</p>
+                      </div>
+                      
+                      <div className="p-4 border-2 border-primary bg-primary/5 rounded-lg">
+                        <div className="flex items-center justify-center mb-2">
+                          <Wallet className="w-8 h-8 text-primary" />
+                        </div>
+                        <p className="text-sm font-medium text-center">Wallets</p>
+                        <p className="text-xs text-gray-600 text-center">Paytm, Amazon Pay</p>
+                      </div>
                     </div>
+
+                    {/* Pay Button */}
+                    <Button
+                      onClick={handlePayment}
+                      disabled={isProcessing || !isRazorpayLoaded}
+                      className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-semibold py-4 px-6 rounded-lg shadow-lg transition-all duration-300 text-lg"
+                      size="lg"
+                    >
+                      {isProcessing ? (
+                        <>
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          <Lock className="w-5 h-5 mr-2" />
+                          Pay {formatPrice(orderTotal)} Securely
+                        </>
+                      )}
+                    </Button>
+
+                    <p className="text-xs text-gray-600 text-center">
+                      By clicking "Pay Securely", you agree to our terms and conditions
+                    </p>
                   </div>
                 </CardContent>
-                
-                <CardFooter className="px-6 py-4 flex justify-between items-center border-t">
-                  <Button
-                    variant="outline"
-                    type="button"
-                    onClick={() => navigate('/checkout/shipping')}
-                  >
-                    Back to Shipping
-                  </Button>
-                  
-                  <Button 
-                    onClick={handlePayment} 
-                    className="gap-2"
-                    disabled={!isRazorpayLoaded}
-                  >
-                    Pay Now
-                    <ArrowRight size={16} />
-                  </Button>
-                </CardFooter>
               </Card>
-            </div>
-            
-            <div className="md:col-span-1">
-              <Card className="sticky top-24">
-                <CardContent className="p-6">
-                  <h3 className="text-lg font-medium mb-4">Order Summary</h3>
-                  
-                  <div className="space-y-4 max-h-80 overflow-y-auto mb-4">
-                    {items.map(item => (
-                      <div key={item._id} className="flex items-center gap-3">
-                        <div className="h-16 w-16 bg-secondary/20 rounded-md relative overflow-hidden flex-shrink-0">
-                          <img 
-                            src={item.images && item.images.length > 0 ? item.images[0] : '/api/placeholder/64/64'} 
-                            alt={item.title}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.currentTarget.src = '/api/placeholder/64/64';
-                            }}
-                          />
-                          <div className="absolute top-0 right-0 h-5 w-5 bg-primary text-primary-foreground text-xs font-medium flex items-center justify-center rounded-full -mt-1 -mr-1">
-                            {item.quantity || 0}
+            </motion.div>
+
+            {/* Promo Code Section */}
+            <motion.div variants={itemVariants}>
+              <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="text-lg">Promo Code</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <PromoCodeInput
+                    orderTotal={subtotal + deliveryFee}
+                    onPromoCodeApplied={handlePromoCodeApplied}
+                    onPromoCodeRemoved={handlePromoCodeRemoved}
+                    appliedPromoCode={appliedPromoCode}
+                  />
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Shipping Details */}
+            <motion.div variants={itemVariants}>
+              <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle 
+                    className="flex items-center justify-between cursor-pointer lg:cursor-default"
+                    onClick={() => setShowShippingDetails(!showShippingDetails)}
+                  >
+                    <span className="flex items-center gap-2 text-lg">
+                      <MapPin className="w-5 h-5 text-primary" />
+                      Shipping Details
+                    </span>
+                    <div className="lg:hidden">
+                      {showShippingDetails ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    </div>
+                  </CardTitle>
+                </CardHeader>
+                
+                <AnimatePresence>
+                  <motion.div
+                    initial={{ height: showShippingDetails ? 'auto' : 0 }}
+                    animate={{ height: showShippingDetails || window.innerWidth >= 1024 ? 'auto' : 0 }}
+                    className="lg:!h-auto overflow-hidden"
+                  >
+                    <CardContent className="space-y-4">
+                      {shippingInfo && (
+                        <>
+                          {/* Customer Info */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                              <p className="text-sm font-medium text-gray-700">Customer</p>
+                              <p className="text-sm">{shippingInfo.firstName} {shippingInfo.lastName}</p>
+                              <p className="text-sm text-gray-600">{shippingInfo.email}</p>
+                              <p className="text-sm text-gray-600">{shippingInfo.phone}</p>
+                            </div>
+                            
+                            <div>
+                              <p className="text-sm font-medium text-gray-700">Delivery Address</p>
+                              {shippingInfo.deliveryOption === 'gift' ? (
+                                <div>
+                                  <p className="text-sm">{shippingInfo.receiverFirstName} {shippingInfo.receiverLastName}</p>
+                                  <p className="text-sm text-gray-600">{shippingInfo.receiverAddress}</p>
+                                  <p className="text-sm text-gray-600">{shippingInfo.receiverCity}, {shippingInfo.receiverState} - {shippingInfo.receiverZipCode}</p>
+                                  <p className="text-sm text-gray-600">{shippingInfo.receiverPhone}</p>
+                                </div>
+                              ) : (
+                                <div>
+                                  <p className="text-sm text-gray-600">{shippingInfo.address}</p>
+                                  {shippingInfo.apartment && <p className="text-sm text-gray-600">{shippingInfo.apartment}</p>}
+                                  <p className="text-sm text-gray-600">{shippingInfo.city}, {shippingInfo.state} - {shippingInfo.zipCode}</p>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-sm font-medium truncate">{item.title}</h4>
-                          <div className="text-muted-foreground text-xs">
-                            {formatPrice(convertPrice(item.price || 0))} × {item.quantity || 0}
+
+                          <Separator />
+
+                          {/* Delivery Info */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                              <p className="text-sm font-medium text-gray-700">Delivery Time</p>
+                              <div className="flex items-center gap-2">
+                                <Clock className="w-4 h-4 text-primary" />
+                                <p className="text-sm">{formatTimeSlot(shippingInfo.timeSlot)}</p>
+                              </div>
+                              {shippingInfo.timeSlot === 'midnight' && (
+                                <Badge variant="secondary" className="mt-1">
+                                  Midnight Delivery (+₹100)
+                                </Badge>
+                              )}
+                            </div>
+                            
+                            <div>
+                              <p className="text-sm font-medium text-gray-700">Delivery Type</p>
+                              <div className="flex items-center gap-2">
+                                {shippingInfo.deliveryOption === 'gift' ? (
+                                  <>
+                                    <User className="w-4 h-4 text-primary" />
+                                    <p className="text-sm">Gift Delivery</p>
+                                  </>
+                                ) : (
+                                  <>
+                                    <User className="w-4 h-4 text-primary" />
+                                    <p className="text-sm">Self Delivery</p>
+                                  </>
+                                )}
+                              </div>
+                            </div>
                           </div>
+
+                          {/* Gift Message */}
+                          {shippingInfo.deliveryOption === 'gift' && shippingInfo.giftMessage && (
+                            <>
+                              <Separator />
+                              <div>
+                                <p className="text-sm font-medium text-gray-700">Gift Message</p>
+                                <p className="text-sm text-gray-600 italic">"{shippingInfo.giftMessage}"</p>
+                              </div>
+                            </>
+                          )}
+
+                          {/* Edit Button */}
+                          <div className="pt-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => navigate('/checkout/shipping')}
+                            >
+                              Edit Details
+                            </Button>
+                          </div>
+                        </>
+                      )}
+                    </CardContent>
+                  </motion.div>
+                </AnimatePresence>
+              </Card>
+            </motion.div>
+          </div>
+
+          {/* Right Column - Order Summary */}
+          <div className="lg:col-span-1">
+            <motion.div variants={itemVariants} className="sticky top-8">
+              <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+                <CardHeader className="lg:hidden">
+                  <CardTitle 
+                    className="flex items-center justify-between cursor-pointer"
+                    onClick={() => setShowOrderSummary(!showOrderSummary)}
+                  >
+                    <span className="flex items-center gap-2">
+                      <Package className="w-5 h-5 text-primary" />
+                      Order Summary
+                    </span>
+                    {showOrderSummary ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </CardTitle>
+                </CardHeader>
+                
+                <div className="hidden lg:block">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Package className="w-5 h-5 text-primary" />
+                      Order Summary
+                    </CardTitle>
+                  </CardHeader>
+                </div>
+
+                <AnimatePresence>
+                  <motion.div
+                    initial={{ height: showOrderSummary ? 'auto' : 0 }}
+                    animate={{ height: showOrderSummary || window.innerWidth >= 1024 ? 'auto' : 0 }}
+                    className="lg:!h-auto overflow-hidden"
+                  >
+                    <CardContent className="space-y-4">
+                      {/* Order Items */}
+                      <div className="space-y-3">
+                        {items.map((item) => (
+                          <div key={item.id} className="flex items-center space-x-3">
+                            <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden">
+                              <img
+                                src={item.image}
+                                alt={item.title}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="text-sm font-medium text-gray-900 line-clamp-1">
+                                {item.title}
+                              </h4>
+                              <p className="text-sm text-gray-600">
+                                Qty: {item.quantity}
+                              </p>
+                            </div>
+                            <div className="text-sm font-medium">
+                              {formatPrice(item.price * item.quantity)}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <Separator />
+
+                      {/* Order Totals */}
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span>Subtotal</span>
+                          <span>{formatPrice(subtotal)}</span>
                         </div>
-                        <div className="text-sm font-medium">
-                          {formatPrice(convertPrice((item.price || 0) * (item.quantity || 0)))}
+                        
+                        {deliveryFee > 0 && (
+                          <div className="flex justify-between text-sm">
+                            <span>Midnight Delivery Fee</span>
+                            <span>{formatPrice(deliveryFee)}</span>
+                          </div>
+                        )}
+                        
+                        {appliedPromoCode && (
+                          <div className="flex justify-between text-sm text-green-600">
+                            <span>Promo Discount ({appliedPromoCode.code})</span>
+                            <span>-{formatPrice(promoDiscount)}</span>
+                          </div>
+                        )}
+                        
+                        <Separator />
+                        
+                        <div className="flex justify-between text-lg font-semibold">
+                          <span>Total</span>
+                          <span>{formatPrice(orderTotal)}</span>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                  
-                  <div className="space-y-2 border-t pt-4">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Subtotal</span>
-                      <span>{formatPrice(convertPrice(subtotal))}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Delivery</span>
-                      <span>
-                        {shippingInfo.timeSlot === 'midnight' ? 
-                          formatPrice(convertPrice(midnightDeliveryFee)) : 
-                          'Free'}
-                      </span>
-                    </div>
 
-                    {/* Promo Code Section */}
-                    <div className="border-t pt-4 mt-4">
-                      <PromoCodeInput
-                        orderAmount={subtotal}
-                        orderItems={items}
-                        onPromoCodeApplied={handlePromoCodeApplied}
-                        onPromoCodeRemoved={handlePromoCodeRemoved}
-                        appliedPromoCode={appliedPromoCode}
-                      />
-                    </div>
-
-                    <div className="flex justify-between font-medium pt-2 border-t mt-2">
-                      <span>Total</span>
-                      <span>
-                        {formatPrice(
-                          convertPrice(subtotal + (shippingInfo.timeSlot === 'midnight' ? midnightDeliveryFee : 0)) - 
-                          (appliedPromoCode ? convertPrice(appliedPromoCode.discount) : 0)
-                        )}
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
+                      {/* Security Badge */}
+                      <div className="bg-green-50 p-3 rounded-lg">
+                        <div className="flex items-center gap-2 text-green-700 text-sm font-medium mb-1">
+                          <Shield className="w-4 h-4" />
+                          Secure Payment
+                        </div>
+                        <p className="text-green-600 text-xs">
+                          Protected by 256-bit SSL encryption
+                        </p>
+                      </div>
+                    </CardContent>
+                  </motion.div>
+                </AnimatePresence>
               </Card>
-            </div>
+            </motion.div>
           </div>
         </div>
-      </main>
-
-      {/* Testing Mode Badge - Floating */}
-      <div className="fixed bottom-4 right-4 bg-yellow-500 text-black px-3 py-2 rounded-lg shadow-lg font-semibold flex items-center gap-2 z-50 text-xs sm:text-sm max-w-xs">
-        <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-        <span className="leading-tight">
-          ⚠️ TESTING MODE: Payments are for testing only.
-        </span>
-      </div>
+      </motion.div>
       
       <Footer />
     </div>
