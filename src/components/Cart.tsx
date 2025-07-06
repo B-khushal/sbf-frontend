@@ -267,8 +267,8 @@ const CartItem = ({
             )}
             {item.customization.customizations.flowers && item.customization.customizations.flowers.length > 0 && (
               <div className="space-y-1">
-                <div className="flex items-center gap-1">
-                  <span className="w-2 h-2 bg-pink-500 rounded-full"></span>
+              <div className="flex items-center gap-1">
+                <span className="w-2 h-2 bg-pink-500 rounded-full"></span>
                   <span className="font-medium">🌸 Extra Flowers:</span>
                 </div>
                 {item.customization.customizations.flowers.map((flower: any, index: number) => {
@@ -286,8 +286,8 @@ const CartItem = ({
             )}
             {item.customization.customizations.chocolates && item.customization.customizations.chocolates.length > 0 && (
               <div className="space-y-1">
-                <div className="flex items-center gap-1">
-                  <span className="w-2 h-2 bg-yellow-500 rounded-full"></span>
+              <div className="flex items-center gap-1">
+                <span className="w-2 h-2 bg-yellow-500 rounded-full"></span>
                   <span className="font-medium">🍫 Added Chocolates:</span>
                 </div>
                 {item.customization.customizations.chocolates.map((chocolate: any, index: number) => {

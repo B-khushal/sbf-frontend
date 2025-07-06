@@ -489,8 +489,8 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                   {product.discount && product.discount > 0 && (
                     <>
                       <span className="text-muted-foreground line-through text-lg">
-                        {formatPrice(convertPrice(originalPrice))}
-                      </span>
+                    {formatPrice(convertPrice(originalPrice))}
+                  </span>
                       <span className="bg-red-500 text-white text-sm px-2 py-1 rounded-full font-medium">
                         {product.discount}% OFF
                       </span>

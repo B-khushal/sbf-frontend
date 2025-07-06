@@ -586,7 +586,7 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({
                         </div>
                       </>
                     ) : (
-                      <span>{formatPrice(convertPrice(product.price))}</span>
+                  <span>{formatPrice(convertPrice(product.price))}</span>
                     )}
                   </div>
                 </div>
@@ -643,11 +643,11 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({
                   return null;
                 })()}
 
-                <Separator />
-                <div className="flex justify-between font-semibold text-lg">
-                  <span>Total</span>
-                  <span className="text-primary">{formatPrice(convertPrice(totalPrice))}</span>
-                </div>
+                    <Separator />
+                    <div className="flex justify-between font-semibold text-lg">
+                      <span>Total</span>
+                      <span className="text-primary">{formatPrice(convertPrice(totalPrice))}</span>
+                    </div>
               </div>
             </div>
 
