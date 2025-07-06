@@ -166,6 +166,14 @@ const AdminProductForm: React.FC<Props> = ({
     },
   });
 
+  // Debug logging for customization options
+  React.useEffect(() => {
+    console.log('Form data updated:', {
+      isCustomizable: formData.isCustomizable,
+      customizationOptions: formData.customizationOptions
+    });
+  }, [formData.isCustomizable, formData.customizationOptions]);
+
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newDetail, setNewDetail] = useState("");
@@ -481,12 +489,17 @@ const AdminProductForm: React.FC<Props> = ({
           </div>
 
           {/* Customization Options */}
-          <div className="space-y-4 border-t pt-4">
-            <div className="flex items-center space-x-2">
+          <div className="space-y-4 border-t pt-4 bg-gray-50 p-4 rounded-lg">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+              <span className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-white text-sm">🎨</span>
+              Customization Options
+            </h3>
+            <div className="flex items-center space-x-2 p-3 bg-white rounded-lg border">
               <Checkbox
                 id="isCustomizable"
-                checked={formData.isCustomizable}
-                onCheckedChange={(checked) => 
+                checked={formData.isCustomizable || false}
+                onCheckedChange={(checked) => {
+                  console.log('Customizable checkbox changed:', checked);
                   setFormData({ 
                     ...formData, 
                     isCustomizable: checked as boolean,
@@ -498,24 +511,25 @@ const AdminProductForm: React.FC<Props> = ({
                       allowChocolateAddons: checked as boolean ? formData.customizationOptions?.allowChocolateAddons : false,
                       allowMessageCard: checked as boolean ? formData.customizationOptions?.allowMessageCard : false,
                     }
-                  })
-                }
+                  });
+                }}
               />
               <label
                 htmlFor="isCustomizable"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
               >
-                Customizable Product
+                Enable Product Customization
               </label>
             </div>
 
             {formData.isCustomizable && (
-              <div className="space-y-4 pl-6 border-l-2 border-gray-200">
+              <div className="space-y-4 pl-6 border-l-2 border-purple-200 bg-white p-4 rounded-lg mt-4">
+                <p className="text-sm text-gray-600 mb-4">Configure which customization options are available for this product:</p>
                 {/* Photo Upload Option */}
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg border">
                   <Checkbox
                     id="allowPhotoUpload"
-                    checked={formData.customizationOptions?.allowPhotoUpload}
+                    checked={formData.customizationOptions?.allowPhotoUpload || false}
                     onCheckedChange={(checked) => 
                       setFormData({ 
                         ...formData, 
@@ -528,18 +542,19 @@ const AdminProductForm: React.FC<Props> = ({
                   />
                   <label
                     htmlFor="allowPhotoUpload"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex items-center gap-2"
                   >
+                    <span className="text-blue-500">📸</span>
                     Allow Photo Upload
                   </label>
                 </div>
 
                 {/* Custom Number Option */}
                 <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg border">
                     <Checkbox
                       id="allowCustomNumber"
-                      checked={formData.customizationOptions?.allowCustomNumber}
+                      checked={formData.customizationOptions?.allowCustomNumber || false}
                       onCheckedChange={(checked) => 
                         setFormData({ 
                           ...formData, 
@@ -552,8 +567,9 @@ const AdminProductForm: React.FC<Props> = ({
                     />
                     <label
                       htmlFor="allowCustomNumber"
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex items-center gap-2"
                     >
+                      <span className="text-green-500">🔢</span>
                       Allow Custom Number
                     </label>
                   </div>
@@ -577,10 +593,10 @@ const AdminProductForm: React.FC<Props> = ({
 
                 {/* Flower Addons */}
                 <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg border">
                     <Checkbox
                       id="allowFlowerAddons"
-                      checked={formData.customizationOptions?.allowFlowerAddons}
+                      checked={formData.customizationOptions?.allowFlowerAddons || false}
                       onCheckedChange={(checked) => 
                         setFormData({ 
                           ...formData, 
@@ -593,8 +609,9 @@ const AdminProductForm: React.FC<Props> = ({
                     />
                     <label
                       htmlFor="allowFlowerAddons"
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex items-center gap-2"
                     >
+                      <span className="text-pink-500">🌸</span>
                       Allow Flower Addons
                     </label>
                   </div>
@@ -676,10 +693,10 @@ const AdminProductForm: React.FC<Props> = ({
 
                 {/* Chocolate Addons */}
                 <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg border">
                     <Checkbox
                       id="allowChocolateAddons"
-                      checked={formData.customizationOptions?.allowChocolateAddons}
+                      checked={formData.customizationOptions?.allowChocolateAddons || false}
                       onCheckedChange={(checked) => 
                         setFormData({ 
                           ...formData, 
@@ -692,8 +709,9 @@ const AdminProductForm: React.FC<Props> = ({
                     />
                     <label
                       htmlFor="allowChocolateAddons"
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex items-center gap-2"
                     >
+                      <span className="text-yellow-500">🍫</span>
                       Allow Chocolate Addons
                     </label>
                   </div>
@@ -775,10 +793,10 @@ const AdminProductForm: React.FC<Props> = ({
 
                 {/* Message Card */}
                 <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg border">
                     <Checkbox
                       id="allowMessageCard"
-                      checked={formData.customizationOptions?.allowMessageCard}
+                      checked={formData.customizationOptions?.allowMessageCard || false}
                       onCheckedChange={(checked) => 
                         setFormData({ 
                           ...formData, 
@@ -791,8 +809,9 @@ const AdminProductForm: React.FC<Props> = ({
                     />
                     <label
                       htmlFor="allowMessageCard"
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex items-center gap-2"
                     >
+                      <span className="text-purple-500">✍️</span>
                       Allow Message Card
                     </label>
                   </div>
