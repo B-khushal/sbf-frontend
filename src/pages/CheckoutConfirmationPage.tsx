@@ -394,11 +394,47 @@ const CheckoutConfirmationPage = () => {
             Thank you for your order, {order.shipping?.firstName}!
           </p>
           
-          <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
-            <span>Order Number:</span>
-            <Badge variant="outline" className="font-mono text-base px-3 py-1">
-              #{order.orderNumber}
-            </Badge>
+          {/* Order ID and Payment Status */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-sm mb-4">
+            <div className="flex items-center gap-2">
+              <span className="text-gray-600">Order ID:</span>
+              <Badge variant="outline" className="font-mono text-base px-3 py-1 bg-blue-50">
+                #{order.orderNumber}
+              </Badge>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <span className="text-gray-600">Payment Status:</span>
+              <Badge className="bg-green-100 text-green-800 border-green-200">
+                <CheckCircle className="w-3 h-3 mr-1" />
+                Paid via {order.payment?.method || 'Razorpay'}
+              </Badge>
+            </div>
+          </div>
+          
+          {/* Order Date and Time */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-sm text-gray-500">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4" />
+              <span>
+                {new Date(order.createdAt || order.date).toLocaleDateString('en-US', {
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}
+              </span>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4" />
+              <span>
+                {new Date(order.createdAt || order.date).toLocaleTimeString('en-US', {
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </span>
+            </div>
           </div>
         </motion.div>
 
@@ -509,57 +545,54 @@ const CheckoutConfirmationPage = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Truck className="w-5 h-5 text-primary" />
-                    Delivery Information
+                    🚚 Shipping & Delivery Details
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-6">
                   {/* Delivery Address */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <MapPin className="w-4 h-4 text-primary" />
-                        <span className="font-medium">Delivery Address</span>
-                      </div>
-                      <div className="text-sm text-gray-600 space-y-1">
-                        <p className="font-medium">{order.shipping?.firstName} {order.shipping?.lastName}</p>
-                        <p>{order.shipping?.address}</p>
-                        {order.shipping?.apartment && <p>{order.shipping.apartment}</p>}
-                        <p>{order.shipping?.city}, {order.shipping?.state} - {order.shipping?.zipCode}</p>
-                      </div>
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <MapPin className="w-4 h-4 text-primary" />
+                      <span className="font-medium text-gray-800">Delivery Address</span>
                     </div>
-                    
-                    <div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <User className="w-4 h-4 text-primary" />
-                        <span className="font-medium">Contact Information</span>
-                      </div>
-                      <div className="text-sm text-gray-600 space-y-1">
-                        <div className="flex items-center gap-2">
-                          <Phone className="w-3 h-3" />
-                          <span>{order.shipping?.phone}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Mail className="w-3 h-3" />
-                          <span>{order.shipping?.email}</span>
-                        </div>
-                      </div>
+                    <div className="bg-gray-50 p-4 rounded-lg space-y-1">
+                      <p className="font-semibold text-gray-900">{order.shipping?.firstName} {order.shipping?.lastName}</p>
+                      <p className="text-gray-700">{order.shipping?.address}</p>
+                      {order.shipping?.apartment && <p className="text-gray-700">{order.shipping.apartment}</p>}
+                      <p className="text-gray-700">{order.shipping?.city}, {order.shipping?.state} - {order.shipping?.zipCode}</p>
                     </div>
                   </div>
                   
-                  <Separator />
+                  {/* Contact Information */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <User className="w-4 h-4 text-primary" />
+                      <span className="font-medium text-gray-800">Contact Information</span>
+                    </div>
+                    <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                      <div className="flex items-center gap-3">
+                        <Phone className="w-4 h-4 text-gray-500" />
+                        <span className="text-gray-700 font-medium">{order.shipping?.phone}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Mail className="w-4 h-4 text-gray-500" />
+                        <span className="text-gray-700 font-medium">{order.shipping?.email}</span>
+                      </div>
+                    </div>
+                  </div>
 
-                  {/* Delivery Time */}
+                  {/* Delivery Schedule */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <div className="flex items-center gap-2 mb-2">
                         <Clock className="w-4 h-4 text-primary" />
-                        <span className="font-medium">Delivery Time</span>
+                        <span className="font-medium text-gray-800">Delivery Time Slot</span>
                       </div>
-                      <div className="text-sm text-gray-600">
-                        <p>{getTimeSlot(order.shipping?.timeSlot || '').time}</p>
+                      <div className="bg-blue-50 p-3 rounded-lg">
+                        <p className="font-medium text-blue-800">{getTimeSlot(order.shipping?.timeSlot || '').time}</p>
                         {order.shipping?.timeSlot === 'midnight' && (
-                          <Badge variant="secondary" className="mt-1">
-                            Midnight Delivery
+                          <Badge variant="secondary" className="mt-2 bg-blue-100 text-blue-800">
+                            🌙 Midnight Delivery
                           </Badge>
                         )}
                       </div>
@@ -568,29 +601,106 @@ const CheckoutConfirmationPage = () => {
                     <div>
                       <div className="flex items-center gap-2 mb-2">
                         <Calendar className="w-4 h-4 text-primary" />
-                        <span className="font-medium">Order Date</span>
+                        <span className="font-medium text-gray-800">Delivery Date</span>
                       </div>
-                      <div className="text-sm text-gray-600">
-                        <p>{new Date(order.createdAt || order.date).toLocaleDateString('en-US', {
-                          weekday: 'long',
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        })}</p>
+                      <div className="bg-green-50 p-3 rounded-lg">
+                        <p className="font-medium text-green-800">
+                          {order.shipping?.deliveryDate ? 
+                            new Date(order.shipping.deliveryDate).toLocaleDateString('en-US', {
+                              weekday: 'long',
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            }) : 
+                            'To be scheduled'
+                          }
+                        </p>
                       </div>
                     </div>
                   </div>
 
+                  {/* Gift Delivery Information */}
+                  {order.shipping?.deliveryOption === 'gift' && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <Gift className="w-4 h-4 text-primary" />
+                        <span className="font-medium text-gray-800">Gift Delivery Details</span>
+                      </div>
+                      <div className="bg-pink-50 p-4 rounded-lg space-y-2">
+                        {order.shipping?.receiverFirstName && (
+                          <p className="text-gray-700">
+                            <span className="font-medium">Recipient:</span> {order.shipping.receiverFirstName} {order.shipping.receiverLastName}
+                          </p>
+                        )}
+                        {order.shipping?.giftMessage && (
+                          <div>
+                            <p className="font-medium text-gray-800 mb-1">Gift Message:</p>
+                            <p className="text-gray-700 italic bg-white p-2 rounded border">"{order.shipping.giftMessage}"</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Special Instructions */}
                   {order.shipping?.notes && (
-                    <>
-                      <Separator />
-                      <div>
-                        <span className="font-medium text-sm">Special Instructions:</span>
-                        <p className="text-sm text-gray-600 mt-1 italic">"{order.shipping.notes}"</p>
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="font-medium text-gray-800">📝 Special Instructions</span>
                       </div>
-                    </>
+                      <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+                        <p className="text-gray-700 italic">"{order.shipping.notes}"</p>
+                      </div>
+                    </div>
                   )}
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Payment Details */}
+            <motion.div variants={itemVariants}>
+              <Card className="border-0 shadow-lg bg-gradient-to-r from-green-50 to-emerald-50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                    💰 Payment Details
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="bg-white p-4 rounded-lg border border-green-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="font-medium text-gray-800">Payment Status</span>
+                      <Badge className="bg-green-100 text-green-800 border-green-200">
+                        <CheckCircle className="w-3 h-3 mr-1" />
+                        Successfully Paid
+                      </Badge>
+                    </div>
+                    
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Payment Method</span>
+                        <span className="font-medium">{order.payment?.method || 'Razorpay'}</span>
+                      </div>
+                      
+                      {order.payment?.transactionId && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Transaction ID</span>
+                          <span className="font-mono text-xs">{order.payment.transactionId}</span>
+                        </div>
+                      )}
+                      
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Amount Paid</span>
+                        <span className="font-semibold text-green-600 text-lg">
+                          {displayPrice(order.total, order.currency, order.currencyRate)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="text-xs text-gray-500 text-center">
+                    A payment confirmation has been sent to your email
+                  </div>
                 </CardContent>
               </Card>
             </motion.div>
@@ -647,37 +757,84 @@ const CheckoutConfirmationPage = () => {
             <motion.div variants={itemVariants}>
               <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
                 <CardHeader>
-                  <CardTitle>Order Summary</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <ShoppingBag className="w-5 h-5 text-primary" />
+                    Order Summary
+                  </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                <div className="flex justify-between text-sm">
-                    <span>Subtotal</span>
-                    <span>{displayPrice(order.subtotal, order.currency, order.currencyRate)}</span>
-                  </div>
-                  
-                  {order.deliveryFee && order.deliveryFee > 0 && (
-                <div className="flex justify-between text-sm">
-                      <span>Delivery Fee</span>
-                      <span>{displayPrice(order.deliveryFee, order.currency, order.currencyRate)}</span>
-                  </div>
-                  )}
-                  
-                  {order.promoCode && (
-                    <div className="flex justify-between text-sm text-green-600">
-                      <span>Discount ({order.promoCode.code})</span>
-                      <span>-{displayPrice(order.promoCode.discount, order.currency, order.currencyRate)}</span>
+                <CardContent className="space-y-4">
+                  {/* Order Details */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Order ID</span>
+                      <span className="font-mono font-medium">#{order.orderNumber}</span>
                     </div>
-                  )}
+                    
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Order Date</span>
+                      <span>{new Date(order.createdAt || order.date).toLocaleDateString()}</span>
+                    </div>
+                    
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Order Time</span>
+                      <span>{new Date(order.createdAt || order.date).toLocaleTimeString()}</span>
+                    </div>
+                  </div>
+                  
+                  <Separator />
+                  
+                  {/* Payment Details */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Payment Method</span>
+                      <span className="font-medium">{order.payment?.method || 'Razorpay'}</span>
+                    </div>
+                    
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Payment Status</span>
+                      <Badge className="bg-green-100 text-green-800 border-green-200 text-xs">
+                        <CheckCircle className="w-3 h-3 mr-1" />
+                        Paid
+                      </Badge>
+                    </div>
+                    
+                    {order.payment?.transactionId && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Transaction ID</span>
+                        <span className="font-mono text-xs">{order.payment.transactionId}</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <Separator />
+                  
+                  {/* Price Breakdown */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Subtotal</span>
+                      <span>{displayPrice(order.subtotal, order.currency, order.currencyRate)}</span>
+                    </div>
+                    
+                    {order.deliveryFee && order.deliveryFee > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span>Delivery Fee</span>
+                        <span>{displayPrice(order.deliveryFee, order.currency, order.currencyRate)}</span>
+                      </div>
+                    )}
+                    
+                    {order.promoCode && (
+                      <div className="flex justify-between text-sm text-green-600">
+                        <span>Discount ({order.promoCode.code})</span>
+                        <span>-{displayPrice(order.promoCode.discount, order.currency, order.currencyRate)}</span>
+                      </div>
+                    )}
+                  </div>
                   
                   <Separator />
                   
                   <div className="flex justify-between font-semibold text-lg">
-                    <span>Total</span>
-                    <span>{displayPrice(order.total, order.currency, order.currencyRate)}</span>
-                  </div>
-                  
-                  <div className="text-xs text-gray-500 text-center">
-                    Payment Method: {order.payment?.method || 'Razorpay'}
+                    <span>Total Amount Paid</span>
+                    <span className="text-green-600">{displayPrice(order.total, order.currency, order.currencyRate)}</span>
                   </div>
                 </CardContent>
               </Card>
