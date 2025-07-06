@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
 
 export type WishlistItem = {
   id: string;
@@ -10,9 +11,16 @@ export type WishlistItem = {
 
 const useWishlist = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
+  
+  // Get the storage key based on user ID
+  const getStorageKey = () => {
+    return user ? `wishlist_${user.id}` : 'wishlist_guest';
+  };
+
   const [items, setItems] = useState<WishlistItem[]>(() => {
     try {
-      const savedWishlist = localStorage.getItem('wishlist');
+      const savedWishlist = localStorage.getItem(getStorageKey());
       return savedWishlist ? JSON.parse(savedWishlist) : [];
     } catch (error) {
       console.error('Error loading wishlist from localStorage:', error);
@@ -20,15 +28,26 @@ const useWishlist = () => {
     }
   });
   
-  // Update localStorage when wishlist changes
+  // Update localStorage when wishlist changes or user changes
   useEffect(() => {
     try {
-      localStorage.setItem('wishlist', JSON.stringify(items));
+      localStorage.setItem(getStorageKey(), JSON.stringify(items));
       console.log('Wishlist saved to localStorage:', items);
     } catch (error) {
       console.error('Error saving wishlist to localStorage:', error);
     }
-  }, [items]);
+  }, [items, user?.id]); // Added user?.id as dependency
+  
+  // Update items when user changes
+  useEffect(() => {
+    try {
+      const savedWishlist = localStorage.getItem(getStorageKey());
+      setItems(savedWishlist ? JSON.parse(savedWishlist) : []);
+    } catch (error) {
+      console.error('Error loading wishlist after user change:', error);
+      setItems([]);
+    }
+  }, [user?.id]); // Re-run when user ID changes
   
   const addItem = (item: WishlistItem) => {
     console.log('Adding item to wishlist:', item);
