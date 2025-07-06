@@ -155,22 +155,13 @@ const defaultCategories: Category[] = [
     order: 2,
   },
   {
-    id: 'gifts',
-    name: 'Gifts',
-    description: 'Thoughtful presents for any occasion',
-    image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?ixlib=rb-4.0.3&q=85&w=800&auto=format&fit=crop',
-    link: '/shop/gifts',
-    enabled: true,
-    order: 3,
-  },
-  {
     id: 'plants',
     name: 'Plants',
     description: 'Indoor and outdoor greenery',
     image: 'https://images.unsplash.com/photo-1533038590840-1cde6e668a91?ixlib=rb-4.0.3&q=85&w=800&auto=format&fit=crop',
     link: '/shop/plants',
     enabled: true,
-    order: 4,
+    order: 3,
   },
   {
     id: 'birthday',
@@ -179,7 +170,7 @@ const defaultCategories: Category[] = [
     image: 'https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?ixlib=rb-4.0.3&q=85&w=800&auto=format&fit=crop',
     link: '/shop/birthday',
     enabled: true,
-    order: 5,
+    order: 4,
   },
   {
     id: 'anniversary',
@@ -188,7 +179,7 @@ const defaultCategories: Category[] = [
     image: 'https://images.unsplash.com/photo-1519378058457-4c29a0a2efac?ixlib=rb-4.0.3&q=85&w=800&auto=format&fit=crop',
     link: '/shop/anniversary',
     enabled: true,
-    order: 6,
+    order: 5,
   },
   {
     id: 'sympathy',
@@ -197,7 +188,7 @@ const defaultCategories: Category[] = [
     image: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?ixlib=rb-4.0.3&q=85&w=800&auto=format&fit=crop',
     link: '/shop/sympathy',
     enabled: true,
-    order: 7,
+    order: 6,
   },
   {
     id: 'occasions',
@@ -206,7 +197,7 @@ const defaultCategories: Category[] = [
     image: 'https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?ixlib=rb-4.0.3&q=85&w=800&auto=format&fit=crop',
     link: '/shop/occasions',
     enabled: true,
-    order: 8,
+    order: 7,
   },
 ];
 

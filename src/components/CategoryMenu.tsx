@@ -139,19 +139,6 @@ const CategoryMenu = () => {
       ]
     },
     { 
-      name: "🎁 Gifts", 
-      path: "/shop/gifts", 
-      emoji: "🎁",
-      description: "Thoughtful gift collections",
-      popular: true,
-      subcategories: [
-        { name: "Gift Sets", path: "/shop/gift-sets", count: getCategoryCount("gift sets") },
-        { name: "Chocolates", path: "/shop/chocolates", count: getCategoryCount("chocolates") },
-        { name: "Combo Packs", path: "/shop/combo-packs", count: getCategoryCount("combo packs") },
-        { name: "Premium Collections", path: "/shop/premium-collections", count: getCategoryCount("premium collections") },
-      ]
-    },
-    { 
       name: "🌿 Plants", 
       path: "/shop/plants", 
       emoji: "🌿",

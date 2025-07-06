@@ -18,6 +18,12 @@ const Categories = () => {
       </section>
     );
   }
+
+  // If no categories are available, don't render the section
+  if (!categories || categories.length === 0) {
+    return null;
+  }
+
   return (
     <section className="py-16 md:py-24 px-6 md:px-8">
       <div className="max-w-7xl mx-auto">
@@ -36,8 +42,14 @@ const Categories = () => {
           </p>
         </div>
         
-        {/* 6 square cards in a single row on desktop */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
+        {/* Grid layout that adjusts based on number of categories */}
+        <div className={cn(
+          "grid gap-4 md:gap-6",
+          categories.length <= 3 ? "grid-cols-1 sm:grid-cols-3" :
+          categories.length <= 4 ? "grid-cols-2 sm:grid-cols-4" :
+          categories.length <= 6 ? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-6" :
+          "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4"
+        )}>
           {categories.map((category) => (
             <CategoryCard key={category.id} category={category} />
           ))}
