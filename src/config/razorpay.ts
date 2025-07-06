@@ -7,7 +7,25 @@ export const RAZORPAY_CONFIG = {
   // Business information
   businessName: 'Deepak Kumar Badodhe',
   businessDescription: 'Flower Delivery Service',
-  logoUrl: 'https://deepakkumarbadodhe.com/logo.png',
+  logoUrl: 'https://via.placeholder.com/256x256/10B981/FFFFFF?text=DK', // Temporary placeholder logo
+  
+  // Alternative logo URLs if placeholder doesn't work
+  logoUrlFallback: 'https://via.placeholder.com/256x256/10B981/FFFFFF?text=DK',
+  logoUrlBackup: 'https://via.placeholder.com/256x256/10B981/FFFFFF?text=Deepak',
+  
+  // Function to get a working logo URL
+  getLogoUrl: () => {
+    // Try multiple logo URLs to avoid EMPTY_WORDMARK error
+    const logoUrls = [
+      'https://via.placeholder.com/256x256/10B981/FFFFFF?text=DK',
+      'https://via.placeholder.com/256x256/10B981/FFFFFF?text=Deepak',
+      'https://via.placeholder.com/256x256/10B981/FFFFFF?text=Flowers',
+      'https://via.placeholder.com/256x256/10B981/FFFFFF?text=DKF'
+    ];
+    
+    // Return a random logo URL to avoid caching issues
+    return logoUrls[Math.floor(Math.random() * logoUrls.length)];
+  }
   
   // Configuration options
   currency: 'INR',
