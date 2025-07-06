@@ -23,6 +23,7 @@ import { Switch } from '../ui/switch';
 import { Card } from '../ui/card';
 import { Plus, Trash2, ChevronDown, ChevronUp, Edit2, Save, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { getCategories, updateCategories, addCategory, updateCategory, deleteCategory } from '@/services/api';
 
 interface Category {
   _id?: string;
@@ -34,11 +35,6 @@ interface Category {
   parentCategory?: string;
   image?: string;
   subcategories?: Category[];
-}
-
-interface CategoryManagerProps {
-  initialCategories: Category[];
-  onSave: (categories: Category[]) => Promise<void>;
 }
 
 interface SortableItemProps {
@@ -107,6 +103,9 @@ const SortableItem: React.FC<SortableItemProps> = ({
             <div className="flex-1">
               <h4 className="font-semibold">{category.name}</h4>
               <p className="text-sm text-gray-500">{category.slug}</p>
+              {category.description && (
+                <p className="text-sm text-gray-600 mt-1">{category.description}</p>
+              )}
             </div>
           )}
           <div className="flex items-center space-x-2">
@@ -161,7 +160,7 @@ const SortableItem: React.FC<SortableItemProps> = ({
           </div>
         </div>
 
-        {isExpanded && category.subcategories && (
+        {isExpanded && (
           <div className="mt-4 pl-6 border-l-2 border-gray-200">
             <div className="mb-4">
               <Button
@@ -173,12 +172,15 @@ const SortableItem: React.FC<SortableItemProps> = ({
                 Add Subcategory
               </Button>
             </div>
-            {category.subcategories.map((subcategory, index) => (
+            {category.subcategories?.map((subcategory, index) => (
               <Card key={subcategory._id || index} className="p-4 mb-2">
                 <div className="flex items-center justify-between">
                   <div>
                     <h5 className="font-medium">{subcategory.name}</h5>
                     <p className="text-sm text-gray-500">{subcategory.slug}</p>
+                    {subcategory.description && (
+                      <p className="text-sm text-gray-600 mt-1">{subcategory.description}</p>
+                    )}
                   </div>
                   <div className="flex items-center space-x-2">
                     <Switch
@@ -205,11 +207,8 @@ const SortableItem: React.FC<SortableItemProps> = ({
   );
 };
 
-export const CategoryManager: React.FC<CategoryManagerProps> = ({
-  initialCategories,
-  onSave
-}) => {
-  const [categories, setCategories] = useState<Category[]>(initialCategories);
+export const CategoryManager: React.FC = () => {
+  const [categories, setCategories] = useState<Category[]>([]);
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const [newCategory, setNewCategory] = useState<Partial<Category>>({
@@ -218,6 +217,9 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
     description: '',
     isActive: true,
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -227,10 +229,25 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
   );
 
   useEffect(() => {
-    setCategories(initialCategories);
-  }, [initialCategories]);
+    fetchCategories();
+  }, []);
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const fetchCategories = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await getCategories();
+      setCategories(response.data);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      setError('Failed to load categories');
+      toast.error('Failed to load categories');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     
     if (!over || active.id === over.id) {
@@ -245,10 +262,16 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
     );
 
     setCategories(updatedCategories);
-    handleSaveCategories(updatedCategories);
+    try {
+      await updateCategories(updatedCategories);
+    } catch (error) {
+      // Revert on error
+      setCategories(categories);
+      toast.error('Failed to reorder categories');
+    }
   };
 
-  const handleAddCategory = () => {
+  const handleAddCategory = async () => {
     if (!newCategory.name || !newCategory.slug) {
       toast.error('Name and slug are required');
       return;
@@ -260,19 +283,60 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
       return;
     }
 
-    const newCategoryItem: Category = {
-      ...newCategory as Category,
-      order: categories.length,
-      isActive: true,
-    };
-
-    const updatedCategories = [...categories, newCategoryItem];
-    setCategories(updatedCategories);
-    handleSaveCategories(updatedCategories);
-    setNewCategory({ name: '', slug: '', description: '', isActive: true });
+    try {
+      setIsSubmitting(true);
+      const response = await addCategory(newCategory);
+      setCategories([...categories, response.data]);
+      setNewCategory({ name: '', slug: '', description: '', isActive: true });
+      toast.success('Category added successfully');
+    } catch (error) {
+      console.error('Error adding category:', error);
+      toast.error('Failed to add category');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleAddSubcategory = (parentId: string) => {
+  const handleUpdateCategory = async (id: string, updates: Partial<Category>) => {
+    try {
+      setIsSubmitting(true);
+      const response = await updateCategory(id, updates);
+      setCategories(categories.map(cat => 
+        cat._id === id ? response.data : cat
+      ));
+      toast.success('Category updated successfully');
+    } catch (error) {
+      console.error('Error updating category:', error);
+      toast.error('Failed to update category');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteCategory = async (id: string) => {
+    const categoryToDelete = categories.find(cat => cat._id === id);
+    if (!categoryToDelete) return;
+
+    const hasSubcategories = categoryToDelete.subcategories?.length > 0;
+    if (hasSubcategories) {
+      toast.error('Cannot delete category with subcategories');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      await deleteCategory(id);
+      setCategories(categories.filter(cat => cat._id !== id));
+      toast.success('Category deleted successfully');
+    } catch (error) {
+      console.error('Error deleting category:', error);
+      toast.error('Failed to delete category');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleAddSubcategory = async (parentId: string) => {
     const parentCategory = categories.find(cat => cat._id === parentId);
     if (!parentCategory) return;
 
@@ -284,58 +348,25 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
       parentCategory: parentId,
     };
 
-    const updatedCategories = categories.map(cat => {
-      if (cat._id === parentId) {
-        return {
-          ...cat,
-          subcategories: [...(cat.subcategories || []), newSubcategory],
-        };
-      }
-      return cat;
-    });
-
-    setCategories(updatedCategories);
-    handleSaveCategories(updatedCategories);
-    setExpandedCategories(new Set([...expandedCategories, parentId]));
-  };
-
-  const handleUpdateCategory = (id: string, updates: Partial<Category>) => {
-    const updatedCategories = categories.map(cat => {
-      if (cat._id === id) {
-        return { ...cat, ...updates };
-      }
-      if (cat.subcategories) {
-        const updatedSubcategories = cat.subcategories.map(sub =>
-          sub._id === id ? { ...sub, ...updates } : sub
-        );
-        return { ...cat, subcategories: updatedSubcategories };
-      }
-      return cat;
-    });
-
-    setCategories(updatedCategories);
-    handleSaveCategories(updatedCategories);
-  };
-
-  const handleDeleteCategory = (id: string) => {
-    const hasSubcategories = categories.find(cat => cat._id === id)?.subcategories?.length > 0;
-    if (hasSubcategories) {
-      toast.error('Cannot delete category with subcategories');
-      return;
-    }
-
-    const updatedCategories = categories.filter(cat => cat._id !== id);
-    setCategories(updatedCategories);
-    handleSaveCategories(updatedCategories);
-  };
-
-  const handleSaveCategories = async (updatedCategories: Category[]) => {
     try {
-      await onSave(updatedCategories);
-      toast.success('Categories updated successfully');
+      setIsSubmitting(true);
+      const response = await addCategory(newSubcategory);
+      setCategories(categories.map(cat => {
+        if (cat._id === parentId) {
+          return {
+            ...cat,
+            subcategories: [...(cat.subcategories || []), response.data],
+          };
+        }
+        return cat;
+      }));
+      setExpandedCategories(new Set([...expandedCategories, parentId]));
+      toast.success('Subcategory added successfully');
     } catch (error) {
-      toast.error('Failed to update categories');
-      console.error('Error saving categories:', error);
+      console.error('Error adding subcategory:', error);
+      toast.error('Failed to add subcategory');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -355,6 +386,28 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
       .replace(/(^-|-$)/g, '');
   };
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-red-500 mb-4">{error}</p>
+        <Button
+          onClick={fetchCategories}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Try Again
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <Card className="p-6">
@@ -371,21 +424,27 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
                 slug: generateSlug(name),
               }));
             }}
+            disabled={isSubmitting}
           />
           <Input
             placeholder="Slug"
             value={newCategory.slug}
             onChange={(e) => setNewCategory(prev => ({ ...prev, slug: e.target.value }))}
+            disabled={isSubmitting}
           />
           <div className="md:col-span-2">
             <Textarea
               placeholder="Description"
               value={newCategory.description}
               onChange={(e) => setNewCategory(prev => ({ ...prev, description: e.target.value }))}
+              disabled={isSubmitting}
             />
           </div>
           <div className="md:col-span-2 flex justify-end">
-            <Button onClick={handleAddCategory}>
+            <Button 
+              onClick={handleAddCategory}
+              disabled={isSubmitting || !newCategory.name || !newCategory.slug}
+            >
               <Plus className="w-4 h-4 mr-2" />
               Add Category
             </Button>

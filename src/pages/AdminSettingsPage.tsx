@@ -29,6 +29,8 @@ import { uploadImage } from "../services/uploadService";
 import { useToast } from "../hooks/use-toast";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { CategoryManager } from '@/components/Admin/CategoryManager';
+import { toast } from 'sonner';
+import axios from 'axios';
 
 interface HeroSlide {
   id: number;
@@ -52,13 +54,15 @@ interface HomeSection {
 }
 
 interface Category {
-  id: string;
+  _id?: string;
   name: string;
-  description: string;
-  image: string;
-  link: string;
-  enabled: boolean;
+  slug: string;
+  description?: string;
   order: number;
+  isActive: boolean;
+  parentCategory?: string;
+  image?: string;
+  subcategories?: Category[];
 }
 
 interface HeaderSettings {
@@ -105,7 +109,7 @@ interface FooterSettings {
 const AdminSettingsPage: React.FC = () => {
   const { toast } = useToast();
   
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState<string | null>(null);
   
@@ -186,64 +190,83 @@ const AdminSettingsPage: React.FC = () => {
     // Removed KeyboardSensor to prevent input interference
   );
 
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
+    fetchAllSettings();
+    fetchCategories();
+  }, []);
+
   const fetchAllSettings = async () => {
     try {
       setLoading(true);
-        const response = await api.get("/settings/all");
-        const data = response.data;
-        
-        if (data.heroSlides) {
-          // Ensure all required properties are set
-          const validatedSlides = data.heroSlides.map((slide: HeroSlide) => ({
-            ...slide,
-            enabled: typeof slide.enabled === 'boolean' ? slide.enabled : true,
-            order: typeof slide.order === 'number' ? slide.order : 0
-          }));
-          setHeroSlides(validatedSlides);
-        }
+      const response = await api.get("/settings/all");
+      const data = response.data;
+      
+      if (data.heroSlides) {
+        // Ensure all required properties are set
+        const validatedSlides = data.heroSlides.map((slide: HeroSlide) => ({
+          ...slide,
+          enabled: typeof slide.enabled === 'boolean' ? slide.enabled : true,
+          order: typeof slide.order === 'number' ? slide.order : 0
+        }));
+        setHeroSlides(validatedSlides);
+      }
 
-        let fetchedHomeSections = data.homeSections || [];
+      let fetchedHomeSections = data.homeSections || [];
 
-        // Ensure "offers" section exists
-        const offersSectionExists = fetchedHomeSections.some(section => section.type === 'offers');
-        if (!offersSectionExists) {
-          fetchedHomeSections.push({
-            id: "offers",
-            type: "offers",
-            title: "Exclusive Offers",
-            subtitle: "Don't miss out on our special deals",
-            enabled: true,
-            order: 3 // Default order, can be adjusted
-          });
-        }
-        
-        // Sort sections by order
-        fetchedHomeSections.sort((a, b) => a.order - b.order);
-
-        setHomeSections(fetchedHomeSections);
-        if (data.categories) setCategories(data.categories);
-        if (data.headerSettings) setHeaderSettings(data.headerSettings);
-        if (data.footerSettings) setFooterSettings(data.footerSettings);
-        
-        toast({
-          title: "Settings loaded",
-          description: "All settings have been loaded successfully",
+      // Ensure "offers" section exists
+      const offersSectionExists = fetchedHomeSections.some(section => section.type === 'offers');
+      if (!offersSectionExists) {
+        fetchedHomeSections.push({
+          id: "offers",
+          type: "offers",
+          title: "Exclusive Offers",
+          subtitle: "Don't miss out on our special deals",
+          enabled: true,
+          order: 3 // Default order, can be adjusted
         });
+      }
+      
+      // Sort sections by order
+      fetchedHomeSections.sort((a, b) => a.order - b.order);
+
+      setHomeSections(fetchedHomeSections);
+      if (data.categories) setCategories(data.categories);
+      if (data.headerSettings) setHeaderSettings(data.headerSettings);
+      if (data.footerSettings) setFooterSettings(data.footerSettings);
+      
+      toast({
+        title: "Settings loaded",
+        description: "All settings have been loaded successfully",
+      });
     } catch (error) {
-        console.error("Error fetching settings:", error);
+      console.error("Error fetching settings:", error);
       toast({
         title: "Error",
         description: "Failed to load settings",
-          variant: "destructive",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
   };
 
-    fetchAllSettings();
-  }, []);
+  const fetchCategories = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await axios.get('/api/settings/categories');
+      console.log('Categories response:', response.data); // Debug log
+      setCategories(Array.isArray(response.data) ? response.data : []);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      setError('Failed to load categories');
+      toast.error('Failed to load categories');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const updateSlide = (slideId: number, field: keyof HeroSlide, value: string | boolean | number) => {
     console.log('Updating slide:', { slideId, field, value });
@@ -418,37 +441,28 @@ const AdminSettingsPage: React.FC = () => {
     }
   };
 
-  const saveAllSettings = async () => {
+  const handleSaveCategories = async (updatedCategories: Category[]) => {
     try {
-      setSaving(true);
-      await api.put("/settings/all", {
-        heroSlides,
-        homeSections,
-        categories,
-        headerSettings,
-        footerSettings,
+      setError(null);
+      const response = await axios.put('/api/settings/categories', {
+        categories: updatedCategories
+      }, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
-      
-      toast({
-        title: "Settings saved",
-        description: "All settings have been saved successfully",
-      });
+
+      if (response.status === 200) {
+        setCategories(response.data);
+        toast.success('Categories updated successfully');
+      } else {
+        throw new Error('Failed to update categories');
+      }
     } catch (error) {
-      console.error("Error saving settings:", error);
-      
-      // Extract error message from response if available
-      const errorMessage = error.response?.data?.message || 'Failed to save settings';
-      const detailedError = error.response?.data?.errors 
-        ? Object.values(error.response.data.errors).join(', ')
-        : error.response?.data?.error || error.message;
-      
-      toast({
-        title: "Error",
-        description: `${errorMessage}${detailedError ? `: ${detailedError}` : ''}`,
-        variant: "destructive",
-      });
-    } finally {
-      setSaving(false);
+      console.error('Error saving categories:', error);
+      setError('Failed to update categories');
+      toast.error('Failed to update categories');
+      throw error;
     }
   };
 
@@ -535,565 +549,49 @@ const AdminSettingsPage: React.FC = () => {
     );
   }
 
-  return (
-    <div className="container mx-auto p-6 max-w-7xl">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Website Settings</h1>
-          <p className="text-gray-600">Manage all aspects of your homepage including hero slides, sections, and content</p>
-        </div>
-        <Button 
-          onClick={saveAllSettings} 
-          disabled={saving}
-          size="lg"
-          className="bg-primary hover:bg-primary/90"
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-red-500 mb-4">{error}</p>
+        <button
+          onClick={fetchCategories}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
         >
-          {saving ? (
-            <>
-              <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-              Saving...
-            </>
-          ) : (
-            <>
-              <Save className="w-4 h-4 mr-2" />
-              Save All Settings
-            </>
-          )}
-        </Button>
+          Try Again
+        </button>
       </div>
+    );
+  }
 
-      <Tabs defaultValue="hero-slides" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5 lg:w-[600px]">
-          <TabsTrigger value="hero-slides">Hero Slides</TabsTrigger>
-          <TabsTrigger value="sections">Page Sections</TabsTrigger>
+  return (
+    <div className="container mx-auto py-8">
+      <h1 className="text-3xl font-bold mb-6">Admin Settings</h1>
+
+      <Tabs defaultValue="categories">
+        <TabsList className="mb-6">
           <TabsTrigger value="categories">Categories</TabsTrigger>
-          <TabsTrigger value="header">Header</TabsTrigger>
-          <TabsTrigger value="footer">Footer</TabsTrigger>
+          <TabsTrigger value="general">General Settings</TabsTrigger>
+          <TabsTrigger value="appearance">Appearance</TabsTrigger>
         </TabsList>
 
-        {/* Hero Slides Tab */}
-        <TabsContent value="hero-slides" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <ImageIcon className="w-5 h-5" />
-                    Hero Slides Management
-                  </CardTitle>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Manage the main banner slides on your homepage
-                  </p>
-                </div>
-                <Button onClick={addNewSlide} variant="outline">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Slide
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <DndContext 
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleSlidesDragEnd}
-              >
-                <SortableContext items={heroSlides.map(s => String(s.id))} strategy={verticalListSortingStrategy}>
-                  <div className="space-y-4">
-                    {heroSlides.map((slide) => (
-                      <SortableItem key={slide.id} id={String(slide.id)}>
-                        <Card className="border-2 border-dashed border-gray-200 hover:border-primary/50 transition-colors">
-                          <CardContent className="p-6">
-                            <div className="flex items-center gap-4 mb-4">
-                              <GripVertical className="w-5 h-5 text-gray-400 cursor-grab" />
-                              <Badge variant={slide.enabled ? "default" : "secondary"}>
-                                Slide {slide.id}
-                              </Badge>
-                              <div className="flex items-center gap-2">
-                                  <Switch
-                                  id={`slide-enabled-${slide.id}`}
-                                  checked={slide.enabled}
-                                  onCheckedChange={(checked) => updateSlide(slide.id, 'enabled', checked)}
-                                />
-                                <Label htmlFor={`slide-enabled-${slide.id}`} className="text-sm">
-                                  {slide.enabled ? 'Enabled' : 'Disabled'}
-                                </Label>
-                              </div>
-                              <div className="ml-auto">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => deleteSlide(slide.id)}
-                                  className="text-red-600 hover:text-red-700"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                              {/* Image Upload Section */}
-                              <div className="space-y-4">
-                                <Label className="text-base font-medium">Slide Image</Label>
-                                <div className="relative group">
-                                  <img
-                                    src={slide.image}
-                                    alt={slide.title}
-                                    className="w-full h-48 object-cover rounded-lg border"
-                                    onError={(e) => {
-                                      const target = e.target as HTMLImageElement;
-                                      target.src = 'https://placehold.co/800x400?text=Image+Not+Found';
-                                    }}
-                                  />
-                                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                                    <Label
-                                      htmlFor={`slide-image-${slide.id}`}
-                                      className="cursor-pointer bg-white text-black px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors"
-                                    >
-                                      {uploadingImage === `slide-${slide.id}` ? (
-                                        <>
-                                          <RefreshCw className="w-4 h-4 mr-2 animate-spin inline" />
-                                          Uploading...
-                                        </>
-                                      ) : (
-                                        <>
-                                          <Upload className="w-4 h-4 mr-2 inline" />
-                                          Change Image
-                                        </>
-                                      )}
-                                    </Label>
-                                    <input
-                                      id={`slide-image-${slide.id}`}
-                                      type="file"
-                                      accept="image/*"
-                                      className="hidden"
-                                      onChange={(e) => {
-                                        const file = e.target.files?.[0];
-                                        if (file) {
-                                          handleSlideImageUpload(slide.id, file);
-                                          e.target.value = ''; // Reset input
-                                        }
-                                      }}
-                                    />
-                                </div>
-                                </div>
-                              </div>
-
-                              {/* Content Section */}
-                              <div className="space-y-4">
-                                <div className="space-y-2">
-                                  <Label htmlFor={`slide-title-${slide.id}`}>Title</Label>
-                                    <Input
-                                    type="text"
-                                    id={`slide-title-${slide.id}`}
-                                    value={slide.title || ''}
-                                    onChange={(e) => updateSlide(slide.id, 'title', e.target.value)}
-                                    placeholder="Enter slide title"
-                                    />
-                                  </div>
-
-                                <div className="space-y-2">
-                                  <Label htmlFor={`slide-subtitle-${slide.id}`}>Subtitle</Label>
-                                    <Textarea
-                                    id={`slide-subtitle-${slide.id}`}
-                                    value={slide.subtitle || ''}
-                                    onChange={(e) => updateSlide(slide.id, 'subtitle', e.target.value)}
-                                    placeholder="Enter slide subtitle"
-                                    rows={3}
-                                    />
-                                  </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                  <div className="space-y-2">
-                                    <Label htmlFor={`slide-cta-${slide.id}`}>Button Text</Label>
-                                    <Input
-                                      type="text"
-                                      id={`slide-cta-${slide.id}`}
-                                      value={slide.ctaText || ''}
-                                      onChange={(e) => updateSlide(slide.id, 'ctaText', e.target.value)}
-                                      placeholder="Shop Now"
-                                    />
-                                </div>
-
-                                  <div className="space-y-2">
-                                    <Label htmlFor={`slide-link-${slide.id}`}>Button Link</Label>
-                                    <Input
-                                      type="text"
-                                      id={`slide-link-${slide.id}`}
-                                      value={slide.ctaLink || ''}
-                                      onChange={(e) => updateSlide(slide.id, 'ctaLink', e.target.value)}
-                                      placeholder="/shop"
-                                    />
-                              </div>
-                                </div>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </SortableItem>
-                    ))}
-                  </div>
-                </SortableContext>
-              </DndContext>
-            </CardContent>
+        <TabsContent value="categories">
+          <Card className="p-6">
+            <h2 className="text-2xl font-semibold mb-4">Category Management</h2>
+            <CategoryManager />
           </Card>
         </TabsContent>
 
-        {/* Page Sections Tab */}
-        <TabsContent value="sections" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <Settings className="w-5 h-5" />
-                    Page Sections Management
-                  </CardTitle>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Control which sections appear on your homepage and their content
-                  </p>
-                </div>
-                <Button onClick={addNewSection} variant="outline">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Section
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleSectionsDragEnd}
-              >
-                <SortableContext items={homeSections.map(s => s.id)} strategy={verticalListSortingStrategy}>
-                  <div className="space-y-4">
-                    {homeSections.map((section) => (
-                      <SortableItem key={section.id} id={section.id}>
-                        <Card key={section.id} className="border-2 border-dashed border-gray-200 hover:border-primary/50 transition-colors">
-                          <CardContent className="p-6">
-                            <div className="flex items-center gap-4 mb-4">
-                              <GripVertical className="w-5 h-5 text-gray-400 cursor-grab" />
-                              <Badge variant={section.enabled ? "default" : "secondary"}>
-                                {section.type}
-                              </Badge>
-                              <Switch
-                                checked={section.enabled}
-                                onCheckedChange={() => toggleSectionEnabled(section.id)}
-                              />
-                              <Label className="text-sm">
-                                {section.enabled ? 'Enabled' : 'Disabled'}
-                              </Label>
-                              <div className="ml-auto flex gap-2">
-                                {section.enabled ? 
-                                  <Eye className="w-4 h-4 text-green-600" /> : 
-                                  <EyeOff className="w-4 h-4 text-gray-400" />
-                                }
-                              {section.type === 'custom' && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => deleteSection(section.id)}
-                                  className="text-red-600 hover:text-red-700"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                </Button>
-                              )}
-                            </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                <Label htmlFor={`section-title-${section.id}`}>Section Title</Label>
-                                <Input
-                                  id={`section-title-${section.id}`}
-                                  value={section.title}
-                                  onChange={(e) => updateSectionContent(section.id, 'title', e.target.value)}
-                                  placeholder="Enter section title"
-                                />
-                              </div>
-
-                              <div className="space-y-2">
-                                <Label htmlFor={`section-subtitle-${section.id}`}>Section Subtitle</Label>
-                                <Textarea
-                                  id={`section-subtitle-${section.id}`}
-                                  value={section.subtitle}
-                                  onChange={(e) => updateSectionContent(section.id, 'subtitle', e.target.value)}
-                                  placeholder="Enter section subtitle"
-                                  rows={2}
-                                />
-                              </div>
-                            </div>
-
-                            {section.type === 'philosophy' && (
-                              <div className="mt-4 space-y-4">
-                                <Separator />
-                                <Label className="text-base font-medium">Philosophy Section Image</Label>
-                                <div className="relative group w-full max-w-md">
-                                  <img
-                                    src={section.content?.image || '/images/d3.jpg'}
-                                    alt="Philosophy section"
-                                    className="w-full h-32 object-cover rounded-lg border"
-                                  />
-                                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                                    <Label
-                                      htmlFor={`philosophy-image`}
-                                      className="cursor-pointer bg-white text-black px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors"
-                                    >
-                                      <Upload className="w-4 h-4 mr-2 inline" />
-                                      Change Image
-                                    </Label>
-                                    <input
-                                      id={`philosophy-image`}
-                                      type="file"
-                                      accept="image/*"
-                                      className="hidden"
-                                      onChange={async (e) => {
-                                        const file = e.target.files?.[0];
-                                        if (file) {
-                                          try {
-                                            const formData = new FormData();
-                                            formData.append('image', file);
-                                            const response = await uploadImage(formData);
-                                            updateSectionContent(section.id, 'content', { 
-                                              ...section.content, 
-                                              image: response.url 
-                                            });
-                                            toast({
-                                              title: "Image uploaded",
-                                              description: "Philosophy section image updated successfully",
-                                            });
-                                          } catch (error) {
-                                            toast({
-                                              title: "Error",
-                                              description: "Failed to upload image",
-                                              variant: "destructive",
-                                            });
-                                          }
-                                        }
-                                      }}
-                                    />
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                          </CardContent>
-                        </Card>
-                      </SortableItem>
-                    ))}
-                  </div>
-                </SortableContext>
-              </DndContext>
-            </CardContent>
+        <TabsContent value="general">
+          <Card className="p-6">
+            <h2 className="text-2xl font-semibold mb-4">General Settings</h2>
+            {/* Add general settings content here */}
           </Card>
         </TabsContent>
 
-        {/* Categories Tab */}
-        <TabsContent value="categories" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <Edit className="w-5 h-5" />
-                    Categories Management
-                  </CardTitle>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Manage product categories displayed on the homepage
-                  </p>
-                </div>
-                <Button onClick={addNewCategory} variant="outline">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Category
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <CategoryManager
-                categories={categories}
-                onAddCategory={handleAddCategory}
-                onUpdateCategory={handleUpdateCategory}
-                onDeleteCategory={handleDeleteCategory}
-                onReorderCategories={handleReorderCategories}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Header Settings Tab */}
-        <TabsContent value="header" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Header Settings</CardTitle>
-              <p className="text-sm text-gray-600">Configure your website header and navigation</p>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="logo-url">Logo URL</Label>
-                <Input
-                    id="logo-url"
-                  value={headerSettings.logo}
-                  onChange={(e) => setHeaderSettings(prev => ({ ...prev, logo: e.target.value }))}
-                    placeholder="/images/logosbf.png"
-                />
-              </div>
-              
-                <div className="space-y-2">
-                  <Label htmlFor="search-placeholder">Search Placeholder</Label>
-                <Input
-                    id="search-placeholder"
-                  value={headerSettings.searchPlaceholder}
-                  onChange={(e) => setHeaderSettings(prev => ({ ...prev, searchPlaceholder: e.target.value }))}
-                    placeholder="Search for flowers..."
-                />
-              </div>
-
-                <div className="space-y-4">
-                  <Label className="text-base font-medium">Header Features</Label>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="flex items-center space-x-2">
-                  <Switch
-                        id="show-wishlist"
-                    checked={headerSettings.showWishlist}
-                    onCheckedChange={(checked) => setHeaderSettings(prev => ({ ...prev, showWishlist: checked }))}
-                  />
-                      <Label htmlFor="show-wishlist">Show Wishlist</Label>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Switch
-                        id="show-cart"
-                    checked={headerSettings.showCart}
-                    onCheckedChange={(checked) => setHeaderSettings(prev => ({ ...prev, showCart: checked }))}
-                  />
-                      <Label htmlFor="show-cart">Show Cart</Label>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Switch
-                        id="show-currency"
-                    checked={headerSettings.showCurrencyConverter}
-                    onCheckedChange={(checked) => setHeaderSettings(prev => ({ ...prev, showCurrencyConverter: checked }))}
-                  />
-                      <Label htmlFor="show-currency">Show Currency Converter</Label>
-                </div>
-              </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Footer Settings Tab */}
-        <TabsContent value="footer" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Footer Settings</CardTitle>
-              <p className="text-sm text-gray-600">Configure your website footer information</p>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="company-name">Company Name</Label>
-                  <Input
-                      id="company-name"
-                    value={footerSettings.companyName}
-                    onChange={(e) => setFooterSettings(prev => ({ ...prev, companyName: e.target.value }))}
-                      placeholder="Spring Blossoms Florist"
-                  />
-                </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="company-description">Company Description</Label>
-                    <Textarea
-                      id="company-description"
-                      value={footerSettings.description}
-                      onChange={(e) => setFooterSettings(prev => ({ ...prev, description: e.target.value }))}
-                      placeholder="Company description"
-                      rows={3}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                  <Label htmlFor="copyright">Copyright Text</Label>
-                  <Input
-                    id="copyright"
-                    value={footerSettings.copyright}
-                    onChange={(e) => setFooterSettings(prev => ({ ...prev, copyright: e.target.value }))}
-                      placeholder="© 2024 Spring Blossoms Florist. All rights reserved."
-                  />
-                </div>
-              </div>
-
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="contact-email">Contact Email</Label>
-                    <Input
-                      id="contact-email"
-                      value={footerSettings.contactInfo.email}
-                      onChange={(e) => setFooterSettings(prev => ({
-                        ...prev,
-                        contactInfo: { ...prev.contactInfo, email: e.target.value }
-                      }))}
-                      placeholder="contact@example.com"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="contact-phone">Contact Phone</Label>
-                    <Input
-                      id="contact-phone"
-                      value={footerSettings.contactInfo.phone}
-                      onChange={(e) => setFooterSettings(prev => ({
-                        ...prev,
-                        contactInfo: { ...prev.contactInfo, phone: e.target.value }
-                      }))}
-                      placeholder="+91 9849589710"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="contact-address">Contact Address</Label>
-                  <Textarea
-                      id="contact-address"
-                    value={footerSettings.contactInfo.address}
-                    onChange={(e) => setFooterSettings(prev => ({
-                      ...prev,
-                      contactInfo: { ...prev.contactInfo, address: e.target.value }
-                    }))}
-                      placeholder="Business address"
-                    rows={3}
-                  />
-                  </div>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-4">
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="show-map"
-                    checked={footerSettings.showMap}
-                    onCheckedChange={(checked) => setFooterSettings(prev => ({ ...prev, showMap: checked }))}
-                  />
-                  <Label htmlFor="show-map">Show Google Map</Label>
-                </div>
-
-                {footerSettings.showMap && (
-                  <div className="space-y-2">
-                    <Label htmlFor="map-embed">Google Map Embed URL</Label>
-                    <Textarea
-                      id="map-embed"
-                      value={footerSettings.mapEmbedUrl}
-                      onChange={(e) => setFooterSettings(prev => ({ ...prev, mapEmbedUrl: e.target.value }))}
-                      placeholder="Google Maps embed URL"
-                      rows={2}
-                    />
-                  </div>
-                )}
-              </div>
-            </CardContent>
+        <TabsContent value="appearance">
+          <Card className="p-6">
+            <h2 className="text-2xl font-semibold mb-4">Appearance Settings</h2>
+            {/* Add appearance settings content here */}
           </Card>
         </TabsContent>
       </Tabs>
