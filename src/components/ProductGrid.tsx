@@ -105,7 +105,6 @@ const ProductCard = ({ product, onAddToCart }: {
   const navigate = useNavigate();
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
-  const [isCustomizationModalOpen, setIsCustomizationModalOpen] = useState(false);
   const { user } = useAuth();
 
   // Load wishlist from localStorage
@@ -191,50 +190,6 @@ const ProductCard = ({ product, onAddToCart }: {
         duration: 3000,
       });
     }
-  };
-
-  // Handle customization
-  const handleCustomize = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (!user) {
-      toast.error("Please login first to customize products", {
-        description: "You'll be redirected to the login page",
-        duration: 3000,
-      });
-      setTimeout(() => {
-        navigate('/login', { 
-          state: { 
-            redirect: window.location.pathname,
-            message: "Please login to customize products"
-          } 
-        });
-      }, 1500);
-      return;
-    }
-    
-    setIsCustomizationModalOpen(true);
-  };
-
-  // Handle customized product add to cart
-  const handleCustomizedAddToCart = (customizedProduct: any) => {
-    const addToCartFunction = onAddToCart || addToCart;
-    
-    // Create cart item with customization data
-    const cartItem = {
-      _id: customizedProduct._id,
-      title: customizedProduct.title,
-      price: customizedProduct.price,
-      images: customizedProduct.images || [],
-      quantity: 1,
-      discount: customizedProduct.discount || 0,
-      category: customizedProduct.category,
-      description: customizedProduct.description,
-      customization: customizedProduct.customization,
-    };
-    
-    addToCartFunction(cartItem, 1);
   };
 
   // Handle wishlist toggle
@@ -334,47 +289,6 @@ const ProductCard = ({ product, onAddToCart }: {
       onClick={handleCardClick}
       className="group relative bg-white rounded-xl sm:rounded-2xl lg:rounded-3xl overflow-hidden border border-gray-200/50 hover:border-primary/30 transition-all duration-500 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1 cursor-pointer"
     >
-      {/* Badges */}
-      <div className="absolute top-2 sm:top-3 left-2 sm:left-3 z-20 flex flex-col gap-1 sm:gap-2">
-        {product.discount > 0 && (
-          <span className="bg-red-500 text-white text-xs sm:text-sm font-bold px-2 py-1 rounded-full shadow-lg">
-            -{product.discount}%
-          </span>
-        )}
-        {isNewProduct() && (
-          <span className="bg-green-500 text-white text-xs sm:text-sm font-bold px-2 py-1 rounded-full shadow-lg">
-            NEW
-          </span>
-        )}
-        {isFeaturedProduct() && (
-          <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs sm:text-sm font-bold px-2 py-1 rounded-full shadow-lg flex items-center gap-1">
-            <Sparkles className="w-3 h-3" />
-            <span className="hidden sm:inline">Featured</span>
-          </span>
-        )}
-        {product.isCustomizable && (
-          <span className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs sm:text-sm font-bold px-2 py-1 rounded-full shadow-lg flex items-center gap-1">
-            <Palette className="w-3 h-3" />
-            <span className="hidden sm:inline">Customizable</span>
-          </span>
-        )}
-      </div>
-
-      {/* Wishlist Button */}
-      <button
-        onClick={handleWishlistToggle}
-        className="absolute top-2 sm:top-3 right-2 sm:right-3 z-20 w-8 h-8 sm:w-10 sm:h-10 bg-white/90 backdrop-blur-sm hover:bg-white border border-gray-200/50 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg"
-      >
-        <Heart 
-          className={cn(
-            "w-4 h-4 sm:w-5 sm:h-5 transition-colors duration-200",
-            isInWishlist 
-              ? "text-red-500 fill-red-500" 
-              : "text-gray-400 hover:text-red-500 group-hover:text-red-500"
-          )}
-        />
-      </button>
-
       {/* Image Container */}
       <div className="relative aspect-[4/5] sm:aspect-[4/5] overflow-hidden bg-gray-100">
         {!isImageLoaded && (
@@ -426,47 +340,31 @@ const ProductCard = ({ product, onAddToCart }: {
 
         {/* Action Buttons */}
         <div className="flex gap-2">
-          {product.isCustomizable ? (
-            <>
-              <Button
-                onClick={handleCustomize}
-                size="sm"
-                className="flex-1 text-xs sm:text-sm py-2 sm:py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-lg sm:rounded-xl transition-all duration-200 hover:shadow-lg"
-              >
-                <Palette className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                Customize
-              </Button>
-              <Button
-                onClick={handleAddToCart}
-                size="sm"
-                className="flex-1 text-xs sm:text-sm py-2 sm:py-2.5 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white rounded-lg sm:rounded-xl transition-all duration-200 hover:shadow-lg"
-              >
-                <ShoppingBag className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                Quick Add
-              </Button>
-            </>
-          ) : (
-            <Button
-              onClick={handleAddToCart}
-              size="sm"
-              className="w-full text-xs sm:text-sm py-2 sm:py-2.5 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white rounded-lg sm:rounded-xl transition-all duration-200 hover:shadow-lg"
-            >
-              <ShoppingBag className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-              Add to Cart
-            </Button>
-          )}
+          <Button
+            onClick={handleAddToCart}
+            size="sm"
+            className="w-full text-xs sm:text-sm py-2 sm:py-2.5 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white rounded-lg sm:rounded-xl transition-all duration-200 hover:shadow-lg"
+          >
+            <ShoppingBag className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+            Add to Cart
+          </Button>
         </div>
       </div>
 
-      {/* Customization Modal */}
-      {product.isCustomizable && (
-        <CustomizationModal
-          product={product}
-          isOpen={isCustomizationModalOpen}
-          onClose={() => setIsCustomizationModalOpen(false)}
-          onAddToCart={handleCustomizedAddToCart}
+      {/* Wishlist Button */}
+      <button
+        onClick={handleWishlistToggle}
+        className="absolute top-2 sm:top-3 right-2 sm:right-3 z-20 w-8 h-8 sm:w-10 sm:h-10 bg-white/90 backdrop-blur-sm hover:bg-white border border-gray-200/50 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg"
+      >
+        <Heart 
+          className={cn(
+            "w-4 h-4 sm:w-5 sm:h-5 transition-colors duration-200",
+            isInWishlist 
+              ? "text-red-500 fill-red-500" 
+              : "text-gray-400 hover:text-red-500 group-hover:text-red-500"
+          )}
         />
-      )}
+      </button>
     </div>
   );
 };

@@ -10,6 +10,7 @@ import useCart from '@/hooks/use-cart';
 import { Button } from './ui/button';
 import productService, { ProductData } from '@/services/productService';
 import ProductReviews from '@/components/ProductReviews';
+import CustomizationModal from './CustomizationModal';
 
 type ProductDetailProps = {
   product: {
@@ -24,6 +25,7 @@ type ProductDetailProps = {
     category: string;
     isNewArrival?: boolean;
     isFeatured?: boolean;
+    isCustomizable?: boolean;
   };
   onAddToCart: (item: {
     id: string;
@@ -162,6 +164,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
   const { user } = useAuth();
   const { addToCart } = useCart();
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  const [isCustomizationModalOpen, setIsCustomizationModalOpen] = useState(false);
 
   // Debug log to check properties
   console.log(`Product Detail ${product.title}:`, {
@@ -372,6 +375,15 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
     }
   };
 
+  // Handler for customized add to cart
+  const handleCustomizedAddToCart = (customizedProduct: any) => {
+    addToCart({
+      ...customizedProduct,
+      quantity,
+    });
+    setIsCustomizationModalOpen(false);
+  };
+
   return (
     <section className="pt-12 sm:pt-16 pb-16 px-6 md:px-8 animate-fade-in">
       <div className="max-w-6xl mx-auto">
@@ -493,13 +505,18 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
 
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-4">
-                <button
-                  onClick={handleAddToCart}
-                  className="flex-1 h-12 bg-primary text-primary-foreground flex items-center justify-center gap-2 rounded-md hover-lift subtle-shadow"
-                >
-                  <ShoppingCart size={18} />
-                  <span>Add to Cart</span>
-                </button>
+                {product.isCustomizable && (
+                  <Button
+                    onClick={() => setIsCustomizationModalOpen(true)}
+                    className="bg-gradient-to-r from-purple-500 to-pink-500 text-white"
+                  >
+                    🎨 Customize
+                  </Button>
+                )}
+                <Button onClick={handleAddToCart} className="bg-primary text-white">
+                  <ShoppingBag className="w-4 h-4 mr-2" />
+                  Add to Cart
+                </Button>
                 <button
                   onClick={handleAddToWishlist}
                   className="h-12 px-6 border border-muted flex items-center justify-center gap-2 rounded-md hover:bg-secondary transition-colors duration-300"
@@ -569,6 +586,14 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
         onClose={() => setIsContactModalOpen(false)}
         productTitle={product.title}
       />
+      {product.isCustomizable && (
+        <CustomizationModal
+          product={product}
+          isOpen={isCustomizationModalOpen}
+          onClose={() => setIsCustomizationModalOpen(false)}
+          onAddToCart={handleCustomizedAddToCart}
+        />
+      )}
     </section>
   );
 };
