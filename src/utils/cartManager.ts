@@ -9,6 +9,23 @@ export interface CartItem {
   discount?: number;
   category?: string;
   description?: string;
+  customization?: {
+    uploadedPhoto?: File;
+    customNumber?: number;
+    flowerAddonQuantities: Record<string, number>;
+    chocolateAddonQuantities: Record<string, number>;
+    messageCard: string;
+    includeMessageCard: boolean;
+    totalPrice: number;
+    basePrice: number;
+    customizations: {
+      photo: string | null;
+      number: string | null;
+      flowers: Array<{ name: string; qty: number }>;
+      chocolates: Array<{ name: string; qty: number }>;
+      messageCard: string | null;
+    };
+  };
 }
 
 // Get current user ID from localStorage

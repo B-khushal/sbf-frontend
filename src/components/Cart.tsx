@@ -28,8 +28,8 @@ type CartItem = {
   customization?: {
     uploadedPhoto?: File;
     customNumber?: number;
-    selectedFlowers: string[];
-    selectedChocolates: string[];
+    flowerAddonQuantities: Record<string, number>;
+    chocolateAddonQuantities: Record<string, number>;
     messageCard: string;
     includeMessageCard: boolean;
     totalPrice: number;
@@ -37,8 +37,8 @@ type CartItem = {
     customizations: {
       photo: string | null;
       number: string | null;
-      flowers: string[];
-      chocolates: string[];
+      flowers: Array<{ name: string; qty: number }>;
+      chocolates: Array<{ name: string; qty: number }>;
       messageCard: string | null;
     };
   };
@@ -265,16 +265,24 @@ const CartItem = ({
                 <span>{item.customization.customizations.number}</span>
               </div>
             )}
-            {item.customization.customizations.flowers.length > 0 && (
+            {item.customization.customizations.flowers && item.customization.customizations.flowers.length > 0 && (
               <div className="flex items-center gap-1">
                 <span className="w-2 h-2 bg-pink-500 rounded-full"></span>
-                <span>{item.customization.customizations.flowers.length} flower addon(s)</span>
+                <span>
+                  {item.customization.customizations.flowers
+                    .map((f: any) => `${f.name} x${f.qty}`)
+                    .join(', ')}
+                </span>
               </div>
             )}
-            {item.customization.customizations.chocolates.length > 0 && (
+            {item.customization.customizations.chocolates && item.customization.customizations.chocolates.length > 0 && (
               <div className="flex items-center gap-1">
                 <span className="w-2 h-2 bg-yellow-500 rounded-full"></span>
-                <span>{item.customization.customizations.chocolates.length} chocolate addon(s)</span>
+                <span>
+                  {item.customization.customizations.chocolates
+                    .map((c: any) => `${c.name} x${c.qty}`)
+                    .join(', ')}
+                </span>
               </div>
             )}
             {item.customization.customizations.messageCard && (

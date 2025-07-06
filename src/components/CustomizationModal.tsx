@@ -63,8 +63,8 @@ interface CustomizationModalProps {
 interface CustomizationData {
   uploadedPhoto?: File;
   customNumber?: number;
-  selectedFlowers: string[];
-  selectedChocolates: string[];
+  flowerAddonQuantities: Record<string, number>; // { [flowerName]: quantity }
+  chocolateAddonQuantities: Record<string, number>; // { [chocolateName]: quantity }
   messageCard: string;
   includeMessageCard: boolean;
 }
@@ -81,8 +81,8 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({
   const [customization, setCustomization] = useState<CustomizationData>({
     uploadedPhoto: undefined,
     customNumber: undefined,
-    selectedFlowers: [],
-    selectedChocolates: [],
+    flowerAddonQuantities: {},
+    chocolateAddonQuantities: {},
     messageCard: '',
     includeMessageCard: false,
   });
@@ -93,16 +93,16 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({
   const calculateTotalPrice = () => {
     let total = product.price;
     
-    // Add flower addon prices
-    customization.selectedFlowers.forEach(flowerName => {
+    // Add flower addon prices (quantity * price)
+    Object.entries(customization.flowerAddonQuantities).forEach(([flowerName, qty]) => {
       const flower = product.customizationOptions.flowerAddons.find(f => f.name === flowerName);
-      if (flower) total += flower.price;
+      if (flower && qty > 0) total += flower.price * qty;
     });
 
-    // Add chocolate addon prices
-    customization.selectedChocolates.forEach(chocolateName => {
+    // Add chocolate addon prices (quantity * price)
+    Object.entries(customization.chocolateAddonQuantities).forEach(([chocolateName, qty]) => {
       const chocolate = product.customizationOptions.chocolateAddons.find(c => c.name === chocolateName);
-      if (chocolate) total += chocolate.price;
+      if (chocolate && qty > 0) total += chocolate.price * qty;
     });
 
     // Add message card price
@@ -130,24 +130,34 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({
     }
   };
 
-  // Handle flower selection
-  const handleFlowerToggle = (flowerName: string) => {
-    setCustomization(prev => ({
-      ...prev,
-      selectedFlowers: prev.selectedFlowers.includes(flowerName)
-        ? prev.selectedFlowers.filter(f => f !== flowerName)
-        : [...prev.selectedFlowers, flowerName]
-    }));
+  // Handle flower quantity change
+  const handleFlowerQuantityChange = (flowerName: string, delta: number) => {
+    setCustomization(prev => {
+      const current = prev.flowerAddonQuantities[flowerName] || 0;
+      const next = Math.max(0, current + delta);
+      return {
+        ...prev,
+        flowerAddonQuantities: {
+          ...prev.flowerAddonQuantities,
+          [flowerName]: next
+        }
+      };
+    });
   };
 
-  // Handle chocolate selection
-  const handleChocolateToggle = (chocolateName: string) => {
-    setCustomization(prev => ({
-      ...prev,
-      selectedChocolates: prev.selectedChocolates.includes(chocolateName)
-        ? prev.selectedChocolates.filter(c => c !== chocolateName)
-        : [...prev.selectedChocolates, chocolateName]
-    }));
+  // Handle chocolate quantity change
+  const handleChocolateQuantityChange = (chocolateName: string, delta: number) => {
+    setCustomization(prev => {
+      const current = prev.chocolateAddonQuantities[chocolateName] || 0;
+      const next = Math.max(0, current + delta);
+      return {
+        ...prev,
+        chocolateAddonQuantities: {
+          ...prev.chocolateAddonQuantities,
+          [chocolateName]: next
+        }
+      };
+    });
   };
 
   // Handle add to cart
@@ -162,8 +172,8 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({
         customizations: {
           photo: customization.uploadedPhoto ? 'Photo uploaded' : null,
           number: customization.customNumber ? `${product.customizationOptions.customNumberLabel}: ${customization.customNumber}` : null,
-          flowers: customization.selectedFlowers,
-          chocolates: customization.selectedChocolates,
+          flowers: Object.entries(customization.flowerAddonQuantities).filter(([_, qty]) => qty > 0).map(([name, qty]) => ({ name, qty })),
+          chocolates: Object.entries(customization.chocolateAddonQuantities).filter(([_, qty]) => qty > 0).map(([name, qty]) => ({ name, qty })),
           messageCard: customization.includeMessageCard ? customization.messageCard : null,
         }
       }
@@ -176,8 +186,8 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({
     setCustomization({
       uploadedPhoto: undefined,
       customNumber: undefined,
-      selectedFlowers: [],
-      selectedChocolates: [],
+      flowerAddonQuantities: {},
+      chocolateAddonQuantities: {},
       messageCard: '',
       includeMessageCard: false,
     });
@@ -283,24 +293,25 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({
                     <Label className="text-lg font-semibold">Add More Flowers</Label>
                   </div>
                   <div className="space-y-2">
-                    {product.customizationOptions.flowerAddons.map((flower) => (
-                      <div key={flower.name} className="flex items-center space-x-3 p-3 border rounded-lg">
-                        <Checkbox
-                          id={`flower-${flower.name}`}
-                          checked={customization.selectedFlowers.includes(flower.name)}
-                          onCheckedChange={() => handleFlowerToggle(flower.name)}
-                        />
-                        <div className="flex-1">
-                          <Label htmlFor={`flower-${flower.name}`} className="font-medium">
-                            {flower.name}
-                          </Label>
-                          <p className="text-sm text-gray-600">{flower.description}</p>
+                    {product.customizationOptions.flowerAddons.map((flower) => {
+                      const qty = customization.flowerAddonQuantities[flower.name] || 0;
+                      return (
+                        <div key={flower.name} className="flex items-center space-x-3 p-3 border rounded-lg">
+                          <div className="flex-1">
+                            <Label className="font-medium">{flower.name}</Label>
+                            <p className="text-sm text-gray-600">{flower.description}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button size="icon" variant="outline" onClick={() => handleFlowerQuantityChange(flower.name, -1)} disabled={qty === 0}><Minus size={16} /></Button>
+                            <span className="w-6 text-center">{qty}</span>
+                            <Button size="icon" variant="outline" onClick={() => handleFlowerQuantityChange(flower.name, 1)}><Plus size={16} /></Button>
+                          </div>
+                          <Badge variant="secondary">
+                            +{formatPrice(convertPrice(flower.price))} each
+                          </Badge>
                         </div>
-                        <Badge variant="secondary">
-                          +{formatPrice(convertPrice(flower.price))}
-                        </Badge>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -313,24 +324,25 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({
                     <Label className="text-lg font-semibold">Add More Chocolates</Label>
                   </div>
                   <div className="space-y-2">
-                    {product.customizationOptions.chocolateAddons.map((chocolate) => (
-                      <div key={chocolate.name} className="flex items-center space-x-3 p-3 border rounded-lg">
-                        <Checkbox
-                          id={`chocolate-${chocolate.name}`}
-                          checked={customization.selectedChocolates.includes(chocolate.name)}
-                          onCheckedChange={() => handleChocolateToggle(chocolate.name)}
-                        />
-                        <div className="flex-1">
-                          <Label htmlFor={`chocolate-${chocolate.name}`} className="font-medium">
-                            {chocolate.name}
-                          </Label>
-                          <p className="text-sm text-gray-600">{chocolate.description}</p>
+                    {product.customizationOptions.chocolateAddons.map((chocolate) => {
+                      const qty = customization.chocolateAddonQuantities[chocolate.name] || 0;
+                      return (
+                        <div key={chocolate.name} className="flex items-center space-x-3 p-3 border rounded-lg">
+                          <div className="flex-1">
+                            <Label className="font-medium">{chocolate.name}</Label>
+                            <p className="text-sm text-gray-600">{chocolate.description}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button size="icon" variant="outline" onClick={() => handleChocolateQuantityChange(chocolate.name, -1)} disabled={qty === 0}><Minus size={16} /></Button>
+                            <span className="w-6 text-center">{qty}</span>
+                            <Button size="icon" variant="outline" onClick={() => handleChocolateQuantityChange(chocolate.name, 1)}><Plus size={16} /></Button>
+                          </div>
+                          <Badge variant="secondary">
+                            +{formatPrice(convertPrice(chocolate.price))} each
+                          </Badge>
                         </div>
-                        <Badge variant="secondary">
-                          +{formatPrice(convertPrice(chocolate.price))}
-                        </Badge>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -408,16 +420,26 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({
                     <Badge variant="outline">{customization.customNumber}</Badge>
                   </div>
                 )}
-                {customization.selectedFlowers.length > 0 && (
+                {Object.entries(customization.flowerAddonQuantities).filter(([_, qty]) => qty > 0).length > 0 && (
                   <div className="flex justify-between">
                     <span>Flower Addons</span>
-                    <Badge variant="outline">{customization.selectedFlowers.length} selected</Badge>
+                    <span>
+                      {Object.entries(customization.flowerAddonQuantities)
+                        .filter(([_, qty]) => qty > 0)
+                        .map(([name, qty]) => `${name} x${qty}`)
+                        .join(', ')}
+                    </span>
                   </div>
                 )}
-                {customization.selectedChocolates.length > 0 && (
+                {Object.entries(customization.chocolateAddonQuantities).filter(([_, qty]) => qty > 0).length > 0 && (
                   <div className="flex justify-between">
                     <span>Chocolate Addons</span>
-                    <Badge variant="outline">{customization.selectedChocolates.length} selected</Badge>
+                    <span>
+                      {Object.entries(customization.chocolateAddonQuantities)
+                        .filter(([_, qty]) => qty > 0)
+                        .map(([name, qty]) => `${name} x${qty}`)
+                        .join(', ')}
+                    </span>
                   </div>
                 )}
                 {customization.includeMessageCard && (
