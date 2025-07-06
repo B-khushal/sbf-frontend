@@ -336,70 +336,67 @@ const CheckoutPaymentPage = () => {
           razorpay_signature: string;
         }) => {
           try {
-            // Verify payment on your backend
+            // Prepare order data for verification and creation
+            const orderData = {
+              shippingInfo: {
+                firstName: shippingInfo.firstName,
+                lastName: shippingInfo.lastName,
+                email: shippingInfo.email,
+                phone: shippingInfo.phone,
+                address: shippingInfo.address,
+                apartment: shippingInfo.apartment || '',
+                city: shippingInfo.city,
+                state: shippingInfo.state,
+                zipCode: shippingInfo.zipCode,
+                notes: shippingInfo.notes || '',
+                deliveryDate: shippingInfo.selectedDate,
+                timeSlot: shippingInfo.timeSlot,
+                deliveryOption: shippingInfo.deliveryOption || '',
+                deliveryFee: deliveryFee,
+                selectedDate: shippingInfo.selectedDate,
+                giftMessage: shippingInfo.giftMessage || '',
+                receiverFirstName: shippingInfo.receiverFirstName || '',
+                receiverLastName: shippingInfo.receiverLastName || '',
+                receiverEmail: shippingInfo.receiverEmail || '',
+                receiverPhone: shippingInfo.receiverPhone || '',
+                receiverAddress: shippingInfo.receiverAddress || '',
+                receiverApartment: shippingInfo.receiverApartment || '',
+                receiverCity: shippingInfo.receiverCity || '',
+                receiverState: shippingInfo.receiverState || '',
+                receiverZipCode: shippingInfo.receiverZipCode || ''
+              },
+              items: items.map(item => ({
+                product: item._id,
+                title: item.title,
+                price: convertPrice(item.price),
+                quantity: item.quantity,
+                finalPrice: convertPrice(item.price * item.quantity),
+                image: item.images?.[0] || '',
+                customization: item.customization || null
+              })),
+              subtotal: convertedSubtotal,
+              deliveryFee: deliveryFee,
+              promoCode: appliedPromoCode ? {
+                code: appliedPromoCode.code,
+                discount: appliedPromoCode.discount
+              } : null,
+              promoDiscount: appliedPromoCode ? convertPrice(appliedPromoCode.discount) : 0,
+              total: total,
+              currency: currency,
+              exchangeRate: rate
+            };
+
+            // Verify payment and create order in one call
             const verifyResponse = await api.post('/orders/verify-payment', {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature
+              razorpay_signature: response.razorpay_signature,
+              orderData: orderData
             });
 
             if (verifyResponse.data.success) {
-              // Create order in your database
-              const orderData = {
-                shippingDetails: {
-                  fullName: `${shippingInfo.firstName} ${shippingInfo.lastName}`,
-                  email: shippingInfo.email,
-                  phone: shippingInfo.phone,
-                  address: shippingInfo.address,
-                  apartment: shippingInfo.apartment || '',
-                  city: shippingInfo.city,
-                  state: shippingInfo.state,
-                  zipCode: shippingInfo.zipCode,
-                  notes: shippingInfo.notes || '',
-                  deliveryDate: shippingInfo.selectedDate,
-                  timeSlot: shippingInfo.timeSlot
-                },
-                items: items.map(item => ({
-                  product: item._id,
-                  quantity: item.quantity,
-                  price: convertPrice(item.price),
-                  finalPrice: convertPrice(item.price * item.quantity)
-                })),
-                paymentDetails: {
-                  method: 'razorpay',
-                  razorpayOrderId: response.razorpay_order_id,
-                  razorpayPaymentId: response.razorpay_payment_id,
-                  razorpaySignature: response.razorpay_signature
-                },
-                totalAmount: total,
-                currency: currency,
-                currencyRate: rate,
-                originalCurrency: currency,
-                subtotal: convertedSubtotal,
-                deliveryFee: deliveryFee,
-                promoCode: appliedPromoCode ? {
-                  code: appliedPromoCode.code,
-                  discount: appliedPromoCode.discount // Send INR amount to backend
-                } : null,
-                deliveryType: shippingInfo.timeSlot === 'midnight' ? 'midnight' : 'standard'
-              };
-
-              // Add gift details if it's a gift order
-              if (shippingInfo.deliveryOption === 'gift') {
-                const giftDetails = {
-                  message: shippingInfo.giftMessage || '',
-                  recipientName: `${shippingInfo.receiverFirstName} ${shippingInfo.receiverLastName}`,
-                  recipientEmail: shippingInfo.receiverEmail || '',
-                  recipientPhone: shippingInfo.receiverPhone,
-                  recipientAddress: shippingInfo.receiverAddress,
-                  recipientApartment: shippingInfo.receiverApartment || '',
-                  recipientCity: shippingInfo.receiverCity,
-                  recipientState: shippingInfo.receiverState,
-                  recipientZipCode: shippingInfo.receiverZipCode
-                };
-              }
-
-              const orderResponse = await api.post('/orders', orderData);
+              // Order has been created by the server during verification
+              const orderResponse = verifyResponse;
               
               if (orderResponse.data.success) {
                 // Add notification for new order
@@ -409,44 +406,44 @@ const CheckoutPaymentPage = () => {
                   message: `Order #${orderResponse.data.order.orderNumber} has been placed. Total amount: ${formatPrice(total)}`,
                 });
 
-                // Store order details for confirmation page
+                // Store order details for confirmation page using server response
                 const orderConfirmation = {
                   id: orderResponse.data.order._id,
                   orderNumber: orderResponse.data.order.orderNumber,
-                  items: items.map(item => ({
+                  items: orderResponse.data.order.items || items.map(item => ({
                     ...item,
                     price: convertPrice(item.price)
                   })),
                   shipping: {
-                    firstName: shippingInfo.firstName,
-                    lastName: shippingInfo.lastName,
-                    email: shippingInfo.email,
-                    phone: shippingInfo.phone,
-                    address: shippingInfo.address,
-                    apartment: shippingInfo.apartment,
-                    city: shippingInfo.city,
-                    state: shippingInfo.state,
-                    zipCode: shippingInfo.zipCode,
-                    notes: shippingInfo.notes,
-                    timeSlot: shippingInfo.timeSlot,
-                    deliveryDate: shippingInfo.selectedDate,
-                    deliveryType: shippingInfo.timeSlot === 'midnight' ? 'midnight' : 'standard'
+                    firstName: orderResponse.data.order.shippingDetails?.firstName || shippingInfo.firstName,
+                    lastName: orderResponse.data.order.shippingDetails?.lastName || shippingInfo.lastName,
+                    email: orderResponse.data.order.shippingDetails?.email || shippingInfo.email,
+                    phone: orderResponse.data.order.shippingDetails?.phone || shippingInfo.phone,
+                    address: orderResponse.data.order.shippingDetails?.address || shippingInfo.address,
+                    apartment: orderResponse.data.order.shippingDetails?.apartment || shippingInfo.apartment,
+                    city: orderResponse.data.order.shippingDetails?.city || shippingInfo.city,
+                    state: orderResponse.data.order.shippingDetails?.state || shippingInfo.state,
+                    zipCode: orderResponse.data.order.shippingDetails?.zipCode || shippingInfo.zipCode,
+                    notes: orderResponse.data.order.shippingDetails?.notes || shippingInfo.notes,
+                    timeSlot: orderResponse.data.order.shippingDetails?.timeSlot || shippingInfo.timeSlot,
+                    deliveryDate: orderResponse.data.order.shippingDetails?.deliveryDate || shippingInfo.selectedDate,
+                    deliveryType: orderResponse.data.order.shippingDetails?.timeSlot === 'midnight' ? 'midnight' : 'standard'
                   },
                   payment: {
                     method: 'razorpay',
                     paymentId: response.razorpay_payment_id,
                     status: 'completed'
                   },
-                  subtotal: convertedSubtotal,
-                  deliveryFee: deliveryFee,
-                  total: total,
-                  date: new Date().toISOString(),
-                  status: 'completed',
-                  createdAt: new Date().toISOString(),
+                  subtotal: orderResponse.data.order.subtotal || convertedSubtotal,
+                  deliveryFee: orderResponse.data.order.deliveryFee || deliveryFee,
+                  total: orderResponse.data.order.total || total,
+                  date: orderResponse.data.order.createdAt || new Date().toISOString(),
+                  status: orderResponse.data.order.status || 'completed',
+                  createdAt: orderResponse.data.order.createdAt || new Date().toISOString(),
                   // Add currency information for proper display
-                  currency: currency,
-                  currencyRate: rate,
-                  originalCurrency: currency
+                  currency: orderResponse.data.order.currency || currency,
+                  currencyRate: orderResponse.data.order.currencyRate || rate,
+                  originalCurrency: orderResponse.data.order.currency || currency
                 };
 
                 // Store order details securely to ensure it's not lost during redirect
