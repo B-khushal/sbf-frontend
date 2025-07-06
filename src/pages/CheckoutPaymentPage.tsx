@@ -169,11 +169,13 @@ const CheckoutPaymentPage = () => {
     script.async = true;
     script.onload = () => {
       setIsRazorpayLoaded(true);
+      console.log('Razorpay script loaded successfully');
     };
-    script.onerror = () => {
+    script.onerror = (error) => {
+      console.error('Failed to load Razorpay script:', error);
       toast({
-        title: "Error",
-        description: "Failed to load payment gateway. Please try again.",
+        title: "Payment Gateway Error",
+        description: "Failed to load payment gateway. Please refresh the page and try again.",
         variant: "destructive",
       });
     };
@@ -181,7 +183,7 @@ const CheckoutPaymentPage = () => {
 
     return () => {
       if (document.body.contains(script)) {
-      document.body.removeChild(script);
+        document.body.removeChild(script);
       }
     };
   }, [toast]);
@@ -316,6 +318,9 @@ const CheckoutPaymentPage = () => {
         order_id: order_id,
         handler: async (response: RazorpayResponse) => {
           try {
+            console.log('Razorpay payment response:', response);
+            console.log('Order data being sent:', orderData);
+            
             // Verify payment
             const verificationResponse = await api.post('/orders/verify-payment', {
               razorpay_order_id: response.razorpay_order_id,
@@ -324,9 +329,21 @@ const CheckoutPaymentPage = () => {
               orderData
             });
 
+            console.log('Verification response:', verificationResponse.data);
+
             if (verificationResponse.data.success) {
-              // Store order data for confirmation page
-              localStorage.setItem('lastOrder', JSON.stringify(verificationResponse.data.order));
+              console.log('Payment verification successful:', verificationResponse.data);
+              
+              // Check if order data is present
+              if (!verificationResponse.data.order) {
+                throw new Error('Order data not received from server');
+              }
+              
+              // Store order data for confirmation page with backup
+              const orderData = verificationResponse.data.order;
+              localStorage.setItem('lastOrder', JSON.stringify(orderData));
+              sessionStorage.setItem('backup_order', JSON.stringify(orderData));
+              sessionStorage.setItem('from_payment', 'true');
               
               // Clear cart and promo code
               clearCart();
@@ -337,12 +354,14 @@ const CheckoutPaymentPage = () => {
               addNotification({
                 type: 'success',
                 title: 'Payment Successful!',
-                message: `Your order #${verificationResponse.data.order.orderNumber} has been confirmed.`,
+                message: `Your order #${orderData.orderNumber} has been confirmed.`,
                 timestamp: new Date().toISOString()
               });
 
-              // Navigate to confirmation
-              navigate('/checkout/confirmation?order=true');
+              // Navigate to confirmation with a small delay to ensure data is stored
+              setTimeout(() => {
+                navigate('/checkout/confirmation?order=true');
+              }, 100);
             } else {
               throw new Error('Payment verification failed');
         }
@@ -368,6 +387,7 @@ const CheckoutPaymentPage = () => {
         modal: {
           confirm_close: true,
           ondismiss: () => {
+            console.log('Razorpay modal dismissed');
             setIsProcessing(false);
           }
         }
