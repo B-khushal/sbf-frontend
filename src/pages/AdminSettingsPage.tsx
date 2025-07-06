@@ -200,52 +200,52 @@ const AdminSettingsPage: React.FC = () => {
   const fetchAllSettings = async () => {
     try {
       setLoading(true);
-      const response = await api.get("/settings/all");
-      const data = response.data;
-      
-      if (data.heroSlides) {
-        // Ensure all required properties are set
-        const validatedSlides = data.heroSlides.map((slide: HeroSlide) => ({
-          ...slide,
-          enabled: typeof slide.enabled === 'boolean' ? slide.enabled : true,
-          order: typeof slide.order === 'number' ? slide.order : 0
-        }));
-        setHeroSlides(validatedSlides);
-      }
+        const response = await api.get("/settings/all");
+        const data = response.data;
+        
+        if (data.heroSlides) {
+          // Ensure all required properties are set
+          const validatedSlides = data.heroSlides.map((slide: HeroSlide) => ({
+            ...slide,
+            enabled: typeof slide.enabled === 'boolean' ? slide.enabled : true,
+            order: typeof slide.order === 'number' ? slide.order : 0
+          }));
+          setHeroSlides(validatedSlides);
+        }
 
-      let fetchedHomeSections = data.homeSections || [];
+        let fetchedHomeSections = data.homeSections || [];
 
-      // Ensure "offers" section exists
-      const offersSectionExists = fetchedHomeSections.some(section => section.type === 'offers');
-      if (!offersSectionExists) {
-        fetchedHomeSections.push({
-          id: "offers",
-          type: "offers",
-          title: "Exclusive Offers",
-          subtitle: "Don't miss out on our special deals",
-          enabled: true,
-          order: 3 // Default order, can be adjusted
+        // Ensure "offers" section exists
+        const offersSectionExists = fetchedHomeSections.some(section => section.type === 'offers');
+        if (!offersSectionExists) {
+          fetchedHomeSections.push({
+            id: "offers",
+            type: "offers",
+            title: "Exclusive Offers",
+            subtitle: "Don't miss out on our special deals",
+            enabled: true,
+            order: 3 // Default order, can be adjusted
+          });
+        }
+        
+        // Sort sections by order
+        fetchedHomeSections.sort((a, b) => a.order - b.order);
+
+        setHomeSections(fetchedHomeSections);
+        if (data.categories) setCategories(data.categories);
+        if (data.headerSettings) setHeaderSettings(data.headerSettings);
+        if (data.footerSettings) setFooterSettings(data.footerSettings);
+        
+        toast({
+          title: "Settings loaded",
+          description: "All settings have been loaded successfully",
         });
-      }
-      
-      // Sort sections by order
-      fetchedHomeSections.sort((a, b) => a.order - b.order);
-
-      setHomeSections(fetchedHomeSections);
-      if (data.categories) setCategories(data.categories);
-      if (data.headerSettings) setHeaderSettings(data.headerSettings);
-      if (data.footerSettings) setFooterSettings(data.footerSettings);
-      
-      toast({
-        title: "Settings loaded",
-        description: "All settings have been loaded successfully",
-      });
     } catch (error) {
-      console.error("Error fetching settings:", error);
+        console.error("Error fetching settings:", error);
       toast({
         title: "Error",
         description: "Failed to load settings",
-        variant: "destructive",
+          variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -550,7 +550,7 @@ const AdminSettingsPage: React.FC = () => {
   }
 
   if (error) {
-    return (
+  return (
       <div className="text-center py-8">
         <p className="text-red-500 mb-4">{error}</p>
         <button

@@ -237,7 +237,7 @@ export const CategoryManager: React.FC = () => {
       setLoading(true);
       setError(null);
       const response = await getCategories();
-      setCategories(response.data);
+      setCategories(response);
     } catch (error) {
       console.error('Error fetching categories:', error);
       setError('Failed to load categories');
