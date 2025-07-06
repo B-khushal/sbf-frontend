@@ -484,11 +484,23 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
 
               {/* Pricing with Discounted Price */}
               <div className="text-xl font-semibold mb-6">
-                <span className="text-primary font-bold">{formatPrice(convertPrice(discountedPrice))}</span>
-                {product.discount && (
-                  <span className="text-muted-foreground line-through ml-2">
-                    {formatPrice(convertPrice(originalPrice))}
-                  </span>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-primary font-bold text-2xl">{formatPrice(convertPrice(discountedPrice))}</span>
+                  {product.discount && product.discount > 0 && (
+                    <>
+                      <span className="text-muted-foreground line-through text-lg">
+                        {formatPrice(convertPrice(originalPrice))}
+                      </span>
+                      <span className="bg-red-500 text-white text-sm px-2 py-1 rounded-full font-medium">
+                        {product.discount}% OFF
+                      </span>
+                    </>
+                  )}
+                </div>
+                {product.discount && product.discount > 0 && (
+                  <p className="text-sm text-green-600 font-medium">
+                    You save {formatPrice(convertPrice(originalPrice - discountedPrice))}!
+                  </p>
                 )}
               </div>
 

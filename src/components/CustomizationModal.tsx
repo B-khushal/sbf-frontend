@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,7 +20,8 @@ import {
   MessageSquare, 
   Plus, 
   Minus,
-  Image as ImageIcon
+  Image as ImageIcon,
+  AlertTriangle
 } from 'lucide-react';
 import { getImageUrl } from '@/config';
 
@@ -51,6 +52,9 @@ interface Product {
   images: string[];
   isCustomizable: boolean;
   customizationOptions: CustomizationOptions;
+  discount?: number;
+  category: string;
+  description: string;
 }
 
 interface CustomizationModalProps {
@@ -77,6 +81,8 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({
 }) => {
   const { formatPrice, convertPrice } = useCurrency();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
   
   const [customization, setCustomization] = useState<CustomizationData>({
     uploadedPhoto: undefined,
@@ -88,10 +94,49 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({
   });
 
   const [previewUrl, setPreviewUrl] = useState<string>('');
+  const [showScrollCaution, setShowScrollCaution] = useState(false);
+
+  // Auto-scroll to modal when it opens
+  useEffect(() => {
+    if (isOpen && modalRef.current) {
+      // Small delay to ensure modal is rendered
+      setTimeout(() => {
+        modalRef.current?.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'center'
+        });
+      }, 100);
+    }
+  }, [isOpen]);
+
+  // Check if content is scrollable and show caution
+  useEffect(() => {
+    if (isOpen && scrollAreaRef.current) {
+      const checkScrollable = () => {
+        const scrollElement = scrollAreaRef.current;
+        if (scrollElement) {
+          const isScrollable = scrollElement.scrollHeight > scrollElement.clientHeight;
+          setShowScrollCaution(isScrollable);
+        }
+      };
+
+      // Check after a short delay to ensure content is rendered
+      setTimeout(checkScrollable, 200);
+      
+      // Also check on window resize
+      window.addEventListener('resize', checkScrollable);
+      return () => window.removeEventListener('resize', checkScrollable);
+    }
+  }, [isOpen, customization]);
 
   // Calculate total price including customizations
   const calculateTotalPrice = () => {
-    let total = product.price;
+    // Use discounted price as base if discount exists
+    const basePrice = product.discount && product.discount > 0 
+      ? product.price * (1 - product.discount / 100)
+      : product.price;
+    
+    let total = basePrice;
     
     // Add flower addon prices (quantity * price)
     Object.entries(customization.flowerAddonQuantities).forEach(([flowerName, qty]) => {
@@ -117,7 +162,7 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({
       console.log(`💌 Added message card = ${product.customizationOptions.messageCardPrice}`);
     }
 
-    console.log(`💰 Total price calculation: Base ${product.price} + customizations = ${total}`);
+    console.log(`💰 Total price calculation: Base ${basePrice} (discounted) + customizations = ${total}`);
     return total;
   };
 
@@ -174,6 +219,10 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({
 
   // Handle add to cart
   const handleAddToCart = () => {
+    const basePrice = product.discount && product.discount > 0 
+      ? product.price * (1 - product.discount / 100)
+      : product.price;
+    
     const customizedProduct = {
       _id: product._id,
       title: product.title,
@@ -183,6 +232,8 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({
       discount: product.discount || 0,
       category: product.category,
       description: product.description,
+      originalPrice: product.price, // Original price before discount
+      basePrice: basePrice, // Price after discount (used for customizations)
       customization: {
         uploadedPhoto: customization.uploadedPhoto,
         customNumber: customization.customNumber,
@@ -191,7 +242,7 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({
         messageCard: customization.messageCard,
         includeMessageCard: customization.includeMessageCard,
         totalPrice: calculateTotalPrice(),
-        basePrice: product.price,
+        basePrice: basePrice,
         customizations: {
           photo: customization.uploadedPhoto ? 'Photo uploaded' : null,
           number: customization.customNumber ? `${product.customizationOptions.customNumberLabel}: ${customization.customNumber}` : null,
@@ -223,16 +274,28 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh]">
+      <DialogContent className="max-w-4xl max-h-[90vh]" ref={modalRef}>
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-center">
             Customize Your {product.title}
           </DialogTitle>
+          
+          {/* Scroll Caution Message */}
+          {showScrollCaution && (
+            <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+              <div className="flex items-center gap-2 text-amber-700">
+                <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                <span className="text-sm font-medium">
+                  ⚠️ Scroll down to view all customization options
+                </span>
+              </div>
+            </div>
+          )}
         </DialogHeader>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
           {/* Left Column - Customization Options */}
-          <ScrollArea className="h-[70vh] pr-4">
+          <ScrollArea className="h-[70vh] pr-4" ref={scrollAreaRef}>
             <div className="space-y-6">
               {/* Photo Upload */}
               {product.customizationOptions.allowPhotoUpload && (
@@ -478,19 +541,83 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({
             <div className="border rounded-lg p-4">
               <h3 className="font-semibold mb-3">Price Summary</h3>
               <div className="space-y-2">
-                <div className="flex justify-between">
+                {/* Base Price with Discount */}
+                <div className="flex justify-between items-center">
                   <span>Base Price</span>
-                  <span>{formatPrice(convertPrice(product.price))}</span>
+                  <div className="text-right">
+                    {product.discount && product.discount > 0 ? (
+                      <>
+                        <div className="text-sm text-gray-500 line-through">
+                          {formatPrice(convertPrice(product.price))}
+                        </div>
+                        <div className="font-medium text-primary">
+                          {formatPrice(convertPrice(product.price * (1 - product.discount / 100)))}
+                          <span className="text-xs text-red-500 ml-1">({product.discount}% OFF)</span>
+                        </div>
+                      </>
+                    ) : (
+                      <span>{formatPrice(convertPrice(product.price))}</span>
+                    )}
+                  </div>
                 </div>
-                {totalPrice > product.price && (
-                  <>
-                    <Separator />
-                    <div className="flex justify-between font-semibold text-lg">
-                      <span>Total</span>
-                      <span className="text-primary">{formatPrice(convertPrice(totalPrice))}</span>
-                    </div>
-                  </>
-                )}
+
+                {/* Customization Costs */}
+                {(() => {
+                  const basePrice = product.discount && product.discount > 0 
+                    ? product.price * (1 - product.discount / 100)
+                    : product.price;
+                  const customizationCost = totalPrice - basePrice;
+                  
+                  if (customizationCost > 0) {
+                    return (
+                      <>
+                        <Separator />
+                        <div className="space-y-1">
+                          <div className="flex justify-between text-sm">
+                            <span>Customizations:</span>
+                            <span>{formatPrice(convertPrice(customizationCost))}</span>
+                          </div>
+                          {Object.entries(customization.flowerAddonQuantities).filter(([_, qty]) => qty > 0).length > 0 && (
+                            <div className="text-xs text-gray-600 pl-2">
+                              {Object.entries(customization.flowerAddonQuantities)
+                                .filter(([_, qty]) => qty > 0)
+                                .map(([name, qty]) => {
+                                  const flower = product.customizationOptions.flowerAddons.find(f => f.name === name);
+                                  return flower ? `${name} x${qty} = ${formatPrice(convertPrice(flower.price * qty))}` : '';
+                                })
+                                .filter(Boolean)
+                                .join(', ')}
+                            </div>
+                          )}
+                          {Object.entries(customization.chocolateAddonQuantities).filter(([_, qty]) => qty > 0).length > 0 && (
+                            <div className="text-xs text-gray-600 pl-2">
+                              {Object.entries(customization.chocolateAddonQuantities)
+                                .filter(([_, qty]) => qty > 0)
+                                .map(([name, qty]) => {
+                                  const chocolate = product.customizationOptions.chocolateAddons.find(c => c.name === name);
+                                  return chocolate ? `${name} x${qty} = ${formatPrice(convertPrice(chocolate.price * qty))}` : '';
+                                })
+                                .filter(Boolean)
+                                .join(', ')}
+                            </div>
+                          )}
+                          {customization.includeMessageCard && (
+                            <div className="text-xs text-gray-600 pl-2">
+                              Message card: {formatPrice(convertPrice(product.customizationOptions.messageCardPrice))}
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    );
+                  }
+                  return null;
+                })()}
+
+                <Separator />
+                <div className="flex justify-between font-semibold text-lg">
+                  <span>Total</span>
+                  <span className="text-primary">{formatPrice(convertPrice(totalPrice))}</span>
+                </div>
               </div>
             </div>
 
