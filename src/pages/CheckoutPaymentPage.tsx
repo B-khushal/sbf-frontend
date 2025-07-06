@@ -162,68 +162,28 @@ const CheckoutPaymentPage = () => {
 
   const [shippingInfo, setShippingInfo] = useState<ShippingInfo | null>(null);
   
-  // Load Razorpay script with enhanced error handling
+  // Load Razorpay script
   useEffect(() => {
-    const loadRazorpayScript = async () => {
-      try {
-        // Check if Razorpay is already loaded
-        if (window.Razorpay) {
-          setIsRazorpayLoaded(true);
-          console.log('Razorpay already loaded');
-          return;
-        }
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    script.onload = () => {
+      setIsRazorpayLoaded(true);
+    };
+    script.onerror = () => {
+      toast({
+        title: "Error",
+        description: "Failed to load payment gateway. Please try again.",
+        variant: "destructive",
+      });
+    };
+    document.body.appendChild(script);
 
-        const script = document.createElement('script');
-        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-        script.async = true;
-        script.crossOrigin = 'anonymous';
-        
-        // Add error handling for script loading
-        script.onload = () => {
-          setIsRazorpayLoaded(true);
-          console.log('✅ Razorpay script loaded successfully');
-        };
-        
-        script.onerror = (error) => {
-          console.error('❌ Failed to load Razorpay script:', error);
-          toast({
-            title: "Payment Gateway Error",
-            description: "Failed to load payment gateway. Please check your internet connection and try again.",
-            variant: "destructive",
-          });
-        };
-
-        // Add timeout for script loading
-        const timeout = setTimeout(() => {
-          if (!window.Razorpay) {
-            console.error('❌ Razorpay script loading timeout');
-            toast({
-              title: "Payment Gateway Timeout",
-              description: "Payment gateway is taking too long to load. Please refresh the page.",
-              variant: "destructive",
-            });
-          }
-        }, 15000); // 15 second timeout
-
-        document.body.appendChild(script);
-
-        return () => {
-          clearTimeout(timeout);
-          if (document.body.contains(script)) {
-            document.body.removeChild(script);
-          }
-        };
-      } catch (error) {
-        console.error('❌ Error in Razorpay script loading:', error);
-        toast({
-          title: "Payment Gateway Error",
-          description: "Failed to initialize payment gateway. Please refresh the page.",
-          variant: "destructive",
-        });
+    return () => {
+      if (document.body.contains(script)) {
+      document.body.removeChild(script);
       }
     };
-
-    loadRazorpayScript();
   }, [toast]);
   
   useEffect(() => {
@@ -317,23 +277,11 @@ const CheckoutPaymentPage = () => {
              // Prepare order data
        const orderData = {
          items: items.map(item => ({
-           product: item._id,
+           productId: item._id,
            title: item.title,
            price: item.price,
            quantity: item.quantity,
-           finalPrice: item.price,
-           image: item.images && item.images.length > 0 ? item.images[0] : '',
-           customization: item.customization ? {
-             uploadedPhoto: item.customization.uploadedPhoto,
-             customNumber: item.customization.customNumber,
-             flowerAddonQuantities: item.customization.flowerAddonQuantities,
-             chocolateAddonQuantities: item.customization.chocolateAddonQuantities,
-             messageCard: item.customization.messageCard,
-             includeMessageCard: item.customization.includeMessageCard,
-             totalPrice: item.customization.totalPrice,
-             basePrice: item.customization.basePrice,
-             customizations: item.customization.customizations
-           } : null
+           image: item.images && item.images.length > 0 ? item.images[0] : ''
          })),
         shippingInfo,
         subtotal,
@@ -346,32 +294,16 @@ const CheckoutPaymentPage = () => {
         exchangeRate: rate
       };
 
-      // Validate Razorpay configuration
-      if (!RAZORPAY_CONFIG.keyId || RAZORPAY_CONFIG.keyId === 'YOUR_KEY_ID') {
-        throw new Error('Razorpay configuration is incomplete. Please check your API keys.');
-      }
-
-      console.log('🔧 Razorpay Configuration:', {
-        keyId: RAZORPAY_CONFIG.keyId,
-        amount,
-        currency: orderCurrency,
-        orderId: order_id
-      });
-
-      // Configure Razorpay options with enhanced error handling
+      // Configure Razorpay options
       const options: RazorpayOptions = {
         key: RAZORPAY_CONFIG.keyId,
         amount: amount,
         currency: orderCurrency,
-        name: RAZORPAY_CONFIG.businessName,
-        description: RAZORPAY_CONFIG.businessDescription,
+        name: "Spring Blossoms Florist",
+        description: "Flower Delivery Service",
         order_id: order_id,
-        image: RAZORPAY_CONFIG.getLogoUrl(), // Use dynamic logo URL to fix EMPTY_WORDMARK
         handler: async (response: RazorpayResponse) => {
           try {
-            console.log('Razorpay payment response:', response);
-            console.log('Order data being sent:', orderData);
-            
             // Verify payment
             const verificationResponse = await api.post('/orders/verify-payment', {
               razorpay_order_id: response.razorpay_order_id,
@@ -380,21 +312,9 @@ const CheckoutPaymentPage = () => {
               orderData
             });
 
-            console.log('Verification response:', verificationResponse.data);
-
             if (verificationResponse.data.success) {
-              console.log('Payment verification successful:', verificationResponse.data);
-              
-              // Check if order data is present
-              if (!verificationResponse.data.order) {
-                throw new Error('Order data not received from server');
-              }
-              
-              // Store order data for confirmation page with backup
-              const orderData = verificationResponse.data.order;
-              localStorage.setItem('lastOrder', JSON.stringify(orderData));
-              sessionStorage.setItem('backup_order', JSON.stringify(orderData));
-              sessionStorage.setItem('from_payment', 'true');
+              // Store order data for confirmation page
+              localStorage.setItem('lastOrder', JSON.stringify(verificationResponse.data.order));
               
               // Clear cart and promo code
               clearCart();
@@ -405,14 +325,12 @@ const CheckoutPaymentPage = () => {
               addNotification({
                 type: 'success',
                 title: 'Payment Successful!',
-                message: `Your order #${orderData.orderNumber} has been confirmed.`,
+                message: `Your order #${verificationResponse.data.order.orderNumber} has been confirmed.`,
                 timestamp: new Date().toISOString()
               });
 
-              // Navigate to confirmation with a small delay to ensure data is stored
-              setTimeout(() => {
-                navigate('/checkout/confirmation?order=true');
-              }, 100);
+              // Navigate to confirmation
+              navigate('/checkout/confirmation?order=true');
             } else {
               throw new Error('Payment verification failed');
         }
@@ -435,85 +353,17 @@ const CheckoutPaymentPage = () => {
         theme: {
           color: RAZORPAY_CONFIG.themeColor
         },
-        config: {
-          display: {
-            blocks: {
-              utib: {
-                name: "Pay using UPI",
-                instruments: [
-                  {
-                    method: "upi"
-                  }
-                ]
-              },
-              other: {
-                name: "Other Payment methods",
-                instruments: [
-                  {
-                    method: "card"
-                  },
-                  {
-                    method: "netbanking"
-                  },
-                  {
-                    method: "wallet"
-                  }
-                ]
-              }
-            },
-            sequence: ["block.utib", "block.other"],
-            preferences: {
-              show_default_blocks: false
-            }
-          }
-        },
         modal: {
           confirm_close: true,
           ondismiss: () => {
-            console.log('Razorpay modal dismissed');
             setIsProcessing(false);
           }
         }
       };
 
-      // Validate Razorpay instance
-      if (!window.Razorpay) {
-        throw new Error('Razorpay is not loaded. Please refresh the page and try again.');
-      }
-
-      console.log('🚀 Opening Razorpay checkout...');
-      
-      // Open Razorpay with error handling
-      try {
-        const rzp = new window.Razorpay(options);
-        
-        // Add error handling for Razorpay instance
-        rzp.on('payment.failed', (response: any) => {
-          console.error('❌ Payment failed:', response.error);
-          toast({
-            title: "Payment Failed",
-            description: response.error.description || "Payment was unsuccessful. Please try again.",
-            variant: "destructive",
-          });
-          setIsProcessing(false);
-        });
-
-        rzp.on('payment.cancelled', () => {
-          console.log('❌ Payment cancelled by user');
-          toast({
-            title: "Payment Cancelled",
-            description: "Payment was cancelled. You can try again.",
-            variant: "default",
-          });
-          setIsProcessing(false);
-        });
-
-        rzp.open();
-        console.log('✅ Razorpay checkout opened successfully');
-      } catch (rzpError) {
-        console.error('❌ Error opening Razorpay:', rzpError);
-        throw new Error('Failed to open payment gateway. Please try again.');
-      }
+      // Open Razorpay
+      const rzp = new window.Razorpay(options);
+      rzp.open();
 
     } catch (error: any) {
       console.error('Payment initiation error:', error);

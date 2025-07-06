@@ -15,12 +15,15 @@ export const RAZORPAY_CONFIG = {
   
   // Function to get a working logo URL
   getLogoUrl: () => {
-    // Try multiple logo URLs to avoid EMPTY_WORDMARK error
+    // Use a more reliable logo URL to avoid EMPTY_WORDMARK error
+    // Using a data URL as fallback to ensure it always works
     const logoUrls = [
       'https://via.placeholder.com/256x256/10B981/FFFFFF?text=DK',
       'https://via.placeholder.com/256x256/10B981/FFFFFF?text=Deepak',
       'https://via.placeholder.com/256x256/10B981/FFFFFF?text=Flowers',
-      'https://via.placeholder.com/256x256/10B981/FFFFFF?text=DKF'
+      'https://via.placeholder.com/256x256/10B981/FFFFFF?text=DKF',
+      // Data URL as ultimate fallback
+      'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgdmlld0JveD0iMCAwIDI1NiAyNTYiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiBmaWxsPSIjMTBCOTgxIi8+Cjx0ZXh0IHg9IjEyOCIgeT0iMTQwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iNDgiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+REs8L3RleHQ+Cjwvc3ZnPgo='
     ];
     
     // Return a random logo URL to avoid caching issues
