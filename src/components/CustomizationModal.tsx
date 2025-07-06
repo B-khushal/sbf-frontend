@@ -95,17 +95,40 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({
 
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [showScrollCaution, setShowScrollCaution] = useState(false);
+  const [hasScrolledToTop, setHasScrolledToTop] = useState(false);
 
-  // Auto-scroll to modal when it opens
+  // Auto-scroll to top of page when modal opens
   useEffect(() => {
-    if (isOpen && modalRef.current) {
-      // Small delay to ensure modal is rendered
+    if (isOpen) {
+      // Set flag to indicate we're scrolling to top
+      setHasScrolledToTop(true);
+      
+      // Scroll to top of page to ensure modal is visible
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+      
+      // Also scroll the modal content to top if needed
       setTimeout(() => {
-        modalRef.current?.scrollIntoView({ 
-          behavior: 'smooth',
-          block: 'center'
-        });
-      }, 100);
+        if (scrollAreaRef.current) {
+          scrollAreaRef.current.scrollTop = 0;
+        }
+        
+        // Focus on the modal for better accessibility
+        if (modalRef.current) {
+          const focusableElement = modalRef.current.querySelector('button, input, textarea, select') as HTMLElement;
+          if (focusableElement) {
+            focusableElement.focus();
+          }
+        }
+        
+        // Reset the flag after a short delay
+        setTimeout(() => setHasScrolledToTop(false), 1000);
+      }, 300);
+    } else {
+      // Reset flag when modal closes
+      setHasScrolledToTop(false);
     }
   }, [isOpen]);
 
@@ -276,7 +299,14 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh]" ref={modalRef}>
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-center">
+          <DialogTitle className={`text-2xl font-bold text-center transition-all duration-500 ${hasScrolledToTop ? 'animate-pulse bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border-2 border-blue-200' : ''}`}>
+            {hasScrolledToTop && (
+              <div className="flex items-center justify-center gap-2 mb-2 text-blue-600">
+                <span className="text-sm">📱</span>
+                <span className="text-sm font-medium">Modal opened at top of page</span>
+                <span className="text-sm">📱</span>
+              </div>
+            )}
             Customize Your {product.title}
           </DialogTitle>
           
