@@ -17,6 +17,7 @@ import api from '../../services/api';
 import axios from 'axios'; // Keep for axios.isAxiosError
 import ProductFeaturesToggle from '@/components/ui/ProductFeaturesToggle';
 import { getImageUrl } from '@/config';
+import { Checkbox } from '@/components/ui/checkbox';
 
 type FormErrors = Partial<Record<keyof ProductData, string>>;
 
@@ -1028,6 +1029,363 @@ const ProductForm = () => {
             >
               Add Detail
             </Button>
+          </CardContent>
+        </Card>
+
+        {/* Customization Options */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Customization Options</CardTitle>
+            <CardDescription>Enable and configure product customizations (photo upload, custom number, add-ons, etc.)</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4 border-t pt-4 bg-gray-50 p-4 rounded-lg">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <span className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-white text-sm">🎨</span>
+                Customization Options
+              </h3>
+              <div className="flex items-center space-x-2 p-3 bg-white rounded-lg border">
+                <Checkbox
+                  id="isCustomizable"
+                  checked={formData.isCustomizable || false}
+                  onCheckedChange={(checked) => {
+                    setFormData({ 
+                      ...formData, 
+                      isCustomizable: checked as boolean,
+                      customizationOptions: {
+                        ...formData.customizationOptions!,
+                        allowPhotoUpload: checked as boolean ? formData.customizationOptions?.allowPhotoUpload : false,
+                        allowCustomNumber: checked as boolean ? formData.customizationOptions?.allowCustomNumber : false,
+                        allowFlowerAddons: checked as boolean ? formData.customizationOptions?.allowFlowerAddons : false,
+                        allowChocolateAddons: checked as boolean ? formData.customizationOptions?.allowChocolateAddons : false,
+                        allowMessageCard: checked as boolean ? formData.customizationOptions?.allowMessageCard : false,
+                      }
+                    });
+                  }}
+                />
+                <label
+                  htmlFor="isCustomizable"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                >
+                  Enable Product Customization
+                </label>
+              </div>
+
+              {formData.isCustomizable && (
+                <div className="space-y-4 pl-6 border-l-2 border-purple-200 bg-white p-4 rounded-lg mt-4">
+                  <p className="text-sm text-gray-600 mb-4">Configure which customization options are available for this product:</p>
+                  {/* Photo Upload Option */}
+                  <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg border">
+                    <Checkbox
+                      id="allowPhotoUpload"
+                      checked={formData.customizationOptions?.allowPhotoUpload || false}
+                      onCheckedChange={(checked) => 
+                        setFormData({ 
+                          ...formData, 
+                          customizationOptions: {
+                            ...formData.customizationOptions!,
+                            allowPhotoUpload: checked as boolean
+                          }
+                        })
+                      }
+                    />
+                    <label
+                      htmlFor="allowPhotoUpload"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex items-center gap-2"
+                    >
+                      <span className="text-blue-500">📸</span>
+                      Allow Photo Upload
+                    </label>
+                  </div>
+
+                  {/* Custom Number Option */}
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg border">
+                      <Checkbox
+                        id="allowCustomNumber"
+                        checked={formData.customizationOptions?.allowCustomNumber || false}
+                        onCheckedChange={(checked) => 
+                          setFormData({ 
+                            ...formData, 
+                            customizationOptions: {
+                              ...formData.customizationOptions!,
+                              allowCustomNumber: checked as boolean
+                            }
+                          })
+                        }
+                      />
+                      <label
+                        htmlFor="allowCustomNumber"
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex items-center gap-2"
+                      >
+                        <span className="text-green-500">🔢</span>
+                        Allow Custom Number
+                      </label>
+                    </div>
+                    {formData.customizationOptions?.allowCustomNumber && (
+                      <Input
+                        placeholder="Number label (e.g., Age, Anniversary)"
+                        value={formData.customizationOptions?.customNumberLabel || "Number"}
+                        onChange={(e) => 
+                          setFormData({ 
+                            ...formData, 
+                            customizationOptions: {
+                              ...formData.customizationOptions!,
+                              customNumberLabel: e.target.value
+                            }
+                          })
+                        }
+                        className="ml-6"
+                      />
+                    )}
+                  </div>
+
+                  {/* Flower Addons */}
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg border">
+                      <Checkbox
+                        id="allowFlowerAddons"
+                        checked={formData.customizationOptions?.allowFlowerAddons || false}
+                        onCheckedChange={(checked) => 
+                          setFormData({ 
+                            ...formData, 
+                            customizationOptions: {
+                              ...formData.customizationOptions!,
+                              allowFlowerAddons: checked as boolean
+                            }
+                          })
+                        }
+                      />
+                      <label
+                        htmlFor="allowFlowerAddons"
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex items-center gap-2"
+                      >
+                        <span className="text-pink-500">🌸</span>
+                        Allow Flower Addons
+                      </label>
+                    </div>
+                    {formData.customizationOptions?.allowFlowerAddons && (
+                      <div className="ml-6 space-y-2">
+                        <p className="text-xs text-gray-600">Add flower options with prices</p>
+                        {formData.customizationOptions?.flowerAddons?.map((flower, index) => (
+                          <div key={index} className="flex gap-2 items-center">
+                            <Input
+                              placeholder="Flower name"
+                              value={flower.name}
+                              onChange={(e) => {
+                                const updatedFlowers = [...(formData.customizationOptions?.flowerAddons || [])];
+                                updatedFlowers[index] = { ...flower, name: e.target.value };
+                                setFormData({
+                                  ...formData,
+                                  customizationOptions: {
+                                    ...formData.customizationOptions!,
+                                    flowerAddons: updatedFlowers
+                                  }
+                                });
+                              }}
+                            />
+                            <Input
+                              type="number"
+                              placeholder="Price"
+                              value={flower.price}
+                              onChange={(e) => {
+                                const updatedFlowers = [...(formData.customizationOptions?.flowerAddons || [])];
+                                updatedFlowers[index] = { ...flower, price: Number(e.target.value) };
+                                setFormData({
+                                  ...formData,
+                                  customizationOptions: {
+                                    ...formData.customizationOptions!,
+                                    flowerAddons: updatedFlowers
+                                  }
+                                });
+                              }}
+                              className="w-24"
+                            />
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                const updatedFlowers = formData.customizationOptions?.flowerAddons?.filter((_, i) => i !== index) || [];
+                                setFormData({
+                                  ...formData,
+                                  customizationOptions: {
+                                    ...formData.customizationOptions!,
+                                    flowerAddons: updatedFlowers
+                                  }
+                                });
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const newFlower = { name: '', price: 0, description: '', image: '' };
+                            setFormData({
+                              ...formData,
+                              customizationOptions: {
+                                ...formData.customizationOptions!,
+                                flowerAddons: [...(formData.customizationOptions?.flowerAddons || []), newFlower]
+                              }
+                            });
+                          }}
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Flower
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Chocolate Addons */}
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg border">
+                      <Checkbox
+                        id="allowChocolateAddons"
+                        checked={formData.customizationOptions?.allowChocolateAddons || false}
+                        onCheckedChange={(checked) => 
+                          setFormData({ 
+                            ...formData, 
+                            customizationOptions: {
+                              ...formData.customizationOptions!,
+                              allowChocolateAddons: checked as boolean
+                            }
+                          })
+                        }
+                      />
+                      <label
+                        htmlFor="allowChocolateAddons"
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex items-center gap-2"
+                      >
+                        <span className="text-yellow-500">🍫</span>
+                        Allow Chocolate Addons
+                      </label>
+                    </div>
+                    {formData.customizationOptions?.allowChocolateAddons && (
+                      <div className="ml-6 space-y-2">
+                        <p className="text-xs text-gray-600">Add chocolate options with prices</p>
+                        {formData.customizationOptions?.chocolateAddons?.map((chocolate, index) => (
+                          <div key={index} className="flex gap-2 items-center">
+                            <Input
+                              placeholder="Chocolate name"
+                              value={chocolate.name}
+                              onChange={(e) => {
+                                const updatedChocolates = [...(formData.customizationOptions?.chocolateAddons || [])];
+                                updatedChocolates[index] = { ...chocolate, name: e.target.value };
+                                setFormData({
+                                  ...formData,
+                                  customizationOptions: {
+                                    ...formData.customizationOptions!,
+                                    chocolateAddons: updatedChocolates
+                                  }
+                                });
+                              }}
+                            />
+                            <Input
+                              type="number"
+                              placeholder="Price"
+                              value={chocolate.price}
+                              onChange={(e) => {
+                                const updatedChocolates = [...(formData.customizationOptions?.chocolateAddons || [])];
+                                updatedChocolates[index] = { ...chocolate, price: Number(e.target.value) };
+                                setFormData({
+                                  ...formData,
+                                  customizationOptions: {
+                                    ...formData.customizationOptions!,
+                                    chocolateAddons: updatedChocolates
+                                  }
+                                });
+                              }}
+                              className="w-24"
+                            />
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                const updatedChocolates = formData.customizationOptions?.chocolateAddons?.filter((_, i) => i !== index) || [];
+                                setFormData({
+                                  ...formData,
+                                  customizationOptions: {
+                                    ...formData.customizationOptions!,
+                                    chocolateAddons: updatedChocolates
+                                  }
+                                });
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const newChocolate = { name: '', price: 0, description: '', image: '' };
+                            setFormData({
+                              ...formData,
+                              customizationOptions: {
+                                ...formData.customizationOptions!,
+                                chocolateAddons: [...(formData.customizationOptions?.chocolateAddons || []), newChocolate]
+                              }
+                            });
+                          }}
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Chocolate
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Message Card */}
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg border">
+                      <Checkbox
+                        id="allowMessageCard"
+                        checked={formData.customizationOptions?.allowMessageCard || false}
+                        onCheckedChange={(checked) => 
+                          setFormData({ 
+                            ...formData, 
+                            customizationOptions: {
+                              ...formData.customizationOptions!,
+                              allowMessageCard: checked as boolean
+                            }
+                          })
+                        }
+                      />
+                      <label
+                        htmlFor="allowMessageCard"
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex items-center gap-2"
+                      >
+                        <span className="text-purple-500">✍️</span>
+                        Allow Message Card
+                      </label>
+                    </div>
+                    {formData.customizationOptions?.allowMessageCard && (
+                      <div className="ml-6 space-y-2">
+                        <Input
+                          type="number"
+                          placeholder="Message card price (0 for free)"
+                          value={formData.customizationOptions?.messageCardPrice || 0}
+                          onChange={(e) => 
+                            setFormData({ 
+                              ...formData, 
+                              customizationOptions: {
+                                ...formData.customizationOptions!,
+                                messageCardPrice: Number(e.target.value)
+                              }
+                            })
+                          }
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
 
