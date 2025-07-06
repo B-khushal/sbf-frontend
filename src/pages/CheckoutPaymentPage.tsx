@@ -717,7 +717,7 @@ const CheckoutPaymentPage = () => {
                     </div>
 
                         {deliveryFee > 0 && (
-                          <div className="flex justify-between text-sm">
+                    <div className="flex justify-between text-sm">
                             <span>Midnight Delivery Fee</span>
                             <span>{formatPrice(deliveryFee)}</span>
                     </div>
@@ -727,7 +727,7 @@ const CheckoutPaymentPage = () => {
                           <div className="flex justify-between text-sm text-green-600">
                             <span>Promo Discount ({appliedPromoCode.code})</span>
                             <span>-{formatPrice(promoDiscount)}</span>
-                          </div>
+                    </div>
                         )}
                         
                         <Separator />
@@ -747,7 +747,7 @@ const CheckoutPaymentPage = () => {
                         <p className="text-green-600 text-xs">
                           Protected by 256-bit SSL encryption
                         </p>
-                      </div>
+                  </div>
                 </CardContent>
                   </motion.div>
                 </AnimatePresence>
