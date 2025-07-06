@@ -25,7 +25,7 @@ export const RAZORPAY_CONFIG = {
     
     // Return a random logo URL to avoid caching issues
     return logoUrls[Math.floor(Math.random() * logoUrls.length)];
-  }
+  },
   
   // Configuration options
   currency: 'INR',
