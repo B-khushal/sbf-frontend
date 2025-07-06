@@ -8,10 +8,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { Calendar } from '@/components/ui/calendar';
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { format, addDays, isBefore, startOfDay, isValid } from 'date-fns';
 import { useCurrency } from '@/contexts/CurrencyContext';
@@ -71,7 +71,7 @@ const TimeSlotSelector = ({
 }: TimeSlotSelectorProps) => {
   // Set default date to today or provided selectedDate
   const [date, setDate] = useState<Date | null>(selectedDate || new Date());
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [isDateDialogOpen, setIsDateDialogOpen] = useState(false);
   const { formatPrice, convertPrice } = useCurrency();
   
   // Create a minimum date for the calendar (today)
@@ -92,7 +92,7 @@ const TimeSlotSelector = ({
     if (newDate && isValid(newDate) && onSelectDate) {
       setDate(newDate);
       onSelectDate(newDate);
-      setIsCalendarOpen(false);
+      setIsDateDialogOpen(false); // Close dialog when date is selected
     }
   };
 
@@ -219,8 +219,8 @@ const TimeSlotSelector = ({
           <CalendarIcon size={18} />
           <span>Select Delivery Date</span>
         </div>
-        <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-          <PopoverTrigger asChild>
+                        <Dialog open={isDateDialogOpen} onOpenChange={setIsDateDialogOpen}>
+          <DialogTrigger asChild>
             <Button
               type="button"
               variant="outline"
@@ -232,17 +232,17 @@ const TimeSlotSelector = ({
               <CalendarIcon className="mr-2 h-4 w-4" />
               {formatDisplayDate(date)}
             </Button>
-          </PopoverTrigger>
-          <PopoverContent side="bottom" align="start" className="w-auto min-w-[320px] p-0 z-50 bg-white rounded-xl shadow-xl border">
+          </DialogTrigger>
+          <DialogContent className="w-auto p-0 max-w-fit">
             <Calendar
               mode="single"
               selected={date || undefined}
               onSelect={handleDateSelect}
               disabled={(date) => isBefore(date, today) || isBefore(maxDate, date)}
-              className={cn("p-3 pointer-events-auto")}
+              className={cn("p-3")}
             />
-          </PopoverContent>
-        </Popover>
+          </DialogContent>
+        </Dialog>
         <p className="text-sm text-muted-foreground">
           Select a delivery date within the next 30 days
         </p>
