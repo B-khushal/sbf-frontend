@@ -93,6 +93,41 @@ const CheckoutPaymentPage = () => {
   const { formatPrice, convertPrice, currency, rate } = useCurrency();
   const [isRazorpayLoaded, setIsRazorpayLoaded] = useState(false);
   
+  // Global error handler for Razorpay API errors
+  useEffect(() => {
+    const handleGlobalError = (event) => {
+      // Suppress Razorpay wordmark and API errors
+      if (event.target && event.target.src) {
+        const src = event.target.src;
+        if (src.includes('razorpay.com') && (src.includes('EMPTY_WORDMARK') || src.includes('wordmark'))) {
+          event.preventDefault();
+          event.stopPropagation();
+          return false;
+        }
+      }
+      
+      // Handle fetch errors for Razorpay API
+      if (event instanceof ErrorEvent && event.message.includes('razorpay.com')) {
+        console.warn('Razorpay API error suppressed:', event.message);
+        event.preventDefault();
+        return false;
+      }
+    };
+
+    window.addEventListener('error', handleGlobalError, true);
+    window.addEventListener('unhandledrejection', (event) => {
+      if (event.reason && event.reason.message && event.reason.message.includes('razorpay.com')) {
+        console.warn('Razorpay promise rejection suppressed:', event.reason.message);
+        event.preventDefault();
+        return false;
+      }
+    });
+
+    return () => {
+      window.removeEventListener('error', handleGlobalError, true);
+    };
+  }, []);
+  
   // State for promo code functionality
   const [appliedPromoCode, setAppliedPromoCode] = useState<{
     code: string;
@@ -146,8 +181,24 @@ const CheckoutPaymentPage = () => {
     };
     document.body.appendChild(script);
 
+    // Add error handling for Razorpay wordmark issues
+    const handleRazorpayErrors = (event) => {
+      if (event.target && event.target.src && event.target.src.includes('razorpay.com')) {
+        // Suppress wordmark loading errors
+        if (event.target.src.includes('EMPTY_WORDMARK') || event.target.src.includes('wordmark')) {
+          event.preventDefault();
+          event.stopPropagation();
+          return false;
+        }
+      }
+    };
+
+    // Listen for image load errors
+    document.addEventListener('error', handleRazorpayErrors, true);
+
     return () => {
       document.body.removeChild(script);
+      document.removeEventListener('error', handleRazorpayErrors, true);
     };
   }, [toast]);
   
@@ -246,25 +297,40 @@ const CheckoutPaymentPage = () => {
         timeSlot: shippingInfo.timeSlot
       });
 
-      // Create order on your backend
+      // Create order on your backend with retry mechanism
       let response;
-      try {
-        console.log('Sending Razorpay order request with amount (INR):', Math.round(razorpayAmount * 100));
-        response = await api.post('/orders/create-razorpay-order', {
-          amount: Math.round(razorpayAmount * 100), // Convert to paise (INR)
-          currency: 'INR' // Always use INR for Razorpay
-        });
-        
-        console.log('Razorpay order response:', response.data);
-        
-        if (!response?.data?.success) {
-          throw new Error(response?.data?.message || 'Failed to create order');
+      let retryCount = 0;
+      const maxRetries = 3;
+      
+      while (retryCount < maxRetries) {
+        try {
+          console.log(`Sending Razorpay order request (attempt ${retryCount + 1}) with amount (INR):`, Math.round(razorpayAmount * 100));
+          response = await api.post('/orders/create-razorpay-order', {
+            amount: Math.round(razorpayAmount * 100), // Convert to paise (INR)
+            currency: 'INR' // Always use INR for Razorpay
+          });
+          
+          console.log('Razorpay order response:', response.data);
+          
+          if (!response?.data?.success) {
+            throw new Error(response?.data?.message || 'Failed to create order');
+          }
+          
+          // If successful, break out of retry loop
+          break;
+        } catch (error) {
+          retryCount++;
+          console.error(`Order creation failed (attempt ${retryCount}):`, error);
+          
+          if (retryCount >= maxRetries) {
+            throw new Error(
+              error instanceof Error ? error.message : 'Failed to create order after multiple attempts'
+            );
+          }
+          
+          // Wait before retrying (exponential backoff)
+          await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
         }
-      } catch (error) {
-        console.error('Order creation failed:', error);
-        throw new Error(
-          error instanceof Error ? error.message : 'Failed to create order'
-        );
       }
 
       if (!response.data.success) {
@@ -318,6 +384,10 @@ const CheckoutPaymentPage = () => {
             }
           }
         },
+        // Disable wordmark to prevent 404 errors
+        image: {
+          src: ''
+        },
         method: {
           upi: true,
           card: true,
@@ -329,6 +399,11 @@ const CheckoutPaymentPage = () => {
           ondismiss: () => {
             console.log('Razorpay checkout dismissed');
           }
+        },
+        // Add retry configuration for API errors
+        retry: {
+          enabled: true,
+          max_count: 3
         },
         handler: async (response: {
           razorpay_order_id: string;
