@@ -178,6 +178,7 @@ const CheckoutPaymentPage = () => {
         script.async = true;
         script.crossOrigin = 'anonymous';
         
+        // Add error handling for script loading
         script.onload = () => {
           setIsRazorpayLoaded(true);
           console.log('✅ Razorpay script loaded successfully');
@@ -202,13 +203,7 @@ const CheckoutPaymentPage = () => {
               variant: "destructive",
             });
           }
-        }, 10000); // 10 second timeout
-
-        script.onload = () => {
-          clearTimeout(timeout);
-          setIsRazorpayLoaded(true);
-          console.log('✅ Razorpay script loaded successfully');
-        };
+        }, 15000); // 15 second timeout
 
         document.body.appendChild(script);
 
@@ -371,6 +366,7 @@ const CheckoutPaymentPage = () => {
         name: "Spring Blossoms Florist",
         description: "Flower Delivery Service",
         order_id: order_id,
+        image: "https://springblossomsflorist.com/logo.png", // Add your logo URL to fix EMPTY_WORDMARK
         handler: async (response: RazorpayResponse) => {
           try {
             console.log('Razorpay payment response:', response);
@@ -438,6 +434,38 @@ const CheckoutPaymentPage = () => {
         },
         theme: {
           color: RAZORPAY_CONFIG.themeColor
+        },
+        config: {
+          display: {
+            blocks: {
+              utib: {
+                name: "Pay using UPI",
+                instruments: [
+                  {
+                    method: "upi"
+                  }
+                ]
+              },
+              other: {
+                name: "Other Payment methods",
+                instruments: [
+                  {
+                    method: "card"
+                  },
+                  {
+                    method: "netbanking"
+                  },
+                  {
+                    method: "wallet"
+                  }
+                ]
+              }
+            },
+            sequence: ["block.utib", "block.other"],
+            preferences: {
+              show_default_blocks: false
+            }
+          }
         },
         modal: {
           confirm_close: true,

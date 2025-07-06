@@ -7,6 +7,7 @@ export const RAZORPAY_CONFIG = {
   // Configuration options
   currency: 'INR',
   timeout: 120, // 2 minutes
+  themeColor: '#10B981', // Green color for success
   
   // Validation functions
   isValidKeyId: (keyId: string): boolean => {
