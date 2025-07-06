@@ -277,11 +277,23 @@ const CheckoutPaymentPage = () => {
              // Prepare order data
        const orderData = {
          items: items.map(item => ({
-           productId: item._id,
+           product: item._id,
            title: item.title,
            price: item.price,
            quantity: item.quantity,
-           image: item.images && item.images.length > 0 ? item.images[0] : ''
+           finalPrice: item.price,
+           image: item.images && item.images.length > 0 ? item.images[0] : '',
+           customization: item.customization ? {
+             uploadedPhoto: item.customization.uploadedPhoto,
+             customNumber: item.customization.customNumber,
+             flowerAddonQuantities: item.customization.flowerAddonQuantities,
+             chocolateAddonQuantities: item.customization.chocolateAddonQuantities,
+             messageCard: item.customization.messageCard,
+             includeMessageCard: item.customization.includeMessageCard,
+             totalPrice: item.customization.totalPrice,
+             basePrice: item.customization.basePrice,
+             customizations: item.customization.customizations
+           } : null
          })),
         shippingInfo,
         subtotal,

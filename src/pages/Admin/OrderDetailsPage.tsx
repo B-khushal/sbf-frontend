@@ -97,6 +97,64 @@ const OrderDetailsPage: React.FC = () => {
                         <span className="ml-2 text-green-600">Final: {formatPrice(item.finalPrice)}</span>
                       )}
                     </div>
+                    
+                    {/* Customization Details */}
+                    {item.customization && (
+                      <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div className="text-sm font-semibold text-blue-800 mb-2">🎨 Customizations:</div>
+                        <div className="space-y-2 text-xs">
+                          {item.customization.customizationSummary?.photo && (
+                            <div className="flex items-center gap-2">
+                              <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+                              <span>📸 Photo uploaded</span>
+                            </div>
+                          )}
+                          {item.customization.customizationSummary?.number && (
+                            <div className="flex items-center gap-2">
+                              <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                              <span>🔢 {item.customization.customizationSummary.number}</span>
+                            </div>
+                          )}
+                          {item.customization.customizationSummary?.flowers && item.customization.customizationSummary.flowers.length > 0 && (
+                            <div className="flex items-center gap-2">
+                              <span className="w-2 h-2 bg-pink-500 rounded-full"></span>
+                              <span>
+                                🌹 {item.customization.customizationSummary.flowers
+                                  .map((f: any) => `${f.name} x${f.qty}`)
+                                  .join(', ')}
+                              </span>
+                            </div>
+                          )}
+                          {item.customization.customizationSummary?.chocolates && item.customization.customizationSummary.chocolates.length > 0 && (
+                            <div className="flex items-center gap-2">
+                              <span className="w-2 h-2 bg-yellow-500 rounded-full"></span>
+                              <span>
+                                🍫 {item.customization.customizationSummary.chocolates
+                                  .map((c: any) => `${c.name} x${c.qty}`)
+                                  .join(', ')}
+                              </span>
+                            </div>
+                          )}
+                          {item.customization.customizationSummary?.messageCard && (
+                            <div className="flex items-center gap-2">
+                              <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                              <span>💌 Message card included</span>
+                            </div>
+                          )}
+                          {item.customization.messageCard && (
+                            <div className="mt-2 p-2 bg-white border border-blue-300 rounded text-xs">
+                              <div className="font-semibold text-blue-800">Message:</div>
+                              <div className="text-gray-700 italic">"{item.customization.messageCard}"</div>
+                            </div>
+                          )}
+                          {item.customization.totalCustomizationPrice > 0 && (
+                            <div className="mt-2 text-xs text-blue-700">
+                              <span className="font-semibold">Customization Cost:</span> +{formatPrice(item.customization.totalCustomizationPrice)}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </li>
               ))}
