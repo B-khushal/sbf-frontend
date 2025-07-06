@@ -2,13 +2,12 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { Heart, ShoppingBag, Star, ArrowRight, Sparkles, Palette } from "lucide-react";
+import { Heart, ShoppingBag, Star, ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import useCart from "@/hooks/use-cart";
 import { useAuth } from "@/hooks/use-auth";
 import { getImageUrl } from "@/config";
-import CustomizationModal from "./CustomizationModal";
 
 export type Product = {
   _id: string;
@@ -23,29 +22,6 @@ export type Product = {
   featured?: boolean;
   isNewArrival?: boolean;
   isFeatured?: boolean;
-  isCustomizable?: boolean;
-  customizationOptions?: {
-    allowPhotoUpload: boolean;
-    allowCustomNumber: boolean;
-    customNumberLabel: string;
-    allowFlowerAddons: boolean;
-    flowerAddons: Array<{
-      name: string;
-      price: number;
-      description: string;
-      image: string;
-    }>;
-    allowChocolateAddons: boolean;
-    chocolateAddons: Array<{
-      name: string;
-      price: number;
-      description: string;
-      image: string;
-    }>;
-    allowMessageCard: boolean;
-    messageCardPrice: number;
-    baseLayoutImage: string;
-  };
 };
 
 type ProductGridProps = {
@@ -289,6 +265,41 @@ const ProductCard = ({ product, onAddToCart }: {
       onClick={handleCardClick}
       className="group relative bg-white rounded-xl sm:rounded-2xl lg:rounded-3xl overflow-hidden border border-gray-200/50 hover:border-primary/30 transition-all duration-500 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1 cursor-pointer"
     >
+      {/* Badges */}
+      <div className="absolute top-2 sm:top-3 left-2 sm:left-3 z-20 flex flex-col gap-1 sm:gap-2">
+        {product.discount > 0 && (
+          <span className="bg-red-500 text-white text-xs sm:text-sm font-bold px-2 py-1 rounded-full shadow-lg">
+            -{product.discount}%
+          </span>
+        )}
+        {isNewProduct() && (
+          <span className="bg-green-500 text-white text-xs sm:text-sm font-bold px-2 py-1 rounded-full shadow-lg">
+            NEW
+          </span>
+        )}
+        {isFeaturedProduct() && (
+          <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs sm:text-sm font-bold px-2 py-1 rounded-full shadow-lg flex items-center gap-1">
+            <Sparkles className="w-3 h-3" />
+            <span className="hidden sm:inline">Featured</span>
+          </span>
+        )}
+      </div>
+
+      {/* Wishlist Button */}
+      <button
+        onClick={handleWishlistToggle}
+        className="absolute top-2 sm:top-3 right-2 sm:right-3 z-20 w-8 h-8 sm:w-10 sm:h-10 bg-white/90 backdrop-blur-sm hover:bg-white border border-gray-200/50 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg"
+      >
+        <Heart 
+          className={cn(
+            "w-4 h-4 sm:w-5 sm:h-5 transition-colors duration-200",
+            isInWishlist 
+              ? "text-red-500 fill-red-500" 
+              : "text-gray-400 hover:text-red-500 group-hover:text-red-500"
+          )}
+        />
+      </button>
+
       {/* Image Container */}
       <div className="relative aspect-[4/5] sm:aspect-[4/5] overflow-hidden bg-gray-100">
         {!isImageLoaded && (
@@ -350,21 +361,6 @@ const ProductCard = ({ product, onAddToCart }: {
           </Button>
         </div>
       </div>
-
-      {/* Wishlist Button */}
-      <button
-        onClick={handleWishlistToggle}
-        className="absolute top-2 sm:top-3 right-2 sm:right-3 z-20 w-8 h-8 sm:w-10 sm:h-10 bg-white/90 backdrop-blur-sm hover:bg-white border border-gray-200/50 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg"
-      >
-        <Heart 
-          className={cn(
-            "w-4 h-4 sm:w-5 sm:h-5 transition-colors duration-200",
-            isInWishlist 
-              ? "text-red-500 fill-red-500" 
-              : "text-gray-400 hover:text-red-500 group-hover:text-red-500"
-          )}
-        />
-      </button>
     </div>
   );
 };

@@ -100,7 +100,6 @@ export const useOfferPopup = () => {
               await api.post(`/offers/${offerToShow._id}/impression`);
             } catch (error) {
               console.error('Failed to track offer impression:', error);
-              // Don't block the offer display if tracking fails
             }
           }
         }
@@ -130,7 +129,6 @@ export const useOfferPopup = () => {
         await api.post(`/offers/${currentOffer._id}/close`);
       } catch (error) {
         console.error('Failed to track offer close:', error);
-        // Don't block the offer close if tracking fails
       }
     }
 

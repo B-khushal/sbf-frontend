@@ -10,7 +10,6 @@ import useCart from '@/hooks/use-cart';
 import { Button } from './ui/button';
 import productService, { ProductData } from '@/services/productService';
 import ProductReviews from '@/components/ProductReviews';
-import CustomizationModal from './CustomizationModal';
 
 type ProductDetailProps = {
   product: {
@@ -25,7 +24,6 @@ type ProductDetailProps = {
     category: string;
     isNewArrival?: boolean;
     isFeatured?: boolean;
-    isCustomizable?: boolean;
   };
   onAddToCart: (item: {
     id: string;
@@ -164,7 +162,6 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
   const { user } = useAuth();
   const { addToCart } = useCart();
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
-  const [isCustomizationModalOpen, setIsCustomizationModalOpen] = useState(false);
 
   // Debug log to check properties
   console.log(`Product Detail ${product.title}:`, {
@@ -375,27 +372,6 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
     }
   };
 
-  // Handler for customized add to cart
-  const handleCustomizedAddToCart = (customizedProduct: any) => {
-    console.log('🎨 Adding customized product to cart:', customizedProduct);
-    
-    // Ensure the customized product has all required fields
-    const cartItem = {
-      ...customizedProduct,
-      quantity: quantity, // Use the quantity from ProductDetail state
-    };
-    
-    console.log('🛒 Final cart item:', cartItem);
-    
-    try {
-      addToCart(cartItem);
-      setIsCustomizationModalOpen(false);
-      console.log('✅ Customized product added to cart successfully');
-    } catch (error) {
-      console.error('❌ Error adding customized product to cart:', error);
-    }
-  };
-
   return (
     <section className="pt-12 sm:pt-16 pb-16 px-6 md:px-8 animate-fade-in">
       <div className="max-w-6xl mx-auto">
@@ -484,23 +460,11 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
 
               {/* Pricing with Discounted Price */}
               <div className="text-xl font-semibold mb-6">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-primary font-bold text-2xl">{formatPrice(convertPrice(discountedPrice))}</span>
-                  {product.discount && product.discount > 0 && (
-                    <>
-                      <span className="text-muted-foreground line-through text-lg">
+                <span className="text-primary font-bold">{formatPrice(convertPrice(discountedPrice))}</span>
+                {product.discount && (
+                  <span className="text-muted-foreground line-through ml-2">
                     {formatPrice(convertPrice(originalPrice))}
                   </span>
-                      <span className="bg-red-500 text-white text-sm px-2 py-1 rounded-full font-medium">
-                        {product.discount}% OFF
-                      </span>
-                    </>
-                  )}
-                </div>
-                {product.discount && product.discount > 0 && (
-                  <p className="text-sm text-green-600 font-medium">
-                    You save {formatPrice(convertPrice(originalPrice - discountedPrice))}!
-                  </p>
                 )}
               </div>
 
@@ -529,18 +493,13 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
 
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-4">
-                {product.isCustomizable && (
-                  <Button
-                    onClick={() => setIsCustomizationModalOpen(true)}
-                    className="bg-gradient-to-r from-purple-500 to-pink-500 text-white"
-                  >
-                    🎨 Customize
-                  </Button>
-                )}
-                <Button onClick={handleAddToCart} className="bg-primary text-white">
-                  <ShoppingBag className="w-4 h-4 mr-2" />
-                  Add to Cart
-                </Button>
+                <button
+                  onClick={handleAddToCart}
+                  className="flex-1 h-12 bg-primary text-primary-foreground flex items-center justify-center gap-2 rounded-md hover-lift subtle-shadow"
+                >
+                  <ShoppingCart size={18} />
+                  <span>Add to Cart</span>
+                </button>
                 <button
                   onClick={handleAddToWishlist}
                   className="h-12 px-6 border border-muted flex items-center justify-center gap-2 rounded-md hover:bg-secondary transition-colors duration-300"
@@ -610,14 +569,6 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
         onClose={() => setIsContactModalOpen(false)}
         productTitle={product.title}
       />
-      {product.isCustomizable && (
-        <CustomizationModal
-          product={product}
-          isOpen={isCustomizationModalOpen}
-          onClose={() => setIsCustomizationModalOpen(false)}
-          onAddToCart={handleCustomizedAddToCart}
-        />
-      )}
     </section>
   );
 };

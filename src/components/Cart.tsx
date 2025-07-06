@@ -25,23 +25,6 @@ type CartItem = {
   discount?: number;
   category?: string;
   description?: string;
-  customization?: {
-    uploadedPhoto?: File;
-    customNumber?: number;
-    flowerAddonQuantities: Record<string, number>;
-    chocolateAddonQuantities: Record<string, number>;
-    messageCard: string;
-    includeMessageCard: boolean;
-    totalPrice: number;
-    basePrice: number;
-    customizations: {
-      photo: string | null;
-      number: string | null;
-      flowers: Array<{ name: string; qty: number }>;
-      chocolates: Array<{ name: string; qty: number }>;
-      messageCard: string | null;
-    };
-  };
 };
 
 type CartProps = {
@@ -249,81 +232,6 @@ const CartItem = ({
       </div>
       <div className="flex-1 min-w-0">
         <h4 className="text-sm font-medium text-gray-900 mb-1 line-clamp-2">{item.title}</h4>
-        
-        {/* Customization Details */}
-        {item.customization && (
-          <div className="text-xs text-gray-600 mb-2 space-y-1">
-            {item.customization.customizations.photo && (
-              <div className="flex items-center gap-1">
-                <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
-                <span>🖼 Photo uploaded</span>
-              </div>
-            )}
-            {item.customization.customizations.number && (
-              <div className="flex items-center gap-1">
-                <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                <span>🔢 {item.customization.customizations.number}</span>
-              </div>
-            )}
-            {item.customization.customizations.flowers && item.customization.customizations.flowers.length > 0 && (
-              <div className="space-y-1">
-              <div className="flex items-center gap-1">
-                <span className="w-2 h-2 bg-pink-500 rounded-full"></span>
-                  <span className="font-medium">🌸 Extra Flowers:</span>
-                </div>
-                {item.customization.customizations.flowers.map((flower: any, index: number) => {
-                  const flowerOption = item.customization?.flowerAddonQuantities?.[flower.name];
-                  const flowerPrice = flowerOption ? 
-                    Object.entries(item.customization.flowerAddonQuantities)
-                      .find(([name]) => name === flower.name)?.[1] || 0 : 0;
-                  return (
-                    <div key={index} className="pl-3 text-xs">
-                      • {flower.name} x{flower.qty} = {formatPrice(convertPrice(flowerPrice * flower.qty))}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-            {item.customization.customizations.chocolates && item.customization.customizations.chocolates.length > 0 && (
-              <div className="space-y-1">
-              <div className="flex items-center gap-1">
-                <span className="w-2 h-2 bg-yellow-500 rounded-full"></span>
-                  <span className="font-medium">🍫 Added Chocolates:</span>
-                </div>
-                {item.customization.customizations.chocolates.map((chocolate: any, index: number) => {
-                  const chocolateOption = item.customization?.chocolateAddonQuantities?.[chocolate.name];
-                  const chocolatePrice = chocolateOption ? 
-                    Object.entries(item.customization.chocolateAddonQuantities)
-                      .find(([name]) => name === chocolate.name)?.[1] || 0 : 0;
-                  return (
-                    <div key={index} className="pl-3 text-xs">
-                      • {chocolate.name} x{chocolate.qty} = {formatPrice(convertPrice(chocolatePrice * chocolate.qty))}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-            {item.customization.customizations.messageCard && (
-              <div className="flex items-center gap-1">
-                <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                <span>💌 Message card included</span>
-              </div>
-            )}
-            
-            {/* Total Add-on Cost */}
-            {item.customization && item.customization.basePrice !== item.price && (
-              <div className="mt-2 pt-2 border-t border-gray-200">
-                <div className="flex justify-between items-center text-xs">
-                  <span className="font-medium">💰 Total add-ons:</span>
-                  <span className="text-primary font-semibold">
-                    {formatPrice(convertPrice(item.price - item.customization.basePrice))}
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-        
         <div className="text-sm text-gray-500 mb-2">
           {item.discount && item.discount > 0 && (
             <span className="line-through mr-2 text-gray-400">
@@ -333,12 +241,6 @@ const CartItem = ({
           <span className="font-medium text-primary">
             {formatPrice(convertPrice(item.price))}
           </span>
-          {item.customization && item.customization.basePrice !== item.price && (
-            <div className="text-xs text-gray-400 mt-1">
-              <div>Base: {formatPrice(convertPrice(item.customization.basePrice))}</div>
-              <div>+ Add-ons: {formatPrice(convertPrice(item.price - item.customization.basePrice))}</div>
-            </div>
-          )}
         </div>
         <div className="flex items-center justify-between">
           <select 
