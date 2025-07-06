@@ -244,14 +244,14 @@ const CheckoutPaymentPage = () => {
   const orderTotal = subtotal + deliveryFee - promoDiscount;
   
   const handlePayment = async () => {
-      if (!isRazorpayLoaded) {
-        toast({
+    if (!isRazorpayLoaded) {
+      toast({
         title: "Payment gateway not ready",
         description: "Please wait a moment and try again.",
-          variant: "destructive",
-        });
-        return;
-      }
+        variant: "destructive",
+      });
+      return;
+    }
 
     if (!shippingInfo) {
       toast({
@@ -265,6 +265,8 @@ const CheckoutPaymentPage = () => {
     setIsProcessing(true);
 
     try {
+      console.log('Creating Razorpay order with amount:', Math.round(orderTotal * 100));
+      
       // Create Razorpay order
       const orderResponse = await api.post('/orders/create-razorpay-order', {
         amount: Math.round(orderTotal * 100),
@@ -272,29 +274,35 @@ const CheckoutPaymentPage = () => {
         receipt: `order_${Date.now()}`
       });
 
-      const { order_id, amount, currency: orderCurrency } = orderResponse.data;
+      console.log('Razorpay order response:', orderResponse.data);
 
-             // Prepare order data
-       const orderData = {
-         items: items.map(item => ({
-           product: item._id,
-           title: item.title,
-           price: item.price,
-           quantity: item.quantity,
-           finalPrice: item.price,
-           image: item.images && item.images.length > 0 ? item.images[0] : '',
-           customization: item.customization ? {
-             uploadedPhoto: item.customization.uploadedPhoto,
-             customNumber: item.customization.customNumber,
-             flowerAddonQuantities: item.customization.flowerAddonQuantities,
-             chocolateAddonQuantities: item.customization.chocolateAddonQuantities,
-             messageCard: item.customization.messageCard,
-             includeMessageCard: item.customization.includeMessageCard,
-             totalPrice: item.customization.totalPrice,
-             basePrice: item.customization.basePrice,
-             customizations: item.customization.customizations
-           } : null
-         })),
+      const { id: order_id, amount, currency: orderCurrency } = orderResponse.data;
+
+      if (!order_id) {
+        throw new Error('Failed to create Razorpay order - no order ID returned');
+      }
+
+      // Prepare order data
+      const orderData = {
+        items: items.map(item => ({
+          product: item._id,
+          title: item.title,
+          price: item.price,
+          quantity: item.quantity,
+          finalPrice: item.price,
+          image: item.images && item.images.length > 0 ? item.images[0] : '',
+          customization: item.customization ? {
+            uploadedPhoto: item.customization.uploadedPhoto,
+            customNumber: item.customization.customNumber,
+            flowerAddonQuantities: item.customization.flowerAddonQuantities,
+            chocolateAddonQuantities: item.customization.chocolateAddonQuantities,
+            messageCard: item.customization.messageCard,
+            includeMessageCard: item.customization.includeMessageCard,
+            totalPrice: item.customization.totalPrice,
+            basePrice: item.customization.basePrice,
+            customizations: item.customization.customizations
+          } : null
+        })),
         shippingInfo,
         subtotal,
         deliveryFee,
@@ -306,6 +314,8 @@ const CheckoutPaymentPage = () => {
         exchangeRate: rate
       };
 
+      console.log('Order data prepared:', orderData);
+
       // Configure Razorpay options
       const options: RazorpayOptions = {
         key: RAZORPAY_CONFIG.keyId,
@@ -316,6 +326,8 @@ const CheckoutPaymentPage = () => {
         order_id: order_id,
         handler: async (response: RazorpayResponse) => {
           try {
+            console.log('Payment completed, verifying...', response);
+            
             // Verify payment
             const verificationResponse = await api.post('/orders/verify-payment', {
               razorpay_order_id: response.razorpay_order_id,
@@ -324,7 +336,9 @@ const CheckoutPaymentPage = () => {
               orderData
             });
 
-            if (verificationResponse.data.success) {
+            console.log('Verification response:', verificationResponse.data);
+
+            if (verificationResponse.data.success && verificationResponse.data.order) {
               // Store order data for confirmation page
               localStorage.setItem('lastOrder', JSON.stringify(verificationResponse.data.order));
               
@@ -335,22 +349,22 @@ const CheckoutPaymentPage = () => {
               
               // Add notification
               addNotification({
-                type: 'success',
+                type: 'order',
                 title: 'Payment Successful!',
-                message: `Your order #${verificationResponse.data.order.orderNumber} has been confirmed.`,
-                timestamp: new Date().toISOString()
+                message: `Your order #${verificationResponse.data.order.orderNumber} has been confirmed.`
               });
 
               // Navigate to confirmation
               navigate('/checkout/confirmation?order=true');
             } else {
-              throw new Error('Payment verification failed');
-        }
-      } catch (error) {
+              console.error('Payment verification failed:', verificationResponse.data);
+              throw new Error(verificationResponse.data.message || 'Payment verification failed');
+            }
+          } catch (error: any) {
             console.error('Payment verification error:', error);
             toast({
               title: "Payment verification failed",
-              description: "Please contact support if amount was deducted.",
+              description: error.response?.data?.message || error.message || "Please contact support if amount was deducted.",
               variant: "destructive",
             });
           } finally {
@@ -368,10 +382,18 @@ const CheckoutPaymentPage = () => {
         modal: {
           confirm_close: true,
           ondismiss: () => {
+            console.log('Razorpay modal dismissed');
             setIsProcessing(false);
           }
         }
       };
+
+      console.log('Opening Razorpay with options:', {
+        key: options.key,
+        amount: options.amount,
+        currency: options.currency,
+        order_id: options.order_id
+      });
 
       // Open Razorpay
       const rzp = new window.Razorpay(options);
@@ -381,7 +403,7 @@ const CheckoutPaymentPage = () => {
       console.error('Payment initiation error:', error);
       toast({
         title: "Payment failed",
-        description: error.response?.data?.message || "Unable to process payment. Please try again.",
+        description: error.response?.data?.message || error.message || "Unable to process payment. Please try again.",
         variant: "destructive",
       });
       setIsProcessing(false);
@@ -528,7 +550,7 @@ const CheckoutPaymentPage = () => {
                 </CardHeader>
                 <CardContent>
                   <PromoCodeInput
-                    orderTotal={subtotal + deliveryFee}
+                    orderAmount={subtotal + deliveryFee}
                     onPromoCodeApplied={handlePromoCodeApplied}
                     onPromoCodeRemoved={handlePromoCodeRemoved}
                     appliedPromoCode={appliedPromoCode}
