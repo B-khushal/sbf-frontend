@@ -7,7 +7,11 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { Calendar } from '@/components/ui/calendar';
-import * as Popover from '@radix-ui/react-popover';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { format, addDays, isBefore, startOfDay, isValid } from 'date-fns';
 import { useCurrency } from '@/contexts/CurrencyContext';
@@ -215,8 +219,8 @@ const TimeSlotSelector = ({
           <CalendarIcon size={18} />
           <span>Select Delivery Date</span>
         </div>
-        <Popover.Root open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-          <Popover.Trigger asChild>
+        <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+          <PopoverTrigger asChild>
             <Button
               type="button"
               variant="outline"
@@ -228,8 +232,8 @@ const TimeSlotSelector = ({
               <CalendarIcon className="mr-2 h-4 w-4" />
               {formatDisplayDate(date)}
             </Button>
-          </Popover.Trigger>
-          <Popover.Content side="bottom" align="start" className="w-auto min-w-[320px] p-0 z-50 bg-white rounded-xl shadow-xl border">
+          </PopoverTrigger>
+          <PopoverContent side="bottom" align="start" className="w-auto min-w-[320px] p-0 z-50 bg-white rounded-xl shadow-xl border">
             <Calendar
               mode="single"
               selected={date || undefined}
@@ -237,8 +241,8 @@ const TimeSlotSelector = ({
               disabled={(date) => isBefore(date, today) || isBefore(maxDate, date)}
               className={cn("p-3 pointer-events-auto")}
             />
-          </Popover.Content>
-        </Popover.Root>
+          </PopoverContent>
+        </Popover>
         <p className="text-sm text-muted-foreground">
           Select a delivery date within the next 30 days
         </p>

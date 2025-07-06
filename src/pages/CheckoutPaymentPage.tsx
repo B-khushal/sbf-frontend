@@ -274,15 +274,15 @@ const CheckoutPaymentPage = () => {
 
       const { order_id, amount, currency: orderCurrency } = orderResponse.data;
 
-      // Prepare order data
-      const orderData = {
-        items: items.map(item => ({
-          productId: item._id || item.id,
-          title: item.title,
-          price: item.price,
-          quantity: item.quantity,
-          image: item.image || item.images?.[0] || ''
-        })),
+             // Prepare order data
+       const orderData = {
+         items: items.map(item => ({
+           productId: item._id,
+           title: item.title,
+           price: item.price,
+           quantity: item.quantity,
+           image: item.images && item.images.length > 0 ? item.images[0] : ''
+         })),
         shippingInfo,
         subtotal,
         deliveryFee,
@@ -678,31 +678,34 @@ const CheckoutPaymentPage = () => {
                     className="lg:!h-auto overflow-hidden"
                   >
                     <CardContent className="space-y-4">
-                      {/* Order Items */}
-                      <div className="space-y-3">
-                        {items.map((item) => (
-                          <div key={item.id} className="flex items-center space-x-3">
-                            <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden">
-                              <img
-                                src={item.image}
-                                alt={item.title}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                            <div className="flex-1">
-                              <h4 className="text-sm font-medium text-gray-900 line-clamp-1">
-                                {item.title}
-                              </h4>
-                              <p className="text-sm text-gray-600">
-                                Qty: {item.quantity}
-                              </p>
-                            </div>
-                            <div className="text-sm font-medium">
-                              {formatPrice(item.price * item.quantity)}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                                             {/* Order Items */}
+                       <div className="space-y-3">
+                         {items.map((item) => (
+                           <div key={item._id} className="flex items-center space-x-3">
+                             <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden">
+                               <img
+                                 src={item.images && item.images.length > 0 ? item.images[0] : '/api/placeholder/64/64'}
+                                 alt={item.title}
+                                 className="w-full h-full object-cover"
+                                 onError={(e) => {
+                                   e.currentTarget.src = '/api/placeholder/64/64';
+                                 }}
+                               />
+                             </div>
+                             <div className="flex-1">
+                               <h4 className="text-sm font-medium text-gray-900 line-clamp-1">
+                                 {item.title}
+                               </h4>
+                               <p className="text-sm text-gray-600">
+                                 Qty: {item.quantity}
+                               </p>
+                             </div>
+                             <div className="text-sm font-medium">
+                               {formatPrice(item.price * item.quantity)}
+                             </div>
+                           </div>
+                         ))}
+                       </div>
 
                       <Separator />
 

@@ -57,7 +57,7 @@ const CheckoutShippingPage = () => {
   const [giftMessage, setGiftMessage] = useState('');
   const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
   const [showSavedAddresses, setShowSavedAddresses] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [shippingMethod, setShippingMethod] = useState('standard');
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
   const [isPinCodeValid, setIsPinCodeValid] = useState(true);
@@ -216,6 +216,10 @@ const CheckoutShippingPage = () => {
         description: `Additional fee of ${formatPrice(midnightDeliveryFee)} will be added`,
       });
     }
+  };
+
+  const handleDateSelect = (date: Date) => {
+    setSelectedDate(date);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -815,8 +819,9 @@ const CheckoutShippingPage = () => {
                 <CardContent>
                   <TimeSlotSelector
                     selectedSlot={selectedTimeSlot}
-                    onSlotSelect={handleTimeSlotSelect}
+                    onSelectSlot={handleTimeSlotSelect}
                     selectedDate={selectedDate}
+                    onSelectDate={handleDateSelect}
                   />
                   {hasMidnightFee && (
                     <Alert className="mt-4">
@@ -879,12 +884,15 @@ const CheckoutShippingPage = () => {
                       {/* Order Items */}
                       <div className="space-y-3">
                         {items.map((item) => (
-                          <div key={item.id} className="flex items-center space-x-3">
+                          <div key={item._id} className="flex items-center space-x-3">
                             <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden">
                               <img
-                                src={item.image}
+                                src={item.images && item.images.length > 0 ? item.images[0] : '/api/placeholder/64/64'}
                                 alt={item.title}
                                 className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.currentTarget.src = '/api/placeholder/64/64';
+                                }}
                               />
                             </div>
                             <div className="flex-1">
