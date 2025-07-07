@@ -34,6 +34,10 @@ import {
   Lock
 } from 'lucide-react';
 import AddressManager from '@/components/AddressManager';
+import { getOrders } from '@/services/orderService';
+import { getUserReviews } from '@/services/reviewService';
+import { getWishlist } from '@/services/wishlistService';
+import { format } from 'date-fns';
 
 // Animation variants
 const containerVariants = {
@@ -83,6 +87,15 @@ const ProfilePage: React.FC = () => {
     threshold: 0.1
   });
   
+  // Real data state
+  const [userStats, setUserStats] = useState({
+    orderCount: 0,
+    wishlistCount: 0,
+    reviewCount: 0,
+    memberSince: ''
+  });
+  const [isLoadingStats, setIsLoadingStats] = useState(true);
+  
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
@@ -93,6 +106,61 @@ const ProfilePage: React.FC = () => {
   
   const [isEditing, setIsEditing] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  
+  // Fetch real user data
+  useEffect(() => {
+    const fetchUserStats = async () => {
+      if (!user) return;
+      
+      setIsLoadingStats(true);
+      try {
+        // Fetch orders count
+        const orders = await getOrders();
+        const orderCount = orders.length;
+        
+        // Fetch wishlist count
+        let wishlistCount = 0;
+        try {
+          const wishlistResponse = await getWishlist();
+          wishlistCount = wishlistResponse.wishlist.length;
+        } catch (error) {
+          console.log('No wishlist data available');
+        }
+        
+        // Fetch reviews count
+        let reviewCount = 0;
+        try {
+          const reviewsResponse = await getUserReviews();
+          reviewCount = reviewsResponse.reviews.length;
+        } catch (error) {
+          console.log('No reviews data available');
+        }
+        
+        // Get member since date from user data
+        const memberSince = user.id ? '2024' : ''; // Default to 2024 if no specific date
+        
+        setUserStats({
+          orderCount,
+          wishlistCount,
+          reviewCount,
+          memberSince
+        });
+      } catch (error) {
+        console.error('Error fetching user stats:', error);
+        // Set default values if there's an error
+        setUserStats({
+          orderCount: 0,
+          wishlistCount: 0,
+          reviewCount: 0,
+          memberSince: '2024'
+        });
+      } finally {
+        setIsLoadingStats(false);
+      }
+    };
+    
+    fetchUserStats();
+  }, [user]);
   
   useEffect(() => {
     if (user) {
@@ -546,7 +614,11 @@ const ProfilePage: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Total Orders</p>
-                  <p className="text-2xl font-bold text-gray-800">12</p>
+                  {isLoadingStats ? (
+                    <div className="w-8 h-8 bg-gray-200 rounded animate-pulse mt-1" />
+                  ) : (
+                    <p className="text-2xl font-bold text-gray-800">{userStats.orderCount}</p>
+                  )}
                 </div>
                 <div className="w-12 h-12 bg-gradient-to-r from-bloom-blue-500 to-bloom-blue-600 rounded-lg flex items-center justify-center">
                   <Package className="w-6 h-6 text-white" />
@@ -561,7 +633,11 @@ const ProfilePage: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Wishlist Items</p>
-                  <p className="text-2xl font-bold text-gray-800">8</p>
+                  {isLoadingStats ? (
+                    <div className="w-8 h-8 bg-gray-200 rounded animate-pulse mt-1" />
+                  ) : (
+                    <p className="text-2xl font-bold text-gray-800">{userStats.wishlistCount}</p>
+                  )}
                 </div>
                 <div className="w-12 h-12 bg-gradient-to-r from-bloom-pink-500 to-bloom-pink-600 rounded-lg flex items-center justify-center">
                   <Heart className="w-6 h-6 text-white" />
@@ -576,7 +652,11 @@ const ProfilePage: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Reviews</p>
-                  <p className="text-2xl font-bold text-gray-800">5</p>
+                  {isLoadingStats ? (
+                    <div className="w-8 h-8 bg-gray-200 rounded animate-pulse mt-1" />
+                  ) : (
+                    <p className="text-2xl font-bold text-gray-800">{userStats.reviewCount}</p>
+                  )}
                 </div>
                 <div className="w-12 h-12 bg-gradient-to-r from-bloom-green-500 to-bloom-green-600 rounded-lg flex items-center justify-center">
                   <Star className="w-6 h-6 text-white" />
@@ -591,7 +671,11 @@ const ProfilePage: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Member Since</p>
-                  <p className="text-2xl font-bold text-gray-800">2024</p>
+                  {isLoadingStats ? (
+                    <div className="w-8 h-8 bg-gray-200 rounded animate-pulse mt-1" />
+                  ) : (
+                    <p className="text-2xl font-bold text-gray-800">{userStats.memberSince}</p>
+                  )}
                 </div>
                 <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg flex items-center justify-center">
                   <Calendar className="w-6 h-6 text-white" />
@@ -687,7 +771,9 @@ const ProfilePage: React.FC = () => {
               </div>
               <h3 className="font-bold text-gray-800 mb-2">My Wishlist</h3>
               <p className="text-sm text-gray-600 mb-4">View your saved favorites and create new collections</p>
-              <div className="text-sm text-bloom-pink-600 font-medium">8 items saved</div>
+              <div className="text-sm text-bloom-pink-600 font-medium">
+                {isLoadingStats ? 'Loading...' : `${userStats.wishlistCount} items saved`}
+              </div>
             </motion.div>
 
             <motion.div 
@@ -703,7 +789,9 @@ const ProfilePage: React.FC = () => {
               </div>
               <h3 className="font-bold text-gray-800 mb-2">Recent Orders</h3>
               <p className="text-sm text-gray-600 mb-4">Track your recent purchases and order status</p>
-              <div className="text-sm text-bloom-blue-600 font-medium">12 orders total</div>
+              <div className="text-sm text-bloom-blue-600 font-medium">
+                {isLoadingStats ? 'Loading...' : `${userStats.orderCount} orders total`}
+              </div>
             </motion.div>
 
             <motion.div 
