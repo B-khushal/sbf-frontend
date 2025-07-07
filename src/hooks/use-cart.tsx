@@ -50,19 +50,27 @@ export const useCart = create<CartState>((set, get) => ({
         const updatedCart = await cartService.addToCart(item._id, item.quantity);
         
         // Transform backend cart format to frontend format
-        const transformedItems = updatedCart.map(cartItem => ({
-          _id: cartItem.productId,
-          id: cartItem.productId,
-          productId: cartItem.productId,
-          title: cartItem.product?.title || '',
-          price: cartItem.product?.price || 0,
-          images: cartItem.product?.images || [],
-          quantity: cartItem.quantity,
-          category: cartItem.product?.category || '',
-          discount: cartItem.product?.discount || 0,
-          description: cartItem.product?.description || '',
-          addedAt: cartItem.addedAt
-        }));
+        const transformedItems = updatedCart.map(cartItem => {
+          // Ensure product data exists
+          if (!cartItem.product) {
+            console.error('Missing product data for cart item:', cartItem);
+            return null;
+          }
+          
+          return {
+            _id: cartItem.productId,
+            id: cartItem.productId,
+            productId: cartItem.productId,
+            title: cartItem.product.title || '',
+            price: cartItem.product.price || 0,
+            images: cartItem.product.images || [],
+            quantity: cartItem.quantity,
+            category: cartItem.product.category || '',
+            discount: cartItem.product.discount || 0,
+            description: cartItem.product.description || '',
+            addedAt: cartItem.addedAt
+          };
+        }).filter(Boolean); // Remove null items
 
         set({ items: transformedItems, isLoading: false });
       } catch (error) {
@@ -123,19 +131,27 @@ export const useCart = create<CartState>((set, get) => ({
         const updatedCart = await cartService.removeFromCart(productId);
         
         // Transform backend cart format to frontend format
-        const transformedItems = updatedCart.map(cartItem => ({
-          _id: cartItem.productId,
-          id: cartItem.productId,
-          productId: cartItem.productId,
-          title: cartItem.product?.title || '',
-          price: cartItem.product?.price || 0,
-          images: cartItem.product?.images || [],
-          quantity: cartItem.quantity,
-          category: cartItem.product?.category || '',
-          discount: cartItem.product?.discount || 0,
-          description: cartItem.product?.description || '',
-          addedAt: cartItem.addedAt
-        }));
+        const transformedItems = updatedCart.map(cartItem => {
+          // Ensure product data exists
+          if (!cartItem.product) {
+            console.error('Missing product data for cart item:', cartItem);
+            return null;
+          }
+          
+          return {
+            _id: cartItem.productId,
+            id: cartItem.productId,
+            productId: cartItem.productId,
+            title: cartItem.product.title || '',
+            price: cartItem.product.price || 0,
+            images: cartItem.product.images || [],
+            quantity: cartItem.quantity,
+            category: cartItem.product.category || '',
+            discount: cartItem.product.discount || 0,
+            description: cartItem.product.description || '',
+            addedAt: cartItem.addedAt
+          };
+        }).filter(Boolean); // Remove null items
 
         set({ items: transformedItems, isLoading: false });
       } catch (error) {
@@ -184,19 +200,27 @@ export const useCart = create<CartState>((set, get) => ({
         const updatedCart = await cartService.updateCartQuantity(itemId, quantity);
         
         // Transform backend cart format to frontend format
-        const transformedItems = updatedCart.map(cartItem => ({
-          _id: cartItem.productId,
-          id: cartItem.productId,
-          productId: cartItem.productId,
-          title: cartItem.product?.title || '',
-          price: cartItem.product?.price || 0,
-          images: cartItem.product?.images || [],
-          quantity: cartItem.quantity,
-          category: cartItem.product?.category || '',
-          discount: cartItem.product?.discount || 0,
-          description: cartItem.product?.description || '',
-          addedAt: cartItem.addedAt
-        }));
+        const transformedItems = updatedCart.map(cartItem => {
+          // Ensure product data exists
+          if (!cartItem.product) {
+            console.error('Missing product data for cart item:', cartItem);
+            return null;
+          }
+          
+          return {
+            _id: cartItem.productId,
+            id: cartItem.productId,
+            productId: cartItem.productId,
+            title: cartItem.product.title || '',
+            price: cartItem.product.price || 0,
+            images: cartItem.product.images || [],
+            quantity: cartItem.quantity,
+            category: cartItem.product.category || '',
+            discount: cartItem.product.discount || 0,
+            description: cartItem.product.description || '',
+            addedAt: cartItem.addedAt
+          };
+        }).filter(Boolean); // Remove null items
 
         set({ items: transformedItems, isLoading: false });
       } catch (error) {
@@ -278,19 +302,27 @@ export const useCart = create<CartState>((set, get) => ({
           const cartData = await cartService.getCart();
           
           // Transform backend cart format to frontend format
-          const transformedItems = cartData.map(cartItem => ({
-            _id: cartItem.productId,
-            id: cartItem.productId,
-            productId: cartItem.productId,
-            title: cartItem.product?.title || '',
-            price: cartItem.product?.price || 0,
-            images: cartItem.product?.images || [],
-            quantity: cartItem.quantity,
-            category: cartItem.product?.category || '',
-            discount: cartItem.product?.discount || 0,
-            description: cartItem.product?.description || '',
-            addedAt: cartItem.addedAt
-          }));
+          const transformedItems = cartData.map(cartItem => {
+            // Ensure product data exists
+            if (!cartItem.product) {
+              console.error('Missing product data for cart item:', cartItem);
+              return null;
+            }
+            
+            return {
+              _id: cartItem.productId,
+              id: cartItem.productId,
+              productId: cartItem.productId,
+              title: cartItem.product.title || '',
+              price: cartItem.product.price || 0,
+              images: cartItem.product.images || [],
+              quantity: cartItem.quantity,
+              category: cartItem.product.category || '',
+              discount: cartItem.product.discount || 0,
+              description: cartItem.product.description || '',
+              addedAt: cartItem.addedAt
+            };
+          }).filter(Boolean); // Remove null items
 
           set({ items: transformedItems, isLoading: false });
           console.log(`🛒 Loaded cart from API for user: ${userId}, items: ${transformedItems.length}`);
