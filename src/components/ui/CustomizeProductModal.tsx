@@ -59,6 +59,7 @@ interface CustomizeProductModalProps {
     _id: string;
     title: string;
     price: number;
+    images: string[];
     customizationOptions: CustomizationOptions;
   };
   onAddToCart: (customizations: CustomizationData) => void;
@@ -423,7 +424,7 @@ export function CustomizeProductModal({
 
             {/* Right Side - Preview & Price Summary */}
             <div className="w-80 border-l bg-gray-50 p-6">
-              <div className="sticky top-6 space-y-6">
+              <div className="space-y-6">
                 {/* Preview Section */}
                 <Card className="border-2 border-dashed border-gray-300">
                   <CardHeader className="pb-3">
@@ -431,17 +432,17 @@ export function CustomizeProductModal({
                   </CardHeader>
                   <CardContent>
                     <div className="aspect-square rounded-lg bg-white border-2 border-gray-200 flex items-center justify-center overflow-hidden">
-                      {product.customizationOptions.previewImage ? (
+                      {product.images.length > 0 ? (
                         <img
-                          src={product.customizationOptions.previewImage}
+                          src={product.images[0]}
                           alt="Product preview"
                           className="max-w-full max-h-full object-contain"
                         />
                       ) : (
                         <div className="text-center text-gray-500 p-4">
                           <Wand2 className="h-12 w-12 mx-auto mb-2 text-gray-400" />
-                          <p className="text-sm font-medium">Customization Preview</p>
-                          <p className="text-xs">Your personalized product will appear here</p>
+                          <p className="text-sm font-medium">Product Preview</p>
+                          <p className="text-xs">No product image available</p>
                         </div>
                       )}
                     </div>
@@ -489,69 +490,71 @@ export function CustomizeProductModal({
                 </Card>
 
                 {/* Sticky Price Summary */}
-                <Card className="border-2 border-purple-200 bg-purple-50/50 sticky bottom-6">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2 text-purple-800">
-                      <IndianRupee className="h-5 w-5" />
-                      Price Summary
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-600">Base Price:</span>
-                        <span className="font-medium">₹{product.price}</span>
+                <div className="sticky top-6">
+                  <Card className="border-2 border-purple-200 bg-purple-50/50">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-purple-800">
+                        <IndianRupee className="h-5 w-5" />
+                        Price Summary
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-600">Base Price:</span>
+                          <span className="font-medium">₹{product.price}</span>
+                        </div>
+                        
+                        {customizations.selectedFlowers.length > 0 && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-600">Flower Add-ons:</span>
+                            <span className="font-medium text-pink-600">+₹{getAddonTotal(customizations.selectedFlowers)}</span>
+                          </div>
+                        )}
+                        
+                        {customizations.selectedChocolates.length > 0 && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-600">Chocolate Add-ons:</span>
+                            <span className="font-medium text-orange-600">+₹{getAddonTotal(customizations.selectedChocolates)}</span>
+                          </div>
+                        )}
+                        
+                        {customizations.messageCard && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-600">Message Card:</span>
+                            <span className="font-medium text-yellow-600">+₹{product.customizationOptions.messageCardPrice}</span>
+                          </div>
+                        )}
+                        
+                        <Separator />
+                        
+                        <div className="flex justify-between items-center text-lg font-bold text-purple-800">
+                          <span>Total Price:</span>
+                          <span>₹{totalPrice}</span>
+                        </div>
                       </div>
-                      
-                      {customizations.selectedFlowers.length > 0 && (
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-600">Flower Add-ons:</span>
-                          <span className="font-medium text-pink-600">+₹{getAddonTotal(customizations.selectedFlowers)}</span>
-                        </div>
-                      )}
-                      
-                      {customizations.selectedChocolates.length > 0 && (
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-600">Chocolate Add-ons:</span>
-                          <span className="font-medium text-orange-600">+₹{getAddonTotal(customizations.selectedChocolates)}</span>
-                        </div>
-                      )}
-                      
-                      {customizations.messageCard && (
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-600">Message Card:</span>
-                          <span className="font-medium text-yellow-600">+₹{product.customizationOptions.messageCardPrice}</span>
-                        </div>
-                      )}
-                      
-                      <Separator />
-                      
-                      <div className="flex justify-between items-center text-lg font-bold text-purple-800">
-                        <span>Total Price:</span>
-                        <span>₹{totalPrice}</span>
-                      </div>
-                    </div>
 
-                    {/* Action Buttons */}
-                    <div className="space-y-3 pt-4">
-                      <Button 
-                        onClick={handleSubmit}
-                        className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3"
-                        size="lg"
-                      >
-                        <ShoppingCart className="mr-2 h-5 w-5" />
-                        Add to Cart with Customizations
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        onClick={onClose}
-                        className="w-full"
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                      {/* Action Buttons */}
+                      <div className="space-y-3 pt-4">
+                        <Button 
+                          onClick={handleSubmit}
+                          className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3"
+                          size="lg"
+                        >
+                          <ShoppingCart className="mr-2 h-5 w-5" />
+                          Add to Cart with Customizations
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          onClick={onClose}
+                          className="w-full"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
               </div>
             </div>
           </div>

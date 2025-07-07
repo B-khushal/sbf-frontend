@@ -641,6 +641,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
             _id: product._id,
             title: product.title,
             price: discountedPrice,
+            images: product.images,
             customizationOptions: product.customizationOptions
           }}
           onAddToCart={(customizations) => {
