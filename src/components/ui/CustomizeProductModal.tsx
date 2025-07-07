@@ -184,8 +184,8 @@ export function CustomizeProductModal({
   return (
     <TooltipProvider>
       <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="w-full max-w-2xl sm:max-w-3xl md:max-w-4xl max-h-[95vh] p-0 rounded-lg overflow-hidden">
-          <DialogHeader className="px-4 sm:px-6 py-4 border-b bg-gradient-to-r from-purple-50 to-pink-50">
+        <DialogContent className="w-full max-w-[98vw] p-0 sm:p-0 rounded-lg overflow-hidden">
+          <DialogHeader className="px-3 py-3 sm:px-6 sm:py-4 border-b bg-gradient-to-r from-purple-50 to-pink-50">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100">
@@ -206,13 +206,13 @@ export function CustomizeProductModal({
 
           <div className="flex flex-col md:flex-row h-auto md:h-[calc(90vh-140px)]">
             {/* Left Side - Customization Options (and preview/summary on mobile) */}
-            <ScrollArea className="flex-1 p-4 sm:p-6 max-h-[70vh] md:max-h-none overflow-y-auto">
-              <div className="space-y-8">
+            <ScrollArea className="flex-1 p-2 sm:p-6 max-h-[70vh] md:max-h-none overflow-y-auto">
+              <div className="space-y-4 sm:space-y-8">
                 {/* 📸 Photo Upload Section */}
                 {product.customizationOptions.allowPhotoUpload && (
-                  <Card className="border-2 border-blue-200 bg-blue-50/50">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="flex items-center gap-2 text-blue-800">
+                  <Card className="border-2 border-blue-200 bg-blue-50/50 rounded-md p-2 sm:p-4">
+                    <CardHeader className="pb-2 sm:pb-3">
+                      <CardTitle className="flex items-center gap-2 text-blue-800 text-base sm:text-lg">
                         <Camera className="h-5 w-5" />
                         Upload Your Photo
                         <Tooltip>
@@ -225,13 +225,13 @@ export function CustomizeProductModal({
                         </Tooltip>
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4">
+                    <CardContent className="space-y-2 sm:space-y-4">
                       {uploadedPhoto ? (
                         <div className="relative">
                           <img
                             src={uploadedPhoto}
                             alt="Uploaded photo"
-                            className="w-full h-48 object-cover rounded-lg border-2 border-blue-300"
+                            className="w-full h-32 sm:h-48 object-cover rounded-lg border-2 border-blue-300"
                           />
                           <Button
                             variant="destructive"
@@ -264,9 +264,9 @@ export function CustomizeProductModal({
 
                 {/* 🔢 Number Input Section */}
                 {product.customizationOptions.allowNumberInput && (
-                  <Card className="border-2 border-green-200 bg-green-50/50">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="flex items-center gap-2 text-green-800">
+                  <Card className="border-2 border-green-200 bg-green-50/50 rounded-md p-2 sm:p-4">
+                    <CardHeader className="pb-2 sm:pb-3">
+                      <CardTitle className="flex items-center gap-2 text-green-800 text-base sm:text-lg">
                         <Hash className="h-5 w-5" />
                         Add Custom Number
                         <Tooltip>
@@ -288,7 +288,7 @@ export function CustomizeProductModal({
                           ...prev,
                           number: e.target.value
                         }))}
-                        className="border-green-300 focus:border-green-500"
+                        className="border-green-300 focus:border-green-500 h-10 text-base w-full"
                       />
                     </CardContent>
                   </Card>
@@ -296,9 +296,9 @@ export function CustomizeProductModal({
 
                 {/* ✍ Message Card Section */}
                 {product.customizationOptions.allowMessageCard && (
-                  <Card className="border-2 border-yellow-200 bg-yellow-50/50">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="flex items-center gap-2 text-yellow-800">
+                  <Card className="border-2 border-yellow-200 bg-yellow-50/50 rounded-md p-2 sm:p-4">
+                    <CardHeader className="pb-2 sm:pb-3">
+                      <CardTitle className="flex items-center gap-2 text-yellow-800 text-base sm:text-lg">
                         <MessageSquare className="h-5 w-5" />
                         Personal Message
                         <Tooltip>
@@ -323,7 +323,7 @@ export function CustomizeProductModal({
                           ...prev,
                           messageCard: e.target.value
                         }))}
-                        className="border-yellow-300 focus:border-yellow-500 min-h-[100px]"
+                        className="border-yellow-300 focus:border-yellow-500 min-h-[100px] h-10 text-base w-full"
                       />
                     </CardContent>
                   </Card>
@@ -331,9 +331,9 @@ export function CustomizeProductModal({
 
                 {/* 🌸 Flower Add-ons Section */}
                 {product.customizationOptions.addons.flowers.length > 0 && (
-                  <Card className="border-2 border-pink-200 bg-pink-50/50">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="flex items-center gap-2 text-pink-800">
+                  <Card className="border-2 border-pink-200 bg-pink-50/50 rounded-md p-2 sm:p-4">
+                    <CardHeader className="pb-2 sm:pb-3">
+                      <CardTitle className="flex items-center gap-2 text-pink-800 text-base sm:text-lg">
                         <Flower2 className="h-5 w-5" />
                         Choose Flower Add-ons
                         <Tooltip>
@@ -432,9 +432,9 @@ export function CustomizeProductModal({
 
                 {/* 🍫 Chocolate Add-ons Section */}
                 {product.customizationOptions.addons.chocolates.length > 0 && (
-                  <Card className="border-2 border-orange-200 bg-orange-50/50">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="flex items-center gap-2 text-orange-800">
+                  <Card className="border-2 border-orange-200 bg-orange-50/50 rounded-md p-2 sm:p-4">
+                    <CardHeader className="pb-2 sm:pb-3">
+                      <CardTitle className="flex items-center gap-2 text-orange-800 text-base sm:text-lg">
                         <Gift className="h-5 w-5" />
                         Chocolates & Treats
                         <Tooltip>
