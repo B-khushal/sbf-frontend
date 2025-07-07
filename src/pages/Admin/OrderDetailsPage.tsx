@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '@/services/api';
 import { Order } from '@/services/orderService';
@@ -7,6 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { format } from 'date-fns';
+import { Download, Camera, Hash, MessageSquare, Flower2, Gift } from 'lucide-react';
+// @ts-ignore
+import html2pdf from 'html2pdf.js';
 
 const OrderDetailsPage: React.FC = () => {
   const { orderId } = useParams<{ orderId: string }>();
@@ -14,6 +17,7 @@ const OrderDetailsPage: React.FC = () => {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const { formatPrice, convertPrice, currency } = useCurrency();
+  const orderRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -30,13 +34,40 @@ const OrderDetailsPage: React.FC = () => {
     if (orderId) fetchOrder();
   }, [orderId]);
 
+  const handleDownloadImage = (url: string, title: string) => {
+    fetch(url)
+      .then(res => res.blob())
+      .then(blob => {
+        const link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        link.download = `${title.replace(/\s+/g, '_')}.jpg`;
+        link.click();
+      });
+  };
+
+  const handleDownloadPDF = () => {
+    if (orderRef.current) {
+      html2pdf().from(orderRef.current).set({
+        margin: 0.5,
+        filename: `order-${order?.orderNumber}.pdf`,
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+      }).save();
+    }
+  };
+
   if (loading) return <div className="p-8 text-center">Loading order details...</div>;
   if (!order) return <div className="p-8 text-center text-red-500">Order not found.</div>;
 
   return (
     <div className="max-w-3xl mx-auto p-4">
       <Button variant="outline" onClick={() => navigate('/admin/orders')} className="mb-4">&larr; Back to Orders</Button>
-      <Card>
+      <div className="flex justify-end mb-4 gap-2">
+        <Button variant="secondary" onClick={handleDownloadPDF}>
+          <Download className="mr-2 h-4 w-4" /> Download Order as PDF
+        </Button>
+      </div>
+      <Card ref={orderRef} id="order-details-pdf">
         <CardHeader>
           <CardTitle>Order #{order.orderNumber}</CardTitle>
           <div className="flex gap-2 mt-2">
@@ -80,13 +111,26 @@ const OrderDetailsPage: React.FC = () => {
             <ul className="space-y-4">
               {order.items.map((item, idx) => (
                 <li key={idx} className="flex gap-4 items-center border-b pb-4">
-                  {item.product.images && item.product.images.length > 0 && (
-                    <img
-                      src={item.product.images[0]}
-                      alt={item.product.title}
-                      className="w-20 h-20 object-cover rounded border"
-                    />
-                  )}
+                  <div className="relative">
+                    {item.product.images && item.product.images.length > 0 && (
+                      <>
+                        <img
+                          src={item.product.images[0]}
+                          alt={item.product.title}
+                          className="w-20 h-20 object-cover rounded border"
+                        />
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="absolute top-1 right-1 bg-white/80 hover:bg-white"
+                          onClick={() => handleDownloadImage(item.product.images[0], item.product.title)}
+                          title="Download Image"
+                        >
+                          <Download className="h-4 w-4 text-blue-600" />
+                        </Button>
+                      </>
+                    )}
+                  </div>
                   <div className="flex-1">
                     <div className="font-medium text-lg">{item.product.title}</div>
                     <div className="text-xs text-gray-500">Product ID: {item.product._id}</div>
@@ -97,6 +141,45 @@ const OrderDetailsPage: React.FC = () => {
                         <span className="ml-2 text-green-600">Final: {formatPrice(item.finalPrice)}</span>
                       )}
                     </div>
+                    {/* Customizations */}
+                    {item.customizations && (
+                      <div className="mt-2 space-y-1 bg-purple-50 border border-purple-200 rounded p-2">
+                        <div className="font-semibold text-purple-700 mb-1 flex items-center gap-2">
+                          <Wand2 className="h-4 w-4" /> Customizations
+                        </div>
+                        {item.customizations.photo && (
+                          <div className="flex items-center gap-2 text-blue-700 text-xs">
+                            <Camera className="h-3 w-3" />
+                            <span>Photo uploaded</span>
+                            <a href={item.customizations.photo} download={`custom-photo-${item.product.title}.jpg`} className="underline ml-2" target="_blank" rel="noopener noreferrer">Download</a>
+                          </div>
+                        )}
+                        {item.customizations.number && (
+                          <div className="flex items-center gap-2 text-green-700 text-xs">
+                            <Hash className="h-3 w-3" />
+                            <span>Number: {item.customizations.number}</span>
+                          </div>
+                        )}
+                        {item.customizations.messageCard && (
+                          <div className="flex items-center gap-2 text-yellow-700 text-xs">
+                            <MessageSquare className="h-3 w-3" />
+                            <span>Message: {item.customizations.messageCard}</span>
+                          </div>
+                        )}
+                        {item.customizations.selectedFlowers && item.customizations.selectedFlowers.length > 0 && (
+                          <div className="flex items-center gap-2 text-pink-700 text-xs">
+                            <Flower2 className="h-3 w-3" />
+                            <span>{item.customizations.selectedFlowers.length} flower add-on(s): {item.customizations.selectedFlowers.map(f => f.name).join(', ')}</span>
+                          </div>
+                        )}
+                        {item.customizations.selectedChocolates && item.customizations.selectedChocolates.length > 0 && (
+                          <div className="flex items-center gap-2 text-orange-700 text-xs">
+                            <Gift className="h-3 w-3" />
+                            <span>{item.customizations.selectedChocolates.length} chocolate add-on(s): {item.customizations.selectedChocolates.map(c => c.name).join(', ')}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </li>
               ))}
