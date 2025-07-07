@@ -12,14 +12,32 @@ import type { ProductData } from '@/services/productService';
 import productService from '@/services/productService';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Loader2, Trash2, ArrowLeft, Upload, Image as ImageIcon, Plus, X } from 'lucide-react';
+import { Loader2, Trash2, ArrowLeft, Upload, Image as ImageIcon, Plus, X, Wand2 } from 'lucide-react';
 import api from '../../services/api';
 import axios from 'axios'; // Keep for axios.isAxiosError
 import ProductFeaturesToggle from '@/components/ui/ProductFeaturesToggle';
 import { getImageUrl } from '@/config';
 
-type FormErrors = Partial<Record<keyof ProductData, string>>;
+type AddonOption = {
+  name: string;
+  price: number;
+  type: 'flower' | 'chocolate';
+};
 
+type CustomizationOptions = {
+  allowPhotoUpload: boolean;
+  allowNumberInput: boolean;
+  numberInputLabel: string;
+  allowMessageCard: boolean;
+  messageCardPrice: number;
+  addons: {
+    flowers: AddonOption[];
+    chocolates: AddonOption[];
+  };
+  previewImage: string;
+};
+
+type FormErrors = Partial<Record<keyof ProductData, string>>;
 
 const CATEGORIES = [
   { value: "bouquets", label: "Bouquets" },
@@ -157,9 +175,22 @@ const initialFormData: ProductData = {
   images: [],
   details: [],
   careInstructions: [],
-      isNewArrival: false,
-    isFeatured: false,
-    hidden: true  // 🔒 New products are hidden by default until admin makes them visible
+  isNewArrival: false,
+  isFeatured: false,
+  hidden: true,  // 🔒 New products are hidden by default until admin makes them visible
+  isCustomizable: false,
+  customizationOptions: {
+    allowPhotoUpload: false,
+    allowNumberInput: false,
+    numberInputLabel: "Enter number",
+    allowMessageCard: false,
+    messageCardPrice: 0,
+    addons: {
+      flowers: [],
+      chocolates: []
+    },
+    previewImage: ""
+  }
 };
 
 const ProductForm = () => {
@@ -173,6 +204,8 @@ const ProductForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number[]>([]);
+  const [newFlowerAddon, setNewFlowerAddon] = useState({ name: "", price: 0 });
+  const [newChocolateAddon, setNewChocolateAddon] = useState({ name: "", price: 0 });
 
   const fetchProductData = async () => {
     try {
@@ -707,6 +740,51 @@ const ProductForm = () => {
     }
   };
 
+  const addFlowerAddon = () => {
+    if (newFlowerAddon.name && newFlowerAddon.price > 0) {
+      setFormData(prev => ({
+        ...prev,
+        customizationOptions: {
+          ...prev.customizationOptions,
+          addons: {
+            ...prev.customizationOptions.addons,
+            flowers: [...prev.customizationOptions.addons.flowers, { ...newFlowerAddon, type: 'flower' }]
+          }
+        }
+      }));
+      setNewFlowerAddon({ name: "", price: 0 });
+    }
+  };
+
+  const addChocolateAddon = () => {
+    if (newChocolateAddon.name && newChocolateAddon.price > 0) {
+      setFormData(prev => ({
+        ...prev,
+        customizationOptions: {
+          ...prev.customizationOptions,
+          addons: {
+            ...prev.customizationOptions.addons,
+            chocolates: [...prev.customizationOptions.addons.chocolates, { ...newChocolateAddon, type: 'chocolate' }]
+          }
+        }
+      }));
+      setNewChocolateAddon({ name: "", price: 0 });
+    }
+  };
+
+  const removeAddon = (type: 'flower' | 'chocolate', index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      customizationOptions: {
+        ...prev.customizationOptions,
+        addons: {
+          ...prev.customizationOptions.addons,
+          [type === 'flower' ? 'flowers' : 'chocolates']: prev.customizationOptions.addons[type === 'flower' ? 'flowers' : 'chocolates'].filter((_, i) => i !== index)
+        }
+      }
+    }));
+  };
+
   return (
     <div className="container mx-auto py-8">
       <div className="mb-6 flex items-center justify-between">
@@ -724,7 +802,7 @@ const ProductForm = () => {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-8 pb-10">
         {/* Basic Information */}
         <Card>
           <CardHeader>
@@ -1071,6 +1149,211 @@ const ProductForm = () => {
             >
               Add Care Instruction
             </Button>
+          </CardContent>
+        </Card>
+
+        {/* Customization Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Wand2 className="h-5 w-5" />
+              Product Customization
+            </CardTitle>
+            <CardDescription>
+              Configure customization options for this product
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="isCustomizable"
+                checked={formData.isCustomizable}
+                onCheckedChange={(checked) => 
+                  setFormData(prev => ({ ...prev, isCustomizable: checked }))
+                }
+              />
+              <Label htmlFor="isCustomizable">Enable Product Customization</Label>
+            </div>
+
+            {formData.isCustomizable && (
+              <div className="space-y-6 pl-6">
+                {/* Photo Upload Option */}
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="allowPhotoUpload"
+                    checked={formData.customizationOptions.allowPhotoUpload}
+                    onCheckedChange={(checked) => 
+                      setFormData(prev => ({
+                        ...prev,
+                        customizationOptions: {
+                          ...prev.customizationOptions,
+                          allowPhotoUpload: checked
+                        }
+                      }))
+                    }
+                  />
+                  <Label htmlFor="allowPhotoUpload">Allow Photo Upload</Label>
+                </div>
+
+                {/* Number Input Option */}
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="allowNumberInput"
+                      checked={formData.customizationOptions.allowNumberInput}
+                      onCheckedChange={(checked) => 
+                        setFormData(prev => ({
+                          ...prev,
+                          customizationOptions: {
+                            ...prev.customizationOptions,
+                            allowNumberInput: checked
+                          }
+                        }))
+                      }
+                    />
+                    <Label htmlFor="allowNumberInput">Allow Number Input</Label>
+                  </div>
+                  {formData.customizationOptions.allowNumberInput && (
+                    <Input
+                      placeholder="Number input label (e.g., 'Enter age')"
+                      value={formData.customizationOptions.numberInputLabel}
+                      onChange={(e) => 
+                        setFormData(prev => ({
+                          ...prev,
+                          customizationOptions: {
+                            ...prev.customizationOptions,
+                            numberInputLabel: e.target.value
+                          }
+                        }))
+                      }
+                    />
+                  )}
+                </div>
+
+                {/* Message Card Option */}
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="allowMessageCard"
+                      checked={formData.customizationOptions.allowMessageCard}
+                      onCheckedChange={(checked) => 
+                        setFormData(prev => ({
+                          ...prev,
+                          customizationOptions: {
+                            ...prev.customizationOptions,
+                            allowMessageCard: checked
+                          }
+                        }))
+                      }
+                    />
+                    <Label htmlFor="allowMessageCard">Allow Message Card</Label>
+                  </div>
+                  {formData.customizationOptions.allowMessageCard && (
+                    <Input
+                      type="number"
+                      placeholder="Message card price"
+                      value={formData.customizationOptions.messageCardPrice}
+                      onChange={(e) => 
+                        setFormData(prev => ({
+                          ...prev,
+                          customizationOptions: {
+                            ...prev.customizationOptions,
+                            messageCardPrice: parseFloat(e.target.value) || 0
+                          }
+                        }))
+                      }
+                    />
+                  )}
+                </div>
+
+                {/* Flower Add-ons */}
+                <div className="space-y-2">
+                  <Label>Flower Add-ons</Label>
+                  <div className="flex space-x-2">
+                    <Input
+                      placeholder="Flower name"
+                      value={newFlowerAddon.name}
+                      onChange={(e) => setNewFlowerAddon(prev => ({ ...prev, name: e.target.value }))}
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Price"
+                      value={newFlowerAddon.price}
+                      onChange={(e) => setNewFlowerAddon(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
+                    />
+                    <Button type="button" onClick={addFlowerAddon} size="sm">Add</Button>
+                  </div>
+                  <div className="space-y-2">
+                    {formData.customizationOptions.addons.flowers.map((flower, index) => (
+                      <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                        <span>{flower.name} (₹{flower.price})</span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeAddon('flower', index)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Chocolate Add-ons */}
+                <div className="space-y-2">
+                  <Label>Chocolate Add-ons</Label>
+                  <div className="flex space-x-2">
+                    <Input
+                      placeholder="Chocolate name"
+                      value={newChocolateAddon.name}
+                      onChange={(e) => setNewChocolateAddon(prev => ({ ...prev, name: e.target.value }))}
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Price"
+                      value={newChocolateAddon.price}
+                      onChange={(e) => setNewChocolateAddon(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
+                    />
+                    <Button type="button" onClick={addChocolateAddon} size="sm">Add</Button>
+                  </div>
+                  <div className="space-y-2">
+                    {formData.customizationOptions.addons.chocolates.map((chocolate, index) => (
+                      <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                        <span>{chocolate.name} (₹{chocolate.price})</span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeAddon('chocolate', index)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Preview Image */}
+                <div className="space-y-2">
+                  <Label>Preview Image</Label>
+                  <Input
+                    type="text"
+                    placeholder="Preview image URL"
+                    value={formData.customizationOptions.previewImage}
+                    onChange={(e) => 
+                      setFormData(prev => ({
+                        ...prev,
+                        customizationOptions: {
+                          ...prev.customizationOptions,
+                          previewImage: e.target.value
+                        }
+                      }))
+                    }
+                  />
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
