@@ -142,54 +142,49 @@ const OrderDetailsPage: React.FC = () => {
                       )}
                     </div>
                     {/* Customizations */}
-                    {item.customizations && (
-                      <div className="mt-2 space-y-1 bg-purple-50 border border-purple-200 rounded p-2">
-                        <div className="font-semibold text-purple-700 mb-1 flex items-center gap-2">
-                          <Wand2 className="h-4 w-4" /> Customizations
-                        </div>
-                        {item.customizations.photo && (
-                          <div className="flex items-center gap-2 text-blue-700 text-xs">
-                            <Camera className="h-3 w-3" />
-                            <span>Photo uploaded</span>
-                            <a href={item.customizations.photo} download={`custom-photo-${item.product.title}.jpg`} className="underline ml-2" target="_blank" rel="noopener noreferrer">Download</a>
-                          </div>
-                        )}
-                        {item.customizations.number && (
-                          <div className="flex items-center gap-2 text-green-700 text-xs">
-                            <Hash className="h-3 w-3" />
-                            <span>Number: {item.customizations.number}</span>
-                          </div>
-                        )}
-                        {item.customizations.messageCard && (
-                          <div className="flex items-center gap-2 text-yellow-700 text-xs">
-                            <MessageSquare className="h-3 w-3" />
-                            <span>Message: {item.customizations.messageCard}</span>
-                          </div>
-                        )}
-                        {item.customizations.selectedFlowers && item.customizations.selectedFlowers.length > 0 && (
-                          <div className="flex items-center gap-2 text-pink-700 text-xs">
-                            <Flower2 className="h-3 w-3" />
-                            <span>
-                              {item.customizations.selectedFlowers.reduce((total, f) => total + (f.quantity || 1), 0)} flower add-on(s): 
-                              {item.customizations.selectedFlowers.map(f => 
-                                `${f.name}${(f.quantity || 1) > 1 ? `×${f.quantity || 1}` : ''}`
-                              ).join(', ')}
-                            </span>
-                          </div>
-                        )}
-                        {item.customizations.selectedChocolates && item.customizations.selectedChocolates.length > 0 && (
-                          <div className="flex items-center gap-2 text-orange-700 text-xs">
-                            <Gift className="h-3 w-3" />
-                            <span>
-                              {item.customizations.selectedChocolates.reduce((total, c) => total + (c.quantity || 1), 0)} chocolate add-on(s): 
-                              {item.customizations.selectedChocolates.map(c => 
-                                `${c.name}${(c.quantity || 1) > 1 ? `×${c.quantity || 1}` : ''}`
-                              ).join(', ')}
-                            </span>
-                          </div>
-                        )}
+                    <div className="mt-2">
+                      <div className="font-semibold text-purple-700 flex items-center gap-2">
+                        🎨 Customization Details
                       </div>
-                    )}
+                      {item.customizations ? (
+                        <div className="space-y-1 mt-1 text-xs">
+                          {item.customizations.photo && (
+                            <div className="flex items-center gap-2 text-blue-700">
+                              📸 <span>Photo uploaded</span>
+                              <a href={item.customizations.photo} download className="underline ml-2" target="_blank" rel="noopener noreferrer">Download</a>
+                            </div>
+                          )}
+                          {item.customizations.number && (
+                            <div className="flex items-center gap-2 text-green-700">
+                              🔢 <span>Number: {item.customizations.number}</span>
+                            </div>
+                          )}
+                          {item.customizations.messageCard && (
+                            <div className="flex items-center gap-2 text-yellow-700">
+                              ✍ <span>Message: {item.customizations.messageCard}</span>
+                            </div>
+                          )}
+                          {item.customizations.selectedFlowers && item.customizations.selectedFlowers.length > 0 && (
+                            <div className="flex items-center gap-2 text-pink-700">
+                              🌸 <span>
+                                {item.customizations.selectedFlowers.reduce((total: number, f: any) => total + (f.quantity || 1), 0)} flower add-on(s):
+                                {item.customizations.selectedFlowers.map((f: any) => `${f.name}${(f.quantity || 1) > 1 ? `×${f.quantity || 1}` : ''}`).join(', ')}
+                              </span>
+                            </div>
+                          )}
+                          {item.customizations.selectedChocolates && item.customizations.selectedChocolates.length > 0 && (
+                            <div className="flex items-center gap-2 text-orange-700">
+                              🍫 <span>
+                                {item.customizations.selectedChocolates.reduce((total: number, c: any) => total + (c.quantity || 1), 0)} chocolate add-on(s):
+                                {item.customizations.selectedChocolates.map((c: any) => `${c.name}${(c.quantity || 1) > 1 ? `×${c.quantity || 1}` : ''}`).join(', ')}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-xs text-gray-400 mt-1">No customization applied for this order.</div>
+                      )}
+                    </div>
                   </div>
                 </li>
               ))}

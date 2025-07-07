@@ -160,7 +160,38 @@ const CheckoutConfirmationPage = () => {
     
     if (savedOrder) {
       try {
-        const parsedOrder = JSON.parse(savedOrder);
+        let parsedOrder = JSON.parse(savedOrder);
+        // --- Normalization logic ---
+        // If backend uses shippingDetails, map to shipping
+        if (parsedOrder.shippingDetails && !parsedOrder.shipping) {
+          parsedOrder.shipping = parsedOrder.shippingDetails;
+        }
+        // If backend uses items with product subfield, flatten for display
+        if (parsedOrder.items && parsedOrder.items.length > 0 && parsedOrder.items[0].product) {
+          parsedOrder.items = parsedOrder.items.map((item: any) => ({
+            id: item.product._id || item.product.id || item.productId || item._id || '',
+            title: item.product.title || item.product.name || item.title || '',
+            image: (item.product.images && item.product.images[0]) || item.image || '',
+            price: item.finalPrice || item.price || (item.product.price ?? 0),
+            quantity: item.quantity || 1,
+            customizations: item.customizations || null,
+            // fallback for legacy
+            product: item.product
+          }));
+        }
+        // Fallback for subtotal/total
+        if (typeof parsedOrder.subtotal === 'undefined') {
+          parsedOrder.subtotal = Array.isArray(parsedOrder.items)
+            ? parsedOrder.items.reduce((sum: number, item: any) => sum + ((item.price || 0) * (item.quantity || 1)), 0)
+            : 0;
+        }
+        if (typeof parsedOrder.total === 'undefined') {
+          parsedOrder.total = parsedOrder.subtotal + (parsedOrder.deliveryFee || 0);
+        }
+        // Fallback for payment
+        if (!parsedOrder.payment && parsedOrder.paymentDetails) {
+          parsedOrder.payment = parsedOrder.paymentDetails;
+        }
         setOrder(parsedOrder);
         setIsOrderDataFetched(true);
         console.log('Order data loaded successfully');
@@ -399,18 +430,66 @@ const CheckoutConfirmationPage = () => {
                     {order.items?.map((item, index) => (
                       <div key={index} className="flex items-center space-x-4 p-4 rounded-lg bg-gray-50">
                         <div className="w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
-                          <img
-                            src={formatImageUrl(item.image || (item.images && item.images[0]))}
-                            alt={item.title}
-                            className="w-full h-full object-cover"
-                          />
+                          {item.image ? (
+                            <img
+                              src={formatImageUrl(item.image)}
+                              alt={item.title || 'Product Image'}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">No Image</div>
+                          )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-gray-900 truncate">{item.title}</h4>
-                          <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
+                          <h4 className="font-medium text-gray-900 truncate">{item.title || 'Unnamed Product'}</h4>
+                          <p className="text-sm text-gray-600">Quantity: {item.quantity ?? 'N/A'}</p>
                           <p className="text-sm text-gray-600">
-                            {displayPrice(Number(item.price) || 0, order.currency, order.currencyRate)} × {item.quantity}
+                            {displayPrice(Number(item.price) || 0, order.currency, order.currencyRate)} × {item.quantity ?? 'N/A'}
                           </p>
+                          {/* Customization Details Block */}
+                          <div className="mt-2">
+                            <div className="font-semibold text-purple-700 flex items-center gap-2">
+                              🎨 Customization Details
+                            </div>
+                            {item.customizations ? (
+                              <div className="space-y-1 mt-1 text-xs">
+                                {item.customizations.photo && (
+                                  <div className="flex items-center gap-2 text-blue-700">
+                                    📸 <span>Photo uploaded</span>
+                                    <a href={item.customizations.photo} download className="underline ml-2" target="_blank" rel="noopener noreferrer">Download</a>
+                                  </div>
+                                )}
+                                {item.customizations.number && (
+                                  <div className="flex items-center gap-2 text-green-700">
+                                    🔢 <span>Number: {item.customizations.number}</span>
+                                  </div>
+                                )}
+                                {item.customizations.messageCard && (
+                                  <div className="flex items-center gap-2 text-yellow-700">
+                                    ✍ <span>Message: {item.customizations.messageCard}</span>
+                                  </div>
+                                )}
+                                {item.customizations.selectedFlowers && item.customizations.selectedFlowers.length > 0 && (
+                                  <div className="flex items-center gap-2 text-pink-700">
+                                    🌸 <span>
+                                      {item.customizations.selectedFlowers.reduce((total: number, f: any) => total + (f.quantity || 1), 0)} flower add-on(s):
+                                      {item.customizations.selectedFlowers.map((f: any) => `${f.name}${(f.quantity || 1) > 1 ? `×${f.quantity || 1}` : ''}`).join(', ')}
+                                    </span>
+                                  </div>
+                                )}
+                                {item.customizations.selectedChocolates && item.customizations.selectedChocolates.length > 0 && (
+                                  <div className="flex items-center gap-2 text-orange-700">
+                                    🍫 <span>
+                                      {item.customizations.selectedChocolates.reduce((total: number, c: any) => total + (c.quantity || 1), 0)} chocolate add-on(s):
+                                      {item.customizations.selectedChocolates.map((c: any) => `${c.name}${(c.quantity || 1) > 1 ? `×${c.quantity || 1}` : ''}`).join(', ')}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="text-xs text-gray-400 mt-1">No customization applied for this order.</div>
+                            )}
+                          </div>
                         </div>
                         <div className="text-right">
                           <p className="font-semibold">
@@ -442,10 +521,10 @@ const CheckoutConfirmationPage = () => {
                         <span className="font-medium">Delivery Address</span>
                       </div>
                       <div className="text-sm text-gray-600 space-y-1">
-                        <p className="font-medium">{order.shipping?.firstName} {order.shipping?.lastName}</p>
-                        <p>{order.shipping?.address}</p>
+                        <p className="font-medium">{order.shipping?.firstName || 'N/A'} {order.shipping?.lastName || ''}</p>
+                        <p>{order.shipping?.address || 'N/A'}</p>
                         {order.shipping?.apartment && <p>{order.shipping.apartment}</p>}
-                        <p>{order.shipping?.city}, {order.shipping?.state} - {order.shipping?.zipCode}</p>
+                        <p>{order.shipping?.city || ''}{order.shipping?.state ? `, ${order.shipping.state}` : ''}{order.shipping?.zipCode || ''}</p>
                       </div>
                     </div>
                     
@@ -457,11 +536,11 @@ const CheckoutConfirmationPage = () => {
                       <div className="text-sm text-gray-600 space-y-1">
                         <div className="flex items-center gap-2">
                           <Phone className="w-3 h-3" />
-                          <span>{order.shipping?.phone}</span>
+                          <span>{order.shipping?.phone || 'N/A'}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <Mail className="w-3 h-3" />
-                          <span>{order.shipping?.email}</span>
+                          <span>{order.shipping?.email || 'N/A'}</span>
                         </div>
                       </div>
                     </div>
@@ -573,7 +652,7 @@ const CheckoutConfirmationPage = () => {
                 <CardContent className="space-y-3">
                 <div className="flex justify-between text-sm">
                     <span>Subtotal</span>
-                  <span>{displayPrice(order.subtotal, order.currency, order.currencyRate)}</span>
+                  <span>{isNaN(order.subtotal) ? 'N/A' : displayPrice(order.subtotal, order.currency, order.currencyRate)}</span>
                 </div>
                   
                   {order.deliveryFee && order.deliveryFee > 0 && (
@@ -594,7 +673,7 @@ const CheckoutConfirmationPage = () => {
                   
                   <div className="flex justify-between font-semibold text-lg">
                     <span>Total</span>
-                    <span>{displayPrice(order.total, order.currency, order.currencyRate)}</span>
+                    <span>{isNaN(order.total) ? 'N/A' : displayPrice(order.total, order.currency, order.currencyRate)}</span>
                   </div>
                   
                   <div className="text-xs text-gray-500 text-center">
