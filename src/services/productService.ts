@@ -1,6 +1,25 @@
 import axios from 'axios';
 import { API_URL } from '@/config';
 
+export interface AddonOption {
+  name: string;
+  price: number;
+  type: 'flower' | 'chocolate';
+}
+
+export interface CustomizationOptions {
+  allowPhotoUpload: boolean;
+  allowNumberInput: boolean;
+  numberInputLabel: string;
+  allowMessageCard: boolean;
+  messageCardPrice: number;
+  addons: {
+    flowers: AddonOption[];
+    chocolates: AddonOption[];
+  };
+  previewImage: string;
+}
+
 export interface ProductData {
   _id?: string;
   title: string;
@@ -17,6 +36,8 @@ export interface ProductData {
   isNewArrival?: boolean;
   isFeatured?: boolean;
   hidden?: boolean;
+  isCustomizable?: boolean;
+  customizationOptions?: CustomizationOptions;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -38,6 +59,8 @@ interface BackendProductData {
   isNew?: boolean; // Backend uses isNew
   isFeatured?: boolean;
   hidden?: boolean;
+  isCustomizable?: boolean;
+  customizationOptions?: CustomizationOptions;
   createdAt?: string;
   updatedAt?: string;
   [key: string]: unknown; // Allow other properties with unknown type

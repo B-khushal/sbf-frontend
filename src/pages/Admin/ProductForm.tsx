@@ -8,34 +8,16 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import type { ProductData } from '@/services/productService';
+import type { ProductData, AddonOption, CustomizationOptions } from '@/services/productService';
 import productService from '@/services/productService';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Loader2, Trash2, ArrowLeft, Upload, Image as ImageIcon, Plus, X, Wand2 } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { Loader2, Trash2, ArrowLeft, Upload, Image as ImageIcon, Plus, X, Wand2, Flower2, Gift, Camera, Hash, MessageSquare, IndianRupee } from 'lucide-react';
 import api from '../../services/api';
 import axios from 'axios'; // Keep for axios.isAxiosError
 import ProductFeaturesToggle from '@/components/ui/ProductFeaturesToggle';
 import { getImageUrl } from '@/config';
-
-type AddonOption = {
-  name: string;
-  price: number;
-  type: 'flower' | 'chocolate';
-};
-
-type CustomizationOptions = {
-  allowPhotoUpload: boolean;
-  allowNumberInput: boolean;
-  numberInputLabel: string;
-  allowMessageCard: boolean;
-  messageCardPrice: number;
-  addons: {
-    flowers: AddonOption[];
-    chocolates: AddonOption[];
-  };
-  previewImage: string;
-};
 
 type FormErrors = Partial<Record<keyof ProductData, string>>;
 
@@ -688,7 +670,20 @@ const ProductForm = () => {
         isNewArrival: Boolean(formData.isNewArrival),
         isFeatured: Boolean(formData.isFeatured),
         hidden: Boolean(formData.hidden),
-        categories: formData.categories || []
+        isCustomizable: Boolean(formData.isCustomizable),
+        categories: formData.categories || [],
+        customizationOptions: formData.isCustomizable ? {
+          allowPhotoUpload: Boolean(formData.customizationOptions?.allowPhotoUpload),
+          allowNumberInput: Boolean(formData.customizationOptions?.allowNumberInput),
+          numberInputLabel: formData.customizationOptions?.numberInputLabel || "Enter number",
+          allowMessageCard: Boolean(formData.customizationOptions?.allowMessageCard),
+          messageCardPrice: Number(formData.customizationOptions?.messageCardPrice) || 0,
+          addons: {
+            flowers: formData.customizationOptions?.addons?.flowers || [],
+            chocolates: formData.customizationOptions?.addons?.chocolates || []
+          },
+          previewImage: formData.customizationOptions?.previewImage || ""
+        } : undefined
       };
       
       if (isEditMode) {
@@ -1152,55 +1147,90 @@ const ProductForm = () => {
           </CardContent>
         </Card>
 
-        {/* Customization Section */}
-        <Card>
+        {/* Enhanced Customization Section */}
+        <Card className="border-2 border-dashed border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Wand2 className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-3 text-purple-800">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100">
+                <Wand2 className="h-5 w-5 text-purple-600" />
+              </div>
               Product Customization
             </CardTitle>
-            <CardDescription>
-              Configure customization options for this product
+            <CardDescription className="text-purple-600">
+              Enable customers to personalize this product with photos, messages, and add-ons
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="isCustomizable"
-                checked={formData.isCustomizable}
-                onCheckedChange={(checked) => 
-                  setFormData(prev => ({ ...prev, isCustomizable: checked }))
-                }
-              />
-              <Label htmlFor="isCustomizable">Enable Product Customization</Label>
+            {/* Main Toggle */}
+            <div className="flex items-center justify-between rounded-lg border border-purple-200 bg-white p-4">
+              <div className="flex items-center space-x-3">
+                <Switch
+                  id="isCustomizable"
+                  checked={formData.isCustomizable}
+                  onCheckedChange={(checked) => 
+                    setFormData(prev => ({ ...prev, isCustomizable: checked }))
+                  }
+                />
+                <div>
+                  <Label htmlFor="isCustomizable" className="text-base font-medium">Enable Product Customization</Label>
+                  <p className="text-sm text-gray-500">Allow customers to personalize this product</p>
+                </div>
+              </div>
+              {formData.isCustomizable && (
+                <Badge variant="secondary" className="bg-purple-100 text-purple-700">
+                  <Wand2 className="mr-1 h-3 w-3" />
+                  Customizable
+                </Badge>
+              )}
             </div>
 
             {formData.isCustomizable && (
-              <div className="space-y-6 pl-6">
+              <div className="space-y-6 rounded-lg border border-purple-200 bg-white p-6">
                 {/* Photo Upload Option */}
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="allowPhotoUpload"
-                    checked={formData.customizationOptions.allowPhotoUpload}
-                    onCheckedChange={(checked) => 
-                      setFormData(prev => ({
-                        ...prev,
-                        customizationOptions: {
-                          ...prev.customizationOptions,
-                          allowPhotoUpload: checked
-                        }
-                      }))
-                    }
-                  />
-                  <Label htmlFor="allowPhotoUpload">Allow Photo Upload</Label>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100">
+                        <Camera className="h-4 w-4 text-blue-600" />
+                      </div>
+                      <div>
+                        <Label htmlFor="allowPhotoUpload" className="text-base font-medium">Photo Upload</Label>
+                        <p className="text-sm text-gray-500">Allow customers to upload personal photos</p>
+                      </div>
+                    </div>
+                    <Switch
+                      id="allowPhotoUpload"
+                      checked={formData.customizationOptions?.allowPhotoUpload}
+                      onCheckedChange={(checked) => 
+                        setFormData(prev => ({
+                          ...prev,
+                          customizationOptions: {
+                            ...prev.customizationOptions,
+                            allowPhotoUpload: checked
+                          }
+                        }))
+                      }
+                    />
+                  </div>
                 </div>
 
+                <Separator />
+
                 {/* Number Input Option */}
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100">
+                        <Hash className="h-4 w-4 text-green-600" />
+                      </div>
+                      <div>
+                        <Label htmlFor="allowNumberInput" className="text-base font-medium">Number Input</Label>
+                        <p className="text-sm text-gray-500">Allow customers to enter custom numbers (age, quantity, etc.)</p>
+                      </div>
+                    </div>
                     <Switch
                       id="allowNumberInput"
-                      checked={formData.customizationOptions.allowNumberInput}
+                      checked={formData.customizationOptions?.allowNumberInput}
                       onCheckedChange={(checked) => 
                         setFormData(prev => ({
                           ...prev,
@@ -1211,31 +1241,44 @@ const ProductForm = () => {
                         }))
                       }
                     />
-                    <Label htmlFor="allowNumberInput">Allow Number Input</Label>
                   </div>
-                  {formData.customizationOptions.allowNumberInput && (
-                    <Input
-                      placeholder="Number input label (e.g., 'Enter age')"
-                      value={formData.customizationOptions.numberInputLabel}
-                      onChange={(e) => 
-                        setFormData(prev => ({
-                          ...prev,
-                          customizationOptions: {
-                            ...prev.customizationOptions,
-                            numberInputLabel: e.target.value
-                          }
-                        }))
-                      }
-                    />
+                  {formData.customizationOptions?.allowNumberInput && (
+                    <div className="ml-11">
+                      <Input
+                        placeholder="Number input label (e.g., 'Enter age', 'Quantity')"
+                        value={formData.customizationOptions?.numberInputLabel}
+                        onChange={(e) => 
+                          setFormData(prev => ({
+                            ...prev,
+                            customizationOptions: {
+                              ...prev.customizationOptions,
+                              numberInputLabel: e.target.value
+                            }
+                          }))
+                        }
+                        className="max-w-md"
+                      />
+                    </div>
                   )}
                 </div>
 
+                <Separator />
+
                 {/* Message Card Option */}
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-yellow-100">
+                        <MessageSquare className="h-4 w-4 text-yellow-600" />
+                      </div>
+                      <div>
+                        <Label htmlFor="allowMessageCard" className="text-base font-medium">Message Card</Label>
+                        <p className="text-sm text-gray-500">Allow customers to add personalized messages</p>
+                      </div>
+                    </div>
                     <Switch
                       id="allowMessageCard"
-                      checked={formData.customizationOptions.allowMessageCard}
+                      checked={formData.customizationOptions?.allowMessageCard}
                       onCheckedChange={(checked) => 
                         setFormData(prev => ({
                           ...prev,
@@ -1246,101 +1289,158 @@ const ProductForm = () => {
                         }))
                       }
                     />
-                    <Label htmlFor="allowMessageCard">Allow Message Card</Label>
                   </div>
-                  {formData.customizationOptions.allowMessageCard && (
-                    <Input
-                      type="number"
-                      placeholder="Message card price"
-                      value={formData.customizationOptions.messageCardPrice}
-                      onChange={(e) => 
-                        setFormData(prev => ({
-                          ...prev,
-                          customizationOptions: {
-                            ...prev.customizationOptions,
-                            messageCardPrice: parseFloat(e.target.value) || 0
-                          }
-                        }))
-                      }
-                    />
+                  {formData.customizationOptions?.allowMessageCard && (
+                    <div className="ml-11 flex items-center space-x-2">
+                      <IndianRupee className="h-4 w-4 text-gray-400" />
+                      <Input
+                        type="number"
+                        placeholder="Message card price"
+                        value={formData.customizationOptions?.messageCardPrice}
+                        onChange={(e) => 
+                          setFormData(prev => ({
+                            ...prev,
+                            customizationOptions: {
+                              ...prev.customizationOptions,
+                              messageCardPrice: parseFloat(e.target.value) || 0
+                            }
+                          }))
+                        }
+                        className="w-32"
+                      />
+                    </div>
                   )}
                 </div>
 
-                {/* Flower Add-ons */}
-                <div className="space-y-2">
-                  <Label>Flower Add-ons</Label>
-                  <div className="flex space-x-2">
-                    <Input
-                      placeholder="Flower name"
-                      value={newFlowerAddon.name}
-                      onChange={(e) => setNewFlowerAddon(prev => ({ ...prev, name: e.target.value }))}
-                    />
-                    <Input
-                      type="number"
-                      placeholder="Price"
-                      value={newFlowerAddon.price}
-                      onChange={(e) => setNewFlowerAddon(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
-                    />
-                    <Button type="button" onClick={addFlowerAddon} size="sm">Add</Button>
-                  </div>
-                  <div className="space-y-2">
-                    {formData.customizationOptions.addons.flowers.map((flower, index) => (
-                      <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
-                        <span>{flower.name} (₹{flower.price})</span>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeAddon('flower', index)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                <Separator />
+
+                {/* Add-ons Section */}
+                <div className="space-y-4">
+                  <h4 className="text-lg font-semibold text-gray-800">Add-ons</h4>
+                  
+                  {/* Flower Add-ons */}
+                  <div className="space-y-3 rounded-lg border border-green-200 bg-green-50 p-4">
+                    <div className="flex items-center space-x-2">
+                      <Flower2 className="h-5 w-5 text-green-600" />
+                      <Label className="text-base font-medium text-green-800">Flower Add-ons</Label>
+                    </div>
+                    <div className="flex space-x-2">
+                      <Input
+                        placeholder="Flower name (e.g., 'Red Roses')"
+                        value={newFlowerAddon.name}
+                        onChange={(e) => setNewFlowerAddon(prev => ({ ...prev, name: e.target.value }))}
+                        className="flex-1"
+                      />
+                      <div className="flex items-center space-x-1">
+                        <IndianRupee className="h-4 w-4 text-gray-400" />
+                        <Input
+                          type="number"
+                          placeholder="Price"
+                          value={newFlowerAddon.price}
+                          onChange={(e) => setNewFlowerAddon(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
+                          className="w-24"
+                        />
                       </div>
-                    ))}
+                      <Button 
+                        type="button" 
+                        onClick={addFlowerAddon} 
+                        size="sm"
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="space-y-2">
+                      {formData.customizationOptions?.addons?.flowers.map((flower, index) => (
+                        <div key={index} className="flex items-center justify-between bg-white p-3 rounded-lg border border-green-200">
+                          <div className="flex items-center space-x-2">
+                            <Flower2 className="h-4 w-4 text-green-600" />
+                            <span className="font-medium">{flower.name}</span>
+                            <Badge variant="outline" className="text-green-700 border-green-300">
+                              ₹{flower.price}
+                            </Badge>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeAddon('flower', index)}
+                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Chocolate Add-ons */}
+                  <div className="space-y-3 rounded-lg border border-orange-200 bg-orange-50 p-4">
+                    <div className="flex items-center space-x-2">
+                      <Gift className="h-5 w-5 text-orange-600" />
+                      <Label className="text-base font-medium text-orange-800">Chocolate Add-ons</Label>
+                    </div>
+                    <div className="flex space-x-2">
+                      <Input
+                        placeholder="Chocolate name (e.g., 'Dark Chocolate Truffles')"
+                        value={newChocolateAddon.name}
+                        onChange={(e) => setNewChocolateAddon(prev => ({ ...prev, name: e.target.value }))}
+                        className="flex-1"
+                      />
+                      <div className="flex items-center space-x-1">
+                        <IndianRupee className="h-4 w-4 text-gray-400" />
+                        <Input
+                          type="number"
+                          placeholder="Price"
+                          value={newChocolateAddon.price}
+                          onChange={(e) => setNewChocolateAddon(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
+                          className="w-24"
+                        />
+                      </div>
+                      <Button 
+                        type="button" 
+                        onClick={addChocolateAddon} 
+                        size="sm"
+                        className="bg-orange-600 hover:bg-orange-700"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="space-y-2">
+                      {formData.customizationOptions?.addons?.chocolates.map((chocolate, index) => (
+                        <div key={index} className="flex items-center justify-between bg-white p-3 rounded-lg border border-orange-200">
+                          <div className="flex items-center space-x-2">
+                            <Gift className="h-4 w-4 text-orange-600" />
+                            <span className="font-medium">{chocolate.name}</span>
+                            <Badge variant="outline" className="text-orange-700 border-orange-300">
+                              ₹{chocolate.price}
+                            </Badge>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeAddon('chocolate', index)}
+                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
-                {/* Chocolate Add-ons */}
-                <div className="space-y-2">
-                  <Label>Chocolate Add-ons</Label>
-                  <div className="flex space-x-2">
-                    <Input
-                      placeholder="Chocolate name"
-                      value={newChocolateAddon.name}
-                      onChange={(e) => setNewChocolateAddon(prev => ({ ...prev, name: e.target.value }))}
-                    />
-                    <Input
-                      type="number"
-                      placeholder="Price"
-                      value={newChocolateAddon.price}
-                      onChange={(e) => setNewChocolateAddon(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
-                    />
-                    <Button type="button" onClick={addChocolateAddon} size="sm">Add</Button>
-                  </div>
-                  <div className="space-y-2">
-                    {formData.customizationOptions.addons.chocolates.map((chocolate, index) => (
-                      <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
-                        <span>{chocolate.name} (₹{chocolate.price})</span>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeAddon('chocolate', index)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <Separator />
 
                 {/* Preview Image */}
-                <div className="space-y-2">
-                  <Label>Preview Image</Label>
+                <div className="space-y-3">
+                  <Label className="text-base font-medium">Preview Image</Label>
+                  <p className="text-sm text-gray-500">URL for the customization preview image</p>
                   <Input
                     type="text"
-                    placeholder="Preview image URL"
-                    value={formData.customizationOptions.previewImage}
+                    placeholder="https://example.com/preview-image.jpg"
+                    value={formData.customizationOptions?.previewImage}
                     onChange={(e) => 
                       setFormData(prev => ({
                         ...prev,
