@@ -13,6 +13,7 @@ import { Badge } from './ui/badge';
 import productService, { ProductData } from '@/services/productService';
 import ProductReviews from '@/components/ProductReviews';
 import useWishlist from '@/hooks/use-wishlist';
+import { useNavigate } from 'react-router-dom';
 
 type AddonOption = {
   name: string;
@@ -198,6 +199,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [isCustomizeModalOpen, setIsCustomizeModalOpen] = useState(false);
   const [customizations, setCustomizations] = useState<CustomizationData | undefined>();
+  const navigate = useNavigate();
 
   // Debug log to check properties
   console.log(`Product Detail ${product.title}:`, {
@@ -240,6 +242,26 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
   const decrementQuantity = () => quantity > 1 && setQuantity((prev) => prev - 1);
 
   const handleCustomize = () => {
+    // Check authentication first
+    if (!user) {
+      toast({
+        title: "Please log in",
+        description: "You need to be logged in to customize products",
+        variant: "destructive",
+        duration: 4000,
+      });
+      
+      setTimeout(() => {
+        navigate('/login', { 
+          state: { 
+            redirect: window.location.pathname,
+            message: "Please login to customize products"
+          } 
+        });
+      }, 1500);
+      return;
+    }
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
     setTimeout(() => {
       setIsCustomizeModalOpen(true);
@@ -530,31 +552,34 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                       className="flex-1"
                       onClick={handleCustomize}
                       variant="outline"
+                      disabled={!user}
                     >
                       <Wand2 className="mr-2 h-4 w-4" />
-                      Customize
+                      {user ? 'Customize' : 'Login to Customize'}
                     </Button>
                     <Button
                       className="flex-1"
                       onClick={handleAddToCart}
-                      disabled={!customizations}
+                      disabled={!customizations || !user}
                     >
                       <ShoppingCart className="mr-2 h-4 w-4" />
-                      Add to Cart
+                      {user ? 'Add to Cart' : 'Login to Add to Cart'}
                     </Button>
                   </>
                 ) : (
                   <Button
                     className="flex-1"
                     onClick={handleAddToCart}
+                    disabled={!user}
                   >
                     <ShoppingCart className="mr-2 h-4 w-4" />
-                    Add to Cart
+                    {user ? 'Add to Cart' : 'Login to Add to Cart'}
                   </Button>
                 )}
                 <button
                   onClick={handleAddToWishlist}
                   className="h-12 px-6 border border-muted flex items-center justify-center gap-2 rounded-md hover:bg-secondary transition-colors duration-300"
+                  disabled={!user}
                 >
                   <Heart size={18} />
                   <span className="hidden sm:inline">Wishlist</span>
@@ -568,6 +593,15 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                   <span className="hidden sm:inline">Share</span>
                 </button>
               </div>
+
+              {/* Authentication Notice */}
+              {!user && (
+                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-700 text-center">
+                    Please log in to customize products and add items to your cart
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Product Details */}
