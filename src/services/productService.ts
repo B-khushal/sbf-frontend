@@ -118,6 +118,7 @@ const prepareProductData = (productData: ProductData): BackendProductData => {
   // Force boolean fields to be actual booleans
   cleanData.isFeatured = Boolean(productData.isFeatured);
   cleanData.hidden = Boolean(productData.hidden);
+  cleanData.isCustomizable = Boolean(productData.isCustomizable);
   
   // Process details for backend (convert array to format expected by backend)
   if (Array.isArray(productData.details)) {
@@ -133,6 +134,26 @@ const prepareProductData = (productData: ProductData): BackendProductData => {
       instruction && typeof instruction === 'string' && instruction.trim().length > 0
     );
   }
+
+  // Process customization options for backend
+  if (productData.customizationOptions) {
+    cleanData.customizationOptions = {
+      allowPhotoUpload: Boolean(productData.customizationOptions.allowPhotoUpload),
+      allowNumberInput: Boolean(productData.customizationOptions.allowNumberInput),
+      numberInputLabel: productData.customizationOptions.numberInputLabel || "Enter number",
+      allowMessageCard: Boolean(productData.customizationOptions.allowMessageCard),
+      messageCardPrice: Number(productData.customizationOptions.messageCardPrice) || 0,
+      addons: {
+        flowers: Array.isArray(productData.customizationOptions.addons?.flowers) 
+          ? productData.customizationOptions.addons.flowers 
+          : [],
+        chocolates: Array.isArray(productData.customizationOptions.addons?.chocolates) 
+          ? productData.customizationOptions.addons.chocolates 
+          : []
+      },
+      previewImage: productData.customizationOptions.previewImage || ""
+    };
+  }
   
   // Remove isNewArrival as the backend doesn't use this field name
   delete cleanData.isNewArrival;
@@ -142,13 +163,17 @@ const prepareProductData = (productData: ProductData): BackendProductData => {
       isNewArrival: productData.isNewArrival,
       isNewArrivalType: typeof productData.isNewArrival,
       isFeatured: productData.isFeatured,
-      isFeaturedType: typeof productData.isFeatured
+      isFeaturedType: typeof productData.isFeatured,
+      isCustomizable: productData.isCustomizable,
+      customizationOptions: productData.customizationOptions
     },
     cleaned: {
       isNew: cleanData.isNew,
       isNewType: typeof cleanData.isNew,
       isFeatured: cleanData.isFeatured,
-      isFeaturedType: typeof cleanData.isFeatured
+      isFeaturedType: typeof cleanData.isFeatured,
+      isCustomizable: cleanData.isCustomizable,
+      customizationOptions: cleanData.customizationOptions
     }
   });
   
@@ -196,6 +221,50 @@ const mapBackendToFrontend = (data: BackendProductData): ProductData => {
   } else {
     mappedData.careInstructions = [];
   }
+
+  // ✅ Handle customization fields
+  if (data.isCustomizable !== undefined) {
+    mappedData.isCustomizable = Boolean(data.isCustomizable);
+  }
+
+  if (data.customizationOptions) {
+    mappedData.customizationOptions = {
+      allowPhotoUpload: Boolean(data.customizationOptions.allowPhotoUpload),
+      allowNumberInput: Boolean(data.customizationOptions.allowNumberInput),
+      numberInputLabel: data.customizationOptions.numberInputLabel || "Enter number",
+      allowMessageCard: Boolean(data.customizationOptions.allowMessageCard),
+      messageCardPrice: Number(data.customizationOptions.messageCardPrice) || 0,
+      addons: {
+        flowers: Array.isArray(data.customizationOptions.addons?.flowers) 
+          ? data.customizationOptions.addons.flowers 
+          : [],
+        chocolates: Array.isArray(data.customizationOptions.addons?.chocolates) 
+          ? data.customizationOptions.addons.chocolates 
+          : []
+      },
+      previewImage: data.customizationOptions.previewImage || ""
+    };
+  } else {
+    // Set default customization options if none exist
+    mappedData.customizationOptions = {
+      allowPhotoUpload: false,
+      allowNumberInput: false,
+      numberInputLabel: "Enter number",
+      allowMessageCard: false,
+      messageCardPrice: 0,
+      addons: {
+        flowers: [],
+        chocolates: []
+      },
+      previewImage: ""
+    };
+  }
+
+  console.log('Mapped product customization:', {
+    title: data.title,
+    isCustomizable: mappedData.isCustomizable,
+    customizationOptions: mappedData.customizationOptions
+  });
 
   return mappedData as ProductData;
 };

@@ -193,10 +193,50 @@ const ProductForm = () => {
     try {
       const token = getAuthToken();
       const data = await productService.getProductById(id);
+      
       // Ensure categories is an array
       if (!data.categories) {
         data.categories = [];
       }
+      
+      // Ensure customization options are properly set
+      if (!data.customizationOptions) {
+        data.customizationOptions = {
+          allowPhotoUpload: false,
+          allowNumberInput: false,
+          numberInputLabel: "Enter number",
+          allowMessageCard: false,
+          messageCardPrice: 0,
+          addons: {
+            flowers: [],
+            chocolates: []
+          },
+          previewImage: ""
+        };
+      }
+      
+      // Ensure addons arrays exist
+      if (!data.customizationOptions.addons) {
+        data.customizationOptions.addons = {
+          flowers: [],
+          chocolates: []
+        };
+      }
+      
+      if (!Array.isArray(data.customizationOptions.addons.flowers)) {
+        data.customizationOptions.addons.flowers = [];
+      }
+      
+      if (!Array.isArray(data.customizationOptions.addons.chocolates)) {
+        data.customizationOptions.addons.chocolates = [];
+      }
+      
+      console.log('Fetched product data:', {
+        title: data.title,
+        isCustomizable: data.isCustomizable,
+        customizationOptions: data.customizationOptions
+      });
+      
       setFormData(data);
       setUploadProgress(new Array(data.images.length).fill(100));
     } catch (error) {
