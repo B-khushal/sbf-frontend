@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, Truck, ArrowRight, User, MapPin, Package, ChevronDown, ChevronUp, Info } from 'lucide-react';
+import { Check, Truck, ArrowRight, User, MapPin, Package, ChevronDown, ChevronUp, Info, Clock, Gift, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import TimeSlotSelector from '@/components/TimeSlotSelector';
 import MessageCard from '@/components/MessageCard';
 import Navigation from '@/components/Navigation';
@@ -58,6 +60,7 @@ const CheckoutShippingPage = () => {
   const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
   const [showSavedAddresses, setShowSavedAddresses] = useState(false);
   const [showOrderSummary, setShowOrderSummary] = useState(false);
+  const [isSavedAddressesOpen, setIsSavedAddressesOpen] = useState(false);
 
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [shippingMethod, setShippingMethod] = useState('standard');
@@ -190,7 +193,7 @@ const CheckoutShippingPage = () => {
     
     // Switch to the correct delivery option if needed
     setDeliveryOption(address.deliveryOption);
-    setShowSavedAddresses(false);
+    setIsSavedAddressesOpen(false);
     
     toast({
       title: "Address loaded",
@@ -360,402 +363,439 @@ const CheckoutShippingPage = () => {
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Notification about saved addresses */}
+                    {/* Saved Addresses Dropdown */}
                     {savedAddresses.length > 0 && (
-                      <Alert className="border-primary/20 bg-primary/5">
-                        <Info className="h-4 w-4 text-primary" />
-                        <AlertDescription className="flex justify-between items-center">
-                          <span>You have {savedAddresses.length} saved address{savedAddresses.length > 1 ? 'es' : ''}.</span>
-                          <Button 
-                            type="button" 
-                            variant="secondary" 
-                            size="sm" 
-                            onClick={() => setShowSavedAddresses(true)}
-                          >
-                            Use Saved Address
-                          </Button>
-                        </AlertDescription>
-                      </Alert>
-                    )}
-                    
-                    {/* Saved Addresses Dialog */}
-                    {showSavedAddresses && (
-                      <Dialog open={showSavedAddresses} onOpenChange={setShowSavedAddresses}>
-                        <DialogContent className="sm:max-w-md">
-                          <DialogHeader>
-                            <DialogTitle>Select a Saved Address</DialogTitle>
-                            <DialogDescription>
-                              Choose from your saved addresses to use for this order.
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="max-h-80 overflow-y-auto space-y-4 py-4">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <Home className="h-4 w-4 text-primary" />
+                          <span className="text-sm font-medium">Saved Addresses</span>
+                          <Badge variant="secondary" className="text-xs">
+                            {savedAddresses.length} saved
+                          </Badge>
+                        </div>
+                        
+                        <Collapsible open={isSavedAddressesOpen} onOpenChange={setIsSavedAddressesOpen}>
+                          <CollapsibleTrigger asChild>
+                            <Button 
+                              type="button" 
+                              variant="outline" 
+                              className="w-full justify-between"
+                            >
+                              <span>Select a saved address</span>
+                              {isSavedAddressesOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                            </Button>
+                          </CollapsibleTrigger>
+                          <CollapsibleContent className="space-y-2 mt-2">
                             {savedAddresses.map((address: any) => (
-                              <Card key={address.id} className="cursor-pointer hover:border-primary" onClick={() => {
-                                handleSavedAddressSelect(address);
-                                setShowSavedAddresses(false);
-                              }}>
-                                <CardContent className="p-4">
-                                  <div className="flex flex-col">
-                                    <div className="font-medium">
-                                      {address.firstName} {address.lastName}
-                                      {address.deliveryOption === 'gift' && ` → ${address.receiverFirstName} ${address.receiverLastName}`}
+                              <Card key={address.id} className="cursor-pointer hover:border-primary transition-colors">
+                                <CardContent className="p-3" onClick={() => handleSavedAddressSelect(address)}>
+                                  <div className="flex items-start justify-between">
+                                    <div className="flex-1">
+                                      <div className="font-medium text-sm">
+                                        {address.firstName} {address.lastName}
+                                        {address.deliveryOption === 'gift' && (
+                                          <span className="text-muted-foreground"> → {address.receiverFirstName} {address.receiverLastName}</span>
+                                        )}
+                                      </div>
+                                      <div className="text-xs text-muted-foreground mt-1">
+                                        {address.deliveryOption === 'self' 
+                                          ? address.address 
+                                          : address.receiverAddress}
+                                        {', '}
+                                        {address.deliveryOption === 'self' 
+                                          ? address.city 
+                                          : address.receiverCity}
+                                        {', '}
+                                        {address.deliveryOption === 'self' 
+                                          ? address.state 
+                                          : address.receiverState}
+                                        {' '}
+                                        {address.deliveryOption === 'self' 
+                                          ? address.zipCode 
+                                          : address.receiverZipCode}
+                                      </div>
+                                      <div className="flex items-center gap-2 mt-2">
+                                        <Badge variant="outline" className="text-xs">
+                                          {address.deliveryOption === 'gift' ? 'Gift' : 'Self Delivery'}
+                                        </Badge>
+                                        {address.isDefault && (
+                                          <Badge variant="secondary" className="text-xs">Default</Badge>
+                                        )}
+                                      </div>
                                     </div>
-                                    <div className="text-sm text-muted-foreground">
-                                      {address.deliveryOption === 'self' 
-                                        ? address.address 
-                                        : address.receiverAddress}
-                                      {', '}
-                                      {address.deliveryOption === 'self' 
-                                        ? address.city 
-                                        : address.receiverCity}
-                                      {', '}
-                                      {address.deliveryOption === 'self' 
-                                        ? address.state 
-                                        : address.receiverState}
-                                      {' '}
-                                      {address.deliveryOption === 'self' 
-                                        ? address.zipCode 
-                                        : address.receiverZipCode}
-                                    </div>
-                                    <div className="text-xs text-primary mt-1">
-                                      {address.deliveryOption === 'gift' ? 'Gift' : 'Self Delivery'}
-                                      {address.isDefault && ' • Default'}
-                                    </div>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      className="text-destructive hover:text-destructive"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteAddress(address.id);
+                                      }}
+                                    >
+                                      ×
+                                    </Button>
                                   </div>
                                 </CardContent>
                               </Card>
                             ))}
-                          </div>
-                          <DialogFooter>
-                            <Button variant="outline" onClick={() => setShowSavedAddresses(false)}>
-                              Cancel
-                            </Button>
-                          </DialogFooter>
-                        </DialogContent>
-                      </Dialog>
+                          </CollapsibleContent>
+                        </Collapsible>
+                      </div>
                     )}
                     
                     {/* Delivery Options */}
-                    <div>
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <Gift className="h-4 w-4 text-primary" />
+                        <span className="text-sm font-medium">Delivery Type</span>
+                      </div>
+                      
                       <Tabs defaultValue="self" onValueChange={(value) => setDeliveryOption(value as 'self' | 'gift')}>
-                        <TabsList className="grid grid-cols-2 mb-4">
-                          <TabsTrigger value="self">Delivery for myself</TabsTrigger>
-                          <TabsTrigger value="gift">Send as a gift</TabsTrigger>
+                        <TabsList className="grid grid-cols-2 w-full">
+                          <TabsTrigger value="self" className="flex items-center gap-2">
+                            <User className="h-4 w-4" />
+                            For Myself
+                          </TabsTrigger>
+                          <TabsTrigger value="gift" className="flex items-center gap-2">
+                            <Gift className="h-4 w-4" />
+                            Send as Gift
+                          </TabsTrigger>
                         </TabsList>
                         
-                        <TabsContent value="self">
-                          <p className="text-sm text-muted-foreground mb-4">
-                            Enter your shipping details below.
-                          </p>
+                        <TabsContent value="self" className="mt-4">
+                          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                            <p className="text-sm text-blue-700">
+                              Enter your shipping details for delivery to your address.
+                            </p>
+                          </div>
                         </TabsContent>
                         
-                        <TabsContent value="gift">
-                          <p className="text-sm text-muted-foreground mb-4">
-                            Send this order as a gift to someone else. You'll need to provide both your information and the recipient's.
-                          </p>
+                        <TabsContent value="gift" className="mt-4">
+                          <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                            <p className="text-sm text-purple-700">
+                              Send this order as a gift to someone else. You'll need to provide both your information and the recipient's.
+                            </p>
+                          </div>
                         </TabsContent>
                       </Tabs>
                     </div>
                     
                     {/* Sender Information */}
-                    <div>
-                      <div className="flex items-center gap-2 mb-4">
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2">
                         <User size={18} className="text-primary" />
                         <h2 className="text-lg font-medium">
                           {deliveryOption === 'self' ? 'Your Information' : 'Sender Information'}
                         </h2>
                       </div>
                       
-                      <div className="space-y-4">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <div>
-                            <label htmlFor="firstName" className="block text-sm font-medium mb-1">
-                              First Name *
-                            </label>
-                            <Input
-                              id="firstName"
-                              name="firstName"
-                              value={formData.firstName}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                          
-                          <div>
-                            <label htmlFor="lastName" className="block text-sm font-medium mb-1">
-                              Last Name *
-                            </label>
-                            <Input
-                              id="lastName"
-                              name="lastName"
-                              value={formData.lastName}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label htmlFor="firstName" className="block text-sm font-medium">
+                            First Name *
+                          </label>
+                          <Input
+                            id="firstName"
+                            name="firstName"
+                            value={formData.firstName}
+                            onChange={handleInputChange}
+                            required
+                            placeholder="Enter first name"
+                          />
                         </div>
                         
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <div>
-                            <label htmlFor="phone" className="block text-sm font-medium mb-1">
-                              Phone *
-                            </label>
-                            <Input
-                              id="phone"
-                              name="phone"
-                              type="tel"
-                              value={formData.phone}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </div>
-                          
-                          <div>
-                            <label htmlFor="email" className="block text-sm font-medium mb-1">
-                              Email (optional)
-                            </label>
-                            <Input
-                              id="email"
-                              name="email"
-                              type="email"
-                              value={formData.email}
-                              onChange={handleInputChange}
-                            />
-                          </div>
+                        <div className="space-y-2">
+                          <label htmlFor="lastName" className="block text-sm font-medium">
+                            Last Name *
+                          </label>
+                          <Input
+                            id="lastName"
+                            name="lastName"
+                            value={formData.lastName}
+                            onChange={handleInputChange}
+                            required
+                            placeholder="Enter last name"
+                          />
                         </div>
-                        
-                        {deliveryOption === 'self' && (
-                          <>
-                            <div>
-                              <label htmlFor="address" className="block text-sm font-medium mb-1">
-                                Address *
-                              </label>
-                              <Input
-                                id="address"
-                                name="address"
-                                value={formData.address}
-                                onChange={handleInputChange}
-                                required
-                              />
-                            </div>
-                            
-                            <div>
-                              <label htmlFor="apartment" className="block text-sm font-medium mb-1">
-                                Apartment, suite, etc. (optional)
-                              </label>
-                              <Input
-                                id="apartment"
-                                name="apartment"
-                                value={formData.apartment}
-                                onChange={handleInputChange}
-                              />
-                            </div>
-                            
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                              <div>
-                                <label htmlFor="city" className="block text-sm font-medium mb-1">
-                                  City *
-                                </label>
-                                <Input
-                                  id="city"
-                                  name="city"
-                                  value={formData.city}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              
-                              <div>
-                                <label htmlFor="state" className="block text-sm font-medium mb-1">
-                                  State/Province *
-                                </label>
-                                <Input
-                                  id="state"
-                                  name="state"
-                                  value={formData.state}
-                                  onChange={handleInputChange}
-                                  required
-                                />
-                              </div>
-                              
-                              <div>
-                                <label htmlFor="zipCode" className="block text-sm font-medium mb-1">
-                                  Zip/Postal Code *
-                                </label>
-                                <PinCodeInput
-                                  value={formData.zipCode}
-                                  onChange={handleZipCodeChange}
-                                  placeholder="Enter PIN code"
-                                  required
-                                  onValidationChange={handlePinCodeValidation}
-                                />
-                              </div>
-                            </div>
-                            
-                            <div>
-                              <label htmlFor="notes" className="block text-sm font-medium mb-1">
-                                Delivery Notes (optional)
-                              </label>
-                              <Textarea
-                                id="notes"
-                                name="notes"
-                                value={formData.notes}
-                                onChange={handleInputChange}
-                                placeholder="Any special instructions for delivery..."
-                                rows={3}
-                              />
-                            </div>
-                          </>
-                        )}
                       </div>
-                    </div>
-                    
-                    {/* Receiver Information (for gift option) */}
-                    {deliveryOption === 'gift' && (
-                      <div>
-                        <div className="flex items-center gap-2 mb-4">
-                          <User size={18} className="text-primary" />
-                          <h2 className="text-lg font-medium">Receiver Information</h2>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label htmlFor="phone" className="block text-sm font-medium">
+                            Phone *
+                          </label>
+                          <Input
+                            id="phone"
+                            name="phone"
+                            type="tel"
+                            value={formData.phone}
+                            onChange={handleInputChange}
+                            required
+                            placeholder="Enter phone number"
+                          />
                         </div>
                         
+                        <div className="space-y-2">
+                          <label htmlFor="email" className="block text-sm font-medium">
+                            Email (optional)
+                          </label>
+                          <Input
+                            id="email"
+                            name="email"
+                            type="email"
+                            value={formData.email}
+                            onChange={handleInputChange}
+                            placeholder="Enter email address"
+                          />
+                        </div>
+                      </div>
+                      
+                      {deliveryOption === 'self' && (
                         <div className="space-y-4">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                              <label htmlFor="receiverFirstName" className="block text-sm font-medium mb-1">
-                                First Name *
-                              </label>
-                              <Input
-                                id="receiverFirstName"
-                                name="receiverFirstName"
-                                value={formData.receiverFirstName}
-                                onChange={handleInputChange}
-                                required={deliveryOption === 'gift'}
-                              />
-                            </div>
-                            
-                            <div>
-                              <label htmlFor="receiverLastName" className="block text-sm font-medium mb-1">
-                                Last Name *
-                              </label>
-                              <Input
-                                id="receiverLastName"
-                                name="receiverLastName"
-                                value={formData.receiverLastName}
-                                onChange={handleInputChange}
-                                required={deliveryOption === 'gift'}
-                              />
-                            </div>
-                          </div>
-                          
-                          <div>
-                            <label htmlFor="receiverAddress" className="block text-sm font-medium mb-1">
+                          <div className="space-y-2">
+                            <label htmlFor="address" className="block text-sm font-medium">
                               Address *
                             </label>
                             <Input
-                              id="receiverAddress"
-                              name="receiverAddress"
-                              value={formData.receiverAddress}
+                              id="address"
+                              name="address"
+                              value={formData.address}
                               onChange={handleInputChange}
-                              required={deliveryOption === 'gift'}
+                              required
+                              placeholder="Enter your address"
                             />
                           </div>
                           
-                          <div>
-                            <label htmlFor="receiverApartment" className="block text-sm font-medium mb-1">
+                          <div className="space-y-2">
+                            <label htmlFor="apartment" className="block text-sm font-medium">
                               Apartment, suite, etc. (optional)
                             </label>
                             <Input
-                              id="receiverApartment"
-                              name="receiverApartment"
-                              value={formData.receiverApartment}
+                              id="apartment"
+                              name="apartment"
+                              value={formData.apartment}
                               onChange={handleInputChange}
+                              placeholder="Apartment, suite, etc."
                             />
                           </div>
                           
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <div>
-                              <label htmlFor="receiverCity" className="block text-sm font-medium mb-1">
+                            <div className="space-y-2">
+                              <label htmlFor="city" className="block text-sm font-medium">
                                 City *
                               </label>
                               <Input
-                                id="receiverCity"
-                                name="receiverCity"
-                                value={formData.receiverCity}
+                                id="city"
+                                name="city"
+                                value={formData.city}
                                 onChange={handleInputChange}
-                                required={deliveryOption === 'gift'}
+                                required
+                                placeholder="Enter city"
                               />
                             </div>
                             
-                            <div>
-                              <label htmlFor="receiverState" className="block text-sm font-medium mb-1">
+                            <div className="space-y-2">
+                              <label htmlFor="state" className="block text-sm font-medium">
                                 State/Province *
                               </label>
                               <Input
-                                id="receiverState"
-                                name="receiverState"
-                                value={formData.receiverState}
+                                id="state"
+                                name="state"
+                                value={formData.state}
                                 onChange={handleInputChange}
-                                required={deliveryOption === 'gift'}
+                                required
+                                placeholder="Enter state"
                               />
                             </div>
                             
-                            <div>
-                              <label htmlFor="receiverZipCode" className="block text-sm font-medium mb-1">
+                            <div className="space-y-2">
+                              <label htmlFor="zipCode" className="block text-sm font-medium">
                                 Zip/Postal Code *
                               </label>
                               <PinCodeInput
-                                value={formData.receiverZipCode}
-                                onChange={handleReceiverZipCodeChange}
+                                value={formData.zipCode}
+                                onChange={handleZipCodeChange}
                                 placeholder="Enter PIN code"
-                                required={deliveryOption === 'gift'}
+                                required
                                 onValidationChange={handlePinCodeValidation}
                               />
                             </div>
                           </div>
                           
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                              <label htmlFor="receiverPhone" className="block text-sm font-medium mb-1">
-                                Phone *
-                              </label>
-                              <Input
-                                id="receiverPhone"
-                                name="receiverPhone"
-                                type="tel"
-                                value={formData.receiverPhone}
-                                onChange={handleInputChange}
-                                required={deliveryOption === 'gift'}
-                              />
-                            </div>
-                            
-                            <div>
-                              <label htmlFor="receiverEmail" className="block text-sm font-medium mb-1">
-                                Email (optional)
-                              </label>
-                              <Input
-                                id="receiverEmail"
-                                name="receiverEmail"
-                                type="email"
-                                value={formData.receiverEmail}
-                                onChange={handleInputChange}
-                              />
-                            </div>
+                          <div className="space-y-2">
+                            <label htmlFor="notes" className="block text-sm font-medium">
+                              Delivery Notes (optional)
+                            </label>
+                            <Textarea
+                              id="notes"
+                              name="notes"
+                              value={formData.notes}
+                              onChange={handleInputChange}
+                              placeholder="Any special instructions for delivery..."
+                              rows={3}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Receiver Information (for gift option) */}
+                    {deliveryOption === 'gift' && (
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-2">
+                          <User size={18} className="text-primary" />
+                          <h2 className="text-lg font-medium">Receiver Information</h2>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <label htmlFor="receiverFirstName" className="block text-sm font-medium">
+                              First Name *
+                            </label>
+                            <Input
+                              id="receiverFirstName"
+                              name="receiverFirstName"
+                              value={formData.receiverFirstName}
+                              onChange={handleInputChange}
+                              required={deliveryOption === 'gift'}
+                              placeholder="Enter receiver's first name"
+                            />
                           </div>
                           
-                          {/* Gift Message Card */}
+                          <div className="space-y-2">
+                            <label htmlFor="receiverLastName" className="block text-sm font-medium">
+                              Last Name *
+                            </label>
+                            <Input
+                              id="receiverLastName"
+                              name="receiverLastName"
+                              value={formData.receiverLastName}
+                              onChange={handleInputChange}
+                              required={deliveryOption === 'gift'}
+                              placeholder="Enter receiver's last name"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <label htmlFor="receiverAddress" className="block text-sm font-medium">
+                            Address *
+                          </label>
+                          <Input
+                            id="receiverAddress"
+                            name="receiverAddress"
+                            value={formData.receiverAddress}
+                            onChange={handleInputChange}
+                            required={deliveryOption === 'gift'}
+                            placeholder="Enter receiver's address"
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <label htmlFor="receiverApartment" className="block text-sm font-medium">
+                            Apartment, suite, etc. (optional)
+                          </label>
+                          <Input
+                            id="receiverApartment"
+                            name="receiverApartment"
+                            value={formData.receiverApartment}
+                            onChange={handleInputChange}
+                            placeholder="Apartment, suite, etc."
+                          />
+                        </div>
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                          <div className="space-y-2">
+                            <label htmlFor="receiverCity" className="block text-sm font-medium">
+                              City *
+                            </label>
+                            <Input
+                              id="receiverCity"
+                              name="receiverCity"
+                              value={formData.receiverCity}
+                              onChange={handleInputChange}
+                              required={deliveryOption === 'gift'}
+                              placeholder="Enter city"
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <label htmlFor="receiverState" className="block text-sm font-medium">
+                              State/Province *
+                            </label>
+                            <Input
+                              id="receiverState"
+                              name="receiverState"
+                              value={formData.receiverState}
+                              onChange={handleInputChange}
+                              required={deliveryOption === 'gift'}
+                              placeholder="Enter state"
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <label htmlFor="receiverZipCode" className="block text-sm font-medium">
+                              Zip/Postal Code *
+                            </label>
+                            <PinCodeInput
+                              value={formData.receiverZipCode}
+                              onChange={handleReceiverZipCodeChange}
+                              placeholder="Enter PIN code"
+                              required={deliveryOption === 'gift'}
+                              onValidationChange={handlePinCodeValidation}
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <label htmlFor="receiverPhone" className="block text-sm font-medium">
+                              Phone *
+                            </label>
+                            <Input
+                              id="receiverPhone"
+                              name="receiverPhone"
+                              type="tel"
+                              value={formData.receiverPhone}
+                              onChange={handleInputChange}
+                              required={deliveryOption === 'gift'}
+                              placeholder="Enter receiver's phone"
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <label htmlFor="receiverEmail" className="block text-sm font-medium">
+                              Email (optional)
+                            </label>
+                            <Input
+                              id="receiverEmail"
+                              name="receiverEmail"
+                              type="email"
+                              value={formData.receiverEmail}
+                              onChange={handleInputChange}
+                              placeholder="Enter receiver's email"
+                            />
+                          </div>
+                        </div>
+                        
+                        {/* Gift Message Card */}
+                        <div className="space-y-2">
+                          <label className="block text-sm font-medium">
+                            Gift Message (optional)
+                          </label>
                           <MessageCard 
                             message={giftMessage}
                             onChange={setGiftMessage}
-                            className="mt-2"
                           />
                         </div>
                       </div>
                     )}
                     
                     {/* Time Slot Selector */}
-                    <div>
-                      <div className="flex items-center gap-2 mb-4">
-                        <MapPin size={18} className="text-primary" />
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <Clock size={18} className="text-primary" />
                         <h2 className="text-lg font-medium">Delivery Time</h2>
                       </div>
                       <TimeSlotSelector
@@ -772,7 +812,7 @@ const CheckoutShippingPage = () => {
                     </div>
                     
                     {/* Save Information Checkbox */}
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2 p-4 bg-gray-50 rounded-lg">
                       <Checkbox 
                         id="saveInfo" 
                         checked={formData.saveInfo}
