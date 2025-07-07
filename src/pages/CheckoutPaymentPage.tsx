@@ -274,25 +274,49 @@ const CheckoutPaymentPage = () => {
 
       const { order_id, amount, currency: orderCurrency } = orderResponse.data;
 
-             // Prepare order data
+             // Prepare order data in correct backend format
        const orderData = {
          items: items.map(item => ({
-           productId: item._id,
-           title: item.title,
-           price: item.price,
+           product: item._id,           // ✅ Correct field name for backend
            quantity: item.quantity,
-           image: item.images && item.images.length > 0 ? item.images[0] : ''
+           price: item.price,
+           finalPrice: item.price * item.quantity  // ✅ Calculate finalPrice
          })),
-        shippingInfo,
-        subtotal,
-        deliveryFee,
-        promoCode: appliedPromoCode?.code || null,
-        promoDiscount,
-        total: orderTotal,
-        paymentMethod: 'razorpay',
-        currency: 'INR',
-        exchangeRate: rate
-      };
+         shippingDetails: {             // ✅ Correct field name for backend
+           fullName: `${shippingInfo.firstName} ${shippingInfo.lastName}`.trim(),
+           email: shippingInfo.email,
+           phone: shippingInfo.phone,
+           address: shippingInfo.address,
+           apartment: shippingInfo.apartment || '',
+           city: shippingInfo.city,
+           state: shippingInfo.state,
+           zipCode: shippingInfo.zipCode,
+           notes: shippingInfo.notes || '',
+           deliveryDate: shippingInfo.selectedDate ? new Date(shippingInfo.selectedDate) : new Date(),
+           timeSlot: shippingInfo.timeSlot
+         },
+         totalAmount: orderTotal,       // ✅ Correct field name for backend
+         currency: 'INR',
+         currencyRate: rate || 1,       // ✅ Correct field name for backend
+         originalCurrency: 'INR'
+       };
+       
+       // Add gift details if present
+       if (shippingInfo.giftMessage || shippingInfo.receiverFirstName) {
+         orderData.giftDetails = {
+           message: shippingInfo.giftMessage || '',
+           recipientName: shippingInfo.receiverFirstName && shippingInfo.receiverLastName 
+             ? `${shippingInfo.receiverFirstName} ${shippingInfo.receiverLastName}`.trim()
+             : '',
+           recipientEmail: shippingInfo.receiverEmail || '',
+           recipientPhone: shippingInfo.receiverPhone || '',
+           recipientAddress: shippingInfo.receiverAddress || '',
+           recipientApartment: shippingInfo.receiverApartment || '',
+           recipientCity: shippingInfo.receiverCity || '',
+           recipientState: shippingInfo.receiverState || '',
+           recipientZipCode: shippingInfo.receiverZipCode || ''
+         };
+       }
 
       // Configure Razorpay options
       const options: RazorpayOptions = {
