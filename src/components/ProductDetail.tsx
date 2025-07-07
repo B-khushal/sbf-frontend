@@ -196,7 +196,6 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [isCustomizeModalOpen, setIsCustomizeModalOpen] = useState(false);
   const [customizations, setCustomizations] = useState<CustomizationData | undefined>();
-  const customizeButtonRef = useRef<HTMLButtonElement>(null);
 
   // Debug log to check properties
   console.log(`Product Detail ${product.title}:`, {
@@ -239,12 +238,10 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
   const decrementQuantity = () => quantity > 1 && setQuantity((prev) => prev - 1);
 
   const handleCustomize = () => {
-    if (customizeButtonRef.current) {
-      customizeButtonRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     setTimeout(() => {
       setIsCustomizeModalOpen(true);
-    }, 100); // Open modal after scroll
+    }, 200); // Open modal after scroll
   };
 
   const handleAddToCart = () => {
@@ -541,7 +538,6 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                 {product.isCustomizable ? (
                   <>
                     <Button
-                      ref={customizeButtonRef}
                       className="flex-1"
                       onClick={handleCustomize}
                       variant="outline"

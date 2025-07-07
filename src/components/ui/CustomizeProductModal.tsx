@@ -82,14 +82,6 @@ export function CustomizeProductModal({
   const [totalPrice, setTotalPrice] = useState(product.price);
   const [uploadedPhoto, setUploadedPhoto] = useState<string | null>(null);
 
-  const dialogContentRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (open && dialogContentRef.current) {
-      dialogContentRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  }, [open]);
-
   useEffect(() => {
     // Calculate total price based on selections
     let total = product.price;
@@ -192,7 +184,7 @@ export function CustomizeProductModal({
   return (
     <TooltipProvider>
       <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent ref={dialogContentRef} className="max-w-4xl max-h-[90vh] p-0">
+        <DialogContent className="max-w-4xl max-h-[90vh] p-0">
           <DialogHeader className="px-6 py-4 border-b bg-gradient-to-r from-purple-50 to-pink-50">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
