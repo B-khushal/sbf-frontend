@@ -73,11 +73,13 @@ const Cart = ({
     });
   }, [isOpen, items, user]);
   
-  // Calculate subtotal
-  const subtotal = items.reduce(
-    (total, item) => total + (item.price || 0) * (item.quantity || 0), 
-    0
-  );
+  // Calculate subtotal with proper discount application
+  const subtotal = items.reduce((total, item) => {
+    const discountedPrice = item.discount && item.discount > 0 
+      ? item.price - (item.price * item.discount / 100)
+      : item.price;
+    return total + (discountedPrice || 0) * (item.quantity || 0);
+  }, 0);
 
   const handleRemoveItem = (id: string) => {
     console.log('Removing item with id:', id);

@@ -328,7 +328,12 @@ export const useCartSelectors = () => {
   
   return {
     itemCount: items.reduce((total, item) => total + (item.quantity || 0), 0),
-    subtotal: items.reduce((total, item) => total + ((item.price || 0) * (item.quantity || 0)), 0),
+    subtotal: items.reduce((total, item) => {
+    const discountedPrice = item.discount && item.discount > 0 
+      ? item.price - (item.price * item.discount / 100)
+      : item.price;
+    return total + (discountedPrice || 0) * (item.quantity || 0);
+  }, 0),
   };
 };
 

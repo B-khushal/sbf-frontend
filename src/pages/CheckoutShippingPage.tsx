@@ -867,11 +867,15 @@ const CheckoutShippingPage = () => {
         <div className="flex-1 min-w-0">
           <h4 className="text-sm font-medium truncate">{item.title}</h4>
           <div className="text-muted-foreground text-xs">
-            {formatPrice(convertPrice(item.price || 0))} × {item.quantity || 0}
+            {formatPrice(convertPrice((item.discount && item.discount > 0 
+              ? item.price - (item.price * item.discount / 100)
+              : item.price) || 0))} × {item.quantity || 0}
           </div>
         </div>
         <div className="text-sm font-medium">
-          {formatPrice(convertPrice((item.price || 0) * (item.quantity || 0)))}
+          {formatPrice(convertPrice(((item.discount && item.discount > 0 
+            ? item.price - (item.price * item.discount / 100)
+            : item.price) || 0) * (item.quantity || 0)))}
         </div>
       </div>
     );

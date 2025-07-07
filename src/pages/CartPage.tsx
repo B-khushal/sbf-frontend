@@ -57,10 +57,13 @@ const CartPage: React.FC = () => {
     threshold: 0.2
   });
   
-  const subtotal = items.reduce(
-    (total, item) => total + (item.price || 0) * (item.quantity || 0), 
-    0
-  );
+  // Calculate subtotal with proper discount application
+  const subtotal = items.reduce((total, item) => {
+    const discountedPrice = item.discount && item.discount > 0 
+      ? item.price - (item.price * item.discount / 100)
+      : item.price;
+    return total + (discountedPrice || 0) * (item.quantity || 0);
+  }, 0);
 
   // Load cart data when component mounts or user changes
   useEffect(() => {
@@ -295,7 +298,9 @@ const CartPage: React.FC = () => {
                               {/* Price and Remove */}
                               <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2 sm:gap-3">
                                 <div className="text-lg sm:text-xl font-black text-gray-800">
-                                  {formatPrice(convertPrice((item.price || 0) * (item.quantity || 0)))}
+                                  {formatPrice(convertPrice(((item.discount && item.discount > 0 
+                                    ? item.price - (item.price * item.discount / 100)
+                                    : item.price) || 0) * (item.quantity || 0)))}
                                 </div>
                                 <motion.button
                                   onClick={() => handleRemoveItem(item._id)}

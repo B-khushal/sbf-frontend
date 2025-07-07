@@ -297,7 +297,9 @@ const CheckoutPaymentPage = () => {
            product: item._id,           // ✅ Correct field name for backend
            quantity: item.quantity,
            price: item.price,
-           finalPrice: item.price * item.quantity  // ✅ Calculate finalPrice
+           finalPrice: (item.discount && item.discount > 0 
+             ? item.price - (item.price * item.discount / 100)
+             : item.price) * item.quantity  // ✅ Calculate finalPrice with discount
          })),
          shippingDetails: {             // ✅ Correct field name for backend
            fullName: `${shippingInfo.firstName} ${shippingInfo.lastName}`.trim(),
@@ -816,7 +818,9 @@ const CheckoutPaymentPage = () => {
                                </p>
                         </div>
                         <div className="text-sm font-medium">
-                               {formatPrice(item.price * item.quantity)}
+                               {formatPrice((item.discount && item.discount > 0 
+                                 ? item.price - (item.price * item.discount / 100)
+                                 : item.price) * item.quantity)}
                         </div>
                       </div>
                     ))}

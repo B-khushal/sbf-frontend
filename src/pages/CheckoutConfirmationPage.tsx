@@ -182,7 +182,12 @@ const CheckoutConfirmationPage = () => {
         // Fallback for subtotal/total
         if (typeof parsedOrder.subtotal === 'undefined') {
           parsedOrder.subtotal = Array.isArray(parsedOrder.items)
-            ? parsedOrder.items.reduce((sum: number, item: any) => sum + ((item.price || 0) * (item.quantity || 1)), 0)
+            ? parsedOrder.items.reduce((sum: number, item: any) => {
+                const discountedPrice = item.discount && item.discount > 0 
+                  ? item.price - (item.price * item.discount / 100)
+                  : item.price;
+                return sum + ((discountedPrice || 0) * (item.quantity || 1));
+              }, 0)
             : 0;
         }
         if (typeof parsedOrder.total === 'undefined') {
@@ -493,7 +498,9 @@ const CheckoutConfirmationPage = () => {
                         </div>
                         <div className="text-right">
                           <p className="font-semibold">
-                            {displayPrice((Number(item.price) || 0) * (item.quantity || 1), order.currency, order.currencyRate)}
+                            {displayPrice(((item.discount && item.discount > 0 
+                              ? Number(item.price) - (Number(item.price) * item.discount / 100)
+                              : Number(item.price)) || 0) * (item.quantity || 1), order.currency, order.currencyRate)}
                           </p>
                         </div>
                       </div>
