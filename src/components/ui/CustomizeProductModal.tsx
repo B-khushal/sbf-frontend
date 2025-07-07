@@ -81,6 +81,7 @@ export function CustomizeProductModal({
 
   const [totalPrice, setTotalPrice] = useState(product.price);
   const [uploadedPhoto, setUploadedPhoto] = useState<string | null>(null);
+  const [isConfirmed, setIsConfirmed] = useState(false);
 
   useEffect(() => {
     // Calculate total price based on selections
@@ -172,9 +173,12 @@ export function CustomizeProductModal({
     }));
   };
 
+  const handleConfirm = () => setIsConfirmed(true);
+
   const handleSubmit = () => {
     onAddToCart(customizations, totalPrice);
     onClose();
+    setIsConfirmed(false); // Reset for next open
   };
 
   const getAddonTotal = (addons: (AddonOption & { quantity: number })[]) => {
@@ -555,7 +559,11 @@ export function CustomizeProductModal({
                     </div>
                   </CardContent>
                 </Card>
-                <Button onClick={handleSubmit} className="h-12 rounded bg-primary text-white w-full text-base font-semibold">Add to Cart</Button>
+                {!isConfirmed ? (
+                  <Button onClick={handleConfirm} className="h-12 rounded bg-primary text-white w-full text-base font-semibold">Confirm</Button>
+                ) : (
+                  <Button onClick={handleSubmit} className="h-12 rounded bg-green-600 text-white w-full text-base font-semibold">Add to Cart</Button>
+                )}
               </div>
             </div>
             {/* Right: Preview & Price Summary (Laptop/Desktop only) */}
@@ -638,6 +646,12 @@ export function CustomizeProductModal({
                       <span>₹{totalPrice}</span>
                     </div>
                   </div>
+                  {/* Confirm/Add to Cart buttons for laptop view */}
+                  {!isConfirmed ? (
+                    <Button onClick={handleConfirm} className="mt-6 w-full h-12 rounded bg-primary text-white text-base font-semibold">Confirm</Button>
+                  ) : (
+                    <Button onClick={handleSubmit} className="mt-6 w-full h-12 rounded bg-green-600 text-white text-base font-semibold">Add to Cart</Button>
+                  )}
                 </CardContent>
               </Card>
             </div>
