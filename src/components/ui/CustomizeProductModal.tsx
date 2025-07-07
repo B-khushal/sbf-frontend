@@ -677,7 +677,7 @@ export function CustomizeProductModal({
               </div>
             </ScrollArea>
             {/* Desktop: Right Side - Preview & Price Summary */}
-            <div className="hidden md:block w-80 border-t md:border-t-0 md:border-l bg-gray-50 p-4 sm:p-6">
+            <div className="hidden md:block w-80 border-t md:border-t-0 md:border-l bg-gray-50 p-4 sm:p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
               <div className="space-y-6">
                 {/* Live Preview */}
                 <Card className="border-2 border-dashed border-gray-300">
