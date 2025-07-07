@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ShoppingCart, Heart, Share2, Minus, Plus, ChevronLeft, ChevronRight, Star, Eye, ShoppingBag, Wand2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -196,6 +196,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [isCustomizeModalOpen, setIsCustomizeModalOpen] = useState(false);
   const [customizations, setCustomizations] = useState<CustomizationData | undefined>();
+  const customizeModalRef = useRef<HTMLDivElement>(null);
 
   // Debug log to check properties
   console.log(`Product Detail ${product.title}:`, {
@@ -248,6 +249,11 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
       return;
     }
     setIsCustomizeModalOpen(true);
+    setTimeout(() => {
+      if (customizeModalRef.current) {
+        customizeModalRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100); // Delay to ensure modal is rendered
   };
 
   const handleAddToCart = () => {
@@ -634,47 +640,49 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
       
       {/* Customization Modal */}
       {product.isCustomizable && product.customizationOptions && (
-        <CustomizeProductModal
-          open={isCustomizeModalOpen}
-          onClose={() => setIsCustomizeModalOpen(false)}
-          product={{
-            _id: product._id,
-            title: product.title,
-            price: discountedPrice,
-            images: product.images,
-            customizationOptions: product.customizationOptions
-          }}
-          onAddToCart={(customizations, customTotalPrice) => {
-            setCustomizations(customizations);
-            setIsCustomizeModalOpen(false);
-            // Use the customTotalPrice for the cart item
-            const cartItem = {
+        <div ref={customizeModalRef}>
+          <CustomizeProductModal
+            open={isCustomizeModalOpen}
+            onClose={() => setIsCustomizeModalOpen(false)}
+            product={{
               _id: product._id,
-              id: product._id,
-              productId: product._id,
               title: product.title,
-              price: customTotalPrice,
-              originalPrice: originalPrice,
-              image: imageUrl,
-              quantity: quantity,
-              category: product.category,
-              discount: product.discount,
+              price: discountedPrice,
               images: product.images,
-              description: product.description,
-              details: product.details,
-              careInstructions: product.careInstructions,
-              isNewArrival: product.isNewArrival,
-              isFeatured: product.isFeatured,
-              customizations: customizations
-            };
-            addToCart(cartItem);
-            toast({
-              title: "Added to cart",
-              description: `${quantity} × ${product.title} added to your cart`,
-              duration: 3000,
-            });
-          }}
-        />
+              customizationOptions: product.customizationOptions
+            }}
+            onAddToCart={(customizations, customTotalPrice) => {
+              setCustomizations(customizations);
+              setIsCustomizeModalOpen(false);
+              // Use the customTotalPrice for the cart item
+              const cartItem = {
+                _id: product._id,
+                id: product._id,
+                productId: product._id,
+                title: product.title,
+                price: customTotalPrice,
+                originalPrice: originalPrice,
+                image: imageUrl,
+                quantity: quantity,
+                category: product.category,
+                discount: product.discount,
+                images: product.images,
+                description: product.description,
+                details: product.details,
+                careInstructions: product.careInstructions,
+                isNewArrival: product.isNewArrival,
+                isFeatured: product.isFeatured,
+                customizations: customizations
+              };
+              addToCart(cartItem);
+              toast({
+                title: "Added to cart",
+                description: `${quantity} × ${product.title} added to your cart`,
+                duration: 3000,
+              });
+            }}
+          />
+        </div>
       )}
 
       {/* Contact Modal */}
