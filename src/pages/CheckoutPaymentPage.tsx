@@ -301,22 +301,22 @@ const CheckoutPaymentPage = () => {
          originalCurrency: 'INR'
        };
        
-       // Add gift details if present
-       if (shippingInfo.giftMessage || shippingInfo.receiverFirstName) {
-         orderData.giftDetails = {
-           message: shippingInfo.giftMessage || '',
-           recipientName: shippingInfo.receiverFirstName && shippingInfo.receiverLastName 
-             ? `${shippingInfo.receiverFirstName} ${shippingInfo.receiverLastName}`.trim()
-             : '',
-           recipientEmail: shippingInfo.receiverEmail || '',
-           recipientPhone: shippingInfo.receiverPhone || '',
-           recipientAddress: shippingInfo.receiverAddress || '',
-           recipientApartment: shippingInfo.receiverApartment || '',
-           recipientCity: shippingInfo.receiverCity || '',
-           recipientState: shippingInfo.receiverState || '',
-           recipientZipCode: shippingInfo.receiverZipCode || ''
-         };
-       }
+               // Add gift details if present
+        if (shippingInfo.giftMessage || shippingInfo.receiverFirstName) {
+          (orderData as any).giftDetails = {
+            message: shippingInfo.giftMessage || '',
+            recipientName: shippingInfo.receiverFirstName && shippingInfo.receiverLastName 
+              ? `${shippingInfo.receiverFirstName} ${shippingInfo.receiverLastName}`.trim()
+              : '',
+            recipientEmail: shippingInfo.receiverEmail || '',
+            recipientPhone: shippingInfo.receiverPhone || '',
+            recipientAddress: shippingInfo.receiverAddress || '',
+            recipientApartment: shippingInfo.receiverApartment || '',
+            recipientCity: shippingInfo.receiverCity || '',
+            recipientState: shippingInfo.receiverState || '',
+            recipientZipCode: shippingInfo.receiverZipCode || ''
+          };
+        }
 
       // Configure Razorpay options
       const options: RazorpayOptions = {
@@ -328,6 +328,32 @@ const CheckoutPaymentPage = () => {
         order_id: order_id,
         handler: async (response: RazorpayResponse) => {
           try {
+            // Debug: Log the complete Razorpay response
+            console.log('🔍 Complete Razorpay Response:', response);
+            console.log('🔍 Razorpay Response Keys:', Object.keys(response));
+            
+            // Validate required Razorpay response data
+            if (!response.razorpay_order_id) {
+              console.error('❌ Missing razorpay_order_id in response');
+              throw new Error('Payment response missing order ID');
+            }
+            
+            if (!response.razorpay_payment_id) {
+              console.error('❌ Missing razorpay_payment_id in response');
+              throw new Error('Payment response missing payment ID');
+            }
+            
+            if (!response.razorpay_signature) {
+              console.error('❌ Missing razorpay_signature in response');
+              throw new Error('Payment response missing signature');
+            }
+            
+            console.log('✅ All Razorpay response data present:', {
+              order_id: response.razorpay_order_id,
+              payment_id: response.razorpay_payment_id,
+              signature: response.razorpay_signature ? 'present' : 'missing'
+            });
+            
             // Verify payment
             const verificationResponse = await api.post('/orders/verify-payment', {
               razorpay_order_id: response.razorpay_order_id,
@@ -347,10 +373,9 @@ const CheckoutPaymentPage = () => {
               
               // Add notification
               addNotification({
-                type: 'success',
+                type: 'order',
                 title: 'Payment Successful!',
-                message: `Your order #${verificationResponse.data.order.orderNumber} has been confirmed.`,
-                timestamp: new Date().toISOString()
+                message: `Your order #${verificationResponse.data.order.orderNumber} has been confirmed.`
               });
 
               // Navigate to confirmation
@@ -375,12 +400,18 @@ const CheckoutPaymentPage = () => {
           contact: shippingInfo.phone
         },
         theme: {
-          color: RAZORPAY_CONFIG.themeColor
+          color: "#3B82F6"
         },
         modal: {
           confirm_close: true,
           ondismiss: () => {
+            console.log('🚫 Payment dialog closed by user');
             setIsProcessing(false);
+            toast({
+              title: "Payment cancelled",
+              description: "Payment was cancelled. You can try again.",
+              variant: "default",
+            });
           }
         }
       };
@@ -540,7 +571,6 @@ const CheckoutPaymentPage = () => {
                 </CardHeader>
                 <CardContent>
                   <PromoCodeInput
-                    orderTotal={subtotal + deliveryFee}
                     onPromoCodeApplied={handlePromoCodeApplied}
                     onPromoCodeRemoved={handlePromoCodeRemoved}
                     appliedPromoCode={appliedPromoCode}
