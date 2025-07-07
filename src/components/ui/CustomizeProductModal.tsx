@@ -192,7 +192,7 @@ export function CustomizeProductModal({
             </Button>
           </DialogHeader>
           <div className="pt-[56px] pb-0 px-3 md:pt-0 md:pb-0 md:px-6 flex flex-col gap-3 md:flex-row md:gap-6">
-            <div className="flex-1 md:pr-6 overflow-y-auto overflow-x-hidden pb-[90px]">
+            <div className="flex-1 md:pr-6 overflow-y-auto overflow-x-hidden pb-6">
               <img src={product.images[0]} alt="Preview" className="w-24 h-24 mx-auto rounded mb-2 object-cover border border-gray-100" />
               <div className="space-y-3">
                 {/* 📸 Photo Upload Section */}
@@ -518,11 +518,46 @@ export function CustomizeProductModal({
                   </Card>
                 )}
               </div>
+              <div className="block md:hidden mt-4">
+                <Card className="border-2 border-purple-200 bg-purple-50/50 mb-3">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center gap-2 text-purple-800 text-base font-medium">
+                      <IndianRupee className="h-5 w-5" /> Price Summary
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-sm">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Base Price:</span>
+                      <span className="font-medium">₹{product.price}</span>
+                    </div>
+                    {customizations.selectedFlowers.length > 0 && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Flower Add-ons:</span>
+                        <span className="font-medium text-pink-600">+₹{getAddonTotal(customizations.selectedFlowers)}</span>
+                      </div>
+                    )}
+                    {customizations.selectedChocolates.length > 0 && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Chocolate Add-ons:</span>
+                        <span className="font-medium text-orange-600">+₹{getAddonTotal(customizations.selectedChocolates)}</span>
+                      </div>
+                    )}
+                    {customizations.messageCard && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Message Card:</span>
+                        <span className="font-medium text-yellow-600">+₹{product.customizationOptions.messageCardPrice}</span>
+                      </div>
+                    )}
+                    <Separator />
+                    <div className="flex justify-between items-center text-lg font-bold text-purple-800">
+                      <span>Total Price:</span>
+                      <span>₹{totalPrice}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Button onClick={handleSubmit} className="h-12 rounded bg-primary text-white w-full text-base font-semibold">Add to Cart</Button>
+              </div>
             </div>
-          </div>
-          <div className="fixed bottom-0 left-0 w-full z-30 bg-white border-t flex justify-between items-center px-4 py-3 md:static md:border-0 md:p-0">
-            <span className="text-lg font-bold text-primary w-1/3 text-right">₹{totalPrice}</span>
-            <Button onClick={handleSubmit} className="h-12 rounded bg-primary text-white w-2/3 text-base font-semibold ml-3">Add to Cart</Button>
           </div>
         </DialogContent>
       </Dialog>
