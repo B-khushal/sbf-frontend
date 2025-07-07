@@ -184,8 +184,8 @@ export function CustomizeProductModal({
   return (
     <TooltipProvider>
       <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="max-w-4xl max-h-[90vh] p-0">
-          <DialogHeader className="px-6 py-4 border-b bg-gradient-to-r from-purple-50 to-pink-50">
+        <DialogContent className="w-full max-w-2xl sm:max-w-3xl md:max-w-4xl max-h-[95vh] p-0 rounded-lg overflow-hidden">
+          <DialogHeader className="px-4 sm:px-6 py-4 border-b bg-gradient-to-r from-purple-50 to-pink-50">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100">
@@ -204,9 +204,9 @@ export function CustomizeProductModal({
             </div>
           </DialogHeader>
 
-          <div className="flex h-[calc(90vh-140px)]">
+          <div className="flex flex-col md:flex-row h-auto md:h-[calc(90vh-140px)]">
             {/* Left Side - Customization Options */}
-            <ScrollArea className="flex-1 p-6">
+            <ScrollArea className="flex-1 p-4 sm:p-6 max-h-[50vh] md:max-h-none overflow-y-auto">
               <div className="space-y-8">
                 {/* 📸 Photo Upload Section */}
                 {product.customizationOptions.allowPhotoUpload && (
@@ -534,7 +534,7 @@ export function CustomizeProductModal({
             </ScrollArea>
 
             {/* Right Side - Preview & Price Summary */}
-            <div className="w-80 border-l bg-gray-50 p-6">
+            <div className="w-full md:w-80 border-t md:border-t-0 md:border-l bg-gray-50 p-4 sm:p-6">
               <div className="space-y-6">
                 {/* Preview Section */}
                 <Card className="border-2 border-dashed border-gray-300">
@@ -663,7 +663,7 @@ export function CustomizeProductModal({
                       <div className="space-y-3 pt-4">
                         <Button 
                           onClick={handleSubmit}
-                          className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3"
+                          className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 text-base md:text-lg"
                           size="lg"
                         >
                           <ShoppingCart className="mr-2 h-5 w-5" />
@@ -672,7 +672,7 @@ export function CustomizeProductModal({
                         <Button 
                           variant="outline" 
                           onClick={onClose}
-                          className="w-full"
+                          className="w-full mt-2"
                         >
                           Cancel
                         </Button>
