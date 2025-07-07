@@ -297,9 +297,7 @@ const CheckoutPaymentPage = () => {
            product: item._id,           // ✅ Correct field name for backend
            quantity: item.quantity,
            price: item.price,
-           finalPrice: (item.discount && item.discount > 0 
-             ? item.price - (item.price * item.discount / 100)
-             : item.price),  // ✅ Unit price only (not multiplied by quantity)
+           finalPrice: item.price, // Always use the total price after customizations
            customizations: item.customizations || null,  // ✅ Include customizations
            images: item.images || []  // ✅ Include product images
          })),
