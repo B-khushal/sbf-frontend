@@ -2,13 +2,20 @@
 
 export interface CartItem {
   _id: string;
+  id?: string;
+  productId?: string;
   title: string;
   price: number;
+  image?: string;
   images: string[];
   quantity: number;
   discount?: number;
   category?: string;
   description?: string;
+  careInstructions?: string[];
+  isNewArrival?: boolean;
+  isFeatured?: boolean;
+  customizations?: any;
 }
 
 // Get current user ID from localStorage
