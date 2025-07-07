@@ -380,27 +380,39 @@ const CheckoutPaymentPage = () => {
             });
 
             if (verificationResponse.data.success) {
-              // Store order data for confirmation page
-              localStorage.setItem('lastOrder', JSON.stringify(verificationResponse.data.order));
+              console.log('✅ Payment verification successful, preparing for redirection');
               
-              // Clear cart and promo code
+              // Store order data for confirmation page
+              const orderData = verificationResponse.data.order;
+              localStorage.setItem('lastOrder', JSON.stringify(orderData));
+              console.log('💾 Order data stored in localStorage');
+              
+              // Set a flag in sessionStorage to indicate successful payment
+              sessionStorage.setItem('from_payment', 'true');
+              
+              // Clear cart and related data
               clearCart();
               localStorage.removeItem('appliedPromoCode');
               localStorage.removeItem('shippingInfo');
+              console.log('🧹 Cart and related data cleared');
               
               // Add notification
               addNotification({
                 type: 'order',
                 title: 'Payment Successful!',
-                message: `Your order #${verificationResponse.data.order.orderNumber} has been confirmed.`
+                message: `Your order #${orderData.orderNumber} has been confirmed.`
               });
+              console.log('🔔 Success notification added');
 
-              // Navigate to confirmation
-              navigate('/checkout/confirmation?order=true');
+              // Ensure we're in the correct context for navigation
+              setTimeout(() => {
+                console.log('🚀 Navigating to confirmation page');
+                navigate('/checkout/confirmation?order=true', { replace: true });
+              }, 100);
             } else {
               throw new Error('Payment verification failed');
-        }
-      } catch (error) {
+            }
+          } catch (error) {
             console.error('Payment verification error:', error);
             toast({
               title: "Payment verification failed",

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { X, ShoppingBag, Trash2 } from 'lucide-react';
+import { X, ShoppingBag, Trash2, Wand2 } from 'lucide-react';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
@@ -15,6 +15,21 @@ import {
   SheetClose,
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+
+type AddonOption = {
+  name: string;
+  price: number;
+  type: 'flower' | 'chocolate';
+};
+
+type CustomizationData = {
+  photo?: string;
+  number?: string;
+  messageCard?: string;
+  selectedFlowers: AddonOption[];
+  selectedChocolates: AddonOption[];
+};
 
 type CartItem = {
   _id: string;
@@ -25,6 +40,7 @@ type CartItem = {
   discount?: number;
   category?: string;
   description?: string;
+  customizations?: CustomizationData;
 };
 
 type CartProps = {
@@ -217,55 +233,122 @@ const CartItem = ({
   const originalPrice = item.discount && item.discount > 0 
     ? Math.round(item.price / (1 - item.discount / 100))
     : item.price;
+
+  // Calculate total add-ons price
+  const addonsPrice = item.customizations ? (
+    (item.customizations.selectedFlowers?.reduce((sum, flower) => sum + flower.price, 0) || 0) +
+    (item.customizations.selectedChocolates?.reduce((sum, chocolate) => sum + chocolate.price, 0) || 0)
+  ) : 0;
   
   return (
-    <div className="flex items-start gap-4 p-4 bg-white border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-      <div className="w-16 h-16 bg-gray-100 relative overflow-hidden rounded-lg flex-shrink-0">
-        <img 
-          src={item.images && item.images.length > 0 ? item.images[0] : '/api/placeholder/64/64'} 
-          alt={item.title}
-          className="w-full h-full object-cover"
-          onError={(e) => {
-            e.currentTarget.src = '/api/placeholder/64/64';
-          }}
-        />
-      </div>
-      <div className="flex-1 min-w-0">
-        <h4 className="text-sm font-medium text-gray-900 mb-1 line-clamp-2">{item.title}</h4>
-        <div className="text-sm text-gray-500 mb-2">
-          {item.discount && item.discount > 0 && (
-            <span className="line-through mr-2 text-gray-400">
-              {formatPrice(convertPrice(originalPrice))}
-            </span>
+    <div className="flex flex-col gap-4 p-4 bg-white border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+      <div className="flex items-start gap-4">
+        <div className="w-16 h-16 bg-gray-100 relative overflow-hidden rounded-lg flex-shrink-0">
+          {item.customizations?.photo ? (
+            <img 
+              src={item.customizations.photo} 
+              alt={item.title}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <img 
+              src={item.images && item.images.length > 0 ? item.images[0] : '/api/placeholder/64/64'} 
+              alt={item.title}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.currentTarget.src = '/api/placeholder/64/64';
+              }}
+            />
           )}
-          <span className="font-medium text-primary">
-            {formatPrice(convertPrice(item.price))}
-          </span>
         </div>
-        <div className="flex items-center justify-between">
-          <select 
-            value={item.quantity}
-            onChange={(e) => onUpdateQuantity(item._id, parseInt(e.target.value))}
-            className="text-sm h-8 px-2 border border-gray-200 rounded-md bg-white focus:border-primary focus:outline-none"
-          >
-            {[1,2,3,4,5].map((num) => (
-              <option key={num} value={num}>
-                Qty: {num}
-              </option>
-            ))}
-          </select>
-          <button 
-            onClick={onRemove}
-            className="text-gray-400 hover:text-red-500 transition-colors duration-200 p-1 hover:bg-red-50 rounded"
-            aria-label="Remove item"
-          >
-            <Trash2 size={16} />
-          </button>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <h4 className="text-sm font-medium text-gray-900 line-clamp-2">{item.title}</h4>
+            <button
+              onClick={onRemove}
+              className="text-gray-400 hover:text-red-500 transition-colors"
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
+
+          {/* Price Section */}
+          <div className="text-sm text-gray-500 mt-1">
+            {item.discount && item.discount > 0 && (
+              <span className="line-through mr-2 text-gray-400">
+                {formatPrice(convertPrice(originalPrice))}
+              </span>
+            )}
+            <span className="font-medium text-primary">
+              {formatPrice(convertPrice(item.price))}
+            </span>
+            {addonsPrice > 0 && (
+              <span className="ml-1 text-gray-500">
+                + {formatPrice(convertPrice(addonsPrice))} add-ons
+              </span>
+            )}
+          </div>
+
+          {/* Quantity Selector */}
+          <div className="flex items-center mt-2">
+            <select 
+              value={item.quantity}
+              onChange={(e) => onUpdateQuantity(item._id, parseInt(e.target.value))}
+              className="text-sm h-8 px-2 border border-gray-200 rounded-md bg-white focus:border-primary focus:outline-none"
+            >
+              {[1, 2, 3, 4, 5].map((num) => (
+                <option key={num} value={num}>
+                  {num}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
-      <div className="text-sm font-semibold text-gray-900">
-        {formatPrice(convertPrice((item.price || 0) * (item.quantity || 0)))}
-      </div>
+
+      {/* Customizations Section */}
+      {item.customizations && (
+        <div className="border-t pt-3 space-y-2">
+          <div className="flex items-center gap-1 text-sm text-gray-600">
+            <Wand2 className="h-3 w-3" />
+            <span className="font-medium">Customizations:</span>
+          </div>
+          
+          <div className="space-y-1.5 text-sm">
+            {item.customizations.number && (
+              <div className="text-gray-600">
+                Number: {item.customizations.number}
+              </div>
+            )}
+            
+            {item.customizations.messageCard && (
+              <div className="text-gray-600">
+                Message: "{item.customizations.messageCard}"
+              </div>
+            )}
+            
+            {item.customizations.selectedFlowers.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {item.customizations.selectedFlowers.map((flower, index) => (
+                  <Badge key={index} variant="outline" className="text-xs">
+                    {flower.name} (+{formatPrice(convertPrice(flower.price))})
+                  </Badge>
+                ))}
+              </div>
+            )}
+            
+            {item.customizations.selectedChocolates.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {item.customizations.selectedChocolates.map((chocolate, index) => (
+                  <Badge key={index} variant="outline" className="text-xs">
+                    {chocolate.name} (+{formatPrice(convertPrice(chocolate.price))})
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

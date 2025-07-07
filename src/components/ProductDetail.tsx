@@ -1,15 +1,44 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Heart, Share2, Minus, Plus, ChevronLeft, ChevronRight, Star, Eye, ShoppingBag } from 'lucide-react';
+import { ShoppingCart, Heart, Share2, Minus, Plus, ChevronLeft, ChevronRight, Star, Eye, ShoppingBag, Wand2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useAuth } from '@/hooks/use-auth';
 import { getImageUrl, getProductImageUrl } from '@/config';
 import ContactModal from '@/components/ui/ContactModal';
+import { CustomizeProductModal } from '@/components/ui/CustomizeProductModal';
 import useCart from '@/hooks/use-cart';
 import { Button } from './ui/button';
+import { Badge } from './ui/badge';
 import productService, { ProductData } from '@/services/productService';
 import ProductReviews from '@/components/ProductReviews';
+
+type AddonOption = {
+  name: string;
+  price: number;
+  type: 'flower' | 'chocolate';
+};
+
+type CustomizationOptions = {
+  allowPhotoUpload: boolean;
+  allowNumberInput: boolean;
+  numberInputLabel: string;
+  allowMessageCard: boolean;
+  messageCardPrice: number;
+  addons: {
+    flowers: AddonOption[];
+    chocolates: AddonOption[];
+  };
+  previewImage: string;
+};
+
+type CustomizationData = {
+  photo?: string;
+  number?: string;
+  messageCard?: string;
+  selectedFlowers: AddonOption[];
+  selectedChocolates: AddonOption[];
+};
 
 type ProductDetailProps = {
   product: {
@@ -24,6 +53,8 @@ type ProductDetailProps = {
     category: string;
     isNewArrival?: boolean;
     isFeatured?: boolean;
+    isCustomizable?: boolean;
+    customizationOptions?: CustomizationOptions;
   };
   onAddToCart: (item: {
     id: string;
@@ -33,6 +64,7 @@ type ProductDetailProps = {
     originalPrice: number;
     image: string;
     quantity: number;
+    customizations?: CustomizationData;
   }) => void;
   onReviewSubmit: () => void;
 };
@@ -162,6 +194,8 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
   const { user } = useAuth();
   const { addToCart } = useCart();
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  const [isCustomizeModalOpen, setIsCustomizeModalOpen] = useState(false);
+  const [customizations, setCustomizations] = useState<CustomizationData | undefined>();
 
   // Debug log to check properties
   console.log(`Product Detail ${product.title}:`, {
@@ -203,6 +237,19 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
   
   const decrementQuantity = () => quantity > 1 && setQuantity((prev) => prev - 1);
 
+  const handleCustomize = () => {
+    if (!user) {
+      toast({
+        title: "Please log in",
+        description: "You need to be logged in to customize products",
+        variant: "destructive",
+        duration: 4000,
+      });
+      return;
+    }
+    setIsCustomizeModalOpen(true);
+  };
+
   const handleAddToCart = () => {
     // Check authentication first
     if (!user) {
@@ -232,7 +279,8 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
         details: product.details,
         careInstructions: product.careInstructions,
         isNewArrival: product.isNewArrival,
-        isFeatured: product.isFeatured
+        isFeatured: product.isFeatured,
+        customizations: customizations
       };
       
       addToCart(cartItem);
@@ -257,7 +305,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
           title: "Error",
           description: errorMessage,
           variant: "destructive",
-          duration: 3000,
+          duration: 4000,
         });
       }
     }
@@ -493,13 +541,34 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
 
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-4">
-                <button
-                  onClick={handleAddToCart}
-                  className="flex-1 h-12 bg-primary text-primary-foreground flex items-center justify-center gap-2 rounded-md hover-lift subtle-shadow"
-                >
-                  <ShoppingCart size={18} />
-                  <span>Add to Cart</span>
-                </button>
+                {product.isCustomizable ? (
+                  <>
+                    <Button
+                      className="flex-1"
+                      onClick={handleCustomize}
+                      variant="outline"
+                    >
+                      <Wand2 className="mr-2 h-4 w-4" />
+                      Customize
+                    </Button>
+                    <Button
+                      className="flex-1"
+                      onClick={handleAddToCart}
+                      disabled={!customizations}
+                    >
+                      <ShoppingCart className="mr-2 h-4 w-4" />
+                      Add to Cart
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    className="flex-1"
+                    onClick={handleAddToCart}
+                  >
+                    <ShoppingCart className="mr-2 h-4 w-4" />
+                    Add to Cart
+                  </Button>
+                )}
                 <button
                   onClick={handleAddToWishlist}
                   className="h-12 px-6 border border-muted flex items-center justify-center gap-2 rounded-md hover:bg-secondary transition-colors duration-300"
@@ -563,6 +632,25 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
         <RecommendedProducts productId={product._id} category={product.category} />
       </div>
       
+      {/* Customization Modal */}
+      {product.isCustomizable && product.customizationOptions && (
+        <CustomizeProductModal
+          open={isCustomizeModalOpen}
+          onClose={() => setIsCustomizeModalOpen(false)}
+          product={{
+            _id: product._id,
+            title: product.title,
+            price: discountedPrice,
+            customizationOptions: product.customizationOptions
+          }}
+          onAddToCart={(customizations) => {
+            setCustomizations(customizations);
+            setIsCustomizeModalOpen(false);
+            handleAddToCart();
+          }}
+        />
+      )}
+
       {/* Contact Modal */}
       <ContactModal 
         isOpen={isContactModalOpen}

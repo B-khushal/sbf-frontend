@@ -83,6 +83,25 @@ const CATEGORIES = [
   { value: "peaceful-arrangements", label: "Peaceful Arrangements" }
 ];
 
+type AddonOption = {
+  name: string;
+  price: number;
+  type: 'flower' | 'chocolate';
+};
+
+type CustomizationOptions = {
+  allowPhotoUpload: boolean;
+  allowNumberInput: boolean;
+  numberInputLabel: string;
+  allowMessageCard: boolean;
+  messageCardPrice: number;
+  addons: {
+    flowers: AddonOption[];
+    chocolates: AddonOption[];
+  };
+  previewImage: string;
+};
+
 type Product = {
   _id?: string;
   title: string;
@@ -95,6 +114,8 @@ type Product = {
   images: string[];
   isFeatured: boolean;
   isNew: boolean;
+  isCustomizable: boolean;
+  customizationOptions: CustomizationOptions;
 };
 
 type Props = {
@@ -128,12 +149,28 @@ const AdminProductForm: React.FC<Props> = ({
     images: productData?.images || [],
     isFeatured: productData?.isFeatured || false,
     isNew: productData?.isNew || false,
+    isCustomizable: productData?.isCustomizable || false,
+    customizationOptions: productData?.customizationOptions || {
+      allowPhotoUpload: false,
+      allowNumberInput: false,
+      numberInputLabel: "Enter number",
+      allowMessageCard: false,
+      messageCardPrice: 0,
+      addons: {
+        flowers: [],
+        chocolates: []
+      },
+      previewImage: ""
+    }
   });
 
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newDetail, setNewDetail] = useState("");
   const [uploadProgress, setUploadProgress] = useState<string>("");
+
+  const [newFlowerAddon, setNewFlowerAddon] = useState({ name: "", price: 0 });
+  const [newChocolateAddon, setNewChocolateAddon] = useState({ name: "", price: 0 });
 
   // Debug function to test upload connection
   const testUploadConnection = async () => {
@@ -282,6 +319,51 @@ const AdminProductForm: React.FC<Props> = ({
       e.preventDefault();
       addDetail();
     }
+  };
+
+  const addFlowerAddon = () => {
+    if (newFlowerAddon.name && newFlowerAddon.price > 0) {
+      setFormData(prev => ({
+        ...prev,
+        customizationOptions: {
+          ...prev.customizationOptions,
+          addons: {
+            ...prev.customizationOptions.addons,
+            flowers: [...prev.customizationOptions.addons.flowers, { ...newFlowerAddon, type: 'flower' }]
+          }
+        }
+      }));
+      setNewFlowerAddon({ name: "", price: 0 });
+    }
+  };
+
+  const addChocolateAddon = () => {
+    if (newChocolateAddon.name && newChocolateAddon.price > 0) {
+      setFormData(prev => ({
+        ...prev,
+        customizationOptions: {
+          ...prev.customizationOptions,
+          addons: {
+            ...prev.customizationOptions.addons,
+            chocolates: [...prev.customizationOptions.addons.chocolates, { ...newChocolateAddon, type: 'chocolate' }]
+          }
+        }
+      }));
+      setNewChocolateAddon({ name: "", price: 0 });
+    }
+  };
+
+  const removeAddon = (type: 'flower' | 'chocolate', index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      customizationOptions: {
+        ...prev.customizationOptions,
+        addons: {
+          ...prev.customizationOptions.addons,
+          [type === 'flower' ? 'flowers' : 'chocolates']: prev.customizationOptions.addons[type === 'flower' ? 'flowers' : 'chocolates'].filter((_, i) => i !== index)
+        }
+      }
+    }));
   };
 
   return (
@@ -442,6 +524,200 @@ const AdminProductForm: React.FC<Props> = ({
                 New Arrival
               </label>
             </div>
+          </div>
+
+          {/* Customization Section */}
+          <div className="space-y-4 border-t pt-4">
+            <h3 className="text-lg font-semibold">Customization Options</h3>
+            
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="isCustomizable"
+                checked={formData.isCustomizable}
+                onCheckedChange={(checked) => 
+                  setFormData(prev => ({ ...prev, isCustomizable: checked as boolean }))
+                }
+              />
+              <label htmlFor="isCustomizable">Enable Product Customization</label>
+            </div>
+
+            {formData.isCustomizable && (
+              <div className="space-y-4 pl-4">
+                {/* Photo Upload Option */}
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="allowPhotoUpload"
+                    checked={formData.customizationOptions.allowPhotoUpload}
+                    onCheckedChange={(checked) => 
+                      setFormData(prev => ({
+                        ...prev,
+                        customizationOptions: {
+                          ...prev.customizationOptions,
+                          allowPhotoUpload: checked as boolean
+                        }
+                      }))
+                    }
+                  />
+                  <label htmlFor="allowPhotoUpload">Allow Photo Upload</label>
+                </div>
+
+                {/* Number Input Option */}
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="allowNumberInput"
+                      checked={formData.customizationOptions.allowNumberInput}
+                      onCheckedChange={(checked) => 
+                        setFormData(prev => ({
+                          ...prev,
+                          customizationOptions: {
+                            ...prev.customizationOptions,
+                            allowNumberInput: checked as boolean
+                          }
+                        }))
+                      }
+                    />
+                    <label htmlFor="allowNumberInput">Allow Number Input</label>
+                  </div>
+                  {formData.customizationOptions.allowNumberInput && (
+                    <Input
+                      placeholder="Number input label (e.g., 'Enter age')"
+                      value={formData.customizationOptions.numberInputLabel}
+                      onChange={(e) => 
+                        setFormData(prev => ({
+                          ...prev,
+                          customizationOptions: {
+                            ...prev.customizationOptions,
+                            numberInputLabel: e.target.value
+                          }
+                        }))
+                      }
+                    />
+                  )}
+                </div>
+
+                {/* Message Card Option */}
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="allowMessageCard"
+                      checked={formData.customizationOptions.allowMessageCard}
+                      onCheckedChange={(checked) => 
+                        setFormData(prev => ({
+                          ...prev,
+                          customizationOptions: {
+                            ...prev.customizationOptions,
+                            allowMessageCard: checked as boolean
+                          }
+                        }))
+                      }
+                    />
+                    <label htmlFor="allowMessageCard">Allow Message Card</label>
+                  </div>
+                  {formData.customizationOptions.allowMessageCard && (
+                    <Input
+                      type="number"
+                      placeholder="Message card price"
+                      value={formData.customizationOptions.messageCardPrice}
+                      onChange={(e) => 
+                        setFormData(prev => ({
+                          ...prev,
+                          customizationOptions: {
+                            ...prev.customizationOptions,
+                            messageCardPrice: parseFloat(e.target.value) || 0
+                          }
+                        }))
+                      }
+                    />
+                  )}
+                </div>
+
+                {/* Flower Add-ons */}
+                <div className="space-y-2">
+                  <h4 className="font-medium">Flower Add-ons</h4>
+                  <div className="flex space-x-2">
+                    <Input
+                      placeholder="Flower name"
+                      value={newFlowerAddon.name}
+                      onChange={(e) => setNewFlowerAddon(prev => ({ ...prev, name: e.target.value }))}
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Price"
+                      value={newFlowerAddon.price}
+                      onChange={(e) => setNewFlowerAddon(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
+                    />
+                    <Button onClick={addFlowerAddon} size="sm">Add</Button>
+                  </div>
+                  <div className="space-y-2">
+                    {formData.customizationOptions.addons.flowers.map((addon, index) => (
+                      <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                        <span>{addon.name} (₹{addon.price})</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeAddon('flower', index)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Chocolate Add-ons */}
+                <div className="space-y-2">
+                  <h4 className="font-medium">Chocolate Add-ons</h4>
+                  <div className="flex space-x-2">
+                    <Input
+                      placeholder="Chocolate name"
+                      value={newChocolateAddon.name}
+                      onChange={(e) => setNewChocolateAddon(prev => ({ ...prev, name: e.target.value }))}
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Price"
+                      value={newChocolateAddon.price}
+                      onChange={(e) => setNewChocolateAddon(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
+                    />
+                    <Button onClick={addChocolateAddon} size="sm">Add</Button>
+                  </div>
+                  <div className="space-y-2">
+                    {formData.customizationOptions.addons.chocolates.map((addon, index) => (
+                      <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                        <span>{addon.name} (₹{addon.price})</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeAddon('chocolate', index)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Preview Image */}
+                <div className="space-y-2">
+                  <h4 className="font-medium">Preview Image</h4>
+                  <Input
+                    type="text"
+                    placeholder="Preview image URL"
+                    value={formData.customizationOptions.previewImage}
+                    onChange={(e) => 
+                      setFormData(prev => ({
+                        ...prev,
+                        customizationOptions: {
+                          ...prev.customizationOptions,
+                          previewImage: e.target.value
+                        }
+                      }))
+                    }
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Image Upload */}

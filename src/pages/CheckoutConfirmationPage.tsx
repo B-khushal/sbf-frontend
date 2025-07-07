@@ -137,7 +137,47 @@ const CheckoutConfirmationPage = () => {
     
     // Check if coming from payment page
     const fromPaymentFlag = sessionStorage.getItem("from_payment");
+    const hasOrderParam = new URLSearchParams(window.location.search).get('order') === 'true';
+    
+    console.log('Navigation context:', {
+      fromPayment: fromPaymentFlag === "true",
+      hasOrderParam,
+      currentPath: window.location.pathname
+    });
+    
     setFromPayment(fromPaymentFlag === "true");
+    
+    // Get order data
+    const savedOrder = localStorage.getItem('lastOrder');
+    console.log('Saved order data:', savedOrder ? 'Present' : 'Not found');
+    
+    if (!savedOrder && !redirectAttempted.current) {
+      console.log('No order data found, redirecting to cart');
+      redirectAttempted.current = true;
+      navigate('/cart');
+      return;
+    }
+    
+    if (savedOrder) {
+      try {
+        const parsedOrder = JSON.parse(savedOrder);
+        setOrder(parsedOrder);
+        setIsOrderDataFetched(true);
+        console.log('Order data loaded successfully');
+        
+        // Clear the payment flag after successful load
+        sessionStorage.removeItem("from_payment");
+        
+        // Backup order data to session storage
+        sessionStorage.setItem('backup_order', savedOrder);
+      } catch (error) {
+        console.error('Error parsing order data:', error);
+        if (!redirectAttempted.current) {
+          redirectAttempted.current = true;
+          navigate('/cart');
+        }
+      }
+    }
     
     // Set confirmation visited flag
     sessionStorage.setItem("confirmation_visited", "true");
@@ -184,67 +224,6 @@ const CheckoutConfirmationPage = () => {
       setIsAuthenticated(false);
     } finally {
       setIsAuthChecking(false);
-    }
-    
-    // Process order data
-    if (!isOrderDataFetched) {
-      console.log('CheckoutConfirmationPage: Processing order data...');
-      
-      const urlParams = new URLSearchParams(window.location.search);
-      const hasOrderParam = urlParams.get('order') === 'true';
-      
-      let savedOrder = localStorage.getItem('lastOrder');
-      
-      if (!savedOrder) {
-        console.log('CheckoutConfirmationPage: No order in localStorage, checking backup in sessionStorage');
-        const backupOrder = sessionStorage.getItem('backup_order');
-        
-        if (backupOrder) {
-          console.log('CheckoutConfirmationPage: Found backup order in sessionStorage');
-          savedOrder = backupOrder;
-          localStorage.setItem('lastOrder', backupOrder);
-          
-          setTimeout(() => {
-            sessionStorage.removeItem('backup_order');
-          }, 5000);
-        }
-      }
-      
-    if (savedOrder) {
-        console.log('CheckoutConfirmationPage: Found order data, displaying confirmation');
-        try {
-          const orderData = JSON.parse(savedOrder);
-          setOrder(orderData);
-          setShowConfetti(true);
-          
-          // Hide confetti after 3 seconds
-          setTimeout(() => setShowConfetti(false), 3000);
-          
-          if (!notificationSent) {
-            addNotification({
-              type: 'success',
-              title: 'Order Confirmed!',
-              message: `Your order #${orderData.orderNumber} has been successfully placed.`,
-              timestamp: new Date().toISOString()
-            });
-            setNotificationSent(true);
-          }
-          
-          setIsOrderDataFetched(true);
-        } catch (error) {
-          console.error('CheckoutConfirmationPage: Error parsing order data:', error);
-          if (!redirectAttempted.current) {
-            redirectAttempted.current = true;
-            navigate('/');
-          }
-        }
-      } else {
-        console.log('CheckoutConfirmationPage: No order data found, redirecting to home');
-        if (!redirectAttempted.current) {
-        redirectAttempted.current = true;
-          navigate('/');
-        }
-      }
     }
   }, [navigate, addNotification, notificationSent, isOrderDataFetched]);
   

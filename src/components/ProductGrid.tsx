@@ -2,8 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { Heart, ShoppingBag, Star, ArrowRight, Sparkles } from "lucide-react";
+import { Heart, ShoppingBag, Star, ArrowRight, Sparkles, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import useCart from "@/hooks/use-cart";
 import { useAuth } from "@/hooks/use-auth";
@@ -22,6 +23,19 @@ export type Product = {
   featured?: boolean;
   isNewArrival?: boolean;
   isFeatured?: boolean;
+  isCustomizable?: boolean;
+  customizationOptions?: {
+    allowPhotoUpload: boolean;
+    allowNumberInput: boolean;
+    numberInputLabel: string;
+    allowMessageCard: boolean;
+    messageCardPrice: number;
+    addons: {
+      flowers: Array<{ name: string; price: number; type: 'flower' }>;
+      chocolates: Array<{ name: string; price: number; type: 'chocolate' }>;
+    };
+    previewImage: string;
+  };
 };
 
 type ProductGridProps = {
@@ -262,101 +276,85 @@ const ProductCard = ({ product, onAddToCart }: {
 
   return (
     <div
+      className="group relative bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer"
       onClick={handleCardClick}
-      className="group relative bg-white rounded-xl sm:rounded-2xl lg:rounded-3xl overflow-hidden border border-gray-200/50 hover:border-primary/30 transition-all duration-500 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1 cursor-pointer"
     >
-      {/* Badges */}
-      <div className="absolute top-2 sm:top-3 left-2 sm:left-3 z-20 flex flex-col gap-1 sm:gap-2">
-        {product.discount > 0 && (
-          <span className="bg-red-500 text-white text-xs sm:text-sm font-bold px-2 py-1 rounded-full shadow-lg">
-            -{product.discount}%
-          </span>
-        )}
-        {isNewProduct() && (
-          <span className="bg-green-500 text-white text-xs sm:text-sm font-bold px-2 py-1 rounded-full shadow-lg">
-            NEW
-          </span>
-        )}
-        {isFeaturedProduct() && (
-          <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs sm:text-sm font-bold px-2 py-1 rounded-full shadow-lg flex items-center gap-1">
-            <Sparkles className="w-3 h-3" />
-            <span className="hidden sm:inline">Featured</span>
-          </span>
-        )}
-      </div>
-
-      {/* Wishlist Button */}
-      <button
-        onClick={handleWishlistToggle}
-        className="absolute top-2 sm:top-3 right-2 sm:right-3 z-20 w-8 h-8 sm:w-10 sm:h-10 bg-white/90 backdrop-blur-sm hover:bg-white border border-gray-200/50 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg"
-      >
-        <Heart 
-          className={cn(
-            "w-4 h-4 sm:w-5 sm:h-5 transition-colors duration-200",
-            isInWishlist 
-              ? "text-red-500 fill-red-500" 
-              : "text-gray-400 hover:text-red-500 group-hover:text-red-500"
+      {/* Product Image */}
+      <div className="relative aspect-square overflow-hidden bg-gray-100">
+        {/* Badges Container */}
+        <div className="absolute top-2 left-2 z-10 flex flex-col gap-1">
+          {product.discount > 0 && (
+            <Badge variant="destructive" className="text-xs px-2 py-1">
+              -{product.discount}%
+            </Badge>
           )}
-        />
-      </button>
+          {isNewProduct() && (
+            <Badge variant="default" className="bg-green-500 text-xs px-2 py-1">
+              NEW
+            </Badge>
+          )}
+          {product.isCustomizable && (
+            <Badge variant="secondary" className="text-xs px-2 py-1 flex items-center gap-1">
+              <Wand2 className="h-3 w-3" />
+              Customizable
+            </Badge>
+          )}
+        </div>
 
-      {/* Image Container */}
-      <div className="relative aspect-[4/5] sm:aspect-[4/5] overflow-hidden bg-gray-100">
-        {!isImageLoaded && (
-          <div className="absolute inset-0 bg-gradient-to-br from-gray-200 via-gray-100 to-gray-200 animate-pulse flex items-center justify-center">
-            <div className="text-gray-400 text-lg sm:text-xl">🌸</div>
-          </div>
-        )}
+        {/* Wishlist Button */}
+        <button
+          onClick={handleWishlistToggle}
+          className="absolute top-2 right-2 z-10 p-1.5 rounded-full bg-white/80 hover:bg-white shadow-sm transition-colors duration-200"
+        >
+          <Heart
+            className={cn(
+              "h-4 w-4 transition-colors duration-200",
+              isInWishlist ? "fill-red-500 stroke-red-500" : "stroke-gray-600"
+            )}
+          />
+        </button>
+
+        {/* Product Image */}
         <img
-          src={getImageUrl(product.images?.[0]) || '/images/placeholder.svg'}
+          src={getImageUrl(product.images[0]) || '/images/placeholder.svg'}
           alt={product.title}
           className={cn(
-            "w-full h-full object-cover transition-all duration-700 group-hover:scale-110",
+            "w-full h-full object-cover transition-opacity duration-300",
             isImageLoaded ? "opacity-100" : "opacity-0"
           )}
           onLoad={() => setIsImageLoaded(true)}
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.src = '/images/placeholder.svg';
-            setIsImageLoaded(true);
-          }}
           loading="lazy"
         />
-        
-        {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
       </div>
 
-      {/* Content */}
-      <div className="p-3 sm:p-4 lg:p-5">
-        {/* Title and Category */}
-        <div className="mb-2 sm:mb-3">
-          <h3 className="font-semibold text-gray-900 mb-1 text-sm sm:text-base lg:text-lg leading-tight line-clamp-2 group-hover:text-primary transition-colors duration-200">
-            {product.title}
-          </h3>
-          <p className="text-xs sm:text-sm text-gray-500 capitalize">{product.category}</p>
-        </div>
-
+      {/* Product Info */}
+      <div className="p-3">
+        <h3 className="font-medium text-sm text-gray-900 mb-1 line-clamp-2 group-hover:text-primary transition-colors">
+          {product.title}
+        </h3>
+        
         {/* Price */}
-        <div className="flex items-center gap-2 mb-3 sm:mb-4">
-          <span className="text-base sm:text-lg lg:text-xl font-bold text-primary">
-            {formatPrice(convertPrice(discountedPrice))}
+        <div className="flex items-center gap-1">
+          <span className="text-sm font-bold text-primary">
+            {formatPrice(convertPrice(product.discount ? product.price * (1 - product.discount / 100) : product.price))}
           </span>
           {product.discount > 0 && (
-            <span className="text-xs sm:text-sm text-gray-500 line-through">
+            <span className="text-xs text-gray-500 line-through">
               {formatPrice(convertPrice(product.price))}
             </span>
           )}
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-2">
+        <div className="mt-3 flex items-center gap-2">
           <Button
-            onClick={handleAddToCart}
+            variant="outline"
             size="sm"
-            className="w-full text-xs sm:text-sm py-2 sm:py-2.5 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white rounded-lg sm:rounded-xl transition-all duration-200 hover:shadow-lg"
+            className="flex-1"
+            onClick={handleAddToCart}
           >
-            <ShoppingBag className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+            <ShoppingBag className="h-4 w-4 mr-1" />
             Add to Cart
           </Button>
         </div>
