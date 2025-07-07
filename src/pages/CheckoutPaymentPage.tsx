@@ -269,11 +269,15 @@ const CheckoutPaymentPage = () => {
 
     try {
       // Create Razorpay order
+      console.log('Creating order with amount:', orderTotal);
+      
       const orderResponse = await api.post('/orders/create-razorpay-order', {
-        amount: Math.round(orderTotal * 100),
+        amount: Math.round(orderTotal * 100), // Convert to paise
         currency: 'INR',
         receipt: `order_${Date.now()}`
       });
+      
+      console.log('Server response:', orderResponse.data);
 
             const { order_id, amount, currency: orderCurrency, key } = orderResponse.data;
       
