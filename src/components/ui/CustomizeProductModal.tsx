@@ -26,6 +26,7 @@ import {
   Minus
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { uploadToCloudinary } from '@/lib/cloudinaryUpload';
 
 type AddonOption = {
   name: string;
@@ -82,6 +83,7 @@ export function CustomizeProductModal({
   const [totalPrice, setTotalPrice] = useState(product.price);
   const [uploadedPhoto, setUploadedPhoto] = useState<string | null>(null);
   const [isConfirmed, setIsConfirmed] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     // Calculate total price based on selections
@@ -105,19 +107,22 @@ export function CustomizeProductModal({
     setTotalPrice(total);
   }, [customizations, product.price, product.customizationOptions.messageCardPrice]);
 
-  const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        setUploadedPhoto(result);
+      setIsUploading(true);
+      try {
+        const url = await uploadToCloudinary(file);
+        setUploadedPhoto(url);
         setCustomizations(prev => ({
           ...prev,
-          photo: result
+          photo: url
         }));
-      };
-      reader.readAsDataURL(file);
+      } catch (err) {
+        alert('Failed to upload image. Please try again.');
+      } finally {
+        setIsUploading(false);
+      }
     }
   };
 
@@ -245,8 +250,16 @@ export function CustomizeProductModal({
                             type="file"
                             accept="image/*"
                             onChange={handlePhotoUpload}
+                            disabled={isUploading}
                             className="hidden h-11 text-base w-full mb-2"
                           />
+                          {isUploading && <span className="text-sm text-blue-600">Uploading...</span>}
+                          {uploadedPhoto && (
+                            <div className="mt-2 flex flex-col items-center">
+                              <img src={uploadedPhoto} alt="Uploaded" className="w-24 h-24 object-cover rounded border" />
+                              <Button variant="ghost" size="sm" onClick={removePhoto} className="mt-1">Remove</Button>
+                            </div>
+                          )}
                         </div>
                       )}
                     </CardContent>
