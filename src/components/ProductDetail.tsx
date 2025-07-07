@@ -196,7 +196,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [isCustomizeModalOpen, setIsCustomizeModalOpen] = useState(false);
   const [customizations, setCustomizations] = useState<CustomizationData | undefined>();
-  const customizeModalRef = useRef<HTMLDivElement>(null);
+  const customizeButtonRef = useRef<HTMLButtonElement>(null);
 
   // Debug log to check properties
   console.log(`Product Detail ${product.title}:`, {
@@ -239,21 +239,12 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
   const decrementQuantity = () => quantity > 1 && setQuantity((prev) => prev - 1);
 
   const handleCustomize = () => {
-    if (!user) {
-      toast({
-        title: "Please log in",
-        description: "You need to be logged in to customize products",
-        variant: "destructive",
-        duration: 4000,
-      });
-      return;
+    if (customizeButtonRef.current) {
+      customizeButtonRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
-    setIsCustomizeModalOpen(true);
     setTimeout(() => {
-      if (customizeModalRef.current) {
-        customizeModalRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }, 100); // Delay to ensure modal is rendered
+      setIsCustomizeModalOpen(true);
+    }, 100); // Open modal after scroll
   };
 
   const handleAddToCart = () => {
@@ -550,6 +541,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                 {product.isCustomizable ? (
                   <>
                     <Button
+                      ref={customizeButtonRef}
                       className="flex-1"
                       onClick={handleCustomize}
                       variant="outline"
@@ -640,7 +632,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
       
       {/* Customization Modal */}
       {product.isCustomizable && product.customizationOptions && (
-        <div ref={customizeModalRef}>
+        <div>
           <CustomizeProductModal
             open={isCustomizeModalOpen}
             onClose={() => setIsCustomizeModalOpen(false)}
