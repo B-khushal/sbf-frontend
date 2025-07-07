@@ -610,7 +610,7 @@ const CheckoutPaymentPage = () => {
                       ) : (
                         <>
                           <Lock className="w-5 h-5 mr-2" />
-                          Pay {formatPrice(orderTotal)} Securely
+                          Pay {formatPrice(convertPrice(orderTotal))} Securely
                         </>
                       )}
                     </Button>
@@ -631,7 +631,7 @@ const CheckoutPaymentPage = () => {
                 </CardHeader>
                 <CardContent>
                               <PromoCodeInput
-                                orderAmount={orderTotal}
+                                orderAmount={convertPrice(orderTotal)}
                                 orderItems={items}
                                 userId={user?.id}
                                 onPromoCodeApplied={handlePromoCodeApplied}
@@ -818,7 +818,7 @@ const CheckoutPaymentPage = () => {
                                </p>
                         </div>
                         <div className="text-sm font-medium">
-                          {formatPrice(item.price * item.quantity)}
+                          {formatPrice(convertPrice(item.price * item.quantity))}
                         </div>
                       </div>
                     ))}
@@ -830,20 +830,20 @@ const CheckoutPaymentPage = () => {
                       <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                           <span>Subtotal</span>
-                          <span>{formatPrice(subtotal)}</span>
+                          <span>{formatPrice(convertPrice(subtotal))}</span>
                     </div>
 
                         {deliveryFee > 0 && (
                     <div className="flex justify-between text-sm">
                             <span>Midnight Delivery Fee</span>
-                            <span>{formatPrice(deliveryFee)}</span>
+                            <span>{formatPrice(convertPrice(deliveryFee))}</span>
                     </div>
                         )}
                         
                         {appliedPromoCode && (
                           <div className="flex justify-between text-sm text-green-600">
                             <span>Promo Discount ({appliedPromoCode.code})</span>
-                            <span>-{formatPrice(promoDiscount)}</span>
+                            <span>-{formatPrice(convertPrice(promoDiscount))}</span>
                     </div>
                         )}
                         
@@ -851,7 +851,7 @@ const CheckoutPaymentPage = () => {
                         
                         <div className="flex justify-between text-lg font-semibold">
                           <span>Total</span>
-                          <span>{formatPrice(orderTotal)}</span>
+                          <span>{formatPrice(convertPrice(orderTotal))}</span>
                     </div>
                   </div>
 
