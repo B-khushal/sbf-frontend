@@ -3,12 +3,27 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ImageUpload } from '@/components/ui/ImageUpload';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { 
+  Wand2, 
+  Camera, 
+  Hash, 
+  MessageSquare, 
+  Flower2, 
+  Gift, 
+  IndianRupee, 
+  Info, 
+  X,
+  Upload,
+  Check,
+  ShoppingCart
+} from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 type AddonOption = {
   name: string;
@@ -61,6 +76,7 @@ export function CustomizeProductModal({
   });
 
   const [totalPrice, setTotalPrice] = useState(product.price);
+  const [uploadedPhoto, setUploadedPhoto] = useState<string | null>(null);
 
   useEffect(() => {
     // Calculate total price based on selections
@@ -84,10 +100,27 @@ export function CustomizeProductModal({
     setTotalPrice(total);
   }, [customizations, product.price, product.customizationOptions.messageCardPrice]);
 
-  const handlePhotoUpload = (url: string) => {
+  const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        setUploadedPhoto(result);
+        setCustomizations(prev => ({
+          ...prev,
+          photo: result
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removePhoto = () => {
+    setUploadedPhoto(null);
     setCustomizations(prev => ({
       ...prev,
-      photo: url
+      photo: undefined
     }));
   };
 
@@ -120,178 +153,410 @@ export function CustomizeProductModal({
     onClose();
   };
 
+  const getAddonTotal = (addons: AddonOption[]) => {
+    return addons.reduce((sum, addon) => sum + addon.price, 0);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Customize {product.title}</DialogTitle>
-        </DialogHeader>
+    <TooltipProvider>
+      <Dialog open={open} onOpenChange={onClose}>
+        <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+          <DialogHeader className="px-6 py-4 border-b bg-gradient-to-r from-purple-50 to-pink-50">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100">
+                  <Wand2 className="h-5 w-5 text-purple-600" />
+                </div>
+                <div>
+                  <DialogTitle className="text-xl font-bold text-gray-900">
+                    Customize {product.title}
+                  </DialogTitle>
+                  <p className="text-sm text-gray-600">Personalize your product with unique touches</p>
+                </div>
+              </div>
+              <Button variant="ghost" size="icon" onClick={onClose}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </DialogHeader>
 
-        <ScrollArea className="max-h-[80vh] px-1">
-          <div className="space-y-6 py-4">
-            {/* Left side - Customization options */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-6">
-                {/* Photo Upload */}
+          <div className="flex h-[calc(90vh-140px)]">
+            {/* Left Side - Customization Options */}
+            <ScrollArea className="flex-1 p-6">
+              <div className="space-y-8">
+                {/* 📸 Photo Upload Section */}
                 {product.customizationOptions.allowPhotoUpload && (
-                  <div className="space-y-2">
-                    <Label>Upload Photo</Label>
-                    <ImageUpload
-                      onUpload={handlePhotoUpload}
-                      value={customizations.photo}
-                    />
-                  </div>
+                  <Card className="border-2 border-blue-200 bg-blue-50/50">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-blue-800">
+                        <Camera className="h-5 w-5" />
+                        Upload Your Photo
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <Info className="h-4 w-4 text-blue-600" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Upload a personal photo to be included with your order</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {uploadedPhoto ? (
+                        <div className="relative">
+                          <img
+                            src={uploadedPhoto}
+                            alt="Uploaded photo"
+                            className="w-full h-48 object-cover rounded-lg border-2 border-blue-300"
+                          />
+                          <Button
+                            variant="destructive"
+                            size="icon"
+                            className="absolute top-2 right-2 h-8 w-8"
+                            onClick={removePhoto}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="border-2 border-dashed border-blue-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors">
+                          <Upload className="h-12 w-12 text-blue-400 mx-auto mb-4" />
+                          <Label htmlFor="photo-upload" className="cursor-pointer">
+                            <div className="text-blue-600 font-medium mb-2">Click to upload photo</div>
+                            <div className="text-sm text-gray-500">JPG, PNG up to 5MB</div>
+                          </Label>
+                          <Input
+                            id="photo-upload"
+                            type="file"
+                            accept="image/*"
+                            onChange={handlePhotoUpload}
+                            className="hidden"
+                          />
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
                 )}
 
-                {/* Number Input */}
+                {/* 🔢 Number Input Section */}
                 {product.customizationOptions.allowNumberInput && (
-                  <div className="space-y-2">
-                    <Label>{product.customizationOptions.numberInputLabel}</Label>
-                    <Input
-                      type="text"
-                      value={customizations.number || ''}
-                      onChange={(e) => setCustomizations(prev => ({
-                        ...prev,
-                        number: e.target.value
-                      }))}
-                    />
-                  </div>
+                  <Card className="border-2 border-green-200 bg-green-50/50">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-green-800">
+                        <Hash className="h-5 w-5" />
+                        Add Custom Number
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <Info className="h-4 w-4 text-green-600" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Add a special number like age, quantity, or any meaningful number</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Input
+                        type="text"
+                        placeholder={product.customizationOptions.numberInputLabel}
+                        value={customizations.number || ''}
+                        onChange={(e) => setCustomizations(prev => ({
+                          ...prev,
+                          number: e.target.value
+                        }))}
+                        className="border-green-300 focus:border-green-500"
+                      />
+                    </CardContent>
+                  </Card>
                 )}
 
-                {/* Message Card */}
+                {/* ✍ Message Card Section */}
                 {product.customizationOptions.allowMessageCard && (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label>Add Message Card</Label>
-                      <span className="text-sm text-gray-500">
-                        +₹{product.customizationOptions.messageCardPrice}
-                      </span>
-                    </div>
-                    <Textarea
-                      placeholder="Enter your message..."
-                      value={customizations.messageCard || ''}
-                      onChange={(e) => setCustomizations(prev => ({
-                        ...prev,
-                        messageCard: e.target.value
-                      }))}
-                    />
-                  </div>
+                  <Card className="border-2 border-yellow-200 bg-yellow-50/50">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-yellow-800">
+                        <MessageSquare className="h-5 w-5" />
+                        Personal Message
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <Info className="h-4 w-4 text-yellow-600" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Add a personalized message card to your order</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </CardTitle>
+                      <div className="flex items-center gap-2 text-sm text-yellow-700">
+                        <IndianRupee className="h-4 w-4" />
+                        <span>+{product.customizationOptions.messageCardPrice} extra</span>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <Textarea
+                        placeholder="Write your heartfelt message here..."
+                        value={customizations.messageCard || ''}
+                        onChange={(e) => setCustomizations(prev => ({
+                          ...prev,
+                          messageCard: e.target.value
+                        }))}
+                        className="border-yellow-300 focus:border-yellow-500 min-h-[100px]"
+                      />
+                    </CardContent>
+                  </Card>
                 )}
 
-                {/* Flower Add-ons */}
+                {/* 🌸 Flower Add-ons Section */}
                 {product.customizationOptions.addons.flowers.length > 0 && (
-                  <div className="space-y-2">
-                    <Label>Flower Add-ons</Label>
-                    <div className="grid grid-cols-1 gap-2">
-                      {product.customizationOptions.addons.flowers.map((flower, index) => (
-                        <Card key={index} className="p-3">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
-                              <Checkbox
-                                checked={customizations.selectedFlowers.some(f => f.name === flower.name)}
-                                onCheckedChange={() => toggleFlowerAddon(flower)}
-                              />
-                              <span>{flower.name}</span>
+                  <Card className="border-2 border-pink-200 bg-pink-50/50">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-pink-800">
+                        <Flower2 className="h-5 w-5" />
+                        Choose Flower Add-ons
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <Info className="h-4 w-4 text-pink-600" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Select additional flowers to enhance your arrangement</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 gap-3">
+                        {product.customizationOptions.addons.flowers.map((flower, index) => {
+                          const isSelected = customizations.selectedFlowers.some(f => f.name === flower.name);
+                          return (
+                            <div
+                              key={index}
+                              className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                                isSelected
+                                  ? 'border-pink-400 bg-pink-100'
+                                  : 'border-pink-200 bg-white hover:border-pink-300'
+                              }`}
+                              onClick={() => toggleFlowerAddon(flower)}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <Checkbox
+                                    checked={isSelected}
+                                    className="data-[state=checked]:bg-pink-500 data-[state=checked]:border-pink-500"
+                                  />
+                                  <div>
+                                    <div className="font-medium text-gray-900">{flower.name}</div>
+                                    <div className="text-sm text-gray-500">Beautiful addition</div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="outline" className="border-pink-300 text-pink-700">
+                                    +₹{flower.price}
+                                  </Badge>
+                                  {isSelected && <Check className="h-4 w-4 text-pink-600" />}
+                                </div>
+                              </div>
                             </div>
-                            <span className="text-sm text-gray-500">+₹{flower.price}</span>
-                          </div>
-                        </Card>
-                      ))}
-                    </div>
-                  </div>
+                          );
+                        })}
+                      </div>
+                    </CardContent>
+                  </Card>
                 )}
 
-                {/* Chocolate Add-ons */}
+                {/* 🍫 Chocolate Add-ons Section */}
                 {product.customizationOptions.addons.chocolates.length > 0 && (
-                  <div className="space-y-2">
-                    <Label>Chocolate Add-ons</Label>
-                    <div className="grid grid-cols-1 gap-2">
-                      {product.customizationOptions.addons.chocolates.map((chocolate, index) => (
-                        <Card key={index} className="p-3">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
-                              <Checkbox
-                                checked={customizations.selectedChocolates.some(c => c.name === chocolate.name)}
-                                onCheckedChange={() => toggleChocolateAddon(chocolate)}
-                              />
-                              <span>{chocolate.name}</span>
+                  <Card className="border-2 border-orange-200 bg-orange-50/50">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-orange-800">
+                        <Gift className="h-5 w-5" />
+                        Chocolates & Treats
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <Info className="h-4 w-4 text-orange-600" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Add delicious chocolates and treats to your order</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 gap-3">
+                        {product.customizationOptions.addons.chocolates.map((chocolate, index) => {
+                          const isSelected = customizations.selectedChocolates.some(c => c.name === chocolate.name);
+                          return (
+                            <div
+                              key={index}
+                              className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                                isSelected
+                                  ? 'border-orange-400 bg-orange-100'
+                                  : 'border-orange-200 bg-white hover:border-orange-300'
+                              }`}
+                              onClick={() => toggleChocolateAddon(chocolate)}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <Checkbox
+                                    checked={isSelected}
+                                    className="data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500"
+                                  />
+                                  <div>
+                                    <div className="font-medium text-gray-900">{chocolate.name}</div>
+                                    <div className="text-sm text-gray-500">Delicious treat</div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="outline" className="border-orange-300 text-orange-700">
+                                    +₹{chocolate.price}
+                                  </Badge>
+                                  {isSelected && <Check className="h-4 w-4 text-orange-600" />}
+                                </div>
+                              </div>
                             </div>
-                            <span className="text-sm text-gray-500">+₹{chocolate.price}</span>
-                          </div>
-                        </Card>
-                      ))}
-                    </div>
-                  </div>
+                          );
+                        })}
+                      </div>
+                    </CardContent>
+                  </Card>
                 )}
               </div>
+            </ScrollArea>
 
-              {/* Right side - Preview */}
-              <div className="space-y-4">
-                <div className="aspect-square rounded-lg border-2 border-dashed border-gray-200 flex items-center justify-center">
-                  {product.customizationOptions.previewImage ? (
-                    <img
-                      src={product.customizationOptions.previewImage}
-                      alt="Preview"
-                      className="max-w-full max-h-full object-contain"
-                    />
-                  ) : (
-                    <div className="text-center text-gray-500">
-                      <p>Preview</p>
-                      <p className="text-sm">Customization preview will appear here</p>
+            {/* Right Side - Preview & Price Summary */}
+            <div className="w-80 border-l bg-gray-50 p-6">
+              <div className="sticky top-6 space-y-6">
+                {/* Preview Section */}
+                <Card className="border-2 border-dashed border-gray-300">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg font-semibold text-gray-800">Live Preview</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="aspect-square rounded-lg bg-white border-2 border-gray-200 flex items-center justify-center overflow-hidden">
+                      {product.customizationOptions.previewImage ? (
+                        <img
+                          src={product.customizationOptions.previewImage}
+                          alt="Product preview"
+                          className="max-w-full max-h-full object-contain"
+                        />
+                      ) : (
+                        <div className="text-center text-gray-500 p-4">
+                          <Wand2 className="h-12 w-12 mx-auto mb-2 text-gray-400" />
+                          <p className="text-sm font-medium">Customization Preview</p>
+                          <p className="text-xs">Your personalized product will appear here</p>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
+                    
+                    {/* Selected Options Preview */}
+                    {(customizations.photo || customizations.number || customizations.messageCard || 
+                      customizations.selectedFlowers.length > 0 || customizations.selectedChocolates.length > 0) && (
+                      <div className="mt-4 space-y-2">
+                        <h4 className="text-sm font-medium text-gray-700">Selected Options:</h4>
+                        <div className="space-y-1">
+                          {customizations.photo && (
+                            <div className="flex items-center gap-2 text-xs text-blue-600">
+                              <Camera className="h-3 w-3" />
+                              <span>Photo uploaded</span>
+                            </div>
+                          )}
+                          {customizations.number && (
+                            <div className="flex items-center gap-2 text-xs text-green-600">
+                              <Hash className="h-3 w-3" />
+                              <span>Number: {customizations.number}</span>
+                            </div>
+                          )}
+                          {customizations.messageCard && (
+                            <div className="flex items-center gap-2 text-xs text-yellow-600">
+                              <MessageSquare className="h-3 w-3" />
+                              <span>Message card added</span>
+                            </div>
+                          )}
+                          {customizations.selectedFlowers.length > 0 && (
+                            <div className="flex items-center gap-2 text-xs text-pink-600">
+                              <Flower2 className="h-3 w-3" />
+                              <span>{customizations.selectedFlowers.length} flower(s) selected</span>
+                            </div>
+                          )}
+                          {customizations.selectedChocolates.length > 0 && (
+                            <div className="flex items-center gap-2 text-xs text-orange-600">
+                              <Gift className="h-3 w-3" />
+                              <span>{customizations.selectedChocolates.length} chocolate(s) selected</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
 
-                {/* Price Summary */}
-                <Card className="p-4">
-                  <h3 className="font-semibold mb-2">Price Summary</h3>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>Base Price:</span>
-                      <span>₹{product.price}</span>
+                {/* Sticky Price Summary */}
+                <Card className="border-2 border-purple-200 bg-purple-50/50 sticky bottom-6">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-purple-800">
+                      <IndianRupee className="h-5 w-5" />
+                      Price Summary
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Base Price:</span>
+                        <span className="font-medium">₹{product.price}</span>
+                      </div>
+                      
+                      {customizations.selectedFlowers.length > 0 && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-600">Flower Add-ons:</span>
+                          <span className="font-medium text-pink-600">+₹{getAddonTotal(customizations.selectedFlowers)}</span>
+                        </div>
+                      )}
+                      
+                      {customizations.selectedChocolates.length > 0 && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-600">Chocolate Add-ons:</span>
+                          <span className="font-medium text-orange-600">+₹{getAddonTotal(customizations.selectedChocolates)}</span>
+                        </div>
+                      )}
+                      
+                      {customizations.messageCard && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-600">Message Card:</span>
+                          <span className="font-medium text-yellow-600">+₹{product.customizationOptions.messageCardPrice}</span>
+                        </div>
+                      )}
+                      
+                      <Separator />
+                      
+                      <div className="flex justify-between items-center text-lg font-bold text-purple-800">
+                        <span>Total Price:</span>
+                        <span>₹{totalPrice}</span>
+                      </div>
                     </div>
-                    
-                    {customizations.selectedFlowers.length > 0 && (
-                      <div className="flex justify-between">
-                        <span>Flower Add-ons:</span>
-                        <span>+₹{customizations.selectedFlowers.reduce((sum, f) => sum + f.price, 0)}</span>
-                      </div>
-                    )}
-                    
-                    {customizations.selectedChocolates.length > 0 && (
-                      <div className="flex justify-between">
-                        <span>Chocolate Add-ons:</span>
-                        <span>+₹{customizations.selectedChocolates.reduce((sum, c) => sum + c.price, 0)}</span>
-                      </div>
-                    )}
-                    
-                    {customizations.messageCard && (
-                      <div className="flex justify-between">
-                        <span>Message Card:</span>
-                        <span>+₹{product.customizationOptions.messageCardPrice}</span>
-                      </div>
-                    )}
-                    
-                    <div className="border-t pt-2 font-semibold flex justify-between">
-                      <span>Total Price:</span>
-                      <span>₹{totalPrice}</span>
+
+                    {/* Action Buttons */}
+                    <div className="space-y-3 pt-4">
+                      <Button 
+                        onClick={handleSubmit}
+                        className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3"
+                        size="lg"
+                      >
+                        <ShoppingCart className="mr-2 h-5 w-5" />
+                        Add to Cart with Customizations
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        onClick={onClose}
+                        className="w-full"
+                      >
+                        Cancel
+                      </Button>
                     </div>
-                  </div>
+                  </CardContent>
                 </Card>
               </div>
             </div>
           </div>
-        </ScrollArea>
-
-        <div className="flex justify-end space-x-2 mt-4">
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit}>
-            Add to Cart (₹{totalPrice})
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+    </TooltipProvider>
   );
 } 
