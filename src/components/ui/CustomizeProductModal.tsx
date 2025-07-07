@@ -558,6 +558,89 @@ export function CustomizeProductModal({
                 <Button onClick={handleSubmit} className="h-12 rounded bg-primary text-white w-full text-base font-semibold">Add to Cart</Button>
               </div>
             </div>
+            {/* Right: Preview & Price Summary (Laptop/Desktop only) */}
+            <div className="hidden md:block md:w-96 flex-shrink-0">
+              <Card className="sticky top-24 border-2 border-primary/20 bg-white/90 shadow-lg rounded-lg">
+                <CardHeader>
+                  <CardTitle className="text-lg font-bold text-primary">Preview & Price Summary</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Large Preview Image */}
+                  <div className="flex flex-col items-center">
+                    <img
+                      src={uploadedPhoto || product.images[0] || product.customizationOptions.previewImage}
+                      alt="Product Preview"
+                      className="w-48 h-48 object-cover rounded-lg border border-gray-200 mb-2"
+                    />
+                    <div className="text-center text-base font-semibold text-gray-800 mt-1">{product.title}</div>
+                  </div>
+                  {/* Customization Summary */}
+                  <div className="space-y-2">
+                    {customizations.number && (
+                      <div className="flex items-center gap-2 text-sm text-gray-700">
+                        <Hash className="w-4 h-4 text-primary" />
+                        <span>Number: <span className="font-medium">{customizations.number}</span></span>
+                      </div>
+                    )}
+                    {customizations.messageCard && (
+                      <div className="flex items-center gap-2 text-sm text-gray-700">
+                        <MessageSquare className="w-4 h-4 text-primary" />
+                        <span>Message: <span className="font-medium">"{customizations.messageCard}"</span></span>
+                      </div>
+                    )}
+                    {customizations.selectedFlowers.length > 0 && (
+                      <div className="flex items-center gap-2 text-sm text-gray-700">
+                        <Flower2 className="w-4 h-4 text-pink-500" />
+                        <span>Flowers: {customizations.selectedFlowers.map(f => `${f.name} (x${f.quantity})`).join(', ')}</span>
+                      </div>
+                    )}
+                    {customizations.selectedChocolates.length > 0 && (
+                      <div className="flex items-center gap-2 text-sm text-gray-700">
+                        <Gift className="w-4 h-4 text-yellow-600" />
+                        <span>Chocolates: {customizations.selectedChocolates.map(c => `${c.name} (x${c.quantity})`).join(', ')}</span>
+                      </div>
+                    )}
+                    {uploadedPhoto && (
+                      <div className="flex items-center gap-2 text-sm text-gray-700">
+                        <Camera className="w-4 h-4 text-blue-500" />
+                        <span>Photo uploaded</span>
+                      </div>
+                    )}
+                  </div>
+                  <Separator />
+                  {/* Price Summary */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Base Price</span>
+                      <span className="font-semibold">₹{product.price}</span>
+                    </div>
+                    {customizations.selectedFlowers.length > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span>Flowers Add-ons</span>
+                        <span>+ ₹{getAddonTotal(customizations.selectedFlowers)}</span>
+                      </div>
+                    )}
+                    {customizations.selectedChocolates.length > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span>Chocolates Add-ons</span>
+                        <span>+ ₹{getAddonTotal(customizations.selectedChocolates)}</span>
+                      </div>
+                    )}
+                    {customizations.messageCard && product.customizationOptions.allowMessageCard && (
+                      <div className="flex justify-between text-sm">
+                        <span>Message Card</span>
+                        <span>+ ₹{product.customizationOptions.messageCardPrice}</span>
+                      </div>
+                    )}
+                    <Separator />
+                    <div className="flex justify-between text-base font-bold text-primary">
+                      <span>Total</span>
+                      <span>₹{totalPrice}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
