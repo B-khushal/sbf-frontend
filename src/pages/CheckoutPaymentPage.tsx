@@ -818,9 +818,7 @@ const CheckoutPaymentPage = () => {
                                </p>
                         </div>
                         <div className="text-sm font-medium">
-                               {formatPrice((item.discount && item.discount > 0 
-                                 ? item.price - (item.price * item.discount / 100)
-                                 : item.price) * item.quantity)}
+                          {formatPrice(item.price * item.quantity)}
                         </div>
                       </div>
                     ))}
