@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, Truck, ArrowRight, User, MapPin } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Check, Truck, ArrowRight, User, MapPin, Package, ChevronDown, ChevronUp, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import TimeSlotSelector from '@/components/TimeSlotSelector';
 import MessageCard from '@/components/MessageCard';
 import Navigation from '@/components/Navigation';
@@ -14,12 +17,34 @@ import Footer from '@/components/Footer';
 import useCart, { useCartSelectors } from '@/hooks/use-cart';
 import { useToast } from '@/hooks/use-toast';
 import { useCurrency } from '@/contexts/CurrencyContext';
-import { Alert, AlertDescription } from '@/components/ui/alert'; // Make sure these are imported
-import { Info } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import api from '@/services/api';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import PinCodeInput from '@/components/ui/PinCodeInput';
 
+// Animation variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      duration: 0.5,
+      ease: [0.25, 0.46, 0.45, 0.94]
+    }
+  }
+};
 
 const CheckoutShippingPage = () => {
   const navigate = useNavigate();
@@ -32,6 +57,7 @@ const CheckoutShippingPage = () => {
   const { formatPrice, convertPrice } = useCurrency();
   const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
   const [showSavedAddresses, setShowSavedAddresses] = useState(false);
+  const [showOrderSummary, setShowOrderSummary] = useState(false);
 
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [shippingMethod, setShippingMethod] = useState('standard');
@@ -201,209 +227,142 @@ const CheckoutShippingPage = () => {
           !formData.phone) {
         toast({
           title: "Missing information",
-          description: "Please fill out all required fields",
+          description: "Please fill in all required fields",
           variant: "destructive"
         });
         return;
       }
     } else {
-      // For gift option, validate both sender and receiver
       if (!formData.firstName || !formData.lastName || !formData.phone ||
-          !formData.receiverFirstName || !formData.receiverLastName || !formData.receiverAddress ||
-          !formData.receiverCity || !formData.receiverState || !formData.receiverZipCode ||
+          !formData.receiverFirstName || !formData.receiverLastName || 
+          !formData.receiverAddress || !formData.receiverCity || 
+          !formData.receiverState || !formData.receiverZipCode || 
           !formData.receiverPhone) {
         toast({
           title: "Missing information",
-          description: "Please fill out all required fields for both sender and recipient",
+          description: "Please fill in all required fields for both sender and receiver",
           variant: "destructive"
         });
         return;
       }
     }
-    
-    // Store shipping info in localStorage for the payment page
-    const shippingData = {
+
+    // Save shipping information
+    const shippingInfo = {
       ...formData,
       timeSlot: selectedTimeSlot,
       deliveryOption,
-      giftMessage: deliveryOption === 'gift' ? giftMessage : '',
-      selectedDate,
-      deliveryFee: hasMidnightFee ? midnightDeliveryFee : 0
+      deliveryFee,
+      selectedDate: selectedDate.toISOString(),
+      giftMessage: deliveryOption === 'gift' ? giftMessage : undefined,
     };
 
-    try {
-      console.log('Saving shipping data:', shippingData); // Debug log
-      localStorage.setItem('shippingInfo', JSON.stringify(shippingData));
-      
-      // Save shipping information if checkbox is checked
-      if (formData.saveInfo) {
-        const savedAddresses = JSON.parse(localStorage.getItem('savedAddresses') || '[]');
-        // Get user from local storage if available
-        const userString = localStorage.getItem('user');
-        let userId = undefined;
-        
-        if (userString) {
-          try {
-            const user = JSON.parse(userString);
-            userId = user.id;
-          } catch (e) {
-            console.error('Error parsing user from localStorage', e);
-          }
-        }
-        
+    localStorage.setItem('shippingInfo', JSON.stringify(shippingInfo));
+
+    // Save address if requested
+    if (formData.saveInfo) {
+      try {
+        const existingAddresses = JSON.parse(localStorage.getItem('savedAddresses') || '[]');
         const newAddress = {
-          ...formData,
-          deliveryOption,
-          giftMessage: deliveryOption === 'gift' ? giftMessage : '',
           id: Date.now().toString(),
-          ...(userId && { userId }) // Add userId if available
+          ...shippingInfo,
+          isDefault: existingAddresses.length === 0
         };
         
-        // Check if this address already exists
-        const existingIndex = savedAddresses.findIndex((addr: any) => 
-          addr.deliveryOption === deliveryOption &&
-          addr.firstName === formData.firstName &&
-          addr.lastName === formData.lastName &&
-          addr.address === formData.address &&
-          addr.city === formData.city &&
-          addr.state === formData.state &&
-          addr.zipCode === formData.zipCode
-        );
-
-        if (existingIndex === -1) {
-          savedAddresses.push(newAddress);
-          localStorage.setItem('savedAddresses', JSON.stringify(savedAddresses));
-          toast({
-            title: "Success",
-            description: "Shipping information saved for future use.",
-          });
-        }
+        const updatedAddresses = [...existingAddresses, newAddress];
+        localStorage.setItem('savedAddresses', JSON.stringify(updatedAddresses));
+        
+        toast({
+          title: "Address saved",
+          description: "Your address has been saved for future orders",
+        });
+      } catch (error) {
+        console.error('Error saving address:', error);
       }
-      
-      // Navigate to payment
-      navigate('/checkout/payment');
-    } catch (error: any) {
-      console.error('Error saving shipping info:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to save shipping information",
-        variant: "destructive",
-      });
     }
+
+    // Navigate to payment page
+    navigate('/checkout/payment');
   };
-  
-  // Add a function to delete a saved address
+
   const handleDeleteAddress = (addressId: string) => {
     try {
-      // Get saved addresses from localStorage
-      const savedAddresses = JSON.parse(localStorage.getItem('savedAddresses') || '[]');
-      
-      // Filter out the address to delete
-      const updatedAddresses = savedAddresses.filter((addr: any) => addr.id !== addressId);
-      
-      // Save back to localStorage
+      const existingAddresses = JSON.parse(localStorage.getItem('savedAddresses') || '[]');
+      const updatedAddresses = existingAddresses.filter((addr: any) => addr.id !== addressId);
       localStorage.setItem('savedAddresses', JSON.stringify(updatedAddresses));
-      
-      // Update state
       setSavedAddresses(updatedAddresses);
       
       toast({
         title: "Address deleted",
-        description: "The saved address has been removed",
+        description: "The address has been removed from your saved addresses",
       });
     } catch (error) {
       console.error('Error deleting address:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete the address",
-        variant: "destructive",
-      });
     }
   };
 
-  // Handler for time slot selection
   const handleTimeSlotSelect = (slotId: string) => {
     setSelectedTimeSlot(slotId);
-    // Update shipping method based on time slot
-    if (slotId === 'midnight') {
-      setShippingMethod('midnight');
-    } else {
-      setShippingMethod('standard');
-    }
   };
 
-  // Add a function to navigate to profile page
   const navigateToProfile = () => {
     navigate('/profile');
   };
 
-  // If cart is empty, redirect to cart page
-  if (items.length === 0) {
-    navigate('/cart');
-    return null;
-  }
-
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navigation cartItemCount={items.length} />
-      <main className="flex-grow pt-24 pb-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-           {/* Alert for Delivery Info */}
-           <Alert className="mb-8 border-yellow-400 bg-yellow-50 text-yellow-800">
-            <Info className="h-4 w-4" />
-            <AlertDescription>
-              Currently, we only deliver to Hyderabad, Telangana. We're working on expanding our delivery network soon!
-            </AlertDescription>
-          </Alert>
-          <div className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl font-bold">Checkout</h1>
-
-            {/* Checkout Steps */}
-            <div className="hidden md:flex items-center space-x-2">
-              <div className="flex items-center">
-                <div className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm">
-                  <Check size={14} />
-                </div>
-                <span className="ml-2 font-medium">Cart</span>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50">
+      <Navigation />
+      
+      <motion.div 
+        className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl"
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+      >
+        {/* Progress Bar */}
+        <motion.div variants={itemVariants} className="mb-8">
+          <div className="flex items-center justify-center space-x-4 mb-6">
+            <div className="flex items-center">
+              <div className="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center text-sm font-semibold">
+                1
               </div>
-              
-              <div className="h-px w-8 bg-primary" />
-              
-              <div className="flex items-center">
-                <div className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm">
-                  <Truck size={14} />
-                </div>
-                <span className="ml-2 font-medium">Shipping</span>
+              <span className="ml-2 text-sm font-medium text-primary">Shipping</span>
+            </div>
+            <div className="w-12 h-0.5 bg-gray-300"></div>
+            <div className="flex items-center">
+              <div className="w-8 h-8 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center text-sm font-semibold">
+                2
               </div>
-              
-              <div className="h-px w-8 bg-muted" />
-              
-              <div className="flex items-center">
-                <div className="h-6 w-6 rounded-full bg-muted text-muted-foreground flex items-center justify-center text-sm">
-                  3
-                </div>
-                <span className="ml-2 text-muted-foreground">Payment</span>
+              <span className="ml-2 text-sm font-medium text-gray-600">Payment</span>
+            </div>
+            <div className="w-12 h-0.5 bg-gray-300"></div>
+            <div className="flex items-center">
+              <div className="w-8 h-8 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center text-sm font-semibold">
+                3
               </div>
-              
-              <div className="h-px w-8 bg-muted" />
-              
-              <div className="flex items-center">
-                <div className="h-6 w-6 rounded-full bg-muted text-muted-foreground flex items-center justify-center text-sm">
-                  4
-                </div>
-                <span className="ml-2 text-muted-foreground">Confirmation</span>
-              </div>
+              <span className="ml-2 text-sm font-medium text-gray-600">Confirmation</span>
             </div>
           </div>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="md:col-span-2">
-              <Card>
-                <form onSubmit={handleSubmit}>
-                  <CardContent className="p-6">
-                    {/* Notification about saved addresses - replace with link to profile */}
+        </motion.div>
+
+        {/* Main Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column - Shipping Form */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Shipping Information */}
+            <motion.div variants={itemVariants}>
+              <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <Truck className="w-5 h-5 text-primary" />
+                    Shipping Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Notification about saved addresses */}
                     {savedAddresses.length > 0 && (
-                      <Alert className="mb-6 border-primary/20 bg-primary/5">
+                      <Alert className="border-primary/20 bg-primary/5">
                         <Info className="h-4 w-4 text-primary" />
                         <AlertDescription className="flex justify-between items-center">
                           <span>You have {savedAddresses.length} saved address{savedAddresses.length > 1 ? 'es' : ''}.</span>
@@ -477,7 +436,7 @@ const CheckoutShippingPage = () => {
                     )}
                     
                     {/* Delivery Options */}
-                    <div className="mb-6">
+                    <div>
                       <Tabs defaultValue="self" onValueChange={(value) => setDeliveryOption(value as 'self' | 'gift')}>
                         <TabsList className="grid grid-cols-2 mb-4">
                           <TabsTrigger value="self">Delivery for myself</TabsTrigger>
@@ -499,7 +458,7 @@ const CheckoutShippingPage = () => {
                     </div>
                     
                     {/* Sender Information */}
-                    <div className="mb-6">
+                    <div>
                       <div className="flex items-center gap-2 mb-4">
                         <User size={18} className="text-primary" />
                         <h2 className="text-lg font-medium">
@@ -600,7 +559,7 @@ const CheckoutShippingPage = () => {
                                 <Input
                                   id="city"
                                   name="city"
-                                  value={formData.city} disabled
+                                  value={formData.city}
                                   onChange={handleInputChange}
                                   required
                                 />
@@ -613,7 +572,7 @@ const CheckoutShippingPage = () => {
                                 <Input
                                   id="state"
                                   name="state"
-                                  value={formData.state} disabled
+                                  value={formData.state}
                                   onChange={handleInputChange}
                                   required
                                 />
@@ -642,8 +601,8 @@ const CheckoutShippingPage = () => {
                                 name="notes"
                                 value={formData.notes}
                                 onChange={handleInputChange}
-                                placeholder="Add any special instructions or notes for delivery"
-                                className="resize-none"
+                                placeholder="Any special instructions for delivery..."
+                                rows={3}
                               />
                             </div>
                           </>
@@ -651,12 +610,12 @@ const CheckoutShippingPage = () => {
                       </div>
                     </div>
                     
-                    {/* Recipient Information (for gift option) */}
+                    {/* Receiver Information (for gift option) */}
                     {deliveryOption === 'gift' && (
-                      <div className="mb-6">
+                      <div>
                         <div className="flex items-center gap-2 mb-4">
-                          <MapPin size={18} className="text-primary" />
-                          <h2 className="text-lg font-medium">Recipient Information</h2>
+                          <User size={18} className="text-primary" />
+                          <h2 className="text-lg font-medium">Receiver Information</h2>
                         </div>
                         
                         <div className="space-y-4">
@@ -721,7 +680,7 @@ const CheckoutShippingPage = () => {
                               <Input
                                 id="receiverCity"
                                 name="receiverCity"
-                                value={formData.receiverCity}disabled
+                                value={formData.receiverCity}
                                 onChange={handleInputChange}
                                 required={deliveryOption === 'gift'}
                               />
@@ -734,7 +693,7 @@ const CheckoutShippingPage = () => {
                               <Input
                                 id="receiverState"
                                 name="receiverState"
-                                value={formData.receiverState}disabled
+                                value={formData.receiverState}
                                 onChange={handleInputChange}
                                 required={deliveryOption === 'gift'}
                               />
@@ -794,17 +753,26 @@ const CheckoutShippingPage = () => {
                     )}
                     
                     {/* Time Slot Selector */}
-                    <div className="mt-6">
+                    <div>
+                      <div className="flex items-center gap-2 mb-4">
+                        <MapPin size={18} className="text-primary" />
+                        <h2 className="text-lg font-medium">Delivery Time</h2>
+                      </div>
                       <TimeSlotSelector
                         selectedSlot={selectedTimeSlot}
                         onSelectSlot={handleTimeSlotSelect}
                         onSelectDate={setSelectedDate}
                         selectedDate={selectedDate}
                       />
+                      {hasMidnightFee && (
+                        <Badge variant="secondary" className="mt-2">
+                          Midnight Delivery (+₹100)
+                        </Badge>
+                      )}
                     </div>
                     
                     {/* Save Information Checkbox */}
-                    <div className="mt-6 flex items-center space-x-2">
+                    <div className="flex items-center space-x-2">
                       <Checkbox 
                         id="saveInfo" 
                         checked={formData.saveInfo}
@@ -817,118 +785,146 @@ const CheckoutShippingPage = () => {
                         Save this information for next time
                       </label>
                     </div>
-                  </CardContent>
-                  
-                  <CardFooter className="px-6 py-4 flex justify-between items-center border-t">
-                    <Button
-                      variant="outline"
-                      type="button"
-                      onClick={() => navigate('/cart')}
-                    >
-                      Back to Cart
-                    </Button>
                     
-                    <Button type="submit" className="gap-2">
-                      Continue to Payment
-                      <ArrowRight size={16} />
-                    </Button>
-                  </CardFooter>
-                </form>
-              </Card>
-            </div>
-            
-            <div className="md:col-span-1">
-              <Card className="sticky top-24">
-                <CardContent className="p-6">
-                  <h3 className="text-lg font-medium mb-4">Order Summary</h3>
-                  
-                 {/* Display items */}
-<div className="space-y-4 max-h-80 overflow-y-auto mb-4">
-  {items.map((item) => {
-    const imageUrl = item.images && item.images.length > 0
-      ? item.images[0]
-      : '/api/placeholder/64/64';
-
-    return (
-      <div key={item._id} className="flex items-center gap-3">
-        <div className="h-16 w-16 bg-secondary/20 rounded-md relative overflow-hidden flex-shrink-0">
-          <img 
-            src={imageUrl} 
-            alt={item.title}
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              e.currentTarget.src = '/api/placeholder/64/64';
-            }}
-          />
-          <div className="absolute top-0 right-0 h-5 w-5 bg-primary text-primary-foreground text-xs font-medium flex items-center justify-center rounded-full -mt-1 -mr-1">
-            {item.quantity || 0}
-          </div>
-        </div>
-        <div className="flex-1 min-w-0">
-          <h4 className="text-sm font-medium truncate">{item.title}</h4>
-          <div className="text-muted-foreground text-xs">
-            {formatPrice(convertPrice(item.price || 0))} × {item.quantity || 0}
-          </div>
-        </div>
-        <div className="text-sm font-medium">
-          {formatPrice(convertPrice((item.price || 0) * (item.quantity || 0)))}
-        </div>
-      </div>
-    );
-  })}
-</div>
-
-                  
-                  {/* Order totals */}
-                  <div className="space-y-2 border-t pt-4">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Subtotal</span>
-                      <span>{formatPrice(convertPrice(subtotal))}</span>
+                    {/* Form Actions */}
+                    <div className="flex justify-between items-center pt-4 border-t">
+                      <Button
+                        variant="outline"
+                        type="button"
+                        onClick={() => navigate('/cart')}
+                      >
+                        Back to Cart
+                      </Button>
+                      
+                      <Button type="submit" className="gap-2 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700">
+                        Continue to Payment
+                        <ArrowRight size={16} />
+                      </Button>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Delivery</span>
-                      <span>
-                        {hasMidnightFee ? formatPrice(convertPrice(midnightDeliveryFee)) : 'Free'}
-                      </span>                    
-                    </div>
-                    {appliedPromoCode && (
-                      <div className="flex justify-between text-sm text-green-600">
-                        <span>Promo code ({appliedPromoCode.code})</span>
-                        <span>-{formatPrice(convertPrice(appliedPromoCode.discount))}</span>
-                      </div>
-                    )}
-                    
-                    {/* Promo Code Reminder - only show if no promo code applied */}
-                    {!appliedPromoCode && (
-                      <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
-                        <div className="flex items-center gap-2 text-blue-700 text-xs">
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                          </svg>
-                          <span className="font-medium">Have a promo code?</span>
-                        </div>
-                        <button 
-                          onClick={() => navigate('/cart')}
-                          className="text-blue-600 text-xs underline mt-1 hover:text-blue-800"
-                        >
-                          Go to cart to apply it
-                        </button>
-                      </div>
-                    )}
-                    
-                    <div className="flex justify-between font-medium pt-2 border-t mt-2">
-                      <span>Total</span>
-                      <span>
-                        {formatPrice(convertPrice(orderTotal))}
-                      </span>
-                    </div>
-                  </div>
+                  </form>
                 </CardContent>
               </Card>
-            </div>
+            </motion.div>
+          </div>
+          
+          {/* Right Column - Order Summary */}
+          <div className="lg:col-span-1">
+            <motion.div variants={itemVariants} className="sticky top-8">
+              <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+                <CardHeader className="lg:hidden">
+                  <CardTitle 
+                    className="flex items-center justify-between cursor-pointer"
+                    onClick={() => setShowOrderSummary(!showOrderSummary)}
+                  >
+                    <span className="flex items-center gap-2">
+                      <Package className="w-5 h-5 text-primary" />
+                      Order Summary
+                    </span>
+                    {showOrderSummary ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </CardTitle>
+                </CardHeader>
+                
+                <div className="hidden lg:block">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Package className="w-5 h-5 text-primary" />
+                      Order Summary
+                    </CardTitle>
+                  </CardHeader>
+                </div>
+
+                <AnimatePresence>
+                  <motion.div
+                    initial={{ height: showOrderSummary ? 'auto' : 0 }}
+                    animate={{ height: showOrderSummary || window.innerWidth >= 1024 ? 'auto' : 0 }}
+                    className="lg:!h-auto overflow-hidden"
+                  >
+                    <CardContent className="space-y-4">
+                      {/* Order Items */}
+                      <div className="space-y-3">
+                        {items.map((item) => (
+                          <div key={item._id} className="flex items-center space-x-3">
+                            <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden">
+                              <img 
+                                src={item.images && item.images.length > 0 ? item.images[0] : '/api/placeholder/64/64'} 
+                                alt={item.title}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.currentTarget.src = '/api/placeholder/64/64';
+                                }}
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="text-sm font-medium text-gray-900 line-clamp-1">
+                                {item.title}
+                              </h4>
+                              <p className="text-sm text-gray-600">
+                                Qty: {item.quantity}
+                              </p>
+                            </div>
+                            <div className="text-sm font-medium">
+                              {formatPrice(convertPrice(item.price * item.quantity))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      <Separator />
+
+                      {/* Order Totals */}
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span>Subtotal</span>
+                          <span>{formatPrice(convertPrice(subtotal))}</span>
+                        </div>
+
+                        {deliveryFee > 0 && (
+                          <div className="flex justify-between text-sm">
+                            <span>Midnight Delivery Fee</span>
+                            <span>{formatPrice(convertPrice(deliveryFee))}</span>
+                          </div>
+                        )}
+                        
+                        {appliedPromoCode && (
+                          <div className="flex justify-between text-sm text-green-600">
+                            <span>Promo Discount ({appliedPromoCode.code})</span>
+                            <span>-{formatPrice(convertPrice(promoDiscount))}</span>
+                          </div>
+                        )}
+                        
+                        <Separator />
+                        
+                        <div className="flex justify-between text-lg font-semibold">
+                          <span>Total</span>
+                          <span>{formatPrice(convertPrice(orderTotal))}</span>
+                        </div>
+                      </div>
+
+                      {/* Promo Code Reminder - only show if no promo code applied */}
+                      {!appliedPromoCode && (
+                        <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
+                          <div className="flex items-center gap-2 text-blue-700 text-xs">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                            </svg>
+                            <span className="font-medium">Have a promo code?</span>
+                          </div>
+                          <button 
+                            onClick={() => navigate('/cart')}
+                            className="text-blue-600 text-xs underline mt-1 hover:text-blue-800"
+                          >
+                            Go to cart to apply it
+                          </button>
+                        </div>
+                      )}
+                    </CardContent>
+                  </motion.div>
+                </AnimatePresence>
+              </Card>
+            </motion.div>
           </div>
         </div>
-      </main>
+      </motion.div>
       
       <Footer />
     </div>
