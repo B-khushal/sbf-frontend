@@ -21,7 +21,9 @@ import {
   X,
   Upload,
   Check,
-  ShoppingCart
+  ShoppingCart,
+  Plus,
+  Minus
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -29,6 +31,7 @@ type AddonOption = {
   name: string;
   price: number;
   type: 'flower' | 'chocolate';
+  quantity?: number;
 };
 
 type CustomizationOptions = {
@@ -48,8 +51,8 @@ type CustomizationData = {
   photo?: string;
   number?: string;
   messageCard?: string;
-  selectedFlowers: AddonOption[];
-  selectedChocolates: AddonOption[];
+  selectedFlowers: (AddonOption & { quantity: number })[];
+  selectedChocolates: (AddonOption & { quantity: number })[];
 };
 
 interface CustomizeProductModalProps {
@@ -83,14 +86,14 @@ export function CustomizeProductModal({
     // Calculate total price based on selections
     let total = product.price;
 
-    // Add flower add-ons
+    // Add flower add-ons with quantities
     customizations.selectedFlowers.forEach(flower => {
-      total += flower.price;
+      total += flower.price * (flower.quantity || 1);
     });
 
-    // Add chocolate add-ons
+    // Add chocolate add-ons with quantities
     customizations.selectedChocolates.forEach(chocolate => {
-      total += chocolate.price;
+      total += chocolate.price * (chocolate.quantity || 1);
     });
 
     // Add message card price if selected
@@ -132,7 +135,7 @@ export function CustomizeProductModal({
         ...prev,
         selectedFlowers: isSelected
           ? prev.selectedFlowers.filter(f => f.name !== addon.name)
-          : [...prev.selectedFlowers, addon]
+          : [...prev.selectedFlowers, { ...addon, quantity: 1 }]
       };
     });
   };
@@ -144,9 +147,29 @@ export function CustomizeProductModal({
         ...prev,
         selectedChocolates: isSelected
           ? prev.selectedChocolates.filter(c => c.name !== addon.name)
-          : [...prev.selectedChocolates, addon]
+          : [...prev.selectedChocolates, { ...addon, quantity: 1 }]
       };
     });
+  };
+
+  const updateFlowerQuantity = (addonName: string, quantity: number) => {
+    if (quantity < 1) return;
+    setCustomizations(prev => ({
+      ...prev,
+      selectedFlowers: prev.selectedFlowers.map(f => 
+        f.name === addonName ? { ...f, quantity } : f
+      )
+    }));
+  };
+
+  const updateChocolateQuantity = (addonName: string, quantity: number) => {
+    if (quantity < 1) return;
+    setCustomizations(prev => ({
+      ...prev,
+      selectedChocolates: prev.selectedChocolates.map(c => 
+        c.name === addonName ? { ...c, quantity } : c
+      )
+    }));
   };
 
   const handleSubmit = () => {
@@ -154,8 +177,8 @@ export function CustomizeProductModal({
     onClose();
   };
 
-  const getAddonTotal = (addons: AddonOption[]) => {
-    return addons.reduce((sum, addon) => sum + addon.price, 0);
+  const getAddonTotal = (addons: (AddonOption & { quantity: number })[]) => {
+    return addons.reduce((sum, addon) => sum + (addon.price * (addon.quantity || 1)), 0);
   };
 
   return (
@@ -326,7 +349,10 @@ export function CustomizeProductModal({
                     <CardContent>
                       <div className="grid grid-cols-1 gap-3">
                         {product.customizationOptions.addons.flowers.map((flower, index) => {
-                          const isSelected = customizations.selectedFlowers.some(f => f.name === flower.name);
+                          const selectedFlower = customizations.selectedFlowers.find(f => f.name === flower.name);
+                          const isSelected = !!selectedFlower;
+                          const quantity = selectedFlower?.quantity || 0;
+                          
                           return (
                             <div
                               key={index}
@@ -348,13 +374,54 @@ export function CustomizeProductModal({
                                     <div className="text-sm text-gray-500">Beautiful addition</div>
                                   </div>
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-3">
                                   <Badge variant="outline" className="border-pink-300 text-pink-700">
                                     +₹{flower.price}
                                   </Badge>
+                                  
+                                  {/* Quantity Controls */}
+                                  {isSelected && (
+                                    <div className="flex items-center gap-2 bg-white rounded-lg border border-pink-300 p-1">
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-6 w-6 p-0 hover:bg-pink-100"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          updateFlowerQuantity(flower.name, Math.max(1, quantity - 1));
+                                        }}
+                                      >
+                                        <Minus className="h-3 w-3" />
+                                      </Button>
+                                      <span className="text-sm font-medium text-gray-700 min-w-[20px] text-center">
+                                        {quantity}
+                                      </span>
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-6 w-6 p-0 hover:bg-pink-100"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          updateFlowerQuantity(flower.name, quantity + 1);
+                                        }}
+                                      >
+                                        <Plus className="h-3 w-3" />
+                                      </Button>
+                                    </div>
+                                  )}
+                                  
                                   {isSelected && <Check className="h-4 w-4 text-pink-600" />}
                                 </div>
                               </div>
+                              
+                              {/* Quantity Summary */}
+                              {isSelected && quantity > 1 && (
+                                <div className="mt-2 text-xs text-pink-600">
+                                  {quantity} × ₹{flower.price} = ₹{flower.price * quantity}
+                                </div>
+                              )}
                             </div>
                           );
                         })}
@@ -383,7 +450,10 @@ export function CustomizeProductModal({
                     <CardContent>
                       <div className="grid grid-cols-1 gap-3">
                         {product.customizationOptions.addons.chocolates.map((chocolate, index) => {
-                          const isSelected = customizations.selectedChocolates.some(c => c.name === chocolate.name);
+                          const selectedChocolate = customizations.selectedChocolates.find(c => c.name === chocolate.name);
+                          const isSelected = !!selectedChocolate;
+                          const quantity = selectedChocolate?.quantity || 0;
+                          
                           return (
                             <div
                               key={index}
@@ -405,13 +475,54 @@ export function CustomizeProductModal({
                                     <div className="text-sm text-gray-500">Delicious treat</div>
                                   </div>
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-3">
                                   <Badge variant="outline" className="border-orange-300 text-orange-700">
                                     +₹{chocolate.price}
                                   </Badge>
+                                  
+                                  {/* Quantity Controls */}
+                                  {isSelected && (
+                                    <div className="flex items-center gap-2 bg-white rounded-lg border border-orange-300 p-1">
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-6 w-6 p-0 hover:bg-orange-100"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          updateChocolateQuantity(chocolate.name, Math.max(1, quantity - 1));
+                                        }}
+                                      >
+                                        <Minus className="h-3 w-3" />
+                                      </Button>
+                                      <span className="text-sm font-medium text-gray-700 min-w-[20px] text-center">
+                                        {quantity}
+                                      </span>
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-6 w-6 p-0 hover:bg-orange-100"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          updateChocolateQuantity(chocolate.name, quantity + 1);
+                                        }}
+                                      >
+                                        <Plus className="h-3 w-3" />
+                                      </Button>
+                                    </div>
+                                  )}
+                                  
                                   {isSelected && <Check className="h-4 w-4 text-orange-600" />}
                                 </div>
                               </div>
+                              
+                              {/* Quantity Summary */}
+                              {isSelected && quantity > 1 && (
+                                <div className="mt-2 text-xs text-orange-600">
+                                  {quantity} × ₹{chocolate.price} = ₹{chocolate.price * quantity}
+                                </div>
+                              )}
                             </div>
                           );
                         })}
@@ -474,13 +585,27 @@ export function CustomizeProductModal({
                           {customizations.selectedFlowers.length > 0 && (
                             <div className="flex items-center gap-2 text-xs text-pink-600">
                               <Flower2 className="h-3 w-3" />
-                              <span>{customizations.selectedFlowers.length} flower(s) selected</span>
+                              <span>
+                                {customizations.selectedFlowers.reduce((total, f) => total + (f.quantity || 1), 0)} flower(s) selected
+                                {customizations.selectedFlowers.some(f => (f.quantity || 1) > 1) && (
+                                  <span className="ml-1">
+                                    ({customizations.selectedFlowers.map(f => `${f.name}×${f.quantity || 1}`).join(', ')})
+                                  </span>
+                                )}
+                              </span>
                             </div>
                           )}
                           {customizations.selectedChocolates.length > 0 && (
                             <div className="flex items-center gap-2 text-xs text-orange-600">
                               <Gift className="h-3 w-3" />
-                              <span>{customizations.selectedChocolates.length} chocolate(s) selected</span>
+                              <span>
+                                {customizations.selectedChocolates.reduce((total, c) => total + (c.quantity || 1), 0)} chocolate(s) selected
+                                {customizations.selectedChocolates.some(c => (c.quantity || 1) > 1) && (
+                                  <span className="ml-1">
+                                    ({customizations.selectedChocolates.map(c => `${c.name}×${c.quantity || 1}`).join(', ')})
+                                  </span>
+                                )}
+                              </span>
                             </div>
                           )}
                         </div>

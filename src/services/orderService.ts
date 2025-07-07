@@ -26,6 +26,7 @@ export interface Order {
     quantity: number;
     price: number;
     finalPrice: number;
+    customizations?: any;
   }[];
   paymentDetails: {
     method: string;

@@ -169,13 +169,23 @@ const OrderDetailsPage: React.FC = () => {
                         {item.customizations.selectedFlowers && item.customizations.selectedFlowers.length > 0 && (
                           <div className="flex items-center gap-2 text-pink-700 text-xs">
                             <Flower2 className="h-3 w-3" />
-                            <span>{item.customizations.selectedFlowers.length} flower add-on(s): {item.customizations.selectedFlowers.map(f => f.name).join(', ')}</span>
+                            <span>
+                              {item.customizations.selectedFlowers.reduce((total, f) => total + (f.quantity || 1), 0)} flower add-on(s): 
+                              {item.customizations.selectedFlowers.map(f => 
+                                `${f.name}${(f.quantity || 1) > 1 ? `×${f.quantity || 1}` : ''}`
+                              ).join(', ')}
+                            </span>
                           </div>
                         )}
                         {item.customizations.selectedChocolates && item.customizations.selectedChocolates.length > 0 && (
                           <div className="flex items-center gap-2 text-orange-700 text-xs">
                             <Gift className="h-3 w-3" />
-                            <span>{item.customizations.selectedChocolates.length} chocolate add-on(s): {item.customizations.selectedChocolates.map(c => c.name).join(', ')}</span>
+                            <span>
+                              {item.customizations.selectedChocolates.reduce((total, c) => total + (c.quantity || 1), 0)} chocolate add-on(s): 
+                              {item.customizations.selectedChocolates.map(c => 
+                                `${c.name}${(c.quantity || 1) > 1 ? `×${c.quantity || 1}` : ''}`
+                              ).join(', ')}
+                            </span>
                           </div>
                         )}
                       </div>
