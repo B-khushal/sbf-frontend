@@ -523,14 +523,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                       variant="outline"
                     >
                       <Wand2 className="mr-2 h-4 w-4" />
-                      Customize
-                    </Button>
-                    <Button
-                      className="flex-1"
-                      onClick={handleAddToCart}
-                    >
-                      <ShoppingCart className="mr-2 h-4 w-4" />
-                      Add to Cart
+                      Customize & Add to Cart
                     </Button>
                   </>
                 ) : (
