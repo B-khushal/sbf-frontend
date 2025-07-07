@@ -23,13 +23,9 @@ import {
   Check,
   ShoppingCart,
   Plus,
-  Minus,
-  LogIn
+  Minus
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { useAuth } from '@/hooks/use-auth';
-import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
 
 type AddonOption = {
   name: string;
@@ -85,9 +81,6 @@ export function CustomizeProductModal({
 
   const [totalPrice, setTotalPrice] = useState(product.price);
   const [uploadedPhoto, setUploadedPhoto] = useState<string | null>(null);
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const navigate = useNavigate();
 
   useEffect(() => {
     // Calculate total price based on selections
@@ -180,70 +173,12 @@ export function CustomizeProductModal({
   };
 
   const handleSubmit = () => {
-    // Check authentication first
-    if (!user) {
-      toast({
-        title: "Please log in",
-        description: "You need to be logged in to add items to cart",
-        variant: "destructive",
-        duration: 4000,
-      });
-      
-      setTimeout(() => {
-        onClose();
-        navigate('/login', { 
-          state: { 
-            redirect: window.location.pathname,
-            message: "Please login to add customized items to cart"
-          } 
-        });
-      }, 1500);
-      return;
-    }
-
     onAddToCart(customizations, totalPrice);
     onClose();
   };
 
   const getAddonTotal = (addons: (AddonOption & { quantity: number })[]) => {
     return addons.reduce((sum, addon) => sum + (addon.price * (addon.quantity || 1)), 0);
-  };
-
-  // Generate preview image based on customizations
-  const getPreviewImage = () => {
-    if (uploadedPhoto) {
-      return uploadedPhoto;
-    }
-    return product.images[0];
-  };
-
-  // Get customization summary for preview
-  const getCustomizationSummary = () => {
-    const summary = [];
-    
-    if (customizations.photo) {
-      summary.push("📸 Custom Photo");
-    }
-    
-    if (customizations.number) {
-      summary.push(`🔢 ${product.customizationOptions.numberInputLabel}: ${customizations.number}`);
-    }
-    
-    if (customizations.messageCard) {
-      summary.push("💌 Personal Message");
-    }
-    
-    if (customizations.selectedFlowers.length > 0) {
-      const flowerCount = customizations.selectedFlowers.reduce((sum, flower) => sum + (flower.quantity || 1), 0);
-      summary.push(`🌸 ${flowerCount} Flower Add-ons`);
-    }
-    
-    if (customizations.selectedChocolates.length > 0) {
-      const chocolateCount = customizations.selectedChocolates.reduce((sum, chocolate) => sum + (chocolate.quantity || 1), 0);
-      summary.push(`🍫 ${chocolateCount} Chocolate Add-ons`);
-    }
-    
-    return summary;
   };
 
   return (
@@ -257,8 +192,9 @@ export function CustomizeProductModal({
             </Button>
           </DialogHeader>
           <div className="pt-[56px] pb-0 px-3 md:pt-0 md:pb-0 md:px-6 flex flex-col gap-3 md:flex-row md:gap-6">
+            {/* Main Content Area */}
             <div className="flex-1 md:pr-6 overflow-y-auto overflow-x-hidden pb-6">
-              <img src={product.images[0]} alt="Preview" className="w-24 h-24 mx-auto rounded mb-2 object-cover border border-gray-100" />
+              <img src={product.images[0]} alt="Preview" className="w-24 h-24 mx-auto rounded mb-2 object-cover border border-gray-100 md:hidden" />
               <div className="space-y-3">
                 {/* 📸 Photo Upload Section */}
                 {product.customizationOptions.allowPhotoUpload && (
@@ -583,181 +519,166 @@ export function CustomizeProductModal({
                   </Card>
                 )}
               </div>
-              <div className="block md:hidden mt-4">
-                <Card className="border-2 border-purple-200 bg-purple-50/50 mb-3">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="flex items-center gap-2 text-purple-800 text-base font-medium">
-                      <IndianRupee className="h-5 w-5" /> Price Summary
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2 text-sm">
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Base Price:</span>
-                      <span className="font-medium">₹{product.price}</span>
-                    </div>
-                    {customizations.selectedFlowers.length > 0 && (
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-600">Flower Add-ons:</span>
-                        <span className="font-medium text-pink-600">+₹{getAddonTotal(customizations.selectedFlowers)}</span>
-                      </div>
-                    )}
-                    {customizations.selectedChocolates.length > 0 && (
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-600">Chocolate Add-ons:</span>
-                        <span className="font-medium text-orange-600">+₹{getAddonTotal(customizations.selectedChocolates)}</span>
-                      </div>
-                    )}
-                    {customizations.messageCard && (
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-600">Message Card:</span>
-                        <span className="font-medium text-yellow-600">+₹{product.customizationOptions.messageCardPrice}</span>
-                      </div>
-                    )}
-                    <Separator />
-                    <div className="flex justify-between items-center text-lg font-bold text-purple-800">
-                      <span>Total Price:</span>
-                      <span>₹{totalPrice}</span>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Button 
-                  onClick={handleSubmit} 
-                  className="h-12 rounded bg-primary text-white w-full text-base font-semibold"
-                  disabled={!user}
-                >
-                  {user ? (
-                    <>
-                      <ShoppingCart className="w-4 h-4 mr-2" />
-                      Add to Cart
-                    </>
-                  ) : (
-                    <>
-                      <LogIn className="w-4 h-4 mr-2" />
-                      Login to Add to Cart
-                    </>
-                  )}
-                </Button>
-              </div>
             </div>
 
-            {/* Desktop Preview and Price Summary Sidebar */}
+            {/* Desktop Preview & Price Summary Sidebar */}
             <div className="hidden md:block w-80 lg:w-96 flex-shrink-0">
-              <div className="sticky top-6 space-y-4">
+              <div className="sticky top-6 space-y-6">
                 {/* Product Preview */}
-                <Card className="border-2 border-gray-200 bg-gray-50/50">
+                <Card className="border-2 border-gray-200 bg-gray-50/50 rounded-lg">
                   <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2 text-gray-800 text-base font-medium">
-                      <Wand2 className="h-5 w-5" />
-                      Your Customized Product
+                    <CardTitle className="flex items-center gap-2 text-gray-800 text-lg font-semibold">
+                      <Wand2 className="h-5 w-5 text-purple-600" />
+                      Product Preview
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {/* Preview Image */}
                     <div className="relative">
                       <img
-                        src={getPreviewImage()}
-                        alt="Customized product preview"
-                        className="w-full h-48 lg:h-56 object-cover rounded-lg border-2 border-gray-300"
+                        src={product.images[0]}
+                        alt={product.title}
+                        className="w-full h-64 lg:h-80 object-cover rounded-lg border-2 border-gray-200 shadow-sm"
                       />
                       {uploadedPhoto && (
-                        <div className="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded-full text-xs">
-                          Custom Photo
+                        <div className="absolute top-2 right-2 bg-white rounded-lg p-2 shadow-lg border">
+                          <img
+                            src={uploadedPhoto}
+                            alt="Uploaded photo"
+                            className="w-16 h-16 object-cover rounded border-2 border-blue-300"
+                          />
+                          <div className="text-xs text-blue-600 mt-1 text-center">Photo Added</div>
                         </div>
                       )}
                     </div>
-
-                    {/* Customization Summary */}
                     <div className="space-y-2">
-                      <h4 className="font-medium text-gray-900 text-sm">Customizations:</h4>
-                      {getCustomizationSummary().length > 0 ? (
-                        <div className="space-y-1">
-                          {getCustomizationSummary().map((item, index) => (
-                            <div key={index} className="flex items-center gap-2 text-sm text-gray-600">
-                              <div className="w-2 h-2 bg-primary rounded-full"></div>
-                              {item}
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-sm text-gray-500 italic">No customizations added yet</p>
-                      )}
+                      <h3 className="font-semibold text-gray-900 text-lg">{product.title}</h3>
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl font-bold text-purple-600">₹{totalPrice}</span>
+                        {totalPrice > product.price && (
+                          <span className="text-sm text-gray-500 line-through">₹{product.price}</span>
+                        )}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
 
                 {/* Price Summary */}
-                <Card className="border-2 border-purple-200 bg-purple-50/50">
+                <Card className="border-2 border-purple-200 bg-purple-50/50 rounded-lg">
                   <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2 text-purple-800 text-base font-medium">
+                    <CardTitle className="flex items-center gap-2 text-purple-800 text-lg font-semibold">
                       <IndianRupee className="h-5 w-5" />
-                      Price Summary
+                      Price Breakdown
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Base Price:</span>
+                      <span className="text-gray-700">Base Price:</span>
                       <span className="font-medium">₹{product.price}</span>
                     </div>
                     
                     {customizations.selectedFlowers.length > 0 && (
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-600">Flower Add-ons:</span>
-                        <span className="font-medium text-pink-600">+₹{getAddonTotal(customizations.selectedFlowers)}</span>
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-700">Flower Add-ons:</span>
+                          <span className="font-medium text-pink-600">+₹{getAddonTotal(customizations.selectedFlowers)}</span>
+                        </div>
+                        {customizations.selectedFlowers.map((flower, index) => (
+                          <div key={index} className="flex justify-between items-center text-sm text-gray-600 ml-4">
+                            <span>• {flower.name} (×{flower.quantity})</span>
+                            <span>₹{flower.price * flower.quantity}</span>
+                          </div>
+                        ))}
                       </div>
                     )}
                     
                     {customizations.selectedChocolates.length > 0 && (
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-600">Chocolate Add-ons:</span>
-                        <span className="font-medium text-orange-600">+₹{getAddonTotal(customizations.selectedChocolates)}</span>
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-700">Chocolate Add-ons:</span>
+                          <span className="font-medium text-orange-600">+₹{getAddonTotal(customizations.selectedChocolates)}</span>
+                        </div>
+                        {customizations.selectedChocolates.map((chocolate, index) => (
+                          <div key={index} className="flex justify-between items-center text-sm text-gray-600 ml-4">
+                            <span>• {chocolate.name} (×{chocolate.quantity})</span>
+                            <span>₹{chocolate.price * chocolate.quantity}</span>
+                          </div>
+                        ))}
                       </div>
                     )}
                     
                     {customizations.messageCard && (
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-600">Message Card:</span>
+                        <span className="text-gray-700">Message Card:</span>
                         <span className="font-medium text-yellow-600">+₹{product.customizationOptions.messageCardPrice}</span>
                       </div>
                     )}
                     
                     <Separator />
                     
-                    <div className="flex justify-between items-center text-lg font-bold text-purple-800">
+                    <div className="flex justify-between items-center text-xl font-bold text-purple-800">
                       <span>Total Price:</span>
                       <span>₹{totalPrice}</span>
                     </div>
+                    
+                    {totalPrice > product.price && (
+                      <div className="text-sm text-green-600 text-center bg-green-50 rounded-lg p-2">
+                        +₹{totalPrice - product.price} in customizations
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 
                 {/* Add to Cart Button */}
                 <Button 
                   onClick={handleSubmit} 
-                  className="h-12 rounded-lg bg-gradient-to-r from-primary to-secondary text-white w-full text-base font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
-                  disabled={!user}
+                  className="h-14 w-full rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white text-lg font-semibold hover:from-purple-700 hover:to-pink-700 shadow-lg"
                 >
-                  {user ? (
-                    <>
-                      <ShoppingCart className="w-4 h-4 mr-2" />
-                      Add to Cart - ₹{totalPrice}
-                    </>
-                  ) : (
-                    <>
-                      <LogIn className="w-4 h-4 mr-2" />
-                      Login to Add to Cart
-                    </>
-                  )}
+                  <ShoppingCart className="h-5 w-5 mr-2" />
+                  Add to Cart - ₹{totalPrice}
                 </Button>
-
-                {/* Authentication Notice */}
-                {!user && (
-                  <div className="text-center p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-sm text-blue-700">
-                      Please log in to add customized items to your cart
-                    </p>
-                  </div>
-                )}
               </div>
             </div>
+          </div>
+
+          {/* Mobile Price Summary and Button */}
+          <div className="block md:hidden mt-4">
+            <Card className="border-2 border-purple-200 bg-purple-50/50 mb-3">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-purple-800 text-base font-medium">
+                  <IndianRupee className="h-5 w-5" /> Price Summary
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Base Price:</span>
+                  <span className="font-medium">₹{product.price}</span>
+                </div>
+                {customizations.selectedFlowers.length > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Flower Add-ons:</span>
+                    <span className="font-medium text-pink-600">+₹{getAddonTotal(customizations.selectedFlowers)}</span>
+                  </div>
+                )}
+                {customizations.selectedChocolates.length > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Chocolate Add-ons:</span>
+                    <span className="font-medium text-orange-600">+₹{getAddonTotal(customizations.selectedChocolates)}</span>
+                  </div>
+                )}
+                {customizations.messageCard && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Message Card:</span>
+                    <span className="font-medium text-yellow-600">+₹{product.customizationOptions.messageCardPrice}</span>
+                  </div>
+                )}
+                <Separator />
+                <div className="flex justify-between items-center text-lg font-bold text-purple-800">
+                  <span>Total Price:</span>
+                  <span>₹{totalPrice}</span>
+                </div>
+              </CardContent>
+            </Card>
+            <Button onClick={handleSubmit} className="h-12 rounded bg-primary text-white w-full text-base font-semibold">Add to Cart</Button>
           </div>
         </DialogContent>
       </Dialog>
