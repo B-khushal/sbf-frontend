@@ -232,6 +232,12 @@ const CartPage: React.FC = () => {
                           ? item.images[0]
                           : '/api/placeholder/64/64';
 
+                        // Calculate discounted price
+                        const discountedPrice = item.discount && item.discount > 0
+                          ? Math.round(item.price - (item.price * item.discount / 100))
+                          : item.price;
+                        const originalPrice = item.price;
+
                         return (
                           <motion.div
                             key={item._id}
@@ -260,11 +266,11 @@ const CartPage: React.FC = () => {
                                 <div className="flex items-center justify-center sm:justify-start gap-2 mb-3">
                                   {item.discount && item.discount > 0 && (
                                     <span className="text-xs sm:text-sm text-gray-500 line-through">
-                                      {formatPrice(convertPrice(Math.round((item.price || 0) / (1 - item.discount / 100))))}
+                                      {formatPrice(convertPrice(originalPrice))}
                                     </span>
                                   )}
                                   <span className="text-base sm:text-lg font-bold text-primary">
-                                    {formatPrice(convertPrice(item.price || 0))}
+                                    {formatPrice(convertPrice(discountedPrice))}
                                   </span>
                                 </div>
                                 
