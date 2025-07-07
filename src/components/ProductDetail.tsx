@@ -622,16 +622,16 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
             onAddToCart={(customizations, customTotalPrice) => {
               setCustomizations(customizations);
               setIsCustomizeModalOpen(false);
-              // Use the customTotalPrice for the cart item
+              // Use the customTotalPrice as the unit price for the cart item
               const cartItem = {
                 _id: product._id,
                 id: product._id,
                 productId: product._id,
                 title: product.title,
-                price: customTotalPrice,
+                price: customTotalPrice, // unit price only
                 originalPrice: originalPrice,
                 image: imageUrl,
-                quantity: quantity,
+                quantity: quantity, // quantity is handled by cart
                 category: product.category,
                 discount: product.discount,
                 images: product.images,
