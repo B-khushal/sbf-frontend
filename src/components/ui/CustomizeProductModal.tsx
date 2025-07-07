@@ -306,7 +306,7 @@ export function CustomizeProductModal({
                             <Info className="h-4 w-4 text-yellow-600" />
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>Adding a message card will increase the price by ₹{product.customizationOptions.messageCardPrice}.</p>
+                            <p>Add a personalized message card to your order</p>
                           </TooltipContent>
                         </Tooltip>
                       </CardTitle>
@@ -341,7 +341,7 @@ export function CustomizeProductModal({
                             <Info className="h-4 w-4 text-pink-600" />
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>Each flower add-on will increase the price by ₹{flower.price} per unit.</p>
+                            <p>Select additional flowers to enhance your arrangement</p>
                           </TooltipContent>
                         </Tooltip>
                       </CardTitle>
@@ -442,7 +442,7 @@ export function CustomizeProductModal({
                             <Info className="h-4 w-4 text-orange-600" />
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>Each chocolate add-on will increase the price by ₹{chocolate.price} per unit.</p>
+                            <p>Add delicious chocolates and treats to your order</p>
                           </TooltipContent>
                         </Tooltip>
                       </CardTitle>
