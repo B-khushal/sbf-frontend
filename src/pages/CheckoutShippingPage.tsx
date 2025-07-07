@@ -883,28 +883,56 @@ const CheckoutShippingPage = () => {
                       {/* Order Items */}
                       <div className="space-y-3">
                         {items.map((item) => (
-                          <div key={item._id} className="flex items-center space-x-3">
-                            <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden">
-                              <img 
-                                src={item.images && item.images.length > 0 ? item.images[0] : '/api/placeholder/64/64'} 
-                                alt={item.title}
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  e.currentTarget.src = '/api/placeholder/64/64';
-                                }}
-                              />
+                          <div key={item._id} className="space-y-2">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden">
+                                <img 
+                                  src={item.images && item.images.length > 0 ? item.images[0] : '/api/placeholder/64/64'} 
+                                  alt={item.title}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    e.currentTarget.src = '/api/placeholder/64/64';
+                                  }}
+                                />
+                              </div>
+                              <div className="flex-1">
+                                <h4 className="text-sm font-medium text-gray-900 line-clamp-1">
+                                  {item.title}
+                                </h4>
+                                <p className="text-sm text-gray-600">
+                                  Qty: {item.quantity}
+                                </p>
+                              </div>
+                              <div className="text-sm font-medium">
+                                {formatPrice(convertPrice(item.price * item.quantity))}
+                              </div>
                             </div>
-                            <div className="flex-1">
-                              <h4 className="text-sm font-medium text-gray-900 line-clamp-1">
-                                {item.title}
-                              </h4>
-                              <p className="text-sm text-gray-600">
-                                Qty: {item.quantity}
-                              </p>
-                            </div>
-                            <div className="text-sm font-medium">
-                              {formatPrice(convertPrice(item.price * item.quantity))}
-                            </div>
+                            
+                            {/* Customization Details */}
+                            {item.customizations && (
+                              <div className="ml-15 pl-3 border-l-2 border-purple-200 space-y-1">
+                                {item.customizations.number && (
+                                  <div className="text-xs text-gray-600">
+                                    Number: {item.customizations.number}
+                                  </div>
+                                )}
+                                {item.customizations.messageCard && (
+                                  <div className="text-xs text-gray-600">
+                                    Message: "{item.customizations.messageCard}"
+                                  </div>
+                                )}
+                                {item.customizations.selectedFlowers && item.customizations.selectedFlowers.length > 0 && (
+                                  <div className="text-xs text-pink-600">
+                                    🌸 {item.customizations.selectedFlowers.map((f: any) => `${f.name}${(f.quantity || 1) > 1 ? `×${f.quantity || 1}` : ''}`).join(', ')}
+                                  </div>
+                                )}
+                                {item.customizations.selectedChocolates && item.customizations.selectedChocolates.length > 0 && (
+                                  <div className="text-xs text-orange-600">
+                                    🍫 {item.customizations.selectedChocolates.map((c: any) => `${c.name}${(c.quantity || 1) > 1 ? `×${c.quantity || 1}` : ''}`).join(', ')}
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
