@@ -191,8 +191,8 @@ export function CustomizeProductModal({
               <X className="h-5 w-5" />
             </Button>
           </DialogHeader>
-          <div className="pt-[56px] pb-[80px] px-3 md:pt-0 md:pb-0 md:px-6 flex flex-col gap-3 md:flex-row md:gap-6">
-            <div className="flex-1 md:pr-6 overflow-y-auto">
+          <div className="pt-[56px] pb-0 px-3 md:pt-0 md:pb-0 md:px-6 flex flex-col gap-3 md:flex-row md:gap-6">
+            <div className="flex-1 md:pr-6 overflow-y-auto overflow-x-hidden pb-[90px]">
               <img src={product.images[0]} alt="Preview" className="w-24 h-24 mx-auto rounded mb-2 object-cover border border-gray-100" />
               <div className="space-y-3">
                 {/* 📸 Photo Upload Section */}
