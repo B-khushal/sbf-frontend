@@ -5,6 +5,8 @@ import { useInView } from "react-intersection-observer";
 import { Trash2, ShoppingBag, RefreshCw, Heart, Sparkles, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import useCart from "@/hooks/use-cart";
+import useWishlist from "@/hooks/use-wishlist";
+import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 
 interface WishlistItem {
@@ -41,8 +43,8 @@ const itemVariants = {
 const WishlistPage = () => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
-  const [items, setItems] = useState<WishlistItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { items, removeItem, isLoading, refreshWishlist } = useWishlist();
+  const { user } = useAuth();
   const { toast } = useToast();
 
   // Intersection observer for animations
@@ -51,130 +53,139 @@ const WishlistPage = () => {
     threshold: 0.2
   });
 
-  // Load wishlist items directly from localStorage
-  const loadWishlist = () => {
-    setIsLoading(true);
+  // Check if user is authenticated
+  useEffect(() => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to view your wishlist",
+        variant: "destructive",
+        duration: 4000,
+      });
+      navigate('/login', { 
+        state: { 
+          redirect: '/wishlist',
+          message: "Please login to view your wishlist"
+        } 
+      });
+    }
+  }, [user, navigate, toast]);
+
+  // Move item to cart and remove from wishlist
+  const moveToCart = async (item: WishlistItem) => {
+    if (!user) {
+      toast({
+        title: "Please log in",
+        description: "You need to be logged in to add items to cart",
+        variant: "destructive",
+        duration: 4000,
+      });
+      return;
+    }
+
     try {
-      let wishlist = [];
-      const wishlistData = localStorage.getItem("wishlist");
+      const cartItem = {
+        _id: item.id,
+        id: item.id,
+        productId: item.id,
+        title: item.title,
+        price: item.price,
+        originalPrice: item.price,
+        image: item.image,
+        quantity: 1,
+        category: '',
+        discount: 0,
+        images: [item.image],
+        description: '',
+        details: [],
+        careInstructions: [],
+        isNewArrival: false,
+        isFeatured: false
+      };
       
-      if (wishlistData && wishlistData !== "null" && wishlistData !== "undefined") {
-        try {
-          const parsed = JSON.parse(wishlistData);
-          if (Array.isArray(parsed)) {
-            // Validate each item has required properties
-            wishlist = parsed.filter(item => 
-              item && 
-              typeof item === 'object' && 
-              item.id && 
-              item.title && 
-              typeof item.price === 'number'
-            );
-          } else {
-            console.error("Wishlist is not an array:", parsed);
-            wishlist = [];
-          }
-        } catch (e) {
-          console.error("Error parsing wishlist:", e);
-          wishlist = [];
-          // Clear corrupted data
-          localStorage.removeItem("wishlist");
-        }
-      }
+      await addToCart(cartItem);
+      await removeItem(item.id);
       
-      setItems(wishlist);
+      toast({
+        title: "Added to Cart! 🛒",
+        description: `${item.title} has been moved to your cart`,
+        duration: 3000,
+      });
     } catch (error) {
-      console.error("Error loading wishlist:", error);
-      setItems([]);
-    } finally {
-      setIsLoading(false);
+      console.error('Error moving item to cart:', error);
+      toast({
+        title: "Error",
+        description: "Failed to move item to cart",
+        variant: "destructive",
+        duration: 3000,
+      });
     }
   };
 
-  useEffect(() => {
-    loadWishlist();
-  }, []);
-
-  // Move item to cart and remove from wishlist
-  const moveToCart = (item: WishlistItem) => {
-    const cartItem = {
-      _id: item.id,
-      id: item.id,
-      productId: item.id,
-      title: item.title,
-      price: item.price,
-      originalPrice: item.price,
-      image: item.image,
-      quantity: 1,
-      category: '',
-      discount: 0,
-      images: [item.image],
-      description: '',
-      details: [],
-      careInstructions: [],
-      isNewArrival: false,
-      isFeatured: false
-    };
-    
-    addToCart(cartItem);
-    
-    removeFromWishlist(item.id);
-    toast({
-      title: "Added to Cart! 🛒",
-      description: `${item.title} has been moved to your cart`,
-      duration: 3000,
-    });
-  };
-
   // Remove item from wishlist
-  const removeFromWishlist = (id: string) => {
-    const newItems = items.filter(item => item.id !== id);
-    setItems(newItems);
-    localStorage.setItem("wishlist", JSON.stringify(newItems));
-    toast({
-      title: "Removed from Wishlist 💔",
-      description: "Item has been removed from your wishlist",
-      duration: 3000,
-    });
+  const removeFromWishlist = async (id: string) => {
+    try {
+      await removeItem(id);
+      toast({
+        title: "Removed from Wishlist 💔",
+        description: "Item has been removed from your wishlist",
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error('Error removing from wishlist:', error);
+      toast({
+        title: "Error",
+        description: "Failed to remove item from wishlist",
+        variant: "destructive",
+        duration: 3000,
+      });
+    }
   };
+
+  // If user is not authenticated, show loading or redirect
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50">
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4" />
+            <p>Redirecting to login...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 rounded-full blur-3xl animate-spin-slow" />
-        <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-gradient-to-tl from-accent/5 via-transparent to-primary/5 rounded-full blur-3xl animate-reverse-spin" />
-        <div className="absolute top-1/4 left-1/4 w-64 sm:w-96 h-64 sm:h-96 bg-gradient-to-r from-secondary/3 to-accent/3 rounded-full blur-2xl animate-pulse" />
-      </div>
-
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50">
       <motion.main 
-        className="relative flex-1 pt-20 sm:pt-24 z-10"
-        initial="hidden"
-        animate="visible"
-        variants={containerVariants}
+        className="pt-20 sm:pt-24"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6 }}
       >
-        {/* Hero Section */}
+        {/* Header Section */}
         <motion.section 
-          variants={itemVariants}
-          className="px-4 sm:px-6 md:px-8 py-8 sm:py-16 md:py-24"
+          className="px-3 sm:px-4 md:px-6 lg:px-8 py-8 sm:py-12"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.8 }}
         >
-          <div className="max-w-7xl mx-auto text-center">
-            <div className="relative">
-              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2 sm:-translate-y-4">
-                <div className="text-2xl sm:text-4xl text-red-400">💖</div>
-              </div>
-              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-black text-gray-800 mb-4 sm:mb-6 pt-6 sm:pt-8 leading-tight">
-                Your <span className="bg-gradient-to-r from-red-400 via-pink-500 to-purple-600 bg-clip-text text-transparent">Wishlist</span>
+          <div className="max-w-4xl mx-auto">
+            <motion.div 
+              className="text-center mb-8 sm:mb-12"
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+            >
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-800 mb-4 sm:mb-6">
+                My Wishlist
               </h1>
-              <div className="absolute top-0 right-1/2 transform translate-x-16 sm:translate-x-32 -translate-y-2 sm:-translate-y-4">
-                <div className="text-2xl sm:text-4xl text-yellow-400">✨</div>
-              </div>
-            </div>
-            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed mb-6 sm:mb-8 px-4">
-              Your collection of favorite floral arrangements
-            </p>
-            
-            {/* Stats Card */}
+              <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
+                Your saved favorites are waiting here. Move them to your cart when you're ready to purchase!
+              </p>
+            </motion.div>
+
             <motion.div 
               className="max-w-sm sm:max-w-md mx-auto bg-white/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-lg border border-white/20"
               whileHover={{ scale: 1.02 }}
@@ -186,7 +197,7 @@ const WishlistPage = () => {
                   <span className="text-base sm:text-lg font-bold text-gray-800">{items.length} item(s) saved</span>
                 </div>
                 <motion.button
-                  onClick={loadWishlist}
+                  onClick={refreshWishlist}
                   disabled={isLoading}
                   className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-primary to-secondary text-white font-medium rounded-xl sm:rounded-2xl hover:shadow-lg transition-all text-sm sm:text-base"
                   whileHover={{ scale: 1.05 }}
@@ -196,15 +207,11 @@ const WishlistPage = () => {
                   <span className="hidden sm:inline">Refresh</span>
                 </motion.button>
               </div>
-              
-
             </motion.div>
           </div>
         </motion.section>
 
         <div className="max-w-5xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 pb-16 sm:pb-20">
-
-
           {isLoading ? (
             <motion.div 
               variants={itemVariants}
@@ -222,7 +229,7 @@ const WishlistPage = () => {
                 <p className="text-base sm:text-lg text-gray-600">Please wait while we fetch your saved items.</p>
               </motion.div>
             </motion.div>
-          ) : !isLoading && items.length === 0 ? (
+          ) : items.length === 0 ? (
             <motion.div 
               variants={itemVariants}
               className="text-center py-12 sm:py-20"

@@ -16,6 +16,7 @@ import useCart, { useCartSelectors } from '@/hooks/use-cart';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useAuth } from '@/hooks/use-auth';
 import { motion, AnimatePresence } from 'framer-motion';
+import useWishlist from '@/hooks/use-wishlist';
 
 interface NavItem {
   href: string;
@@ -88,10 +89,10 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
   const { pathname } = useLocation();
-  const [wishlistCount, setWishlistCount] = useState(0);
   const cartHook = useCart();
   const { itemCount: actualCartCount } = useCartSelectors();
   const { items } = cartHook;
+  const { itemCount: wishlistCount } = useWishlist();
   
   // Debug cart state with detailed logging
   useEffect(() => {
@@ -110,46 +111,6 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-
-  // Get wishlist count directly from localStorage
-  useEffect(() => {
-    const updateWishlistCount = () => {
-      try {
-        const wishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
-        setWishlistCount(Array.isArray(wishlist) ? wishlist.length : 0);
-      } catch (error) {
-        console.error("Error reading wishlist:", error);
-        setWishlistCount(0);
-      }
-    };
-    
-    updateWishlistCount();
-    
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'wishlist') {
-        updateWishlistCount();
-      }
-    };
-    
-    const handleCustomEvent = (e: CustomEvent) => {
-      if (e.detail && typeof e.detail.count === 'number') {
-        setWishlistCount(e.detail.count);
-      } else {
-        updateWishlistCount();
-      }
-    };
-    
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('wishlist-update', handleCustomEvent as EventListener);
-    
-    const interval = setInterval(updateWishlistCount, 2000);
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('wishlist-update', handleCustomEvent as EventListener);
-      clearInterval(interval);
-    };
-  }, []);
 
   // Search suggestions API call
   useEffect(() => {

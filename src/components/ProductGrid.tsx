@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import useCart from "@/hooks/use-cart";
 import { useAuth } from "@/hooks/use-auth";
 import { getImageUrl } from "@/config";
+import useWishlist from '@/hooks/use-wishlist';
 
 export type Product = {
   _id: string;
@@ -92,27 +93,13 @@ const ProductCard = ({ product, onAddToCart }: {
 }) => {
   const { formatPrice, convertPrice } = useCurrency();
   const { addToCart } = useCart();
+  const { addItem: addToWishlist, removeItem: removeFromWishlist, items: wishlistItems } = useWishlist();
   const navigate = useNavigate();
-  const [wishlist, setWishlist] = useState<string[]>([]);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   const { user } = useAuth();
 
-  // Load wishlist from localStorage
-  useEffect(() => {
-    try {
-      const wishlistStr = localStorage.getItem("wishlist");
-      if (wishlistStr) {
-        const wishlistItems = JSON.parse(wishlistStr);
-        if (Array.isArray(wishlistItems)) {
-          setWishlist(wishlistItems.map(item => item.id));
-        }
-      }
-    } catch (error) {
-      console.error("Error loading wishlist:", error);
-    }
-  }, []);
-  
-  const isInWishlist = wishlist.includes(product._id);
+  // Check if product is in wishlist
+  const isInWishlist = wishlistItems.some(item => item.id === product._id);
 
   // Handle main card click - redirect to product details
   const handleCardClick = (e: React.MouseEvent) => {
@@ -167,7 +154,7 @@ const ProductCard = ({ product, onAddToCart }: {
       };
       
       console.log("Adding to cart:", cartItem);
-      addToCartFunction(cartItem, 1);
+      await addToCartFunction(cartItem, 1);
       
       toast.success("🛒 Added to cart!", {
         description: `${product.title} has been added to your cart`,
@@ -183,7 +170,7 @@ const ProductCard = ({ product, onAddToCart }: {
   };
 
   // Handle wishlist toggle
-  const handleWishlistToggle = (e: React.MouseEvent) => {
+  const handleWishlistToggle = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     console.log("Wishlist toggle clicked:", product._id);
@@ -211,42 +198,15 @@ const ProductCard = ({ product, onAddToCart }: {
         title: product.title,
         price: product.price,
         image: product.images?.[0] || '/images/placeholder.svg',
-        category: product.category,
-        dateAdded: new Date().toISOString()
       };
 
-      const currentWishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
-      let updatedWishlist;
-      let message;
-
       if (isInWishlist) {
-        updatedWishlist = currentWishlist.filter((item: any) => item.id !== String(product._id));
-        message = "Removed from wishlist";
-        setWishlist(prev => prev.filter(id => id !== product._id));
+        await removeFromWishlist(String(product._id));
       } else {
-        updatedWishlist = [...currentWishlist, wishlistItem];
-        message = "Added to wishlist";
-        setWishlist(prev => [...prev, product._id]);
+        await addToWishlist(wishlistItem);
       }
-
-      localStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
-      
-      // Dispatch custom event for wishlist updates
-      const event = new CustomEvent('wishlist-update', { 
-        detail: { 
-          count: updatedWishlist.length,
-          action: isInWishlist ? 'remove' : 'add',
-          product: wishlistItem
-        }
-      });
-      window.dispatchEvent(event);
-
-      toast.success(`❤️ ${message}!`, {
-        description: `${product.title} has been ${isInWishlist ? 'removed from' : 'added to'} your wishlist`,
-        duration: 3000,
-      });
     } catch (error) {
-      console.error("Error updating wishlist:", error);
+      console.error("Error toggling wishlist:", error);
       toast.error("Failed to update wishlist", {
         description: "Please try again",
         duration: 3000,

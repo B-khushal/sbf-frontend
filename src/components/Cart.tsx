@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import AuthCheck from './AuthCheck';
 
 type AddonOption = {
   name: string;
@@ -133,85 +134,109 @@ const Cart = ({
         </SheetHeader>
         
         <div className="flex-1 overflow-y-auto py-4 px-6">
-          {!user ? (
-            <div className="h-full flex flex-col items-center justify-center text-center">
-              <ShoppingBag size={48} className="text-gray-300 mb-4" />
-              <h3 className="text-xl font-semibold mb-2 text-gray-900">Please Login</h3>
-              <p className="text-gray-500 mb-8 max-w-xs">
-                You need to be logged in to view and manage your cart items.
-              </p>
-              <Button 
-                onClick={() => {
-                  onClose();
-                  navigate('/login', { state: { redirect: '/cart' } });
-                }}
-                className="bg-gradient-to-r from-primary to-secondary text-white"
-              >
-                Login Now
-              </Button>
-            </div>
-          ) : items.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-center">
-              <ShoppingBag size={48} className="text-gray-300 mb-4" />
-              <h3 className="text-xl font-semibold mb-2 text-gray-900">Your cart is empty</h3>
-              <p className="text-gray-500 mb-8 max-w-xs">
-                Discover our beautiful floral arrangements and add them to your cart.
-              </p>
-              <Button 
-                onClick={onClose}
-                className="bg-gradient-to-r from-primary to-secondary text-white"
-              >
-                Continue Shopping
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {items.map((item) => (
-                <CartItem 
-                  key={item._id} 
-                  item={item} 
-                  onUpdateQuantity={onUpdateQuantity} 
-                  onRemove={() => handleRemoveItem(item._id)} 
-                />
-              ))}
-            </div>
-          )}
-        </div>
-        
-        {items.length > 0 && user && (
-          <SheetFooter className="bg-gray-50 px-6 py-4 border-t">
-            <div className="w-full space-y-4">
-              <div className="flex justify-between items-center text-lg font-semibold">
-                <span>Subtotal</span>
-                <span className="text-primary">{formatPrice(convertPrice(subtotal))}</span>
-              </div>
-              
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="flex items-center gap-2 text-blue-700 text-sm">
-                  <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                  </svg>
-                  <span className="font-medium">Have a promo code?</span>
-                </div>
-                <button 
+          <AuthCheck 
+            action="cart" 
+            fallback={
+              <div className="h-full flex flex-col items-center justify-center text-center">
+                <ShoppingBag size={48} className="text-gray-300 mb-4" />
+                <h3 className="text-xl font-semibold mb-2 text-gray-900">Please Login</h3>
+                <p className="text-gray-500 mb-8 max-w-xs">
+                  You need to be logged in to view and manage your cart items.
+                </p>
+                <Button 
                   onClick={() => {
                     onClose();
-                    navigate('/cart');
+                    navigate('/login', { state: { redirect: '/cart' } });
                   }}
-                  className="text-blue-600 text-xs underline mt-1 hover:text-blue-800 transition-colors"
+                  className="bg-gradient-to-r from-primary to-secondary text-white"
                 >
-                  Go to cart page to apply promo codes
-                </button>
+                  Login Now
+                </Button>
               </div>
-              
-              <Button 
-                className="w-full h-12 bg-gradient-to-r from-primary to-secondary text-white font-medium"
-                onClick={handleCheckout}
-              >
-                Proceed to Checkout
-              </Button>
+            }
+            showPrompt={false}
+          >
+            {items.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-center">
+                <ShoppingBag size={48} className="text-gray-300 mb-4" />
+                <h3 className="text-xl font-semibold mb-2 text-gray-900">Your cart is empty</h3>
+                <p className="text-gray-500 mb-8 max-w-xs">
+                  Add some items to your cart to get started with your shopping.
+                </p>
+                <Button 
+                  onClick={() => {
+                    onClose();
+                    navigate('/shop');
+                  }}
+                  className="bg-gradient-to-r from-primary to-secondary text-white"
+                >
+                  Browse Products
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {items.map((item) => (
+                  <div key={item._id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    <div className="w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+                      <img
+                        src={item.images?.[0] || '/images/placeholder.svg'}
+                        alt={item.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium text-gray-900 truncate">{item.title}</h4>
+                      <p className="text-sm text-gray-500">
+                        {formatPrice(item.price)} × {item.quantity}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onUpdateQuantity(item._id, Math.max(0, (item.quantity || 1) - 1))}
+                        className="w-8 h-8 p-0"
+                      >
+                        -
+                      </Button>
+                      <span className="text-sm font-medium w-8 text-center">{item.quantity}</span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onUpdateQuantity(item._id, (item.quantity || 1) + 1)}
+                        className="w-8 h-8 p-0"
+                      >
+                        +
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveItem(item._id)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <Trash2 size={16} />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </AuthCheck>
+        </div>
+        
+        {user && items.length > 0 && (
+          <div className="border-t border-gray-200 p-6">
+            <div className="flex justify-between items-center mb-4">
+              <span className="text-lg font-semibold">Subtotal:</span>
+              <span className="text-lg font-bold">{formatPrice(subtotal)}</span>
             </div>
-          </SheetFooter>
+            <Button 
+              onClick={handleCheckout}
+              className="w-full bg-gradient-to-r from-primary to-secondary text-white"
+            >
+              Proceed to Checkout
+            </Button>
+          </div>
         )}
       </SheetContent>
     </Sheet>
