@@ -108,6 +108,7 @@ declare global {
     Razorpay: {
       new(options: RazorpayOptions): {
         open: () => void;
+        on: (event: string, handler: (response: any) => void) => void;
       };
     };
   }
@@ -273,6 +274,12 @@ const CheckoutPaymentPage = () => {
       });
 
       const { order_id, amount, currency: orderCurrency } = orderResponse.data;
+      
+      console.log('Razorpay order created:', {
+        order_id,
+        amount,
+        currency: orderCurrency
+      });
 
              // Prepare order data in correct backend format
        const orderData = {
@@ -416,9 +423,38 @@ const CheckoutPaymentPage = () => {
         }
       };
 
-      // Open Razorpay
-      const rzp = new window.Razorpay(options);
-      rzp.open();
+      // Initialize and open Razorpay with error handling
+      try {
+        console.log('🔄 Initializing Razorpay with options:', {
+          ...options,
+          key: options.key ? 'VALID_KEY_PRESENT' : 'MISSING_KEY',
+          amount: options.amount,
+          currency: options.currency,
+          order_id: options.order_id
+        });
+        
+        const rzp = new window.Razorpay(options);
+        
+        // Add error event handler
+        rzp.on('payment.failed', function (response: any) {
+          console.error('💳 Payment failed:', response.error);
+          toast({
+            title: "Payment Failed",
+            description: response.error.description || "Your payment could not be processed. Please try again.",
+            variant: "destructive",
+          });
+        });
+        
+        rzp.open();
+      } catch (rzpError) {
+        console.error('💥 Razorpay initialization error:', rzpError);
+        toast({
+          title: "Payment System Error",
+          description: "Could not initialize payment system. Please try again later.",
+          variant: "destructive",
+        });
+        setIsProcessing(false);
+      }
 
     } catch (error: any) {
       console.error('Payment initiation error:', error);
@@ -570,11 +606,14 @@ const CheckoutPaymentPage = () => {
                   <CardTitle className="text-lg">Promo Code</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <PromoCodeInput
-                    onPromoCodeApplied={handlePromoCodeApplied}
-                    onPromoCodeRemoved={handlePromoCodeRemoved}
-                    appliedPromoCode={appliedPromoCode}
-                  />
+                              <PromoCodeInput
+                                orderAmount={orderTotal}
+                                orderItems={items}
+                                userId={user?._id}
+                                onPromoCodeApplied={handlePromoCodeApplied}
+                                onPromoCodeRemoved={handlePromoCodeRemoved}
+                                appliedPromoCode={appliedPromoCode}
+                              />
                 </CardContent>
               </Card>
             </motion.div>
