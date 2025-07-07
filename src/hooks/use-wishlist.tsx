@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/use-auth';
+import * as wishlistService from '@/services/wishlistService';
 
 export type WishlistItem = {
   id: string;
@@ -11,45 +11,94 @@ export type WishlistItem = {
 
 const useWishlist = () => {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const [items, setItems] = useState<WishlistItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   
-  // Get the storage key based on user ID
-  const getStorageKey = () => {
-    return user ? `wishlist_${user.id}` : 'wishlist_guest';
+  // Check if user is authenticated
+  const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+  
+  // Load wishlist from backend or localStorage
+  const loadWishlist = async () => {
+    setIsLoading(true);
+    
+    try {
+      if (isAuthenticated) {
+        // Load from backend for authenticated users
+        const response = await wishlistService.getWishlist();
+        const transformedItems = response.wishlist.map(item => ({
+          id: item.id,
+          title: item.title,
+          image: item.image,
+          price: item.price
+        }));
+        setItems(transformedItems);
+        
+        // Also save to localStorage as backup
+        localStorage.setItem('wishlist', JSON.stringify(transformedItems));
+      } else {
+        // Load from localStorage for non-authenticated users
+        try {
+          let wishlist = [];
+          const wishlistData = localStorage.getItem("wishlist");
+          
+          if (wishlistData && wishlistData !== "null" && wishlistData !== "undefined") {
+            try {
+              const parsed = JSON.parse(wishlistData);
+              if (Array.isArray(parsed)) {
+                wishlist = parsed.filter(item => 
+                  item && 
+                  typeof item === 'object' && 
+                  item.id && 
+                  item.title && 
+                  typeof item.price === 'number'
+                );
+              }
+            } catch (e) {
+              console.error("Error parsing wishlist:", e);
+              wishlist = [];
+              localStorage.removeItem("wishlist");
+            }
+          }
+          
+          setItems(wishlist);
+        } catch (error) {
+          console.error("Error loading wishlist:", error);
+          setItems([]);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading wishlist:', error);
+      // Fallback to localStorage
+      try {
+        const wishlistData = localStorage.getItem("wishlist");
+        if (wishlistData) {
+          const parsed = JSON.parse(wishlistData);
+          if (Array.isArray(parsed)) {
+            const validItems = parsed.filter(item => 
+              item && 
+              typeof item === 'object' && 
+              item.id && 
+              item.title && 
+              typeof item.price === 'number'
+            );
+            setItems(validItems);
+          }
+        }
+      } catch (fallbackError) {
+        console.error('Error in fallback wishlist loading:', fallbackError);
+        setItems([]);
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
-
-  const [items, setItems] = useState<WishlistItem[]>(() => {
-    try {
-      const savedWishlist = localStorage.getItem(getStorageKey());
-      return savedWishlist ? JSON.parse(savedWishlist) : [];
-    } catch (error) {
-      console.error('Error loading wishlist from localStorage:', error);
-      return [];
-    }
-  });
   
-  // Update localStorage when wishlist changes or user changes
+  // Load wishlist on mount and when authentication status changes
   useEffect(() => {
-    try {
-      localStorage.setItem(getStorageKey(), JSON.stringify(items));
-      console.log('Wishlist saved to localStorage:', items);
-    } catch (error) {
-      console.error('Error saving wishlist to localStorage:', error);
-    }
-  }, [items, user?.id]); // Added user?.id as dependency
+    loadWishlist();
+  }, [isAuthenticated]);
   
-  // Update items when user changes
-  useEffect(() => {
-    try {
-      const savedWishlist = localStorage.getItem(getStorageKey());
-      setItems(savedWishlist ? JSON.parse(savedWishlist) : []);
-    } catch (error) {
-      console.error('Error loading wishlist after user change:', error);
-      setItems([]);
-    }
-  }, [user?.id]); // Re-run when user ID changes
-  
-  const addItem = (item: WishlistItem) => {
+  const addItem = async (item: WishlistItem) => {
     console.log('Adding item to wishlist:', item);
     
     if (!item.id || !item.title || typeof item.price !== 'number') {
@@ -62,56 +111,201 @@ const useWishlist = () => {
       return;
     }
     
-    setItems(prevItems => {
-      // Check if item already exists in wishlist
-      const exists = prevItems.some(existingItem => existingItem.id === item.id);
+    // Check if user is authenticated
+    if (!isAuthenticated) {
+      toast({
+        title: "Please log in",
+        description: "You need to be logged in to add items to wishlist",
+        variant: "destructive",
+        duration: 4000,
+      });
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      if (isAuthenticated) {
+        // Add to backend
+        const response = await wishlistService.addToWishlist(item.id);
+        const transformedItems = response.wishlist.map(wishlistItem => ({
+          id: wishlistItem.id,
+          title: wishlistItem.title,
+          image: wishlistItem.image,
+          price: wishlistItem.price
+        }));
+        setItems(transformedItems);
+        
+        // Also save to localStorage as backup
+        localStorage.setItem('wishlist', JSON.stringify(transformedItems));
+        
+        toast({
+          title: "Added to wishlist",
+          description: "Item has been added to your wishlist",
+        });
+      } else {
+        // Fallback to localStorage for non-authenticated users
+        setItems(prevItems => {
+          const exists = prevItems.some(existingItem => existingItem.id === item.id);
+          
+          if (exists) {
+            toast({
+              title: "Already in wishlist",
+              description: "This item is already in your wishlist",
+            });
+            return prevItems;
+          }
+          
+          const newItems = [...prevItems, item];
+          localStorage.setItem('wishlist', JSON.stringify(newItems));
+          
+          toast({
+            title: "Added to wishlist",
+            description: "Item has been added to your wishlist",
+          });
+          
+          return newItems;
+        });
+      }
+    } catch (error: any) {
+      console.error('Error adding to wishlist:', error);
       
-      if (exists) {
+      if (error.message.includes('already in wishlist')) {
         toast({
           title: "Already in wishlist",
           description: "This item is already in your wishlist",
         });
-        return prevItems;
+      } else if (error.message.includes('log in')) {
+        toast({
+          title: "Please log in",
+          description: "You need to be logged in to add items to wishlist",
+          variant: "destructive",
+          duration: 4000,
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: error.message || "Failed to add to wishlist",
+          variant: "destructive"
+        });
       }
-      
-      // Add the new item
-      toast({
-        title: "Added to wishlist",
-        description: "Item has been added to your wishlist",
-      });
-      return [...prevItems, item];
-    });
+    } finally {
+      setIsLoading(false);
+    }
   };
   
-  const removeItem = (id: string) => {
-    setItems(prevItems => {
-      const newItems = prevItems.filter(item => item.id !== id);
-      
-      if (newItems.length !== prevItems.length) {
+  const removeItem = async (id: string) => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Please log in",
+        description: "You need to be logged in to manage your wishlist",
+        variant: "destructive",
+        duration: 4000,
+      });
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      if (isAuthenticated) {
+        // Remove from backend
+        const response = await wishlistService.removeFromWishlist(id);
+        const transformedItems = response.wishlist.map(wishlistItem => ({
+          id: wishlistItem.id,
+          title: wishlistItem.title,
+          image: wishlistItem.image,
+          price: wishlistItem.price
+        }));
+        setItems(transformedItems);
+        
+        // Also save to localStorage as backup
+        localStorage.setItem('wishlist', JSON.stringify(transformedItems));
+        
         toast({
           title: "Removed from wishlist",
           description: "Item has been removed from your wishlist",
         });
+      } else {
+        // Fallback to localStorage for non-authenticated users
+        setItems(prevItems => {
+          const newItems = prevItems.filter(item => item.id !== id);
+          localStorage.setItem('wishlist', JSON.stringify(newItems));
+          
+          toast({
+            title: "Removed from wishlist",
+            description: "Item has been removed from your wishlist",
+          });
+          
+          return newItems;
+        });
       }
-      
-      return newItems;
-    });
+    } catch (error: any) {
+      console.error('Error removing from wishlist:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to remove from wishlist",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
   
-  const clearWishlist = () => {
-    setItems([]);
-    toast({
-      title: "Wishlist cleared",
-      description: "Your wishlist has been cleared",
-    });
+  const clearWishlist = async () => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Please log in",
+        description: "You need to be logged in to manage your wishlist",
+        variant: "destructive",
+        duration: 4000,
+      });
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      if (isAuthenticated) {
+        // Clear from backend
+        await wishlistService.clearWishlist();
+        setItems([]);
+        localStorage.setItem('wishlist', JSON.stringify([]));
+        
+        toast({
+          title: "Wishlist cleared",
+          description: "Your wishlist has been cleared",
+        });
+      } else {
+        // Fallback to localStorage for non-authenticated users
+        setItems([]);
+        localStorage.setItem('wishlist', JSON.stringify([]));
+        
+        toast({
+          title: "Wishlist cleared",
+          description: "Your wishlist has been cleared",
+        });
+      }
+    } catch (error: any) {
+      console.error('Error clearing wishlist:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to clear wishlist",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   return {
     items,
     itemCount: items.length,
+    isLoading,
     addItem,
     removeItem,
     clearWishlist,
+    loadWishlist
   };
 };
 

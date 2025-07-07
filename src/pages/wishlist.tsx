@@ -5,7 +5,9 @@ import { useInView } from "react-intersection-observer";
 import { Trash2, ShoppingBag, RefreshCw, Heart, Sparkles, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import useCart from "@/hooks/use-cart";
+import useWishlist from "@/hooks/use-wishlist";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 
 interface WishlistItem {
   id: string;
@@ -41,9 +43,9 @@ const itemVariants = {
 const WishlistPage = () => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
-  const [items, setItems] = useState<WishlistItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { items, isLoading, loadWishlist, removeItem } = useWishlist();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   // Intersection observer for animations
   const [contentRef, contentInView] = useInView({
@@ -51,49 +53,10 @@ const WishlistPage = () => {
     threshold: 0.2
   });
 
-  // Load wishlist items directly from localStorage
-  const loadWishlist = () => {
-    setIsLoading(true);
-    try {
-      let wishlist = [];
-      const wishlistData = localStorage.getItem("wishlist");
-      
-      if (wishlistData && wishlistData !== "null" && wishlistData !== "undefined") {
-        try {
-          const parsed = JSON.parse(wishlistData);
-          if (Array.isArray(parsed)) {
-            // Validate each item has required properties
-            wishlist = parsed.filter(item => 
-              item && 
-              typeof item === 'object' && 
-              item.id && 
-              item.title && 
-              typeof item.price === 'number'
-            );
-          } else {
-            console.error("Wishlist is not an array:", parsed);
-            wishlist = [];
-          }
-        } catch (e) {
-          console.error("Error parsing wishlist:", e);
-          wishlist = [];
-          // Clear corrupted data
-          localStorage.removeItem("wishlist");
-        }
-      }
-      
-      setItems(wishlist);
-    } catch (error) {
-      console.error("Error loading wishlist:", error);
-      setItems([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+  // Load wishlist when component mounts or user changes
   useEffect(() => {
     loadWishlist();
-  }, []);
+  }, [user, loadWishlist]);
 
   // Move item to cart and remove from wishlist
   const moveToCart = (item: WishlistItem) => {
@@ -127,15 +90,18 @@ const WishlistPage = () => {
   };
 
   // Remove item from wishlist
-  const removeFromWishlist = (id: string) => {
-    const newItems = items.filter(item => item.id !== id);
-    setItems(newItems);
-    localStorage.setItem("wishlist", JSON.stringify(newItems));
-    toast({
-      title: "Removed from Wishlist 💔",
-      description: "Item has been removed from your wishlist",
-      duration: 3000,
-    });
+  const removeFromWishlist = async (id: string) => {
+    try {
+      await removeItem(id);
+    } catch (error) {
+      console.error("Error removing from wishlist:", error);
+      toast({
+        title: "Error",
+        description: "Failed to remove item from wishlist",
+        variant: "destructive",
+        duration: 3000,
+      });
+    }
   };
 
   return (

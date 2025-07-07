@@ -8,6 +8,7 @@ import { getImageUrl, getProductImageUrl } from '@/config';
 import ContactModal from '@/components/ui/ContactModal';
 import { CustomizeProductModal } from '@/components/ui/CustomizeProductModal';
 import useCart from '@/hooks/use-cart';
+import useWishlist from '@/hooks/use-wishlist';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import productService, { ProductData } from '@/services/productService';
@@ -193,6 +194,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
   const { formatPrice, convertPrice } = useCurrency();
   const { user } = useAuth();
   const { addToCart } = useCart();
+  const { addItem: addToWishlist } = useWishlist();
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [isCustomizeModalOpen, setIsCustomizeModalOpen] = useState(false);
   const [customizations, setCustomizations] = useState<CustomizationData | undefined>();
@@ -244,7 +246,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
     }, 200); // Open modal after scroll
   };
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     // Check authentication first
     if (!user) {
       toast({
@@ -277,7 +279,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
         customizations: customizations
       };
       
-      addToCart(cartItem);
+      await addToCart(cartItem);
       toast({
         title: "Added to cart",
         description: `${quantity} × ${product.title} added to your cart`,
@@ -305,7 +307,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
     }
   };
 
-  const handleAddToWishlist = () => {
+  const handleAddToWishlist = async () => {
     try {
       // Use utility function for consistent image URL construction
       const imageUrl = getImageUrl(product.images?.[0], { bustCache: true });
@@ -320,50 +322,28 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
       
       console.log("Adding to wishlist from ProductDetail:", wishlistItem);
       
-      // Get existing wishlist with error handling
-      let existingWishlist = [];
-      try {
-        const wishlistStr = localStorage.getItem("wishlist");
-        existingWishlist = wishlistStr ? JSON.parse(wishlistStr) : [];
-        if (!Array.isArray(existingWishlist)) {
-          console.error("Wishlist is not an array, resetting");
-          existingWishlist = [];
-        }
-      } catch (error) {
-        console.error("Error parsing wishlist:", error);
-        existingWishlist = [];
-      }
+      // Use the wishlist hook to add item
+      await addToWishlist(wishlistItem);
       
-      // Check if already exists
-      if (existingWishlist.some(item => item.id === String(product._id))) {
-        toast({
-          title: "Already in wishlist",
-          description: "This product is already in your wishlist",
-          duration: 3000,
-        });
-        return;
-      }
-      
-      // Add new item and save directly
-      const updatedWishlist = [...existingWishlist, wishlistItem];
-      localStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
-      
-      // Trigger storage event for Navigation to update count
-      window.dispatchEvent(new Event('storage'));
-      
-      toast({
-        title: "Added to wishlist",
-        description: `${product.title} has been added to your wishlist`,
-        duration: 3000,
-      });
     } catch (error) {
       console.error("Error adding to wishlist:", error);
-      toast({
-        title: "Error",
-        description: "Failed to add to wishlist",
-        variant: "destructive",
-        duration: 3000,
-      });
+      const errorMessage = error instanceof Error ? error.message : 'Failed to add to wishlist';
+      
+      if (errorMessage.includes('log in')) {
+        toast({
+          title: "Please log in",
+          description: "You need to be logged in to add items to wishlist",
+          variant: "destructive",
+          duration: 4000,
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive",
+          duration: 3000,
+        });
+      }
     }
   };
 

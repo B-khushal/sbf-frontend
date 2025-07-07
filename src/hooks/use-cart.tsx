@@ -6,166 +6,313 @@ import {
   migrateOldCartData,
   type CartItem 
 } from '@/utils/cartManager';
+import * as cartService from '@/services/cartService';
 
 interface CartState {
   items: CartItem[];
-  addToCart: (item: CartItem) => void;
-  removeFromCart: (productId: string) => void;
-  removeItem: (itemId: string) => void;
-  updateItemQuantity: (itemId: string, quantity: number) => void;
-  clearCart: () => void;
-  loadCart: (userId?: string) => void;
+  isLoading: boolean;
+  addToCart: (item: CartItem) => Promise<void>;
+  removeFromCart: (productId: string) => Promise<void>;
+  removeItem: (itemId: string) => Promise<void>;
+  updateItemQuantity: (itemId: string, quantity: number) => Promise<void>;
+  clearCart: () => Promise<void>;
+  loadCart: (userId?: string) => Promise<void>;
   saveCart: (cart: CartItem[], userId?: string) => void;
   showContactModal: boolean;
   contactModalProduct: string;
   closeContactModal: () => void;
 }
 
-
-
 export const useCart = create<CartState>((set, get) => ({
   items: [],
+  isLoading: false,
   showContactModal: false,
   contactModalProduct: '',
 
-  addToCart: (item) => {
-    const { items } = get();
-    
+  addToCart: async (item) => {
+    // Check if user is authenticated
+    const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+    if (!isAuthenticated) {
+      throw new Error('Please log in to add items to cart');
+    }
+
     // Validate item has required fields
     if (!item._id || !item.title || typeof item.price !== 'number' || typeof item.quantity !== 'number') {
       console.error('Invalid cart item:', item);
-      return;
+      throw new Error('Invalid cart item');
     }
-    
-    const existingItem = items.find((i) => i._id === item._id);
 
-    let updatedCart;
-    if (existingItem) {
-      updatedCart = items.map((i) =>
-        i._id === item._id
-          ? { ...i, quantity: (i.quantity || 0) + (item.quantity || 1) }
-          : i
-      );
-    } else {
-      updatedCart = [...items, { ...item, quantity: item.quantity || 1 }];
+    set({ isLoading: true });
+    
+    try {
+      // Add to backend
+      const response = await cartService.addToCart(item._id, item.quantity);
+      
+      // Update local state with backend response
+      const transformedItems = response.cart.map(cartItem => ({
+        _id: cartItem._id,
+        id: cartItem._id,
+        productId: cartItem.productId,
+        title: cartItem.title,
+        price: cartItem.price,
+        image: cartItem.images?.[0] || '',
+        images: cartItem.images,
+        quantity: cartItem.quantity,
+        category: cartItem.category,
+        discount: cartItem.discount,
+        description: cartItem.description,
+        careInstructions: [],
+        isNewArrival: false,
+        isFeatured: false
+      }));
+      
+      set({ items: transformedItems });
+      
+      // Also save to localStorage as backup
+      const userId = getCurrentUserId();
+      saveUserCart(transformedItems, userId);
+      
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      throw error;
+    } finally {
+      set({ isLoading: false });
     }
-    set({ items: updatedCart });
-    
-    // Get current user ID for saving
-    const userId = getCurrentUserId();
-    saveUserCart(updatedCart, userId);
   },
 
-  removeFromCart: (productId) => {
-    const updatedCart = get().items.filter((item) => item._id !== productId);
-    set({ items: updatedCart });
+  removeFromCart: async (productId) => {
+    const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+    if (!isAuthenticated) {
+      throw new Error('Please log in to manage your cart');
+    }
+
+    set({ isLoading: true });
     
-    // Get current user ID for saving
-    const userId = getCurrentUserId();
-    saveUserCart(updatedCart, userId);
+    try {
+      const response = await cartService.removeFromCart(productId);
+      
+      const transformedItems = response.cart.map(cartItem => ({
+        _id: cartItem._id,
+        id: cartItem._id,
+        productId: cartItem.productId,
+        title: cartItem.title,
+        price: cartItem.price,
+        image: cartItem.images?.[0] || '',
+        images: cartItem.images,
+        quantity: cartItem.quantity,
+        category: cartItem.category,
+        discount: cartItem.discount,
+        description: cartItem.description,
+        careInstructions: [],
+        isNewArrival: false,
+        isFeatured: false
+      }));
+      
+      set({ items: transformedItems });
+      
+      const userId = getCurrentUserId();
+      saveUserCart(transformedItems, userId);
+      
+    } catch (error) {
+      console.error('Error removing from cart:', error);
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
   },
 
-  removeItem: (itemId) => {
-    const updatedCart = get().items.filter((item) => item._id !== itemId);
-    set({ items: updatedCart });
-    
-    // Get current user ID for saving
-    const userId = getCurrentUserId();
-    saveUserCart(updatedCart, userId);
+  removeItem: async (itemId) => {
+    await get().removeFromCart(itemId);
   },
 
-  updateItemQuantity: (itemId, quantity) => {
+  updateItemQuantity: async (itemId, quantity) => {
+    const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+    if (!isAuthenticated) {
+      throw new Error('Please log in to manage your cart');
+    }
+
     if (quantity <= 0) {
-      get().removeItem(itemId);
+      await get().removeItem(itemId);
       return;
     }
+
+    set({ isLoading: true });
     
-    const { items } = get();
-    const updatedCart = items.map((item) =>
-      item._id === itemId ? { ...item, quantity } : item
-    );
-    set({ items: updatedCart });
-    
-    // Get current user ID for saving
-    const userId = getCurrentUserId();
-    saveUserCart(updatedCart, userId);
+    try {
+      const response = await cartService.updateCartItem(itemId, quantity);
+      
+      const transformedItems = response.cart.map(cartItem => ({
+        _id: cartItem._id,
+        id: cartItem._id,
+        productId: cartItem.productId,
+        title: cartItem.title,
+        price: cartItem.price,
+        image: cartItem.images?.[0] || '',
+        images: cartItem.images,
+        quantity: cartItem.quantity,
+        category: cartItem.category,
+        discount: cartItem.discount,
+        description: cartItem.description,
+        careInstructions: [],
+        isNewArrival: false,
+        isFeatured: false
+      }));
+      
+      set({ items: transformedItems });
+      
+      const userId = getCurrentUserId();
+      saveUserCart(transformedItems, userId);
+      
+    } catch (error) {
+      console.error('Error updating cart item:', error);
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
   },
 
-  clearCart: () => {
-    set({ items: [] });
+  clearCart: async () => {
+    const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+    if (!isAuthenticated) {
+      throw new Error('Please log in to manage your cart');
+    }
+
+    set({ isLoading: true });
     
-    // Get current user ID for saving
-    const userId = getCurrentUserId();
-    saveUserCart([], userId);
+    try {
+      await cartService.clearCart();
+      set({ items: [] });
+      
+      const userId = getCurrentUserId();
+      saveUserCart([], userId);
+      
+    } catch (error) {
+      console.error('Error clearing cart:', error);
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
   },
 
   closeContactModal: () => set({ showContactModal: false, contactModalProduct: '' }),
 
-  loadCart: (userId) => {
-    try {
-      // If no userId provided, try to get from localStorage
-      if (!userId) {
-        userId = getCurrentUserId();
-      }
-      
-      // If still no userId, use generic cart (for non-authenticated users)
-      const cartKey = userId ? `cart_${userId}` : 'cart';
-      const cartData = localStorage.getItem(cartKey);
-      
-      if (cartData) {
-        const parsedCart = JSON.parse(cartData);
-        // Validate cart data structure
-        if (Array.isArray(parsedCart)) {
-          const validItems = parsedCart.filter(item => 
-            item && item._id && item.title && typeof item.price === 'number' && typeof item.quantity === 'number'
-          );
-          set({ items: validItems });
-          console.log(`🛒 Loaded cart for user: ${userId || 'anonymous'}, items: ${validItems.length}`);
+  loadCart: async (userId) => {
+    const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+    
+    if (!isAuthenticated) {
+      // For non-authenticated users, load from localStorage
+      try {
+        if (!userId) {
+          userId = getCurrentUserId();
         }
-      } else if (userId) {
-        // Try to migrate old cart data for authenticated users
-        const migratedItems = migrateOldCartData(userId);
-        if (migratedItems.length > 0) {
-          set({ items: migratedItems });
-          console.log(`🔄 Loaded migrated cart for user: ${userId}, items: ${migratedItems.length}`);
-        } else {
-          // Clear cart if no data found for this user
-          set({ items: [] });
-          console.log(`🧹 Cleared cart for user: ${userId}`);
-        }
-      } else {
-        // For anonymous users, try to load from generic cart
-        const genericCartData = localStorage.getItem('cart');
-        if (genericCartData) {
-          const parsedCart = JSON.parse(genericCartData);
+        
+        const cartKey = userId ? `cart_${userId}` : 'cart';
+        const cartData = localStorage.getItem(cartKey);
+        
+        if (cartData) {
+          const parsedCart = JSON.parse(cartData);
           if (Array.isArray(parsedCart)) {
             const validItems = parsedCart.filter(item => 
               item && item._id && item.title && typeof item.price === 'number' && typeof item.quantity === 'number'
             );
             set({ items: validItems });
-            console.log(`🛒 Loaded generic cart for anonymous user, items: ${validItems.length}`);
+            console.log(`🛒 Loaded cart for user: ${userId || 'anonymous'}, items: ${validItems.length}`);
+          }
+        } else if (userId) {
+          const migratedItems = migrateOldCartData(userId);
+          if (migratedItems.length > 0) {
+            set({ items: migratedItems });
+            console.log(`🔄 Loaded migrated cart for user: ${userId}, items: ${migratedItems.length}`);
+          } else {
+            set({ items: [] });
+            console.log(`🧹 Cleared cart for user: ${userId}`);
           }
         } else {
-          set({ items: [] });
-          console.log(`🧹 Cleared cart for anonymous user`);
+          const genericCartData = localStorage.getItem('cart');
+          if (genericCartData) {
+            const parsedCart = JSON.parse(genericCartData);
+            if (Array.isArray(parsedCart)) {
+              const validItems = parsedCart.filter(item => 
+                item && item._id && item.title && typeof item.price === 'number' && typeof item.quantity === 'number'
+              );
+              set({ items: validItems });
+              console.log(`🛒 Loaded generic cart for anonymous user, items: ${validItems.length}`);
+            }
+          } else {
+            set({ items: [] });
+            console.log(`🧹 Cleared cart for anonymous user`);
+          }
         }
+      } catch (error) {
+        console.error('Error loading cart:', error);
+        const cartKey = userId ? `cart_${userId}` : 'cart';
+        localStorage.removeItem(cartKey);
       }
+      return;
+    }
+
+    // For authenticated users, load from backend
+    set({ isLoading: true });
+    
+    try {
+      const response = await cartService.getCart();
+      
+      const transformedItems = response.cart.map(cartItem => ({
+        _id: cartItem._id,
+        id: cartItem._id,
+        productId: cartItem.productId,
+        title: cartItem.title,
+        price: cartItem.price,
+        image: cartItem.images?.[0] || '',
+        images: cartItem.images,
+        quantity: cartItem.quantity,
+        category: cartItem.category,
+        discount: cartItem.discount,
+        description: cartItem.description,
+        careInstructions: [],
+        isNewArrival: false,
+        isFeatured: false
+      }));
+      
+      set({ items: transformedItems });
+      
+      // Also save to localStorage as backup
+      const currentUserId = getCurrentUserId();
+      saveUserCart(transformedItems, currentUserId);
+      
+      console.log(`🛒 Loaded cart from backend for user: ${currentUserId}, items: ${transformedItems.length}`);
+      
     } catch (error) {
-      console.error('Error loading cart:', error);
-      // Clear invalid cart data
-      const cartKey = userId ? `cart_${userId}` : 'cart';
-      localStorage.removeItem(cartKey);
+      console.error('Error loading cart from backend:', error);
+      // Fallback to localStorage
+      try {
+        const currentUserId = getCurrentUserId();
+        const cartData = localStorage.getItem(`cart_${currentUserId}`);
+        if (cartData) {
+          const parsedCart = JSON.parse(cartData);
+          if (Array.isArray(parsedCart)) {
+            const validItems = parsedCart.filter(item => 
+              item && item._id && item.title && typeof item.price === 'number' && typeof item.quantity === 'number'
+            );
+            set({ items: validItems });
+            console.log(`🛒 Fallback: Loaded cart from localStorage for user: ${currentUserId}, items: ${validItems.length}`);
+          }
+        }
+      } catch (fallbackError) {
+        console.error('Error in fallback cart loading:', fallbackError);
+        set({ items: [] });
+      }
+    } finally {
+      set({ isLoading: false });
     }
   },
 
   saveCart: (cart, userId) => {
     try {
-      // If no userId provided, try to get from localStorage
       if (!userId) {
         userId = getCurrentUserId();
       }
       
-      // If still no userId, use generic cart (for non-authenticated users)
       const cartKey = userId ? `cart_${userId}` : 'cart';
       localStorage.setItem(cartKey, JSON.stringify(cart));
       console.log(`💾 Saved cart for user: ${userId || 'anonymous'}, items: ${cart.length}`);
