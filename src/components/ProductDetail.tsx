@@ -644,10 +644,35 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
             images: product.images,
             customizationOptions: product.customizationOptions
           }}
-          onAddToCart={(customizations) => {
+          onAddToCart={(customizations, customTotalPrice) => {
             setCustomizations(customizations);
             setIsCustomizeModalOpen(false);
-            handleAddToCart();
+            // Use the customTotalPrice for the cart item
+            const cartItem = {
+              _id: product._id,
+              id: product._id,
+              productId: product._id,
+              title: product.title,
+              price: customTotalPrice,
+              originalPrice: originalPrice,
+              image: imageUrl,
+              quantity: quantity,
+              category: product.category,
+              discount: product.discount,
+              images: product.images,
+              description: product.description,
+              details: product.details,
+              careInstructions: product.careInstructions,
+              isNewArrival: product.isNewArrival,
+              isFeatured: product.isFeatured,
+              customizations: customizations
+            };
+            addToCart(cartItem);
+            toast({
+              title: "Added to cart",
+              description: `${quantity} × ${product.title} added to your cart`,
+              duration: 3000,
+            });
           }}
         />
       )}

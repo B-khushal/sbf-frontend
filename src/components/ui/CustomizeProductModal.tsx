@@ -62,7 +62,7 @@ interface CustomizeProductModalProps {
     images: string[];
     customizationOptions: CustomizationOptions;
   };
-  onAddToCart: (customizations: CustomizationData) => void;
+  onAddToCart: (customizations: CustomizationData, totalPrice: number) => void;
 }
 
 export function CustomizeProductModal({
@@ -150,7 +150,7 @@ export function CustomizeProductModal({
   };
 
   const handleSubmit = () => {
-    onAddToCart(customizations);
+    onAddToCart(customizations, totalPrice);
     onClose();
   };
 
