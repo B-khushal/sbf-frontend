@@ -11,6 +11,10 @@ export interface CartItem {
   description?: string;
   quantity: number;
   addedAt: string;
+  careInstructions?: string[];
+  isNewArrival?: boolean;
+  isFeatured?: boolean;
+  customizations?: any;
 }
 
 export interface CartResponse {
@@ -32,9 +36,14 @@ export const getCart = async (): Promise<CartResponse> => {
 };
 
 // Add item to cart
-export const addToCart = async (productId: string, quantity: number = 1): Promise<CartResponse> => {
+export const addToCart = async (
+  productId: string,
+  quantity: number = 1,
+  customizations?: any,
+  customPrice?: number
+): Promise<CartResponse> => {
   try {
-    const response = await api.post('/cart', { productId, quantity });
+    const response = await api.post('/cart', { productId, quantity, customizations, customPrice });
     return response.data;
   } catch (error: any) {
     console.error('Error adding to cart:', error);

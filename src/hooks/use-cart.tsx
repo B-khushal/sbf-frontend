@@ -32,46 +32,59 @@ export const useCart = create<CartState>((set, get) => ({
   addToCart: async (item) => {
     // Check if user is authenticated
     const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
-    if (!isAuthenticated) {
-      throw new Error('Please log in to add items to cart');
-    }
-
-    // Validate item has required fields
     if (!item._id || !item.title || typeof item.price !== 'number' || typeof item.quantity !== 'number') {
       console.error('Invalid cart item:', item);
       throw new Error('Invalid cart item');
     }
-
     set({ isLoading: true });
-    
     try {
-      // Add to backend
-      const response = await cartService.addToCart(item._id, item.quantity);
-      
-      // Update local state with backend response
-      const transformedItems = response.cart.map(cartItem => ({
-        _id: cartItem._id,
-        id: cartItem._id,
-        productId: cartItem.productId,
-        title: cartItem.title,
-        price: cartItem.price,
-        image: cartItem.images?.[0] || '',
-        images: cartItem.images,
-        quantity: cartItem.quantity,
-        category: cartItem.category,
-        discount: cartItem.discount,
-        description: cartItem.description,
-        careInstructions: [],
-        isNewArrival: false,
-        isFeatured: false
-      }));
-      
-      set({ items: transformedItems });
-      
-      // Also save to localStorage as backup
-      const userId = getCurrentUserId();
-      saveUserCart(transformedItems, userId);
-      
+      if (isAuthenticated) {
+        // Add to backend with customizations and custom price
+        const response = await cartService.addToCart(
+          item._id,
+          item.quantity,
+          item.customizations,
+          item.price // customPrice
+        );
+        // Update local state with backend response
+        const transformedItems = response.cart.map(cartItem => ({
+          _id: cartItem._id,
+          id: cartItem._id,
+          productId: cartItem.productId,
+          title: cartItem.title,
+          price: cartItem.price,
+          image: cartItem.images?.[0] || '',
+          images: cartItem.images,
+          quantity: cartItem.quantity,
+          category: cartItem.category,
+          discount: cartItem.discount,
+          description: cartItem.description,
+          careInstructions: cartItem.careInstructions ?? [],
+          isNewArrival: cartItem.isNewArrival ?? false,
+          isFeatured: cartItem.isFeatured ?? false,
+          customizations: cartItem.customizations ?? undefined,
+        }));
+        set({ items: transformedItems });
+        const userId = getCurrentUserId();
+        saveUserCart(transformedItems, userId);
+      } else {
+        // Guest: Add to local cart
+        const currentItems = get().items;
+        // If same product+customizations exists, increase quantity
+        const matchIndex = currentItems.findIndex(
+          i => i._id === item._id && JSON.stringify(i.customizations) === JSON.stringify(item.customizations)
+        );
+        let newItems;
+        if (matchIndex > -1) {
+          newItems = [...currentItems];
+          newItems[matchIndex].quantity += item.quantity;
+        } else {
+          newItems = [...currentItems, item];
+        }
+        set({ items: newItems });
+        const userId = getCurrentUserId();
+        saveUserCart(newItems, userId);
+      }
     } catch (error) {
       console.error('Error adding to cart:', error);
       throw error;
@@ -269,9 +282,10 @@ export const useCart = create<CartState>((set, get) => ({
         category: cartItem.category,
         discount: cartItem.discount,
         description: cartItem.description,
-        careInstructions: [],
-        isNewArrival: false,
-        isFeatured: false
+        careInstructions: cartItem.careInstructions ?? [],
+        isNewArrival: cartItem.isNewArrival ?? false,
+        isFeatured: cartItem.isFeatured ?? false,
+        customizations: cartItem.customizations ?? undefined,
       }));
       
       set({ items: transformedItems });
