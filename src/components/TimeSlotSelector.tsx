@@ -208,47 +208,46 @@ const TimeSlotSelector = ({
   };
   
   return (
-    <div className={cn("space-y-5", className)}>
-      {/* Date Selection */}
-      <div className="space-y-3">
-        <div className="font-medium flex items-center gap-2">
-          <CalendarIcon size={18} />
-          <span>Select Delivery Date</span>
+    <div className={cn('space-y-4', className)}>
+      {/* Delivery Date Picker as Popover */}
+      <div>
+        <div className="flex items-center gap-2 mb-2">
+          <CalendarIcon className="h-5 w-5 text-primary" />
+          <span className="font-medium text-base">Select Delivery Date</span>
         </div>
         <Popover.Root open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
           <Popover.Trigger asChild>
             <Button
-              type="button"
               variant="outline"
-              className={cn(
-                "w-full sm:w-[280px] justify-start text-left font-normal border-dashed",
-                !date && "text-muted-foreground"
-              )}
+              className="w-full justify-start text-left font-normal py-2 px-4"
+              type="button"
+              onClick={() => setIsCalendarOpen((open) => !open)}
             >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {formatDisplayDate(date)}
+              {date && isValid(date) ? (
+                <span>{formatDisplayDate(date)}</span>
+              ) : (
+                <span className="text-muted-foreground">Pick a delivery date</span>
+              )}
             </Button>
           </Popover.Trigger>
-          <Popover.Content side="bottom" align="start" className="w-auto min-w-[320px] p-0 z-50 bg-white rounded-xl shadow-xl border">
+          <Popover.Content side="bottom" align="start" className="z-50 bg-white rounded-lg shadow-lg p-2 mt-2">
             <Calendar
               mode="single"
               selected={date || undefined}
               onSelect={handleDateSelect}
-              disabled={(date) => isBefore(date, today) || isBefore(maxDate, date)}
-              className={cn("p-3 pointer-events-auto")}
+              fromDate={today}
+              toDate={maxDate}
+              initialFocus
             />
           </Popover.Content>
         </Popover.Root>
-        <p className="text-sm text-muted-foreground">
-          Select a delivery date within the next 30 days
-        </p>
       </div>
       
-      {/* Time Slot Selection */}
-      <div className="space-y-3">
-        <div className="font-medium flex items-center gap-2">
-          <Clock size={18} />
-          <span>Select Delivery Time</span>
+      {/* Delivery Time Slots */}
+      <div>
+        <div className="flex items-center gap-2 mb-2">
+          <Clock className="h-5 w-5 text-primary" />
+          <span className="font-medium text-base">Select Delivery Time</span>
         </div>
         
         {date && isValid(date) && (() => {
