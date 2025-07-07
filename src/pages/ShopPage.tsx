@@ -195,7 +195,10 @@ const ShopPage = () => {
       try {
         setIsLoading(true);
         const productsResponse = await api.get("/products");
-        setProducts(productsResponse.data.products || []);
+        const allProducts = productsResponse.data.products || [];
+        console.log('📦 Total products received from API:', allProducts.length);
+        console.log('📋 Products:', allProducts.map(p => ({ title: p.title, hidden: p.hidden, discount: p.discount })));
+        setProducts(allProducts);
 
         // Collect both primary categories and additional categories
         const allCategories = new Set();
@@ -324,6 +327,8 @@ const ShopPage = () => {
       }
     });
 
+    console.log('🔍 Filtered products count:', filtered.length);
+    console.log('🔍 Filtered products:', filtered.map(p => ({ title: p.title, hidden: p.hidden, discount: p.discount })));
     setFilteredProducts(filtered);
   }, [products, selectedCategory, priceRange, sortBy, currency, searchQuery]);
 

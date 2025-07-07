@@ -77,10 +77,15 @@ const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCar
           <p className="text-muted-foreground text-sm sm:text-base lg:text-lg text-center">No products available at the moment.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 sm:gap-5 md:gap-6 lg:gap-7 xl:gap-9">
-          {products.map((product) => (
-            <ProductCard key={product._id} product={product} onAddToCart={onAddToCart} />
-          ))}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 sm:gap-5 md:gap-6 lg:gap-7 xl:gap-9 min-h-0 overflow-visible" style={{ gridTemplateRows: 'auto' }}>
+          {products.map((product, index) => {
+            console.log(`Rendering product ${index + 1}:`, product.title, product._id);
+            return <ProductCard key={product._id} product={product} onAddToCart={onAddToCart} />;
+          })}
+        </div>
+        {/* Debug info - remove after testing */}
+        <div className="text-center mt-4 text-sm text-gray-500">
+          Showing {products.length} products
         </div>
       )}
     </section>
