@@ -57,12 +57,9 @@ const CartPage: React.FC = () => {
     threshold: 0.2
   });
   
-  // Calculate subtotal with proper discount application
+  // Calculate subtotal using item.price (which is already the custom price if present)
   const subtotal = items.reduce((total, item) => {
-    const discountedPrice = item.discount && item.discount > 0 
-      ? item.price - (item.price * item.discount / 100)
-      : item.price;
-    return total + (discountedPrice || 0) * (item.quantity || 0);
+    return total + (item.price || 0) * (item.quantity || 0);
   }, 0);
 
   // Load cart data when component mounts or user changes
@@ -232,11 +229,9 @@ const CartPage: React.FC = () => {
                           ? item.images[0]
                           : '/api/placeholder/64/64';
 
-                        // Calculate discounted price
-                        const discountedPrice = item.discount && item.discount > 0
-                          ? Math.round(item.price - (item.price * item.discount / 100))
-                          : item.price;
-                        const originalPrice = item.price;
+                        // Use item.price directly (already custom price if present)
+                        const displayPrice = item.price;
+                        const originalPrice = item.originalPrice || item.price;
 
                         return (
                           <motion.div
@@ -270,7 +265,7 @@ const CartPage: React.FC = () => {
                                     </span>
                                   )}
                                   <span className="text-base sm:text-lg font-bold text-primary">
-                                    {formatPrice(convertPrice(discountedPrice))}
+                                    {formatPrice(convertPrice(displayPrice))}
                                   </span>
                                 </div>
                                 
@@ -304,9 +299,7 @@ const CartPage: React.FC = () => {
                               {/* Price and Remove */}
                               <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2 sm:gap-3">
                                 <div className="text-lg sm:text-xl font-black text-gray-800">
-                                  {formatPrice(convertPrice(((item.discount && item.discount > 0 
-                                    ? item.price - (item.price * item.discount / 100)
-                                    : item.price) || 0) * (item.quantity || 0)))}
+                                  {formatPrice(convertPrice((displayPrice || 0) * (item.quantity || 0)))}
                                 </div>
                                 <motion.button
                                   onClick={() => handleRemoveItem(item._id)}
