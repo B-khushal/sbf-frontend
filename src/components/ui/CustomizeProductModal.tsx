@@ -184,7 +184,7 @@ export function CustomizeProductModal({
   return (
     <TooltipProvider>
       <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="w-full max-w-full rounded-none bg-white shadow-none p-0 sm:rounded-lg sm:max-w-2xl md:max-w-6xl lg:max-w-7xl">
+        <DialogContent className="w-full max-w-full rounded-none bg-white shadow-none p-0 sm:rounded-lg sm:max-w-2xl md:max-w-4xl">
           <DialogHeader className="fixed top-0 left-0 w-full z-20 bg-white px-4 py-3 border-b flex justify-between items-center md:static md:rounded-t-lg md:shadow md:px-6 md:py-4">
             <span className="text-lg font-semibold text-gray-900 truncate">Customize {product.title}</span>
             <Button variant="ghost" size="icon" onClick={onClose} className="h-10 w-10">
@@ -192,9 +192,8 @@ export function CustomizeProductModal({
             </Button>
           </DialogHeader>
           <div className="pt-[56px] pb-0 px-3 md:pt-0 md:pb-0 md:px-6 flex flex-col gap-3 md:flex-row md:gap-6">
-            {/* Main Content Area */}
             <div className="flex-1 md:pr-6 overflow-y-auto overflow-x-hidden pb-6">
-              <img src={product.images[0]} alt="Preview" className="w-24 h-24 mx-auto rounded mb-2 object-cover border border-gray-100 md:hidden" />
+              <img src={product.images[0]} alt="Preview" className="w-24 h-24 mx-auto rounded mb-2 object-cover border border-gray-100" />
               <div className="space-y-3">
                 {/* 📸 Photo Upload Section */}
                 {product.customizationOptions.allowPhotoUpload && (
@@ -519,166 +518,46 @@ export function CustomizeProductModal({
                   </Card>
                 )}
               </div>
-            </div>
-
-            {/* Desktop Preview & Price Summary Sidebar */}
-            <div className="hidden md:block w-80 lg:w-96 flex-shrink-0">
-              <div className="sticky top-6 space-y-6">
-                {/* Product Preview */}
-                <Card className="border-2 border-gray-200 bg-gray-50/50 rounded-lg">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2 text-gray-800 text-lg font-semibold">
-                      <Wand2 className="h-5 w-5 text-purple-600" />
-                      Product Preview
+              <div className="block md:hidden mt-4">
+                <Card className="border-2 border-purple-200 bg-purple-50/50 mb-3">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center gap-2 text-purple-800 text-base font-medium">
+                      <IndianRupee className="h-5 w-5" /> Price Summary
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="relative">
-                      <img
-                        src={product.images[0]}
-                        alt={product.title}
-                        className="w-full h-64 lg:h-80 object-cover rounded-lg border-2 border-gray-200 shadow-sm"
-                      />
-                      {uploadedPhoto && (
-                        <div className="absolute top-2 right-2 bg-white rounded-lg p-2 shadow-lg border">
-                          <img
-                            src={uploadedPhoto}
-                            alt="Uploaded photo"
-                            className="w-16 h-16 object-cover rounded border-2 border-blue-300"
-                          />
-                          <div className="text-xs text-blue-600 mt-1 text-center">Photo Added</div>
-                        </div>
-                      )}
-                    </div>
-                    <div className="space-y-2">
-                      <h3 className="font-semibold text-gray-900 text-lg">{product.title}</h3>
-                      <div className="flex items-center gap-2">
-                        <span className="text-2xl font-bold text-purple-600">₹{totalPrice}</span>
-                        {totalPrice > product.price && (
-                          <span className="text-sm text-gray-500 line-through">₹{product.price}</span>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Price Summary */}
-                <Card className="border-2 border-purple-200 bg-purple-50/50 rounded-lg">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2 text-purple-800 text-lg font-semibold">
-                      <IndianRupee className="h-5 w-5" />
-                      Price Breakdown
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
+                  <CardContent className="space-y-2 text-sm">
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-700">Base Price:</span>
+                      <span className="text-gray-600">Base Price:</span>
                       <span className="font-medium">₹{product.price}</span>
                     </div>
-                    
                     {customizations.selectedFlowers.length > 0 && (
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-700">Flower Add-ons:</span>
-                          <span className="font-medium text-pink-600">+₹{getAddonTotal(customizations.selectedFlowers)}</span>
-                        </div>
-                        {customizations.selectedFlowers.map((flower, index) => (
-                          <div key={index} className="flex justify-between items-center text-sm text-gray-600 ml-4">
-                            <span>• {flower.name} (×{flower.quantity})</span>
-                            <span>₹{flower.price * flower.quantity}</span>
-                          </div>
-                        ))}
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Flower Add-ons:</span>
+                        <span className="font-medium text-pink-600">+₹{getAddonTotal(customizations.selectedFlowers)}</span>
                       </div>
                     )}
-                    
                     {customizations.selectedChocolates.length > 0 && (
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-700">Chocolate Add-ons:</span>
-                          <span className="font-medium text-orange-600">+₹{getAddonTotal(customizations.selectedChocolates)}</span>
-                        </div>
-                        {customizations.selectedChocolates.map((chocolate, index) => (
-                          <div key={index} className="flex justify-between items-center text-sm text-gray-600 ml-4">
-                            <span>• {chocolate.name} (×{chocolate.quantity})</span>
-                            <span>₹{chocolate.price * chocolate.quantity}</span>
-                          </div>
-                        ))}
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Chocolate Add-ons:</span>
+                        <span className="font-medium text-orange-600">+₹{getAddonTotal(customizations.selectedChocolates)}</span>
                       </div>
                     )}
-                    
                     {customizations.messageCard && (
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-700">Message Card:</span>
+                        <span className="text-gray-600">Message Card:</span>
                         <span className="font-medium text-yellow-600">+₹{product.customizationOptions.messageCardPrice}</span>
                       </div>
                     )}
-                    
                     <Separator />
-                    
-                    <div className="flex justify-between items-center text-xl font-bold text-purple-800">
+                    <div className="flex justify-between items-center text-lg font-bold text-purple-800">
                       <span>Total Price:</span>
                       <span>₹{totalPrice}</span>
                     </div>
-                    
-                    {totalPrice > product.price && (
-                      <div className="text-sm text-green-600 text-center bg-green-50 rounded-lg p-2">
-                        +₹{totalPrice - product.price} in customizations
-                      </div>
-                    )}
                   </CardContent>
                 </Card>
-
-                {/* Add to Cart Button */}
-                <Button 
-                  onClick={handleSubmit} 
-                  className="h-14 w-full rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white text-lg font-semibold hover:from-purple-700 hover:to-pink-700 shadow-lg"
-                >
-                  <ShoppingCart className="h-5 w-5 mr-2" />
-                  Add to Cart - ₹{totalPrice}
-                </Button>
+                <Button onClick={handleSubmit} className="h-12 rounded bg-primary text-white w-full text-base font-semibold">Add to Cart</Button>
               </div>
             </div>
-          </div>
-
-          {/* Mobile Price Summary and Button */}
-          <div className="block md:hidden mt-4">
-            <Card className="border-2 border-purple-200 bg-purple-50/50 mb-3">
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-purple-800 text-base font-medium">
-                  <IndianRupee className="h-5 w-5" /> Price Summary
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Base Price:</span>
-                  <span className="font-medium">₹{product.price}</span>
-                </div>
-                {customizations.selectedFlowers.length > 0 && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Flower Add-ons:</span>
-                    <span className="font-medium text-pink-600">+₹{getAddonTotal(customizations.selectedFlowers)}</span>
-                  </div>
-                )}
-                {customizations.selectedChocolates.length > 0 && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Chocolate Add-ons:</span>
-                    <span className="font-medium text-orange-600">+₹{getAddonTotal(customizations.selectedChocolates)}</span>
-                  </div>
-                )}
-                {customizations.messageCard && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Message Card:</span>
-                    <span className="font-medium text-yellow-600">+₹{product.customizationOptions.messageCardPrice}</span>
-                  </div>
-                )}
-                <Separator />
-                <div className="flex justify-between items-center text-lg font-bold text-purple-800">
-                  <span>Total Price:</span>
-                  <span>₹{totalPrice}</span>
-                </div>
-              </CardContent>
-            </Card>
-            <Button onClick={handleSubmit} className="h-12 rounded bg-primary text-white w-full text-base font-semibold">Add to Cart</Button>
           </div>
         </DialogContent>
       </Dialog>
