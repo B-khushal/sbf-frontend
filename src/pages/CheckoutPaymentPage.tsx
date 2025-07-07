@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import api from '@/services/api';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useNotification } from '@/contexts/NotificationContext';
+import { useAuth } from '@/hooks/use-auth';
 import PromoCodeInput from '@/components/PromoCodeInput';
 import type { PromoCodeValidationResult } from '@/services/promoCodeService';
 import { RAZORPAY_CONFIG } from '@/config/razorpay';
@@ -148,6 +149,7 @@ const CheckoutPaymentPage = () => {
   const { toast } = useToast();
   const { formatPrice, convertPrice, currency, rate } = useCurrency();
   const { addNotification } = useNotification();
+  const { user } = useAuth();
   
   const [isRazorpayLoaded, setIsRazorpayLoaded] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -273,7 +275,11 @@ const CheckoutPaymentPage = () => {
         receipt: `order_${Date.now()}`
       });
 
-      const { order_id, amount, currency: orderCurrency } = orderResponse.data;
+            const { order_id, amount, currency: orderCurrency, key } = orderResponse.data;
+      
+      if (!order_id || !amount || !orderCurrency) {
+        throw new Error('Invalid order response from server');
+      }
       
       console.log('Razorpay order created:', {
         order_id,
@@ -327,7 +333,7 @@ const CheckoutPaymentPage = () => {
 
       // Configure Razorpay options
       const options: RazorpayOptions = {
-        key: RAZORPAY_CONFIG.keyId,
+        key: key || RAZORPAY_CONFIG.keyId, // Use server-provided key or fallback
         amount: amount,
         currency: orderCurrency,
         name: "Spring Blossoms Florist",
@@ -609,7 +615,7 @@ const CheckoutPaymentPage = () => {
                               <PromoCodeInput
                                 orderAmount={orderTotal}
                                 orderItems={items}
-                                userId={user?._id}
+                                userId={user?.id}
                                 onPromoCodeApplied={handlePromoCodeApplied}
                                 onPromoCodeRemoved={handlePromoCodeRemoved}
                                 appliedPromoCode={appliedPromoCode}
