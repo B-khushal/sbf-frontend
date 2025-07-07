@@ -31,22 +31,11 @@ export const useCart = create<CartState>((set, get) => ({
   addToCart: (item) => {
     const { items } = get();
     
-    // Debug logging
-    console.log('🛒 Adding item to cart:', item);
-    
     // Validate item has required fields
-    if (!item._id || !item.title || typeof item.price !== 'number') {
-      console.error('❌ Invalid cart item - missing required fields:', {
-        hasId: !!item._id,
-        hasTitle: !!item.title,
-        priceType: typeof item.price,
-        item
-      });
+    if (!item._id || !item.title || typeof item.price !== 'number' || typeof item.quantity !== 'number') {
+      console.error('Invalid cart item:', item);
       return;
     }
-    
-    // Ensure quantity is a number
-    const quantity = typeof item.quantity === 'number' ? item.quantity : 1;
     
     const existingItem = items.find((i) => i._id === item._id);
 
@@ -54,19 +43,16 @@ export const useCart = create<CartState>((set, get) => ({
     if (existingItem) {
       updatedCart = items.map((i) =>
         i._id === item._id
-          ? { ...i, quantity: (i.quantity || 0) + quantity }
+          ? { ...i, quantity: (i.quantity || 0) + (item.quantity || 1) }
           : i
       );
     } else {
-      updatedCart = [...items, { ...item, quantity }];
+      updatedCart = [...items, { ...item, quantity: item.quantity || 1 }];
     }
-    
-    console.log('🛒 Updated cart:', updatedCart);
     set({ items: updatedCart });
     
     // Get current user ID for saving
     const userId = getCurrentUserId();
-    console.log('🛒 Saving cart for user:', userId);
     saveUserCart(updatedCart, userId);
   },
 
