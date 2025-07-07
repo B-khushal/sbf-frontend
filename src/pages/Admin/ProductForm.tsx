@@ -726,7 +726,14 @@ const ProductForm = () => {
         } : undefined
       };
       
+      console.log('🎨 Frontend - Sending customization data:', {
+        isCustomizable: productData.isCustomizable,
+        customizationOptions: productData.customizationOptions,
+        formDataCustomization: formData.customizationOptions
+      });
+      
       if (isEditMode) {
+        console.log('🔄 Updating product with ID:', id);
         await productService.updateProduct(id, productData);
         toast({
           title: "Success",
@@ -734,6 +741,7 @@ const ProductForm = () => {
           variant: "default",
         });
       } else {
+        console.log('🆕 Creating new product');
         await productService.createProduct(productData);
         toast({
           title: "Success",
