@@ -89,6 +89,14 @@ const CATEGORIES = [
   { value: "peaceful-arrangements", label: "Peaceful Arrangements" }
 ];
 
+const COMBO_SUBCATEGORIES = [
+  { value: "cake-combo", label: "Cake Combo" },
+  { value: "flower-combo", label: "Flower Combo" },
+  { value: "chocolate-combo", label: "Chocolate Combo" },
+  { value: "plant-combo", label: "Plant Combo" },
+  { value: "custom-combo", label: "Custom Combo" },
+];
+
 const PRODUCT_DETAILS_OPTIONS = [
   'Freshly sourced',
   'Hand-picked quality',
@@ -176,7 +184,8 @@ const initialFormData: ProductData = {
   // Combo-specific fields
   comboItems: [],
   comboName: '',
-  comboDescription: ''
+  comboDescription: '',
+  comboSubcategory: '', // <-- add this line
 };
 
 const ProductForm = () => {
@@ -730,6 +739,13 @@ const ProductForm = () => {
     }));
   };
 
+  const handleComboSubcategoryChange = (value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      comboSubcategory: value
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const validationErrors = validateForm();
@@ -744,6 +760,7 @@ const ProductForm = () => {
       
       const productData = {
         ...formData,
+        comboSubcategory: formData.comboSubcategory || '', // <-- ensure it's included
         isNewArrival: Boolean(formData.isNewArrival),
         isFeatured: Boolean(formData.isFeatured),
         hidden: Boolean(formData.hidden),
@@ -1228,6 +1245,27 @@ const ProductForm = () => {
                 <p className="text-sm text-red-500">{errors.category}</p>
               )}
             </div>
+            {/* Combo Subcategory Dropdown */}
+            {formData.category === 'combos' && (
+              <div className="space-y-2">
+                <Label htmlFor="comboSubcategory">Combo Subcategory *</Label>
+                <Select
+                  value={formData.comboSubcategory}
+                  onValueChange={handleComboSubcategoryChange}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select combo subcategory" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {COMBO_SUBCATEGORIES.map((subcategory) => (
+                      <SelectItem key={subcategory.value} value={subcategory.value}>
+                        {subcategory.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             {/* Multiple Categories */}
             <div className="space-y-4">
