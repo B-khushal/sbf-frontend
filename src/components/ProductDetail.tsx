@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ShoppingCart, Heart, Share2, Minus, Plus, ChevronLeft, ChevronRight, Star, Eye, ShoppingBag, Wand2 } from 'lucide-react';
+import { ShoppingCart, Heart, Share2, Minus, Plus, ChevronLeft, ChevronRight, Star, Eye, ShoppingBag, Wand2, Accordion, AccordionItem, AccordionTrigger, AccordionContent } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useCurrency } from '@/contexts/CurrencyContext';
@@ -13,6 +13,7 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import productService, { ProductData, ComboItem } from '@/services/productService';
 import ProductReviews from '@/components/ProductReviews';
+import { Gift, ClipboardList, Leaf } from 'lucide-react';
 
 type AddonOption = {
   name: string;
@@ -601,187 +602,133 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
             </div>
 
             {/* Product Details */}
-            <div className="mb-6">
-              <h3 className="text-lg font-medium mb-4 text-blue-700 flex items-center gap-2">
-                📋 Product Details
-              </h3>
-              <div className="space-y-3">
-                {product.details.map((detail, index) => (
-                  <div key={index} className="bg-blue-50 p-3 rounded-lg border-l-4 border-blue-500">
-                    <div className="flex items-start gap-3">
-                      <span className="text-blue-600 text-sm">🔸</span>
-                      <p className="text-blue-800 text-sm font-medium">{detail}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Care Instructions */}
-            {product.careInstructions && product.careInstructions.length > 0 && (
-              <div>
-                <h3 className="text-lg font-medium mb-4 text-green-700 flex items-center gap-2">
-                  🌿 Care Instructions
-                </h3>
-                <div className="space-y-3">
-                  {product.careInstructions.map((instruction, index) => (
-                    <div key={index} className="bg-green-50 p-3 rounded-lg border-l-4 border-green-500">
-                      <div className="flex items-start gap-3">
-                        <span className="text-green-600 text-sm">💡</span>
-                        <p className="text-green-800 text-sm font-medium">{instruction}</p>
+            <Accordion type="multiple" className="w-full" defaultValue={["details"]}>
+              {/* Product Details */}
+              <AccordionItem value="details">
+                <AccordionTrigger>
+                  <ClipboardList className="mr-2 h-5 w-5 text-blue-700" />
+                  Product Details
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-3">
+                    {product.details.map((detail, index) => (
+                      <div key={index} className="bg-blue-50 p-3 rounded-lg border-l-4 border-blue-500">
+                        <div className="flex items-start gap-3">
+                          <span className="text-blue-600 text-sm">🔸</span>
+                          <p className="text-blue-800 text-sm font-medium">{detail}</p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Combo Items */}
-            {product.category === "combos" && product.comboItems && product.comboItems.length > 0 && (
-              <div>
-                <h3 className="text-lg font-medium mb-4 text-blue-700 flex items-center gap-2">
-                  🎁 Combo Contents
-                </h3>
-                {product.comboName && (
-                  <div className="mb-3">
-                    <h4 className="font-semibold text-blue-800">{product.comboName}</h4>
-                    {product.comboDescription && (
-                      <p className="text-sm text-blue-600 mt-1">{product.comboDescription}</p>
-                    )}
+                    ))}
                   </div>
-                )}
-                <div className="space-y-4">
-                  {product.comboItems.map((item, index) => (
-                    <div key={index} className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                      <div className="flex items-start gap-4">
-                        {/* Item Image */}
-                        {item.image && (
-                          <div className="flex-shrink-0">
-                            <img
-                              src={item.image}
-                              alt={item.name}
-                              className="w-16 h-16 object-cover rounded-lg border border-blue-300"
-                              onError={(e) => {
-                                e.currentTarget.style.display = 'none';
-                              }}
-                            />
-                          </div>
+                </AccordionContent>
+              </AccordionItem>
+              {/* Combo Contents */}
+              {product.category === "combos" && product.comboItems && product.comboItems.length > 0 && (
+                <AccordionItem value="combo">
+                  <AccordionTrigger>
+                    <Gift className="mr-2 h-5 w-5 text-purple-700" />
+                    Combo Contents
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    {product.comboName && (
+                      <div className="mb-3">
+                        <h4 className="font-semibold text-blue-800">{product.comboName}</h4>
+                        {product.comboDescription && (
+                          <p className="text-sm text-blue-600 mt-1">{product.comboDescription}</p>
                         )}
-                        
-                        {/* Item Details */}
-                        <div className="flex-1">
-                          <h5 className="font-semibold text-blue-800 mb-2">{item.name}</h5>
-                          {item.description && (
-                            <p className="text-sm text-blue-700 mb-3">{item.description}</p>
-                          )}
-                          {/* Variant Selection */}
-                          {item.customizationOptions && item.customizationOptions.allowVariants && item.customizationOptions.variants && item.customizationOptions.variants.length > 0 && (
-                            <div className="mb-2">
-                              <label className="block text-xs font-medium text-blue-700 mb-1">
-                                {item.customizationOptions.variantLabel || 'Variant'}:
-                              </label>
-                              <select
-                                className="border border-blue-300 rounded px-2 py-1 text-sm"
-                                value={selectedVariants[index] || ''}
-                                onChange={e => handleVariantChange(index, e.target.value)}
-                              >
-                                <option value="">Select</option>
-                                {item.customizationOptions.variants.map((variant, vIdx) => (
-                                  <option key={vIdx} value={variant.name}>
-                                    {variant.name} (₹{variant.price})
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-                          )}
-                          {/* Customization Options */}
-                          {item.customizationOptions && (
-                            <div className="space-y-2">
-                              {/* Message Option */}
-                              {item.customizationOptions.allowMessage && (
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">💬 {item.customizationOptions.messageLabel}</span>
-                                </div>
-                              )}
-                              
-                              {/* Color Options */}
-                              {item.customizationOptions.allowColorChoice && item.customizationOptions.colorOptions.length > 0 && (
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">🎨 Colors: {item.customizationOptions.colorOptions.join(', ')}</span>
-                                </div>
-                              )}
-                              
-                              {/* Size Options */}
-                              {item.customizationOptions.allowSizeChoice && item.customizationOptions.sizeOptions.length > 0 && (
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">📏 Sizes: {item.customizationOptions.sizeOptions.join(', ')}</span>
-                                </div>
-                              )}
-                              
-                              {/* Quantity Option */}
-                              {item.customizationOptions.allowQuantity && (
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">🔢 Quantity (max: {item.customizationOptions.maxQuantity})</span>
-                                </div>
-                              )}
-                              
-                              {/* Photo Upload Option */}
-                              {item.customizationOptions.allowPhotoUpload && (
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">📸 Photo Upload</span>
-                                </div>
-                              )}
-                              
-                              {/* Custom Text Option */}
-                              {item.customizationOptions.allowCustomText && (
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">✏️ {item.customizationOptions.customTextLabel}</span>
-                                </div>
-                              )}
-                              
-                              {/* Add-on Options */}
-                              {item.customizationOptions.allowAddons && item.customizationOptions.addonOptions.length > 0 && (
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">➕ Add-ons: {item.customizationOptions.addonOptions.join(', ')}</span>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-                {/* Real-time Combo Price Breakdown */}
-                <div className="mt-6 space-y-2 bg-green-50 border border-green-200 rounded-lg p-4">
-                  <div className="font-semibold text-green-800 flex items-center gap-2">
-                    <span>Combo Pricing Breakdown</span>
-                  </div>
-                  <div className="text-sm">
-                    <div className="flex justify-between">
-                      <span>Base Price:</span>
-                      <span>₹{product.price}</span>
-                    </div>
-                    {product.comboItems.map((item, idx) => {
-                      const variant = item.customizationOptions && item.customizationOptions.allowVariants && item.customizationOptions.variants
-                        ? item.customizationOptions.variants.find(v => v.name === selectedVariants[idx])
-                        : null;
-                      const price = variant ? variant.price : item.price;
-                      return (
-                        <div key={idx} className="flex justify-between">
-                          <span>+ {item.name}{variant ? ` (${variant.name})` : ''}:</span>
-                          <span>₹{price}</span>
+                    )}
+                    <div className="space-y-4">
+                      {product.comboItems.map((item, index) => (
+                        <div key={index} className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                          <div className="flex items-start gap-4">
+                            {item.image && (
+                              <div className="flex-shrink-0">
+                                <img
+                                  src={item.image}
+                                  alt={item.name}
+                                  className="w-16 h-16 object-cover rounded-lg border border-blue-300"
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                  }}
+                                />
+                              </div>
+                            )}
+                            <div className="flex-1">
+                              <h5 className="font-semibold text-blue-800 mb-2">{item.name}</h5>
+                              {item.description && (
+                                <p className="text-sm text-blue-700 mb-3">{item.description}</p>
+                              )}
+                              {/* Customization Options */}
+                              {item.customizationOptions && (
+                                <div className="space-y-2">
+                                  {item.customizationOptions.allowMessage && (
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">💬 {item.customizationOptions.messageLabel}</span>
+                                    </div>
+                                  )}
+                                  {item.customizationOptions.allowColorChoice && item.customizationOptions.colorOptions.length > 0 && (
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">🎨 Colors: {item.customizationOptions.colorOptions.join(', ')}</span>
+                                    </div>
+                                  )}
+                                  {item.customizationOptions.allowSizeChoice && item.customizationOptions.sizeOptions.length > 0 && (
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">📏 Sizes: {item.customizationOptions.sizeOptions.join(', ')}</span>
+                                    </div>
+                                  )}
+                                  {item.customizationOptions.allowQuantity && (
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">🔢 Quantity (max: {item.customizationOptions.maxQuantity})</span>
+                                    </div>
+                                  )}
+                                  {item.customizationOptions.allowPhotoUpload && (
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">📸 Photo Upload</span>
+                                    </div>
+                                  )}
+                                  {item.customizationOptions.allowCustomText && (
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">✏️ {item.customizationOptions.customTextLabel}</span>
+                                    </div>
+                                  )}
+                                  {item.customizationOptions.allowAddons && item.customizationOptions.addonOptions.length > 0 && (
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">➕ Add-ons: {item.customizationOptions.addonOptions.join(', ')}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                      );
-                    })}
-                    <div className="flex justify-between font-bold text-green-700 mt-2">
-                      <span>Total Combo Price:</span>
-                      <span>₹{comboTotalPrice}</span>
+                      ))}
                     </div>
-                  </div>
-                </div>
-              </div>
-            )}
+                  </AccordionContent>
+                </AccordionItem>
+              )}
+              {/* Care Instructions */}
+              {product.careInstructions && product.careInstructions.length > 0 && (
+                <AccordionItem value="care">
+                  <AccordionTrigger>
+                    <Leaf className="mr-2 h-5 w-5 text-green-700" />
+                    Care Instructions
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="space-y-3">
+                      {product.careInstructions.map((instruction, index) => (
+                        <div key={index} className="bg-green-50 p-3 rounded-lg border-l-4 border-green-500">
+                          <div className="flex items-start gap-3">
+                            <span className="text-green-600 text-sm">💡</span>
+                            <p className="text-green-800 text-sm font-medium">{instruction}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              )}
+            </Accordion>
           </div>
         </div>
         
