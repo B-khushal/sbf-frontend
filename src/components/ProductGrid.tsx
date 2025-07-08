@@ -431,15 +431,12 @@ const ProductCard = ({ product, onAddToCart }: {
         {/* Price */}
         <div className="flex items-center gap-1">
           {product.category === 'combos' && product.comboItems && product.comboItems.length > 0 ? (
-            <>
-              <span className={cn(
-                "text-sm font-bold",
-                product.discount > 0 ? "text-red-600" : "text-black"
-              )}>
-                {formatPrice(convertPrice(product.price))}
-              </span>
-              <span className="text-xs text-gray-500 ml-1">– {formatPrice(convertPrice(getComboMaxPrice(product)))}</span>
-            </>
+            <span className={cn(
+              "text-sm font-bold",
+              product.discount > 0 ? "text-red-600" : "text-black"
+            )}>
+              {formatPrice(convertPrice(getComboMaxPrice(product)))}
+            </span>
           ) : (
             <>
               <span className={cn(

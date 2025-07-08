@@ -239,6 +239,21 @@ const AdminProducts: React.FC = () => {
     }
   };
 
+  const getComboMaxPrice = (product: Product) => {
+    if (product.category !== 'combos' || !product.comboItems) return product.price;
+    let total = product.price;
+    product.comboItems.forEach(item => {
+      if (item.customizationOptions && item.customizationOptions.allowVariants && item.customizationOptions.variants && item.customizationOptions.variants.length > 0) {
+        // Use the max variant price
+        const maxVariant = item.customizationOptions.variants.reduce((max, v) => v.price > max ? v.price : max, 0);
+        total += maxVariant;
+      } else {
+        total += item.price;
+      }
+    });
+    return total;
+  };
+
   return (
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-6">
@@ -516,7 +531,11 @@ const AdminProducts: React.FC = () => {
                         </div>
                       </TableCell>
                       <TableCell className={product.discount > 0 ? "text-red-600 font-bold" : "text-black font-bold"}>
-                        {formatPrice(convertPrice(product.price))}
+                        {product.category === 'combos' && product.comboItems && product.comboItems.length > 0 ? (
+                          formatPrice(convertPrice(getComboMaxPrice(product)))
+                        ) : (
+                          formatPrice(convertPrice(product.price))
+                        )}
                       </TableCell>
                       <TableCell>{product.discount ? `${product.discount}%` : "0%"}</TableCell>
                       <TableCell className="font-bold text-primary">{formatPrice(finalPrice)}</TableCell>
