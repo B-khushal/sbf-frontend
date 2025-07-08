@@ -18,39 +18,8 @@ interface HeroSlide {
   order: number;
 }
 
-// Default slides for immediate rendering
-const defaultSlides: HeroSlide[] = [
-  {
-    id: 1,
-    title: "Spring Collection",
-    subtitle: "Freshly picked arrangements to brighten your day",
-    image: "/images/1.jpg",
-    ctaText: "Shop Now",
-    ctaLink: "/shop",
-    enabled: true,
-    order: 0
-  },
-  {
-    id: 2,
-    title: "Signature Bouquets",
-    subtitle: "Handcrafted with love and attention to detail",
-    image: "/images/2.jpg",
-    ctaText: "Shop Now",
-    ctaLink: "/shop",
-    enabled: true,
-    order: 1
-  },
-  {
-    id: 3,
-    title: "Seasonal Specials",
-    subtitle: "Limited edition arrangements for every occasion",
-    image: "/images/3.jpg",
-    ctaText: "Shop Now",
-    ctaLink: "/shop",
-    enabled: true,
-    order: 2
-  }
-];
+// Empty array for slides - will be populated from API
+const defaultSlides: HeroSlide[] = [];
 
 const HomeHero = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -90,7 +59,7 @@ const HomeHero = () => {
         // Fetch from API
         const response = await api.get('/settings/hero-slides');
         const slides = response.data?.filter((slide: HeroSlide) => slide.enabled)
-                                ?.sort((a: HeroSlide, b: HeroSlide) => a.order - b.order) || defaultSlides;
+                                ?.sort((a: HeroSlide, b: HeroSlide) => a.order - b.order) || [];
         
         // Only update if slides are different from current
         if (JSON.stringify(slides) !== JSON.stringify(heroSlides)) {
