@@ -61,6 +61,8 @@ const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCar
     let scrollAmount = 1.2; // px per frame
     let reqId: number;
     let isHovered = false;
+    // Expose a way to set isHovered from outside (arrow click)
+    (container as any)._setIsHovered = (val: boolean) => { isHovered = val; };
 
     const step = () => {
       if (!container) return;
@@ -86,6 +88,7 @@ const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCar
       cancelAnimationFrame(reqId);
       container.removeEventListener('mouseenter', onMouseEnter);
       container.removeEventListener('mouseleave', onMouseLeave);
+      delete (container as any)._setIsHovered;
     };
   }, [horizontal, products.length]);
 
@@ -95,6 +98,10 @@ const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCar
       const container = scrollRef.current;
       const scrollAmount = Math.floor(container.offsetWidth * 0.8);
       container.scrollBy({ left: direction === 'left' ? -scrollAmount : scrollAmount, behavior: 'smooth' });
+      // Pause auto-scroll when arrow is clicked
+      if ((container as any)._setIsHovered) {
+        (container as any)._setIsHovered(true);
+      }
     }
   };
 
