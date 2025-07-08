@@ -47,9 +47,10 @@ type ProductGridProps = {
   className?: string;
   loading?: boolean;
   onAddToCart?: (item: any, quantity: number) => boolean;
+  horizontal?: boolean;
 };
 
-const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCart }: ProductGridProps) => {
+const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCart, horizontal }: ProductGridProps) => {
   return (
     <section className={cn("py-8 sm:py-12 lg:py-16 xl:py-20 px-3 sm:px-4 md:px-6 lg:px-8", className)}>
       {(title || subtitle) && (
@@ -76,6 +77,14 @@ const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCar
         <div className="text-center py-8 sm:py-12 lg:py-16">
           <div className="text-3xl sm:text-4xl lg:text-6xl mb-3 sm:mb-4 text-center">🌸</div>
           <p className="text-muted-foreground text-sm sm:text-base lg:text-lg text-center">No products available at the moment.</p>
+        </div>
+      ) : horizontal ? (
+        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-primary/40 scrollbar-track-transparent">
+          {products.map((product) => (
+            <div className="min-w-[220px] max-w-xs flex-shrink-0" key={product._id}>
+              <ProductCard product={product} onAddToCart={onAddToCart} />
+            </div>
+          ))}
         </div>
       ) : (
         <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 sm:gap-5 md:gap-6 lg:gap-7 xl:gap-9">

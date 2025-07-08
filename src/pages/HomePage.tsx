@@ -251,6 +251,7 @@ const HomePage = () => {
                   subtitle={section.subtitle || "Discover our latest seasonal additions"}
                   loading={loading}
                   onAddToCart={handleAddToCart}
+                  horizontal={true}
                 />
               </motion.section>
             );
