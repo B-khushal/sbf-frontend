@@ -178,6 +178,21 @@ const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCar
   );
 };
 
+const getComboMaxPrice = (product: Product) => {
+  if (product.category !== 'combos' || !product.comboItems) return product.price;
+  let total = product.price;
+  product.comboItems.forEach(item => {
+    if (item.customizationOptions && item.customizationOptions.allowVariants && item.customizationOptions.variants && item.customizationOptions.variants.length > 0) {
+      // Use the max variant price
+      const maxVariant = item.customizationOptions.variants.reduce((max, v) => v.price > max ? v.price : max, 0);
+      total += maxVariant;
+    } else {
+      total += item.price;
+    }
+  });
+  return total;
+};
+
 const ProductCard = ({ product, onAddToCart }: { 
   product: Product; 
   onAddToCart?: (item: any, quantity: number) => boolean;
@@ -415,16 +430,30 @@ const ProductCard = ({ product, onAddToCart }: {
         
         {/* Price */}
         <div className="flex items-center gap-1">
-          <span className={cn(
-            "text-sm font-bold",
-            product.discount > 0 ? "text-red-600" : "text-black"
-          )}>
-            {formatPrice(convertPrice(product.discount ? product.price * (1 - product.discount / 100) : product.price))}
-          </span>
-          {product.discount > 0 && (
-            <span className="text-xs text-gray-500 line-through">
-              {formatPrice(convertPrice(product.price))}
-            </span>
+          {product.category === 'combos' && product.comboItems && product.comboItems.length > 0 ? (
+            <>
+              <span className={cn(
+                "text-sm font-bold",
+                product.discount > 0 ? "text-red-600" : "text-black"
+              )}>
+                {formatPrice(convertPrice(product.price))}
+              </span>
+              <span className="text-xs text-gray-500 ml-1">– {formatPrice(convertPrice(getComboMaxPrice(product)))}</span>
+            </>
+          ) : (
+            <>
+              <span className={cn(
+                "text-sm font-bold",
+                product.discount > 0 ? "text-red-600" : "text-black"
+              )}>
+                {formatPrice(convertPrice(product.discount ? product.price * (1 - product.discount / 100) : product.price))}
+              </span>
+              {product.discount > 0 && (
+                <span className="text-xs text-gray-500 line-through">
+                  {formatPrice(convertPrice(product.price))}
+                </span>
+              )}
+            </>
           )}
         </div>
 
