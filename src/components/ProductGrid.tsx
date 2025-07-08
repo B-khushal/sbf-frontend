@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { Heart, ShoppingBag, Star, ArrowRight, Sparkles, Wand2 } from "lucide-react";
+import { Heart, ShoppingBag, Star, ArrowRight, Sparkles, Wand2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -51,6 +51,51 @@ type ProductGridProps = {
 };
 
 const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCart, horizontal }: ProductGridProps) => {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll logic
+  useEffect(() => {
+    if (!horizontal || !products.length) return;
+    const container = scrollRef.current;
+    if (!container) return;
+    let scrollAmount = 1.2; // px per frame
+    let reqId: number;
+    let isHovered = false;
+
+    const step = () => {
+      if (!container) return;
+      if (!isHovered) {
+        if (container.scrollLeft + container.offsetWidth >= container.scrollWidth - 2) {
+          // Loop back to start
+          container.scrollTo({ left: 0, behavior: 'auto' });
+        } else {
+          container.scrollLeft += scrollAmount;
+        }
+      }
+      reqId = requestAnimationFrame(step);
+    };
+    reqId = requestAnimationFrame(step);
+
+    // Pause on hover
+    const onMouseEnter = () => { isHovered = true; };
+    const onMouseLeave = () => { isHovered = false; };
+    container.addEventListener('mouseenter', onMouseEnter);
+    container.addEventListener('mouseleave', onMouseLeave);
+
+    return () => {
+      cancelAnimationFrame(reqId);
+      container.removeEventListener('mouseenter', onMouseEnter);
+      container.removeEventListener('mouseleave', onMouseLeave);
+    };
+  }, [horizontal, products.length]);
+
+  // Manual scroll
+  const scrollBy = (amount: number) => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: amount, behavior: 'smooth' });
+    }
+  };
+
   return (
     <section className={cn("py-8 sm:py-12 lg:py-16 xl:py-20 px-3 sm:px-4 md:px-6 lg:px-8", className)}>
       {(title || subtitle) && (
@@ -79,12 +124,34 @@ const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCar
           <p className="text-muted-foreground text-sm sm:text-base lg:text-lg text-center">No products available at the moment.</p>
         </div>
       ) : horizontal ? (
-        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-primary/40 scrollbar-track-transparent">
-          {products.map((product) => (
-            <div className="min-w-[220px] max-w-xs flex-shrink-0" key={product._id}>
-              <ProductCard product={product} onAddToCart={onAddToCart} />
-            </div>
-          ))}
+        <div className="relative">
+          <button
+            aria-label="Scroll left"
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-white/80 hover:bg-primary/80 hover:text-white text-primary shadow rounded-full p-2 transition-all duration-200"
+            style={{ display: products.length > 2 ? 'block' : 'none' }}
+            onClick={() => scrollBy(-260)}
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </button>
+          <div
+            ref={scrollRef}
+            className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-primary/40 scrollbar-track-transparent scroll-smooth"
+            style={{ scrollBehavior: 'smooth' }}
+          >
+            {products.map((product) => (
+              <div className="min-w-[220px] max-w-xs flex-shrink-0" key={product._id}>
+                <ProductCard product={product} onAddToCart={onAddToCart} />
+              </div>
+            ))}
+          </div>
+          <button
+            aria-label="Scroll right"
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-white/80 hover:bg-primary/80 hover:text-white text-primary shadow rounded-full p-2 transition-all duration-200"
+            style={{ display: products.length > 2 ? 'block' : 'none' }}
+            onClick={() => scrollBy(260)}
+          >
+            <ChevronRight className="w-6 h-6" />
+          </button>
         </div>
       ) : (
         <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 sm:gap-5 md:gap-6 lg:gap-7 xl:gap-9">
