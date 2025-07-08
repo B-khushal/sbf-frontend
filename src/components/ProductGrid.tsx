@@ -90,9 +90,11 @@ const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCar
   }, [horizontal, products.length]);
 
   // Manual scroll
-  const scrollBy = (amount: number) => {
+  const scrollBy = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
-      scrollRef.current.scrollBy({ left: amount, behavior: 'smooth' });
+      const container = scrollRef.current;
+      const scrollAmount = Math.floor(container.offsetWidth * 0.8);
+      container.scrollBy({ left: direction === 'left' ? -scrollAmount : scrollAmount, behavior: 'smooth' });
     }
   };
 
@@ -129,7 +131,7 @@ const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCar
             aria-label="Scroll left"
             className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-white/80 hover:bg-primary/80 hover:text-white text-primary shadow rounded-full p-2 transition-all duration-200"
             style={{ display: products.length > 2 ? 'block' : 'none' }}
-            onClick={() => scrollBy(-260)}
+            onClick={() => scrollBy('left')}
           >
             <ChevronLeft className="w-6 h-6" />
           </button>
@@ -148,7 +150,7 @@ const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCar
             aria-label="Scroll right"
             className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-white/80 hover:bg-primary/80 hover:text-white text-primary shadow rounded-full p-2 transition-all duration-200"
             style={{ display: products.length > 2 ? 'block' : 'none' }}
-            onClick={() => scrollBy(260)}
+            onClick={() => scrollBy('right')}
           >
             <ChevronRight className="w-6 h-6" />
           </button>
