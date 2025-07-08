@@ -206,7 +206,7 @@ export function CustomizeProductModal({
   const handleConfirm = () => setIsConfirmed(true);
 
   const handleSubmit = () => {
-    onAddToCart(customizations, totalPrice);
+    onAddToCart(customizations, product.category === 'combos' ? comboTotalPrice : totalPrice);
     onClose();
     setIsConfirmed(false); // Reset for next open
   };
@@ -909,7 +909,7 @@ export function CustomizeProductModal({
                     <Separator />
                     <div className="flex justify-between items-center text-lg font-bold text-purple-800">
                       <span>Total Price:</span>
-                      <span>₹{totalPrice}</span>
+                      <span>₹{product.category === 'combos' ? comboTotalPrice : totalPrice}</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -1040,7 +1040,7 @@ export function CustomizeProductModal({
                     <Separator />
                     <div className="flex justify-between text-base font-bold text-primary">
                       <span>Total</span>
-                      <span>₹{totalPrice}</span>
+                      <span>₹{product.category === 'combos' ? comboTotalPrice : totalPrice}</span>
                     </div>
                   </div>
                   {/* Confirm/Add to Cart buttons for laptop view */}
