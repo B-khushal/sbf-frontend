@@ -11,7 +11,7 @@ import useCart from '@/hooks/use-cart';
 import useWishlist from '@/hooks/use-wishlist';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import productService, { ProductData } from '@/services/productService';
+import productService, { ProductData, ComboItem } from '@/services/productService';
 import ProductReviews from '@/components/ProductReviews';
 
 type AddonOption = {
@@ -56,6 +56,10 @@ type ProductDetailProps = {
     isFeatured?: boolean;
     isCustomizable?: boolean;
     customizationOptions?: CustomizationOptions;
+    // Combo-specific fields
+    comboItems?: ComboItem[];
+    comboName?: string;
+    comboDescription?: string;
   };
   onAddToCart: (item: {
     id: string;
@@ -582,6 +586,106 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                       <div className="flex items-start gap-3">
                         <span className="text-green-600 text-sm">💡</span>
                         <p className="text-green-800 text-sm font-medium">{instruction}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Combo Items */}
+            {product.category === "combos" && product.comboItems && product.comboItems.length > 0 && (
+              <div>
+                <h3 className="text-lg font-medium mb-4 text-blue-700 flex items-center gap-2">
+                  🎁 Combo Contents
+                </h3>
+                {product.comboName && (
+                  <div className="mb-3">
+                    <h4 className="font-semibold text-blue-800">{product.comboName}</h4>
+                    {product.comboDescription && (
+                      <p className="text-sm text-blue-600 mt-1">{product.comboDescription}</p>
+                    )}
+                  </div>
+                )}
+                <div className="space-y-4">
+                  {product.comboItems.map((item, index) => (
+                    <div key={index} className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                      <div className="flex items-start gap-4">
+                        {/* Item Image */}
+                        {item.image && (
+                          <div className="flex-shrink-0">
+                            <img
+                              src={item.image}
+                              alt={item.name}
+                              className="w-16 h-16 object-cover rounded-lg border border-blue-300"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                          </div>
+                        )}
+                        
+                        {/* Item Details */}
+                        <div className="flex-1">
+                          <h5 className="font-semibold text-blue-800 mb-2">{item.name}</h5>
+                          {item.description && (
+                            <p className="text-sm text-blue-700 mb-3">{item.description}</p>
+                          )}
+                          
+                          {/* Customization Options */}
+                          {item.customizationOptions && (
+                            <div className="space-y-2">
+                              {/* Message Option */}
+                              {item.customizationOptions.allowMessage && (
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">💬 {item.customizationOptions.messageLabel}</span>
+                                </div>
+                              )}
+                              
+                              {/* Color Options */}
+                              {item.customizationOptions.allowColorChoice && item.customizationOptions.colorOptions.length > 0 && (
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">🎨 Colors: {item.customizationOptions.colorOptions.join(', ')}</span>
+                                </div>
+                              )}
+                              
+                              {/* Size Options */}
+                              {item.customizationOptions.allowSizeChoice && item.customizationOptions.sizeOptions.length > 0 && (
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">📏 Sizes: {item.customizationOptions.sizeOptions.join(', ')}</span>
+                                </div>
+                              )}
+                              
+                              {/* Quantity Option */}
+                              {item.customizationOptions.allowQuantity && (
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">🔢 Quantity (max: {item.customizationOptions.maxQuantity})</span>
+                                </div>
+                              )}
+                              
+                              {/* Photo Upload Option */}
+                              {item.customizationOptions.allowPhotoUpload && (
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">📸 Photo Upload</span>
+                                </div>
+                              )}
+                              
+                              {/* Custom Text Option */}
+                              {item.customizationOptions.allowCustomText && (
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">✏️ {item.customizationOptions.customTextLabel}</span>
+                                </div>
+                              )}
+                              
+                              {/* Add-on Options */}
+                              {item.customizationOptions.allowAddons && item.customizationOptions.addonOptions.length > 0 && (
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">➕ Add-ons: {item.customizationOptions.addonOptions.join(', ')}</span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}

@@ -10,6 +10,7 @@ import useCart from "@/hooks/use-cart";
 import useWishlist from "@/hooks/use-wishlist";
 import { useAuth } from "@/hooks/use-auth";
 import { getImageUrl } from "@/config";
+import { ComboItem } from "@/services/productService";
 
 export type Product = {
   _id: string;
@@ -38,6 +39,10 @@ export type Product = {
     };
     previewImage: string;
   };
+  // Combo-specific fields
+  comboItems?: ComboItem[];
+  comboName?: string;
+  comboDescription?: string;
 };
 
 type ProductGridProps = {

@@ -761,6 +761,13 @@ const ProductForm = () => {
         formDataCustomization: formData.customizationOptions
       });
       
+      console.log('🎁 Frontend - Sending combo data:', {
+        category: productData.category,
+        comboItems: productData.comboItems,
+        comboName: productData.comboName,
+        comboDescription: productData.comboDescription
+      });
+      
       if (isEditMode) {
         console.log('🔄 Updating product with ID:', id);
         await productService.updateProduct(id, productData);
