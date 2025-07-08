@@ -58,6 +58,7 @@ type ComboItemCustomization = {
   photo?: string;
   customText?: string;
   selectedAddons: string[];
+  selectedVariant?: string;
 };
 
 type CustomizationData = {
@@ -256,6 +257,21 @@ export function CustomizeProductModal({
       }
     }
   };
+
+  const comboTotalPrice = React.useMemo(() => {
+    if (product.category !== 'combos' || !product.comboItems) return product.price;
+    let total = product.price;
+    product.comboItems.forEach((item, idx) => {
+      const customization = customizations.comboItemCustomizations?.find(c => c.itemIndex === idx);
+      let price = item.price;
+      if (item.customizationOptions.allowVariants && item.customizationOptions.variants && customization?.selectedVariant) {
+        const variant = item.customizationOptions.variants.find(v => v.name === customization.selectedVariant);
+        if (variant) price = variant.price;
+      }
+      total += price * (customization?.quantity || 1);
+    });
+    return total;
+  }, [product, customizations]);
 
   return (
     <TooltipProvider>
@@ -730,6 +746,27 @@ export function CustomizeProductModal({
                                   </div>
                                 </div>
                               )}
+
+                              {/* Variant Selection */}
+                              {item.customizationOptions.allowVariants && item.customizationOptions.variants && item.customizationOptions.variants.length > 0 && (
+                                <div className="mb-3">
+                                  <Label className="text-sm font-medium text-purple-700 mb-2 block">
+                                    {item.customizationOptions.variantLabel || 'Variant'}
+                                  </Label>
+                                  <select
+                                    className="border border-purple-300 rounded px-2 py-1 text-sm"
+                                    value={itemCustomization?.selectedVariant || ''}
+                                    onChange={e => updateComboItemCustomization(itemIndex, 'selectedVariant', e.target.value)}
+                                  >
+                                    <option value="">Select</option>
+                                    {item.customizationOptions.variants.map((variant, vIdx) => (
+                                      <option key={vIdx} value={variant.name}>
+                                        {variant.name} (₹{variant.price})
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                              )}
                             </div>
                           );
                         })}
@@ -965,6 +1002,9 @@ export function CustomizeProductModal({
                               )}
                               {itemCustomization.selectedAddons.length > 0 && (
                                 <div>• Add-ons: {itemCustomization.selectedAddons.join(', ')}</div>
+                              )}
+                              {itemCustomization.selectedVariant && (
+                                <div>• Variant: {itemCustomization.selectedVariant}</div>
                               )}
                             </div>
                           );

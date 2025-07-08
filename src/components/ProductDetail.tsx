@@ -31,6 +31,9 @@ type CustomizationOptions = {
     chocolates: AddonOption[];
   };
   previewImage: string;
+  allowVariants?: boolean;
+  variants?: { name: string; price: number }[];
+  variantLabel?: string;
 };
 
 type CustomizationData = {
@@ -202,6 +205,25 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [isCustomizeModalOpen, setIsCustomizeModalOpen] = useState(false);
   const [customizations, setCustomizations] = useState<CustomizationData | undefined>();
+  const [selectedVariants, setSelectedVariants] = useState<string[]>([]);
+  const handleVariantChange = (itemIdx: number, variantName: string) => {
+    setSelectedVariants(prev => {
+      const updated = [...prev];
+      updated[itemIdx] = variantName;
+      return updated;
+    });
+  };
+  const comboTotalPrice = React.useMemo(() => {
+    if (product.category !== 'combos' || !product.comboItems) return product.price;
+    let total = product.price;
+    product.comboItems.forEach((item, idx) => {
+      const variant = item.customizationOptions && item.customizationOptions.allowVariants && item.customizationOptions.variants
+        ? item.customizationOptions.variants.find(v => v.name === selectedVariants[idx])
+        : null;
+      total += variant ? variant.price : item.price;
+    });
+    return total;
+  }, [product, selectedVariants]);
 
   // Debug log to check properties
   console.log(`Product Detail ${product.title}:`, {
@@ -631,7 +653,26 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                           {item.description && (
                             <p className="text-sm text-blue-700 mb-3">{item.description}</p>
                           )}
-                          
+                          {/* Variant Selection */}
+                          {item.customizationOptions && item.customizationOptions.allowVariants && item.customizationOptions.variants && item.customizationOptions.variants.length > 0 && (
+                            <div className="mb-2">
+                              <label className="block text-xs font-medium text-blue-700 mb-1">
+                                {item.customizationOptions.variantLabel || 'Variant'}:
+                              </label>
+                              <select
+                                className="border border-blue-300 rounded px-2 py-1 text-sm"
+                                value={selectedVariants[index] || ''}
+                                onChange={e => handleVariantChange(index, e.target.value)}
+                              >
+                                <option value="">Select</option>
+                                {item.customizationOptions.variants.map((variant, vIdx) => (
+                                  <option key={vIdx} value={variant.name}>
+                                    {variant.name} (₹{variant.price})
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
                           {/* Customization Options */}
                           {item.customizationOptions && (
                             <div className="space-y-2">
@@ -689,6 +730,34 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                       </div>
                     </div>
                   ))}
+                </div>
+                {/* Real-time Combo Price Breakdown */}
+                <div className="mt-6 space-y-2 bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div className="font-semibold text-green-800 flex items-center gap-2">
+                    <span>Combo Pricing Breakdown</span>
+                  </div>
+                  <div className="text-sm">
+                    <div className="flex justify-between">
+                      <span>Base Price:</span>
+                      <span>₹{product.price}</span>
+                    </div>
+                    {product.comboItems.map((item, idx) => {
+                      const variant = item.customizationOptions && item.customizationOptions.allowVariants && item.customizationOptions.variants
+                        ? item.customizationOptions.variants.find(v => v.name === selectedVariants[idx])
+                        : null;
+                      const price = variant ? variant.price : item.price;
+                      return (
+                        <div key={idx} className="flex justify-between">
+                          <span>+ {item.name}{variant ? ` (${variant.name})` : ''}:</span>
+                          <span>₹{price}</span>
+                        </div>
+                      );
+                    })}
+                    <div className="flex justify-between font-bold text-green-700 mt-2">
+                      <span>Total Combo Price:</span>
+                      <span>₹{comboTotalPrice}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
