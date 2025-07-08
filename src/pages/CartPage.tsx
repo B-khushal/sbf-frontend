@@ -230,9 +230,10 @@ const CartPage: React.FC = () => {
                           ? item.images[0]
                           : '/api/placeholder/64/64';
 
-                        // Use item.price directly (already custom price if present)
-                        const displayPrice = item.price;
-                        const originalPrice = item.originalPrice || item.price;
+                        // Calculate price logic
+                        const hasDiscount = item.discount > 0 && item.originalPrice && item.originalPrice > item.price;
+                        const displayPrice = hasDiscount ? item.price : item.originalPrice || item.price;
+                        const originalPrice = hasDiscount ? item.originalPrice : null;
 
                         return (
                           <motion.div
@@ -260,14 +261,14 @@ const CartPage: React.FC = () => {
                               <div className="flex-1 min-w-0 text-center sm:text-left">
                                 <h4 className="text-base sm:text-lg font-bold text-gray-800 mb-2 line-clamp-2">{item.title}</h4>
                                 <div className="flex items-center justify-center sm:justify-start gap-2 mb-3">
-                                  {item.discount && item.discount > 0 && (
+                                  {originalPrice && (
                                     <span className="text-xs sm:text-sm text-gray-500 line-through">
                                       {formatPrice(convertPrice(originalPrice))}
                                     </span>
                                   )}
                                   <span className={cn(
                                     "font-bold text-sm sm:text-base",
-                                    item.discount > 0 ? "text-red-600" : "text-black"
+                                    hasDiscount ? "text-red-600" : "text-black"
                                   )}>
                                     {formatPrice(convertPrice(displayPrice))}
                                   </span>
