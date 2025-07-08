@@ -343,6 +343,7 @@ const AdminProducts: React.FC = () => {
                 <SelectItem value="tulips">🌷 Tulips</SelectItem>
                 <SelectItem value="orchids">🌺 Orchids</SelectItem>
                 <SelectItem value="lilies">🌼 Lilies</SelectItem>
+                <SelectItem value="combos">🎁 Combos</SelectItem>
                 <SelectItem value="gift-hampers">🎁 Gift Hampers</SelectItem>
                 <SelectItem value="fruit-baskets">🍎 Fruit Baskets</SelectItem>
                 <SelectItem value="mixed-arrangements">🌸 Mixed Arrangements</SelectItem>

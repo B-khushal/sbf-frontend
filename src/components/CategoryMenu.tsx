@@ -139,6 +139,19 @@ const CategoryMenu = () => {
       ]
     },
     { 
+      name: "🎁 Combos", 
+      path: "/shop/combos", 
+      emoji: "🎁",
+      description: "Perfect combo packages",
+      popular: true,
+      subcategories: [
+        { name: "Birthday Combos", path: "/shop/birthday-combos", count: getCategoryCount("birthday combos") },
+        { name: "Anniversary Combos", path: "/shop/anniversary-combos", count: getCategoryCount("anniversary combos") },
+        { name: "Romantic Combos", path: "/shop/romantic-combos", count: getCategoryCount("romantic combos") },
+        { name: "Special Occasion Combos", path: "/shop/special-occasion-combos", count: getCategoryCount("special occasion combos") },
+      ]
+    },
+    { 
       name: "🌿 Plants", 
       path: "/shop/plants", 
       emoji: "🌿",

@@ -7,6 +7,29 @@ export interface AddonOption {
   type: 'flower' | 'chocolate';
 }
 
+export interface ComboItemCustomizationOptions {
+  allowMessage: boolean;
+  messageLabel: string;
+  allowColorChoice: boolean;
+  colorOptions: string[];
+  allowSizeChoice: boolean;
+  sizeOptions: string[];
+  allowQuantity: boolean;
+  maxQuantity: number;
+  allowPhotoUpload: boolean;
+  allowCustomText: boolean;
+  customTextLabel: string;
+  allowAddons: boolean;
+  addonOptions: string[];
+}
+
+export interface ComboItem {
+  name: string;
+  description: string;
+  image: string;
+  customizationOptions: ComboItemCustomizationOptions;
+}
+
 export interface CustomizationOptions {
   allowPhotoUpload: boolean;
   allowNumberInput: boolean;
@@ -38,6 +61,10 @@ export interface ProductData {
   hidden?: boolean;
   isCustomizable?: boolean;
   customizationOptions?: CustomizationOptions;
+  // Combo-specific fields
+  comboItems?: ComboItem[];
+  comboName?: string;
+  comboDescription?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -61,6 +88,10 @@ interface BackendProductData {
   hidden?: boolean;
   isCustomizable?: boolean;
   customizationOptions?: CustomizationOptions;
+  // Combo-specific fields
+  comboItems?: ComboItem[];
+  comboName?: string;
+  comboDescription?: string;
   createdAt?: string;
   updatedAt?: string;
   [key: string]: unknown; // Allow other properties with unknown type
@@ -154,6 +185,17 @@ const prepareProductData = (productData: ProductData): BackendProductData => {
       previewImage: productData.customizationOptions.previewImage || ""
     };
   }
+
+  // Process combo fields for backend
+  if (productData.comboItems && Array.isArray(productData.comboItems)) {
+    cleanData.comboItems = productData.comboItems;
+  }
+  if (productData.comboName) {
+    cleanData.comboName = productData.comboName;
+  }
+  if (productData.comboDescription) {
+    cleanData.comboDescription = productData.comboDescription;
+  }
   
   // Remove isNewArrival as the backend doesn't use this field name
   delete cleanData.isNewArrival;
@@ -198,6 +240,17 @@ const mapBackendToFrontend = (data: BackendProductData): ProductData => {
       title: data.title,
       keys: Object.keys(data)
     });
+  }
+
+  // Map combo fields
+  if (data.comboItems) {
+    mappedData.comboItems = data.comboItems;
+  }
+  if (data.comboName) {
+    mappedData.comboName = data.comboName;
+  }
+  if (data.comboDescription) {
+    mappedData.comboDescription = data.comboDescription;
   }
 
   // ✅ Handle details properly (flatten nested arrays from backend)

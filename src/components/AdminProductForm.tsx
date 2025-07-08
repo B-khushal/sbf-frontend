@@ -19,7 +19,7 @@ const CATEGORIES = [
   { value: "bouquets", label: "Bouquets" },
   { value: "flowers", label: "Flowers" },
   { value: "plants", label: "Plants" },
-  { value: "gifts", label: "Gifts" },
+  { value: "combos", label: "Combos" },
   { value: "occasions", label: "Occasions" },
   { value: "baskets", label: "Baskets" },
   { value: "chocolate-baskets", label: "Chocolate Baskets" },

@@ -25,7 +25,7 @@ const CATEGORIES = [
   { value: "bouquets", label: "Bouquets" },
   { value: "flowers", label: "Flowers" },
   { value: "plants", label: "Plants" },
-  { value: "gifts", label: "Gifts" },
+  { value: "combos", label: "Combos" },
   { value: "occasions", label: "Occasions" },
   { value: "baskets", label: "Baskets" },
   { value: "chocolate-baskets", label: "Chocolate Baskets" },
@@ -172,7 +172,11 @@ const initialFormData: ProductData = {
       chocolates: []
     },
     previewImage: ""
-  }
+  },
+  // Combo-specific fields
+  comboItems: [],
+  comboName: '',
+  comboDescription: ''
 };
 
 const ProductForm = () => {
@@ -188,6 +192,31 @@ const ProductForm = () => {
   const [uploadProgress, setUploadProgress] = useState<number[]>([]);
   const [newFlowerAddon, setNewFlowerAddon] = useState({ name: "", price: 0 });
   const [newChocolateAddon, setNewChocolateAddon] = useState({ name: "", price: 0 });
+  
+  // Combo form state
+  const [newComboItem, setNewComboItem] = useState({
+    name: "",
+    description: "",
+    image: "",
+    customizationOptions: {
+      allowMessage: false,
+      messageLabel: "Message",
+      allowColorChoice: false,
+      colorOptions: [],
+      allowSizeChoice: false,
+      sizeOptions: [],
+      allowQuantity: false,
+      maxQuantity: 1,
+      allowPhotoUpload: false,
+      allowCustomText: false,
+      customTextLabel: "Custom Text",
+      allowAddons: false,
+      addonOptions: []
+    }
+  });
+  const [newColorOption, setNewColorOption] = useState("");
+  const [newSizeOption, setNewSizeOption] = useState("");
+  const [newAddonOption, setNewAddonOption] = useState("");
 
   const fetchProductData = async () => {
     try {
@@ -825,6 +854,166 @@ const ProductForm = () => {
           [type === 'flower' ? 'flowers' : 'chocolates']: prev.customizationOptions.addons[type === 'flower' ? 'flowers' : 'chocolates'].filter((_, i) => i !== index)
         }
       }
+    }));
+  };
+
+  // Combo item handlers
+  const addComboItem = () => {
+    if (newComboItem.name.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        comboItems: [...(prev.comboItems || []), { ...newComboItem }]
+      }));
+      setNewComboItem({
+        name: "",
+        description: "",
+        image: "",
+        customizationOptions: {
+          allowMessage: false,
+          messageLabel: "Message",
+          allowColorChoice: false,
+          colorOptions: [],
+          allowSizeChoice: false,
+          sizeOptions: [],
+          allowQuantity: false,
+          maxQuantity: 1,
+          allowPhotoUpload: false,
+          allowCustomText: false,
+          customTextLabel: "Custom Text",
+          allowAddons: false,
+          addonOptions: []
+        }
+      });
+    }
+  };
+
+  const removeComboItem = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      comboItems: (prev.comboItems || []).filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateComboItem = (index: number, field: string, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      comboItems: (prev.comboItems || []).map((item, i) => 
+        i === index ? { ...item, [field]: value } : item
+      )
+    }));
+  };
+
+  const updateComboItemCustomization = (itemIndex: number, field: string, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      comboItems: (prev.comboItems || []).map((item, i) => 
+        i === itemIndex ? {
+          ...item,
+          customizationOptions: {
+            ...item.customizationOptions,
+            [field]: value
+          }
+        } : item
+      )
+    }));
+  };
+
+  const addColorOption = (itemIndex: number) => {
+    if (newColorOption.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        comboItems: (prev.comboItems || []).map((item, i) => 
+          i === itemIndex ? {
+            ...item,
+            customizationOptions: {
+              ...item.customizationOptions,
+              colorOptions: [...item.customizationOptions.colorOptions, newColorOption.trim()]
+            }
+          } : item
+        )
+      }));
+      setNewColorOption("");
+    }
+  };
+
+  const removeColorOption = (itemIndex: number, colorIndex: number) => {
+    setFormData(prev => ({
+      ...prev,
+      comboItems: (prev.comboItems || []).map((item, i) => 
+        i === itemIndex ? {
+          ...item,
+          customizationOptions: {
+            ...item.customizationOptions,
+            colorOptions: item.customizationOptions.colorOptions.filter((_, ci) => ci !== colorIndex)
+          }
+        } : item
+      )
+    }));
+  };
+
+  const addSizeOption = (itemIndex: number) => {
+    if (newSizeOption.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        comboItems: (prev.comboItems || []).map((item, i) => 
+          i === itemIndex ? {
+            ...item,
+            customizationOptions: {
+              ...item.customizationOptions,
+              sizeOptions: [...item.customizationOptions.sizeOptions, newSizeOption.trim()]
+            }
+          } : item
+        )
+      }));
+      setNewSizeOption("");
+    }
+  };
+
+  const removeSizeOption = (itemIndex: number, sizeIndex: number) => {
+    setFormData(prev => ({
+      ...prev,
+      comboItems: (prev.comboItems || []).map((item, i) => 
+        i === itemIndex ? {
+          ...item,
+          customizationOptions: {
+            ...item.customizationOptions,
+            sizeOptions: item.customizationOptions.sizeOptions.filter((_, si) => si !== sizeIndex)
+          }
+        } : item
+      )
+    }));
+  };
+
+  const addAddonOption = (itemIndex: number) => {
+    if (newAddonOption.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        comboItems: (prev.comboItems || []).map((item, i) => 
+          i === itemIndex ? {
+            ...item,
+            customizationOptions: {
+              ...item.customizationOptions,
+              addonOptions: [...item.customizationOptions.addonOptions, newAddonOption.trim()]
+            }
+          } : item
+        )
+      }));
+      setNewAddonOption("");
+    }
+  };
+
+  const removeAddonOption = (itemIndex: number, addonIndex: number) => {
+    setFormData(prev => ({
+      ...prev,
+      comboItems: (prev.comboItems || []).map((item, i) => 
+        i === itemIndex ? {
+          ...item,
+          customizationOptions: {
+            ...item.customizationOptions,
+            addonOptions: item.customizationOptions.addonOptions.filter((_, ai) => ai !== addonIndex)
+          }
+        } : item
+      )
     }));
   };
 
@@ -1504,6 +1693,622 @@ const ProductForm = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Combo Items Section - Only show when category is "combos" */}
+        {formData.category === "combos" && (
+          <Card className="border-2 border-dashed border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3 text-blue-800">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
+                  <Gift className="h-5 w-5 text-blue-600" />
+                </div>
+                Combo Items
+              </CardTitle>
+              <CardDescription className="text-blue-600">
+                Add multiple items to create a perfect combo package
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Combo Name and Description */}
+              <div className="space-y-4 rounded-lg border border-blue-200 bg-white p-4">
+                <h4 className="text-lg font-semibold text-gray-800">Combo Details</h4>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="comboName">Combo Name</Label>
+                    <Input
+                      id="comboName"
+                      value={formData.comboName || ""}
+                      onChange={(e) => setFormData(prev => ({ ...prev, comboName: e.target.value }))}
+                      placeholder="e.g., Birthday Special Combo"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="comboDescription">Combo Description</Label>
+                    <Textarea
+                      id="comboDescription"
+                      value={formData.comboDescription || ""}
+                      onChange={(e) => setFormData(prev => ({ ...prev, comboDescription: e.target.value }))}
+                      placeholder="Describe what's included in this combo"
+                      rows={2}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Add New Combo Item */}
+              <div className="space-y-4 rounded-lg border border-blue-200 bg-white p-4">
+                <h4 className="text-lg font-semibold text-gray-800">Add New Item</h4>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="newItemName">Item Name *</Label>
+                      <Input
+                        id="newItemName"
+                        value={newComboItem.name}
+                        onChange={(e) => setNewComboItem(prev => ({ ...prev, name: e.target.value }))}
+                        placeholder="e.g., Red Roses, Chocolate Cake"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="newItemImage">Item Image URL</Label>
+                      <Input
+                        id="newItemImage"
+                        value={newComboItem.image}
+                        onChange={(e) => setNewComboItem(prev => ({ ...prev, image: e.target.value }))}
+                        placeholder="https://example.com/image.jpg"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="newItemDescription">Item Description</Label>
+                    <Textarea
+                      id="newItemDescription"
+                      value={newComboItem.description}
+                      onChange={(e) => setNewComboItem(prev => ({ ...prev, description: e.target.value }))}
+                      placeholder="Describe this item"
+                      rows={2}
+                    />
+                  </div>
+                  
+                  {/* Customization Options for New Item */}
+                  <div className="space-y-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
+                    <h5 className="font-medium text-gray-800">Customization Options</h5>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="allowMessage"
+                          checked={newComboItem.customizationOptions.allowMessage}
+                          onCheckedChange={(checked) => 
+                            setNewComboItem(prev => ({
+                              ...prev,
+                              customizationOptions: {
+                                ...prev.customizationOptions,
+                                allowMessage: checked
+                              }
+                            }))
+                          }
+                        />
+                        <Label htmlFor="allowMessage">Allow Message</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="allowColorChoice"
+                          checked={newComboItem.customizationOptions.allowColorChoice}
+                          onCheckedChange={(checked) => 
+                            setNewComboItem(prev => ({
+                              ...prev,
+                              customizationOptions: {
+                                ...prev.customizationOptions,
+                                allowColorChoice: checked
+                              }
+                            }))
+                          }
+                        />
+                        <Label htmlFor="allowColorChoice">Allow Color Choice</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="allowSizeChoice"
+                          checked={newComboItem.customizationOptions.allowSizeChoice}
+                          onCheckedChange={(checked) => 
+                            setNewComboItem(prev => ({
+                              ...prev,
+                              customizationOptions: {
+                                ...prev.customizationOptions,
+                                allowSizeChoice: checked
+                              }
+                            }))
+                          }
+                        />
+                        <Label htmlFor="allowSizeChoice">Allow Size Choice</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="allowQuantity"
+                          checked={newComboItem.customizationOptions.allowQuantity}
+                          onCheckedChange={(checked) => 
+                            setNewComboItem(prev => ({
+                              ...prev,
+                              customizationOptions: {
+                                ...prev.customizationOptions,
+                                allowQuantity: checked
+                              }
+                            }))
+                          }
+                        />
+                        <Label htmlFor="allowQuantity">Allow Quantity</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="allowPhotoUpload"
+                          checked={newComboItem.customizationOptions.allowPhotoUpload}
+                          onCheckedChange={(checked) => 
+                            setNewComboItem(prev => ({
+                              ...prev,
+                              customizationOptions: {
+                                ...prev.customizationOptions,
+                                allowPhotoUpload: checked
+                              }
+                            }))
+                          }
+                        />
+                        <Label htmlFor="allowPhotoUpload">Allow Photo Upload</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="allowCustomText"
+                          checked={newComboItem.customizationOptions.allowCustomText}
+                          onCheckedChange={(checked) => 
+                            setNewComboItem(prev => ({
+                              ...prev,
+                              customizationOptions: {
+                                ...prev.customizationOptions,
+                                allowCustomText: checked
+                              }
+                            }))
+                          }
+                        />
+                        <Label htmlFor="allowCustomText">Allow Custom Text</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="allowAddons"
+                          checked={newComboItem.customizationOptions.allowAddons}
+                          onCheckedChange={(checked) => 
+                            setNewComboItem(prev => ({
+                              ...prev,
+                              customizationOptions: {
+                                ...prev.customizationOptions,
+                                allowAddons: checked
+                              }
+                            }))
+                          }
+                        />
+                        <Label htmlFor="allowAddons">Allow Add-ons</Label>
+                      </div>
+                    </div>
+
+                    {/* Conditional fields based on switches */}
+                    {newComboItem.customizationOptions.allowMessage && (
+                      <div className="space-y-2">
+                        <Label htmlFor="messageLabel">Message Label</Label>
+                        <Input
+                          id="messageLabel"
+                          value={newComboItem.customizationOptions.messageLabel}
+                          onChange={(e) => 
+                            setNewComboItem(prev => ({
+                              ...prev,
+                              customizationOptions: {
+                                ...prev.customizationOptions,
+                                messageLabel: e.target.value
+                              }
+                            }))
+                          }
+                          placeholder="e.g., Birthday Message"
+                        />
+                      </div>
+                    )}
+
+                    {newComboItem.customizationOptions.allowColorChoice && (
+                      <div className="space-y-2">
+                        <Label>Color Options</Label>
+                        <div className="flex space-x-2">
+                          <Input
+                            value={newColorOption}
+                            onChange={(e) => setNewColorOption(e.target.value)}
+                            placeholder="e.g., Red, Pink, White"
+                          />
+                          <Button type="button" onClick={() => addColorOption(-1)} size="sm">
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        {newComboItem.customizationOptions.colorOptions.length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {newComboItem.customizationOptions.colorOptions.map((color, index) => (
+                              <Badge key={index} variant="outline" className="flex items-center gap-1">
+                                {color}
+                                <X
+                                  className="h-3 w-3 cursor-pointer"
+                                  onClick={() => {
+                                    setNewComboItem(prev => ({
+                                      ...prev,
+                                      customizationOptions: {
+                                        ...prev.customizationOptions,
+                                        colorOptions: prev.customizationOptions.colorOptions.filter((_, i) => i !== index)
+                                      }
+                                    }));
+                                  }}
+                                />
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {newComboItem.customizationOptions.allowSizeChoice && (
+                      <div className="space-y-2">
+                        <Label>Size Options</Label>
+                        <div className="flex space-x-2">
+                          <Input
+                            value={newSizeOption}
+                            onChange={(e) => setNewSizeOption(e.target.value)}
+                            placeholder="e.g., Small, Medium, Large"
+                          />
+                          <Button type="button" onClick={() => addSizeOption(-1)} size="sm">
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        {newComboItem.customizationOptions.sizeOptions.length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {newComboItem.customizationOptions.sizeOptions.map((size, index) => (
+                              <Badge key={index} variant="outline" className="flex items-center gap-1">
+                                {size}
+                                <X
+                                  className="h-3 w-3 cursor-pointer"
+                                  onClick={() => {
+                                    setNewComboItem(prev => ({
+                                      ...prev,
+                                      customizationOptions: {
+                                        ...prev.customizationOptions,
+                                        sizeOptions: prev.customizationOptions.sizeOptions.filter((_, i) => i !== index)
+                                      }
+                                    }));
+                                  }}
+                                />
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {newComboItem.customizationOptions.allowQuantity && (
+                      <div className="space-y-2">
+                        <Label htmlFor="maxQuantity">Maximum Quantity</Label>
+                        <Input
+                          id="maxQuantity"
+                          type="number"
+                          value={newComboItem.customizationOptions.maxQuantity}
+                          onChange={(e) => 
+                            setNewComboItem(prev => ({
+                              ...prev,
+                              customizationOptions: {
+                                ...prev.customizationOptions,
+                                maxQuantity: parseInt(e.target.value) || 1
+                              }
+                            }))
+                          }
+                          min="1"
+                          max="10"
+                        />
+                      </div>
+                    )}
+
+                    {newComboItem.customizationOptions.allowCustomText && (
+                      <div className="space-y-2">
+                        <Label htmlFor="customTextLabel">Custom Text Label</Label>
+                        <Input
+                          id="customTextLabel"
+                          value={newComboItem.customizationOptions.customTextLabel}
+                          onChange={(e) => 
+                            setNewComboItem(prev => ({
+                              ...prev,
+                              customizationOptions: {
+                                ...prev.customizationOptions,
+                                customTextLabel: e.target.value
+                              }
+                            }))
+                          }
+                          placeholder="e.g., Custom Message"
+                        />
+                      </div>
+                    )}
+
+                    {newComboItem.customizationOptions.allowAddons && (
+                      <div className="space-y-2">
+                        <Label>Add-on Options</Label>
+                        <div className="flex space-x-2">
+                          <Input
+                            value={newAddonOption}
+                            onChange={(e) => setNewAddonOption(e.target.value)}
+                            placeholder="e.g., Extra Flowers, Premium Wrapping"
+                          />
+                          <Button type="button" onClick={() => addAddonOption(-1)} size="sm">
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        {newComboItem.customizationOptions.addonOptions.length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {newComboItem.customizationOptions.addonOptions.map((addon, index) => (
+                              <Badge key={index} variant="outline" className="flex items-center gap-1">
+                                {addon}
+                                <X
+                                  className="h-3 w-3 cursor-pointer"
+                                  onClick={() => {
+                                    setNewComboItem(prev => ({
+                                      ...prev,
+                                      customizationOptions: {
+                                        ...prev.customizationOptions,
+                                        addonOptions: prev.customizationOptions.addonOptions.filter((_, i) => i !== index)
+                                      }
+                                    }));
+                                  }}
+                                />
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  <Button
+                    type="button"
+                    onClick={addComboItem}
+                    className="w-full bg-blue-600 hover:bg-blue-700"
+                    disabled={!newComboItem.name.trim()}
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Item to Combo
+                  </Button>
+                </div>
+              </div>
+
+              {/* Existing Combo Items */}
+              {(formData.comboItems || []).length > 0 && (
+                <div className="space-y-4">
+                  <h4 className="text-lg font-semibold text-gray-800">Combo Items ({formData.comboItems?.length})</h4>
+                  <div className="space-y-4">
+                    {(formData.comboItems || []).map((item, index) => (
+                      <div key={index} className="rounded-lg border border-gray-200 bg-white p-4">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 space-y-3">
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                              <div className="space-y-2">
+                                <Label>Item Name</Label>
+                                <Input
+                                  value={item.name}
+                                  onChange={(e) => updateComboItem(index, 'name', e.target.value)}
+                                  placeholder="Item name"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label>Item Image URL</Label>
+                                <Input
+                                  value={item.image}
+                                  onChange={(e) => updateComboItem(index, 'image', e.target.value)}
+                                  placeholder="Image URL"
+                                />
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <Label>Description</Label>
+                              <Textarea
+                                value={item.description}
+                                onChange={(e) => updateComboItem(index, 'description', e.target.value)}
+                                placeholder="Item description"
+                                rows={2}
+                              />
+                            </div>
+                            
+                            {/* Customization Options for Existing Item */}
+                            <div className="space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                              <h5 className="font-medium text-gray-800">Customization Options</h5>
+                              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+                                <div className="flex items-center space-x-2">
+                                  <Switch
+                                    checked={item.customizationOptions.allowMessage}
+                                    onCheckedChange={(checked) => updateComboItemCustomization(index, 'allowMessage', checked)}
+                                  />
+                                  <Label>Allow Message</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <Switch
+                                    checked={item.customizationOptions.allowColorChoice}
+                                    onCheckedChange={(checked) => updateComboItemCustomization(index, 'allowColorChoice', checked)}
+                                  />
+                                  <Label>Allow Color Choice</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <Switch
+                                    checked={item.customizationOptions.allowSizeChoice}
+                                    onCheckedChange={(checked) => updateComboItemCustomization(index, 'allowSizeChoice', checked)}
+                                  />
+                                  <Label>Allow Size Choice</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <Switch
+                                    checked={item.customizationOptions.allowQuantity}
+                                    onCheckedChange={(checked) => updateComboItemCustomization(index, 'allowQuantity', checked)}
+                                  />
+                                  <Label>Allow Quantity</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <Switch
+                                    checked={item.customizationOptions.allowPhotoUpload}
+                                    onCheckedChange={(checked) => updateComboItemCustomization(index, 'allowPhotoUpload', checked)}
+                                  />
+                                  <Label>Allow Photo Upload</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <Switch
+                                    checked={item.customizationOptions.allowCustomText}
+                                    onCheckedChange={(checked) => updateComboItemCustomization(index, 'allowCustomText', checked)}
+                                  />
+                                  <Label>Allow Custom Text</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <Switch
+                                    checked={item.customizationOptions.allowAddons}
+                                    onCheckedChange={(checked) => updateComboItemCustomization(index, 'allowAddons', checked)}
+                                  />
+                                  <Label>Allow Add-ons</Label>
+                                </div>
+                              </div>
+
+                              {/* Conditional fields for existing items */}
+                              {item.customizationOptions.allowMessage && (
+                                <div className="space-y-2">
+                                  <Label>Message Label</Label>
+                                  <Input
+                                    value={item.customizationOptions.messageLabel}
+                                    onChange={(e) => updateComboItemCustomization(index, 'messageLabel', e.target.value)}
+                                    placeholder="Message label"
+                                  />
+                                </div>
+                              )}
+
+                              {item.customizationOptions.allowColorChoice && (
+                                <div className="space-y-2">
+                                  <Label>Color Options</Label>
+                                  <div className="flex space-x-2">
+                                    <Input
+                                      value={newColorOption}
+                                      onChange={(e) => setNewColorOption(e.target.value)}
+                                      placeholder="Add color option"
+                                    />
+                                    <Button type="button" onClick={() => addColorOption(index)} size="sm">
+                                      <Plus className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                  {item.customizationOptions.colorOptions.length > 0 && (
+                                    <div className="flex flex-wrap gap-2">
+                                      {item.customizationOptions.colorOptions.map((color, colorIndex) => (
+                                        <Badge key={colorIndex} variant="outline" className="flex items-center gap-1">
+                                          {color}
+                                          <X
+                                            className="h-3 w-3 cursor-pointer"
+                                            onClick={() => removeColorOption(index, colorIndex)}
+                                          />
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                              {item.customizationOptions.allowSizeChoice && (
+                                <div className="space-y-2">
+                                  <Label>Size Options</Label>
+                                  <div className="flex space-x-2">
+                                    <Input
+                                      value={newSizeOption}
+                                      onChange={(e) => setNewSizeOption(e.target.value)}
+                                      placeholder="Add size option"
+                                    />
+                                    <Button type="button" onClick={() => addSizeOption(index)} size="sm">
+                                      <Plus className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                  {item.customizationOptions.sizeOptions.length > 0 && (
+                                    <div className="flex flex-wrap gap-2">
+                                      {item.customizationOptions.sizeOptions.map((size, sizeIndex) => (
+                                        <Badge key={sizeIndex} variant="outline" className="flex items-center gap-1">
+                                          {size}
+                                          <X
+                                            className="h-3 w-3 cursor-pointer"
+                                            onClick={() => removeSizeOption(index, sizeIndex)}
+                                          />
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                              {item.customizationOptions.allowQuantity && (
+                                <div className="space-y-2">
+                                  <Label>Maximum Quantity</Label>
+                                  <Input
+                                    type="number"
+                                    value={item.customizationOptions.maxQuantity}
+                                    onChange={(e) => updateComboItemCustomization(index, 'maxQuantity', parseInt(e.target.value) || 1)}
+                                    min="1"
+                                    max="10"
+                                  />
+                                </div>
+                              )}
+
+                              {item.customizationOptions.allowCustomText && (
+                                <div className="space-y-2">
+                                  <Label>Custom Text Label</Label>
+                                  <Input
+                                    value={item.customizationOptions.customTextLabel}
+                                    onChange={(e) => updateComboItemCustomization(index, 'customTextLabel', e.target.value)}
+                                    placeholder="Custom text label"
+                                  />
+                                </div>
+                              )}
+
+                              {item.customizationOptions.allowAddons && (
+                                <div className="space-y-2">
+                                  <Label>Add-on Options</Label>
+                                  <div className="flex space-x-2">
+                                    <Input
+                                      value={newAddonOption}
+                                      onChange={(e) => setNewAddonOption(e.target.value)}
+                                      placeholder="Add add-on option"
+                                    />
+                                    <Button type="button" onClick={() => addAddonOption(index)} size="sm">
+                                      <Plus className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                  {item.customizationOptions.addonOptions.length > 0 && (
+                                    <div className="flex flex-wrap gap-2">
+                                      {item.customizationOptions.addonOptions.map((addon, addonIndex) => (
+                                        <Badge key={addonIndex} variant="outline" className="flex items-center gap-1">
+                                          {addon}
+                                          <X
+                                            className="h-3 w-3 cursor-pointer"
+                                            onClick={() => removeAddonOption(index, addonIndex)}
+                                          />
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeComboItem(index)}
+                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         <div className="flex justify-end space-x-4">
           <Button
