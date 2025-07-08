@@ -25,6 +25,7 @@ export type Product = {
   isNewArrival?: boolean;
   isFeatured?: boolean;
   isCustomizable?: boolean;
+  hidden?: boolean;
   customizationOptions?: {
     allowPhotoUpload: boolean;
     allowNumberInput: boolean;
@@ -252,7 +253,9 @@ const ProductCard = ({ product, onAddToCart }: {
 
   return (
     <div
-      className="group relative bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer"
+      className={`group relative bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer ${
+        product.hidden ? 'opacity-75 border-2 border-orange-200' : ''
+      }`}
       onClick={handleCardClick}
     >
       {/* Product Image */}
@@ -273,6 +276,11 @@ const ProductCard = ({ product, onAddToCart }: {
             <Badge variant="secondary" className="text-xs px-2 py-1 flex items-center gap-1">
               <Wand2 className="h-3 w-3" />
               Customizable
+            </Badge>
+          )}
+          {product.hidden && (
+            <Badge variant="outline" className="text-xs px-2 py-1 border-orange-500 text-orange-600">
+              Hidden
             </Badge>
           )}
         </div>
