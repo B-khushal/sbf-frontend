@@ -713,7 +713,12 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
               title: product.title,
               price: discountedPrice,
               images: product.images,
-              customizationOptions: product.customizationOptions
+              category: product.category,
+              customizationOptions: product.customizationOptions,
+              // Combo-specific fields
+              comboItems: product.comboItems,
+              comboName: product.comboName,
+              comboDescription: product.comboDescription
             }}
             onAddToCart={(customizations, customTotalPrice) => {
               setCustomizations(customizations);

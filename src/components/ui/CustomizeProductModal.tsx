@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { uploadToCloudinary } from '@/lib/cloudinaryUpload';
+import { ComboItem } from '@/services/productService';
 
 type AddonOption = {
   name: string;
@@ -48,12 +49,25 @@ type CustomizationOptions = {
   previewImage: string;
 };
 
+type ComboItemCustomization = {
+  itemIndex: number;
+  message?: string;
+  color?: string;
+  size?: string;
+  quantity: number;
+  photo?: string;
+  customText?: string;
+  selectedAddons: string[];
+};
+
 type CustomizationData = {
   photo?: string;
   number?: string;
   messageCard?: string;
   selectedFlowers: (AddonOption & { quantity: number })[];
   selectedChocolates: (AddonOption & { quantity: number })[];
+  // Combo item customizations
+  comboItemCustomizations?: ComboItemCustomization[];
 };
 
 interface CustomizeProductModalProps {
@@ -64,7 +78,12 @@ interface CustomizeProductModalProps {
     title: string;
     price: number;
     images: string[];
+    category: string;
     customizationOptions: CustomizationOptions;
+    // Combo-specific fields
+    comboItems?: ComboItem[];
+    comboName?: string;
+    comboDescription?: string;
   };
   onAddToCart: (customizations: CustomizationData, totalPrice: number) => void;
 }
@@ -78,6 +97,11 @@ export function CustomizeProductModal({
   const [customizations, setCustomizations] = useState<CustomizationData>({
     selectedFlowers: [],
     selectedChocolates: [],
+    comboItemCustomizations: product.comboItems?.map((_, index) => ({
+      itemIndex: index,
+      quantity: 1,
+      selectedAddons: []
+    })) || []
   });
 
   const [totalPrice, setTotalPrice] = useState(product.price);
@@ -188,6 +212,49 @@ export function CustomizeProductModal({
 
   const getAddonTotal = (addons: (AddonOption & { quantity: number })[]) => {
     return addons.reduce((sum, addon) => sum + (addon.price * (addon.quantity || 1)), 0);
+  };
+
+  // Combo item customization functions
+  const updateComboItemCustomization = (itemIndex: number, field: keyof ComboItemCustomization, value: any) => {
+    setCustomizations(prev => ({
+      ...prev,
+      comboItemCustomizations: prev.comboItemCustomizations?.map(customization =>
+        customization.itemIndex === itemIndex
+          ? { ...customization, [field]: value }
+          : customization
+      ) || []
+    }));
+  };
+
+  const updateComboItemQuantity = (itemIndex: number, quantity: number) => {
+    if (quantity < 1) return;
+    updateComboItemCustomization(itemIndex, 'quantity', quantity);
+  };
+
+  const toggleComboItemAddon = (itemIndex: number, addonName: string) => {
+    const currentCustomization = customizations.comboItemCustomizations?.find(c => c.itemIndex === itemIndex);
+    const currentAddons = currentCustomization?.selectedAddons || [];
+    
+    const newAddons = currentAddons.includes(addonName)
+      ? currentAddons.filter(addon => addon !== addonName)
+      : [...currentAddons, addonName];
+    
+    updateComboItemCustomization(itemIndex, 'selectedAddons', newAddons);
+  };
+
+  const handleComboItemPhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>, itemIndex: number) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setIsUploading(true);
+      try {
+        const url = await uploadToCloudinary(file);
+        updateComboItemCustomization(itemIndex, 'photo', url);
+      } catch (err) {
+        alert('Failed to upload image. Please try again.');
+      } finally {
+        setIsUploading(false);
+      }
+    }
   };
 
   return (
@@ -434,6 +501,243 @@ export function CustomizeProductModal({
                   </Card>
                 )}
 
+                {/* 🎁 Combo Items Customization Section */}
+                {product.category === "combos" && product.comboItems && product.comboItems.length > 0 && (
+                  <Card className="border-2 border-purple-200 bg-purple-50/50 rounded-md p-3 mb-3">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="flex items-center gap-2 text-purple-800 text-base font-medium">
+                        <Gift className="h-5 w-5" />
+                        Customize Combo Items
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <Info className="h-4 w-4 text-purple-600" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Customize each item in your combo package</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {product.comboItems.map((item, itemIndex) => {
+                          const itemCustomization = customizations.comboItemCustomizations?.find(c => c.itemIndex === itemIndex);
+                          
+                          return (
+                            <div key={itemIndex} className="border-2 border-purple-200 rounded-lg p-4 bg-white">
+                              <div className="flex items-start gap-3 mb-3">
+                                {item.image && (
+                                  <img
+                                    src={item.image}
+                                    alt={item.name}
+                                    className="w-16 h-16 object-cover rounded-lg border border-purple-300"
+                                    onError={(e) => {
+                                      e.currentTarget.style.display = 'none';
+                                    }}
+                                  />
+                                )}
+                                <div className="flex-1">
+                                  <h4 className="font-semibold text-purple-800 mb-1">{item.name}</h4>
+                                  {item.description && (
+                                    <p className="text-sm text-gray-600 mb-2">{item.description}</p>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Quantity Control */}
+                              {item.customizationOptions.allowQuantity && (
+                                <div className="mb-3">
+                                  <Label className="text-sm font-medium text-purple-700 mb-2 block">
+                                    Quantity (Max: {item.customizationOptions.maxQuantity})
+                                  </Label>
+                                  <div className="flex items-center gap-2 bg-purple-50 rounded-lg border border-purple-300 p-2 w-fit">
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-8 w-8 p-0 hover:bg-purple-200"
+                                      onClick={() => updateComboItemQuantity(itemIndex, Math.max(1, (itemCustomization?.quantity || 1) - 1))}
+                                    >
+                                      <Minus className="h-4 w-4" />
+                                    </Button>
+                                    <span className="text-sm font-medium text-purple-700 min-w-[30px] text-center">
+                                      {itemCustomization?.quantity || 1}
+                                    </span>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-8 w-8 p-0 hover:bg-purple-200"
+                                      onClick={() => updateComboItemQuantity(itemIndex, Math.min(item.customizationOptions.maxQuantity, (itemCustomization?.quantity || 1) + 1))}
+                                    >
+                                      <Plus className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Message Input */}
+                              {item.customizationOptions.allowMessage && (
+                                <div className="mb-3">
+                                  <Label className="text-sm font-medium text-purple-700 mb-2 block">
+                                    {item.customizationOptions.messageLabel}
+                                  </Label>
+                                  <Textarea
+                                    placeholder={`Enter your message for ${item.name}...`}
+                                    value={itemCustomization?.message || ''}
+                                    onChange={(e) => updateComboItemCustomization(itemIndex, 'message', e.target.value)}
+                                    className="h-20 text-sm border-purple-300 focus:border-purple-500"
+                                  />
+                                </div>
+                              )}
+
+                              {/* Color Selection */}
+                              {item.customizationOptions.allowColorChoice && item.customizationOptions.colorOptions.length > 0 && (
+                                <div className="mb-3">
+                                  <Label className="text-sm font-medium text-purple-700 mb-2 block">
+                                    Choose Color
+                                  </Label>
+                                  <div className="flex flex-wrap gap-2">
+                                    {item.customizationOptions.colorOptions.map((color, colorIndex) => (
+                                      <Button
+                                        key={colorIndex}
+                                        type="button"
+                                        variant={itemCustomization?.color === color ? "default" : "outline"}
+                                        size="sm"
+                                        className={`text-xs ${
+                                          itemCustomization?.color === color 
+                                            ? 'bg-purple-600 border-purple-600' 
+                                            : 'border-purple-300 text-purple-700 hover:bg-purple-50'
+                                        }`}
+                                        onClick={() => updateComboItemCustomization(itemIndex, 'color', color)}
+                                      >
+                                        {color}
+                                      </Button>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Size Selection */}
+                              {item.customizationOptions.allowSizeChoice && item.customizationOptions.sizeOptions.length > 0 && (
+                                <div className="mb-3">
+                                  <Label className="text-sm font-medium text-purple-700 mb-2 block">
+                                    Choose Size
+                                  </Label>
+                                  <div className="flex flex-wrap gap-2">
+                                    {item.customizationOptions.sizeOptions.map((size, sizeIndex) => (
+                                      <Button
+                                        key={sizeIndex}
+                                        type="button"
+                                        variant={itemCustomization?.size === size ? "default" : "outline"}
+                                        size="sm"
+                                        className={`text-xs ${
+                                          itemCustomization?.size === size 
+                                            ? 'bg-purple-600 border-purple-600' 
+                                            : 'border-purple-300 text-purple-700 hover:bg-purple-50'
+                                        }`}
+                                        onClick={() => updateComboItemCustomization(itemIndex, 'size', size)}
+                                      >
+                                        {size}
+                                      </Button>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Custom Text */}
+                              {item.customizationOptions.allowCustomText && (
+                                <div className="mb-3">
+                                  <Label className="text-sm font-medium text-purple-700 mb-2 block">
+                                    {item.customizationOptions.customTextLabel}
+                                  </Label>
+                                  <Input
+                                    type="text"
+                                    placeholder={`Enter custom text for ${item.name}...`}
+                                    value={itemCustomization?.customText || ''}
+                                    onChange={(e) => updateComboItemCustomization(itemIndex, 'customText', e.target.value)}
+                                    className="h-9 text-sm border-purple-300 focus:border-purple-500"
+                                  />
+                                </div>
+                              )}
+
+                              {/* Photo Upload */}
+                              {item.customizationOptions.allowPhotoUpload && (
+                                <div className="mb-3">
+                                  <Label className="text-sm font-medium text-purple-700 mb-2 block">
+                                    Upload Photo
+                                  </Label>
+                                  {itemCustomization?.photo ? (
+                                    <div className="relative">
+                                      <img
+                                        src={itemCustomization.photo}
+                                        alt="Uploaded photo"
+                                        className="w-24 h-24 object-cover rounded-lg border border-purple-300"
+                                      />
+                                      <Button
+                                        variant="destructive"
+                                        size="icon"
+                                        className="absolute -top-2 -right-2 h-6 w-6"
+                                        onClick={() => updateComboItemCustomization(itemIndex, 'photo', undefined)}
+                                      >
+                                        <X className="h-3 w-3" />
+                                      </Button>
+                                    </div>
+                                  ) : (
+                                    <div className="border-2 border-dashed border-purple-300 rounded-lg p-4 text-center hover:border-purple-400 transition-colors">
+                                      <Upload className="h-8 w-8 text-purple-400 mx-auto mb-2" />
+                                      <Label htmlFor={`photo-upload-${itemIndex}`} className="cursor-pointer">
+                                        <div className="text-purple-600 font-medium text-sm mb-1">Click to upload photo</div>
+                                        <div className="text-xs text-gray-500">JPG, PNG up to 5MB</div>
+                                      </Label>
+                                      <Input
+                                        id={`photo-upload-${itemIndex}`}
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) => handleComboItemPhotoUpload(e, itemIndex)}
+                                        disabled={isUploading}
+                                        className="hidden"
+                                      />
+                                      {isUploading && <span className="text-xs text-purple-600">Uploading...</span>}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* Add-on Options */}
+                              {item.customizationOptions.allowAddons && item.customizationOptions.addonOptions.length > 0 && (
+                                <div className="mb-3">
+                                  <Label className="text-sm font-medium text-purple-700 mb-2 block">
+                                    Add-ons
+                                  </Label>
+                                  <div className="flex flex-wrap gap-2">
+                                    {item.customizationOptions.addonOptions.map((addon, addonIndex) => (
+                                      <Button
+                                        key={addonIndex}
+                                        type="button"
+                                        variant={itemCustomization?.selectedAddons.includes(addon) ? "default" : "outline"}
+                                        size="sm"
+                                        className={`text-xs ${
+                                          itemCustomization?.selectedAddons.includes(addon)
+                                            ? 'bg-purple-600 border-purple-600'
+                                            : 'border-purple-300 text-purple-700 hover:bg-purple-50'
+                                        }`}
+                                        onClick={() => toggleComboItemAddon(itemIndex, addon)}
+                                      >
+                                        {addon}
+                                      </Button>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
                 {/* 🍫 Chocolate Add-ons Section */}
                 {product.customizationOptions.addons.chocolates.length > 0 && (
                   <Card className="border-2 border-orange-200 bg-orange-50/50 rounded-md p-3 mb-3">
@@ -625,6 +929,46 @@ export function CustomizeProductModal({
                       <div className="flex items-center gap-2 text-sm text-gray-700">
                         <Camera className="w-4 h-4 text-blue-500" />
                         <span>Photo uploaded</span>
+                      </div>
+                    )}
+                    {/* Combo Item Customizations */}
+                    {customizations.comboItemCustomizations && customizations.comboItemCustomizations.length > 0 && (
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 text-sm text-gray-700">
+                          <Gift className="w-4 h-4 text-purple-500" />
+                          <span className="font-medium">Combo Customizations:</span>
+                        </div>
+                        {customizations.comboItemCustomizations.map((itemCustomization, index) => {
+                          const comboItem = product.comboItems?.[itemCustomization.itemIndex];
+                          if (!comboItem) return null;
+                          
+                          return (
+                            <div key={index} className="ml-6 text-xs text-gray-600 space-y-1">
+                              <div className="font-medium">{comboItem.name}:</div>
+                              {itemCustomization.quantity > 1 && (
+                                <div>• Quantity: {itemCustomization.quantity}</div>
+                              )}
+                              {itemCustomization.message && (
+                                <div>• Message: "{itemCustomization.message}"</div>
+                              )}
+                              {itemCustomization.color && (
+                                <div>• Color: {itemCustomization.color}</div>
+                              )}
+                              {itemCustomization.size && (
+                                <div>• Size: {itemCustomization.size}</div>
+                              )}
+                              {itemCustomization.customText && (
+                                <div>• Custom Text: "{itemCustomization.customText}"</div>
+                              )}
+                              {itemCustomization.photo && (
+                                <div>• Photo uploaded</div>
+                              )}
+                              {itemCustomization.selectedAddons.length > 0 && (
+                                <div>• Add-ons: {itemCustomization.selectedAddons.join(', ')}</div>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
