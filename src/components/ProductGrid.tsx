@@ -303,7 +303,7 @@ const ProductCard = ({ product, onAddToCart }: {
           src={getImageUrl(product.images[0]) || '/images/placeholder.svg'}
           alt={product.title}
           className={cn(
-            "w-full h-full object-cover transition-opacity duration-300",
+            "w-full h-full object-cover transition-opacity duration-300 group-hover:scale-110 group-hover:z-20",
             isImageLoaded ? "opacity-100" : "opacity-0"
           )}
           onLoad={() => setIsImageLoaded(true)}
@@ -335,7 +335,7 @@ const ProductCard = ({ product, onAddToCart }: {
           <Button
             variant="outline"
             size="sm"
-            className="flex-1"
+            className={`flex-1 bg-primary text-white hover:bg-primary/90 hover:shadow-lg transition-all duration-200`}
             onClick={handleAddToCart}
           >
             <ShoppingBag className="h-4 w-4 mr-1" />
