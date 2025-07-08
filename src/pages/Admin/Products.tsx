@@ -514,7 +514,9 @@ const AdminProducts: React.FC = () => {
                           }
                         </div>
                       </TableCell>
-                      <TableCell>{formatPrice(convertPrice(product.price))}</TableCell>
+                      <TableCell className={product.discount > 0 ? "text-red-600 font-bold" : "text-black font-bold"}>
+                        {formatPrice(convertPrice(product.price))}
+                      </TableCell>
                       <TableCell>{product.discount ? `${product.discount}%` : "0%"}</TableCell>
                       <TableCell className="font-bold text-primary">{formatPrice(finalPrice)}</TableCell>
                       <TableCell>

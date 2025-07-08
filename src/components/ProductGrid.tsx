@@ -320,7 +320,10 @@ const ProductCard = ({ product, onAddToCart }: {
         
         {/* Price */}
         <div className="flex items-center gap-1">
-          <span className="text-sm font-bold text-primary">
+          <span className={cn(
+            "text-sm font-bold",
+            product.discount > 0 ? "text-red-600" : "text-black"
+          )}>
             {formatPrice(convertPrice(product.discount ? product.price * (1 - product.discount / 100) : product.price))}
           </span>
           {product.discount > 0 && (

@@ -18,6 +18,7 @@ import { useAuth } from '@/hooks/use-auth';
 import PromoCodeInput from '@/components/PromoCodeInput';
 import type { PromoCodeValidationResult } from '@/services/promoCodeService';
 import { RAZORPAY_CONFIG } from '@/config/razorpay';
+import { cn } from '@/lib/utils';
 
 // Animation variants
 const containerVariants = {
@@ -819,7 +820,12 @@ const CheckoutPaymentPage = () => {
                                  </p>
                                </div>
                                <div className="text-sm font-medium">
-                                 {formatPrice(convertPrice(item.price * item.quantity))}
+                                 <span className={cn(
+  item.discount > 0 ? "text-red-600" : "text-black",
+  "font-bold"
+)}>
+  {formatPrice(convertPrice(item.price * item.quantity))}
+</span>
                                </div>
                              </div>
                              

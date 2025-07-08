@@ -13,6 +13,7 @@ import PromoCodeInput from '@/components/PromoCodeInput';
 import { useState } from 'react';
 import type { PromoCodeValidationResult } from '@/services/promoCodeService';
 import { useAuth } from '@/hooks/use-auth';
+import { cn } from '@/lib/utils';
 
 // Animation variants
 const containerVariants = {
@@ -264,7 +265,10 @@ const CartPage: React.FC = () => {
                                       {formatPrice(convertPrice(originalPrice))}
                                     </span>
                                   )}
-                                  <span className="text-base sm:text-lg font-bold text-primary">
+                                  <span className={cn(
+                                    "font-bold text-sm sm:text-base",
+                                    item.discount > 0 ? "text-red-600" : "text-black"
+                                  )}>
                                     {formatPrice(convertPrice(displayPrice))}
                                   </span>
                                 </div>
