@@ -267,6 +267,11 @@ const ProductCard = ({ product, onAddToCart }: {
               -{product.discount}%
             </Badge>
           )}
+          {isFeaturedProduct() && (
+            <Badge variant="default" className="bg-yellow-400 text-white text-xs px-2 py-1">
+              ⭐ Featured
+            </Badge>
+          )}
           {isNewProduct() && (
             <Badge variant="default" className="bg-green-500 text-xs px-2 py-1">
               NEW
