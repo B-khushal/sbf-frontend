@@ -16,6 +16,7 @@ const CategoryMenu = () => {
   const navRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
   const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [dropdownAlignRight, setDropdownAlignRight] = useState(false);
 
   const handleMouseEnter = (categoryName: string) => {
     if (hideTimeoutRef.current) {
@@ -61,6 +62,15 @@ const CategoryMenu = () => {
         const itemRect = itemRef.getBoundingClientRect();
         const left = itemRect.left - navRect.left + itemRect.width / 2;
         setDropdownPosition({ left });
+        // Check for overflow
+        const dropdownWidth = 288; // w-72 = 18rem = 288px
+        const dropdownLeft = itemRect.left + itemRect.width / 2 - dropdownWidth / 2;
+        const dropdownRight = dropdownLeft + dropdownWidth;
+        if (dropdownRight > window.innerWidth - 16) { // 16px margin
+          setDropdownAlignRight(true);
+        } else {
+          setDropdownAlignRight(false);
+        }
       }
     }
   }, [hoveredCategory]);
@@ -320,10 +330,10 @@ const CategoryMenu = () => {
               animate="visible"
               exit="exit"
               className="absolute top-full mt-2 bg-white rounded-xl shadow-lg border w-72 overflow-hidden z-[100]"
-              style={{ 
-                left: `${dropdownPosition.left}px`,
-                transform: 'translateX(-50%)',
-              }}
+              style={dropdownAlignRight
+                ? { right: 0 }
+                : { left: `${dropdownPosition.left}px`, transform: 'translateX(-50%)' }
+              }
               onMouseEnter={() => handleMouseEnter(activeCategory.name)}
             >
               <div className="p-4 border-b">
