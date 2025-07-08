@@ -194,6 +194,21 @@ const RecommendedProducts: React.FC<{ productId: string; category: string }> = (
   );
 };
 
+const getComboMaxPrice = (product: typeof product) => {
+  if (product.category !== 'combos' || !product.comboItems) return product.price;
+  let total = product.price;
+  product.comboItems.forEach(item => {
+    if (item.customizationOptions && item.customizationOptions.allowVariants && item.customizationOptions.variants && item.customizationOptions.variants.length > 0) {
+      // Use the max variant price
+      const maxVariant = item.customizationOptions.variants.reduce((max, v) => v.price > max ? v.price : max, 0);
+      total += maxVariant;
+    } else {
+      total += item.price;
+    }
+  });
+  return total;
+};
+
 const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailProps) => {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -508,11 +523,17 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
 
               {/* Pricing with Discounted Price */}
               <div className="text-xl font-semibold mb-6">
-                <span className="text-primary font-bold">{formatPrice(convertPrice(discountedPrice))}</span>
-                {product.discount && (
-                  <span className="text-muted-foreground line-through ml-2">
-                    {formatPrice(convertPrice(originalPrice))}
-                  </span>
+                {product.category === 'combos' && product.comboItems && product.comboItems.length > 0 ? (
+                  <span className="text-primary font-bold">{formatPrice(convertPrice(getComboMaxPrice(product)))}</span>
+                ) : (
+                  <>
+                    <span className="text-primary font-bold">{formatPrice(convertPrice(discountedPrice))}</span>
+                    {product.discount && (
+                      <span className="text-muted-foreground line-through ml-2">
+                        {formatPrice(convertPrice(originalPrice))}
+                      </span>
+                    )}
+                  </>
                 )}
               </div>
 
