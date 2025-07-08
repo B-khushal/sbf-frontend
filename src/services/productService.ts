@@ -7,6 +7,12 @@ export interface AddonOption {
   type: 'flower' | 'chocolate';
 }
 
+export interface ComboItemVariant {
+  name: string;
+  price: number;
+  description?: string;
+}
+
 export interface ComboItemCustomizationOptions {
   allowMessage: boolean;
   messageLabel: string;
@@ -21,12 +27,19 @@ export interface ComboItemCustomizationOptions {
   customTextLabel: string;
   allowAddons: boolean;
   addonOptions: string[];
+  // Pricing variants for size/type selection
+  variants?: ComboItemVariant[];
+  allowVariants?: boolean;
+  variantLabel?: string; // e.g., "Size", "Type", "Weight"
 }
 
 export interface ComboItem {
   name: string;
   description: string;
   image: string;
+  price: number; // Base price for this item
+  quantity: number; // Default quantity
+  notes?: string; // Optional notes field
   customizationOptions: ComboItemCustomizationOptions;
 }
 

@@ -198,6 +198,9 @@ const ProductForm = () => {
     name: "",
     description: "",
     image: "",
+    price: 0,
+    quantity: 1,
+    notes: "",
     customizationOptions: {
       allowMessage: false,
       messageLabel: "Message",
@@ -211,12 +214,17 @@ const ProductForm = () => {
       allowCustomText: false,
       customTextLabel: "Custom Text",
       allowAddons: false,
-      addonOptions: []
+      addonOptions: [],
+      allowVariants: false,
+      variantLabel: "Size",
+      variants: []
     }
   });
   const [newColorOption, setNewColorOption] = useState("");
   const [newSizeOption, setNewSizeOption] = useState("");
   const [newAddonOption, setNewAddonOption] = useState("");
+  const [newVariant, setNewVariant] = useState({ name: "", price: 0, description: "" });
+  const [comboTotalPrice, setComboTotalPrice] = useState(0);
 
   const fetchProductData = async () => {
     try {
@@ -866,7 +874,7 @@ const ProductForm = () => {
 
   // Combo item handlers
   const addComboItem = () => {
-    if (newComboItem.name.trim()) {
+    if (newComboItem.name.trim() && newComboItem.price >= 0) {
       setFormData(prev => ({
         ...prev,
         comboItems: [...(prev.comboItems || []), { ...newComboItem }]
@@ -875,6 +883,9 @@ const ProductForm = () => {
         name: "",
         description: "",
         image: "",
+        price: 0,
+        quantity: 1,
+        notes: "",
         customizationOptions: {
           allowMessage: false,
           messageLabel: "Message",
@@ -888,7 +899,10 @@ const ProductForm = () => {
           allowCustomText: false,
           customTextLabel: "Custom Text",
           allowAddons: false,
-          addonOptions: []
+          addonOptions: [],
+          allowVariants: false,
+          variantLabel: "Size",
+          variants: []
         }
       });
     }
@@ -1023,6 +1037,62 @@ const ProductForm = () => {
       )
     }));
   };
+
+  // Variant handlers
+  const addVariant = (itemIndex: number) => {
+    if (newVariant.name.trim() && newVariant.price >= 0) {
+      setFormData(prev => ({
+        ...prev,
+        comboItems: (prev.comboItems || []).map((item, i) => 
+          i === itemIndex ? {
+            ...item,
+            customizationOptions: {
+              ...item.customizationOptions,
+              variants: [...(item.customizationOptions.variants || []), { ...newVariant }]
+            }
+          } : item
+        )
+      }));
+      setNewVariant({ name: "", price: 0, description: "" });
+    }
+  };
+
+  const removeVariant = (itemIndex: number, variantIndex: number) => {
+    setFormData(prev => ({
+      ...prev,
+      comboItems: (prev.comboItems || []).map((item, i) => 
+        i === itemIndex ? {
+          ...item,
+          customizationOptions: {
+            ...item.customizationOptions,
+            variants: (item.customizationOptions.variants || []).filter((_, index) => index !== variantIndex)
+          }
+        } : item
+      )
+    }));
+  };
+
+  // Calculate total combo price
+  const calculateComboTotalPrice = useCallback(() => {
+    if (formData.category !== "combos" || !formData.comboItems || formData.comboItems.length === 0) {
+      return formData.price;
+    }
+
+    let total = formData.price; // Base price
+
+    // Add individual item prices
+    formData.comboItems.forEach(item => {
+      total += item.price * item.quantity;
+    });
+
+    return total;
+  }, [formData.category, formData.price, formData.comboItems]);
+
+  // Update total price when combo items change
+  useEffect(() => {
+    const total = calculateComboTotalPrice();
+    setComboTotalPrice(total);
+  }, [calculateComboTotalPrice]);
 
   return (
     <div className="container mx-auto py-8">
@@ -1777,6 +1847,42 @@ const ProductForm = () => {
                     />
                   </div>
                   
+                  {/* Pricing and Quantity Fields */}
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="newItemPrice">Item Price (₹) *</Label>
+                      <Input
+                        id="newItemPrice"
+                        type="number"
+                        value={newComboItem.price}
+                        onChange={(e) => setNewComboItem(prev => ({ ...prev, price: Number(e.target.value) }))}
+                        placeholder="0"
+                        min="0"
+                        step="0.01"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="newItemQuantity">Default Quantity</Label>
+                      <Input
+                        id="newItemQuantity"
+                        type="number"
+                        value={newComboItem.quantity}
+                        onChange={(e) => setNewComboItem(prev => ({ ...prev, quantity: Number(e.target.value) }))}
+                        placeholder="1"
+                        min="1"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="newItemNotes">Notes (Optional)</Label>
+                      <Input
+                        id="newItemNotes"
+                        value={newComboItem.notes}
+                        onChange={(e) => setNewComboItem(prev => ({ ...prev, notes: e.target.value }))}
+                        placeholder="Special instructions or notes"
+                      />
+                    </div>
+                  </div>
+                  
                   {/* Customization Options for New Item */}
                   <div className="space-y-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
                     <h5 className="font-medium text-gray-800">Customization Options</h5>
@@ -2068,6 +2174,111 @@ const ProductForm = () => {
                         )}
                       </div>
                     )}
+
+                    {/* Pricing Variants Section */}
+                    <div className="space-y-4 rounded-lg border border-orange-200 bg-orange-50 p-4">
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="allowVariants"
+                          checked={newComboItem.customizationOptions.allowVariants}
+                          onCheckedChange={(checked) => 
+                            setNewComboItem(prev => ({
+                              ...prev,
+                              customizationOptions: {
+                                ...prev.customizationOptions,
+                                allowVariants: checked
+                              }
+                            }))
+                          }
+                        />
+                        <Label htmlFor="allowVariants" className="font-medium text-orange-800">Enable Pricing Variants</Label>
+                      </div>
+                      
+                      {newComboItem.customizationOptions.allowVariants && (
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="variantLabel">Variant Label</Label>
+                            <Input
+                              id="variantLabel"
+                              value={newComboItem.customizationOptions.variantLabel}
+                              onChange={(e) => 
+                                setNewComboItem(prev => ({
+                                  ...prev,
+                                  customizationOptions: {
+                                    ...prev.customizationOptions,
+                                    variantLabel: e.target.value
+                                  }
+                                }))
+                              }
+                              placeholder="e.g., Size, Weight, Type"
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label>Add Variant</Label>
+                            <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
+                              <Input
+                                value={newVariant.name}
+                                onChange={(e) => setNewVariant(prev => ({ ...prev, name: e.target.value }))}
+                                placeholder="e.g., 1kg, Large, Premium"
+                              />
+                              <Input
+                                type="number"
+                                value={newVariant.price}
+                                onChange={(e) => setNewVariant(prev => ({ ...prev, price: Number(e.target.value) }))}
+                                placeholder="Price"
+                                min="0"
+                                step="0.01"
+                              />
+                              <Input
+                                value={newVariant.description}
+                                onChange={(e) => setNewVariant(prev => ({ ...prev, description: e.target.value }))}
+                                placeholder="Description (optional)"
+                              />
+                            </div>
+                            <Button type="button" onClick={() => addVariant(-1)} size="sm" className="bg-orange-600 hover:bg-orange-700">
+                              <Plus className="h-4 w-4" />
+                              Add Variant
+                            </Button>
+                          </div>
+                          
+                          {newComboItem.customizationOptions.variants && newComboItem.customizationOptions.variants.length > 0 && (
+                            <div className="space-y-2">
+                              <Label>Current Variants</Label>
+                              <div className="space-y-2">
+                                {newComboItem.customizationOptions.variants.map((variant, index) => (
+                                  <div key={index} className="flex items-center justify-between rounded-lg border border-orange-200 bg-white p-3">
+                                    <div className="flex-1">
+                                      <div className="font-medium">{variant.name}</div>
+                                      <div className="text-sm text-gray-600">₹{variant.price}</div>
+                                      {variant.description && (
+                                        <div className="text-xs text-gray-500">{variant.description}</div>
+                                      )}
+                                    </div>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => {
+                                        setNewComboItem(prev => ({
+                                          ...prev,
+                                          customizationOptions: {
+                                            ...prev.customizationOptions,
+                                            variants: prev.customizationOptions.variants.filter((_, i) => i !== index)
+                                          }
+                                        }));
+                                      }}
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <Button
@@ -2117,6 +2328,39 @@ const ProductForm = () => {
                                 placeholder="Item description"
                                 rows={2}
                               />
+                            </div>
+                            
+                            {/* Pricing and Quantity Fields for Existing Items */}
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                              <div className="space-y-2">
+                                <Label>Item Price (₹)</Label>
+                                <Input
+                                  type="number"
+                                  value={item.price || 0}
+                                  onChange={(e) => updateComboItem(index, 'price', Number(e.target.value))}
+                                  placeholder="0"
+                                  min="0"
+                                  step="0.01"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label>Default Quantity</Label>
+                                <Input
+                                  type="number"
+                                  value={item.quantity || 1}
+                                  onChange={(e) => updateComboItem(index, 'quantity', Number(e.target.value))}
+                                  placeholder="1"
+                                  min="1"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label>Notes (Optional)</Label>
+                                <Input
+                                  value={item.notes || ""}
+                                  onChange={(e) => updateComboItem(index, 'notes', e.target.value)}
+                                  placeholder="Special instructions or notes"
+                                />
+                              </div>
                             </div>
                             
                             {/* Customization Options for Existing Item */}
@@ -2296,6 +2540,85 @@ const ProductForm = () => {
                                   )}
                                 </div>
                               )}
+
+                              {/* Pricing Variants for Existing Items */}
+                              <div className="space-y-4 rounded-lg border border-orange-200 bg-orange-50 p-4">
+                                <div className="flex items-center space-x-2">
+                                  <Switch
+                                    checked={item.customizationOptions.allowVariants || false}
+                                    onCheckedChange={(checked) => updateComboItemCustomization(index, 'allowVariants', checked)}
+                                  />
+                                  <Label className="font-medium text-orange-800">Enable Pricing Variants</Label>
+                                </div>
+                                
+                                {item.customizationOptions.allowVariants && (
+                                  <div className="space-y-4">
+                                    <div className="space-y-2">
+                                      <Label>Variant Label</Label>
+                                      <Input
+                                        value={item.customizationOptions.variantLabel || "Size"}
+                                        onChange={(e) => updateComboItemCustomization(index, 'variantLabel', e.target.value)}
+                                        placeholder="e.g., Size, Weight, Type"
+                                      />
+                                    </div>
+                                    
+                                    <div className="space-y-2">
+                                      <Label>Add Variant</Label>
+                                      <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
+                                        <Input
+                                          value={newVariant.name}
+                                          onChange={(e) => setNewVariant(prev => ({ ...prev, name: e.target.value }))}
+                                          placeholder="e.g., 1kg, Large, Premium"
+                                        />
+                                        <Input
+                                          type="number"
+                                          value={newVariant.price}
+                                          onChange={(e) => setNewVariant(prev => ({ ...prev, price: Number(e.target.value) }))}
+                                          placeholder="Price"
+                                          min="0"
+                                          step="0.01"
+                                        />
+                                        <Input
+                                          value={newVariant.description}
+                                          onChange={(e) => setNewVariant(prev => ({ ...prev, description: e.target.value }))}
+                                          placeholder="Description (optional)"
+                                        />
+                                      </div>
+                                      <Button type="button" onClick={() => addVariant(index)} size="sm" className="bg-orange-600 hover:bg-orange-700">
+                                        <Plus className="h-4 w-4" />
+                                        Add Variant
+                                      </Button>
+                                    </div>
+                                    
+                                    {item.customizationOptions.variants && item.customizationOptions.variants.length > 0 && (
+                                      <div className="space-y-2">
+                                        <Label>Current Variants</Label>
+                                        <div className="space-y-2">
+                                          {item.customizationOptions.variants.map((variant, variantIndex) => (
+                                            <div key={variantIndex} className="flex items-center justify-between rounded-lg border border-orange-200 bg-white p-3">
+                                              <div className="flex-1">
+                                                <div className="font-medium">{variant.name}</div>
+                                                <div className="text-sm text-gray-600">₹{variant.price}</div>
+                                                {variant.description && (
+                                                  <div className="text-xs text-gray-500">{variant.description}</div>
+                                                )}
+                                              </div>
+                                              <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => removeVariant(index, variantIndex)}
+                                              >
+                                                <X className="h-4 w-4" />
+                                              </Button>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           </div>
                           <Button
@@ -2310,6 +2633,36 @@ const ProductForm = () => {
                         </div>
                       </div>
                     ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Real-time Pricing Breakdown */}
+              {formData.category === "combos" && (formData.comboItems || []).length > 0 && (
+                <div className="space-y-4 rounded-lg border border-green-200 bg-green-50 p-4">
+                  <h4 className="text-lg font-semibold text-green-800 flex items-center gap-2">
+                    <IndianRupee className="h-5 w-5" />
+                    Combo Pricing Breakdown
+                  </h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Base Price:</span>
+                      <span className="font-medium">₹{formData.price}</span>
+                    </div>
+                    {(formData.comboItems || []).map((item, index) => (
+                      <div key={index} className="flex justify-between">
+                        <span className="text-gray-600">+ {item.name} (Qty: {item.quantity}):</span>
+                        <span className="font-medium">₹{item.price * item.quantity}</span>
+                      </div>
+                    ))}
+                    <Separator />
+                    <div className="flex justify-between text-lg font-bold text-green-800">
+                      <span>Total Combo Price:</span>
+                      <span>₹{comboTotalPrice}</span>
+                    </div>
+                    <p className="text-xs text-green-600 mt-2">
+                      💡 This price will be automatically updated as you add or modify combo items
+                    </p>
                   </div>
                 </div>
               )}
