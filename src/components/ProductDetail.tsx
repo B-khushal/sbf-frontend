@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ShoppingCart, Heart, Share2, Minus, Plus, ChevronLeft, ChevronRight, Star, Eye, ShoppingBag, Wand2, Accordion, AccordionItem, AccordionTrigger, AccordionContent } from 'lucide-react';
+import { ShoppingCart, Heart, Share2, Minus, Plus, ChevronLeft, ChevronRight, Star, Eye, ShoppingBag, Wand2, Gift, ClipboardList, Leaf } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useCurrency } from '@/contexts/CurrencyContext';
@@ -13,7 +13,7 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import productService, { ProductData, ComboItem } from '@/services/productService';
 import ProductReviews from '@/components/ProductReviews';
-import { Gift, ClipboardList, Leaf } from 'lucide-react';
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 
 type AddonOption = {
   name: string;
