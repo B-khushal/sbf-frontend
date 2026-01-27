@@ -1,0 +1,35 @@
+# SBF Frontend - SPA Routing Configuration
+# Redirect all requests to index.html for client-side routing (React Router)
+
+# Handle static assets first (don't redirect these)
+/images/*    /images/:splat    200
+/sounds/*    /sounds/:splat    200
+/fonts/*     /fonts/:splat     200
+*.js         /:splat           200
+*.css        /:splat           200
+*.png        /:splat           200
+*.jpg        /:splat           200
+*.jpeg       /:splat           200
+*.gif        /:splat           200
+*.svg        /:splat           200
+*.ico        /:splat           200
+*.woff       /:splat           200
+*.woff2      /:splat           200
+*.ttf        /:splat           200
+*.eot        /:splat           200
+
+# Health check endpoint
+/health      /health           200
+
+# All other routes should be handled by React Router
+/*           /index.html       200
+
+# Optional: Handle specific API calls if you have external APIs
+# /api/*  https://your-backend-api.com/api/:splat  200
+
+# Optional: Handle specific file extensions that should not be redirected
+# *.js    /  404
+# *.css   /  404
+# *.png   /  404
+# *.jpg   /  404
+# *.svg   /  404 
