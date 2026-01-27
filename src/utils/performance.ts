@@ -337,12 +337,12 @@ export const preloadCriticalImages = (): void => {
   if (!isHomePage) return;
 
   const criticalImages = [
-    '/images/logosbf.png', // Logo - always needed
+    'https://res.cloudinary.com/djtrhfqan/image/upload/v1769532776/sbflorist/assets/logosbf.jpg', // Logo - always needed
   ];
 
   // Only preload hero images on homepage
   if (isHomePage) {
-    criticalImages.push('/images/1.jpg'); // First hero image only
+    criticalImages.push('https://res.cloudinary.com/djtrhfqan/image/upload/v1769532719/sbflorist/assets/1.jpg'); // First hero image only
   }
 
   criticalImages.forEach(imageUrl => {

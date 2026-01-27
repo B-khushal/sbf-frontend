@@ -157,7 +157,7 @@ const RecommendedProducts: React.FC<{ productId: string; category: string }> = (
                   </div>
                 )}
                 <img
-                  src={getImageUrl(product.images[0]) || '/images/placeholder.svg'}
+                  src={getImageUrl(product.images[0]) || 'https://res.cloudinary.com/djtrhfqan/image/upload/v1769532810/sbflorist/assets/placeholder.jpg'}
                   alt={product.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   loading="lazy"

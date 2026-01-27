@@ -243,12 +243,12 @@ const WishlistPage = () => {
                       {/* Product Image - Larger on Mobile */}
                       <div className="w-24 h-24 sm:w-20 sm:h-20 md:w-24 md:h-24 bg-gray-100 rounded-xl sm:rounded-2xl overflow-hidden flex-shrink-0 mx-auto sm:mx-0 shadow-sm">
                         <img
-                          src={item.image || "/images/placeholder.jpg"}
+                          src={item.image || "https://res.cloudinary.com/djtrhfqan/image/upload/v1769532810/sbflorist/assets/placeholder.jpg"}
                           alt={item.title}
                           className="w-full h-full object-cover"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
-                            target.src = "/images/placeholder.jpg";
+                            target.src = "https://res.cloudinary.com/djtrhfqan/image/upload/v1769532810/sbflorist/assets/placeholder.jpg";
                           }}
                         />
                       </div>

@@ -1,3 +1,5 @@
+import { PLACEHOLDER_IMAGE_URL } from './constants/cloudinaryImages';
+
 // API Configuration - Development Mode
 // Uses environment variables from .env file
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -32,7 +34,7 @@ export const getImageUrl = (imagePath: string | undefined, options?: {
   bustCache?: boolean;
 }): string => {
   if (!imagePath) {
-    return '/images/placeholder.jpg';
+    return PLACEHOLDER_IMAGE_URL;
   }
   
   // If it's already a full Cloudinary URL, apply simplified transformations if needed
@@ -133,7 +135,7 @@ export const getProductImageUrl = (imagePath: string | undefined, width: number 
 // Generate square images with simplified transformations for consistent product grid display
 export const getSquareImageUrl = (imagePath: string | undefined, size: number = 400, bustCache: boolean = false): string => {
   if (!imagePath) {
-    return '/images/placeholder.svg';
+    return PLACEHOLDER_IMAGE_URL;
   }
   
   // If it's already a full Cloudinary URL, apply simplified transformations
@@ -180,7 +182,7 @@ export const getEnhancedProductImageUrl = (
   } = options || {};
   
   if (!imagePath) {
-    return '/images/placeholder.jpg';
+    return PLACEHOLDER_IMAGE_URL;
   }
   
   // If it's already a full Cloudinary URL, apply enhanced transformations

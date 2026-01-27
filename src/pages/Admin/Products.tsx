@@ -588,7 +588,7 @@ const AdminProducts: React.FC = () => {
                                   } else if (product.images?.[0] && !product.images[0].startsWith('http')) {
                         target.src = `https://www.sbflorist.in/uploads/${product.images[0]}`;
                                   } else {
-                                    target.src = "/images/placeholder.jpg";
+                                    target.src = "https://res.cloudinary.com/djtrhfqan/image/upload/v1769532810/sbflorist/assets/placeholder.jpg";
                                   }
                                 } else {
                                   // Already tried alternatives, show placeholder icon

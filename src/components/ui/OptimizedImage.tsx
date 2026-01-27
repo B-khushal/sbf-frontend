@@ -79,7 +79,7 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
     setIsError(true);
     // Fallback to placeholder
     if (imgRef.current && !imgRef.current.src.includes('placeholder')) {
-      imgRef.current.src = '/images/placeholder.svg';
+      imgRef.current.src = 'https://res.cloudinary.com/djtrhfqan/image/upload/v1769532810/sbflorist/assets/placeholder.jpg';
     }
     onError?.();
   };

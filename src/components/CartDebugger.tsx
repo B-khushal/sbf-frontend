@@ -12,7 +12,7 @@ const CartDebugger = () => {
       _id: 'test-product-1',
       title: 'Test Product',
       price: 999,
-      images: ['/images/placeholder.svg'],
+      images: ['https://res.cloudinary.com/djtrhfqan/image/upload/v1769532810/sbflorist/assets/placeholder.jpg'],
       quantity: 1,
       category: 'test',
       discount: 0,

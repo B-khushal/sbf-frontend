@@ -10,6 +10,7 @@ import useCart from "@/hooks/use-cart";
 import useWishlist from "@/hooks/use-wishlist";
 import { useAuth } from "@/hooks/use-auth";
 import { getImageUrl } from "@/config";
+import { PLACEHOLDER_IMAGE_URL } from "@/constants/cloudinaryImages";
 import { ComboItem } from "@/services/productService";
 
 export type Product = {
@@ -372,7 +373,7 @@ const ProductCard = ({ product, onAddToCart }: {
       const wishlistItem = {
         id: String(product._id),
         title: product.title,
-        image: product.images?.[0] || '/images/placeholder.svg',
+        image: product.images?.[0] || PLACEHOLDER_IMAGE_URL,
         price: product.price
       };
 
@@ -481,7 +482,7 @@ const ProductCard = ({ product, onAddToCart }: {
 
         {/* Product Image */}
         <img
-          src={getImageUrl(product.images[0]) || '/images/placeholder.svg'}
+          src={getImageUrl(product.images[0]) || PLACEHOLDER_IMAGE_URL}
           alt={`${product.title} - Flower Delivery in Hyderabad | Online Bouquet Shop India`}
           className={cn(
             "w-full h-full object-cover transition-opacity duration-300 group-hover:scale-110 group-hover:z-20",

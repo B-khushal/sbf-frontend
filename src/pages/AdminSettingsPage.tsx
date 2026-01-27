@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, TouchSensor } from "@dnd-kit/core";
 import { arrayMove, SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { SortableItem } from "../components/ui/SortableItem";
+import { LOGO_IMAGE_URL, PLACEHOLDER_IMAGE_URL, DELIVERY_IMAGE_URL } from "../constants/cloudinaryImages";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -126,7 +127,7 @@ const AdminSettingsPage: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [shopCategories, setShopCategories] = useState<Category[]>([]);
   const [headerSettings, setHeaderSettings] = useState<HeaderSettings>({
-    logo: "/images/logosbf.png",
+    logo: LOGO_IMAGE_URL,
     navigationItems: [
       { id: "shop", label: "Shop", href: "/shop", enabled: true, order: 0 },
       { id: "about", label: "About", href: "/about", enabled: true, order: 1 },
@@ -432,7 +433,7 @@ const AdminSettingsPage: React.FC = () => {
       id: `shop-category-${Date.now()}`,
       name: "New Shop Category",
       description: "Add description here",
-      image: "/images/placeholder.jpg",
+      image: PLACEHOLDER_IMAGE_URL,
       link: "/shop/new-category",
       enabled: true,
       order: shopCategories.length,
@@ -473,7 +474,7 @@ const AdminSettingsPage: React.FC = () => {
       id: `category-${Date.now()}`,
       name: "New Category",
       description: "Add description here",
-      image: "/images/placeholder.jpg",
+      image: PLACEHOLDER_IMAGE_URL,
       link: "/shop/new-category",
       enabled: true,
       order: categories.length,
@@ -877,7 +878,7 @@ const AdminSettingsPage: React.FC = () => {
                                 <Label className="text-base font-medium">Philosophy Section Image</Label>
                                 <div className="relative group w-full max-w-md">
                                   <img
-                                    src={section.content?.image || '/images/d3.jpg'}
+                                    src={section.content?.image || DELIVERY_IMAGE_URL}
                                     alt="Philosophy section"
                                     className="w-full h-32 object-cover rounded-lg border"
                                   />

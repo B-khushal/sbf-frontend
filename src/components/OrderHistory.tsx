@@ -211,7 +211,7 @@ const OrderHistory = () => {
                           className="w-full h-full object-cover"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
-                            target.src = "/images/placeholder.jpg";
+                            target.src = "https://res.cloudinary.com/djtrhfqan/image/upload/v1769532810/sbflorist/assets/placeholder.jpg";
                           }}
                         />
                         <div className="absolute -top-1 -right-1 h-5 w-5 bg-gradient-to-r from-primary to-secondary text-white text-xs font-bold flex items-center justify-center rounded-full">

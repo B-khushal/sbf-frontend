@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo, useCallback } from 'react';
 import api from '../services/api';
 import { trackApiCall } from '../utils/performance';
+import { LOGO_IMAGE_URL } from '../constants/cloudinaryImages';
 
 console.log("SettingsContext loaded");
 
@@ -80,7 +81,7 @@ interface SettingsContextType {
 }
 
 const defaultHeaderSettings: HeaderSettings = {
-  logo: "/images/logosbf.png",
+  logo: LOGO_IMAGE_URL,
   navigationItems: [
     { id: "shop", label: "Shop", href: "/shop", enabled: true, order: 0 },
     { id: "about", label: "About", href: "/about", enabled: true, order: 1 },
