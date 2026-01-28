@@ -1,16 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import React, { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { 
-  Wand2, 
   Camera, 
   Hash, 
   MessageSquare, 
@@ -21,7 +19,6 @@ import {
   X,
   Upload,
   Check,
-  ShoppingCart,
   Plus,
   Minus
 } from 'lucide-react';
@@ -67,7 +64,6 @@ type CustomizationData = {
   messageCard?: string;
   selectedFlowers: (AddonOption & { quantity: number })[];
   selectedChocolates: (AddonOption & { quantity: number })[];
-  // Combo item customizations
   comboItemCustomizations?: ComboItemCustomization[];
 };
 
@@ -81,7 +77,6 @@ interface CustomizeProductModalProps {
     images: string[];
     category: string;
     customizationOptions: CustomizationOptions;
-    // Combo-specific fields
     comboItems?: ComboItem[];
     comboName?: string;
     comboDescription?: string;
@@ -111,20 +106,16 @@ export function CustomizeProductModal({
   const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
-    // Calculate total price based on selections
     let total = product.price;
 
-    // Add flower add-ons with quantities
     customizations.selectedFlowers.forEach(flower => {
       total += flower.price * (flower.quantity || 1);
     });
 
-    // Add chocolate add-ons with quantities
     customizations.selectedChocolates.forEach(chocolate => {
       total += chocolate.price * (chocolate.quantity || 1);
     });
 
-    // Add message card price if selected
     if (customizations.messageCard && product.customizationOptions.allowMessageCard) {
       total += product.customizationOptions.messageCardPrice;
     }
@@ -208,7 +199,7 @@ export function CustomizeProductModal({
   const handleSubmit = () => {
     onAddToCart(customizations, product.category === 'combos' ? comboTotalPrice : totalPrice);
     onClose();
-    setIsConfirmed(false); // Reset for next open
+    setIsConfirmed(false);
   };
 
   const getAddonTotal = (addons: (AddonOption & { quantity: number })[]) => {
@@ -276,7 +267,9 @@ export function CustomizeProductModal({
   return (
     <TooltipProvider>
       <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="w-full max-w-full sm:max-w-2xl md:max-w-4xl max-h-[90vh] p-0 overflow-hidden flex flex-col">
+        <DialogContent 
+          className="fixed left-[50%] top-[50%] z-50 translate-x-[-50%] translate-y-[-50%] w-full max-w-full sm:max-w-2xl md:max-w-4xl max-h-[90vh] p-0 overflow-hidden flex flex-col bg-white shadow-lg sm:rounded-lg border"
+        >
           <DialogHeader className="sticky top-0 z-20 bg-white px-4 py-3 border-b shrink-0">
             <div className="flex items-center justify-between">
               <span className="text-lg font-semibold text-gray-900 truncate pr-8">Customize {product.title}</span>
@@ -1045,4 +1038,4 @@ export function CustomizeProductModal({
       </Dialog>
     </TooltipProvider>
   );
-} 
+}
