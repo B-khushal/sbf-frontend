@@ -275,13 +275,29 @@ const CheckoutConfirmationPage = () => {
   };
 
   const handleDownloadInvoice = async () => {
-    if (!order) return;
+    if (!order) {
+      console.error('No order data available');
+      toast({
+        title: "Error",
+        description: "Order data not available. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     try {
       // Use _id (MongoDB default) or id as fallback
       const orderId = order._id || order.id;
       
+      console.log('Attempting to download invoice for order:', {
+        orderId,
+        orderNumber: order.orderNumber,
+        hasMongoId: !!order._id,
+        hasRegularId: !!order.id
+      });
+      
       if (!orderId) {
+        console.error('Order ID not found in order object:', order);
         toast({
           title: "Error",
           description: "Order ID not found. Please try again.",
@@ -290,29 +306,67 @@ const CheckoutConfirmationPage = () => {
         return;
       }
       
+      console.log('Fetching invoice from:', `/orders/${orderId}/invoice`);
+      
       const response = await api.get(`/orders/${orderId}/invoice`, {
-        responseType: 'blob'
+        responseType: 'blob',
+        headers: {
+          'Accept': 'application/pdf'
+        }
       });
+      
+      console.log('Invoice response received:', {
+        status: response.status,
+        contentType: response.headers['content-type'],
+        dataSize: response.data.size
+      });
+      
+      // Check if response is actually a PDF
+      if (!response.data || response.data.size === 0) {
+        throw new Error('Received empty response from server');
+      }
       
       const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `invoice-${order.orderNumber}.pdf`;
+      link.download = `invoice-${order.orderNumber || orderId}.pdf`;
       document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      
+      // Clean up after a short delay to ensure download starts
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }, 100);
+      
+      console.log('Invoice download initiated successfully');
       
       toast({
         title: "Invoice Downloaded",
         description: "Your invoice has been downloaded successfully.",
       });
-    } catch (error) {
-      console.error('Error downloading invoice:', error);
+    } catch (error: any) {
+      console.error('Error downloading invoice:', {
+        error,
+        message: error?.message,
+        response: error?.response?.data,
+        status: error?.response?.status
+      });
+      
+      let errorMessage = "Unable to download invoice. Please try again later.";
+      
+      if (error?.response?.status === 404) {
+        errorMessage = "Invoice not found. Please contact support.";
+      } else if (error?.response?.status === 401 || error?.response?.status === 403) {
+        errorMessage = "You don't have permission to access this invoice.";
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: "Download Failed",
-        description: "Unable to download invoice. Please try again later.",
+        description: errorMessage,
         variant: "destructive",
       });
     }

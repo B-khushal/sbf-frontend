@@ -49,6 +49,7 @@ export interface InvoiceOrder {
 }
 
 export interface Order {
+  _id?: string;
   id: string;
   orderNumber: string;
   createdAt: string;
