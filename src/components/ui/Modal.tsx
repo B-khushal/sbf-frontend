@@ -22,22 +22,9 @@ const Modal: React.FC<ModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
-      // Ensure modal is visible in viewport
-      setTimeout(() => {
-        if (modalRef.current) {
-          modalRef.current.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center'
-          });
-        }
-      }, 100);
+      // Modal will appear at current viewport position naturally
     } else {
       document.body.style.overflow = '';
-      // Scroll to top when modal closes
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
     }
     return () => {
       document.body.style.overflow = '';
