@@ -33,29 +33,31 @@ const DialogContent = React.forwardRef<
 >(({ className, children, ...props }, ref) => (
   <DialogPortal>
     <DialogOverlay />
-    {/* Fixed positioning wrapper that ensures modal is always centered in viewport */}
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
-      <DialogPrimitive.Content
-        ref={ref}
-        className={cn(
-          "relative w-full max-w-lg my-auto",
-          "bg-background border shadow-lg rounded-lg",
-          "data-[state=open]:animate-in data-[state=closed]:animate-out",
-          "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
-          "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
-          "data-[state=closed]:slide-out-to-top-[2%]",
-          "data-[state=open]:slide-in-from-top-[2%]",
-          "max-h-[calc(100vh-2rem)]",
-          className
-        )}
+    {/* Natural scroll positioning - appears at user's current viewport position */}
+    <div className="fixed inset-0 z-[100] overflow-y-auto p-4">
+      <div className="min-h-screen flex items-start justify-center pt-4 pb-20">
+        <DialogPrimitive.Content
+          ref={ref}
+          className={cn(
+            "relative w-full max-w-lg",
+            "bg-background border shadow-lg rounded-lg",
+            "data-[state=open]:animate-in data-[state=closed]:animate-out",
+            "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+            "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+            "data-[state=closed]:slide-out-to-top-[2%]",
+            "data-[state=open]:slide-in-from-top-[2%]",
+            "max-h-[calc(100vh-2rem)]",
+            className
+          )}
         {...props}
       >
         {children}
-        <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground z-10">
-          <X className="h-4 w-4" />
-          <span className="sr-only">Close</span>
-        </DialogPrimitive.Close>
-      </DialogPrimitive.Content>
+          <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground z-10">
+            <X className="h-4 w-4" />
+            <span className="sr-only">Close</span>
+          </DialogPrimitive.Close>
+        </DialogPrimitive.Content>
+      </div>
     </div>
   </DialogPortal>
 ))
