@@ -276,12 +276,11 @@ export function CustomizeProductModal({
   return (
     <TooltipProvider>
       <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="w-full max-w-full rounded-lg bg-white shadow-lg p-0 sm:max-w-2xl md:max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-          <DialogHeader className="sticky top-0 z-10 bg-white px-4 py-3 border-b flex justify-between items-center md:px-6 md:py-4 shrink-0">
-            <span className="text-lg font-semibold text-gray-900 truncate">Customize {product.title}</span>
-            <Button variant="ghost" size="icon" onClick={onClose} className="h-10 w-10">
-              <X className="h-5 w-5" />
-            </Button>
+        <DialogContent className="w-full max-w-full sm:max-w-2xl md:max-w-4xl max-h-[90vh] p-0 overflow-hidden flex flex-col">
+          <DialogHeader className="sticky top-0 z-20 bg-white px-4 py-3 border-b shrink-0">
+            <div className="flex items-center justify-between">
+              <span className="text-lg font-semibold text-gray-900 truncate pr-8">Customize {product.title}</span>
+            </div>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto px-3 py-3 md:px-6 md:py-4 flex flex-col gap-3 md:flex-row md:gap-6">
             <div className="flex-1 md:pr-6 pb-6">
