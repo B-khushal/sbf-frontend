@@ -267,8 +267,13 @@ export function CustomizeProductModal({
   return (
     <TooltipProvider>
       <Dialog open={open} onOpenChange={onClose}>
+        {/* FIXED: 
+          1. Added 'onOpenAutoFocus' to prevent viewport jumping to top 
+          2. Added 'fixed' positioning classes to ensure centering 
+        */}
         <DialogContent 
-          className="fixed left-[50%] top-[50%] z-50 translate-x-[-50%] translate-y-[-50%] w-full max-w-full sm:max-w-2xl md:max-w-4xl max-h-[90vh] p-0 overflow-hidden flex flex-col bg-white shadow-lg sm:rounded-lg border"
+          onOpenAutoFocus={(e) => e.preventDefault()}
+          className="fixed left-[50%] top-[50%] z-50 translate-x-[-50%] translate-y-[-50%] w-full max-w-full sm:max-w-2xl md:max-w-4xl max-h-[90vh] p-0 overflow-hidden flex flex-col bg-white shadow-xl rounded-lg border-0"
         >
           <DialogHeader className="sticky top-0 z-20 bg-white px-4 py-3 border-b shrink-0">
             <div className="flex items-center justify-between">
