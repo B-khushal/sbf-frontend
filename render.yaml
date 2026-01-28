@@ -1,0 +1,56 @@
+# Render Configuration for SBF Florist Frontend
+# This file configures the React + Vite app as a Static Site on Render
+
+services:
+  # Frontend - Static Site Service
+  - type: web
+    name: sbf-frontend
+    env: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    
+    # Headers for proper CORS and caching
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: X-XSS-Protection
+        value: 1; mode=block
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+    
+    # Routes configuration for SPA
+    routes:
+      # Serve static assets normally
+      - type: rewrite
+        source: /assets/*
+        destination: /assets/:splat
+      
+      # Serve all other routes through index.html (SPA fallback)
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    
+    # Environment variables for build
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: VITE_API_URL
+        value: https://sbf-backend.onrender.com/api
+      - key: VITE_UPLOADS_URL
+        value: https://sbf-backend.onrender.com
+      - key: VITE_ENABLE_PAYMENT
+        value: true
+      - key: VITE_MOCK_PAYMENT
+        value: false
+      - key: VITE_ENABLE_ANALYTICS
+        value: true
+      - key: VITE_ENABLE_EMAIL
+        value: true
+      - key: VITE_DEV_LOGGING
+        value: false

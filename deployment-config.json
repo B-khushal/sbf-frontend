@@ -1,0 +1,112 @@
+{
+  "name": "SBF Florist - Render Deployment Configuration",
+  "description": "Production-ready SPA routing configuration for Render",
+  "version": "1.0.0",
+  "deploymentPlatform": "Render",
+  "serviceType": "Static Site",
+  
+  "buildSettings": {
+    "buildCommand": "npm install && npm run build",
+    "publishDirectory": "./dist",
+    "nodeVersion": "18.x",
+    "branch": "main"
+  },
+  
+  "rewriteRules": [
+    {
+      "source": "/*",
+      "destination": "/index.html",
+      "action": "rewrite",
+      "status": 200,
+      "description": "SPA fallback - Route all requests to index.html for client-side routing"
+    }
+  ],
+  
+  "environmentVariables": {
+    "required": [
+      "VITE_API_URL",
+      "VITE_UPLOADS_URL",
+      "NODE_ENV"
+    ],
+    "optional": [
+      "VITE_GOOGLE_CLIENT_ID",
+      "VITE_RAZORPAY_KEY_ID",
+      "VITE_ENABLE_PAYMENT",
+      "VITE_ENABLE_ANALYTICS"
+    ],
+    "production": {
+      "VITE_API_URL": "https://sbf-backend.onrender.com/api",
+      "VITE_UPLOADS_URL": "https://sbf-backend.onrender.com",
+      "NODE_ENV": "production",
+      "VITE_ENABLE_PAYMENT": "true",
+      "VITE_MOCK_PAYMENT": "false",
+      "VITE_ENABLE_ANALYTICS": "true",
+      "VITE_DEV_LOGGING": "false"
+    }
+  },
+  
+  "headers": [
+    {
+      "path": "/*",
+      "headers": {
+        "X-Frame-Options": "DENY",
+        "X-Content-Type-Options": "nosniff",
+        "X-XSS-Protection": "1; mode=block",
+        "Referrer-Policy": "strict-origin-when-cross-origin"
+      }
+    },
+    {
+      "path": "/assets/*",
+      "headers": {
+        "Cache-Control": "public, max-age=31536000, immutable"
+      }
+    }
+  ],
+  
+  "verification": {
+    "preDeployment": [
+      "npm run build",
+      "Check dist/ folder exists",
+      "Verify index.html in dist/",
+      "Test API URL in .env.production"
+    ],
+    "postDeployment": [
+      "Test direct URL access: /product/:id",
+      "Test page refresh on routes",
+      "Verify API calls work",
+      "Check browser console for errors",
+      "Test authentication flow"
+    ]
+  },
+  
+  "troubleshooting": {
+    "404OnDirectURL": "Add rewrite rule in Render Dashboard: /* → /index.html",
+    "404OnRefresh": "Verify _redirects file and render.yaml are deployed",
+    "APICOrsError": "Add frontend URL to backend CORS whitelist",
+    "EnvVarsNotWorking": "Add variables in Render Dashboard, then rebuild",
+    "AssetsNotLoading": "Verify base: '/' in vite.config.ts"
+  },
+  
+  "files": {
+    "modified": [
+      "vite.config.ts",
+      "public/_redirects"
+    ],
+    "created": [
+      "render.yaml",
+      ".env.production",
+      "RENDER_DEPLOYMENT_GUIDE.md",
+      "SPA_ROUTING_FIX_SUMMARY.md",
+      "QUICK_FIX.md",
+      "verify-deployment.sh"
+    ]
+  },
+  
+  "criticalChecks": {
+    "1": "Rewrite rule MUST be added in Render Dashboard",
+    "2": "base: '/' MUST be set in vite.config.ts",
+    "3": "Environment variables MUST be added in Render Dashboard",
+    "4": "Backend CORS MUST allow frontend domain",
+    "5": "Build command MUST output to 'dist' folder"
+  }
+}

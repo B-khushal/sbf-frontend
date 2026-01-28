@@ -11,6 +11,8 @@ const __dirname = path.dirname(__filename);
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  // Critical: Set base to '/' for proper SPA routing on Render
+  base: '/',
   server: {
     host: "0.0.0.0", // Changed from "::" to bind to IPv4
     port: 8080,
@@ -155,6 +157,6 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
     host: "0.0.0.0", // Changed from "::" to bind to IPv4
     // Enable SPA fallback for preview mode
-    historyApiFallback: true,
+    strictPort: false,
   },
 }));
