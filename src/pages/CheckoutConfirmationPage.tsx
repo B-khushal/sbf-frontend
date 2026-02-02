@@ -135,91 +135,115 @@ const CheckoutConfirmationPage = () => {
   useEffect(() => {
     console.log('CheckoutConfirmationPage: Initializing...');
     
-    // Check if coming from payment page
-    const fromPaymentFlag = sessionStorage.getItem("from_payment");
-    const hasOrderParam = new URLSearchParams(window.location.search).get('order') === 'true';
-    
-    console.log('Navigation context:', {
-      fromPayment: fromPaymentFlag === "true",
-      hasOrderParam,
-      currentPath: window.location.pathname
-    });
-    
-    setFromPayment(fromPaymentFlag === "true");
-    
-    // Get order data
-    const savedOrder = localStorage.getItem('lastOrder');
-    console.log('Saved order data:', savedOrder ? 'Present' : 'Not found');
-    
-    if (!savedOrder && !redirectAttempted.current) {
-      console.log('No order data found, redirecting to cart');
-      redirectAttempted.current = true;
-      navigate('/cart');
-      return;
-    }
-    
-    if (savedOrder) {
+    // Wrap everything in try-catch to handle any localStorage access issues
+    try {
+      // Check if coming from payment page
+      const fromPaymentFlag = sessionStorage.getItem("from_payment");
+      const hasOrderParam = new URLSearchParams(window.location.search).get('order') === 'true';
+      
+      console.log('Navigation context:', {
+        fromPayment: fromPaymentFlag === "true",
+        hasOrderParam,
+        currentPath: window.location.pathname,
+        search: window.location.search
+      });
+      
+      setFromPayment(fromPaymentFlag === "true");
+      
+      // Get order data with fallbacks
+      let savedOrder = null;
       try {
-        let parsedOrder = JSON.parse(savedOrder);
-        // --- Normalization logic ---
-        // If backend uses shippingDetails, map to shipping
-        if (parsedOrder.shippingDetails && !parsedOrder.shipping) {
-          parsedOrder.shipping = parsedOrder.shippingDetails;
+        savedOrder = localStorage.getItem('lastOrder');
+        if (!savedOrder) {
+          // Try backup from sessionStorage
+          savedOrder = sessionStorage.getItem('backup_order');
+          if (savedOrder) {
+            console.log('Using backup order from sessionStorage');
+            // Restore to localStorage
+            localStorage.setItem('lastOrder', savedOrder);
+          }
         }
-        // If backend uses items with product subfield, flatten for display
-        if (parsedOrder.items && parsedOrder.items.length > 0 && parsedOrder.items[0].product) {
-          parsedOrder.items = parsedOrder.items.map((item: any) => ({
-            id: item.product._id || item.product.id || item.productId || item._id || '',
-            title: item.product.title || item.product.name || item.title || '',
-            image: (item.product.images && item.product.images[0]) || item.image || '',
-            price: item.finalPrice || item.price || (item.product.price ?? 0),
-            quantity: item.quantity || 1,
-            customizations: item.customizations || null,
-            // fallback for legacy
-            product: item.product
-          }));
-        }
-        // Fallback for subtotal/total
-        if (typeof parsedOrder.subtotal === 'undefined') {
-          parsedOrder.subtotal = Array.isArray(parsedOrder.items)
-            ? parsedOrder.items.reduce((sum: number, item: any) => {
-                const discountedPrice = item.discount && item.discount > 0 
-                  ? item.price - (item.price * item.discount / 100)
-                  : item.price;
-                return sum + ((discountedPrice || 0) * (item.quantity || 1));
-              }, 0)
-            : 0;
-        }
-        if (typeof parsedOrder.total === 'undefined') {
-          parsedOrder.total = parsedOrder.subtotal + (parsedOrder.deliveryFee || 0);
-        }
-        // Fallback for payment
-        if (!parsedOrder.payment && parsedOrder.paymentDetails) {
-          parsedOrder.payment = parsedOrder.paymentDetails;
-        }
-        setOrder(parsedOrder);
-        setIsOrderDataFetched(true);
-        console.log('Order data loaded successfully');
+      } catch (storageError) {
+        console.error('Error accessing storage:', storageError);
+      }
+      
+      console.log('Saved order data:', savedOrder ? 'Present' : 'Not found');
+      
+      if (!savedOrder && !redirectAttempted.current) {
+        console.warn('No order data found, redirecting to cart');
+        redirectAttempted.current = true;
         
-        // Clear the payment flag after successful load
-        sessionStorage.removeItem("from_payment");
+        toast({
+          title: "Order Not Found",
+          description: "No order information available. Please try placing your order again.",
+          variant: "destructive",
+        });
         
-        // Backup order data to session storage
-        sessionStorage.setItem('backup_order', savedOrder);
-      } catch (error) {
-        console.error('Error parsing order data:', error);
-        if (!redirectAttempted.current) {
-          redirectAttempted.current = true;
-          navigate('/cart');
+        navigate('/cart');
+        return;
+      }
+    
+      if (savedOrder) {
+        try {
+          let parsedOrder = JSON.parse(savedOrder);
+          // --- Normalization logic ---
+          // If backend uses shippingDetails, map to shipping
+          if (parsedOrder.shippingDetails && !parsedOrder.shipping) {
+            parsedOrder.shipping = parsedOrder.shippingDetails;
+          }
+          // If backend uses items with product subfield, flatten for display
+          if (parsedOrder.items && parsedOrder.items.length > 0 && parsedOrder.items[0].product) {
+            parsedOrder.items = parsedOrder.items.map((item: any) => ({
+              id: item.product._id || item.product.id || item.productId || item._id || '',
+              title: item.product.title || item.product.name || item.title || '',
+              image: (item.product.images && item.product.images[0]) || item.image || '',
+              price: item.finalPrice || item.price || (item.product.price ?? 0),
+              quantity: item.quantity || 1,
+              customizations: item.customizations || null,
+              // fallback for legacy
+              product: item.product
+            }));
+          }
+          // Fallback for subtotal/total
+          if (typeof parsedOrder.subtotal === 'undefined') {
+            parsedOrder.subtotal = Array.isArray(parsedOrder.items)
+              ? parsedOrder.items.reduce((sum: number, item: any) => {
+                  const discountedPrice = item.discount && item.discount > 0 
+                    ? item.price - (item.price * item.discount / 100)
+                    : item.price;
+                  return sum + ((discountedPrice || 0) * (item.quantity || 1));
+                }, 0)
+              : 0;
+          }
+          if (typeof parsedOrder.total === 'undefined') {
+            parsedOrder.total = parsedOrder.subtotal + (parsedOrder.deliveryFee || 0);
+          }
+          // Fallback for payment
+          if (!parsedOrder.payment && parsedOrder.paymentDetails) {
+            parsedOrder.payment = parsedOrder.paymentDetails;
+          }
+          setOrder(parsedOrder);
+          setIsOrderDataFetched(true);
+          console.log('Order data loaded successfully');
+          
+          // Clear the payment flag after successful load
+          sessionStorage.removeItem("from_payment");
+          
+          // Backup order data to session storage
+          sessionStorage.setItem('backup_order', savedOrder);
+        } catch (error) {
+          console.error('Error parsing order data:', error);
+          if (!redirectAttempted.current) {
+            redirectAttempted.current = true;
+            navigate('/cart');
+          }
         }
       }
-    }
-    
-    // Set confirmation visited flag
-    sessionStorage.setItem("confirmation_visited", "true");
-    
-    // Auth restoration logic
-    try {
+      
+      // Set confirmation visited flag
+      sessionStorage.setItem("confirmation_visited", "true");
+      
+      // Auth restoration logic
       const authDataString = sessionStorage.getItem('auth_data');
       
       if (authDataString) {
@@ -256,12 +280,17 @@ const CheckoutConfirmationPage = () => {
       setIsAuthenticated(!!storedIsAuthenticated && !!storedUser);
       console.log('CheckoutConfirmationPage: Auth check result:', !!storedIsAuthenticated && !!storedUser);
     } catch (error) {
-      console.error('CheckoutConfirmationPage: Error during auth check:', error);
+      console.error('CheckoutConfirmationPage: Critical error during initialization:', error);
       setIsAuthenticated(false);
+      
+      // Don't redirect if we're already showing the page
+      if (!order) {
+        setIsOrderDataFetched(true); // Stop showing loading state
+      }
     } finally {
       setIsAuthChecking(false);
     }
-  }, [navigate, addNotification, notificationSent, isOrderDataFetched]);
+  }, [navigate, addNotification, notificationSent, isOrderDataFetched, order, toast]);
   
   const handleContinueShopping = () => {
     // Clear any remaining order data
