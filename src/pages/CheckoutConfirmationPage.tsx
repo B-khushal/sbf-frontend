@@ -133,7 +133,8 @@ const CheckoutConfirmationPage = () => {
   
   // First useEffect for authentication and order processing
   useEffect(() => {
-    console.log('CheckoutConfirmationPage: Initializing...');
+    console.log('✨ CheckoutConfirmationPage: Initializing...');
+    console.log('📍 Current location:', window.location.href);
     
     // Wrap everything in try-catch to handle any localStorage access issues
     try {
@@ -141,11 +142,13 @@ const CheckoutConfirmationPage = () => {
       const fromPaymentFlag = sessionStorage.getItem("from_payment");
       const hasOrderParam = new URLSearchParams(window.location.search).get('order') === 'true';
       
-      console.log('Navigation context:', {
+      console.log('🔍 Navigation context:', {
         fromPayment: fromPaymentFlag === "true",
         hasOrderParam,
         currentPath: window.location.pathname,
-        search: window.location.search
+        search: window.location.search,
+        localStorage_keys: Object.keys(localStorage),
+        sessionStorage_keys: Object.keys(sessionStorage)
       });
       
       setFromPayment(fromPaymentFlag === "true");
@@ -154,23 +157,51 @@ const CheckoutConfirmationPage = () => {
       let savedOrder = null;
       try {
         savedOrder = localStorage.getItem('lastOrder');
+        console.log('📦 localStorage.lastOrder:', savedOrder ? `Found (${savedOrder.length} chars)` : 'Not found');
+        
         if (!savedOrder) {
           // Try backup from sessionStorage
           savedOrder = sessionStorage.getItem('backup_order');
+          console.log('📦 sessionStorage.backup_order:', savedOrder ? `Found (${savedOrder.length} chars)` : 'Not found');
+          
           if (savedOrder) {
-            console.log('Using backup order from sessionStorage');
+            console.log('✅ Using backup order from sessionStorage');
             // Restore to localStorage
             localStorage.setItem('lastOrder', savedOrder);
           }
         }
       } catch (storageError) {
-        console.error('Error accessing storage:', storageError);
+        console.error('❌ Error accessing storage:', storageError);
       }
       
-      console.log('Saved order data:', savedOrder ? 'Present' : 'Not found');
+      console.log('📊 Final order data status:', savedOrder ? 'PRESENT ✅' : 'NOT FOUND ❌');
+      
+      // If coming from payment with order param, give it a moment for data to settle
+      if (!savedOrder && hasOrderParam && fromPaymentFlag === "true") {
+        console.log('⏳ Coming from payment but no order yet, waiting 500ms...');
+        setTimeout(() => {
+          const retryOrder = localStorage.getItem('lastOrder');
+          if (!retryOrder) {
+            console.warn('❌ Still no order data after retry, redirecting to cart');
+            if (!redirectAttempted.current) {
+              redirectAttempted.current = true;
+              toast({
+                title: "Order Not Found",
+                description: "No order information available. Please try placing your order again.",
+                variant: "destructive",
+              });
+              navigate('/cart');
+            }
+          } else {
+            console.log('✅ Order data found on retry, reloading page');
+            window.location.reload();
+          }
+        }, 500);
+        return;
+      }
       
       if (!savedOrder && !redirectAttempted.current) {
-        console.warn('No order data found, redirecting to cart');
+        console.warn('❌ No order data found, redirecting to cart');
         redirectAttempted.current = true;
         
         toast({
@@ -282,15 +313,11 @@ const CheckoutConfirmationPage = () => {
     } catch (error) {
       console.error('CheckoutConfirmationPage: Critical error during initialization:', error);
       setIsAuthenticated(false);
-      
-      // Don't redirect if we're already showing the page
-      if (!order) {
-        setIsOrderDataFetched(true); // Stop showing loading state
-      }
+      setIsOrderDataFetched(true); // Stop showing loading state
     } finally {
       setIsAuthChecking(false);
     }
-  }, [navigate, addNotification, notificationSent, isOrderDataFetched, order, toast]);
+  }, [navigate, toast]); // Removed order, addNotification, notificationSent, isOrderDataFetched from dependencies
   
   const handleContinueShopping = () => {
     // Clear any remaining order data
