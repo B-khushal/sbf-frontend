@@ -836,7 +836,7 @@ const CheckoutPaymentPage = () => {
                 </CardHeader>
                 <CardContent>
                               <PromoCodeInput
-                                orderAmount={convertPrice(orderTotal)}
+                                orderAmount={orderTotal}
                                 orderItems={items}
                                 userId={user?.id}
                                 onPromoCodeApplied={handlePromoCodeApplied}

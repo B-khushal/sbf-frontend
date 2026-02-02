@@ -144,9 +144,12 @@ export const validatePromoCode = async (data: {
   userId?: string;
 }): Promise<PromoCodeValidationResult> => {
   try {
+    console.log('Validating promo code with data:', data);
     const response = await api.post('/promocodes/validate', data);
+    console.log('Promo code validation response:', response.data);
     return response.data;
   } catch (error: any) {
+    console.error('Promo code validation error:', error.response?.data || error.message);
     return {
       success: false,
       message: error.response?.data?.message || 'Failed to validate promo code'
