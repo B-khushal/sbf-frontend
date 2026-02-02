@@ -416,8 +416,16 @@ const CheckoutPaymentPage = () => {
               
               // Store order data for confirmation page
               const orderData = verificationResponse.data.order;
-              localStorage.setItem('lastOrder', JSON.stringify(orderData));
-              console.log('💾 Order data stored in localStorage');
+              const orderDataString = JSON.stringify(orderData);
+              
+              // Store in both localStorage and sessionStorage for redundancy
+              localStorage.setItem('lastOrder', orderDataString);
+              sessionStorage.setItem('backup_order', orderDataString);
+              console.log('💾 Order data stored in localStorage and sessionStorage');
+              
+              // Verify the data was actually written
+              const verifyData = localStorage.getItem('lastOrder');
+              console.log('🔍 Verification - Order data persisted:', verifyData ? 'YES ✅' : 'NO ❌');
               
               // Set a flag in sessionStorage to indicate successful payment
               sessionStorage.setItem('from_payment', 'true');
@@ -436,11 +444,18 @@ const CheckoutPaymentPage = () => {
               });
               console.log('🔔 Success notification added');
 
-              // Ensure we're in the correct context for navigation
+              // Navigate to confirmation page with a longer delay to ensure everything is saved
+              // Use window.location.href for more reliable navigation on production
               setTimeout(() => {
                 console.log('🚀 Navigating to confirmation page');
-                navigate('/checkout/confirmation?order=true', { replace: true });
-              }, 100);
+                
+                // For production reliability, use window.location instead of navigate
+                if (import.meta.env.PROD) {
+                  window.location.href = '/checkout/confirmation?order=true';
+                } else {
+                  navigate('/checkout/confirmation?order=true', { replace: true });
+                }
+              }, 500); // Increased delay to ensure localStorage is written
             } else {
               throw new Error('Payment verification failed');
             }
