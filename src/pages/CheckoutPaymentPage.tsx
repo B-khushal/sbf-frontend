@@ -414,6 +414,13 @@ const CheckoutPaymentPage = () => {
             if (verificationResponse.data.success) {
               console.log('✅ Payment verification successful, preparing for redirection');
               
+              // Show success message immediately
+              toast({
+                title: "Payment Successful! ✅",
+                description: "Redirecting to confirmation page...",
+                duration: 2000,
+              });
+              
               // Store order data for confirmation page
               const orderData = verificationResponse.data.order;
               const orderDataString = JSON.stringify(orderData);
@@ -444,18 +451,18 @@ const CheckoutPaymentPage = () => {
               });
               console.log('🔔 Success notification added');
 
-              // Navigate to confirmation page with a longer delay to ensure everything is saved
-              // Use window.location.href for more reliable navigation on production
+              // Navigate to confirmation page with adequate delay for all operations to complete
+              console.log('⏳ Waiting before navigation to ensure data persistence...');
+              
               setTimeout(() => {
-                console.log('🚀 Navigating to confirmation page');
+                console.log('🚀 Navigating to confirmation page NOW');
+                console.log('📊 Final check - lastOrder exists:', !!localStorage.getItem('lastOrder'));
+                console.log('📊 Final check - from_payment flag:', sessionStorage.getItem('from_payment'));
                 
-                // For production reliability, use window.location instead of navigate
-                if (import.meta.env.PROD) {
-                  window.location.href = '/checkout/confirmation?order=true';
-                } else {
-                  navigate('/checkout/confirmation?order=true', { replace: true });
-                }
-              }, 500); // Increased delay to ensure localStorage is written
+                // Use window.location for most reliable navigation
+                // This works in both development and production
+                window.location.href = '/checkout/confirmation?order=true';
+              }, 1000); // Increased to 1 second to ensure all async operations complete
             } else {
               throw new Error('Payment verification failed');
             }
