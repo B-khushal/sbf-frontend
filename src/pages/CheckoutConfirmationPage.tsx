@@ -134,6 +134,7 @@ const CheckoutConfirmationPage = () => {
   // First useEffect for authentication and order processing
   useEffect(() => {
     console.log('CheckoutConfirmationPage: Initializing...');
+    console.log('Full URL:', window.location.href);
     
     // Check if coming from payment page
     const fromPaymentFlag = sessionStorage.getItem("from_payment");
@@ -142,25 +143,52 @@ const CheckoutConfirmationPage = () => {
     console.log('Navigation context:', {
       fromPayment: fromPaymentFlag === "true",
       hasOrderParam,
-      currentPath: window.location.pathname
+      currentPath: window.location.pathname,
+      search: window.location.search
     });
     
     setFromPayment(fromPaymentFlag === "true");
     
-    // Get order data
+    // Get order data with detailed logging
     const savedOrder = localStorage.getItem('lastOrder');
-    console.log('Saved order data:', savedOrder ? 'Present' : 'Not found');
+    const backupOrder = sessionStorage.getItem('backup_order');
     
-    if (!savedOrder && !redirectAttempted.current) {
-      console.log('No order data found, redirecting to cart');
+    console.log('Storage check:', {
+      lastOrder: savedOrder ? `Found (${savedOrder.length} chars)` : 'NULL',
+      backupOrder: backupOrder ? `Found (${backupOrder.length} chars)` : 'NULL',
+      allLocalStorageKeys: Object.keys(localStorage),
+      allSessionStorageKeys: Object.keys(sessionStorage)
+    });
+    
+    // Try backup if main is missing
+    const orderData = savedOrder || backupOrder;
+    
+    if (!orderData && !redirectAttempted.current) {
+      console.error('❌ NO ORDER DATA FOUND - Redirecting to cart');
+      console.error('This means payment handler did not store order data properly');
       redirectAttempted.current = true;
-      navigate('/cart');
+      
+      toast({
+        title: "Order Not Found",
+        description: "Redirecting to cart. If you completed payment, please contact support.",
+        variant: "destructive",
+      });
+      
+      setTimeout(() => navigate('/cart'), 2000);
       return;
     }
     
-    if (savedOrder) {
+    if (orderData) {
       try {
-        let parsedOrder = JSON.parse(savedOrder);
+        console.log('📦 Parsing order data...');
+        let parsedOrder = JSON.parse(orderData);
+        console.log('✅ Order parsed successfully:', {
+          orderId: parsedOrder._id,
+          orderNumber: parsedOrder.orderNumber,
+          itemCount: parsedOrder.items?.length,
+          total: parsedOrder.total
+        });
+        
         // --- Normalization logic ---
         // If backend uses shippingDetails, map to shipping
         if (parsedOrder.shippingDetails && !parsedOrder.shipping) {
@@ -197,20 +225,31 @@ const CheckoutConfirmationPage = () => {
         if (!parsedOrder.payment && parsedOrder.paymentDetails) {
           parsedOrder.payment = parsedOrder.paymentDetails;
         }
+        
         setOrder(parsedOrder);
         setIsOrderDataFetched(true);
-        console.log('Order data loaded successfully');
+        console.log('✅ Order state updated successfully');
+        
+        // Save to backup if not already there
+        if (!backupOrder) {
+          sessionStorage.setItem('backup_order', orderData);
+        }
         
         // Clear the payment flag after successful load
         sessionStorage.removeItem("from_payment");
         
-        // Backup order data to session storage
-        sessionStorage.setItem('backup_order', savedOrder);
       } catch (error) {
-        console.error('Error parsing order data:', error);
+        console.error('❌ Error parsing order data:', error);
+        console.error('Raw order data:', orderData?.substring(0, 200));
+        
         if (!redirectAttempted.current) {
           redirectAttempted.current = true;
-          navigate('/cart');
+          toast({
+            title: "Error Loading Order",
+            description: "There was an error loading your order details. Redirecting to cart.",
+            variant: "destructive",
+          });
+          setTimeout(() => navigate('/cart'), 2000);
         }
       }
     }

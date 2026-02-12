@@ -426,12 +426,29 @@ const CheckoutPaymentPage = () => {
               
               // Store order data for confirmation page
               const confirmedOrder = verificationResponse.data.order;
-              console.log('📦 Order confirmed:', confirmedOrder);
+              console.log('📦 Order confirmed:', {
+                orderId: confirmedOrder._id,
+                orderNumber: confirmedOrder.orderNumber,
+                total: confirmedOrder.total
+              });
               
               // CRITICAL: Store all data FIRST (synchronous operations)
               try {
-                localStorage.setItem('lastOrder', JSON.stringify(confirmedOrder));
+                const orderJSON = JSON.stringify(confirmedOrder);
+                console.log('💾 Storing order data (size: ' + orderJSON.length + ' chars)...');
+                
+                localStorage.setItem('lastOrder', orderJSON);
                 sessionStorage.setItem('from_payment', 'true');
+                sessionStorage.setItem('backup_order', orderJSON); // Backup in session too
+                
+                // Verify storage immediately
+                const storedCheck = localStorage.getItem('lastOrder');
+                if (!storedCheck) {
+                  console.error('❌ CRITICAL: Failed to store order in localStorage!');
+                  throw new Error('Failed to store order data');
+                }
+                console.log('✅ Order data verified in localStorage');
+                
                 localStorage.removeItem('appliedPromoCode');
                 localStorage.removeItem('shippingInfo');
                 console.log('💾 All data stored successfully');
@@ -447,7 +464,12 @@ const CheckoutPaymentPage = () => {
                   message: `Your order #${confirmedOrder.orderNumber} has been confirmed.`
                 });
               } catch (storageError) {
-                console.error('Storage error (non-critical):', storageError);
+                console.error('❌ Storage error:', storageError);
+                toast({
+                  title: "Warning",
+                  description: "Order saved but there may be display issues. Contact support if needed.",
+                  variant: "destructive",
+                });
               }
               
               // NOW navigate immediately
@@ -455,8 +477,11 @@ const CheckoutPaymentPage = () => {
               console.log('🚀 NAVIGATING NOW:', confirmationUrl);
               console.log('Current location:', window.location.href);
               
-              // Use location.replace for instant, no-history navigation
-              window.location.replace(confirmationUrl);
+              // Small delay to ensure storage completes
+              setTimeout(() => {
+                console.log('📍 Executing navigation...');
+                window.location.replace(confirmationUrl);
+              }, 100);
             } else {
               console.error('❌ Payment verification failed:', verificationResponse.data);
               throw new Error(verificationResponse.data.message || 'Payment verification failed');
