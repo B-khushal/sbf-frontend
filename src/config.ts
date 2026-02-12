@@ -1,6 +1,66 @@
 // API Configuration - Development settings with production fallback
-export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-export const UPLOADS_URL = import.meta.env.VITE_UPLOADS_URL || 'http://localhost:5000';
+
+// URL validation and correction function
+const validateAndFixUrl = (url: string | undefined, defaultUrl: string): string => {
+  if (!url) return defaultUrl;
+  
+  let fixedUrl = url.trim();
+  
+  // Fix common malformations
+  // Case 1: Missing colon after protocol (https// instead of https://)
+  fixedUrl = fixedUrl.replace(/^https\/\//, 'https://');
+  fixedUrl = fixedUrl.replace(/^http\/\//, 'http://');
+  
+  // Case 2: Double protocol (http://https:// or similar)
+  fixedUrl = fixedUrl.replace(/^https?:\/\/https?:\/\//, 'https://');
+  
+  // Case 3: Ensure protocol exists
+  if (!fixedUrl.startsWith('http://') && !fixedUrl.startsWith('https://')) {
+    console.error('❌ Invalid API URL - missing protocol:', fixedUrl);
+    return defaultUrl;
+  }
+  
+  // Validate URL format
+  try {
+    new URL(fixedUrl);
+    return fixedUrl;
+  } catch (error) {
+    console.error('❌ Invalid URL format:', fixedUrl, error);
+    return defaultUrl;
+  }
+};
+
+// Validate and fix environment variables
+const rawApiUrl = import.meta.env.VITE_API_URL;
+const rawUploadsUrl = import.meta.env.VITE_UPLOADS_URL;
+
+export const API_URL = validateAndFixUrl(rawApiUrl, 'http://localhost:5000/api');
+export const UPLOADS_URL = validateAndFixUrl(rawUploadsUrl, 'http://localhost:5000');
+
+// Log configuration for debugging
+console.log('🔧 Environment Configuration:', {
+  raw: {
+    VITE_API_URL: rawApiUrl,
+    VITE_UPLOADS_URL: rawUploadsUrl,
+  },
+  corrected: {
+    API_URL,
+    UPLOADS_URL,
+  },
+  mode: import.meta.env.MODE,
+  isProduction: import.meta.env.PROD
+});
+
+// Validate HTTPS in production
+if (import.meta.env.PROD) {
+  if (!API_URL.startsWith('https://')) {
+    console.error('🚨 SECURITY WARNING: Production API URL must use HTTPS!', API_URL);
+    console.error('Current environment:', import.meta.env.MODE);
+  }
+  if (!UPLOADS_URL.startsWith('https://')) {
+    console.error('🚨 SECURITY WARNING: Production UPLOADS URL must use HTTPS!', UPLOADS_URL);
+  }
+}
 
 // Utility function to construct proper image URLs with Cloudinary optimization
 export const getImageUrl = (imagePath: string | undefined, options?: {
