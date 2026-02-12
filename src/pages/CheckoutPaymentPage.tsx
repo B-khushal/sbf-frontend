@@ -428,63 +428,35 @@ const CheckoutPaymentPage = () => {
               const confirmedOrder = verificationResponse.data.order;
               console.log('📦 Order confirmed:', confirmedOrder);
               
-              localStorage.setItem('lastOrder', JSON.stringify(confirmedOrder));
-              console.log('💾 Order data stored in localStorage');
-              
-              // Set a flag in sessionStorage to indicate successful payment
-              sessionStorage.setItem('from_payment', 'true');
-              
-              // Clear cart and related data
-              clearCart();
-              localStorage.removeItem('appliedPromoCode');
-              localStorage.removeItem('shippingInfo');
-              console.log('🧹 Cart and related data cleared');
-              
-              // Add notification
-              addNotification({
-                type: 'order',
-                title: 'Payment Successful!',
-                message: `Your order #${confirmedOrder.orderNumber} has been confirmed.`
-              });
-              console.log('🔔 Success notification added');
-
-              // Force navigation with multiple fallback methods
-              const confirmationUrl = '/checkout/confirmation?order=true';
-              console.log('🚀 Attempting navigation to:', confirmationUrl);
-              
-              // Method 1: Direct location assignment (most reliable)
+              // CRITICAL: Store all data FIRST (synchronous operations)
               try {
-                window.location.href = confirmationUrl;
-                console.log('✅ Navigation method 1: window.location.href executed');
-              } catch (navError) {
-                console.error('❌ Navigation method 1 failed:', navError);
+                localStorage.setItem('lastOrder', JSON.stringify(confirmedOrder));
+                sessionStorage.setItem('from_payment', 'true');
+                localStorage.removeItem('appliedPromoCode');
+                localStorage.removeItem('shippingInfo');
+                console.log('💾 All data stored successfully');
                 
-                // Method 2: Location replace (fallback)
-                try {
-                  window.location.replace(confirmationUrl);
-                  console.log('✅ Navigation method 2: window.location.replace executed');
-                } catch (replaceError) {
-                  console.error('❌ Navigation method 2 failed:', replaceError);
-                  
-                  // Method 3: Create and click a link (last resort)
-                  try {
-                    const link = document.createElement('a');
-                    link.href = confirmationUrl;
-                    link.click();
-                    console.log('✅ Navigation method 3: link click executed');
-                  } catch (linkError) {
-                    console.error('❌ All navigation methods failed:', linkError);
-                  }
-                }
+                // Clear cart
+                clearCart();
+                console.log('🧹 Cart cleared');
+                
+                // Add notification (non-blocking)
+                addNotification({
+                  type: 'order',
+                  title: 'Payment Successful!',
+                  message: `Your order #${confirmedOrder.orderNumber} has been confirmed.`
+                });
+              } catch (storageError) {
+                console.error('Storage error (non-critical):', storageError);
               }
               
-              // Safety timeout: Force redirect after 1 second if still on page
-              setTimeout(() => {
-                console.log('⏰ Safety timeout triggered - forcing navigation');
-                if (window.location.pathname !== '/checkout/confirmation') {
-                  window.location.href = confirmationUrl;
-                }
-              }, 1000);
+              // NOW navigate immediately
+              const confirmationUrl = '/checkout/confirmation?order=true';
+              console.log('🚀 NAVIGATING NOW:', confirmationUrl);
+              console.log('Current location:', window.location.href);
+              
+              // Use location.replace for instant, no-history navigation
+              window.location.replace(confirmationUrl);
             } else {
               console.error('❌ Payment verification failed:', verificationResponse.data);
               throw new Error(verificationResponse.data.message || 'Payment verification failed');
