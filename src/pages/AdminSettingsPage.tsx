@@ -113,6 +113,10 @@ const AdminSettingsPage: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState<string | null>(null);
   
+  // FCM Push Notifications state
+  const [adminDevices, setAdminDevices] = useState<any[]>([]);
+  const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
+  
   // State for all settings
   const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
   const [homeSections, setHomeSections] = useState<HomeSection[]>([
@@ -249,6 +253,26 @@ const AdminSettingsPage: React.FC = () => {
   };
 
     fetchAllSettings();
+  }, []);
+
+  // Fetch admin devices for push notifications
+  useEffect(() => {
+    const fetchAdminDevices = async () => {
+      try {
+        const response = await api.get('/device-tokens/admin-devices');
+        setAdminDevices(response.data.data || []);
+        
+        // Auto-select first device if available
+        if (response.data.data && response.data.data.length > 0) {
+          setSelectedDeviceId(response.data.data[0].id);
+        }
+      } catch (error) {
+        console.error('Failed to fetch admin devices:', error);
+        // Silently fail - devices list will be empty
+      }
+    };
+
+    fetchAdminDevices();
   }, []);
 
   const updateSlide = (slideId: number, field: keyof HeroSlide, value: string | boolean | number) => {
@@ -1367,56 +1391,101 @@ const AdminSettingsPage: React.FC = () => {
                     Mobile App Push Notifications
                   </CardTitle>
                   <p className="text-sm text-gray-600 mt-1">
-                    Test push notifications for the mobile app
+                    Send test notifications to registered admin devices
                   </p>
                 </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={async () => {
+                    try {
+                      const response = await api.get('/device-tokens/admin-devices');
+                      const devices = response.data.data || [];
+                      setAdminDevices(devices);
+                      if (devices.length > 0 && !selectedDeviceId) {
+                        setSelectedDeviceId(devices[0].id);
+                      }
+                      toast({
+                        title: "✅ Devices Refreshed",
+                        description: `Found ${devices.length} registered admin device(s)`,
+                      });
+                    } catch (error: any) {
+                      console.error('Failed to fetch devices:', error);
+                      toast({
+                        variant: "destructive",
+                        title: "Failed to Fetch Devices",
+                        description: error.response?.data?.message || "Could not load registered devices",
+                      });
+                    }
+                  }}
+                >
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Refresh Devices
+                </Button>
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-sm text-blue-800">
-                  <strong>Note:</strong> This sends a test notification to all registered admin devices via Firebase Cloud Messaging (FCM).
-                  Make sure you have registered your device token from the mobile app first.
+                  <strong>Note:</strong> Select a registered device below to send a test notification.
+                  Devices are automatically registered when admins log in to the mobile app.
                 </p>
               </div>
 
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="test-fcm-token" className="flex items-center gap-2">
-                    FCM Device Token <span className="text-red-500">*</span>
-                    <span className="text-xs font-normal text-gray-500">(Required)</span>
-                  </Label>
-                  <Textarea
-                    id="test-fcm-token"
-                    placeholder="Example: eF5O7Q_FCM_TOKEN_abcdefghijklmnopqrstuvwxyz1234567890..."
-                    rows={3}
-                    className="font-mono text-xs"
-                  />
-                  <div className="flex items-start gap-2 text-xs">
-                    <div className="flex-1 text-gray-500">
-                      Get this from the mobile app's Firebase token registration
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        const textarea = document.getElementById('test-fcm-token') as HTMLTextAreaElement;
-                        if (textarea) {
-                          textarea.value = 'eF5O7Q_TEST_TOKEN_FOR_DEMO_PURPOSES_1234567890abcdefghijklmnopqrstuvwxyz';
-                          toast({
-                            title: "Sample Token Added",
-                            description: "This is a demo token for testing the endpoint. Real notifications need a valid FCM token from your mobile app.",
-                          });
-                        }
-                      }}
-                      className="text-xs"
-                    >
-                      Use Sample Token
-                    </Button>
+              {/* Registered Devices List */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">Registered Admin Devices ({adminDevices.length})</Label>
+                {adminDevices.length === 0 ? (
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
+                    <Bell className="w-12 h-12 mx-auto text-gray-400 mb-3" />
+                    <p className="text-sm text-gray-600 mb-2">No devices registered yet</p>
+                    <p className="text-xs text-gray-500">
+                      Admins need to log in to the mobile app first to register their devices
+                    </p>
                   </div>
-                </div>
+                ) : (
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {adminDevices.map((device: any) => (
+                      <div
+                        key={device.id}
+                        className={`border rounded-lg p-3 cursor-pointer transition-all ${
+                          selectedDeviceId === device.id
+                            ? 'border-blue-500 bg-blue-50 shadow-sm'
+                            : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                        }`}
+                        onClick={() => setSelectedDeviceId(device.id)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-sm">{device.user?.name || 'Unknown User'}</span>
+                              <Badge variant={device.deviceType === 'android' ? 'default' : 'secondary'} className="text-xs">
+                                {device.deviceType}
+                              </Badge>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-1">{device.user?.email}</p>
+                            <p className="text-xs text-gray-400 mt-1">
+                              Last used: {new Date(device.lastUsed).toLocaleString()}
+                            </p>
+                          </div>
+                          {selectedDeviceId === device.id && (
+                            <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
+                              <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
 
+              <Separator />
+
+              {/* Test Notification Form */}
+              <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="test-notif-title">Notification Title</Label>
                   <Input
@@ -1439,26 +1508,24 @@ const AdminSettingsPage: React.FC = () => {
                 <div className="flex gap-3">
                   <Button
                     onClick={async () => {
-                      const tokenInput = document.getElementById('test-fcm-token') as HTMLTextAreaElement;
-                      const titleInput = document.getElementById('test-notif-title') as HTMLInputElement;
-                      const bodyInput = document.getElementById('test-notif-body') as HTMLTextAreaElement;
-                      
-                      const token = tokenInput?.value?.trim();
-                      const title = titleInput?.value || '🧪 Test Notification';
-                      const body = bodyInput?.value || 'This is a test notification';
-
-                      if (!token) {
+                      if (!selectedDeviceId) {
                         toast({
                           variant: "destructive",
-                          title: "❌ Token Required",
-                          description: "Please paste your FCM device token first",
+                          title: "❌ No Device Selected",
+                          description: "Please select a device first, or refresh if no devices are shown",
                         });
                         return;
                       }
 
+                      const titleInput = document.getElementById('test-notif-title') as HTMLInputElement;
+                      const bodyInput = document.getElementById('test-notif-body') as HTMLTextAreaElement;
+                      
+                      const title = titleInput?.value || '🧪 Test Notification';
+                      const body = bodyInput?.value || 'This is a test notification';
+
                       try {
-                        const response = await api.post('/device-tokens/test', {
-                          token,
+                        const response = await api.post('/device-tokens/test-by-id', {
+                          deviceId: selectedDeviceId,
                           title,
                           body,
                           data: {
@@ -1470,20 +1537,15 @@ const AdminSettingsPage: React.FC = () => {
                         if (response.data.success) {
                           toast({
                             title: "✅ Notification Sent!",
-                            description: "Test notification sent successfully!",
+                            description: "Test notification sent successfully to the selected device!",
                           });
                         }
                       } catch (error: any) {
                         console.error('Failed to send test notification:', error);
-                        console.error('Error details:', {
-                          message: error.response?.data?.message,
-                          error: error.response?.data?.error,
-                          status: error.response?.status
-                        });
                         
                         const errorMessage = error.response?.data?.message || 
                                            error.response?.data?.error || 
-                                           "Failed to send notification. Check if the token is valid.";
+                                           "Failed to send notification. Device may no longer be registered.";
                         
                         toast({
                           variant: "destructive",
@@ -1493,6 +1555,7 @@ const AdminSettingsPage: React.FC = () => {
                       }
                     }}
                     className="flex-1"
+                    disabled={!selectedDeviceId}
                   >
                     <Send className="w-4 h-4 mr-2" />
                     Send Test Notification
@@ -1509,7 +1572,8 @@ const AdminSettingsPage: React.FC = () => {
                   <li>Go to Settings → Notifications</li>
                   <li>Enable push notifications and grant permission</li>
                   <li>Your device will be automatically registered</li>
-                  <li>Return here and click "Send Test Notification"</li>
+                  <li>Return here and click "Refresh Devices" to see your device</li>
+                  <li>Select your device and click "Send Test Notification"</li>
                 </ol>
               </div>
 
