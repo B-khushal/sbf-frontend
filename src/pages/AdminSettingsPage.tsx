@@ -1382,16 +1382,39 @@ const AdminSettingsPage: React.FC = () => {
 
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="test-fcm-token">FCM Device Token *</Label>
+                  <Label htmlFor="test-fcm-token" className="flex items-center gap-2">
+                    FCM Device Token <span className="text-red-500">*</span>
+                    <span className="text-xs font-normal text-gray-500">(Required)</span>
+                  </Label>
                   <Textarea
                     id="test-fcm-token"
-                    placeholder="Paste your FCM device token here (from mobile app)"
+                    placeholder="Example: eF5O7Q_FCM_TOKEN_abcdefghijklmnopqrstuvwxyz1234567890..."
                     rows={3}
                     className="font-mono text-xs"
                   />
-                  <p className="text-xs text-gray-500">
-                    Get this from the mobile app's Firebase token registration
-                  </p>
+                  <div className="flex items-start gap-2 text-xs">
+                    <div className="flex-1 text-gray-500">
+                      Get this from the mobile app's Firebase token registration
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const textarea = document.getElementById('test-fcm-token') as HTMLTextAreaElement;
+                        if (textarea) {
+                          textarea.value = 'eF5O7Q_TEST_TOKEN_FOR_DEMO_PURPOSES_1234567890abcdefghijklmnopqrstuvwxyz';
+                          toast({
+                            title: "Sample Token Added",
+                            description: "This is a demo token for testing the endpoint. Real notifications need a valid FCM token from your mobile app.",
+                          });
+                        }
+                      }}
+                      className="text-xs"
+                    >
+                      Use Sample Token
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="space-y-2">
@@ -1452,10 +1475,20 @@ const AdminSettingsPage: React.FC = () => {
                         }
                       } catch (error: any) {
                         console.error('Failed to send test notification:', error);
+                        console.error('Error details:', {
+                          message: error.response?.data?.message,
+                          error: error.response?.data?.error,
+                          status: error.response?.status
+                        });
+                        
+                        const errorMessage = error.response?.data?.message || 
+                                           error.response?.data?.error || 
+                                           "Failed to send notification. Check if the token is valid.";
+                        
                         toast({
                           variant: "destructive",
                           title: "❌ Failed to Send",
-                          description: error.response?.data?.message || "Failed to send notification. Check if the token is valid.",
+                          description: errorMessage,
                         });
                       }
                     }}
