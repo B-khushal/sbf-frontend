@@ -133,121 +133,124 @@ const CheckoutConfirmationPage = () => {
   
   // First useEffect for authentication and order processing
   useEffect(() => {
-    console.log('CheckoutConfirmationPage: Initializing...');
-    console.log('Full URL:', window.location.href);
-    
-    // Check if coming from payment page
-    const fromPaymentFlag = sessionStorage.getItem("from_payment");
-    const hasOrderParam = new URLSearchParams(window.location.search).get('order') === 'true';
-    
-    console.log('Navigation context:', {
-      fromPayment: fromPaymentFlag === "true",
-      hasOrderParam,
-      currentPath: window.location.pathname,
-      search: window.location.search
-    });
-    
-    setFromPayment(fromPaymentFlag === "true");
-    
-    // Get order data with detailed logging
-    const savedOrder = localStorage.getItem('lastOrder');
-    const backupOrder = sessionStorage.getItem('backup_order');
-    
-    console.log('Storage check:', {
-      lastOrder: savedOrder ? `Found (${savedOrder.length} chars)` : 'NULL',
-      backupOrder: backupOrder ? `Found (${backupOrder.length} chars)` : 'NULL',
-      allLocalStorageKeys: Object.keys(localStorage),
-      allSessionStorageKeys: Object.keys(sessionStorage)
-    });
-    
-    // Try backup if main is missing
-    const orderData = savedOrder || backupOrder;
-    
-    if (!orderData && !redirectAttempted.current) {
-      console.error('❌ NO ORDER DATA FOUND - Redirecting to cart');
-      console.error('This means payment handler did not store order data properly');
-      redirectAttempted.current = true;
-      
-      toast({
-        title: "Order Not Found",
-        description: "Redirecting to cart. If you completed payment, please contact support.",
-        variant: "destructive",
-      });
-      
-      setTimeout(() => navigate('/cart'), 2000);
-      return;
-    }
-    
-    if (orderData) {
+    // Wrap everything in a try-catch to prevent any errors from blocking the page
+    const initializeConfirmationPage = async () => {
       try {
-        console.log('📦 Parsing order data...');
-        let parsedOrder = JSON.parse(orderData);
-        console.log('✅ Order parsed successfully:', {
-          orderId: parsedOrder._id,
-          orderNumber: parsedOrder.orderNumber,
-          itemCount: parsedOrder.items?.length,
-          total: parsedOrder.total
+        console.log('CheckoutConfirmationPage: Initializing...');
+        console.log('Full URL:', window.location.href);
+        
+        // Check if coming from payment page
+        const fromPaymentFlag = sessionStorage.getItem("from_payment");
+        const hasOrderParam = new URLSearchParams(window.location.search).get('order') === 'true';
+        
+        console.log('Navigation context:', {
+          fromPayment: fromPaymentFlag === "true",
+          hasOrderParam,
+          currentPath: window.location.pathname,
+          search: window.location.search
         });
         
-        // --- Normalization logic ---
-        // If backend uses shippingDetails, map to shipping
-        if (parsedOrder.shippingDetails && !parsedOrder.shipping) {
-          parsedOrder.shipping = parsedOrder.shippingDetails;
-        }
-        // If backend uses items with product subfield, flatten for display
-        if (parsedOrder.items && parsedOrder.items.length > 0 && parsedOrder.items[0].product) {
-          parsedOrder.items = parsedOrder.items.map((item: any) => ({
-            id: item.product._id || item.product.id || item.productId || item._id || '',
-            title: item.product.title || item.product.name || item.title || '',
-            image: (item.product.images && item.product.images[0]) || item.image || '',
-            price: item.finalPrice || item.price || (item.product.price ?? 0),
-            quantity: item.quantity || 1,
-            customizations: item.customizations || null,
-            // fallback for legacy
-            product: item.product
-          }));
-        }
-        // Fallback for subtotal/total
-        if (typeof parsedOrder.subtotal === 'undefined') {
-          parsedOrder.subtotal = Array.isArray(parsedOrder.items)
-            ? parsedOrder.items.reduce((sum: number, item: any) => {
-                const discountedPrice = item.discount && item.discount > 0 
-                  ? item.price - (item.price * item.discount / 100)
-                  : item.price;
-                return sum + ((discountedPrice || 0) * (item.quantity || 1));
-              }, 0)
-            : 0;
-        }
-        if (typeof parsedOrder.total === 'undefined') {
-          parsedOrder.total = parsedOrder.subtotal + (parsedOrder.deliveryFee || 0);
-        }
-        // Fallback for payment
-        if (!parsedOrder.payment && parsedOrder.paymentDetails) {
-          parsedOrder.payment = parsedOrder.paymentDetails;
-        }
+        setFromPayment(fromPaymentFlag === "true");
         
-        setOrder(parsedOrder);
-        setIsOrderDataFetched(true);
-        console.log('✅ Order state updated successfully');
+        // Get order data with detailed logging
+        const savedOrder = localStorage.getItem('lastOrder');
+        const backupOrder = sessionStorage.getItem('backup_order');
         
-        // Save to backup if not already there
-        if (!backupOrder) {
-          sessionStorage.setItem('backup_order', orderData);
-        }
+        console.log('Storage check:', {
+          lastOrder: savedOrder ? `Found (${savedOrder.length} chars)` : 'NULL',
+          backupOrder: backupOrder ? `Found (${backupOrder.length} chars)` : 'NULL',
+          allLocalStorageKeys: Object.keys(localStorage),
+          allSessionStorageKeys: Object.keys(sessionStorage)
+        });
         
-        // Clear the payment flag after successful load
-        sessionStorage.removeItem("from_payment");
+        // Try backup if main is missing
+        const orderData = savedOrder || backupOrder;
         
-      } catch (error) {
-        console.error('❌ Error parsing order data:', error);
-        console.error('Raw order data:', orderData?.substring(0, 200));
-        
-        if (!redirectAttempted.current) {
+        if (!orderData && !redirectAttempted.current) {
+          console.error('❌ NO ORDER DATA FOUND - Redirecting to cart');
+          console.error('This means payment handler did not store order data properly');
           redirectAttempted.current = true;
+          
           toast({
-            title: "Error Loading Order",
-            description: "There was an error loading your order details. Redirecting to cart.",
+            title: "Order Not Found",
+            description: "Redirecting to cart. If you completed payment, please contact support.",
             variant: "destructive",
+          });
+          
+          setTimeout(() => navigate('/cart'), 2000);
+          return;
+        }
+        
+        if (orderData) {
+          try {
+            console.log('📦 Parsing order data...');
+            let parsedOrder = JSON.parse(orderData);
+            console.log('✅ Order parsed successfully:', {
+              orderId: parsedOrder._id,
+              orderNumber: parsedOrder.orderNumber,
+              itemCount: parsedOrder.items?.length,
+              total: parsedOrder.total
+            });
+            
+            // --- Normalization logic ---
+            // If backend uses shippingDetails, map to shipping
+            if (parsedOrder.shippingDetails && !parsedOrder.shipping) {
+              parsedOrder.shipping = parsedOrder.shippingDetails;
+            }
+            // If backend uses items with product subfield, flatten for display
+            if (parsedOrder.items && parsedOrder.items.length > 0 && parsedOrder.items[0].product) {
+              parsedOrder.items = parsedOrder.items.map((item: any) => ({
+                id: item.product._id || item.product.id || item.productId || item._id || '',
+                title: item.product.title || item.product.name || item.title || '',
+                image: (item.product.images && item.product.images[0]) || item.image || '',
+                price: item.finalPrice || item.price || (item.product.price ?? 0),
+                quantity: item.quantity || 1,
+                customizations: item.customizations || null,
+                // fallback for legacy
+                product: item.product
+              }));
+            }
+            // Fallback for subtotal/total
+            if (typeof parsedOrder.subtotal === 'undefined') {
+              parsedOrder.subtotal = Array.isArray(parsedOrder.items)
+                ? parsedOrder.items.reduce((sum: number, item: any) => {
+                    const discountedPrice = item.discount && item.discount > 0 
+                      ? item.price - (item.price * item.discount / 100)
+                      : item.price;
+                    return sum + ((discountedPrice || 0) * (item.quantity || 1));
+                  }, 0)
+                : 0;
+            }
+            if (typeof parsedOrder.total === 'undefined') {
+              parsedOrder.total = parsedOrder.subtotal + (parsedOrder.deliveryFee || 0);
+            }
+            // Fallback for payment
+            if (!parsedOrder.payment && parsedOrder.paymentDetails) {
+              parsedOrder.payment = parsedOrder.paymentDetails;
+            }
+            
+            setOrder(parsedOrder);
+            setIsOrderDataFetched(true);
+            console.log('✅ Order state updated successfully');
+            
+            // Save to backup if not already there
+            if (!backupOrder) {
+              sessionStorage.setItem('backup_order', orderData);
+            }
+            
+            // Clear the payment flag after successful load
+            sessionStorage.removeItem("from_payment");
+            
+          } catch (error) {
+            console.error('❌ Error parsing order data:', error);
+            console.error('Raw order data:', orderData?.substring(0, 200));
+            
+            if (!redirectAttempted.current) {
+              redirectAttempted.current = true;
+              toast({
+                title: "Error Loading Order",
+                description: "There was an error loading your order details. Redirecting to cart.",
+                variant: "destructive",
           });
           setTimeout(() => navigate('/cart'), 2000);
         }
@@ -300,6 +303,24 @@ const CheckoutConfirmationPage = () => {
     } finally {
       setIsAuthChecking(false);
     }
+      } catch (globalError) {
+        // Catch any unexpected errors to prevent page crash
+        console.error('CheckoutConfirmationPage: Unexpected error during initialization:', globalError);
+        setIsAuthChecking(false);
+        
+        // Try to load from localStorage as fallback
+        try {
+          const storedIsAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+          const storedUser = localStorage.getItem('user');
+          setIsAuthenticated(!!storedIsAuthenticated && !!storedUser);
+        } catch (e) {
+          setIsAuthenticated(false);
+        }
+      }
+    };
+    
+    // Execute the initialization
+    initializeConfirmationPage();
   }, [navigate, addNotification, notificationSent, isOrderDataFetched]);
   
   const handleContinueShopping = () => {

@@ -472,16 +472,39 @@ const CheckoutPaymentPage = () => {
                 });
               }
               
-              // NOW navigate immediately
+              // NOW navigate immediately with multiple fallback methods
               const confirmationUrl = '/checkout/confirmation?order=true';
               console.log('🚀 NAVIGATING NOW:', confirmationUrl);
               console.log('Current location:', window.location.href);
               
-              // Small delay to ensure storage completes
+              // Navigate with React Router first (most reliable in React app)
+              try {
+                console.log('📍 Method 1: Using React Router navigate...');
+                navigate(confirmationUrl, { replace: true });
+                console.log('✅ React Router navigation initiated');
+              } catch (navError) {
+                console.error('❌ React Router navigation failed:', navError);
+              }
+              
+              // Fallback to window.location after a small delay
               setTimeout(() => {
-                console.log('📍 Executing navigation...');
-                window.location.replace(confirmationUrl);
-              }, 100);
+                // Only use window.location if we're still on the payment page
+                if (window.location.pathname.includes('/payment')) {
+                  console.log('📍 Method 2: Using window.location.href fallback...');
+                  try {
+                    window.location.href = confirmationUrl;
+                    console.log('✅ window.location.href navigation initiated');
+                  } catch (locError) {
+                    console.error('❌ window.location navigation failed:', locError);
+                    // Last resort: force reload
+                    console.log('📍 Method 3: Last resort - force page reload...');
+                    window.location.href = confirmationUrl;
+                    window.location.reload();
+                  }
+                } else {
+                  console.log('✅ Already navigated away from payment page');
+                }
+              }, 300);
             } else {
               console.error('❌ Payment verification failed:', verificationResponse.data);
               throw new Error(verificationResponse.data.message || 'Payment verification failed');

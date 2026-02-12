@@ -21,6 +21,7 @@ const useWishlist = () => {
   
   // Load wishlist from backend or localStorage
   const loadWishlist = useCallback(async () => {
+    // Don't block the app if wishlist loading fails
     console.log('loadWishlist called, isAuthenticated:', isAuthenticated);
     setIsLoading(true);
     
@@ -33,20 +34,45 @@ const useWishlist = () => {
     try {
       if (isAuthenticated) {
         console.log('Loading wishlist from backend...');
-        // Load from backend for authenticated users
-        const response = await wishlistService.getWishlist();
-        console.log('Backend response:', response);
-        const transformedItems = response.wishlist.map(item => ({
-          id: item.id,
-          title: item.title,
-          image: item.image,
-          price: item.price
-        }));
-        console.log('Transformed items:', transformedItems);
-        setItems(transformedItems);
-        
-        // Also save to localStorage as backup
-        localStorage.setItem('wishlist', JSON.stringify(transformedItems));
+        try {
+          // Load from backend for authenticated users
+          const response = await wishlistService.getWishlist();
+          console.log('Backend response:', response);
+          const transformedItems = response.wishlist.map(item => ({
+            id: item.id,
+            title: item.title,
+            image: item.image,
+            price: item.price
+          }));
+          console.log('Transformed items:', transformedItems);
+          setItems(transformedItems);
+          
+          // Also save to localStorage as backup
+          localStorage.setItem('wishlist', JSON.stringify(transformedItems));
+        } catch (apiError: any) {
+          // Silently fallback to localStorage if API fails
+          console.warn('Wishlist API failed, falling back to localStorage:', apiError.message);
+          const wishlistData = localStorage.getItem("wishlist");
+          if (wishlistData) {
+            try {
+              const parsed = JSON.parse(wishlistData);
+              if (Array.isArray(parsed)) {
+                const validItems = parsed.filter(item => 
+                  item && 
+                  typeof item === 'object' && 
+                  item.id && 
+                  item.title && 
+                  typeof item.price === 'number'
+                );
+                setItems(validItems);
+              }
+            } catch (e) {
+              setItems([]);
+            }
+          } else {
+            setItems([]);
+          }
+        }
       } else {
         console.log('Loading wishlist from localStorage...');
         // Load from localStorage for non-authenticated users
@@ -81,10 +107,10 @@ const useWishlist = () => {
         }
       }
     } catch (error) {
-      console.error('Error loading wishlist:', error);
-      // Fallback to localStorage
+      console.error('Error loading wishlist (outer catch):', error);
+      // Final fallback to localStorage
       try {
-        console.log('Falling back to localStorage due to API error');
+        console.log('Final fallback to localStorage due to error');
         const wishlistData = localStorage.getItem("wishlist");
         if (wishlistData) {
           const parsed = JSON.parse(wishlistData);
