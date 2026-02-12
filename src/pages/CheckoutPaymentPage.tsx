@@ -472,39 +472,43 @@ const CheckoutPaymentPage = () => {
                 });
               }
               
-              // NOW navigate immediately with multiple fallback methods
+              // NOW navigate immediately - Use window.location for production reliability
               const confirmationUrl = '/checkout/confirmation?order=true';
               console.log('🚀 NAVIGATING NOW:', confirmationUrl);
               console.log('Current location:', window.location.href);
+              console.log('Environment:', import.meta.env.MODE);
               
-              // Navigate with React Router first (most reliable in React app)
+              // Use window.location.href for most reliable navigation
+              // This works consistently across all environments (local & production)
               try {
-                console.log('📍 Method 1: Using React Router navigate...');
-                navigate(confirmationUrl, { replace: true });
-                console.log('✅ React Router navigation initiated');
-              } catch (navError) {
-                console.error('❌ React Router navigation failed:', navError);
-              }
-              
-              // Fallback to window.location after a small delay
-              setTimeout(() => {
-                // Only use window.location if we're still on the payment page
-                if (window.location.pathname.includes('/payment')) {
-                  console.log('📍 Method 2: Using window.location.href fallback...');
-                  try {
-                    window.location.href = confirmationUrl;
-                    console.log('✅ window.location.href navigation initiated');
-                  } catch (locError) {
-                    console.error('❌ window.location navigation failed:', locError);
-                    // Last resort: force reload
-                    console.log('📍 Method 3: Last resort - force page reload...');
-                    window.location.href = confirmationUrl;
-                    window.location.reload();
-                  }
-                } else {
-                  console.log('✅ Already navigated away from payment page');
+                console.log('📍 Navigating with window.location.href...');
+                
+                // Force navigation using href (works reliably on Render/Netlify)
+                window.location.href = confirmationUrl;
+                
+                console.log('✅ Navigation initiated');
+              } catch (error) {
+                console.error('❌ Navigation failed:', error);
+                
+                // Absolute fallback: try with full URL construction
+                try {
+                  const fullUrl = `${window.location.origin}${confirmationUrl}`;
+                  console.log('📍 Fallback: Using full URL:', fullUrl);
+                  window.location.href = fullUrl;
+                } catch (fallbackError) {
+                  console.error('❌ Fallback navigation also failed:', fallbackError);
+                  toast({
+                    title: "Navigation Issue",
+                    description: "Please click 'Continue' to view your order.",
+                    action: {
+                      label: "Continue",
+                      onClick: () => {
+                        window.location.href = confirmationUrl;
+                      }
+                    }
+                  });
                 }
-              }, 300);
+              }
             } else {
               console.error('❌ Payment verification failed:', verificationResponse.data);
               throw new Error(verificationResponse.data.message || 'Payment verification failed');
