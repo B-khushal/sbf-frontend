@@ -113,15 +113,15 @@ const VendorDashboard: React.FC = () => {
   const { vendor, stats, recentOrders, lowStockProducts, charts } = dashboardData;
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-start">
+      <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
         <div>
           <div className="flex items-center gap-3 mb-2">
             <Store className="h-8 w-8 text-primary" />
             <h1 className="text-3xl font-bold">{vendor.storeName}</h1>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2">
             <Badge className={getStatusColor(vendor.status)}>
               {getStatusIcon(vendor.status)}
               <span className="ml-1 capitalize">{vendor.status}</span>
@@ -140,13 +140,14 @@ const VendorDashboard: React.FC = () => {
         <div className="flex gap-2">
           <Button
             variant="outline"
+            size="sm"
             onClick={() => fetchDashboardData(true)}
             disabled={refreshing}
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
-          <Button onClick={() => navigate('/vendor/profile')}>
+          <Button size="sm" onClick={() => navigate('/vendor/profile')}>
             <Edit className="h-4 w-4 mr-2" />
             Edit Profile
           </Button>
@@ -154,17 +155,17 @@ const VendorDashboard: React.FC = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <DollarSign className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
               {formatPrice(convertPrice(stats.totalRevenue))}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground mt-1">
               Monthly: {formatPrice(convertPrice(stats.monthlyRevenue))}
             </p>
           </CardContent>
@@ -173,13 +174,13 @@ const VendorDashboard: React.FC = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Your Earnings</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <TrendingUp className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
               {formatPrice(convertPrice(stats.vendorEarnings))}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground mt-1">
               Monthly: {formatPrice(convertPrice(stats.monthlyEarnings))}
             </p>
           </CardContent>
@@ -188,12 +189,12 @@ const VendorDashboard: React.FC = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-            <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+            <ShoppingCart className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalOrders}</div>
-            <p className="text-xs text-muted-foreground">
-              Monthly: {stats.monthlyOrders}
+            <p className="text-xs text-muted-foreground mt-1">
+              This month: {stats.monthlyOrders}
             </p>
           </CardContent>
         </Card>
@@ -201,11 +202,11 @@ const VendorDashboard: React.FC = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Products</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
+            <Package className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalProducts}</div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground mt-1">
               Active: {stats.activeProducts}
             </p>
           </CardContent>
