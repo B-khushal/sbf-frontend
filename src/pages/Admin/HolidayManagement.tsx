@@ -154,9 +154,9 @@ const HolidayManagement: React.FC = () => {
 
   // Filters
   const [filters, setFilters] = useState({
-    category: '',
-    type: '',
-    isActive: ''
+    category: 'all',
+    type: 'all',
+    isActive: 'all'
   });
 
   useEffect(() => {
@@ -170,33 +170,8 @@ const HolidayManagement: React.FC = () => {
       console.log('3. LocalStorage user:', localStorage.getItem('user'));
       console.log('4. LocalStorage isAuthenticated:', localStorage.getItem('isAuthenticated'));
       
-      // Test API call directly
-      try {
-        console.log('5. Testing API call to /holidays/stats...');
-        const response = await fetch('https://www.sbflorist.in/api/holidays/stats?year=2024', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        console.log('6. API Response status:', response.status);
-        const data = await response.text();
-        console.log('7. API Response data:', data);
-        
-        // Also test the holidays endpoint
-        console.log('8. Testing API call to /holidays...');
-        const holidaysResponse = await fetch('https://www.sbflorist.in/api/holidays?year=2024', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        console.log('9. Holidays API Response status:', holidaysResponse.status);
-        const holidaysData = await holidaysResponse.text();
-        console.log('10. Holidays API Response data:', holidaysData);
-      } catch (error) {
-        console.error('8. API call failed:', error);
-      }
+      // Test API call directly - REMOVED HARDCODED URLs
+      // API calls are handled by holidayService which uses the configured API_URL
       console.log('=== END DEBUG ===');
     };
     
@@ -213,8 +188,8 @@ const HolidayManagement: React.FC = () => {
       
       const response = await holidayService.getAllHolidays({
         year: selectedYear,
-        category: filters.category || undefined,
-        type: filters.type || undefined,
+        category: filters.category && filters.category !== 'all' ? filters.category : undefined,
+        type: filters.type && filters.type !== 'all' ? filters.type : undefined,
         isActive: filters.isActive === 'true' ? true : filters.isActive === 'false' ? false : undefined
       });
       
@@ -405,9 +380,9 @@ const HolidayManagement: React.FC = () => {
   };
 
   const filteredHolidays = holidays.filter(holiday => {
-    if (filters.category && holiday.category !== filters.category) return false;
-    if (filters.type && holiday.type !== filters.type) return false;
-    if (filters.isActive !== '' && holiday.isActive !== (filters.isActive === 'true')) return false;
+    if (filters.category && filters.category !== 'all' && holiday.category !== filters.category) return false;
+    if (filters.type && filters.type !== 'all' && holiday.type !== filters.type) return false;
+    if (filters.isActive !== 'all' && holiday.isActive !== (filters.isActive === 'true')) return false;
     return true;
   });
 
@@ -590,12 +565,12 @@ const HolidayManagement: React.FC = () => {
             
             <div>
               <Label htmlFor="category">Category</Label>
-              <Select value={filters.category} onValueChange={(value) => setFilters({ ...filters, category: value })}>
+              <Select value={filters.category} onValueChange={(value) => setFilters({ ...filters, category: value === 'all' ? '' : value }))}>
                 <SelectTrigger>
                   <SelectValue placeholder="All categories" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All categories</SelectItem>
+                  <SelectItem value="all">All categories</SelectItem>
                   <SelectItem value="national">National</SelectItem>
                   <SelectItem value="religious">Religious</SelectItem>
                   <SelectItem value="store">Store</SelectItem>
@@ -607,12 +582,12 @@ const HolidayManagement: React.FC = () => {
             
             <div>
               <Label htmlFor="type">Type</Label>
-              <Select value={filters.type} onValueChange={(value) => setFilters({ ...filters, type: value })}>
+              <Select value={filters.type} onValueChange={(value) => setFilters({ ...filters, type: value === 'all' ? '' : value }))}>
                 <SelectTrigger>
                   <SelectValue placeholder="All types" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All types</SelectItem>
+                  <SelectItem value="all">All types</SelectItem>
                   <SelectItem value="fixed">Fixed</SelectItem>
                   <SelectItem value="dynamic">Dynamic</SelectItem>
                   <SelectItem value="store">Store</SelectItem>
@@ -622,12 +597,12 @@ const HolidayManagement: React.FC = () => {
             
             <div>
               <Label htmlFor="status">Status</Label>
-              <Select value={filters.isActive} onValueChange={(value) => setFilters({ ...filters, isActive: value })}>
+              <Select value={filters.isActive} onValueChange={(value) => setFilters({ ...filters, isActive: value === 'all' ? '' : value }))}>
                 <SelectTrigger>
                   <SelectValue placeholder="All statuses" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All statuses</SelectItem>
+                  <SelectItem value="all">All statuses</SelectItem>
                   <SelectItem value="true">Active</SelectItem>
                   <SelectItem value="false">Inactive</SelectItem>
                 </SelectContent>
