@@ -528,6 +528,13 @@ const CheckoutPaymentPage = () => {
           order_id: options.order_id
         });
         
+        console.log('%c💡 NOTE: Razorpay 400 errors are NORMAL', 'color: green; font-weight: bold');
+        console.log('%cYou may see 400 errors from:', 'color: gray');
+        console.log('%c  - /customers/status (checking if customer exists)', 'color: gray');
+        console.log('%c  - /consents (checking saved payment methods)', 'color: gray');
+        console.log('%cThese are safe to ignore - payment will work fine!', 'color: green');
+        console.log('%cOnly worry if: Payment verification fails or order is not created', 'color: orange');
+        
         const rzp = new window.Razorpay(options);
         
         // Add error event handler
