@@ -23,7 +23,9 @@ import {
   Image as ImageIcon,
   Edit,
   Settings,
-  ShoppingBag
+  ShoppingBag,
+  Bell,
+  Send
 } from "lucide-react";
 import api from "../services/api";
 import { uploadImage } from "../services/uploadService";
@@ -610,13 +612,14 @@ const AdminSettingsPage: React.FC = () => {
       </div>
 
       <Tabs defaultValue="hero-slides" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6 lg:w-[720px]">
+        <TabsList className="grid w-full grid-cols-7 lg:w-[840px]">
           <TabsTrigger value="hero-slides">Hero Slides</TabsTrigger>
           <TabsTrigger value="sections">Page Sections</TabsTrigger>
           <TabsTrigger value="shop-categories">Shop Categories</TabsTrigger>
           <TabsTrigger value="categories">Home Categories</TabsTrigger>
           <TabsTrigger value="header">Header</TabsTrigger>
           <TabsTrigger value="footer">Footer</TabsTrigger>
+          <TabsTrigger value="notifications">App Notifications</TabsTrigger>
         </TabsList>
 
         {/* Hero Slides Tab */}
@@ -1348,6 +1351,153 @@ const AdminSettingsPage: React.FC = () => {
                     />
                   </div>
                 )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* App Notifications Tab */}
+        <TabsContent value="notifications" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Bell className="w-5 h-5" />
+                    Mobile App Push Notifications
+                  </CardTitle>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Test push notifications for the mobile app
+                  </p>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm text-blue-800">
+                  <strong>Note:</strong> This sends a test notification to all registered admin devices via Firebase Cloud Messaging (FCM).
+                  Make sure you have registered your device token from the mobile app first.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="test-fcm-token">FCM Device Token *</Label>
+                  <Textarea
+                    id="test-fcm-token"
+                    placeholder="Paste your FCM device token here (from mobile app)"
+                    rows={3}
+                    className="font-mono text-xs"
+                  />
+                  <p className="text-xs text-gray-500">
+                    Get this from the mobile app's Firebase token registration
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="test-notif-title">Notification Title</Label>
+                  <Input
+                    id="test-notif-title"
+                    placeholder="Enter notification title"
+                    defaultValue="🧪 Test Notification"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="test-notif-body">Notification Body</Label>
+                  <Textarea
+                    id="test-notif-body"
+                    placeholder="Enter notification message"
+                    defaultValue="This is a test push notification from SBF Florist Admin Panel"
+                    rows={3}
+                  />
+                </div>
+
+                <div className="flex gap-3">
+                  <Button
+                    onClick={async () => {
+                      const tokenInput = document.getElementById('test-fcm-token') as HTMLTextAreaElement;
+                      const titleInput = document.getElementById('test-notif-title') as HTMLInputElement;
+                      const bodyInput = document.getElementById('test-notif-body') as HTMLTextAreaElement;
+                      
+                      const token = tokenInput?.value?.trim();
+                      const title = titleInput?.value || '🧪 Test Notification';
+                      const body = bodyInput?.value || 'This is a test notification';
+
+                      if (!token) {
+                        toast({
+                          variant: "destructive",
+                          title: "❌ Token Required",
+                          description: "Please paste your FCM device token first",
+                        });
+                        return;
+                      }
+
+                      try {
+                        const response = await api.post('/device-tokens/test', {
+                          token,
+                          title,
+                          body,
+                          data: {
+                            source: 'admin_panel',
+                            timestamp: new Date().toISOString()
+                          }
+                        });
+
+                        if (response.data.success) {
+                          toast({
+                            title: "✅ Notification Sent!",
+                            description: "Test notification sent successfully!",
+                          });
+                        }
+                      } catch (error: any) {
+                        console.error('Failed to send test notification:', error);
+                        toast({
+                          variant: "destructive",
+                          title: "❌ Failed to Send",
+                          description: error.response?.data?.message || "Failed to send notification. Check if the token is valid.",
+                        });
+                      }
+                    }}
+                    className="flex-1"
+                  >
+                    <Send className="w-4 h-4 mr-2" />
+                    Send Test Notification
+                  </Button>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-3">
+                <h4 className="font-medium text-sm">How to Register Your Device:</h4>
+                <ol className="text-sm text-gray-600 space-y-2 pl-5 list-decimal">
+                  <li>Open the mobile app and log in as admin</li>
+                  <li>Go to Settings → Notifications</li>
+                  <li>Enable push notifications and grant permission</li>
+                  <li>Your device will be automatically registered</li>
+                  <li>Return here and click "Send Test Notification"</li>
+                </ol>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-3">
+                <h4 className="font-medium text-sm">Firebase Configuration Status:</h4>
+                <div className="flex items-center gap-2">
+                  {process.env.NODE_ENV === 'development' ? (
+                    <Badge variant="outline" className="bg-yellow-50 text-yellow-800 border-yellow-200">
+                      Development Mode
+                    </Badge>
+                  ) : (
+                    <Badge variant="default" className="bg-green-50 text-green-800 border-green-200">
+                      Production Mode
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500">
+                  Push notifications are configured on the backend. Check server logs for Firebase initialization status.
+                </p>
               </div>
             </CardContent>
           </Card>
