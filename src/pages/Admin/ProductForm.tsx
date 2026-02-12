@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -86,9 +86,7 @@ const CATEGORIES = [
   { value: "garden-plants", label: "Garden Plants" },
   { value: "air-purifying", label: "Air Purifying" },
   { value: "sympathy-bouquets", label: "Sympathy Bouquets" },
-  { value: "condolence-arrangements", label: "Condolence Arrangements" },
-  { value: "memorial-flowers", label: "Memorial Flowers" },
-  { value: "peaceful-arrangements", label: "Peaceful Arrangements" }
+  { value: "condolence-arrangements", label: "Condolence Arrangements" }
 ];
 
 const COMBO_SUBCATEGORIES = [
@@ -199,9 +197,19 @@ const initialFormData: ProductData = {
 
 const ProductForm = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams();
   const { toast } = useToast();
   const isEditMode = Boolean(id);
+  
+  // Determine if user is admin or vendor based on current path
+  const isVendorPath = location.pathname.includes('/vendor/');
+  const [userRole, setUserRole] = useState<string>('');
+  
+  // Helper function to get the correct products list route based on user role
+  const getProductsListRoute = () => {
+    return isVendorPath ? '/vendor/products' : '/admin/products';
+  };
 
   const [formData, setFormData] = useState<ProductData>(initialFormData);
   const [errors, setErrors] = useState<FormErrors>({});
@@ -349,7 +357,7 @@ const ProductForm = () => {
             duration: 5000,
           });
           setTimeout(() => {
-            navigate('/admin/products');
+            navigate(getProductsListRoute());
           }, 2000);
         } else if (error.response?.status === 401) {
           toast({
@@ -422,21 +430,29 @@ const ProductForm = () => {
         return;
       }
 
-      let isAdmin = false;
+      let currentUserRole = '';
+      let hasAccess = false;
       
       try {
         if (userData) {
           const parsed = JSON.parse(userData);
-          isAdmin = parsed.role === 'admin';
+          currentUserRole = parsed.role;
+          hasAccess = parsed.role === 'admin' || parsed.role === 'vendor';
         } else if (user) {
           const parsed = JSON.parse(user);
-          isAdmin = parsed.role === 'admin';
+          currentUserRole = parsed.role;
+          hasAccess = parsed.role === 'admin' || parsed.role === 'vendor';
         }
         
         const storedRole = localStorage.getItem('role');
-        if (storedRole === 'admin') isAdmin = true;
+        if (storedRole === 'admin' || storedRole === 'vendor') {
+          currentUserRole = storedRole;
+          hasAccess = true;
+        }
         
-        if (!isAdmin) {
+        setUserRole(currentUserRole);
+        
+        if (!hasAccess) {
           toast({
             title: "Access Denied",
             description: "You don't have permission to access this page",
@@ -927,7 +943,7 @@ const ProductForm = () => {
           variant: "default",
         });
       }
-      navigate('/admin/products');
+      navigate(getProductsListRoute());
     } catch (error) {
       console.error('Error saving product:', error);
       if (axios.isAxiosError(error)) {
@@ -1316,7 +1332,7 @@ const ProductForm = () => {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => navigate('/admin/products')}
+              onClick={() => navigate(getProductsListRoute())}
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
@@ -1341,7 +1357,7 @@ const ProductForm = () => {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate('/admin/products')}
+            onClick={() => navigate(getProductsListRoute())}
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
@@ -3066,7 +3082,7 @@ const ProductForm = () => {
           <Button
             type="button"
             variant="outline"
-            onClick={() => navigate('/admin/products')}
+            onClick={() => navigate(getProductsListRoute())}
           >
             Cancel
           </Button>
