@@ -1,0 +1,370 @@
+/* Import Inter font from Google Fonts instead of rsms.me */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light Blue, Pink, Green & White Color Scheme */
+    --background: 0 0% 100%; /* Pure white */
+    --foreground: 220 20% 25%; /* Soft dark blue-gray for text */
+    
+    --card: 0 0% 100%; /* Pure white cards */
+    --card-foreground: 220 20% 25%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 25%;
+    
+    /* Light Blue Primary */
+    --primary: 200 100% 75%; /* Light blue */
+    --primary-foreground: 220 30% 15%; /* Dark blue-gray text */
+    
+    /* Light Pink Secondary */
+    --secondary: 320 60% 85%; /* Light pink */
+    --secondary-foreground: 320 30% 25%; /* Dark pink text */
+    
+    /* Light muted tones */
+    --muted: 210 40% 96%; /* Very light blue-gray */
+    --muted-foreground: 220 15% 45%; /* Medium blue-gray */
+    
+    /* Light Green Accent */
+    --accent: 140 50% 80%; /* Light green */
+    --accent-foreground: 140 40% 25%; /* Dark green text */
+    
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    
+    /* Light borders and inputs */
+    --border: 200 30% 90%; /* Light blue-gray borders */
+    --input: 200 30% 95%; /* Very light blue input backgrounds */
+    --ring: 200 100% 60%; /* Light blue focus rings */
+    
+    --radius: 0.75rem;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+
+  * {
+    @apply border-border;
+  }
+  
+  html {
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+    scroll-behavior: smooth;
+    font-family: 'Inter', sans-serif;
+  }
+  
+  body {
+    @apply bg-background text-foreground antialiased;
+    overflow-x: hidden;
+    /* Ensure proper scroll behavior for dropdowns */
+    scroll-behavior: smooth;
+  }
+
+  ::selection {
+    @apply bg-primary/10 text-primary;
+  }
+}
+
+@layer components {
+  .glass {
+    @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-sm;
+  }
+  
+  .button-hover {
+    @apply transition-all duration-300 ease-out-expo hover:opacity-80;
+  }
+  
+  .section-padding {
+    @apply py-16 sm:py-24 px-4 sm:px-6 md:px-8;
+  }
+  
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .fade-mask {
+    mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+  }
+  
+  .subtle-shadow {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+  }
+  
+  .hover-lift {
+    @apply transition-transform duration-300 ease-smooth hover:-translate-y-1;
+  }
+}
+
+@layer utilities {
+  .ease-out-expo {
+    transition-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+  }
+  
+  .ease-smooth {
+    transition-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+  }
+  
+  /* Standardized Z-Index System */
+  .z-nav {
+    z-index: 50; /* Navigation header */
+  }
+  .z-nav-sub {
+    z-index: 40; /* Category menu (below main nav) */
+  }
+  .z-dropdown {
+    z-index: 60; /* Dropdowns (above nav) */
+  }
+  .z-sheet {
+    z-index: 80; /* Sheets/Sidebars */
+  }
+  .z-modal {
+    z-index: 90; /* Modals and overlays */
+  }
+  .z-toast {
+    z-index: 100; /* Toasts and notifications */
+  }
+  
+  /* Dropdown Utilities */
+  .dropdown-shadow {
+    box-shadow: 0 10px 38px -10px rgba(22, 23, 24, 0.35), 0 10px 20px -15px rgba(22, 23, 24, 0.2);
+  }
+  
+  .dropdown-content {
+    @apply bg-white border border-gray-100 rounded-xl shadow-xl z-dropdown will-change-transform;
+    transform: translateZ(0);
+    contain: layout style paint;
+  }
+  
+  /* Sidebar Menu Item Utilities */
+  .sidebar-item {
+    @apply flex items-center px-3 py-2.5 rounded-lg transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-700;
+  }
+  
+  .sidebar-item-icon {
+    @apply flex items-center justify-center w-5 h-5;
+  }
+  
+  .sidebar-item-text {
+    @apply font-medium;
+  }
+  
+  .sidebar-item-collapsed {
+    @apply justify-center;
+  }
+  
+  .sidebar-item-expanded {
+    @apply gap-3;
+  }
+  
+  /* Navigation Item Utilities */
+  .nav-dropdown-item {
+    @apply flex items-center w-full px-3 py-2.5 text-sm transition-all duration-200 rounded-md;
+  }
+  
+  .nav-dropdown-item-icon {
+    @apply flex items-center justify-center w-5 h-5 mr-3;
+  }
+  
+  /* Responsive Dropdown Utilities */
+  .dropdown-responsive {
+    max-width: calc(100vw - 2rem);
+  }
+  
+  @media (max-width: 640px) {
+    .dropdown-responsive {
+      position: fixed !important;
+      top: 50% !important;
+      left: 50% !important;
+      transform: translate(-50%, -50%) !important;
+      width: calc(100vw - 2rem) !important;
+      max-width: 320px !important;
+      margin: 0 !important;
+      z-index: 1000 !important;
+      max-height: calc(100vh - 2rem) !important;
+      overflow-y: auto !important;
+    }
+  }
+  
+  /* Improved Dropdown Positioning */
+  .dropdown-fixed-position {
+    position: fixed !important;
+    will-change: transform, opacity;
+  }
+  
+  .dropdown-absolute-position {
+    position: absolute !important;
+    will-change: transform, opacity;
+  }
+  
+  /* Ensure dropdowns stay visible during scroll */
+  .dropdown-scroll-aware {
+    position: absolute;
+    transform-origin: top center;
+    will-change: transform;
+  }
+  
+  /* Better container for relative positioning */
+  .dropdown-container {
+    position: relative;
+    overflow: visible;
+  }
+  
+  /* Sidebar Utilities */
+  .sidebar-scrollable {
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+  }
+  
+  .sidebar-scrollable::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .sidebar-scrollable::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .sidebar-scrollable::-webkit-scrollbar-thumb {
+    background-color: rgba(156, 163, 175, 0.5);
+    border-radius: 3px;
+  }
+  
+  .sidebar-scrollable::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(156, 163, 175, 0.7);
+  }
+  
+  /* Custom animations for the magical shop page */
+  .line-clamp-1 {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* Custom keyframes for shop page animations */
+@keyframes gradient-shift {
+  0%, 100% { 
+    background-position: 0% 50%; 
+  }
+  50% { 
+    background-position: 100% 50%; 
+  }
+}
+
+@keyframes spin-slow {
+  from { 
+    transform: rotate(0deg); 
+  }
+  to { 
+    transform: rotate(360deg); 
+  }
+}
+
+@keyframes reverse-spin {
+  from { 
+    transform: rotate(360deg); 
+  }
+  to { 
+    transform: rotate(0deg); 
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(59, 130, 246, 0.6);
+  }
+}
+
+/* Utility classes for shop page */
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient-shift 3s ease infinite;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 20s linear infinite;
+}
+
+.animate-reverse-spin {
+  animation: reverse-spin 25s linear infinite;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
