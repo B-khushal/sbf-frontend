@@ -16,19 +16,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { getVendorProducts } from '@/services/vendorService';
 import { getImageUrl } from '@/config';
 import { Input } from '@/components/ui/input';
-import AdminProductForm from '@/components/AdminProductForm'; // Re-using the admin product form
+import { useNavigate } from 'react-router-dom';
 
 interface Product {
   _id: string;
@@ -45,9 +37,8 @@ const VendorProducts: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const fetchProducts = async () => {
     try {
@@ -74,23 +65,12 @@ const VendorProducts: React.FC = () => {
     fetchProducts();
   };
 
-  const handleFormSuccess = () => {
-    setIsFormOpen(false);
-    fetchProducts(); // Refresh product list on success
-    toast({
-      title: selectedProduct ? 'Product Updated' : 'Product Created',
-      description: 'Your product list has been updated.',
-    });
+  const handleAddProduct = () => {
+    navigate('/vendor/products/new');
   };
 
-  const openAddForm = () => {
-    setSelectedProduct(null);
-    setIsFormOpen(true);
-  };
-
-  const openEditForm = (product: Product) => {
-    setSelectedProduct(product);
-    setIsFormOpen(true);
+  const handleEditProduct = (productId: string) => {
+    navigate(`/vendor/products/edit/${productId}`);
   };
 
   const getStatusVariant = (status: string) => {
@@ -110,7 +90,7 @@ const VendorProducts: React.FC = () => {
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">My Products</h1>
-        <Button onClick={openAddForm}>
+        <Button onClick={handleAddProduct}>
           <PlusCircle className="mr-2 h-4 w-4" />
           Add Product
         </Button>
@@ -178,7 +158,7 @@ const VendorProducts: React.FC = () => {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => openEditForm(product)}>
+                        <DropdownMenuItem onClick={() => handleEditProduct(product._id)}>
                           <Edit className="mr-2 h-4 w-4" />
                           <span>Edit</span>
                         </DropdownMenuItem>
@@ -201,24 +181,6 @@ const VendorProducts: React.FC = () => {
           </TableBody>
         </Table>
       </div>
-
-      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="max-w-4xl">
-          <DialogHeader>
-            <DialogTitle>{selectedProduct ? 'Edit Product' : 'Add New Product'}</DialogTitle>
-            <DialogDescription>
-              {selectedProduct
-                ? 'Update the details of your product.'
-                : 'Fill in the form to add a new product to your store.'}
-            </DialogDescription>
-          </DialogHeader>
-          <AdminProductForm
-            product={selectedProduct}
-            onClose={() => setIsFormOpen(false)}
-            onSuccess={handleFormSuccess}
-          />
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

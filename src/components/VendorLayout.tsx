@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Home, ShoppingCart, BarChart2, DollarSign, Settings, LogOut, Package, Menu, X } from 'lucide-react';
+import { Home, ShoppingCart, BarChart2, DollarSign, Settings, LogOut, Package, Menu, X, Tag, Gift, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
@@ -15,6 +15,9 @@ const VendorLayout: React.FC = () => {
     { to: '/vendor/products', icon: Package, text: 'Products' },
     { to: '/vendor/orders', icon: ShoppingCart, text: 'Orders' },
     { to: '/vendor/analytics', icon: BarChart2, text: 'Analytics' },
+    { to: '/vendor/promocodes', icon: Tag, text: 'Promo Codes' },
+    { to: '/vendor/offers', icon: Gift, text: 'Offers' },
+    { to: '/vendor/holidays', icon: Calendar, text: 'Holidays' },
     { to: '/vendor/payouts', icon: DollarSign, text: 'Payouts' },
     { to: '/vendor/settings', icon: Settings, text: 'Settings' },
   ];

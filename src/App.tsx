@@ -348,35 +348,44 @@ const App = () => {
                                   <VendorProducts />
                                 </Suspense>
                               } />
-                              <Route path="orders" element={
-                                <Suspense fallback={<LoadingFallback message="Loading orders..." />}>
-                                  <VendorOrders />
-                                </Suspense>
-                              } />
-                              <Route path="analytics" element={
-                                <Suspense fallback={<LoadingFallback message="Loading analytics..." />}>
-                                  <VendorAnalytics />
-                                </Suspense>
-                              } />
-                              <Route path="payouts" element={
-                                <Suspense fallback={<LoadingFallback message="Loading payouts..." />}>
-                                  <VendorPayouts />
-                                </Suspense>
-                              } />
-                              <Route path="settings" element={
-                                <Suspense fallback={<LoadingFallback message="Loading settings..." />}>
-                                  <VendorSettings />
-                                </Suspense>
-                              } />
-                            </Route>
-                          </Route>
-                          <Route path="/vendor/register" element={
-                            <Suspense fallback={<LoadingFallback message="Loading registration..." />}>
-                              <VendorRegistration />
-                            </Suspense>
-                          } />
-                          
-                          <Route path="*" element={<NotFound />} />
+              <Route path="products/new" element={
+                <Suspense fallback={<LoadingFallback message="Loading form..." />}>
+                  <ProductForm />
+                </Suspense>
+              } />
+              <Route path="products/edit/:id" element={
+                <Suspense fallback={<LoadingFallback message="Loading form..." />}>
+                  <ProductForm />
+                </Suspense>
+              } />
+              <Route path="orders" element={
+                <Suspense fallback={<LoadingFallback message="Loading orders..." />}>
+                  <VendorOrders />
+                </Suspense>
+              } />
+              <Route path="orders/:orderId" element={
+                <Suspense fallback={<LoadingFallback message="Loading order details..." />}>
+                  <OrderDetailsPage />
+                </Suspense>
+              } />
+              <Route path="analytics" element={
+                <Suspense fallback={<LoadingFallback message="Loading analytics..." />}>
+                  <VendorAnalytics />
+                </Suspense>
+              } />
+              <Route path="promocodes" element={
+                <Suspense fallback={<LoadingFallback message="Loading promo codes..." />}>
+                  <PromoCodes />
+                </Suspense>
+              } />
+              <Route path="offers" element={
+                <Suspense fallback={<LoadingFallback message="Loading offers..." />}>
+                  <OffersManager />
+                </Suspense>
+              } />
+              <Route path="holidays" element={
+                <Suspense fallback={<LoadingFallback message="Loading holidays..." />}>
+                  <HolidayManagement />
                         </Routes>
                       </Suspense>
                     </BrowserRouter>

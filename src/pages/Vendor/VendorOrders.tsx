@@ -68,10 +68,8 @@ const VendorOrders: React.FC = () => {
     }
   };
   
-  // NOTE: For now, viewing order details will navigate to the admin order details page.
-  // This could be replaced with a vendor-specific order detail modal or page later.
   const viewOrderDetails = (orderId: string) => {
-    navigate(`/admin/orders/${orderId}`);
+    navigate(`/vendor/orders/${orderId}`);
   };
 
 
