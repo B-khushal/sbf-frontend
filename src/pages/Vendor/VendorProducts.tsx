@@ -149,7 +149,7 @@ const VendorProducts: React.FC = () => {
                     </Badge>
                   </TableCell>
                   <TableCell>{product.stock}</TableCell>
-                  <TableCell>${product.price.toFixed(2)}</TableCell>
+                  <TableCell>₹{product.price.toFixed(2)}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>

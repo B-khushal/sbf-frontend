@@ -3,7 +3,7 @@ import { useNavigate, Link, Outlet } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { BarChart, Users, ShoppingBag, Package, Settings, LogOut, Menu, TrendingUp, ChevronLeft, ChevronRight, Tag, Gift, Store, Calendar } from 'lucide-react';
+import { BarChart, Users, ShoppingBag, Package, Settings, LogOut, Menu, TrendingUp, ChevronLeft, ChevronRight, Tag, Gift, Store, Calendar, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
@@ -129,6 +129,19 @@ const AdminDashboard: React.FC = () => {
             <Package className="h-4 w-4 text-muted-foreground" />
           </div>
           {!isCollapsed && <span className="sidebar-item-text">Products</span>}
+        </Link>
+        <Link 
+          to="/admin/product-approval" 
+          className={cn(
+            "sidebar-item",
+            isCollapsed ? "sidebar-item-collapsed" : "sidebar-item-expanded"
+          )}
+          title={isCollapsed ? 'Product Approval' : ''}
+        >
+          <div className="sidebar-item-icon">
+            <CheckCircle className="h-4 w-4 text-muted-foreground" />
+          </div>
+          {!isCollapsed && <span className="sidebar-item-text">Product Approval</span>}
         </Link>
         <Link 
           to="/admin/orders" 
