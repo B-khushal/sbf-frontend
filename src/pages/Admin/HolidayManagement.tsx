@@ -565,7 +565,7 @@ const HolidayManagement: React.FC = () => {
             
             <div>
               <Label htmlFor="category">Category</Label>
-              <Select value={filters.category} onValueChange={(value) => setFilters({ ...filters, category: value === 'all' ? '' : value }))}>
+              <Select value={filters.category} onValueChange={(value) => setFilters({ ...filters, category: value === 'all' ? '' : value })}>
                 <SelectTrigger>
                   <SelectValue placeholder="All categories" />
                 </SelectTrigger>
@@ -582,7 +582,7 @@ const HolidayManagement: React.FC = () => {
             
             <div>
               <Label htmlFor="type">Type</Label>
-              <Select value={filters.type} onValueChange={(value) => setFilters({ ...filters, type: value === 'all' ? '' : value }))}>
+              <Select value={filters.type} onValueChange={(value) => setFilters({ ...filters, type: value === 'all' ? '' : value })}>
                 <SelectTrigger>
                   <SelectValue placeholder="All types" />
                 </SelectTrigger>
@@ -597,7 +597,7 @@ const HolidayManagement: React.FC = () => {
             
             <div>
               <Label htmlFor="status">Status</Label>
-              <Select value={filters.isActive} onValueChange={(value) => setFilters({ ...filters, isActive: value === 'all' ? '' : value }))}>
+              <Select value={filters.isActive} onValueChange={(value) => setFilters({ ...filters, isActive: value === 'all' ? '' : value })}>
                 <SelectTrigger>
                   <SelectValue placeholder="All statuses" />
                 </SelectTrigger>
