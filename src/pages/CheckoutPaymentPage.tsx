@@ -411,12 +411,16 @@ const CheckoutPaymentPage = () => {
               orderData
             });
 
+            console.log('🔍 Verification response:', verificationResponse.data);
+
             if (verificationResponse.data.success) {
               console.log('✅ Payment verification successful, preparing for redirection');
               
               // Store order data for confirmation page
-              const orderData = verificationResponse.data.order;
-              localStorage.setItem('lastOrder', JSON.stringify(orderData));
+              const confirmedOrder = verificationResponse.data.order;
+              console.log('📦 Order confirmed:', confirmedOrder);
+              
+              localStorage.setItem('lastOrder', JSON.stringify(confirmedOrder));
               console.log('💾 Order data stored in localStorage');
               
               // Set a flag in sessionStorage to indicate successful payment
@@ -432,23 +436,22 @@ const CheckoutPaymentPage = () => {
               addNotification({
                 type: 'order',
                 title: 'Payment Successful!',
-                message: `Your order #${orderData.orderNumber} has been confirmed.`
+                message: `Your order #${confirmedOrder.orderNumber} has been confirmed.`
               });
               console.log('🔔 Success notification added');
 
-              // Ensure we're in the correct context for navigation
-              setTimeout(() => {
-                console.log('🚀 Navigating to confirmation page');
-                navigate('/checkout/confirmation?order=true', { replace: true });
-              }, 100);
+              // Navigate immediately to confirmation page
+              console.log('🚀 Navigating to confirmation page');
+              window.location.href = '/checkout/confirmation?order=true';
             } else {
-              throw new Error('Payment verification failed');
+              console.error('❌ Payment verification failed:', verificationResponse.data);
+              throw new Error(verificationResponse.data.message || 'Payment verification failed');
             }
-          } catch (error) {
-            console.error('Payment verification error:', error);
+          } catch (error: any) {
+            console.error('❌ Payment verification error:', error);
             toast({
               title: "Payment verification failed",
-              description: "Please contact support if amount was deducted.",
+              description: error.message || "Please contact support if amount was deducted.",
               variant: "destructive",
             });
           } finally {
@@ -469,9 +472,8 @@ const CheckoutPaymentPage = () => {
             console.log('🚫 Payment dialog closed by user');
             setIsProcessing(false);
             toast({
-              title: "Payment cancelled",
-              description: "Payment was cancelled. You can try again.",
-              variant: "default",
+              title: "Payment Cancelled",
+              description: "You can try again when ready.",
             });
           }
         }
