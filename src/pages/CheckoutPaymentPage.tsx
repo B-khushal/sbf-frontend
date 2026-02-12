@@ -403,6 +403,14 @@ const CheckoutPaymentPage = () => {
               signature: response.razorpay_signature ? 'present' : 'missing'
             });
             
+            // Log current API configuration for debugging
+            console.log('🌐 API Configuration:', {
+              baseURL: api.defaults.baseURL,
+              env_API_URL: import.meta.env.VITE_API_URL,
+              mode: import.meta.env.MODE,
+              prod: import.meta.env.PROD
+            });
+            
             // Verify payment
             const verificationResponse = await api.post('/orders/verify-payment', {
               razorpay_order_id: response.razorpay_order_id,
@@ -440,9 +448,43 @@ const CheckoutPaymentPage = () => {
               });
               console.log('🔔 Success notification added');
 
-              // Navigate immediately to confirmation page
-              console.log('🚀 Navigating to confirmation page');
-              window.location.href = '/checkout/confirmation?order=true';
+              // Force navigation with multiple fallback methods
+              const confirmationUrl = '/checkout/confirmation?order=true';
+              console.log('🚀 Attempting navigation to:', confirmationUrl);
+              
+              // Method 1: Direct location assignment (most reliable)
+              try {
+                window.location.href = confirmationUrl;
+                console.log('✅ Navigation method 1: window.location.href executed');
+              } catch (navError) {
+                console.error('❌ Navigation method 1 failed:', navError);
+                
+                // Method 2: Location replace (fallback)
+                try {
+                  window.location.replace(confirmationUrl);
+                  console.log('✅ Navigation method 2: window.location.replace executed');
+                } catch (replaceError) {
+                  console.error('❌ Navigation method 2 failed:', replaceError);
+                  
+                  // Method 3: Create and click a link (last resort)
+                  try {
+                    const link = document.createElement('a');
+                    link.href = confirmationUrl;
+                    link.click();
+                    console.log('✅ Navigation method 3: link click executed');
+                  } catch (linkError) {
+                    console.error('❌ All navigation methods failed:', linkError);
+                  }
+                }
+              }
+              
+              // Safety timeout: Force redirect after 1 second if still on page
+              setTimeout(() => {
+                console.log('⏰ Safety timeout triggered - forcing navigation');
+                if (window.location.pathname !== '/checkout/confirmation') {
+                  window.location.href = confirmationUrl;
+                }
+              }, 1000);
             } else {
               console.error('❌ Payment verification failed:', verificationResponse.data);
               throw new Error(verificationResponse.data.message || 'Payment verification failed');

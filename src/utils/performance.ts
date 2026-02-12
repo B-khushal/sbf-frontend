@@ -336,13 +336,16 @@ export const preloadCriticalImages = (): void => {
   
   if (!isHomePage) return;
 
-  const criticalImages = [
-    '/images/logosbf.png', // Logo - always needed
+  // TODO: Add actual image paths when available
+  // Images must exist in public/images/ folder
+  const criticalImages: string[] = [
+    // '/images/logosbf.png', // Logo - Add when file exists
+    // '/images/1.jpg', // Hero image - Add when file exists
   ];
 
-  // Only preload hero images on homepage
-  if (isHomePage) {
-    criticalImages.push('/images/1.jpg'); // First hero image only
+  if (criticalImages.length === 0) {
+    console.log('ℹ️ No critical images configured for preload');
+    return;
   }
 
   criticalImages.forEach(imageUrl => {
