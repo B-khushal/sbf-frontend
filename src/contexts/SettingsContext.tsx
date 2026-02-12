@@ -81,7 +81,7 @@ interface SettingsContextType {
 }
 
 const defaultHeaderSettings: HeaderSettings = {
-  logo: "/images/logosbf.png",
+  logo: "/placeholder.svg",
   navigationItems: [
     { id: "shop", label: "Shop", href: "/shop", enabled: true, order: 0 },
     { id: "about", label: "About", href: "/about", enabled: true, order: 1 },

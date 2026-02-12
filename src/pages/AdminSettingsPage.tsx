@@ -126,7 +126,7 @@ const AdminSettingsPage: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [shopCategories, setShopCategories] = useState<Category[]>([]);
   const [headerSettings, setHeaderSettings] = useState<HeaderSettings>({
-    logo: "/images/logosbf.png",
+    logo: "/placeholder.svg",
     navigationItems: [
       { id: "shop", label: "Shop", href: "/shop", enabled: true, order: 0 },
       { id: "about", label: "About", href: "/about", enabled: true, order: 1 },
@@ -877,7 +877,7 @@ const AdminSettingsPage: React.FC = () => {
                                 <Label className="text-base font-medium">Philosophy Section Image</Label>
                                 <div className="relative group w-full max-w-md">
                                   <img
-                                    src={section.content?.image || '/images/d3.jpg'}
+                                    src={section.content?.image || '/placeholder.svg'}
                                     alt="Philosophy section"
                                     className="w-full h-32 object-cover rounded-lg border"
                                   />

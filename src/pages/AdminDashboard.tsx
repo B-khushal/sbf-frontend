@@ -82,7 +82,7 @@ const AdminDashboard: React.FC = () => {
       <div className={`flex items-center mb-8 ${isCollapsed ? 'justify-center' : ''}`}>
         <Link to="/" className="flex items-center">
           <img
-            src="/images/logosbf.png"
+            src="/placeholder.svg"
             alt="Spring Blossoms Florist Logo"
             className={`transition-all duration-300 ease-in-out hover:scale-105 ${
               isCollapsed ? 'h-10 w-10' : 'h-24 w-70'

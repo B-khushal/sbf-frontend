@@ -281,7 +281,7 @@ const HomePage = () => {
                     <motion.div variants={itemVariants} className="w-full lg:w-1/2">
                       <div className="relative aspect-square overflow-hidden rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-xl lg:shadow-2xl mx-auto max-w-sm sm:max-w-md lg:max-w-none">
                         <img 
-                          src="/images/d3.jpg" 
+                          src="/placeholder.svg" 
                           alt="Artisan Florist" 
                           className="object-cover w-full h-full transition-transform duration-700 hover:scale-105"
                           loading="lazy"
