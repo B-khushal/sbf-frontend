@@ -31,6 +31,8 @@ interface Product {
   category: string;
   status: 'active' | 'archived' | 'draft';
   isFeatured: boolean;
+  approvalStatus?: 'pending' | 'approved' | 'rejected';
+  rejectionReason?: string;
 }
 
 const VendorProducts: React.FC = () => {
@@ -120,6 +122,7 @@ const VendorProducts: React.FC = () => {
               <TableHead className="w-[80px]">Image</TableHead>
               <TableHead>Title</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Approval</TableHead>
               <TableHead>Stock</TableHead>
               <TableHead>Price</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -146,6 +149,17 @@ const VendorProducts: React.FC = () => {
                   <TableCell>
                     <Badge variant={getStatusVariant(product.status)}>
                       {product.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge 
+                      variant={
+                        product.approvalStatus === 'approved' ? 'default' : 
+                        product.approvalStatus === 'rejected' ? 'destructive' : 
+                        'secondary'
+                      }
+                    >
+                      {product.approvalStatus || 'pending'}
                     </Badge>
                   </TableCell>
                   <TableCell>{product.stock}</TableCell>
