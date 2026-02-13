@@ -46,7 +46,14 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
   const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
   const [connectionRetries, setConnectionRetries] = useState(0);
   const pollingInterval = useRef<NodeJS.Timeout | null>(null);
-  const lastNotificationCheck = useRef<string>(new Date().toISOString());
+  
+  // Initialize lastNotificationCheck to 24 hours ago to catch recent notifications
+  const get24HoursAgo = () => {
+    const now = new Date();
+    now.setHours(now.getHours() - 24);
+    return now.toISOString();
+  };
+  const lastNotificationCheck = useRef<string>(get24HoursAgo());
   const { toast } = useToast();
 
   const MAX_RETRIES = 3;
@@ -224,7 +231,18 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
             });
           });
           
-          // Update last check time
+          // Update last check time to the most recent notification's timestamp
+          // This ensures we don't miss any notifications created between polling intervals
+          const mostRecentTimestamp = Math.max(
+            ...newNotifications.map((n: any) => new Date(n.createdAt || 0).getTime())
+          );
+          if (mostRecentTimestamp > 0) {
+            lastNotificationCheck.current = new Date(mostRecentTimestamp).toISOString();
+          } else {
+            lastNotificationCheck.current = new Date().toISOString();
+          }
+        } else {
+          // No new notifications, update check time to now
           lastNotificationCheck.current = new Date().toISOString();
         }
         
