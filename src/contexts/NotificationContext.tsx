@@ -46,6 +46,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
   const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
   const [connectionRetries, setConnectionRetries] = useState(0);
   const pollingInterval = useRef<NodeJS.Timeout | null>(null);
+  const newNotificationIds = useRef<Set<string>>(new Set());
   
   // Initialize lastNotificationCheck to 24 hours ago to catch recent notifications
   const get24HoursAgo = () => {
@@ -155,6 +156,32 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []); // Empty dependency array - only run on mount
 
+  // Show toasts for new notifications (avoid render-time updates)
+  useEffect(() => {
+    if (newNotificationIds.current.size > 0 && isAdminUser()) {
+      // Process all new notifications
+      notifications.forEach(notification => {
+        if (newNotificationIds.current.has(notification.id)) {
+          try {
+            const safeTitle = notification.title || 'New Notification';
+            const safeMessage = notification.message || 'You have a new notification';
+            
+            toast({
+              title: safeTitle,
+              description: safeMessage,
+              duration: 5000,
+            });
+          } catch (toastError) {
+            console.error('Error showing toast notification:', toastError);
+          }
+          
+          // Remove from set after showing toast
+          newNotificationIds.current.delete(notification.id);
+        }
+      });
+    }
+  }, [notifications, toast]);
+
   // Real-time notification polling (admin only)
   useEffect(() => {
     const fetchNewNotifications = async () => {
@@ -199,29 +226,15 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
             setNotifications(prev => {
               const exists = prev.some(n => n.id === completeNotification.id);
               if (!exists) {
-                 // Play sound for new notifications (admin only)
-                 if (enableSounds && isAdminUser() && (notification.type === 'order' || completeNotification.title.toLowerCase().includes('order'))) {
-                   try {
-                     setTimeout(() => playNotificationSound(notification.type || 'default'), 100);
-                   } catch (soundError) {
-                     console.error('Error playing notification sound:', soundError);
-                   }
-                 }
+                // Mark this as a new notification for toast display
+                newNotificationIds.current.add(completeNotification.id);
                 
-                // Show toast notification (admin only)
-                if (isAdminUser()) {
+                // Play sound for new notifications (admin only)
+                if (enableSounds && isAdminUser() && (notification.type === 'order' || completeNotification.title.toLowerCase().includes('order'))) {
                   try {
-                    // Ensure toast properties are valid
-                    const safeTitle = completeNotification.title || 'New Notification';
-                    const safeMessage = completeNotification.message || 'You have a new notification';
-                    
-                    toast({
-                      title: safeTitle,
-                      description: safeMessage,
-                      duration: 5000,
-                    });
-                  } catch (toastError) {
-                    console.error('Error showing toast notification:', toastError);
+                    setTimeout(() => playNotificationSound(notification.type || 'default'), 100);
+                  } catch (soundError) {
+                    console.error('Error playing notification sound:', soundError);
                   }
                 }
                 
