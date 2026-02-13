@@ -134,8 +134,12 @@ const CheckoutConfirmationPage = () => {
   
   // First useEffect for authentication and order processing
   useEffect(() => {
-    // Run only once
-    if (initialized.current) return;
+    // Only run once - prevent re-initialization
+    if (initialized.current) {
+      console.log('CheckoutConfirmationPage: Already initialized, skipping...');
+      return;
+    }
+    
     initialized.current = true;
     
     // Wrap everything in a try-catch to prevent any errors from blocking the page
@@ -326,7 +330,7 @@ const CheckoutConfirmationPage = () => {
     
     // Execute the initialization
     initializeConfirmationPage();
-  }, []); // Empty dependency array - runs only once on mount
+  }, []); // Empty dependency array - only run once on mount
   
   const handleContinueShopping = () => {
     // Clear any remaining order data
