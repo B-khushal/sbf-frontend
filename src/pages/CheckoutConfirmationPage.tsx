@@ -100,6 +100,7 @@ const CheckoutConfirmationPage = () => {
   const [showConfetti, setShowConfetti] = useState(false);
   
   const redirectAttempted = useRef<boolean>(false);
+  const initialized = useRef<boolean>(false);
 
   // Helper function to format price with specific currency
   const formatPriceWithCurrency = (amount: number, targetCurrency: string) => {
@@ -133,6 +134,10 @@ const CheckoutConfirmationPage = () => {
   
   // First useEffect for authentication and order processing
   useEffect(() => {
+    // Run only once
+    if (initialized.current) return;
+    initialized.current = true;
+    
     // Wrap everything in a try-catch to prevent any errors from blocking the page
     const initializeConfirmationPage = async () => {
       try {
@@ -321,7 +326,7 @@ const CheckoutConfirmationPage = () => {
     
     // Execute the initialization
     initializeConfirmationPage();
-  }, [navigate, addNotification, notificationSent, isOrderDataFetched]);
+  }, []); // Empty dependency array - runs only once on mount
   
   const handleContinueShopping = () => {
     // Clear any remaining order data
