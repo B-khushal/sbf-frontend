@@ -25,8 +25,34 @@
     <meta name="author" content="Spring Blossoms Florist" />
     <meta name="geo.region" content="IN-TG" />
     <meta name="geo.placename" content="Hyderabad" />
+    <meta name="theme-color" content="#ffffff" />
     <link rel="canonical" href="https://sbflorist.in" />
     <link rel="icon" href="/placeholder.svg" type="image/svg+xml" />
+    <script>
+      (function () {
+        var path = window.location.pathname || "/";
+        var isAdmin = path.indexOf("/admin") === 0;
+        var isVendor = path.indexOf("/vendor") === 0;
+        var manifestPath = null;
+
+        if (isAdmin) {
+          manifestPath = "/manifest-admin.json";
+        } else if (isVendor) {
+          manifestPath = "/manifest-vendor.json";
+        }
+
+        if (manifestPath) {
+          var manifestLink = document.createElement("link");
+          manifestLink.rel = "manifest";
+          manifestLink.href = manifestPath;
+          document.head.appendChild(manifestLink);
+          var themeMeta = document.querySelector('meta[name="theme-color"]');
+          if (themeMeta) {
+            themeMeta.setAttribute("content", "#0f172a");
+          }
+        }
+      })();
+    </script>
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   </head>
 

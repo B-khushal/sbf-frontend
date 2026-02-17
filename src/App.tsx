@@ -14,6 +14,7 @@ import MainLayout from './components/MainLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import useCart from '@/hooks/use-cart';
 import CartLoader from '@/components/CartLoader';
+import PwaInstallManager from '@/components/PwaInstallManager';
 
 // Core pages that should load immediately
 import HomePage from "./pages/HomePage";
@@ -132,6 +133,7 @@ const App = () => {
                     <Toaster />
                     <Sonner />
                     <BrowserRouter>
+                      <PwaInstallManager />
                       <Suspense fallback={<LoadingFallback />}>
                         <Routes>
                           {/* Main Layout Routes */}
