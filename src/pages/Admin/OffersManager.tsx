@@ -322,7 +322,7 @@ const OffersManager = () => {
                     {currentOffer.startDate ? format(new Date(currentOffer.startDate), 'PPP') : 'Pick a date'}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
+                <PopoverContent side="bottom" align="start" sideOffset={8} className="w-auto max-w-[92vw] p-0">
                   <Calendar
                     mode="single"
                     selected={currentOffer.startDate ? new Date(currentOffer.startDate) : undefined}
@@ -343,7 +343,7 @@ const OffersManager = () => {
                     {currentOffer.endDate ? format(new Date(currentOffer.endDate), 'PPP') : 'Pick a date'}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
+                <PopoverContent side="bottom" align="start" sideOffset={8} className="w-auto max-w-[92vw] p-0">
                   <Calendar
                     mode="single"
                     selected={currentOffer.endDate ? new Date(currentOffer.endDate) : undefined}

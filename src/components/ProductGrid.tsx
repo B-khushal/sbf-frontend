@@ -24,6 +24,7 @@ export type Product = {
   createdAt?: string;
   featured?: boolean;
   isNewArrival?: boolean;
+  isNew?: boolean;
   isFeatured?: boolean;
   isCustomizable?: boolean;
   hidden?: boolean;
@@ -424,8 +425,8 @@ const ProductCard = ({ product, onAddToCart }: {
 
   // Check if product is new (created within last 30 days)
   const isNewProduct = () => {
-    if (!product.createdAt && !product.isNewArrival) return false;
-    if (product.isNewArrival) return true;
+    if (!product.createdAt && !product.isNewArrival && !product.isNew) return false;
+    if (product.isNewArrival || product.isNew) return true;
     const createdDate = new Date(product.createdAt!);
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);

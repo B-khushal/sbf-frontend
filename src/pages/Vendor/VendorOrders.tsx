@@ -108,7 +108,7 @@ const VendorOrders: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Orders</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Orders</h1>
           <p className="text-gray-500 mt-1">Manage and track your product orders</p>
         </div>
         <Button variant="outline" size="sm" onClick={fetchOrders} disabled={loading}>
@@ -196,7 +196,7 @@ const VendorOrders: React.FC = () => {
       {/* Orders Table */}
       <Card>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
+          <div className="responsive-table-wrap rounded-none border-0">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -244,7 +244,7 @@ const VendorOrders: React.FC = () => {
                         {formatPrice(order.vendorTotal || order.totalAmount)}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="sm" onClick={() => viewOrderDetails(order._id)}>
+                        <Button variant="ghost" size="sm" onClick={() => viewOrderDetails(order._id)} className="touch-action-btn">
                           <Eye className="h-4 w-4" />
                         </Button>
                       </TableCell>

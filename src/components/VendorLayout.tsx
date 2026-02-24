@@ -11,6 +11,17 @@ const VendorLayout: React.FC = () => {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = React.useState(false);
   const [isDesktopSidebarCollapsed, setIsDesktopSidebarCollapsed] = React.useState(false);
 
+  React.useEffect(() => {
+    document.body.style.overflow = isMobileSidebarOpen ? 'hidden' : '';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMobileSidebarOpen]);
+
+  React.useEffect(() => {
+    setIsMobileSidebarOpen(false);
+  }, [location.pathname]);
+
   const navLinks = [
     { to: '/vendor/dashboard', icon: Home, text: 'Dashboard' },
     { to: '/vendor/products', icon: Package, text: 'Products' },
@@ -74,32 +85,37 @@ const VendorLayout: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen flex bg-gray-50">
+    <div className="dashboard-shell flex">
       {/* Mobile Sidebar */}
-      <div className={cn("fixed inset-0 z-40 flex md:hidden", isMobileSidebarOpen ? "block" : "hidden")}>
-        <div className="fixed inset-0 bg-black/60" onClick={() => setIsMobileSidebarOpen(false)}></div>
-        <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white">
-          <div className="absolute top-0 right-0 -mr-12 pt-2">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => setIsMobileSidebarOpen(false)} 
-              className="ml-1 flex items-center justify-center h-10 w-10 rounded-full text-white hover:bg-white/20"
-            >
-              <X className="h-6 w-6" />
-            </Button>
-          </div>
+      <div className={cn("fixed inset-0 z-sheet bg-black/60 transition-opacity md:hidden", isMobileSidebarOpen ? "opacity-100" : "pointer-events-none opacity-0")} onClick={() => setIsMobileSidebarOpen(false)} />
+      <div
+        className={cn(
+          "fixed inset-y-0 left-0 z-sheet flex w-[85vw] max-w-xs flex-col bg-white shadow-xl transition-transform duration-300 md:hidden",
+          isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        <div className="flex items-center justify-end p-2 border-b">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsMobileSidebarOpen(false)}
+            className="touch-action-btn"
+          >
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
+        <div className="flex-1 sidebar-scrollable pb-4">
           {sidebarContent(false)}
         </div>
       </div>
 
       {/* Desktop Sidebar */}
       <div className={cn(
-        "hidden md:flex md:flex-shrink-0 transition-all duration-300",
+        "hidden md:flex md:flex-shrink-0 transition-all duration-300 sticky top-0 h-screen",
         isDesktopSidebarCollapsed ? "md:w-20" : "md:w-64"
       )}>
         <div className="flex flex-col w-full border-r border-gray-200 bg-white relative">
-          {sidebarContent(isDesktopSidebarCollapsed)}
+          <div className="flex-1 sidebar-scrollable pb-4">{sidebarContent(isDesktopSidebarCollapsed)}</div>
           {/* Toggle Button for Desktop */}
           <Button
             variant="ghost"
@@ -117,14 +133,14 @@ const VendorLayout: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex flex-col flex-1 min-w-0">
-        <div className="md:hidden flex justify-between items-center bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-30 shadow-sm">
-          <h2 className="text-xl font-bold text-gray-800">Vendor Panel</h2>
-          <Button variant="ghost" size="icon" onClick={() => setIsMobileSidebarOpen(true)}>
-            <Menu className="h-6 w-6" />
+      <div className="dashboard-main flex flex-col">
+        <div className="md:hidden flex justify-between items-center bg-white border-b border-gray-200 px-3 py-2.5 sticky top-0 z-nav shadow-sm">
+          <h2 className="text-base font-bold text-gray-800">Vendor Panel</h2>
+          <Button variant="ghost" size="icon" onClick={() => setIsMobileSidebarOpen(true)} className="touch-action-btn">
+            <Menu className="h-5 w-5" />
           </Button>
         </div>
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
+        <main className="panel-content flex-1 overflow-x-hidden overflow-y-auto">
           <Outlet />
         </main>
       </div>

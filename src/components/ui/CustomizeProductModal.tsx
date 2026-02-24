@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -278,7 +278,12 @@ export function CustomizeProductModal({
       <Dialog open={open} onOpenChange={onClose}>
         <DialogContent className="w-full max-w-full rounded-none bg-white shadow-none p-0 sm:rounded-lg sm:max-w-2xl md:max-w-4xl">
           <DialogHeader className="fixed top-0 left-0 w-full z-20 bg-white px-4 py-3 border-b flex justify-between items-center md:static md:rounded-t-lg md:shadow md:px-6 md:py-4">
-            <span className="text-lg font-semibold text-gray-900 truncate">Customize {product.title}</span>
+            <DialogTitle className="text-lg font-semibold text-gray-900 truncate">
+              Customize {product.title}
+            </DialogTitle>
+            <DialogDescription className="sr-only">
+              Customize add-ons, message, and optional uploads before adding this product to cart.
+            </DialogDescription>
             <Button variant="ghost" size="icon" onClick={onClose} className="h-10 w-10">
               <X className="h-5 w-5" />
             </Button>

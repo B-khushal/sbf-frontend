@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Clock, Calendar as CalendarIcon, Info } from 'lucide-react';
 import { 
   Card,
@@ -7,9 +7,9 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { Calendar } from '@/components/ui/calendar';
-import * as Popover from '@radix-ui/react-popover';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
-import { format, addDays, isBefore, startOfDay, isValid, isSameDay, getDay } from 'date-fns';
+import { format, isBefore, startOfDay, isValid, isSameDay } from 'date-fns';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import {
   Tooltip,
@@ -448,13 +448,12 @@ const TimeSlotSelector = ({
           <CalendarIcon className="h-5 w-5 text-primary" />
           <span className="font-medium text-base">Select Delivery Date</span>
         </div>
-        <Popover.Root open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-          <Popover.Trigger asChild>
+        <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+          <PopoverTrigger asChild>
             <Button
               variant="outline"
               className="w-full justify-start text-left font-normal py-2 px-4"
               type="button"
-              onClick={() => setIsCalendarOpen((open) => !open)}
             >
               {date && isValid(date) ? (
                 <span>{formatDisplayDate(date)}</span>
@@ -462,8 +461,13 @@ const TimeSlotSelector = ({
                 <span className="text-muted-foreground">Pick a delivery date</span>
               )}
             </Button>
-          </Popover.Trigger>
-          <Popover.Content side="bottom" align="start" className="z-[9999] bg-white rounded-lg shadow-lg p-2 mt-2">
+          </PopoverTrigger>
+          <PopoverContent
+            side="bottom"
+            align="start"
+            sideOffset={8}
+            className="w-[min(92vw,22rem)] bg-white p-2"
+          >
             <div className="space-y-2">
               <Calendar
                 mode="single"
@@ -503,8 +507,8 @@ const TimeSlotSelector = ({
                 </div>
               )}
             </div>
-          </Popover.Content>
-        </Popover.Root>
+          </PopoverContent>
+        </Popover>
       </div>
       
       {/* Delivery Time Slots */}

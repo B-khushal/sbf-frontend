@@ -44,11 +44,10 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
-import { testNotificationSound } from '@/utils/notificationSound';
 import DeliveryCalendar from '@/components/DeliveryCalendar';
 import NotificationHistoryModal from '@/components/NotificationHistoryModal';
 import { getSessionId, createNewSession, isNewSession } from '@/utils/sessionManager';
-import { showNotificationsOnLogin, clearReadNotifications } from '@/services/notificationService';
+import { showNotificationsOnLogin } from '@/services/notificationService';
 
 interface DashboardData {
   revenue: {
@@ -124,28 +123,23 @@ const AdminDashboardHome: React.FC = () => {
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
-  const [sessionId, setSessionId] = useState<string>('');
   const { formatPrice, convertPrice, currency, setCurrency } = useCurrency();
-  const { notifications, unreadCount, markAllAsRead, clearReadNotifications, isConnected, enableSounds, toggleSounds, addNotification } = useNotification();
+  const { notifications, unreadCount, markAllAsRead, clearReadNotifications, isConnected, enableSounds, toggleSounds } = useNotification();
   const { toast } = useToast();
   const navigate = useNavigate();
 
   // Session management and notification handling on component mount
   useEffect(() => {
     const initializeSession = async () => {
-      const currentSessionId = getSessionId();
-      setSessionId(currentSessionId);
+      getSessionId();
       
       // Check if this is a new session (login)
       if (isNewSession()) {
-        console.log('New session detected, creating fresh session...');
         const newSessionId = createNewSession();
-        setSessionId(newSessionId);
         
         // Show notifications that were hidden in previous sessions
         try {
           await showNotificationsOnLogin(newSessionId);
-          console.log('Notifications reset for new session');
         } catch (error) {
           console.error('Error resetting notifications for new session:', error);
         }
@@ -154,26 +148,6 @@ const AdminDashboardHome: React.FC = () => {
     
     initializeSession();
   }, []);
-
-  // Debug logging for currency conversion
-  useEffect(() => {
-    if (dashboardData.revenue.total > 0) {
-      console.log('=== CURRENCY CONVERSION DEBUG ===');
-      console.log('Current currency:', currency);
-      console.log('Raw revenue from backend (INR):', dashboardData.revenue.total);
-      console.log('Converted revenue:', convertPrice(dashboardData.revenue.total));
-      console.log('Formatted revenue:', formatPrice(convertPrice(dashboardData.revenue.total)));
-      
-      // Test specific values
-      const testValue = 2150; // ₹2,150
-      console.log('Test: ₹2,150 →', formatPrice(convertPrice(testValue)));
-      
-      if (currency === 'USD') {
-        console.log('Expected: $25.00 (2150 × 0.01162 ≈ 25)');
-      }
-      console.log('=================================');
-    }
-  }, [dashboardData.revenue.total, currency, convertPrice, formatPrice]);
 
   const fetchDashboardData = useCallback(async (showToast = false) => {
     try {
@@ -338,7 +312,7 @@ const AdminDashboardHome: React.FC = () => {
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
             <Activity className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
-            Live Dashboard
+            Dashboard Overview
           </h1>
           <div className="flex flex-wrap items-center gap-2 mt-2 text-xs sm:text-sm text-muted-foreground">
             <div className="flex items-center gap-1">
@@ -346,7 +320,7 @@ const AdminDashboardHome: React.FC = () => {
               Last updated: {lastUpdated.toLocaleTimeString()}
             </div>
             {autoRefresh && (
-              <span className="text-green-600">• Auto-refresh enabled</span>
+              <span className="text-green-600">Live updates enabled</span>
             )}
             {/* Connection Status */}
             {isConnected ? (
@@ -369,7 +343,6 @@ const AdminDashboardHome: React.FC = () => {
           <Button 
             onClick={() => {
               const newCurrency = currency === 'INR' ? 'USD' : 'INR';
-              console.log('Switching currency from', currency, 'to', newCurrency);
               setCurrency(newCurrency);
             }}
             variant="outline"
@@ -377,7 +350,7 @@ const AdminDashboardHome: React.FC = () => {
             className="gap-1 text-xs sm:text-sm"
           >
             <DollarSign className="h-3 w-3 sm:h-4 sm:w-4" />
-            <span className="hidden sm:inline">{currency} ({currency === 'INR' ? '₹' : '$'})</span>
+            <span className="hidden sm:inline">{currency} ({currency === 'INR' ? 'Rs' : '$'})</span>
             <span className="sm:hidden">{currency}</span>
           </Button>
 
@@ -596,7 +569,7 @@ const AdminDashboardHome: React.FC = () => {
         <Alert className="border-yellow-500 bg-gradient-to-r from-yellow-50 to-orange-50 animate-pulse">
           <AlertTriangle className="h-4 w-4 text-yellow-600 animate-bounce" />
           <AlertTitle className="text-yellow-800 flex flex-wrap items-center gap-2">
-            🚨 Critical Stock Alert
+            Critical Stock Alert
             <Badge variant="destructive" className="animate-pulse text-xs">
               {lowStockProducts.length} items
             </Badge>
@@ -758,7 +731,7 @@ const AdminDashboardHome: React.FC = () => {
                   tick={{ fontSize: 10 }}
                   tickFormatter={(value) => {
                     return currency === 'INR' 
-                      ? `₹${(value / 1000)}k`
+                      ? `Rs ${(value / 1000)}k`
                       : `$${(value / 1000).toFixed(1)}k`;
                   }}
                 />
@@ -844,15 +817,6 @@ const AdminDashboardHome: React.FC = () => {
               >
                 <X className="h-3 w-3" />
                 <span className="hidden sm:inline">Clear read</span>
-              </Button>
-              <Button 
-                onClick={testNotificationSound}
-                variant="ghost" 
-                size="sm"
-                className="gap-1 text-xs sm:text-sm"
-                title="Test notification sound"
-              >
-                🔔 <span className="hidden sm:inline">Test</span>
               </Button>
               <Button 
                 variant="outline" 
@@ -1000,9 +964,9 @@ const AdminDashboardHome: React.FC = () => {
                           <p className="text-xs text-muted-foreground">{order.customer}</p>
                           <p className="text-xs text-muted-foreground flex items-center gap-1">
                             <span>{order.items} items</span>
-                            <span>•</span>
+                            <span>|</span>
                             <span>{order.paymentMethod}</span>
-                            <span>•</span>
+                            <span>|</span>
                             <span>{new Date(order.date).toLocaleDateString()}</span>
                           </p>
                         </div>
@@ -1103,10 +1067,10 @@ const AdminDashboardHome: React.FC = () => {
                             <p className="text-xs text-muted-foreground">{product.category}</p>
                             <div className="flex items-center gap-3 text-xs">
                               <span className="text-green-600 font-medium">
-                                🔥 {product.sold} sold
+                                Sold: {product.sold}
                               </span>
                               <span className={`${product.inStock < 10 ? 'text-red-500 animate-pulse' : 'text-muted-foreground'}`}>
-                                📦 {product.inStock} in stock
+                                Stock: {product.inStock}
                               </span>
                             </div>
                           </div>
@@ -1158,3 +1122,4 @@ const AdminDashboardHome: React.FC = () => {
 };
 
 export default AdminDashboardHome;
+

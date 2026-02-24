@@ -353,13 +353,13 @@ const AdminProductForm: React.FC<Props> = ({
   };
 
   return (
-    <div className="flex flex-col h-[80vh]">
-      <div className="flex-none p-6 pb-2">
+    <div className="flex flex-col h-[85dvh] sm:h-[80vh] max-h-[90dvh]">
+      <div className="flex-none p-4 sm:p-6 pb-2">
         <h2 className="text-xl font-semibold mb-4">{isEditing ? "Edit Product" : "Add New Product"}</h2>
       </div>
 
-      <ScrollArea className="flex-grow px-6">
-        <div className="space-y-4 pr-4">
+      <ScrollArea className="flex-grow px-4 sm:px-6">
+        <div className="space-y-4 pr-2 sm:pr-4">
           {/* Product Name */}
           <div>
             <label className="text-sm font-medium">Product Name</label>
@@ -391,7 +391,7 @@ const AdminProductForm: React.FC<Props> = ({
           </div>
 
           {/* Price & Discount */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium">Price (INR)</label>
               <Input 
@@ -621,7 +621,7 @@ const AdminProductForm: React.FC<Props> = ({
                 {/* Flower Add-ons */}
                 <div className="space-y-2">
                   <h4 className="font-medium">Flower Add-ons</h4>
-                  <div className="flex space-x-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-2">
                     <Input
                       placeholder="Flower name"
                       value={newFlowerAddon.name}
@@ -654,7 +654,7 @@ const AdminProductForm: React.FC<Props> = ({
                 {/* Chocolate Add-ons */}
                 <div className="space-y-2">
                   <h4 className="font-medium">Chocolate Add-ons</h4>
-                  <div className="flex space-x-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-2">
                     <Input
                       placeholder="Chocolate name"
                       value={newChocolateAddon.name}
@@ -760,7 +760,7 @@ const AdminProductForm: React.FC<Props> = ({
             {isEditing && formData.images.length > 0 && (
               <div className="mt-4">
                 <p className="text-sm font-medium mb-2">Current Images ({formData.images.length})</p>
-                <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-32 overflow-y-auto">
                   {formData.images.map((image, index) => (
                     <div key={index} className="relative">
                       <img 
@@ -778,21 +778,22 @@ const AdminProductForm: React.FC<Props> = ({
       </ScrollArea>
 
       {/* Submit Buttons - Fixed at bottom */}
-      <div className="flex-none p-6 pt-2 border-t bg-background">
+      <div className="flex-none p-4 sm:p-6 pt-2 border-t bg-background">
         {uploadProgress && (
           <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
             <p className="text-sm text-blue-700">{uploadProgress}</p>
           </div>
         )}
-        <div className="flex justify-end gap-2">
+        <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
           <Button 
             variant="ghost" 
             onClick={onSuccess ? () => onSuccess() : onClose} 
             disabled={isSubmitting}
+            className="w-full sm:w-auto"
           >
             <X className="h-4 w-4 mr-2" /> Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting}>
+          <Button onClick={handleSubmit} disabled={isSubmitting} className="w-full sm:w-auto">
             <Save className="h-4 w-4 mr-2" /> 
             {isSubmitting 
               ? uploadProgress 

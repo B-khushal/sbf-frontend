@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   Menu, Search, ShoppingCart, User, X, Heart, Sparkles, 
@@ -7,7 +7,6 @@ import {
   Shield, Truck, RefreshCw, Gift, Home, Info, MessageCircle, Package
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import CurrencyConverter from './CurrencyConverter';
 import { Input } from '@/components/ui/input';
@@ -122,32 +121,34 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
   const [isSearching, setIsSearching] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState<'bottom' | 'top'>('bottom');
+  const userMenuRef = useRef<HTMLDivElement | null>(null);
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 
-  // Add click outside handler for user dropdown
+  // Add outside-click + Esc handlers only while menu is open.
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    if (!showUserMenu) {
+      return;
+    }
+
+    const handlePointerDownOutside = (event: PointerEvent) => {
       const target = event.target as Element;
-      if (showUserMenu && !target.closest('.dropdown-container')) {
+      if (!target.closest('.dropdown-container')) {
+        setShowUserMenu(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
         setShowUserMenu(false);
       }
     };
 
-    // Add touch event handler for mobile
-    const handleTouchOutside = (event: TouchEvent) => {
-      const target = event.target as Element;
-      if (showUserMenu && !target.closest('.dropdown-container')) {
-        setShowUserMenu(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('touchstart', handleTouchOutside);
+    document.addEventListener('pointerdown', handlePointerDownOutside);
+    document.addEventListener('keydown', handleKeyDown);
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('touchstart', handleTouchOutside);
+      document.removeEventListener('pointerdown', handlePointerDownOutside);
+      document.removeEventListener('keydown', handleKeyDown);
     };
   }, [showUserMenu]);
 
@@ -155,7 +156,7 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
   const handleDropdownToggle = () => {
     if (!showUserMenu) {
       // Check if dropdown would be cut off at bottom
-      const button = document.querySelector('.dropdown-container button');
+      const button = userMenuRef.current?.querySelector('button');
       if (button) {
         const rect = button.getBoundingClientRect();
         const viewportHeight = window.innerHeight;
@@ -201,13 +202,10 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
     
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('wishlist-update', handleCustomEvent as EventListener);
-    
-    const interval = setInterval(updateWishlistCount, 2000);
-    
+
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('wishlist-update', handleCustomEvent as EventListener);
-      clearInterval(interval);
     };
   }, []);
 
@@ -585,7 +583,7 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
               </Button>
 
               {user ? (
-                <div className="relative dropdown-container">
+                <div ref={userMenuRef} className="relative dropdown-container">
                   <Button variant="ghost" size="icon" onClick={handleDropdownToggle}>
                     <User size={18} />
                   </Button>
@@ -710,136 +708,143 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
               )}
 
               <div className="lg:hidden">
-                <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-                  <SheetTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                      <Menu size={18} />
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent 
-                    side="right" 
-                    className="w-full max-w-xs p-0 z-sheet bg-white"
-                  >
-                    <div className="flex flex-col h-full">
-                      {/* Header */}
-                      <div className="p-4 border-b flex justify-between items-center">
-                          <Link to="/" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2">
-                            <span className="text-2xl font-black bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-                              SBF
-                            </span>
-                          </Link>
-                          <SheetClose asChild>
-                            <Button variant="ghost" size="icon">
-                              <X size={20} />
-                            </Button>
-                          </SheetClose>
-                      </div>
-
-                      <div className="flex-1 overflow-y-auto p-4 space-y-6">
-                        {/* User Profile */}
-                        {user ? (
-                          <div className="bg-gray-50 p-4 rounded-xl">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center text-white font-bold">
-                                {user.name.charAt(0).toUpperCase()}
-                              </div>
-                              <div>
-                                <p className="font-semibold text-sm truncate">{user.name}</p>
-                                <p className="text-xs text-gray-500 truncate">{user.email}</p>
-                              </div>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="grid grid-cols-2 gap-2">
-                             <Button asChild><Link to="/login" onClick={() => setMobileMenuOpen(false)}>Sign In</Link></Button>
-                             <Button asChild variant="outline"><Link to="/signup" onClick={() => setMobileMenuOpen(false)}>Sign Up</Link></Button>
-                          </div>
-                        )}
-
-                        {/* Navigation */}
-                        <nav className="space-y-1">
-                          <p className="px-3 text-xs font-semibold text-gray-400 uppercase">Menu</p>
-                          {headerSettings?.navigationItems
-                            ?.filter(item => item.enabled)
-                            ?.sort((a,b) => a.order - b.order)
-                            ?.map((item) => (
-                              <Link
-                                key={item.href}
-                                to={item.href}
-                                onClick={() => setMobileMenuOpen(false)}
-                                className={cn(
-                                  'flex items-center gap-3 px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200',
-                                  pathname === item.href ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100'
-                                )}
-                              >
-                                <div className="flex items-center justify-center w-5 h-5">
-                                  {getNavIcon(item.href, item.label)}
-                                </div>
-                                <span>{item.label}</span>
-                              </Link>
-                          ))}
-                        </nav>
-
-                        {/* Account Links */}
-                        {user && (
-                          <nav className="space-y-1">
-                            <p className="px-3 text-xs font-semibold text-gray-400 uppercase">Account</p>
-                            <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className={cn('flex items-center gap-3 px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200', pathname === '/profile' ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100')}>
-                              <div className="flex items-center justify-center w-5 h-5">
-                                <User size={16} />
-                              </div>
-                              <span>My Account</span>
-                            </Link>
-                            <Link to="/profile#orders" onClick={() => setMobileMenuOpen(false)} className='flex items-center gap-3 px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200 text-gray-700 hover:bg-gray-100'>
-                              <div className="flex items-center justify-center w-5 h-5">
-                                <ShoppingCart size={16} />
-                              </div>
-                              <span>My Orders</span>
-                            </Link>
-                            {user.role === 'admin' && (
-                              <Link to="/admin" onClick={() => setMobileMenuOpen(false)} className={cn('flex items-center gap-3 px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200', pathname.startsWith('/admin') ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100')}>
-                                <div className="flex items-center justify-center w-5 h-5">
-                                  <Store size={16} />
-                                </div>
-                                <span>Admin Dashboard</span>
-                              </Link>
-                            )}
-                            {user.role === 'vendor' && (
-                              <Link to="/vendor/dashboard" onClick={() => setMobileMenuOpen(false)} className={cn('flex items-center gap-3 px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200', pathname.startsWith('/vendor') ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100')}>
-                                <div className="flex items-center justify-center w-5 h-5">
-                                  <Store size={16} />
-                                </div>
-                                <span>Vendor Dashboard</span>
-                              </Link>
-                            )}
-                          </nav>
-                        )}
-                      </div>
-
-                      {/* Footer */}
-                      {user && (
-                        <div className="p-4 border-t">
-                          <Button 
-                            onClick={() => {
-                              logout();
-                              setMobileMenuOpen(false);
-                            }}
-                            variant="outline"
-                            className="w-full"
-                          >
-                            <LogIn size={16} className="mr-2" />
-                            Sign Out
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </SheetContent>
-                </Sheet>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setMobileMenuOpen((open) => !open)}
+                  aria-expanded={mobileMenuOpen}
+                  aria-controls="mobile-nav-panel"
+                >
+                  <Menu size={18} />
+                </Button>
               </div>
             </motion.div>
           </div>
         </div>
       </header>
+
+      {/* Mobile Navigation Panel (in-flow, scrolls with page) */}
+      <AnimatePresence initial={false}>
+        {mobileMenuOpen && (
+          <motion.div
+            id="mobile-nav-panel"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="lg:hidden overflow-hidden border-b bg-white"
+          >
+            <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-3">
+              <div className="rounded-xl border bg-white shadow-sm">
+                <div className="p-4 border-b flex justify-between items-center">
+                  <Link to="/" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2">
+                    <span className="text-2xl font-black bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+                      SBF
+                    </span>
+                  </Link>
+                  <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)}>
+                    <X size={20} />
+                  </Button>
+                </div>
+
+                <div className="max-h-[70dvh] overflow-y-auto p-4 space-y-6">
+                  {user ? (
+                    <div className="bg-gray-50 p-4 rounded-xl">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center text-white font-bold">
+                          {user.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm truncate">{user.name}</p>
+                          <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button asChild><Link to="/login" onClick={() => setMobileMenuOpen(false)}>Sign In</Link></Button>
+                      <Button asChild variant="outline"><Link to="/signup" onClick={() => setMobileMenuOpen(false)}>Sign Up</Link></Button>
+                    </div>
+                  )}
+
+                  <nav className="space-y-1">
+                    <p className="px-3 text-xs font-semibold text-gray-400 uppercase">Menu</p>
+                    {headerSettings?.navigationItems
+                      ?.filter(item => item.enabled)
+                      ?.sort((a,b) => a.order - b.order)
+                      ?.map((item) => (
+                        <Link
+                          key={item.href}
+                          to={item.href}
+                          onClick={() => setMobileMenuOpen(false)}
+                          className={cn(
+                            'flex items-center gap-3 px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200',
+                            pathname === item.href ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100'
+                          )}
+                        >
+                          <div className="flex items-center justify-center w-5 h-5">
+                            {getNavIcon(item.href, item.label)}
+                          </div>
+                          <span>{item.label}</span>
+                        </Link>
+                    ))}
+                  </nav>
+
+                  {user && (
+                    <nav className="space-y-1">
+                      <p className="px-3 text-xs font-semibold text-gray-400 uppercase">Account</p>
+                      <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className={cn('flex items-center gap-3 px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200', pathname === '/profile' ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100')}>
+                        <div className="flex items-center justify-center w-5 h-5">
+                          <User size={16} />
+                        </div>
+                        <span>My Account</span>
+                      </Link>
+                      <Link to="/profile#orders" onClick={() => setMobileMenuOpen(false)} className='flex items-center gap-3 px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200 text-gray-700 hover:bg-gray-100'>
+                        <div className="flex items-center justify-center w-5 h-5">
+                          <ShoppingCart size={16} />
+                        </div>
+                        <span>My Orders</span>
+                      </Link>
+                      {user.role === 'admin' && (
+                        <Link to="/admin" onClick={() => setMobileMenuOpen(false)} className={cn('flex items-center gap-3 px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200', pathname.startsWith('/admin') ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100')}>
+                          <div className="flex items-center justify-center w-5 h-5">
+                            <Store size={16} />
+                          </div>
+                          <span>Admin Dashboard</span>
+                        </Link>
+                      )}
+                      {user.role === 'vendor' && (
+                        <Link to="/vendor/dashboard" onClick={() => setMobileMenuOpen(false)} className={cn('flex items-center gap-3 px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200', pathname.startsWith('/vendor') ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100')}>
+                          <div className="flex items-center justify-center w-5 h-5">
+                            <Store size={16} />
+                          </div>
+                          <span>Vendor Dashboard</span>
+                        </Link>
+                      )}
+                    </nav>
+                  )}
+                </div>
+
+                {user && (
+                  <div className="p-4 border-t">
+                    <Button
+                      onClick={() => {
+                        logout();
+                        setMobileMenuOpen(false);
+                      }}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      <LogIn size={16} className="mr-2" />
+                      Sign Out
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Mobile Search Modal */}
       <AnimatePresence>

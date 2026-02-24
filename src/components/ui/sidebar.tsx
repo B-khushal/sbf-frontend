@@ -8,7 +8,6 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
-import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Tooltip,
@@ -139,7 +138,7 @@ const SidebarProvider = React.forwardRef<
               } as React.CSSProperties
             }
             className={cn(
-              "group/sidebar-wrapper flex min-h-svh w-full has-[[data-variant=inset]]:bg-sidebar",
+              "group/sidebar-wrapper relative flex min-h-svh w-full has-[[data-variant=inset]]:bg-sidebar",
               className
             )}
             ref={ref}
@@ -192,25 +191,39 @@ const Sidebar = React.forwardRef<
 
     if (isMobile) {
       return (
-        <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
-          <SheetContent
+        <>
+          <div
+            className={cn(
+              "absolute inset-0 z-sheet bg-black/40 transition-opacity duration-200",
+              openMobile ? "opacity-100" : "pointer-events-none opacity-0"
+            )}
+            onClick={() => setOpenMobile(false)}
+            aria-hidden="true"
+          />
+          <div
             data-sidebar="sidebar"
             data-mobile="true"
-            className="w-[--sidebar-width] bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden absolute top-0 left-0 right-0 z-40"
+            className={cn(
+              "absolute top-0 z-sheet h-[100dvh] max-h-[100dvh] w-[--sidebar-width] bg-sidebar p-0 text-sidebar-foreground transition-transform duration-300 ease-out",
+              side === "left"
+                ? openMobile
+                  ? "left-0 translate-x-0"
+                  : "left-0 -translate-x-full"
+                : openMobile
+                  ? "right-0 translate-x-0"
+                  : "right-0 translate-x-full",
+              className
+            )}
             style={
               {
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                '--sidebar-width': SIDEBAR_WIDTH_MOBILE,
+                "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
               } as React.CSSProperties
             }
-            side={side}
+            {...props}
           >
-            <div className="flex h-full w-full flex-col">{children}</div>
-          </SheetContent>
-        </Sheet>
+            <div className="flex h-full w-full flex-col overflow-y-auto">{children}</div>
+          </div>
+        </>
       )
     }
 

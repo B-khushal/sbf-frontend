@@ -192,7 +192,6 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
       }
 
       try {
-        console.log('Fetching notifications from API...');
         const response = await api.get(`/notifications?since=${lastNotificationCheck.current}`);
         
         // Validate response structure
@@ -203,8 +202,6 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
         const newNotifications = response.data.notifications || [];
         
         if (newNotifications.length > 0) {
-          console.log(`Received ${newNotifications.length} new notifications from API`);
-          
           // Add new notifications
           newNotifications.forEach((notification: any) => {
             // Validate notification data

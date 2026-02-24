@@ -37,20 +37,6 @@ const rawUploadsUrl = import.meta.env.VITE_UPLOADS_URL;
 export const API_URL = validateAndFixUrl(rawApiUrl, 'http://localhost:5000/api');
 export const UPLOADS_URL = validateAndFixUrl(rawUploadsUrl, 'http://localhost:5000');
 
-// Log configuration for debugging
-console.log('🔧 Environment Configuration:', {
-  raw: {
-    VITE_API_URL: rawApiUrl,
-    VITE_UPLOADS_URL: rawUploadsUrl,
-  },
-  corrected: {
-    API_URL,
-    UPLOADS_URL,
-  },
-  mode: import.meta.env.MODE,
-  isProduction: import.meta.env.PROD
-});
-
 // Validate HTTPS in production
 if (import.meta.env.PROD) {
   if (!API_URL.startsWith('https://')) {
@@ -71,17 +57,6 @@ export const getImageUrl = (imagePath: string | undefined, options?: {
   format?: string;
   bustCache?: boolean;
 }): string => {
-  // Debug logging to understand what's happening
-  console.log('🔍 getImageUrl called with:', { 
-    imagePath, 
-    imagePathType: typeof imagePath,
-    imagePathLength: imagePath?.length,
-    startsWithHttp: imagePath?.startsWith('http'),
-    startsWithHttps: imagePath?.startsWith('https'),
-    startsWithUploads: imagePath?.startsWith('/uploads/'),
-    options 
-  });
-  
   if (!imagePath || imagePath.trim() === '') {
     return '/images/placeholder.jpg';
   }
@@ -90,11 +65,8 @@ export const getImageUrl = (imagePath: string | undefined, options?: {
   
   // If it's already a full Cloudinary URL, apply simplified transformations if needed
   if (imagePath.startsWith('https://res.cloudinary.com')) {
-    console.log('☁️ Processing Cloudinary URL:', imagePath);
-    
     // Check if transformations are already applied
     if (imagePath.includes('/c_scale') || imagePath.includes('/q_auto') || imagePath.includes('/f_auto')) {
-      console.log('✅ Cloudinary URL already has transformations');
       // Add cache busting for updated images if needed
       if (options?.bustCache) {
         return imagePath + `?_t=${Date.now()}`;

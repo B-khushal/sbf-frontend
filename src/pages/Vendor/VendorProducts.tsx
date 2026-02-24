@@ -89,16 +89,16 @@ const VendorProducts: React.FC = () => {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">My Products</h1>
+    <div className="space-y-6">
+      <div className="responsive-toolbar">
+        <h1 className="text-2xl sm:text-3xl font-bold">My Products</h1>
         <Button onClick={handleAddProduct}>
           <PlusCircle className="mr-2 h-4 w-4" />
           Add Product
         </Button>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
         <form onSubmit={handleSearch} className="flex-1 flex gap-2">
             <Input
               placeholder="Search products..."
@@ -109,13 +109,13 @@ const VendorProducts: React.FC = () => {
                 <Search className="h-4 w-4"/>
             </Button>
         </form>
-        <Button variant="ghost" size="icon" onClick={() => fetchProducts()}>
+        <Button variant="ghost" size="icon" onClick={() => fetchProducts()} className="touch-action-btn self-end sm:self-auto">
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
         </Button>
       </div>
 
 
-      <div className="border rounded-lg">
+      <div className="responsive-table-wrap">
         <Table>
           <TableHeader>
             <TableRow>
@@ -167,7 +167,7 @@ const VendorProducts: React.FC = () => {
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
+                        <Button variant="ghost" className="touch-action-btn p-0">
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>

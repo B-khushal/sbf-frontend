@@ -201,21 +201,16 @@
   
   /* Responsive Dropdown Utilities */
   .dropdown-responsive {
-    max-width: calc(100vw - 2rem);
+    max-width: calc(100vw - 1rem);
+    max-height: min(24rem, calc(100dvh - 1rem));
   }
   
   @media (max-width: 640px) {
     .dropdown-responsive {
-      position: fixed !important;
-      top: 50% !important;
-      left: 50% !important;
-      transform: translate(-50%, -50%) !important;
-      width: calc(100vw - 2rem) !important;
-      max-width: 320px !important;
-      margin: 0 !important;
-      z-index: 1000 !important;
-      max-height: calc(100vh - 2rem) !important;
-      overflow-y: auto !important;
+      width: min(24rem, calc(100vw - 1rem));
+      max-width: calc(100vw - 1rem);
+      max-height: calc(100dvh - 1rem);
+      overflow-y: auto;
     }
   }
   
@@ -266,6 +261,45 @@
   
   .sidebar-scrollable::-webkit-scrollbar-thumb:hover {
     background-color: rgba(156, 163, 175, 0.7);
+  }
+
+  /* Dashboard layout utilities */
+  .dashboard-shell {
+    @apply min-h-screen overflow-x-clip bg-gray-50 dark:bg-gray-900;
+  }
+
+  .dashboard-main {
+    @apply flex-1 min-w-0;
+  }
+
+  .panel-content {
+    @apply p-3 sm:p-4 lg:p-6 xl:p-8;
+  }
+
+  .responsive-filter-grid {
+    @apply grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4;
+  }
+
+  .responsive-toolbar {
+    @apply flex flex-col gap-3 md:flex-row md:items-center md:justify-between;
+  }
+
+  .responsive-table-wrap {
+    @apply w-full overflow-x-auto rounded-md border;
+  }
+
+  .responsive-table-wrap table {
+    min-width: 44rem;
+  }
+
+  .touch-action-btn {
+    @apply h-9 min-w-9;
+  }
+
+  @media (max-width: 640px) {
+    .responsive-table-wrap table {
+      min-width: 40rem;
+    }
   }
   
   /* Custom animations for the magical shop page */

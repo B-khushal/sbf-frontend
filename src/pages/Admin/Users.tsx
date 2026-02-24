@@ -313,8 +313,8 @@ const AdminUsers: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Users</h1>
+      <div className="responsive-toolbar">
+        <h1 className="text-2xl sm:text-3xl font-bold">Users</h1>
         <Button onClick={handleAddUserClick}>
           <UserPlus className="mr-2 h-4 w-4" /> Add User
         </Button>
@@ -322,10 +322,10 @@ const AdminUsers: React.FC = () => {
 
       <Card>
         <CardHeader className="py-4">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between mb-4">
             <CardTitle>All Users & Vendors</CardTitle>
-            <div className="flex gap-4 items-center">
-              <div className="relative w-64">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-4 sm:items-center w-full lg:w-auto">
+              <div className="relative w-full sm:w-64">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search users..."
@@ -335,7 +335,7 @@ const AdminUsers: React.FC = () => {
                 />
               </div>
               <Select value={roleFilter} onValueChange={setRoleFilter}>
-                <SelectTrigger className="w-32">
+                <SelectTrigger className="w-full sm:w-32">
                   <SelectValue placeholder="Role" />
                 </SelectTrigger>
                 <SelectContent>
@@ -347,7 +347,7 @@ const AdminUsers: React.FC = () => {
               </Select>
               {roleFilter === 'vendor' && (
                 <Select value={vendorStatusFilter} onValueChange={setVendorStatusFilter}>
-                  <SelectTrigger className="w-40">
+                  <SelectTrigger className="w-full sm:w-40">
                     <SelectValue placeholder="Vendor Status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -391,6 +391,7 @@ const AdminUsers: React.FC = () => {
           </div>
         </CardHeader>
         <CardContent>
+          <div className="responsive-table-wrap border-0 rounded-none">
           <Table>
             <TableHeader>
               <TableRow>
@@ -459,12 +460,14 @@ const AdminUsers: React.FC = () => {
                   <TableCell className="text-muted-foreground text-sm">
                     {user.lastLogin ? user.lastLogin : "N/A"}
                   </TableCell>
-                  <TableCell className="text-right space-x-2">
+                  <TableCell className="text-right">
+                    <div className="inline-flex flex-wrap justify-end gap-1">
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => handleViewClick(user)}
                       disabled={isLoading}
+                      className="touch-action-btn"
                     >
                       <Eye className="h-4 w-4" />
                     </Button>
@@ -475,6 +478,7 @@ const AdminUsers: React.FC = () => {
                         size="sm"
                         onClick={() => handleVendorDetailClick(user)}
                         disabled={isLoading}
+                        className="touch-action-btn"
                       >
                         <Store className="h-4 w-4" />
                       </Button>
@@ -484,6 +488,7 @@ const AdminUsers: React.FC = () => {
                       size="sm"
                       onClick={() => handleEditClick(user)}
                       disabled={isLoading}
+                      className="touch-action-btn"
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
@@ -492,10 +497,11 @@ const AdminUsers: React.FC = () => {
                       size="sm"
                       onClick={() => handleDeleteClick(user._id)}
                       disabled={isLoading}
-                      className="text-destructive hover:text-destructive"
+                      className="text-destructive hover:text-destructive touch-action-btn"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -508,6 +514,7 @@ const AdminUsers: React.FC = () => {
               )}
             </TableBody>
           </Table>
+          </div>
         </CardContent>
       </Card>
 

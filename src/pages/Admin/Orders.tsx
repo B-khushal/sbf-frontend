@@ -574,13 +574,13 @@ const AdminOrders = () => {
     const pageNumbers = generatePageNumbers();
 
     return (
-      <div className="flex items-center justify-between mt-6 px-4 py-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center gap-4">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between mt-6 px-3 sm:px-4 py-3 bg-gray-50 rounded-lg">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
             <div className="text-sm text-gray-600">
               Showing {startIndex}-{endIndex} of {totalItems} orders
             </div>
             <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
-              <SelectTrigger className="w-36">
+              <SelectTrigger className="w-full sm:w-36">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -593,7 +593,7 @@ const AdminOrders = () => {
             </Select>
           </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {/* First page */}
           <Button
             variant="outline"
@@ -662,13 +662,13 @@ const AdminOrders = () => {
 
       <Card>
         <CardHeader className="pb-4">
-          <div className="flex justify-between items-center">
-            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <div className="responsive-toolbar">
+            <CardTitle className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               Order Management
             </CardTitle>
-            <div className="flex items-center gap-2">
+            <div className="flex w-full md:w-auto flex-wrap items-center gap-2">
               <Select value={currency} onValueChange={handleCurrencyChange}>
-                <SelectTrigger className="w-24">
+                <SelectTrigger className="w-full sm:w-24">
                   <SelectValue placeholder="Currency" />
                 </SelectTrigger>
                 <SelectContent>
@@ -679,14 +679,14 @@ const AdminOrders = () => {
                   ))}
                 </SelectContent>
               </Select>
-              <Button onClick={exportToCSV} variant="outline" className="gap-2">
+              <Button onClick={exportToCSV} variant="outline" className="gap-2 touch-action-btn">
                 <Download className="h-4 w-4" />
                 Export CSV
               </Button>
               <Button 
                 onClick={testDeliveryEmail} 
                 variant="outline" 
-                className="gap-2"
+                className="gap-2 touch-action-btn"
                 disabled={!orders.length}
               >
                 📧 Test Email
@@ -695,7 +695,7 @@ const AdminOrders = () => {
           </div>
 
           {/* Enhanced Filters */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+          <div className="responsive-filter-grid mt-4">
             {/* Search */}
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
@@ -739,7 +739,7 @@ const AdminOrders = () => {
                     : "Order Date Range"}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
+              <PopoverContent side="bottom" align="start" sideOffset={8} className="w-auto max-w-[92vw] p-0">
                 <CalendarComponent
                   initialFocus
                   mode="range"
@@ -770,7 +770,7 @@ const AdminOrders = () => {
                     : "Delivery Date Range"}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
+              <PopoverContent side="bottom" align="start" sideOffset={8} className="w-auto max-w-[92vw] p-0">
                 <CalendarComponent
                   initialFocus
                   mode="range"
@@ -787,19 +787,19 @@ const AdminOrders = () => {
           </div>
 
           {/* Filter Controls */}
-          <div className="flex items-center justify-between mt-4">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mt-4">
+            <div className="flex flex-wrap items-center gap-2">
               <Button
                 variant={highlight3Days ? "default" : "outline"}
                 size="sm"
                 onClick={() => setHighlight3Days(!highlight3Days)}
-                className="gap-2"
+                className="gap-2 touch-action-btn"
               >
                 <AlertTriangle className="h-4 w-4" />
                 3-Day Highlighting
               </Button>
               {(dateRange.from || deliveryDateRange.from || searchTerm || selectedStatus !== 'all') && (
-                <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-2">
+                <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-2 touch-action-btn">
                   <X className="h-4 w-4" />
                   Clear Filters
                 </Button>
@@ -829,7 +829,7 @@ const AdminOrders = () => {
             </div>
           ) : (
             <>
-              <div className="rounded-md border">
+              <div className="responsive-table-wrap">
                 <Table key={currency}>
                   <TableHeader>
                     <TableRow>

@@ -151,7 +151,7 @@ const RecommendedProducts: React.FC<{ productId: string; category: string }> = (
                     -{product.discount}%
                   </div>
                 )}
-                {product.isNewArrival && (
+                {(product.isNewArrival || (product as { isNew?: boolean }).isNew) && (
                   <div className="absolute top-2 right-2 z-10 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-medium">
                     NEW
                   </div>
@@ -919,7 +919,9 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                 description: product.description,
                 details: product.details,
                 careInstructions: product.careInstructions,
-                isNewArrival: product.isNewArrival,
+                isNewArrival: Boolean(
+                  product.isNewArrival || (product as { isNew?: boolean }).isNew
+                ),
                 isFeatured: product.isFeatured,
                 customizations: customizations
               };

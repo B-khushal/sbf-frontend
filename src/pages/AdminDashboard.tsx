@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
 import AdminNavbar from '@/components/AdminNavbar';
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -50,6 +49,13 @@ const AdminDashboard: React.FC = () => {
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  useEffect(() => {
+    document.body.style.overflow = isSidebarOpen ? 'hidden' : '';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isSidebarOpen]);
   
   // Show loading state while checking auth
   if (isLoading) {
@@ -85,7 +91,7 @@ const AdminDashboard: React.FC = () => {
             src="/placeholder.svg"
             alt="Spring Blossoms Florist Logo"
             className={`transition-all duration-300 ease-in-out hover:scale-105 ${
-              isCollapsed ? 'h-10 w-10' : 'h-24 w-70'
+              isCollapsed ? 'h-10 w-10' : 'h-16 w-auto max-w-full'
             }`}
           />
         </Link>
@@ -269,24 +275,26 @@ const AdminDashboard: React.FC = () => {
   );
   
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="flex flex-col md:flex-row">
-        {/* Mobile Sidebar */}
-        <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
-          <SheetTrigger asChild className="md:hidden">
-            <Button variant="ghost" size="icon" className="md:hidden">
-              <Menu className="h-6 w-6" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-64 p-0">
-            <div className="h-full flex flex-col p-4 sidebar-scrollable">
-              <SidebarContent isCollapsed={false} />
-            </div>
-          </SheetContent>
-        </Sheet>
+    <div className="dashboard-shell">
+      <div className="flex min-h-screen">
+        <div className={cn(
+          "fixed inset-0 z-sheet bg-black/50 transition-opacity duration-200 md:hidden",
+          isSidebarOpen ? "opacity-100" : "pointer-events-none opacity-0"
+        )} onClick={() => setIsSidebarOpen(false)} />
+        <aside
+          id="admin-mobile-sidebar"
+          className={cn(
+            "fixed inset-y-0 left-0 z-sheet w-[85vw] max-w-xs bg-white dark:bg-gray-800 shadow-xl transition-transform duration-300 md:hidden",
+            isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+          )}
+        >
+          <div className="flex h-full flex-col p-4 sidebar-scrollable">
+            <SidebarContent isCollapsed={false} />
+          </div>
+        </aside>
 
         {/* Desktop Sidebar */}
-        <div className={`hidden md:flex bg-white dark:bg-gray-800 h-screen shadow-md flex-col transition-all duration-300 ${
+        <aside className={`hidden md:flex bg-white dark:bg-gray-800 h-screen sticky top-0 shadow-md flex-col transition-all duration-300 ${
           isSidebarCollapsed ? 'w-16' : 'w-64'
         }`}>
           {/* Sidebar Toggle Button */}
@@ -309,10 +317,24 @@ const AdminDashboard: React.FC = () => {
           <div className={`flex flex-col flex-1 sidebar-scrollable ${isSidebarCollapsed ? 'px-2 pb-4' : 'px-4 pb-4'}`}>
             <SidebarContent isCollapsed={isSidebarCollapsed} />
           </div>
-        </div>
+        </aside>
         
         {/* Main Content */}
-        <div className="flex-1 flex flex-col min-h-screen">
+        <div className="dashboard-main flex flex-col min-h-screen">
+          <div className="md:hidden flex items-center justify-between border-b bg-white dark:bg-gray-800 px-3 py-2.5 sticky top-0 z-nav">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsSidebarOpen((open) => !open)}
+              aria-expanded={isSidebarOpen}
+              aria-controls="admin-mobile-sidebar"
+              className="touch-action-btn"
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+            <span className="text-sm font-semibold">Admin Panel</span>
+            <span className="w-9" />
+          </div>
           {/* Top bar with sidebar toggle for collapsed state */}
           {isSidebarCollapsed && (
             <div className="hidden md:flex items-center p-4 border-b bg-white dark:bg-gray-800">
@@ -332,7 +354,7 @@ const AdminDashboard: React.FC = () => {
           )}
           
           <AdminNavbar />
-          <div className="p-4 md:p-8 overflow-y-auto">
+          <div className="panel-content overflow-x-hidden overflow-y-auto">
             <Outlet />
           </div>
         </div>

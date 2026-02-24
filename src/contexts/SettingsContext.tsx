@@ -67,6 +67,10 @@ interface HomeSection {
   subtitle: string;
   enabled: boolean;
   order: number;
+  content?: {
+    image?: string;
+    [key: string]: any;
+  };
 }
 
 interface SettingsContextType {

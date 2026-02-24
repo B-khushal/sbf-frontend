@@ -119,7 +119,7 @@ const VendorDashboard: React.FC = () => {
         <div>
           <div className="flex items-center gap-3 mb-2">
             <Store className="h-8 w-8 text-primary" />
-            <h1 className="text-3xl font-bold">{vendor.storeName}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold break-words">{vendor.storeName}</h1>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Badge className={getStatusColor(vendor.status)}>
@@ -137,7 +137,7 @@ const VendorDashboard: React.FC = () => {
             </Badge>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button
             variant="outline"
             size="sm"
@@ -155,7 +155,7 @@ const VendorDashboard: React.FC = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
@@ -348,10 +348,10 @@ const VendorDashboard: React.FC = () => {
           <CardTitle>Quick Actions</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Button 
               variant="outline" 
-              className="h-20 flex flex-col gap-2"
+              className="h-20 flex flex-col gap-2 touch-action-btn"
               onClick={() => navigate('/vendor/products/new')}
             >
               <Plus className="h-6 w-6" />
@@ -359,7 +359,7 @@ const VendorDashboard: React.FC = () => {
             </Button>
             <Button 
               variant="outline" 
-              className="h-20 flex flex-col gap-2"
+              className="h-20 flex flex-col gap-2 touch-action-btn"
               onClick={() => navigate('/vendor/orders')}
             >
               <ShoppingCart className="h-6 w-6" />
@@ -367,7 +367,7 @@ const VendorDashboard: React.FC = () => {
             </Button>
             <Button 
               variant="outline" 
-              className="h-20 flex flex-col gap-2"
+              className="h-20 flex flex-col gap-2 touch-action-btn"
               onClick={() => navigate('/vendor/analytics')}
             >
               <TrendingUp className="h-6 w-6" />
@@ -375,7 +375,7 @@ const VendorDashboard: React.FC = () => {
             </Button>
             <Button 
               variant="outline" 
-              className="h-20 flex flex-col gap-2"
+              className="h-20 flex flex-col gap-2 touch-action-btn"
               onClick={() => navigate('/vendor/payouts')}
             >
               <DollarSign className="h-6 w-6" />

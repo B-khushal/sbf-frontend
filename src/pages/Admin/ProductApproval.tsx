@@ -146,9 +146,9 @@ const ProductApproval: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="responsive-toolbar">
         <div>
-          <h1 className="text-3xl font-bold">Product Approval</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">Product Approval</h1>
           <p className="text-muted-foreground mt-1">
             Review and approve vendor product submissions
           </p>
@@ -178,7 +178,7 @@ const ProductApproval: React.FC = () => {
             <CardTitle>Pending Products ({products.length})</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="rounded-md border">
+            <div className="responsive-table-wrap">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -234,11 +234,12 @@ const ProductApproval: React.FC = () => {
                           {new Date(product.createdAt).toLocaleDateString()}
                         </TableCell>
                         <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
+                          <div className="flex flex-wrap justify-end gap-2">
                             <Button
                               size="sm"
                               variant="outline"
                               onClick={() => viewProduct(product._id)}
+                              className="touch-action-btn"
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
@@ -247,6 +248,7 @@ const ProductApproval: React.FC = () => {
                               variant="default"
                               onClick={() => handleApprove(product._id)}
                               disabled={actionLoading}
+                              className="touch-action-btn"
                             >
                               <CheckCircle className="h-4 w-4 mr-1" />
                               Approve
@@ -256,6 +258,7 @@ const ProductApproval: React.FC = () => {
                               variant="destructive"
                               onClick={() => openRejectDialog(product)}
                               disabled={actionLoading}
+                              className="touch-action-btn"
                             >
                               <XCircle className="h-4 w-4 mr-1" />
                               Reject

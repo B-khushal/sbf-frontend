@@ -5,7 +5,8 @@ import {
   Dialog, 
   DialogContent, 
   DialogHeader, 
-  DialogTitle 
+  DialogTitle,
+  DialogDescription,
 } from './dialog';
 
 interface ContactModalProps {
@@ -51,9 +52,9 @@ Best regards`;
           <DialogTitle className="text-2xl font-bold mb-2 text-white">
             Need More Than 5 Items?
           </DialogTitle>
-          <p className="text-white/90 text-sm">
+          <DialogDescription className="text-white/90 text-sm">
             For bulk orders, please contact us directly for special pricing and availability.
-          </p>
+          </DialogDescription>
         </DialogHeader>
 
         <div className="p-6 space-y-4">

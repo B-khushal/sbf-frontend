@@ -886,6 +886,8 @@ const ProductForm = () => {
       const productData = {
         ...formData,
         comboSubcategory: formData.comboSubcategory || '', // <-- ensure it's included
+        // Send both keys so backend variants persist consistently.
+        isNew: Boolean(formData.isNewArrival),
         isNewArrival: Boolean(formData.isNewArrival),
         isFeatured: Boolean(formData.isFeatured),
         hidden: Boolean(formData.hidden),
@@ -907,27 +909,7 @@ const ProductForm = () => {
         } : undefined
       };
       
-      console.log('🎨 Frontend - Sending customization data:', {
-        isCustomizable: productData.isCustomizable,
-        customizationOptions: productData.customizationOptions,
-        formDataCustomization: formData.customizationOptions
-      });
-      
-      console.log('💰 Frontend - Sending price variant data:', {
-        hasPriceVariants: productData.hasPriceVariants,
-        priceVariants: productData.priceVariants,
-        priceVariantsCount: productData.priceVariants?.length || 0
-      });
-      
-      console.log('🎁 Frontend - Sending combo data:', {
-        category: productData.category,
-        comboItems: productData.comboItems,
-        comboName: productData.comboName,
-        comboDescription: productData.comboDescription
-      });
-      
       if (isEditMode) {
-        console.log('🔄 Updating product with ID:', id);
         await productService.updateProduct(id, productData);
         toast({
           title: "Success",
@@ -935,7 +917,6 @@ const ProductForm = () => {
           variant: "default",
         });
       } else {
-        console.log('🆕 Creating new product');
         await productService.createProduct(productData);
         toast({
           title: "Success",

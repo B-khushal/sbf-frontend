@@ -82,7 +82,9 @@ const ProductPage = () => {
         description: product?.description || '',
         details: product?.details || [],
         careInstructions: product?.careInstructions || [],
-        isNewArrival: product?.isNewArrival || false,
+        isNewArrival: Boolean(
+          product?.isNewArrival || (product as ProductData & { isNew?: boolean } | null)?.isNew
+        ),
         isFeatured: product?.isFeatured || false,
         selectedVariant: item.selectedVariant,
         customizations: item.customizations

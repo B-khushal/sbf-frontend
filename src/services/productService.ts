@@ -102,6 +102,7 @@ interface BackendProductData {
   details?: string[];
   careInstructions?: string[];
   isNew?: boolean; // Backend uses isNew
+  isNewArrival?: boolean; // Backward compatibility for older backend variants
   isFeatured?: boolean;
   hidden?: boolean;
   isCustomizable?: boolean;
@@ -163,8 +164,9 @@ const prepareProductData = (productData: ProductData): BackendProductData => {
   // Clean empty or null values, ensure boolean fields are sent as booleans
   const cleanData: BackendProductData = { ...productData };
   
-  // Map isNewArrival to isNew for the backend
+  // Send both fields for backward/forward compatibility.
   cleanData.isNew = Boolean(productData.isNewArrival);
+  cleanData.isNewArrival = Boolean(productData.isNewArrival);
   
   // Force boolean fields to be actual booleans
   cleanData.isFeatured = Boolean(productData.isFeatured);
@@ -229,32 +231,6 @@ const prepareProductData = (productData: ProductData): BackendProductData => {
     cleanData.comboDescription = productData.comboDescription;
   }
   
-  // Remove isNewArrival as the backend doesn't use this field name
-  delete cleanData.isNewArrival;
-  
-  console.log('Prepared product data:', {
-    original: {
-      isNewArrival: productData.isNewArrival,
-      isNewArrivalType: typeof productData.isNewArrival,
-      isFeatured: productData.isFeatured,
-      isFeaturedType: typeof productData.isFeatured,
-      isCustomizable: productData.isCustomizable,
-      hasPriceVariants: productData.hasPriceVariants,
-      priceVariants: productData.priceVariants,
-      customizationOptions: productData.customizationOptions
-    },
-    cleaned: {
-      isNew: cleanData.isNew,
-      isNewType: typeof cleanData.isNew,
-      isFeatured: cleanData.isFeatured,
-      isFeaturedType: typeof cleanData.isFeatured,
-      isCustomizable: cleanData.isCustomizable,
-      hasPriceVariants: cleanData.hasPriceVariants,
-      priceVariants: cleanData.priceVariants,
-      customizationOptions: cleanData.customizationOptions
-    }
-  });
-  
   return cleanData;
 };
 
@@ -263,19 +239,11 @@ const mapBackendToFrontend = (data: BackendProductData): ProductData => {
   // Create a copy to avoid modifying the original
   const mappedData: Partial<ProductData> = { ...data };
 
-  // Map isNew to isNewArrival
-  if ('isNew' in data) {
-    mappedData.isNewArrival = Boolean(data.isNew);
-    console.log('Mapping product:', {
-      title: data.title,
-      backendIsNew: data.isNew,
-      mappedIsNewArrival: mappedData.isNewArrival
-    });
-  } else {
-    console.log('Product has no isNew property:', {
-      title: data.title,
-      keys: Object.keys(data)
-    });
+  // Map either backend field (isNew or isNewArrival) to frontend isNewArrival
+  if ('isNew' in data || 'isNewArrival' in data) {
+    mappedData.isNewArrival = Boolean(
+      typeof data.isNew === 'boolean' ? data.isNew : data.isNewArrival
+    );
   }
 
   // Map combo fields
@@ -331,14 +299,6 @@ const mapBackendToFrontend = (data: BackendProductData): ProductData => {
     mappedData.priceVariants = [];
   }
 
-  console.log('Price variants mapping:', {
-    title: data.title,
-    backendHasPriceVariants: data.hasPriceVariants,
-    mappedHasPriceVariants: mappedData.hasPriceVariants,
-    backendPriceVariants: data.priceVariants,
-    mappedPriceVariants: mappedData.priceVariants
-  });
-
   if (data.customizationOptions) {
     mappedData.customizationOptions = {
       allowPhotoUpload: Boolean(data.customizationOptions.allowPhotoUpload),
@@ -372,12 +332,6 @@ const mapBackendToFrontend = (data: BackendProductData): ProductData => {
     };
   }
 
-  console.log('Mapped product customization:', {
-    title: data.title,
-    isCustomizable: mappedData.isCustomizable,
-    customizationOptions: mappedData.customizationOptions
-  });
-
   return mappedData as ProductData;
 };
 
@@ -400,29 +354,21 @@ class ProductService {
 
   async createProduct(productData: ProductData): Promise<ProductData> {
     const config = createAuthConfig();
-    console.log('Creating product with data:', productData);
-    
+
     // Process data ensuring proper types for all fields
     const processedData = prepareProductData(productData);
-    
-    console.log('Using auth config:', config);
-    
+
     const response = await axios.post(`${API_URL}/products`, processedData, config);
-    console.log('Create response:', response.data);
     return response.data;
   }
 
   async updateProduct(id: string, productData: ProductData): Promise<ProductData> {
     const config = createAuthConfig();
-    console.log('Updating product ID:', id);
-    
+
     // Process data ensuring proper types for all fields
     const processedData = prepareProductData(productData);
-    
-    console.log('Using auth config:', config);
-    
+
     const response = await axios.put(`${API_URL}/products/${id}`, processedData, config);
-    console.log('Update response:', response.data);
     return response.data;
   }
 
@@ -442,9 +388,8 @@ class ProductService {
   }
 
   async getNewArrivals(): Promise<ProductData[]> {
-    const response = await axios.get(`${API_URL}/products/new-arrivals`);
-    console.log('New arrivals response:', response.data);
-    
+    const response = await axios.get(`${API_URL}/products/new`);
+
     // Extract products from the response
     const products = response.data.products || response.data;
     
@@ -456,8 +401,7 @@ class ProductService {
 
   async getFeaturedProducts(): Promise<ProductData[]> {
     const response = await axios.get(`${API_URL}/products/featured`);
-    console.log('Featured products response:', response.data);
-    
+
     // Extract products from the response
     const products = response.data.products || response.data;
     
@@ -534,5 +478,3 @@ export const getTopProducts = async () => {
   const response = await axios.get<ProductData[]>(`${API_URL}/products/top`);
   return response.data;
 };
-
-

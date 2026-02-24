@@ -80,6 +80,10 @@ const EnhancedContextualDialogContent = React.forwardRef<
             }}
             {...props}
           >
+            <DialogPrimitive.Title className="sr-only">Dialog</DialogPrimitive.Title>
+            <DialogPrimitive.Description className="sr-only">
+              Dialog content.
+            </DialogPrimitive.Description>
             <div
               className={cn(
                 variant === 'popup' && "relative bg-gradient-to-br from-background to-muted rounded-xl overflow-hidden shadow-2xl"
@@ -127,6 +131,10 @@ const EnhancedContextualDialogContent = React.forwardRef<
               )}
               {...props}
             >
+              <DialogPrimitive.Title className="sr-only">Dialog</DialogPrimitive.Title>
+              <DialogPrimitive.Description className="sr-only">
+                Dialog content.
+              </DialogPrimitive.Description>
               <div
                 className={cn(
                   variant === 'popup' && "relative bg-gradient-to-br from-background to-muted rounded-xl overflow-hidden shadow-2xl"

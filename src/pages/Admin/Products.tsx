@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -53,7 +53,14 @@ const AdminProducts: React.FC = () => {
   const fetchProducts = async () => {
     try {
       const { data } = await api.get("/products/admin/list");
-      setProducts(data.products);
+      const normalizedProducts = (data.products || []).map((product: any) => ({
+        ...product,
+        // Support both backend keys
+        isNew: typeof product.isNew === 'boolean'
+          ? product.isNew
+          : Boolean(product.isNewArrival),
+      }));
+      setProducts(normalizedProducts);
     } catch (error) {
       console.error("Error fetching products:", error);
       toast({
@@ -221,6 +228,64 @@ const AdminProducts: React.FC = () => {
     }
   };
 
+  const toggleProductNewStatus = async (productId: string) => {
+    const currentProduct = products.find((product) => product._id === productId);
+    if (!currentProduct) return;
+
+    const nextIsNew = !Boolean(currentProduct.isNew);
+
+    try {
+      const updatePayload = {
+        title: currentProduct.title,
+        description: currentProduct.description,
+        price: currentProduct.price,
+        discount: currentProduct.discount || 0,
+        category: currentProduct.category,
+        categories: currentProduct.categories || [],
+        countInStock: currentProduct.countInStock,
+        images: currentProduct.images || [],
+        details: currentProduct.details || [],
+        careInstructions: currentProduct.careInstructions || [],
+        isFeatured: Boolean(currentProduct.isFeatured),
+        hidden: Boolean(currentProduct.hidden),
+        isCustomizable: Boolean(currentProduct.isCustomizable),
+        customizationOptions: currentProduct.customizationOptions || {},
+        hasPriceVariants: Boolean(currentProduct.hasPriceVariants),
+        priceVariants: currentProduct.priceVariants || [],
+        comboItems: currentProduct.comboItems || [],
+        comboName: currentProduct.comboName || '',
+        comboDescription: currentProduct.comboDescription || '',
+        comboSubcategory: currentProduct.comboSubcategory || '',
+        // Send both fields for compatibility across backend versions.
+        isNew: nextIsNew,
+        isNewArrival: nextIsNew,
+      };
+
+      await api.put(`/products/${productId}`, updatePayload);
+
+      setProducts(prev => prev.map(product =>
+        product._id === productId
+          ? { ...product, isNew: nextIsNew }
+          : product
+      ));
+
+      // Sync with backend response source to avoid stale UI state.
+      await fetchProducts();
+
+      toast({
+        title: "Success",
+        description: `Product marked as ${nextIsNew ? "new" : "regular"}`,
+      });
+    } catch (error: any) {
+      console.error("Error toggling new status:", error);
+      toast({
+        title: "Error",
+        description: "Failed to toggle new status",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleDeleteProduct = async (id: string) => {
     try {
       await api.delete(`/products/${id}`);
@@ -264,9 +329,9 @@ const AdminProducts: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto py-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Products Management</h1>
+    <div className="space-y-6">
+      <div className="responsive-toolbar">
+        <h1 className="text-2xl sm:text-3xl font-bold">Products Management</h1>
         <Button onClick={() => navigate('/admin/products/new')}>
           <Plus className="mr-2 h-4 w-4" />
           Add New Product
@@ -311,7 +376,7 @@ const AdminProducts: React.FC = () => {
       {/* Advanced Filters Section */}
       <Card className="mb-6">
         <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
+          <div className="responsive-toolbar">
             <CardTitle className="flex items-center gap-2">
               <Filter className="h-5 w-5" />
               Filter Products
@@ -349,44 +414,44 @@ const AdminProducts: React.FC = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
-                <SelectItem value="cakes">🎂 Cakes</SelectItem>
-                <SelectItem value="baskets">🧺 Baskets</SelectItem>
-                <SelectItem value="chocolate-baskets">🍫 Chocolate Baskets</SelectItem>
-                <SelectItem value="chocolate-bouquets">🍫 Chocolate Bouquets</SelectItem>
-                <SelectItem value="bunches">💐 Bunches</SelectItem>
-                <SelectItem value="anniversary">💕 Anniversary</SelectItem>
-                <SelectItem value="birthday">🎈 Birthday</SelectItem>
-                <SelectItem value="wedding">💒 Wedding</SelectItem>
-                <SelectItem value="funeral">🕊️ Funeral</SelectItem>
-                <SelectItem value="congratulations">🎉 Congratulations</SelectItem>
-                <SelectItem value="get-well">🌸 Get Well</SelectItem>
-                <SelectItem value="sympathy">💙 Sympathy</SelectItem>
-                <SelectItem value="condolence">🕊️ Condolence</SelectItem>
-                <SelectItem value="roses">🌹 Roses</SelectItem>
-                <SelectItem value="sunflowers">🌻 Sunflowers</SelectItem>
-                <SelectItem value="tulips">🌷 Tulips</SelectItem>
-                <SelectItem value="orchids">🌺 Orchids</SelectItem>
-                <SelectItem value="lilies">🌼 Lilies</SelectItem>
-                <SelectItem value="combos">🎁 Combos</SelectItem>
-                <SelectItem value="gift-hampers">🎁 Gift Hampers</SelectItem>
-                <SelectItem value="fruit-baskets">🍎 Fruit Baskets</SelectItem>
-                <SelectItem value="mixed-arrangements">🌸 Mixed Arrangements</SelectItem>
-                <SelectItem value="premium-collections">⭐ Premium Collections</SelectItem>
-                <SelectItem value="seasonal-specials">🍂 Seasonal Specials</SelectItem>
-                <SelectItem value="corporate-gifts">🏢 Corporate Gifts</SelectItem>
-                <SelectItem value="baby-shower">👶 Baby Shower</SelectItem>
-                <SelectItem value="housewarming">🏠 Housewarming</SelectItem>
-                <SelectItem value="thank-you">🙏 Thank You</SelectItem>
-                <SelectItem value="apology">😔 Apology</SelectItem>
-                <SelectItem value="graduation">🎓 Graduation</SelectItem>
-                <SelectItem value="valentines-day">💝 Valentine's Day</SelectItem>
-                <SelectItem value="mothers-day">🌷 Mother's Day</SelectItem>
-                <SelectItem value="fathers-day">👨‍👧‍👦 Father's Day</SelectItem>
-                <SelectItem value="christmas">🎄 Christmas</SelectItem>
-                <SelectItem value="new-year">🎆 New Year</SelectItem>
-                <SelectItem value="diwali">🪔 Diwali</SelectItem>
-                <SelectItem value="holi">🎨 Holi</SelectItem>
-                <SelectItem value="raksha-bandhan">🪢 Raksha Bandhan</SelectItem>
+                <SelectItem value="cakes">ðŸŽ‚ Cakes</SelectItem>
+                <SelectItem value="baskets">ðŸ§º Baskets</SelectItem>
+                <SelectItem value="chocolate-baskets">ðŸ« Chocolate Baskets</SelectItem>
+                <SelectItem value="chocolate-bouquets">ðŸ« Chocolate Bouquets</SelectItem>
+                <SelectItem value="bunches">ðŸ’ Bunches</SelectItem>
+                <SelectItem value="anniversary">ðŸ’• Anniversary</SelectItem>
+                <SelectItem value="birthday">ðŸŽˆ Birthday</SelectItem>
+                <SelectItem value="wedding">ðŸ’’ Wedding</SelectItem>
+                <SelectItem value="funeral">ðŸ•Šï¸ Funeral</SelectItem>
+                <SelectItem value="congratulations">ðŸŽ‰ Congratulations</SelectItem>
+                <SelectItem value="get-well">ðŸŒ¸ Get Well</SelectItem>
+                <SelectItem value="sympathy">ðŸ’™ Sympathy</SelectItem>
+                <SelectItem value="condolence">ðŸ•Šï¸ Condolence</SelectItem>
+                <SelectItem value="roses">ðŸŒ¹ Roses</SelectItem>
+                <SelectItem value="sunflowers">ðŸŒ» Sunflowers</SelectItem>
+                <SelectItem value="tulips">ðŸŒ· Tulips</SelectItem>
+                <SelectItem value="orchids">ðŸŒº Orchids</SelectItem>
+                <SelectItem value="lilies">ðŸŒ¼ Lilies</SelectItem>
+                <SelectItem value="combos">ðŸŽ Combos</SelectItem>
+                <SelectItem value="gift-hampers">ðŸŽ Gift Hampers</SelectItem>
+                <SelectItem value="fruit-baskets">ðŸŽ Fruit Baskets</SelectItem>
+                <SelectItem value="mixed-arrangements">ðŸŒ¸ Mixed Arrangements</SelectItem>
+                <SelectItem value="premium-collections">â­ Premium Collections</SelectItem>
+                <SelectItem value="seasonal-specials">ðŸ‚ Seasonal Specials</SelectItem>
+                <SelectItem value="corporate-gifts">ðŸ¢ Corporate Gifts</SelectItem>
+                <SelectItem value="baby-shower">ðŸ‘¶ Baby Shower</SelectItem>
+                <SelectItem value="housewarming">ðŸ  Housewarming</SelectItem>
+                <SelectItem value="thank-you">ðŸ™ Thank You</SelectItem>
+                <SelectItem value="apology">ðŸ˜” Apology</SelectItem>
+                <SelectItem value="graduation">ðŸŽ“ Graduation</SelectItem>
+                <SelectItem value="valentines-day">ðŸ’ Valentine's Day</SelectItem>
+                <SelectItem value="mothers-day">ðŸŒ· Mother's Day</SelectItem>
+                <SelectItem value="fathers-day">ðŸ‘¨â€ðŸ‘§â€ðŸ‘¦ Father's Day</SelectItem>
+                <SelectItem value="christmas">ðŸŽ„ Christmas</SelectItem>
+                <SelectItem value="new-year">ðŸŽ† New Year</SelectItem>
+                <SelectItem value="diwali">ðŸª” Diwali</SelectItem>
+                <SelectItem value="holi">ðŸŽ¨ Holi</SelectItem>
+                <SelectItem value="raksha-bandhan">ðŸª¢ Raksha Bandhan</SelectItem>
                 {categories.map((category) => (
                   <SelectItem key={category} value={category.toLowerCase()}>
                     {category.charAt(0).toUpperCase() + category.slice(1)}
@@ -402,10 +467,10 @@ const AdminProducts: React.FC = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Stock Levels</SelectItem>
-                <SelectItem value="in-stock">✅ In Stock (10+)</SelectItem>
-                <SelectItem value="low-stock">⚠️ Low Stock (1-10)</SelectItem>
-                <SelectItem value="critical">🚨 Critical (1-5)</SelectItem>
-                <SelectItem value="out-of-stock">❌ Out of Stock</SelectItem>
+                <SelectItem value="in-stock">âœ… In Stock (10+)</SelectItem>
+                <SelectItem value="low-stock">âš ï¸ Low Stock (1-10)</SelectItem>
+                <SelectItem value="critical">ðŸš¨ Critical (1-5)</SelectItem>
+                <SelectItem value="out-of-stock">âŒ Out of Stock</SelectItem>
               </SelectContent>
             </Select>
 
@@ -416,8 +481,8 @@ const AdminProducts: React.FC = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Products</SelectItem>
-                <SelectItem value="featured">⭐ Featured Only</SelectItem>
-                <SelectItem value="not-featured">📋 Not Featured</SelectItem>
+                <SelectItem value="featured">â­ Featured Only</SelectItem>
+                <SelectItem value="not-featured">ðŸ“‹ Not Featured</SelectItem>
               </SelectContent>
             </Select>
 
@@ -428,8 +493,8 @@ const AdminProducts: React.FC = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Products</SelectItem>
-                <SelectItem value="new">🆕 New Products</SelectItem>
-                <SelectItem value="not-new">📦 Regular Products</SelectItem>
+                <SelectItem value="new">ðŸ†• New Products</SelectItem>
+                <SelectItem value="not-new">ðŸ“¦ Regular Products</SelectItem>
               </SelectContent>
             </Select>
 
@@ -440,8 +505,8 @@ const AdminProducts: React.FC = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Products</SelectItem>
-                <SelectItem value="visible">👁️ Visible</SelectItem>
-                <SelectItem value="hidden">🙈 Hidden</SelectItem>
+                <SelectItem value="visible">ðŸ‘ï¸ Visible</SelectItem>
+                <SelectItem value="hidden">ðŸ™ˆ Hidden</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -449,7 +514,7 @@ const AdminProducts: React.FC = () => {
       </Card>
 
       {/* Results Summary */}
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div className="text-sm text-muted-foreground">
           Showing <strong>{filteredProducts.length}</strong> of <strong>{products.length}</strong> products
           {getActiveFiltersCount() > 0 && " (filtered)"}
@@ -486,6 +551,7 @@ const AdminProducts: React.FC = () => {
               )}
             </div>
           ) : (
+            <div className="responsive-table-wrap border-0 rounded-none">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -556,8 +622,23 @@ const AdminProducts: React.FC = () => {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell>{product.isFeatured ? "✅" : "❌"}</TableCell>
-                      <TableCell>{product.isNew ? "✅" : "❌"}</TableCell>
+                      <TableCell>
+                        <span className="text-xs text-muted-foreground">
+                          {product.isFeatured ? "Featured" : "Regular"}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={Boolean(product.isNew)}
+                            onCheckedChange={() => toggleProductNewStatus(product._id)}
+                            className="data-[state=checked]:bg-blue-600"
+                          />
+                          <span className="text-xs text-muted-foreground">
+                            {product.isNew ? "New" : "Regular"}
+                          </span>
+                        </div>
+                      </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Switch
@@ -611,11 +692,11 @@ const AdminProducts: React.FC = () => {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="flex gap-1">
-                          <Button variant="ghost" size="sm" onClick={() => navigate(`/admin/products/edit/${product._id}`)}>
+                        <div className="flex flex-wrap gap-1">
+                          <Button variant="ghost" size="sm" onClick={() => navigate(`/admin/products/edit/${product._id}`)} className="touch-action-btn">
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" onClick={() => handleDeleteProduct(product._id)}>
+                          <Button variant="ghost" size="sm" onClick={() => handleDeleteProduct(product._id)} className="touch-action-btn">
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -625,6 +706,7 @@ const AdminProducts: React.FC = () => {
                 })}
               </TableBody>
             </Table>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -633,3 +715,5 @@ const AdminProducts: React.FC = () => {
 };
 
 export default AdminProducts;
+
+

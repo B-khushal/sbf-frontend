@@ -19,18 +19,13 @@ export const ProductFeaturesToggle: React.FC<ProductFeaturesToggleProps> = ({
   onFeaturedChange,
   onHiddenChange,
 }) => {
-  console.log('ProductFeaturesToggle rendered with:', { isNewArrival, isFeatured, hidden });
-  
   return (
     <div className="space-y-4 relative z-40 bg-white p-4 rounded-lg border shadow-sm">
       <div className="flex items-center space-x-2">
         <Switch
           id="isNewArrival"
           checked={Boolean(isNewArrival)}
-          onCheckedChange={(checked) => {
-            console.log('New Arrival Toggle Changed:', checked);
-            onNewArrivalChange(checked);
-          }}
+          onCheckedChange={onNewArrivalChange}
         />
         <Label htmlFor="isNewArrival">Enable New Arrival</Label>
       </div>
@@ -39,10 +34,7 @@ export const ProductFeaturesToggle: React.FC<ProductFeaturesToggleProps> = ({
         <Switch
           id="isFeatured"
           checked={Boolean(isFeatured)}
-          onCheckedChange={(checked) => {
-            console.log('Featured Toggle Changed:', checked);
-            onFeaturedChange(checked);
-          }}
+          onCheckedChange={onFeaturedChange}
         />
         <Label htmlFor="isFeatured">Enable Featured Product</Label>
       </div>
@@ -52,10 +44,7 @@ export const ProductFeaturesToggle: React.FC<ProductFeaturesToggleProps> = ({
           <Switch
             id="hidden"
             checked={Boolean(hidden)}
-            onCheckedChange={(checked) => {
-              console.log('Hidden Toggle Changed:', checked);
-              onHiddenChange(checked);
-            }}
+            onCheckedChange={onHiddenChange}
           />
           <Label htmlFor="hidden" className="flex flex-col">
             <span>Hide Product from Public View</span>

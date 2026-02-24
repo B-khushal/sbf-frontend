@@ -262,15 +262,15 @@ const AdminVendorManagement: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="responsive-toolbar">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
+          <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
             <Store className="h-8 w-8 text-primary" />
             Vendor Management
           </h1>
           <p className="text-muted-foreground">Manage vendor applications, approvals, and store operations</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button 
             variant="outline" 
             onClick={exportVendorsData}
@@ -287,7 +287,7 @@ const AdminVendorManagement: React.FC = () => {
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
         <Card>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
@@ -326,8 +326,8 @@ const AdminVendorManagement: React.FC = () => {
           <CardTitle>Filter Vendors</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-4">
-            <div className="flex-1 min-w-[200px]">
+          <div className="flex flex-col lg:flex-row lg:flex-wrap gap-3 sm:gap-4">
+            <div className="flex-1 min-w-0 lg:min-w-[200px]">
               <div className="relative">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -339,7 +339,7 @@ const AdminVendorManagement: React.FC = () => {
               </div>
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[150px]">
+              <SelectTrigger className="w-full sm:w-[150px]">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -351,7 +351,7 @@ const AdminVendorManagement: React.FC = () => {
               </SelectContent>
             </Select>
             <Select value={verificationFilter} onValueChange={setVerificationFilter}>
-              <SelectTrigger className="w-[150px]">
+              <SelectTrigger className="w-full sm:w-[150px]">
                 <SelectValue placeholder="Verification" />
               </SelectTrigger>
               <SelectContent>
@@ -361,7 +361,7 @@ const AdminVendorManagement: React.FC = () => {
               </SelectContent>
             </Select>
             <Select value={subscriptionFilter} onValueChange={setSubscriptionFilter}>
-              <SelectTrigger className="w-[150px]">
+              <SelectTrigger className="w-full sm:w-[150px]">
                 <SelectValue placeholder="Plan" />
               </SelectTrigger>
               <SelectContent>
@@ -393,6 +393,7 @@ const AdminVendorManagement: React.FC = () => {
           <CardTitle>Vendors ({filteredVendors.length})</CardTitle>
         </CardHeader>
         <CardContent>
+          <div className="responsive-table-wrap border-0 rounded-none">
           <Table>
             <TableHeader>
               <TableRow>
@@ -450,13 +451,14 @@ const AdminVendorManagement: React.FC = () => {
                   </TableCell>
                   <TableCell>{new Date(vendor.createdAt).toLocaleDateString()}</TableCell>
                   <TableCell className="text-right">
-                    <div className="flex gap-1 justify-end">
+                    <div className="flex flex-wrap gap-1 justify-end">
                       <Button
                         ref={(el) => vendorDetailButtonRefs.current[vendor._id] = el}
                         variant="ghost"
                         size="sm"
                         onClick={() => handleViewDetails(vendor._id)}
                         title="View Details"
+                        className="touch-action-btn"
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
@@ -469,7 +471,7 @@ const AdminVendorManagement: React.FC = () => {
                             onClick={() => openStatusDialog(vendor, 'approved')}
                             disabled={updatingVendor === vendor._id}
                             title="Approve"
-                            className="text-green-600 hover:text-green-700"
+                            className="text-green-600 hover:text-green-700 touch-action-btn"
                           >
                             <Check className="h-4 w-4" />
                           </Button>
@@ -480,7 +482,7 @@ const AdminVendorManagement: React.FC = () => {
                             onClick={() => openStatusDialog(vendor, 'rejected')}
                             disabled={updatingVendor === vendor._id}
                             title="Reject"
-                            className="text-red-600 hover:text-red-700"
+                            className="text-red-600 hover:text-red-700 touch-action-btn"
                           >
                             <X className="h-4 w-4" />
                           </Button>
@@ -494,7 +496,7 @@ const AdminVendorManagement: React.FC = () => {
                           onClick={() => openStatusDialog(vendor, 'suspended')}
                           disabled={updatingVendor === vendor._id}
                           title="Suspend"
-                          className="text-orange-600 hover:text-orange-700"
+                          className="text-orange-600 hover:text-orange-700 touch-action-btn"
                         >
                           <Pause className="h-4 w-4" />
                         </Button>
@@ -507,7 +509,7 @@ const AdminVendorManagement: React.FC = () => {
                           onClick={() => openStatusDialog(vendor, 'approved')}
                           disabled={updatingVendor === vendor._id}
                           title="Reactivate"
-                          className="text-green-600 hover:text-green-700"
+                          className="text-green-600 hover:text-green-700 touch-action-btn"
                         >
                           <Play className="h-4 w-4" />
                         </Button>
@@ -525,6 +527,7 @@ const AdminVendorManagement: React.FC = () => {
               )}
             </TableBody>
           </Table>
+          </div>
         </CardContent>
       </Card>
 

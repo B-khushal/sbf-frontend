@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, TouchSensor } from "@dnd-kit/core";
 import { arrayMove, SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { SortableItem } from "../components/ui/SortableItem";
+import { SortableHandle, SortableItem } from "../components/ui/SortableItem";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -25,7 +25,9 @@ import {
   Settings,
   ShoppingBag,
   Bell,
-  Send
+  Send,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import api from "../services/api";
 import { uploadImage } from "../services/uploadService";
@@ -108,6 +110,9 @@ interface FooterSettings {
 const AdminSettingsPage: React.FC = () => {
   const { toast } = useToast();
   const { refetchSettings } = useSettings();
+  const tabsScrollRef = useRef<HTMLDivElement | null>(null);
+  const [canScrollTabsLeft, setCanScrollTabsLeft] = useState(false);
+  const [canScrollTabsRight, setCanScrollTabsRight] = useState(false);
   
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -595,9 +600,46 @@ const AdminSettingsPage: React.FC = () => {
     }
   };
 
+  const updateTabsScrollState = () => {
+    const el = tabsScrollRef.current;
+    if (!el) return;
+
+    const maxScrollLeft = el.scrollWidth - el.clientWidth;
+    setCanScrollTabsLeft(el.scrollLeft > 4);
+    setCanScrollTabsRight(el.scrollLeft < maxScrollLeft - 4);
+  };
+
+  const scrollTabs = (direction: "left" | "right") => {
+    const el = tabsScrollRef.current;
+    if (!el) return;
+
+    const amount = Math.max(180, Math.floor(el.clientWidth * 0.7));
+    el.scrollBy({
+      left: direction === "left" ? -amount : amount,
+      behavior: "smooth",
+    });
+  };
+
+  useEffect(() => {
+    const el = tabsScrollRef.current;
+    if (!el) return;
+
+    const onScroll = () => updateTabsScrollState();
+    const onResize = () => updateTabsScrollState();
+
+    updateTabsScrollState();
+    el.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onResize);
+
+    return () => {
+      el.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onResize);
+    };
+  }, []);
+
   if (loading) {
     return (
-      <div className="container mx-auto p-6">
+      <div className="container mx-auto p-3 sm:p-4 lg:p-6">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="flex flex-col items-center gap-4">
             <RefreshCw className="w-8 h-8 animate-spin text-primary" />
@@ -609,17 +651,17 @@ const AdminSettingsPage: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto p-6 max-w-7xl">
-      <div className="flex justify-between items-center mb-8">
+    <div className="container mx-auto p-3 sm:p-4 lg:p-6 max-w-7xl">
+      <div className="responsive-toolbar mb-6 sm:mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Website Settings</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Website Settings</h1>
           <p className="text-gray-600">Manage all aspects of your homepage including hero slides, sections, and content</p>
         </div>
         <Button 
           onClick={saveAllSettings} 
           disabled={saving}
           size="lg"
-          className="bg-primary hover:bg-primary/90"
+          className="bg-primary hover:bg-primary/90 w-full sm:w-auto"
         >
           {saving ? (
             <>
@@ -636,21 +678,50 @@ const AdminSettingsPage: React.FC = () => {
       </div>
 
       <Tabs defaultValue="hero-slides" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-7 lg:w-[840px]">
-          <TabsTrigger value="hero-slides">Hero Slides</TabsTrigger>
-          <TabsTrigger value="sections">Page Sections</TabsTrigger>
-          <TabsTrigger value="shop-categories">Shop Categories</TabsTrigger>
-          <TabsTrigger value="categories">Home Categories</TabsTrigger>
-          <TabsTrigger value="header">Header</TabsTrigger>
-          <TabsTrigger value="footer">Footer</TabsTrigger>
-          <TabsTrigger value="notifications">App Notifications</TabsTrigger>
-        </TabsList>
+        <div className="relative">
+          {canScrollTabsLeft && (
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => scrollTabs("left")}
+              className="absolute left-1 top-1/2 -translate-y-1/2 z-10 h-7 w-7 rounded-full bg-background/95 backdrop-blur touch-action-btn"
+              aria-label="Scroll settings tabs left"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+          )}
+          {canScrollTabsRight && (
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => scrollTabs("right")}
+              className="absolute right-1 top-1/2 -translate-y-1/2 z-10 h-7 w-7 rounded-full bg-background/95 backdrop-blur touch-action-btn"
+              aria-label="Scroll settings tabs right"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          )}
+          <TabsList
+            ref={tabsScrollRef}
+            className="w-full overflow-x-auto no-scrollbar inline-flex h-auto p-1 gap-1 justify-start px-9 sm:px-1"
+          >
+          <TabsTrigger className="shrink-0 whitespace-nowrap text-xs sm:text-sm" value="hero-slides">Hero Slides</TabsTrigger>
+          <TabsTrigger className="shrink-0 whitespace-nowrap text-xs sm:text-sm" value="sections">Page Sections</TabsTrigger>
+          <TabsTrigger className="shrink-0 whitespace-nowrap text-xs sm:text-sm" value="shop-categories">Shop Categories</TabsTrigger>
+          <TabsTrigger className="shrink-0 whitespace-nowrap text-xs sm:text-sm" value="categories">Home Categories</TabsTrigger>
+          <TabsTrigger className="shrink-0 whitespace-nowrap text-xs sm:text-sm" value="header">Header</TabsTrigger>
+          <TabsTrigger className="shrink-0 whitespace-nowrap text-xs sm:text-sm" value="footer">Footer</TabsTrigger>
+          <TabsTrigger className="shrink-0 whitespace-nowrap text-xs sm:text-sm" value="notifications">App Notifications</TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* Hero Slides Tab */}
         <TabsContent value="hero-slides" className="space-y-6">
           <Card>
             <CardHeader>
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     <ImageIcon className="w-5 h-5" />
@@ -677,9 +748,11 @@ const AdminSettingsPage: React.FC = () => {
                     {heroSlides.map((slide) => (
                       <SortableItem key={slide.id} id={String(slide.id)}>
                         <Card className="border-2 border-dashed border-gray-200 hover:border-primary/50 transition-colors">
-                          <CardContent className="p-6">
-                            <div className="flex items-center gap-4 mb-4">
-                              <GripVertical className="w-5 h-5 text-gray-400 cursor-grab" />
+                          <CardContent className="p-4 sm:p-6">
+                            <div className="flex flex-wrap items-center gap-3 sm:gap-4 mb-4">
+                              <SortableHandle>
+                                <GripVertical className="w-5 h-5 text-gray-400" />
+                              </SortableHandle>
                               <Badge variant={slide.enabled ? "default" : "secondary"}>
                                 Slide {slide.id}
                               </Badge>
@@ -698,7 +771,7 @@ const AdminSettingsPage: React.FC = () => {
                                   variant="outline"
                                   size="sm"
                                   onClick={() => deleteSlide(slide.id)}
-                                  className="text-red-600 hover:text-red-700"
+                                  className="text-red-600 hover:text-red-700 touch-action-btn"
                                 >
                                   <Trash2 className="w-4 h-4" />
                                 </Button>
@@ -777,7 +850,7 @@ const AdminSettingsPage: React.FC = () => {
                                     />
                                   </div>
 
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                   <div className="space-y-2">
                                     <Label htmlFor={`slide-cta-${slide.id}`}>Button Text</Label>
                                     <Input
@@ -817,7 +890,7 @@ const AdminSettingsPage: React.FC = () => {
         <TabsContent value="sections" className="space-y-6">
           <Card>
             <CardHeader>
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     <Settings className="w-5 h-5" />
@@ -844,9 +917,11 @@ const AdminSettingsPage: React.FC = () => {
                     {homeSections.map((section) => (
                       <SortableItem key={section.id} id={section.id}>
                         <Card key={section.id} className="border-2 border-dashed border-gray-200 hover:border-primary/50 transition-colors">
-                          <CardContent className="p-6">
-                            <div className="flex items-center gap-4 mb-4">
-                              <GripVertical className="w-5 h-5 text-gray-400 cursor-grab" />
+                          <CardContent className="p-4 sm:p-6">
+                            <div className="flex flex-wrap items-center gap-3 sm:gap-4 mb-4">
+                              <SortableHandle>
+                                <GripVertical className="w-5 h-5 text-gray-400" />
+                              </SortableHandle>
                               <Badge variant={section.enabled ? "default" : "secondary"}>
                                 {section.type}
                               </Badge>
@@ -867,7 +942,7 @@ const AdminSettingsPage: React.FC = () => {
                                   variant="outline"
                                   size="sm"
                                   onClick={() => deleteSection(section.id)}
-                                  className="text-red-600 hover:text-red-700"
+                                    className="text-red-600 hover:text-red-700 touch-action-btn"
                                 >
                                     <Trash2 className="w-4 h-4" />
                                 </Button>
@@ -928,9 +1003,9 @@ const AdminSettingsPage: React.FC = () => {
                                             const formData = new FormData();
                                             formData.append('image', file);
                                             const response = await uploadImage(formData);
-                                            updateSectionContent(section.id, 'content', { 
-                                              ...section.content, 
-                                              image: response.url 
+                                            updateSectionContent(section.id, 'content', {
+                                              ...(section.content || {}),
+                                              image: response.imageUrl
                                             });
                                             toast({
                                               title: "Image uploaded",
@@ -965,7 +1040,7 @@ const AdminSettingsPage: React.FC = () => {
         <TabsContent value="shop-categories" className="space-y-6">
           <Card>
             <CardHeader>
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     <ShoppingBag className="w-5 h-5" />
@@ -992,9 +1067,11 @@ const AdminSettingsPage: React.FC = () => {
                     {shopCategories.map((category) => (
                       <SortableItem key={category.id} id={category.id}>
                         <Card className="border-2 border-dashed border-gray-200 hover:border-primary/50 transition-colors">
-                          <CardContent className="p-6">
-                            <div className="flex items-center gap-4 mb-4">
-                              <GripVertical className="w-5 h-5 text-gray-400 cursor-grab" />
+                          <CardContent className="p-4 sm:p-6">
+                            <div className="flex flex-wrap items-center gap-3 sm:gap-4 mb-4">
+                              <SortableHandle>
+                                <GripVertical className="w-5 h-5 text-gray-400" />
+                              </SortableHandle>
                               <Badge variant={category.enabled ? "default" : "secondary"}>
                                 {category.name}
                               </Badge>
@@ -1010,7 +1087,7 @@ const AdminSettingsPage: React.FC = () => {
                                   variant="outline"
                                   size="sm"
                                   onClick={() => deleteShopCategory(category.id)}
-                                  className="text-red-600 hover:text-red-700"
+                                  className="text-red-600 hover:text-red-700 touch-action-btn"
                                 >
                                   <Trash2 className="w-4 h-4" />
                                 </Button>
@@ -1080,7 +1157,7 @@ const AdminSettingsPage: React.FC = () => {
         <TabsContent value="categories" className="space-y-6">
           <Card>
             <CardHeader>
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     <Edit className="w-5 h-5" />
@@ -1107,9 +1184,11 @@ const AdminSettingsPage: React.FC = () => {
                     {categories.map((category) => (
                       <SortableItem key={category.id} id={category.id}>
                         <Card key={category.id} className="border-2 border-dashed border-gray-200 hover:border-primary/50 transition-colors">
-                          <CardContent className="p-6">
-                            <div className="flex items-center gap-4 mb-4">
-                              <GripVertical className="w-5 h-5 text-gray-400 cursor-grab" />
+                          <CardContent className="p-4 sm:p-6">
+                            <div className="flex flex-wrap items-center gap-3 sm:gap-4 mb-4">
+                              <SortableHandle>
+                                <GripVertical className="w-5 h-5 text-gray-400" />
+                              </SortableHandle>
                               <Badge variant={category.enabled ? "default" : "secondary"}>
                                 {category.name}
                               </Badge>
@@ -1125,7 +1204,7 @@ const AdminSettingsPage: React.FC = () => {
                                   variant="outline"
                                   size="sm"
                                   onClick={() => deleteCategory(category.id)}
-                                  className="text-red-600 hover:text-red-700"
+                                  className="text-red-600 hover:text-red-700 touch-action-btn"
                                 >
                                   <Trash2 className="w-4 h-4" />
                                 </Button>
@@ -1207,7 +1286,7 @@ const AdminSettingsPage: React.FC = () => {
                     onImageUpload={async (file) => {
                       const formData = new FormData();
                       formData.append('image', file);
-                      const response = await uploadImage(formData);
+                      const response = await uploadImage(formData, 'logo');
                       if (response.imageUrl) {
                         setHeaderSettings(prev => ({ ...prev, logo: response.imageUrl }));
                         toast({ title: 'Logo updated', description: 'Logo image uploaded successfully.' });
@@ -1384,7 +1463,7 @@ const AdminSettingsPage: React.FC = () => {
         <TabsContent value="notifications" className="space-y-6">
           <Card>
             <CardHeader>
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     <Bell className="w-5 h-5" />
@@ -1418,6 +1497,7 @@ const AdminSettingsPage: React.FC = () => {
                       });
                     }
                   }}
+                  className="w-full sm:w-auto touch-action-btn"
                 >
                   <RefreshCw className="w-4 h-4 mr-2" />
                   Refresh Devices
@@ -1436,7 +1516,7 @@ const AdminSettingsPage: React.FC = () => {
               <div className="space-y-3">
                 <Label className="text-sm font-medium">Registered Admin Devices ({adminDevices.length})</Label>
                 {adminDevices.length === 0 ? (
-                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 sm:p-6 text-center">
                     <Bell className="w-12 h-12 mx-auto text-gray-400 mb-3" />
                     <p className="text-sm text-gray-600 mb-2">No devices registered yet</p>
                     <p className="text-xs text-gray-500">
@@ -1444,7 +1524,7 @@ const AdminSettingsPage: React.FC = () => {
                     </p>
                   </div>
                 ) : (
-                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                  <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
                     {adminDevices.map((device: any) => (
                       <div
                         key={device.id}
@@ -1455,7 +1535,7 @@ const AdminSettingsPage: React.FC = () => {
                         }`}
                         onClick={() => setSelectedDeviceId(device.id)}
                       >
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-start sm:items-center justify-between gap-2">
                           <div className="flex-1">
                             <div className="flex items-center gap-2">
                               <span className="font-medium text-sm">{device.user?.name || 'Unknown User'}</span>
@@ -1505,7 +1585,7 @@ const AdminSettingsPage: React.FC = () => {
                   />
                 </div>
 
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-3">
                   <Button
                     onClick={async () => {
                       if (!selectedDeviceId) {
@@ -1554,7 +1634,7 @@ const AdminSettingsPage: React.FC = () => {
                         });
                       }
                     }}
-                    className="flex-1"
+                    className="w-full sm:flex-1 touch-action-btn"
                     disabled={!selectedDeviceId}
                   >
                     <Send className="w-4 h-4 mr-2" />

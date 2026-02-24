@@ -105,7 +105,11 @@ const HomePage = () => {
           if (!Array.isArray(products)) return [];
           return products.map(product => ({
             ...product,
-            _id: product._id || product.id
+            _id: product._id || product.id,
+            // Normalize across backend variants.
+            isNewArrival: typeof product.isNewArrival === 'boolean'
+              ? product.isNewArrival
+              : Boolean(product.isNew),
           }));
         };
 
@@ -281,8 +285,8 @@ const HomePage = () => {
                     <motion.div variants={itemVariants} className="w-full lg:w-1/2">
                       <div className="relative aspect-square overflow-hidden rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-xl lg:shadow-2xl mx-auto max-w-sm sm:max-w-md lg:max-w-none">
                         <img 
-                          src="/placeholder.svg" 
-                          alt="Artisan Florist" 
+                          src={section.content?.image || "/placeholder.svg"} 
+                          alt={section.title || "Artisan Florist"} 
                           className="object-cover w-full h-full transition-transform duration-700 hover:scale-105"
                           loading="lazy"
                           decoding="async"

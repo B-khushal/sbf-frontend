@@ -467,9 +467,9 @@ const HolidayManagement: React.FC = () => {
       </Card>
 
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="responsive-toolbar">
         <div>
-          <h1 className="text-3xl font-bold">Holiday Management</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">Holiday Management</h1>
           <p className="text-muted-foreground">
             Manage store holidays and non-delivery dates
           </p>
@@ -482,7 +482,7 @@ const HolidayManagement: React.FC = () => {
 
       {/* Stats Cards */}
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
@@ -548,7 +548,7 @@ const HolidayManagement: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="responsive-filter-grid">
             <div>
               <Label htmlFor="year">Year</Label>
               <Select value={selectedYear.toString()} onValueChange={(value) => setSelectedYear(parseInt(value))}>
@@ -623,6 +623,7 @@ const HolidayManagement: React.FC = () => {
               <RefreshCw className="h-8 w-8 animate-spin" />
             </div>
           ) : (
+            <div className="responsive-table-wrap border-0 rounded-none">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -678,11 +679,12 @@ const HolidayManagement: React.FC = () => {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => handleEdit(holiday)}
+                            className="touch-action-btn"
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -690,6 +692,7 @@ const HolidayManagement: React.FC = () => {
                             variant="outline"
                             size="sm"
                             onClick={() => handleToggleStatus(holiday._id)}
+                            className="touch-action-btn"
                           >
                             {holiday.isActive ? "Deactivate" : "Activate"}
                           </Button>
@@ -697,7 +700,7 @@ const HolidayManagement: React.FC = () => {
                             variant="outline"
                             size="sm"
                             onClick={() => handleDelete(holiday._id)}
-                            className="text-red-600 hover:text-red-700"
+                            className="text-red-600 hover:text-red-700 touch-action-btn"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -708,6 +711,7 @@ const HolidayManagement: React.FC = () => {
                 })}
               </TableBody>
             </Table>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -756,7 +760,7 @@ const HolidayManagement: React.FC = () => {
                         {currentHoliday.date ? format(new Date(currentHoliday.date), 'PPP') : 'Pick a date'}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
+                    <PopoverContent side="bottom" align="start" sideOffset={8} className="w-auto max-w-[92vw] p-0">
                       <Calendar
                         mode="single"
                         selected={currentHoliday.date ? new Date(currentHoliday.date) : undefined}

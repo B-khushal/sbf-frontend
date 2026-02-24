@@ -14,8 +14,6 @@ const api = axios.create({
   withCredentials: true, // Enable sending cookies with requests
 });
 
-console.log('API base URL:', api.defaults.baseURL);
-
 // Add a request interceptor to include the auth token in requests
 api.interceptors.request.use(
   (config) => {
@@ -50,14 +48,8 @@ api.interceptors.request.use(
     
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log('API Request: Token added to request for URL:', config.url);
     } else {
-      console.warn('API Request: No token found for URL:', config.url);
-      
-      // For wishlist endpoints, this might be a problem
-      if (config.url?.includes('/wishlist')) {
-        console.warn('Wishlist request without token - user may not be authenticated');
-      }
+      // For endpoints that require authentication, requests will fail naturally.
     }
     
     return config;
