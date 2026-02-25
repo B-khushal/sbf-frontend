@@ -10,7 +10,6 @@ import ContactModal from '@/components/ui/ContactModal';
 import { CustomizeProductModal } from '@/components/ui/CustomizeProductModal';
 import useCart from '@/hooks/use-cart';
 import useWishlist from '@/hooks/use-wishlist';
-import WishlistLottieButton from '@/components/ui/WishlistLottieButton';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import productService, { ProductData, ComboItem } from '@/services/productService';
@@ -218,7 +217,6 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
   const { user } = useAuth();
   const { addToCart } = useCart();
   const { addItem: addToWishlist, removeItem: removeFromWishlist, items: wishlistItems } = useWishlist();
-  const isInWishlist = wishlistItems.some(item => item.id === String(product._id));
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [isCustomizeModalOpen, setIsCustomizeModalOpen] = useState(false);
   const [customizations, setCustomizations] = useState<CustomizationData | undefined>();
@@ -383,7 +381,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
     }
   };
 
-  const handleWishlistToggle = async () => {
+  const handleAddToWishlist = async () => {
     try {
       // Validate product data
       if (!product._id || !product.title || typeof product.price !== 'number') {
@@ -397,29 +395,25 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
         return;
       }
 
-      if (isInWishlist) {
-        await removeFromWishlist(String(product._id));
-      } else {
-        // Use utility function for consistent image URL construction
-        const imageUrl = getImageUrl(product.images?.[0], { bustCache: true });
+      // Use utility function for consistent image URL construction
+      const imageUrl = getImageUrl(product.images?.[0], { bustCache: true });
 
-        // Create wishlist item with proper ID
-        const wishlistItem = {
-          id: String(product._id),
-          title: product.title,
-          image: imageUrl,
-          price: product.price
-        };
+      // Create wishlist item with proper ID
+      const wishlistItem = {
+        id: String(product._id),
+        title: product.title,
+        image: imageUrl,
+        price: product.price
+      };
 
-        console.log("Adding to wishlist from ProductDetail:", wishlistItem);
+      console.log("Adding to wishlist from ProductDetail:", wishlistItem);
 
-        // Use the wishlist hook to add item
-        await addToWishlist(wishlistItem);
-      }
+      // Use the wishlist hook to add item
+      await addToWishlist(wishlistItem);
 
     } catch (error) {
-      console.error("Error updating wishlist:", error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to update wishlist';
+      console.error("Error adding to wishlist:", error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to add to wishlist';
 
       if (errorMessage.includes('log in')) {
         toast({
@@ -723,14 +717,10 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                 )}
                 <button
                   type="button"
-                  onClick={handleWishlistToggle}
+                  onClick={handleAddToWishlist}
                   className="h-12 px-6 border border-muted flex items-center justify-center gap-2 rounded-md hover:bg-secondary transition-colors duration-300"
                 >
-                  <WishlistLottieButton
-                    isInWishlist={isInWishlist}
-                    onClick={handleWishlistToggle}
-                    size={20}
-                  />
+                  <Heart size={18} />
                   <span className="hidden sm:inline">Wishlist</span>
                 </button>
                 <button

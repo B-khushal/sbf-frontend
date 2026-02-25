@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, createContext, useContext, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import * as wishlistService from '@/services/wishlistService';
@@ -10,48 +10,41 @@ export type WishlistItem = {
   price: number;
 };
 
-interface WishlistContextType {
-  items: WishlistItem[];
-  itemCount: number;
-  isLoading: boolean;
-  addItem: (item: WishlistItem) => Promise<void>;
-  removeItem: (id: string) => Promise<void>;
-  clearWishlist: () => Promise<void>;
-  loadWishlist: () => Promise<void>;
-}
-
-const WishlistContext = createContext<WishlistContextType | null>(null);
-
-export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const useWishlist = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const [items, setItems] = useState<WishlistItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const hasFetchedRef = useRef(false);
 
   // Check if user is authenticated using auth context
   const isAuthenticated = !!user;
 
   // Load wishlist from backend or localStorage
   const loadWishlist = useCallback(async () => {
+    // Don't block the app if wishlist loading fails
+    console.log('loadWishlist called, isAuthenticated:', isAuthenticated);
     setIsLoading(true);
 
     // Add a timeout to ensure loading state is cleared
     const timeoutId = setTimeout(() => {
+      console.log('Loading timeout reached, clearing loading state');
       setIsLoading(false);
     }, 10000); // 10 second timeout
 
     try {
       if (isAuthenticated) {
+        console.log('Loading wishlist from backend...');
         try {
           // Load from backend for authenticated users
           const response = await wishlistService.getWishlist();
+          console.log('Backend response:', response);
           const transformedItems = response.wishlist.map(item => ({
             id: item.id,
             title: item.title,
             image: item.image,
             price: item.price
           }));
+          console.log('Transformed items:', transformedItems);
           setItems(transformedItems);
 
           // Also save to localStorage as backup
@@ -81,9 +74,10 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           }
         }
       } else {
+        console.log('Loading wishlist from localStorage...');
         // Load from localStorage for non-authenticated users
         try {
-          let wishlist: WishlistItem[] = [];
+          let wishlist = [];
           const wishlistData = localStorage.getItem("wishlist");
 
           if (wishlistData && wishlistData !== "null" && wishlistData !== "undefined") {
@@ -105,6 +99,7 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             }
           }
 
+          console.log('LocalStorage items:', wishlist);
           setItems(wishlist);
         } catch (error) {
           console.error("Error loading wishlist:", error);
@@ -115,6 +110,7 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       console.error('Error loading wishlist (outer catch):', error);
       // Final fallback to localStorage
       try {
+        console.log('Final fallback to localStorage due to error');
         const wishlistData = localStorage.getItem("wishlist");
         if (wishlistData) {
           const parsed = JSON.parse(wishlistData);
@@ -126,9 +122,11 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
               item.title &&
               typeof item.price === 'number'
             );
+            console.log('Fallback items from localStorage:', validItems);
             setItems(validItems);
           }
         } else {
+          console.log('No localStorage data available');
           setItems([]);
         }
       } catch (fallbackError) {
@@ -137,22 +135,21 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
     } finally {
       clearTimeout(timeoutId);
+      console.log('Setting isLoading to false');
       setIsLoading(false);
     }
   }, [isAuthenticated]);
 
-  // Load wishlist once on mount and when authentication status changes
+  // Load wishlist on mount and when authentication status changes
   useEffect(() => {
     loadWishlist();
   }, [loadWishlist]);
 
-  // Load cached data on first mount for immediate display
+  // Also load cached data on mount for better UX
   useEffect(() => {
-    if (hasFetchedRef.current) return;
-    hasFetchedRef.current = true;
-
+    // Load cached data immediately for better UX
     const cachedData = localStorage.getItem("wishlist");
-    if (cachedData) {
+    if (cachedData && items.length === 0) {
       try {
         const parsed = JSON.parse(cachedData);
         if (Array.isArray(parsed) && parsed.length > 0) {
@@ -164,6 +161,7 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             typeof item.price === 'number'
           );
           if (validItems.length > 0) {
+            console.log('Loading cached wishlist data for immediate display:', validItems);
             setItems(validItems);
           }
         }
@@ -171,9 +169,11 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         console.error('Error loading cached wishlist data:', error);
       }
     }
-  }, []);
+  }, []); // Only run once on mount
 
   const addItem = async (item: WishlistItem) => {
+    console.log('Adding item to wishlist:', item);
+
     if (!item.id || !item.title || typeof item.price !== 'number') {
       console.error('Invalid item format for wishlist:', item);
       toast({
@@ -383,7 +383,7 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  const value: WishlistContextType = {
+  return {
     items,
     itemCount: items.length,
     isLoading,
@@ -392,20 +392,6 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     clearWishlist,
     loadWishlist
   };
-
-  return (
-    <WishlistContext.Provider value={value}>
-      {children}
-    </WishlistContext.Provider>
-  );
-};
-
-const useWishlist = () => {
-  const context = useContext(WishlistContext);
-  if (!context) {
-    throw new Error('useWishlist must be used within a WishlistProvider');
-  }
-  return context;
 };
 
 export default useWishlist; 

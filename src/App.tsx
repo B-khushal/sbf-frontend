@@ -8,7 +8,6 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { CurrencyProvider } from '@/contexts/CurrencyContext';
 import { SettingsProvider } from '@/contexts/SettingsContext';
 import { NotificationProvider } from '@/contexts/NotificationContext';
-import { WishlistProvider } from '@/hooks/use-wishlist';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import MainLayout from './components/MainLayout';
@@ -126,143 +125,235 @@ const App = () => {
           }}
         >
           <AuthProvider>
-            <WishlistProvider>
-              <CartLoader />
-              <CurrencyProvider>
-                <SettingsProvider>
-                  <NotificationProvider>
-                    <TooltipProvider>
-                      <Toaster />
-                      <Sonner />
-                      <BrowserRouter>
-                        <PwaInstallManager />
-                        <Suspense fallback={<LoadingFallback />}>
-                          <Routes>
-                            {/* Main Layout Routes */}
-                            <Route element={<MainLayout />}>
-                              <Route path="/" element={<HomePage />} />
-                              <Route path="/shop" element={
-                                <Suspense fallback={<LoadingFallback message="Loading shop..." />}>
-                                  <ShopPage />
-                                </Suspense>
-                              } />
-                              <Route path="/shop/:category" element={
-                                <Suspense fallback={<LoadingFallback message="Loading products..." />}>
-                                  <ShopPage />
-                                </Suspense>
-                              } />
-                              <Route path="/product/:id" element={
-                                <Suspense fallback={<LoadingFallback message="Loading product..." />}>
-                                  <ProductPage />
-                                </Suspense>
-                              } />
-                              <Route path="/products/:productId" element={
-                                <Suspense fallback={<LoadingFallback message="Loading product..." />}>
-                                  <ProductPage />
-                                </Suspense>
-                              } />
-                              <Route path="/cart" element={
-                                <Suspense fallback={<LoadingFallback message="Loading cart..." />}>
-                                  <CartPage />
-                                </Suspense>
-                              } />
-                              <Route path="/about" element={
-                                <Suspense fallback={<LoadingFallback message="Loading about..." />}>
-                                  <AboutPage />
-                                </Suspense>
-                              } />
-                              <Route path="/wishlist" element={
-                                <Suspense fallback={<LoadingFallback message="Loading wishlist..." />}>
-                                  <WishlistPage />
-                                </Suspense>
-                              } />
-                              <Route path="/contact" element={
-                                <Suspense fallback={<LoadingFallback message="Loading contact..." />}>
-                                  <ContactPage />
-                                </Suspense>
-                              } />
-                            </Route>
+            <CartLoader />
+            <CurrencyProvider>
+              <SettingsProvider>
+                <NotificationProvider>
+                  <TooltipProvider>
+                    <Toaster />
+                    <Sonner />
+                    <BrowserRouter>
+                      <PwaInstallManager />
+                      <Suspense fallback={<LoadingFallback />}>
+                        <Routes>
+                          {/* Main Layout Routes */}
+                          <Route element={<MainLayout />}>
+                            <Route path="/" element={<HomePage />} />
+                            <Route path="/shop" element={
+                              <Suspense fallback={<LoadingFallback message="Loading shop..." />}>
+                                <ShopPage />
+                              </Suspense>
+                            } />
+                            <Route path="/shop/:category" element={
+                              <Suspense fallback={<LoadingFallback message="Loading products..." />}>
+                                <ShopPage />
+                              </Suspense>
+                            } />
+                            <Route path="/product/:id" element={
+                              <Suspense fallback={<LoadingFallback message="Loading product..." />}>
+                                <ProductPage />
+                              </Suspense>
+                            } />
+                            <Route path="/products/:productId" element={
+                              <Suspense fallback={<LoadingFallback message="Loading product..." />}>
+                                <ProductPage />
+                              </Suspense>
+                            } />
+                            <Route path="/cart" element={
+                              <Suspense fallback={<LoadingFallback message="Loading cart..." />}>
+                                <CartPage />
+                              </Suspense>
+                            } />
+                            <Route path="/about" element={
+                              <Suspense fallback={<LoadingFallback message="Loading about..." />}>
+                                <AboutPage />
+                              </Suspense>
+                            } />
+                            <Route path="/wishlist" element={
+                              <Suspense fallback={<LoadingFallback message="Loading wishlist..." />}>
+                                <WishlistPage />
+                              </Suspense>
+                            } />
+                            <Route path="/contact" element={
+                              <Suspense fallback={<LoadingFallback message="Loading contact..." />}>
+                                <ContactPage />
+                              </Suspense>
+                            } />
+                          </Route>
 
-                            {/* Legal Pages */}
-                            <Route path="/terms" element={
-                              <Suspense fallback={<LoadingFallback />}>
-                                <TermsPage />
-                              </Suspense>
-                            } />
-                            <Route path="/shipping" element={
-                              <Suspense fallback={<LoadingFallback />}>
-                                <ShippingPage />
-                              </Suspense>
-                            } />
-                            <Route path="/privacy" element={
-                              <Suspense fallback={<LoadingFallback />}>
-                                <PrivacyPage />
-                              </Suspense>
-                            } />
-                            <Route path="/refund-policy" element={
-                              <Suspense fallback={<LoadingFallback />}>
-                                <RefundPolicyPage />
-                              </Suspense>
-                            } />
-                            <Route path="/cancellation-policy" element={
-                              <Suspense fallback={<LoadingFallback />}>
-                                <CancellationPolicyPage />
-                              </Suspense>
-                            } />
-                            <Route path="/forgot-password" element={
-                              <Suspense fallback={<LoadingFallback />}>
-                                <ForgotPasswordPage />
-                              </Suspense>
-                            } />
+                          {/* Legal Pages */}
+                          <Route path="/terms" element={
+                            <Suspense fallback={<LoadingFallback />}>
+                              <TermsPage />
+                            </Suspense>
+                          } />
+                          <Route path="/shipping" element={
+                            <Suspense fallback={<LoadingFallback />}>
+                              <ShippingPage />
+                            </Suspense>
+                          } />
+                          <Route path="/privacy" element={
+                            <Suspense fallback={<LoadingFallback />}>
+                              <PrivacyPage />
+                            </Suspense>
+                          } />
+                          <Route path="/refund-policy" element={
+                            <Suspense fallback={<LoadingFallback />}>
+                              <RefundPolicyPage />
+                            </Suspense>
+                          } />
+                          <Route path="/cancellation-policy" element={
+                            <Suspense fallback={<LoadingFallback />}>
+                              <CancellationPolicyPage />
+                            </Suspense>
+                          } />
+                          <Route path="/forgot-password" element={
+                            <Suspense fallback={<LoadingFallback />}>
+                              <ForgotPasswordPage />
+                            </Suspense>
+                          } />
 
-                            {/* Checkout Routes */}
-                            <Route path="/checkout/shipping" element={
-                              <ProtectedRoute>
-                                <Suspense fallback={<LoadingFallback message="Loading checkout..." />}>
-                                  <CheckoutShippingPage />
-                                </Suspense>
-                              </ProtectedRoute>
-                            } />
-                            <Route path="/checkout/payment" element={
-                              <ProtectedRoute>
-                                <Suspense fallback={<LoadingFallback message="Processing payment..." />}>
-                                  <CheckoutPaymentPage />
-                                </Suspense>
-                              </ProtectedRoute>
-                            } />
-                            <Route path="/checkout/confirmation" element={
-                              <Suspense fallback={<LoadingFallback message="Loading confirmation..." />}>
-                                <CheckoutConfirmationPage />
+                          {/* Checkout Routes */}
+                          <Route path="/checkout/shipping" element={
+                            <ProtectedRoute>
+                              <Suspense fallback={<LoadingFallback message="Loading checkout..." />}>
+                                <CheckoutShippingPage />
+                              </Suspense>
+                            </ProtectedRoute>
+                          } />
+                          <Route path="/checkout/payment" element={
+                            <ProtectedRoute>
+                              <Suspense fallback={<LoadingFallback message="Processing payment..." />}>
+                                <CheckoutPaymentPage />
+                              </Suspense>
+                            </ProtectedRoute>
+                          } />
+                          <Route path="/checkout/confirmation" element={
+                            <Suspense fallback={<LoadingFallback message="Loading confirmation..." />}>
+                              <CheckoutConfirmationPage />
+                            </Suspense>
+                          } />
+
+                          {/* Auth Routes */}
+                          <Route path="/login" element={<LoginPage />} />
+                          <Route path="/signup" element={<SignupPage />} />
+                          <Route path="/profile" element={
+                            <ProtectedRoute>
+                              <Suspense fallback={<LoadingFallback message="Loading profile..." />}>
+                                <ProfilePage />
+                              </Suspense>
+                            </ProtectedRoute>
+                          } />
+
+                          {/* Admin Panel Routes - Protected and Lazy Loaded */}
+                          <Route path="/admin" element={
+                            <ProtectedRoute requiredRole="admin">
+                              <Suspense fallback={<LoadingFallback message="Loading admin panel..." />}>
+                                <AdminDashboard />
+                              </Suspense>
+                            </ProtectedRoute>
+                          }>
+                            <Route index element={
+                              <Suspense fallback={<LoadingFallback message="Loading dashboard..." />}>
+                                <AdminDashboardHome />
                               </Suspense>
                             } />
-
-                            {/* Auth Routes */}
-                            <Route path="/login" element={<LoginPage />} />
-                            <Route path="/signup" element={<SignupPage />} />
-                            <Route path="/profile" element={
-                              <ProtectedRoute>
-                                <Suspense fallback={<LoadingFallback message="Loading profile..." />}>
-                                  <ProfilePage />
-                                </Suspense>
-                              </ProtectedRoute>
+                            <Route path="products" element={
+                              <Suspense fallback={<LoadingFallback message="Loading products..." />}>
+                                <AdminProducts />
+                              </Suspense>
                             } />
+                            <Route path="products/new" element={
+                              <Suspense fallback={<LoadingFallback message="Loading form..." />}>
+                                <ProductForm />
+                              </Suspense>
+                            } />
+                            <Route path="products/edit/:id" element={
+                              <Suspense fallback={<LoadingFallback message="Loading form..." />}>
+                                <ProductForm />
+                              </Suspense>
+                            } />
+                            <Route path="product-approval" element={
+                              <Suspense fallback={<LoadingFallback message="Loading approvals..." />}>
+                                <ProductApproval />
+                              </Suspense>
+                            } />
+                            <Route path="orders" element={
+                              <Suspense fallback={<LoadingFallback message="Loading orders..." />}>
+                                <AdminOrders />
+                              </Suspense>
+                            } />
+                            <Route path="users" element={
+                              <Suspense fallback={<LoadingFallback message="Loading users..." />}>
+                                <AdminUsers />
+                              </Suspense>
+                            } />
+                            <Route path="users/view/:userId" element={
+                              <Suspense fallback={<LoadingFallback message="Loading user details..." />}>
+                                <UserViewPage />
+                              </Suspense>
+                            } />
+                            <Route path="users/edit/:userId" element={
+                              <Suspense fallback={<LoadingFallback message="Loading user edit form..." />}>
+                                <UserEditPage />
+                              </Suspense>
+                            } />
+                            <Route path="vendors" element={
+                              <Suspense fallback={<LoadingFallback message="Loading vendors..." />}>
+                                <AdminVendorManagement />
+                              </Suspense>
+                            } />
+                            <Route path="analytics" element={
+                              <Suspense fallback={<LoadingFallback message="Loading analytics..." />}>
+                                <Analytics />
+                              </Suspense>
+                            } />
+                            <Route path="promocodes" element={
+                              <Suspense fallback={<LoadingFallback message="Loading promo codes..." />}>
+                                <PromoCodes />
+                              </Suspense>
+                            } />
+                            <Route path="offers" element={
+                              <Suspense fallback={<LoadingFallback message="Loading offers..." />}>
+                                <OffersManager />
+                              </Suspense>
+                            } />
+                            <Route path="holidays" element={
+                              <Suspense fallback={<LoadingFallback message="Loading holidays..." />}>
+                                <HolidayManagement />
+                              </Suspense>
+                            } />
+                            <Route path="settings" element={
+                              <Suspense fallback={<LoadingFallback message="Loading settings..." />}>
+                                <AdminSettingsPage />
+                              </Suspense>
+                            } />
+                            <Route path="/admin/orders/:orderId" element={
+                              <Suspense fallback={<LoadingFallback message="Loading order details..." />}>
+                                <OrderDetailsPage />
+                              </Suspense>
+                            } />
+                          </Route>
 
-                            {/* Admin Panel Routes - Protected and Lazy Loaded */}
-                            <Route path="/admin" element={
-                              <ProtectedRoute requiredRole="admin">
-                                <Suspense fallback={<LoadingFallback message="Loading admin panel..." />}>
-                                  <AdminDashboard />
-                                </Suspense>
-                              </ProtectedRoute>
+                          {/* Vendor Panel Routes - Protected and Lazy Loaded */}
+                          <Route path="/vendor" element={
+                            <Suspense fallback={<LoadingFallback message="Loading vendor panel..." />}>
+                              <VendorProtectedRoute />
+                            </Suspense>
+                          }>
+                            <Route element={
+                              <Suspense fallback={<LoadingFallback message="Loading vendor layout..." />}>
+                                <VendorLayout />
+                              </Suspense>
                             }>
-                              <Route index element={
+                              <Route path="dashboard" element={
                                 <Suspense fallback={<LoadingFallback message="Loading dashboard..." />}>
-                                  <AdminDashboardHome />
+                                  <VendorDashboard />
                                 </Suspense>
                               } />
                               <Route path="products" element={
                                 <Suspense fallback={<LoadingFallback message="Loading products..." />}>
-                                  <AdminProducts />
+                                  <VendorProducts />
                                 </Suspense>
                               } />
                               <Route path="products/new" element={
@@ -275,39 +366,19 @@ const App = () => {
                                   <ProductForm />
                                 </Suspense>
                               } />
-                              <Route path="product-approval" element={
-                                <Suspense fallback={<LoadingFallback message="Loading approvals..." />}>
-                                  <ProductApproval />
-                                </Suspense>
-                              } />
                               <Route path="orders" element={
                                 <Suspense fallback={<LoadingFallback message="Loading orders..." />}>
-                                  <AdminOrders />
+                                  <VendorOrders />
                                 </Suspense>
                               } />
-                              <Route path="users" element={
-                                <Suspense fallback={<LoadingFallback message="Loading users..." />}>
-                                  <AdminUsers />
-                                </Suspense>
-                              } />
-                              <Route path="users/view/:userId" element={
-                                <Suspense fallback={<LoadingFallback message="Loading user details..." />}>
-                                  <UserViewPage />
-                                </Suspense>
-                              } />
-                              <Route path="users/edit/:userId" element={
-                                <Suspense fallback={<LoadingFallback message="Loading user edit form..." />}>
-                                  <UserEditPage />
-                                </Suspense>
-                              } />
-                              <Route path="vendors" element={
-                                <Suspense fallback={<LoadingFallback message="Loading vendors..." />}>
-                                  <AdminVendorManagement />
+                              <Route path="orders/:orderId" element={
+                                <Suspense fallback={<LoadingFallback message="Loading order details..." />}>
+                                  <OrderDetailsPage />
                                 </Suspense>
                               } />
                               <Route path="analytics" element={
                                 <Suspense fallback={<LoadingFallback message="Loading analytics..." />}>
-                                  <Analytics />
+                                  <VendorAnalytics />
                                 </Suspense>
                               } />
                               <Route path="promocodes" element={
@@ -325,106 +396,32 @@ const App = () => {
                                   <HolidayManagement />
                                 </Suspense>
                               } />
+                              <Route path="payouts" element={
+                                <Suspense fallback={<LoadingFallback message="Loading payouts..." />}>
+                                  <VendorPayouts />
+                                </Suspense>
+                              } />
                               <Route path="settings" element={
                                 <Suspense fallback={<LoadingFallback message="Loading settings..." />}>
-                                  <AdminSettingsPage />
-                                </Suspense>
-                              } />
-                              <Route path="/admin/orders/:orderId" element={
-                                <Suspense fallback={<LoadingFallback message="Loading order details..." />}>
-                                  <OrderDetailsPage />
+                                  <VendorSettings />
                                 </Suspense>
                               } />
                             </Route>
+                          </Route>
+                          <Route path="/vendor/register" element={
+                            <Suspense fallback={<LoadingFallback message="Loading registration..." />}>
+                              <VendorRegistration />
+                            </Suspense>
+                          } />
 
-                            {/* Vendor Panel Routes - Protected and Lazy Loaded */}
-                            <Route path="/vendor" element={
-                              <Suspense fallback={<LoadingFallback message="Loading vendor panel..." />}>
-                                <VendorProtectedRoute />
-                              </Suspense>
-                            }>
-                              <Route element={
-                                <Suspense fallback={<LoadingFallback message="Loading vendor layout..." />}>
-                                  <VendorLayout />
-                                </Suspense>
-                              }>
-                                <Route path="dashboard" element={
-                                  <Suspense fallback={<LoadingFallback message="Loading dashboard..." />}>
-                                    <VendorDashboard />
-                                  </Suspense>
-                                } />
-                                <Route path="products" element={
-                                  <Suspense fallback={<LoadingFallback message="Loading products..." />}>
-                                    <VendorProducts />
-                                  </Suspense>
-                                } />
-                                <Route path="products/new" element={
-                                  <Suspense fallback={<LoadingFallback message="Loading form..." />}>
-                                    <ProductForm />
-                                  </Suspense>
-                                } />
-                                <Route path="products/edit/:id" element={
-                                  <Suspense fallback={<LoadingFallback message="Loading form..." />}>
-                                    <ProductForm />
-                                  </Suspense>
-                                } />
-                                <Route path="orders" element={
-                                  <Suspense fallback={<LoadingFallback message="Loading orders..." />}>
-                                    <VendorOrders />
-                                  </Suspense>
-                                } />
-                                <Route path="orders/:orderId" element={
-                                  <Suspense fallback={<LoadingFallback message="Loading order details..." />}>
-                                    <OrderDetailsPage />
-                                  </Suspense>
-                                } />
-                                <Route path="analytics" element={
-                                  <Suspense fallback={<LoadingFallback message="Loading analytics..." />}>
-                                    <VendorAnalytics />
-                                  </Suspense>
-                                } />
-                                <Route path="promocodes" element={
-                                  <Suspense fallback={<LoadingFallback message="Loading promo codes..." />}>
-                                    <PromoCodes />
-                                  </Suspense>
-                                } />
-                                <Route path="offers" element={
-                                  <Suspense fallback={<LoadingFallback message="Loading offers..." />}>
-                                    <OffersManager />
-                                  </Suspense>
-                                } />
-                                <Route path="holidays" element={
-                                  <Suspense fallback={<LoadingFallback message="Loading holidays..." />}>
-                                    <HolidayManagement />
-                                  </Suspense>
-                                } />
-                                <Route path="payouts" element={
-                                  <Suspense fallback={<LoadingFallback message="Loading payouts..." />}>
-                                    <VendorPayouts />
-                                  </Suspense>
-                                } />
-                                <Route path="settings" element={
-                                  <Suspense fallback={<LoadingFallback message="Loading settings..." />}>
-                                    <VendorSettings />
-                                  </Suspense>
-                                } />
-                              </Route>
-                            </Route>
-                            <Route path="/vendor/register" element={
-                              <Suspense fallback={<LoadingFallback message="Loading registration..." />}>
-                                <VendorRegistration />
-                              </Suspense>
-                            } />
-
-                            <Route path="*" element={<NotFound />} />
-                          </Routes>
-                        </Suspense>
-                      </BrowserRouter>
-                    </TooltipProvider>
-                  </NotificationProvider>
-                </SettingsProvider>
-              </CurrencyProvider>
-            </WishlistProvider>
+                          <Route path="*" element={<NotFound />} />
+                        </Routes>
+                      </Suspense>
+                    </BrowserRouter>
+                  </TooltipProvider>
+                </NotificationProvider>
+              </SettingsProvider>
+            </CurrencyProvider>
           </AuthProvider>
         </GoogleOAuthProvider>
       </QueryClientProvider>

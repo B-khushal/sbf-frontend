@@ -10,7 +10,6 @@ import useCart from "@/hooks/use-cart";
 import useWishlist from "@/hooks/use-wishlist";
 import { useAuth } from "@/hooks/use-auth";
 import { getImageUrl } from "@/config";
-import WishlistLottieButton from "@/components/ui/WishlistLottieButton";
 import { ComboItem } from "@/services/productService";
 
 export type Product = {
@@ -483,13 +482,17 @@ const ProductCard = ({ product, onAddToCart }: {
         </div>
 
         {/* Wishlist Button */}
-        <div className="absolute top-2 right-2 z-10 p-1.5 rounded-full bg-white/80 hover:bg-white shadow-sm transition-colors duration-200">
-          <WishlistLottieButton
-            isInWishlist={isInWishlist}
-            onClick={handleWishlistToggle}
-            size={20}
+        <button
+          onClick={handleWishlistToggle}
+          className="absolute top-2 right-2 z-10 p-1.5 rounded-full bg-white/80 hover:bg-white shadow-sm transition-colors duration-200"
+        >
+          <Heart
+            className={cn(
+              "h-4 w-4 transition-colors duration-200",
+              isInWishlist ? "fill-red-500 stroke-red-500" : "stroke-gray-600"
+            )}
           />
-        </div>
+        </button>
 
         {/* Product Image */}
         <img
