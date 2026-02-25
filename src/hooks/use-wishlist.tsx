@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, createContext, useContext, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import * as wishlistService from '@/services/wishlistService';
@@ -10,43 +10,50 @@ export type WishlistItem = {
   price: number;
 };
 
-const useWishlist = () => {
+interface WishlistContextType {
+  items: WishlistItem[];
+  itemCount: number;
+  isLoading: boolean;
+  addItem: (item: WishlistItem) => Promise<void>;
+  removeItem: (id: string) => Promise<void>;
+  clearWishlist: () => Promise<void>;
+  loadWishlist: () => Promise<void>;
+}
+
+const WishlistContext = createContext<WishlistContextType | null>(null);
+
+export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { toast } = useToast();
   const { user } = useAuth();
   const [items, setItems] = useState<WishlistItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  
+  const hasFetchedRef = useRef(false);
+
   // Check if user is authenticated using auth context
   const isAuthenticated = !!user;
-  
+
   // Load wishlist from backend or localStorage
   const loadWishlist = useCallback(async () => {
-    // Don't block the app if wishlist loading fails
-    console.log('loadWishlist called, isAuthenticated:', isAuthenticated);
     setIsLoading(true);
-    
+
     // Add a timeout to ensure loading state is cleared
     const timeoutId = setTimeout(() => {
-      console.log('Loading timeout reached, clearing loading state');
       setIsLoading(false);
     }, 10000); // 10 second timeout
-    
+
     try {
       if (isAuthenticated) {
-        console.log('Loading wishlist from backend...');
         try {
           // Load from backend for authenticated users
           const response = await wishlistService.getWishlist();
-          console.log('Backend response:', response);
           const transformedItems = response.wishlist.map(item => ({
             id: item.id,
             title: item.title,
             image: item.image,
             price: item.price
           }));
-          console.log('Transformed items:', transformedItems);
           setItems(transformedItems);
-          
+
           // Also save to localStorage as backup
           localStorage.setItem('wishlist', JSON.stringify(transformedItems));
         } catch (apiError: any) {
@@ -57,11 +64,11 @@ const useWishlist = () => {
             try {
               const parsed = JSON.parse(wishlistData);
               if (Array.isArray(parsed)) {
-                const validItems = parsed.filter(item => 
-                  item && 
-                  typeof item === 'object' && 
-                  item.id && 
-                  item.title && 
+                const validItems = parsed.filter(item =>
+                  item &&
+                  typeof item === 'object' &&
+                  item.id &&
+                  item.title &&
                   typeof item.price === 'number'
                 );
                 setItems(validItems);
@@ -74,21 +81,20 @@ const useWishlist = () => {
           }
         }
       } else {
-        console.log('Loading wishlist from localStorage...');
         // Load from localStorage for non-authenticated users
         try {
-          let wishlist = [];
+          let wishlist: WishlistItem[] = [];
           const wishlistData = localStorage.getItem("wishlist");
-          
+
           if (wishlistData && wishlistData !== "null" && wishlistData !== "undefined") {
             try {
               const parsed = JSON.parse(wishlistData);
               if (Array.isArray(parsed)) {
-                wishlist = parsed.filter(item => 
-                  item && 
-                  typeof item === 'object' && 
-                  item.id && 
-                  item.title && 
+                wishlist = parsed.filter(item =>
+                  item &&
+                  typeof item === 'object' &&
+                  item.id &&
+                  item.title &&
                   typeof item.price === 'number'
                 );
               }
@@ -98,8 +104,7 @@ const useWishlist = () => {
               localStorage.removeItem("wishlist");
             }
           }
-          
-          console.log('LocalStorage items:', wishlist);
+
           setItems(wishlist);
         } catch (error) {
           console.error("Error loading wishlist:", error);
@@ -110,23 +115,20 @@ const useWishlist = () => {
       console.error('Error loading wishlist (outer catch):', error);
       // Final fallback to localStorage
       try {
-        console.log('Final fallback to localStorage due to error');
         const wishlistData = localStorage.getItem("wishlist");
         if (wishlistData) {
           const parsed = JSON.parse(wishlistData);
           if (Array.isArray(parsed)) {
-            const validItems = parsed.filter(item => 
-              item && 
-              typeof item === 'object' && 
-              item.id && 
-              item.title && 
+            const validItems = parsed.filter(item =>
+              item &&
+              typeof item === 'object' &&
+              item.id &&
+              item.title &&
               typeof item.price === 'number'
             );
-            console.log('Fallback items from localStorage:', validItems);
             setItems(validItems);
           }
         } else {
-          console.log('No localStorage data available');
           setItems([]);
         }
       } catch (fallbackError) {
@@ -135,33 +137,33 @@ const useWishlist = () => {
       }
     } finally {
       clearTimeout(timeoutId);
-      console.log('Setting isLoading to false');
       setIsLoading(false);
     }
   }, [isAuthenticated]);
-  
-  // Load wishlist on mount and when authentication status changes
+
+  // Load wishlist once on mount and when authentication status changes
   useEffect(() => {
     loadWishlist();
   }, [loadWishlist]);
 
-  // Also load cached data on mount for better UX
+  // Load cached data on first mount for immediate display
   useEffect(() => {
-    // Load cached data immediately for better UX
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
+
     const cachedData = localStorage.getItem("wishlist");
-    if (cachedData && items.length === 0) {
+    if (cachedData) {
       try {
         const parsed = JSON.parse(cachedData);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          const validItems = parsed.filter(item => 
-            item && 
-            typeof item === 'object' && 
-            item.id && 
-            item.title && 
+          const validItems = parsed.filter(item =>
+            item &&
+            typeof item === 'object' &&
+            item.id &&
+            item.title &&
             typeof item.price === 'number'
           );
           if (validItems.length > 0) {
-            console.log('Loading cached wishlist data for immediate display:', validItems);
             setItems(validItems);
           }
         }
@@ -169,11 +171,9 @@ const useWishlist = () => {
         console.error('Error loading cached wishlist data:', error);
       }
     }
-  }, []); // Only run once on mount
-  
+  }, []);
+
   const addItem = async (item: WishlistItem) => {
-    console.log('Adding item to wishlist:', item);
-    
     if (!item.id || !item.title || typeof item.price !== 'number') {
       console.error('Invalid item format for wishlist:', item);
       toast({
@@ -183,7 +183,7 @@ const useWishlist = () => {
       });
       return;
     }
-    
+
     // Check if user is authenticated
     if (!isAuthenticated) {
       toast({
@@ -194,14 +194,14 @@ const useWishlist = () => {
       });
       return;
     }
-    
+
     setIsLoading(true);
-    
+
     try {
       if (isAuthenticated) {
         // Add to backend
         const response = await wishlistService.addToWishlist(item.id);
-        
+
         // Ensure response has the expected structure
         if (response && response.wishlist) {
           const transformedItems = response.wishlist.map(wishlistItem => ({
@@ -211,10 +211,10 @@ const useWishlist = () => {
             price: wishlistItem.price
           }));
           setItems(transformedItems);
-          
+
           // Also save to localStorage as backup
           localStorage.setItem('wishlist', JSON.stringify(transformedItems));
-          
+
           toast({
             title: "Added to wishlist",
             description: "Item has been added to your wishlist",
@@ -226,7 +226,7 @@ const useWishlist = () => {
         // Fallback to localStorage for non-authenticated users
         setItems(prevItems => {
           const exists = prevItems.some(existingItem => existingItem.id === item.id);
-          
+
           if (exists) {
             toast({
               title: "Already in wishlist",
@@ -234,21 +234,21 @@ const useWishlist = () => {
             });
             return prevItems;
           }
-          
+
           const newItems = [...prevItems, item];
           localStorage.setItem('wishlist', JSON.stringify(newItems));
-          
+
           toast({
             title: "Added to wishlist",
             description: "Item has been added to your wishlist",
           });
-          
+
           return newItems;
         });
       }
     } catch (error: any) {
       console.error('Error adding to wishlist:', error);
-      
+
       if (error.message.includes('already in wishlist')) {
         toast({
           title: "Already in wishlist",
@@ -272,7 +272,7 @@ const useWishlist = () => {
       setIsLoading(false);
     }
   };
-  
+
   const removeItem = async (id: string) => {
     if (!isAuthenticated) {
       toast({
@@ -283,14 +283,14 @@ const useWishlist = () => {
       });
       return;
     }
-    
+
     setIsLoading(true);
-    
+
     try {
       if (isAuthenticated) {
         // Remove from backend
         const response = await wishlistService.removeFromWishlist(id);
-        
+
         // Ensure response has the expected structure
         if (response && response.wishlist) {
           const transformedItems = response.wishlist.map(wishlistItem => ({
@@ -300,10 +300,10 @@ const useWishlist = () => {
             price: wishlistItem.price
           }));
           setItems(transformedItems);
-          
+
           // Also save to localStorage as backup
           localStorage.setItem('wishlist', JSON.stringify(transformedItems));
-          
+
           toast({
             title: "Removed from wishlist",
             description: "Item has been removed from your wishlist",
@@ -316,12 +316,12 @@ const useWishlist = () => {
         setItems(prevItems => {
           const newItems = prevItems.filter(item => item.id !== id);
           localStorage.setItem('wishlist', JSON.stringify(newItems));
-          
+
           toast({
             title: "Removed from wishlist",
             description: "Item has been removed from your wishlist",
           });
-          
+
           return newItems;
         });
       }
@@ -336,7 +336,7 @@ const useWishlist = () => {
       setIsLoading(false);
     }
   };
-  
+
   const clearWishlist = async () => {
     if (!isAuthenticated) {
       toast({
@@ -347,16 +347,16 @@ const useWishlist = () => {
       });
       return;
     }
-    
+
     setIsLoading(true);
-    
+
     try {
       if (isAuthenticated) {
         // Clear from backend
         await wishlistService.clearWishlist();
         setItems([]);
         localStorage.setItem('wishlist', JSON.stringify([]));
-        
+
         toast({
           title: "Wishlist cleared",
           description: "Your wishlist has been cleared",
@@ -365,7 +365,7 @@ const useWishlist = () => {
         // Fallback to localStorage for non-authenticated users
         setItems([]);
         localStorage.setItem('wishlist', JSON.stringify([]));
-        
+
         toast({
           title: "Wishlist cleared",
           description: "Your wishlist has been cleared",
@@ -382,8 +382,8 @@ const useWishlist = () => {
       setIsLoading(false);
     }
   };
-  
-  return {
+
+  const value: WishlistContextType = {
     items,
     itemCount: items.length,
     isLoading,
@@ -392,6 +392,20 @@ const useWishlist = () => {
     clearWishlist,
     loadWishlist
   };
+
+  return (
+    <WishlistContext.Provider value={value}>
+      {children}
+    </WishlistContext.Provider>
+  );
+};
+
+const useWishlist = () => {
+  const context = useContext(WishlistContext);
+  if (!context) {
+    throw new Error('useWishlist must be used within a WishlistProvider');
+  }
+  return context;
 };
 
 export default useWishlist; 

@@ -10,6 +10,7 @@ import ContactModal from '@/components/ui/ContactModal';
 import { CustomizeProductModal } from '@/components/ui/CustomizeProductModal';
 import useCart from '@/hooks/use-cart';
 import useWishlist from '@/hooks/use-wishlist';
+import WishlistLottieButton from '@/components/ui/WishlistLottieButton';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import productService, { ProductData, ComboItem } from '@/services/productService';
@@ -134,7 +135,7 @@ const RecommendedProducts: React.FC<{ productId: string; category: string }> = (
       <h2 className="text-2xl font-bold mb-6 text-center">Recommended Products</h2>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
         {recommendedProducts.map((product) => {
-          const discountedPrice = product.discount 
+          const discountedPrice = product.discount
             ? product.price * (1 - product.discount / 100)
             : product.price;
 
@@ -170,7 +171,7 @@ const RecommendedProducts: React.FC<{ productId: string; category: string }> = (
                 <h3 className="font-medium text-sm text-gray-900 mb-1 line-clamp-2 group-hover:text-primary transition-colors">
                   {product.title}
                 </h3>
-                
+
                 {/* Price */}
                 <div className="flex items-center gap-1">
                   <span className="text-sm font-bold text-primary">
@@ -217,6 +218,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
   const { user } = useAuth();
   const { addToCart } = useCart();
   const { addItem: addToWishlist, removeItem: removeFromWishlist, items: wishlistItems } = useWishlist();
+  const isInWishlist = wishlistItems.some(item => item.id === String(product._id));
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [isCustomizeModalOpen, setIsCustomizeModalOpen] = useState(false);
   const [customizations, setCustomizations] = useState<CustomizationData | undefined>();
@@ -275,7 +277,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
   }, [currentPrice, product.discount]);
 
   // Handle image URL using utility function with optimization for product detail view
-  const imageUrl = getProductImageUrl(product.images[selectedImage], 800, false); 
+  const imageUrl = getProductImageUrl(product.images[selectedImage], 800, false);
 
   // Image Navigation
   const prevImage = () => {
@@ -298,13 +300,13 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
     }
     setQuantity((prev) => prev + 1);
   };
-  
+
   const decrementQuantity = () => quantity > 1 && setQuantity((prev) => prev - 1);
 
   const handleCustomize = (e?: React.MouseEvent) => {
     e?.preventDefault();
     e?.stopPropagation();
-    
+
     if (product.hasPriceVariants && !selectedVariant) {
       toast({
         title: "Please select a variant",
@@ -313,7 +315,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
       });
       return;
     }
-    
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
     setTimeout(() => {
       setIsCustomizeModalOpen(true);
@@ -361,12 +363,12 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
       };
 
       onAddToCart(cartItem);
-      
+
       toast({
         title: "Added to Cart",
         description: `${product.title} ${selectedVariant ? `(${selectedVariant.label})` : ''} has been added to your cart successfully`,
       });
-      
+
       // Redirect to cart page after successful addition
       setTimeout(() => {
         navigate('/cart');
@@ -381,7 +383,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
     }
   };
 
-  const handleAddToWishlist = async () => {
+  const handleWishlistToggle = async () => {
     try {
       // Validate product data
       if (!product._id || !product.title || typeof product.price !== 'number') {
@@ -395,26 +397,30 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
         return;
       }
 
-      // Use utility function for consistent image URL construction
-      const imageUrl = getImageUrl(product.images?.[0], { bustCache: true });
-      
-      // Create wishlist item with proper ID
-      const wishlistItem = {
-        id: String(product._id),
-        title: product.title,
-        image: imageUrl,
-        price: product.price
-      };
-      
-      console.log("Adding to wishlist from ProductDetail:", wishlistItem);
-      
-      // Use the wishlist hook to add item
-      await addToWishlist(wishlistItem);
-      
+      if (isInWishlist) {
+        await removeFromWishlist(String(product._id));
+      } else {
+        // Use utility function for consistent image URL construction
+        const imageUrl = getImageUrl(product.images?.[0], { bustCache: true });
+
+        // Create wishlist item with proper ID
+        const wishlistItem = {
+          id: String(product._id),
+          title: product.title,
+          image: imageUrl,
+          price: product.price
+        };
+
+        console.log("Adding to wishlist from ProductDetail:", wishlistItem);
+
+        // Use the wishlist hook to add item
+        await addToWishlist(wishlistItem);
+      }
+
     } catch (error) {
-      console.error("Error adding to wishlist:", error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to add to wishlist';
-      
+      console.error("Error updating wishlist:", error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update wishlist';
+
       if (errorMessage.includes('log in')) {
         toast({
           title: "Please log in",
@@ -547,7 +553,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
             ))}
           </AnimatePresence>
         </div>
-        
+
         {/* Variant Selection Notice */}
         {!selectedVariant && (
           <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
@@ -576,7 +582,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
 
               {/* Badges for new and featured products */}
               <div className="absolute top-3 left-3 flex flex-col gap-1">
-                {(product.isNewArrival || (product as {isNew?: boolean}).isNew) && (
+                {(product.isNewArrival || (product as { isNew?: boolean }).isNew) && (
                   <span className="bg-primary text-white text-sm px-3 py-1 rounded-md font-medium">
                     New
                   </span>
@@ -587,7 +593,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                   </span>
                 )}
               </div>
-              
+
               {product.discount > 0 && (
                 <span className="absolute bottom-3 right-3 bg-red-500 text-white text-sm px-3 py-1 rounded-md font-medium">
                   {product.discount}% Off
@@ -717,13 +723,17 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                 )}
                 <button
                   type="button"
-                  onClick={handleAddToWishlist}
+                  onClick={handleWishlistToggle}
                   className="h-12 px-6 border border-muted flex items-center justify-center gap-2 rounded-md hover:bg-secondary transition-colors duration-300"
                 >
-                  <Heart size={18} />
+                  <WishlistLottieButton
+                    isInWishlist={isInWishlist}
+                    onClick={handleWishlistToggle}
+                    size={20}
+                  />
                   <span className="hidden sm:inline">Wishlist</span>
                 </button>
-                <button 
+                <button
                   onClick={handleShare}
                   className="h-12 px-6 border border-muted flex items-center justify-center gap-2 rounded-md hover:bg-secondary transition-colors duration-300"
                   title="Share this product"
@@ -753,7 +763,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                         </p>
                       </div>
                     </div>
-                    
+
                     {product.details.map((detail, index) => (
                       <div key={index} className="bg-blue-50 p-3 rounded-lg border-l-4 border-blue-500">
                         <div className="flex items-start gap-3">
@@ -874,14 +884,14 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
             </Accordion>
           </div>
         </div>
-        
+
         {/* Product Reviews Section */}
         <ProductReviews productId={product._id} onReviewSubmit={onReviewSubmit} />
-        
+
         {/* Recommended Products Section */}
         <RecommendedProducts productId={product._id} category={product.category} />
       </div>
-      
+
       {/* Customization Modal */}
       {product.isCustomizable && product.customizationOptions && (
         <div>
@@ -931,7 +941,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                 description: `${quantity} × ${product.title} added to your cart`,
                 duration: 3000,
               });
-              
+
               // Redirect to cart page after successful addition
               setTimeout(() => {
                 navigate('/cart');
@@ -942,7 +952,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
       )}
 
       {/* Contact Modal */}
-      <ContactModal 
+      <ContactModal
         isOpen={isContactModalOpen}
         onClose={() => setIsContactModalOpen(false)}
         productTitle={product.title}

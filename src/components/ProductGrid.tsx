@@ -10,6 +10,7 @@ import useCart from "@/hooks/use-cart";
 import useWishlist from "@/hooks/use-wishlist";
 import { useAuth } from "@/hooks/use-auth";
 import { getImageUrl } from "@/config";
+import WishlistLottieButton from "@/components/ui/WishlistLottieButton";
 import { ComboItem } from "@/services/productService";
 
 export type Product = {
@@ -59,10 +60,10 @@ type ProductGridProps = {
 const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCart, horizontal }: ProductGridProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
-  
+
   // Filter out hidden products for non-admin users
-  const visibleProducts = user?.role === 'admin' 
-    ? products 
+  const visibleProducts = user?.role === 'admin'
+    ? products
     : products.filter(product => !product.hidden);
 
   // Auto-scroll logic with circular scrolling
@@ -87,12 +88,12 @@ const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCar
 
     const step = () => {
       if (!container) return;
-      
+
       if (!isHovered) {
         const scrollLeft = container.scrollLeft;
         const containerWidth = container.offsetWidth;
         const originalContentWidth = container.scrollWidth / 3;
-        
+
         // If we've reached the end of the second set, jump back to the same position in the second set
         if (scrollLeft + containerWidth >= originalContentWidth * 2 - 2) {
           container.scrollLeft = originalContentWidth;
@@ -158,7 +159,7 @@ const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCar
   };
 
   // Create circular product list for seamless scrolling
-  const circularProducts = horizontal && visibleProducts.length > 0 
+  const circularProducts = horizontal && visibleProducts.length > 0
     ? [...visibleProducts, ...visibleProducts, ...visibleProducts] // Triple the products for seamless loop
     : visibleProducts;
 
@@ -202,14 +203,14 @@ const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCar
           <div
             ref={scrollRef}
             className="flex gap-4 overflow-x-auto pb-4 scrollbar-none scroll-smooth"
-            style={{ 
+            style={{
               scrollBehavior: 'smooth',
               scrollSnapType: 'x mandatory'
             }}
           >
             {circularProducts.map((product, index) => (
-              <div 
-                className="min-w-[220px] max-w-xs flex-shrink-0 scroll-snap-align-start" 
+              <div
+                className="min-w-[220px] max-w-xs flex-shrink-0 scroll-snap-align-start"
                 key={`${product._id}-${index}`}
               >
                 <ProductCard product={product} onAddToCart={onAddToCart} />
@@ -251,8 +252,8 @@ const getComboMaxPrice = (product: Product) => {
   return total;
 };
 
-const ProductCard = ({ product, onAddToCart }: { 
-  product: Product; 
+const ProductCard = ({ product, onAddToCart }: {
+  product: Product;
   onAddToCart?: (item: any, quantity: number) => boolean;
 }) => {
   const { formatPrice, convertPrice } = useCurrency();
@@ -279,31 +280,31 @@ const ProductCard = ({ product, onAddToCart }: {
     e.preventDefault();
     e.stopPropagation();
     console.log("Add to cart clicked:", product.title);
-    
+
     if (!user) {
       toast.error("Please login first to add items to your cart", {
         description: "You'll be redirected to the login page",
         duration: 3000,
       });
       setTimeout(() => {
-        navigate('/login', { 
-          state: { 
+        navigate('/login', {
+          state: {
             redirect: window.location.pathname,
             message: "Please login to add items to your cart"
-          } 
+          }
         });
       }, 1500);
       return;
     }
-    
+
     try {
       const addToCartFunction = onAddToCart || addToCart;
-      
+
       // Calculate discounted price if needed
       const discountedPrice = product.discount && product.discount > 0
         ? Math.round(product.price * (1 - product.discount / 100))
         : product.price;
-      
+
       // Create cart item with proper structure
       const cartItem = {
         _id: product._id,
@@ -315,15 +316,15 @@ const ProductCard = ({ product, onAddToCart }: {
         category: product.category,
         description: product.description,
       };
-      
+
       console.log("Adding to cart:", cartItem);
       addToCartFunction(cartItem, 1);
-      
+
       toast.success("🛒 Added to cart!", {
         description: `${product.title} has been added to your cart`,
         duration: 3000,
       });
-      
+
       // Redirect to cart page after successful addition
       setTimeout(() => {
         navigate('/cart');
@@ -341,7 +342,7 @@ const ProductCard = ({ product, onAddToCart }: {
     e.preventDefault();
     e.stopPropagation();
     console.log("Customize and add to cart clicked:", product.title);
-    
+
     // Navigate to product detail page with customization modal open
     navigate(`/product/${product._id}?customize=true`);
   };
@@ -351,7 +352,7 @@ const ProductCard = ({ product, onAddToCart }: {
     e.preventDefault();
     e.stopPropagation();
     console.log("Wishlist toggle clicked:", product._id);
-    
+
     if (!user) {
       toast.error("Please login first to add items to your wishlist", {
         description: "You'll be redirected to the login page",
@@ -359,16 +360,16 @@ const ProductCard = ({ product, onAddToCart }: {
       });
       // Redirect to login page with current page as redirect path
       setTimeout(() => {
-        navigate('/login', { 
-          state: { 
+        navigate('/login', {
+          state: {
             redirect: window.location.pathname,
             message: "Please login to manage your wishlist"
-          } 
+          }
         });
       }, 1500);
       return;
     }
-    
+
     try {
       // Validate product data
       if (!product._id || !product.title || typeof product.price !== 'number') {
@@ -395,18 +396,18 @@ const ProductCard = ({ product, onAddToCart }: {
     } catch (error) {
       console.error("Error updating wishlist:", error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to update wishlist';
-      
+
       if (errorMessage.includes('log in')) {
         toast.error("Please login first to manage your wishlist", {
           description: "You'll be redirected to the login page",
           duration: 3000,
         });
         setTimeout(() => {
-          navigate('/login', { 
-            state: { 
+          navigate('/login', {
+            state: {
               redirect: window.location.pathname,
               message: "Please login to manage your wishlist"
-            } 
+            }
           });
         }, 1500);
       } else if (errorMessage.includes('already in wishlist')) {
@@ -439,15 +440,14 @@ const ProductCard = ({ product, onAddToCart }: {
   };
 
   // Calculate discounted price
-  const discountedPrice = product.discount > 0 
+  const discountedPrice = product.discount > 0
     ? product.price - (product.price * product.discount / 100)
     : product.price;
 
   return (
     <div
-      className={`group relative bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer ${
-        product.hidden ? 'opacity-75 border-2 border-orange-200' : ''
-      }`}
+      className={`group relative bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer ${product.hidden ? 'opacity-75 border-2 border-orange-200' : ''
+        }`}
       onClick={handleCardClick}
     >
       {/* Product Image */}
@@ -483,17 +483,13 @@ const ProductCard = ({ product, onAddToCart }: {
         </div>
 
         {/* Wishlist Button */}
-        <button
-          onClick={handleWishlistToggle}
-          className="absolute top-2 right-2 z-10 p-1.5 rounded-full bg-white/80 hover:bg-white shadow-sm transition-colors duration-200"
-        >
-          <Heart
-            className={cn(
-              "h-4 w-4 transition-colors duration-200",
-              isInWishlist ? "fill-red-500 stroke-red-500" : "stroke-gray-600"
-            )}
+        <div className="absolute top-2 right-2 z-10 p-1.5 rounded-full bg-white/80 hover:bg-white shadow-sm transition-colors duration-200">
+          <WishlistLottieButton
+            isInWishlist={isInWishlist}
+            onClick={handleWishlistToggle}
+            size={20}
           />
-        </button>
+        </div>
 
         {/* Product Image */}
         <img
@@ -514,7 +510,7 @@ const ProductCard = ({ product, onAddToCart }: {
         <h3 className="font-medium text-sm text-gray-900 mb-1 line-clamp-2 group-hover:text-primary transition-colors">
           {product.title}
         </h3>
-        
+
         {/* Price */}
         <div className="flex items-center gap-1">
           {product.category === 'combos' && product.comboItems && product.comboItems.length > 0 ? (

@@ -43,7 +43,7 @@ const fadeInVariants = {
   visible: {
     opacity: 1,
     scale: 1,
-    transition: { 
+    transition: {
       duration: 0.8,
       ease: [0.25, 0.46, 0.45, 0.94]
     }
@@ -55,7 +55,7 @@ const HomePage = () => {
   const { addToCart } = useCart();
   const { homeSections, loading: settingsLoading } = useSettings();
   const { currentOffer, isOpen: isOfferOpen, closeOffer } = useOfferPopup();
-  
+
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [newProducts, setNewProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -75,12 +75,12 @@ const HomePage = () => {
   const handleAddToCart = (item: any, quantity: number) => {
     try {
       addToCart({ ...item, quantity });
-      
+
       // Redirect to cart page after successful addition
       setTimeout(() => {
         navigate('/cart');
       }, 1000);
-      
+
       return true;
     } catch (error) {
       console.error('Error adding to cart:', error);
@@ -94,13 +94,13 @@ const HomePage = () => {
       try {
         setLoading(true);
         setError("");
-        
+
         // Fetch products from API
         const [featuredResponse, newResponse] = await Promise.allSettled([
           api.get('/products/featured'),
           api.get('/products/new')
         ]);
-        
+
         const processProducts = (products) => {
           if (!Array.isArray(products)) return [];
           return products.map(product => ({
@@ -113,17 +113,17 @@ const HomePage = () => {
           }));
         };
 
-        const featuredData = featuredResponse.status === 'fulfilled' 
+        const featuredData = featuredResponse.status === 'fulfilled'
           ? processProducts(featuredResponse.value.data.products || featuredResponse.value.data || [])
           : [];
-          
+
         const newData = newResponse.status === 'fulfilled'
           ? processProducts(newResponse.value.data.products || newResponse.value.data || [])
           : [];
 
         setFeaturedProducts(featuredData);
         setNewProducts(newData);
-        
+
       } catch (error) {
         console.error("Error fetching products:", error);
         setError("Failed to load products. Please try again later.");
@@ -136,7 +136,7 @@ const HomePage = () => {
   }, []);
 
   // Memoize enabled sections to prevent unnecessary re-renders
-  const enabledSections = useMemo(() => 
+  const enabledSections = useMemo(() =>
     homeSections
       .filter(section => section.enabled)
       .sort((a, b) => a.order - b.order),
@@ -182,37 +182,24 @@ const HomePage = () => {
         offer={currentOffer}
       />
 
-      {/* Debug button - remove this after testing */}
-      <button
-        onClick={() => {
-          sessionStorage.removeItem('offerShownThisSession');
-          localStorage.removeItem('seenOffers');
-          window.location.reload();
-        }}
-        className="fixed bottom-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg z-50"
-        style={{ display: process.env.NODE_ENV === 'development' ? 'block' : 'none' }}
-      >
-        Reset Offers
-      </button>
-
 
 
       {enabledSections.map((section, index) => {
         switch (section.type) {
           case 'hero':
             return (
-              <motion.div 
+              <motion.div
                 key={`hero-${index}`}
-                variants={itemVariants} 
+                variants={itemVariants}
                 className="relative w-full overflow-hidden"
               >
                 <HomeHero />
               </motion.div>
             );
-          
+
           case 'categories':
             return (
-              <motion.section 
+              <motion.section
                 key={`categories-${index}`}
                 variants={itemVariants}
                 className="relative"
@@ -220,10 +207,10 @@ const HomePage = () => {
                 <Categories />
               </motion.section>
             );
-          
+
           case 'featured':
             return (
-              <motion.section 
+              <motion.section
                 key={`featured-${index}`}
                 variants={itemVariants}
                 className="bg-white/30 backdrop-blur-sm py-16 md:py-24"
@@ -237,10 +224,10 @@ const HomePage = () => {
                 />
               </motion.section>
             );
-          
+
           case 'offers':
             return (
-              <motion.section 
+              <motion.section
                 key={`offers-${index}`}
                 variants={itemVariants}
                 className="relative"
@@ -248,10 +235,10 @@ const HomePage = () => {
                 <OffersSection />
               </motion.section>
             );
-          
+
           case 'new':
             return (
-              <motion.section 
+              <motion.section
                 key={`new-${index}`}
                 variants={itemVariants}
                 className="bg-gradient-to-r from-primary/5 via-secondary/5 to-accent/5 py-16 md:py-24"
@@ -266,10 +253,10 @@ const HomePage = () => {
                 />
               </motion.section>
             );
-          
+
           case 'philosophy':
             return (
-              <motion.section 
+              <motion.section
                 key={`philosophy-${index}`}
                 ref={philosophyRef}
                 initial="hidden"
@@ -278,15 +265,15 @@ const HomePage = () => {
                 className="px-3 xs:px-4 sm:px-6 md:px-8 lg:px-12 py-16 md:py-24 bg-gradient-to-br from-purple-100 via-blue-100 to-green-100"
               >
                 <div className="max-w-7xl mx-auto">
-                  <motion.div 
+                  <motion.div
                     className="flex flex-col lg:flex-row gap-6 sm:gap-8 md:gap-10 lg:gap-12 xl:gap-16 items-center"
                     variants={containerVariants}
                   >
                     <motion.div variants={itemVariants} className="w-full lg:w-1/2">
                       <div className="relative aspect-square overflow-hidden rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-xl lg:shadow-2xl mx-auto max-w-sm sm:max-w-md lg:max-w-none">
-                        <img 
-                          src={section.content?.image || "/placeholder.svg"} 
-                          alt={section.title || "Artisan Florist"} 
+                        <img
+                          src={section.content?.image || "/placeholder.svg"}
+                          alt={section.title || "Artisan Florist"}
                           className="object-cover w-full h-full transition-transform duration-700 hover:scale-105"
                           loading="lazy"
                           decoding="async"
@@ -294,7 +281,7 @@ const HomePage = () => {
                         <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
                       </div>
                     </motion.div>
-                    <motion.div 
+                    <motion.div
                       className="w-full lg:w-1/2 flex flex-col justify-center text-center lg:text-left"
                       variants={itemVariants}
                     >
@@ -312,7 +299,7 @@ const HomePage = () => {
                 </div>
               </motion.section>
             );
-          
+
           default:
             return null;
         }
