@@ -90,9 +90,14 @@ const AdminUsers: React.FC = () => {
         
         // Merge vendor data with user data
         const usersWithVendorInfo = usersResponse.data.map((user: User) => {
-          const vendorInfo = vendorsResponse.vendors.find((vendor: any) => 
-            vendor.user._id === user._id || vendor.user === user._id
-          );
+          const vendorInfo = vendorsResponse.vendors.find((vendor: any) => {
+            // Check if vendor has a user reference
+            if (!vendor.user) return false;
+            
+            // Handle both populated and unpopulated user references
+            const vendorUserId = typeof vendor.user === 'object' ? vendor.user._id : vendor.user;
+            return vendorUserId === user._id;
+          });
           
           return {
             ...user,

@@ -83,6 +83,14 @@ export interface Order {
     image: string;
     price: number;
     quantity: number;
+    discount?: number;
+    customizations?: {
+      photo?: string;
+      number?: string;
+      messageCard?: string;
+      selectedFlowers?: Array<{ name: string; quantity?: number }>;
+      selectedChocolates?: Array<{ name: string; quantity?: number }>;
+    } | null;
     product: {
       name: string;
       images: string[];
@@ -100,8 +108,13 @@ export interface Order {
     status: string;
     transactionId?: string;
   };
+  date?: string;
   status: string;
   currency?: string;
   currencyRate?: number;
   originalCurrency?: string;
-} 
+  promoCode?: {
+    code: string;
+    discount: number;
+  };
+}

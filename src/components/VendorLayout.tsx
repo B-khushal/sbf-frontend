@@ -1,15 +1,17 @@
 import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Home, ShoppingCart, BarChart2, DollarSign, Settings, LogOut, Package, Menu, X, Tag, Gift, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Home, ShoppingCart, BarChart2, DollarSign, Settings, LogOut, Package, Menu, X, ChevronLeft, ChevronRight, User, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
+import { useNotification } from '@/contexts/NotificationContext';
 
 const VendorLayout: React.FC = () => {
   const { logout } = useAuth();
   const location = useLocation();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = React.useState(false);
   const [isDesktopSidebarCollapsed, setIsDesktopSidebarCollapsed] = React.useState(false);
+  const { unreadCount } = useNotification();
 
   React.useEffect(() => {
     document.body.style.overflow = isMobileSidebarOpen ? 'hidden' : '';
@@ -27,9 +29,7 @@ const VendorLayout: React.FC = () => {
     { to: '/vendor/products', icon: Package, text: 'Products' },
     { to: '/vendor/orders', icon: ShoppingCart, text: 'Orders' },
     { to: '/vendor/analytics', icon: BarChart2, text: 'Analytics' },
-    { to: '/vendor/promocodes', icon: Tag, text: 'Promo Codes' },
-    { to: '/vendor/offers', icon: Gift, text: 'Offers' },
-    { to: '/vendor/holidays', icon: Calendar, text: 'Holidays' },
+    { to: '/vendor/profile', icon: User, text: 'Profile' },
     { to: '/vendor/payouts', icon: DollarSign, text: 'Payouts' },
     { to: '/vendor/settings', icon: Settings, text: 'Settings' },
   ];
@@ -68,9 +68,9 @@ const VendorLayout: React.FC = () => {
         ))}
       </nav>
       <div className="p-2">
-        <Button 
-          onClick={logout} 
-          variant="ghost" 
+        <Button
+          onClick={logout}
+          variant="ghost"
           className={cn(
             "w-full text-gray-700 hover:bg-red-100 hover:text-red-800 transition-all duration-200",
             collapsed ? "justify-center px-2" : "justify-start"
@@ -136,9 +136,19 @@ const VendorLayout: React.FC = () => {
       <div className="dashboard-main flex flex-col">
         <div className="md:hidden flex justify-between items-center bg-white border-b border-gray-200 px-3 py-2.5 sticky top-0 z-nav shadow-sm">
           <h2 className="text-base font-bold text-gray-800">Vendor Panel</h2>
-          <Button variant="ghost" size="icon" onClick={() => setIsMobileSidebarOpen(true)} className="touch-action-btn">
-            <Menu className="h-5 w-5" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Link to="/vendor/orders" className="relative">
+              <Bell className="h-5 w-5 text-gray-600" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </Link>
+            <Button variant="ghost" size="icon" onClick={() => setIsMobileSidebarOpen(true)} className="touch-action-btn">
+              <Menu className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
         <main className="panel-content flex-1 overflow-x-hidden overflow-y-auto">
           <Outlet />

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,12 +7,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
-import { Store, ArrowRight, Check } from 'lucide-react';
-import { registerVendor, VendorRegistrationData } from '@/services/vendorService';
+import { Store, ArrowRight, Check, AlertCircle } from 'lucide-react';
+import { registerVendor, getVendorConsentData, VendorRegistrationData } from '@/services/vendorService';
 
 const VendorRegistration: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(0);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [submitLoading, setSubmitLoading] = useState(false);
   const [formData, setFormData] = useState<VendorRegistrationData>({
     storeName: '',
     storeDescription: '',
@@ -44,6 +45,40 @@ const VendorRegistration: React.FC = () => {
 
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchConsentData = async () => {
+      try {
+        const response = await getVendorConsentData();
+        if (response.success && response.vendorData) {
+          setFormData((prev: any) => ({
+            ...prev,
+            storeName: response.vendorData.storeName || '',
+            storeDescription: response.vendorData.storeDescription || '',
+            storeAddress: {
+              ...prev.storeAddress,
+              ...(response.vendorData.storeAddress || {})
+            },
+            contactInfo: {
+              ...prev.contactInfo,
+              ...(response.vendorData.contactInfo || {})
+            }
+          }));
+        }
+        setLoading(false);
+      } catch (error: any) {
+        toast({
+          title: "Action Required",
+          description: error.message || "You must complete the consent agreement before registering.",
+          variant: "destructive",
+          duration: 5000
+        });
+        navigate('/vendors-consent');
+      }
+    };
+
+    fetchConsentData();
+  }, [navigate, toast]);
 
   const steps = [
     {
@@ -77,7 +112,7 @@ const VendorRegistration: React.FC = () => {
         return {
           ...prev,
           [section]: {
-            ...prev[section],
+            ...(prev as any)[section],
             [field]: value
           }
         };
@@ -101,12 +136,12 @@ const VendorRegistration: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateStep(currentStep)) {
       return;
     }
 
-    setLoading(true);
+    setSubmitLoading(true);
 
     try {
       const response = await registerVendor(formData);
@@ -123,7 +158,7 @@ const VendorRegistration: React.FC = () => {
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setSubmitLoading(false);
     }
   };
 
@@ -219,8 +254,8 @@ const VendorRegistration: React.FC = () => {
           });
           return false;
         }
-        if ((!formData.bankDetails?.accountNumber || !formData.bankDetails.accountNumber.trim()) && 
-            (!formData.bankDetails?.upiId || !formData.bankDetails.upiId.trim())) {
+        if ((!formData.bankDetails?.accountNumber || !formData.bankDetails.accountNumber.trim()) &&
+          (!formData.bankDetails?.upiId || !formData.bankDetails.upiId.trim())) {
           toast({
             title: "Payment Details Required",
             description: "Please enter either bank account details or UPI ID",
@@ -405,7 +440,7 @@ const VendorRegistration: React.FC = () => {
                 required
               />
             </div>
-            
+
             <div className="space-y-4">
               <h3 className="text-lg font-medium">Bank Details (Choose one method)</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -455,6 +490,17 @@ const VendorRegistration: React.FC = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="flex items-center gap-3">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <p className="text-lg text-gray-600">Loading your application...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4">
@@ -473,8 +519,8 @@ const VendorRegistration: React.FC = () => {
             {steps.map((step, index) => (
               <div key={index} className="flex items-center">
                 <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 
-                  ${index <= currentStep 
-                    ? 'bg-primary border-primary text-white' 
+                  ${index <= currentStep
+                    ? 'bg-primary border-primary text-white'
                     : 'border-gray-300 text-gray-500'}`}>
                   {index < currentStep ? (
                     <Check className="h-5 w-5" />
@@ -516,8 +562,8 @@ const VendorRegistration: React.FC = () => {
                 </Button>
 
                 {currentStep === steps.length - 1 ? (
-                  <Button type="submit" disabled={loading}>
-                    {loading ? (
+                  <Button type="submit" disabled={submitLoading}>
+                    {submitLoading ? (
                       <div className="flex items-center gap-2">
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                         Submitting...

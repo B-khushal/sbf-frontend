@@ -21,6 +21,7 @@ import HomePage from "./pages/HomePage";
 import NotFound from "./pages/NotFound";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
+import VendorConsentPage from "./pages/VendorConsentPage";
 
 // Lazy loaded pages with better organization
 const ShopPage = lazy(() => import('./pages/ShopPage'));
@@ -53,6 +54,7 @@ const AdminProducts = lazy(() => import("./pages/Admin/Products"));
 const AdminOrders = lazy(() => import("./pages/Admin/Orders"));
 const AdminUsers = lazy(() => import("./pages/Admin/Users"));
 const AdminVendorManagement = lazy(() => import("./pages/Admin/VendorManagement"));
+const AdminVendorDetailsPage = lazy(() => import("./pages/Admin/VendorDetailsPage"));
 const OrderDetailsPage = lazy(() => import("./pages/Admin/OrderDetailsPage"));
 const AdminSettingsPage = lazy(() => import("./pages/AdminSettingsPage"));
 const Analytics = lazy(() => import("./pages/Admin/Analytics"));
@@ -75,6 +77,7 @@ const VendorOrders = lazy(() => import('./pages/Vendor/VendorOrders'));
 const VendorAnalytics = lazy(() => import('./pages/Vendor/VendorAnalytics'));
 const VendorPayouts = lazy(() => import('./pages/Vendor/VendorPayouts'));
 const VendorSettings = lazy(() => import('./pages/Vendor/VendorSettings'));
+const VendorProfile = lazy(() => import('./pages/Vendor/VendorProfile'));
 
 // Optimize QueryClient for better performance
 const queryClient = new QueryClient({
@@ -120,8 +123,8 @@ const App = () => {
       <QueryClientProvider client={queryClient}>
         <GoogleOAuthProvider
           clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || "246004709667-1a33cbkt2b2hq2m1foav1b3j4fsvilef.apps.googleusercontent.com"}
-          onScriptLoadError={(error) => {
-            console.warn('Google OAuth script failed to load:', error);
+          onScriptLoadError={() => {
+            console.warn('Google OAuth script failed to load');
           }}
         >
           <AuthProvider>
@@ -237,6 +240,11 @@ const App = () => {
                           {/* Auth Routes */}
                           <Route path="/login" element={<LoginPage />} />
                           <Route path="/signup" element={<SignupPage />} />
+                          <Route path="/vendors-consent" element={
+                            <ProtectedRoute>
+                              <VendorConsentPage />
+                            </ProtectedRoute>
+                          } />
                           <Route path="/profile" element={
                             <ProtectedRoute>
                               <Suspense fallback={<LoadingFallback message="Loading profile..." />}>
@@ -301,6 +309,11 @@ const App = () => {
                             <Route path="vendors" element={
                               <Suspense fallback={<LoadingFallback message="Loading vendors..." />}>
                                 <AdminVendorManagement />
+                              </Suspense>
+                            } />
+                            <Route path="vendors/:id" element={
+                              <Suspense fallback={<LoadingFallback message="Loading vendor details..." />}>
+                                <AdminVendorDetailsPage />
                               </Suspense>
                             } />
                             <Route path="analytics" element={
@@ -381,19 +394,9 @@ const App = () => {
                                   <VendorAnalytics />
                                 </Suspense>
                               } />
-                              <Route path="promocodes" element={
-                                <Suspense fallback={<LoadingFallback message="Loading promo codes..." />}>
-                                  <PromoCodes />
-                                </Suspense>
-                              } />
-                              <Route path="offers" element={
-                                <Suspense fallback={<LoadingFallback message="Loading offers..." />}>
-                                  <OffersManager />
-                                </Suspense>
-                              } />
-                              <Route path="holidays" element={
-                                <Suspense fallback={<LoadingFallback message="Loading holidays..." />}>
-                                  <HolidayManagement />
+                              <Route path="profile" element={
+                                <Suspense fallback={<LoadingFallback message="Loading profile..." />}>
+                                  <VendorProfile />
                                 </Suspense>
                               } />
                               <Route path="payouts" element={

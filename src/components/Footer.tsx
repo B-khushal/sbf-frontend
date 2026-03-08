@@ -1,22 +1,23 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  Mail, 
-  Phone, 
-  Instagram, 
-  Facebook, 
-  Twitter, 
-  MessageCircle, 
-  MapPin, 
-  Clock, 
-  ArrowRight, 
-  Send, 
+import {
+  Mail,
+  Phone,
+  Instagram,
+  Facebook,
+  Twitter,
+  MessageCircle,
+  MapPin,
+  Clock,
+  ArrowRight,
+  Send,
   Heart,
   Flower2,
   Gift,
   CreditCard,
   Truck,
-  ShieldCheck
+  ShieldCheck,
+  Store
 } from 'lucide-react';
 import { useSettings } from '@/contexts/SettingsContext';
 import { Button } from './ui/button';
@@ -34,10 +35,10 @@ const Footer = () => {
 
   const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       const response = await api.post('/newsletter/subscribe', { email });
-      
+
       if (response.data.success) {
         toast.success("Thanks for subscribing!", {
           description: "We'll keep you updated with our latest offers.",
@@ -107,12 +108,12 @@ const Footer = () => {
               {footerSettings.companyName}
             </Link>
             <p className="text-gray-600 text-sm leading-relaxed max-w-sm mx-auto sm:mx-0">
-              Best florist in Hyderabad offering flower delivery in Hyderabad, online bouquet shop India, midnight flower delivery, 
+              Best florist in Hyderabad offering flower delivery in Hyderabad, online bouquet shop India, midnight flower delivery,
               roses for anniversary, and birthday flowers online. Send flowers online with confidence.
             </p>
             <div className="flex items-center justify-center sm:justify-start gap-4 flex-wrap">
               {/* WhatsApp Link */}
-              <a 
+              <a
                 href={whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -122,22 +123,22 @@ const Footer = () => {
               >
                 <MessageCircle className="w-6 h-6" />
               </a>
-              
+
               {/* Social Links */}
               {footerSettings.socialLinks
                 .filter(link => link.enabled)
                 .map((link) => {
-                  const IconComponent = 
+                  const IconComponent =
                     link.platform === 'Instagram' ? Instagram :
-                    link.platform === 'Facebook' ? Facebook :
-                    link.platform === 'Twitter' ? Twitter : Instagram;
-                  
+                      link.platform === 'Facebook' ? Facebook :
+                        link.platform === 'Twitter' ? Twitter : Instagram;
+
                   return (
-                    <a 
+                    <a
                       key={link.platform}
                       href={link.url}
                       target="_blank"
-                      rel="noopener noreferrer" 
+                      rel="noopener noreferrer"
                       className="w-12 h-12 flex items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-all duration-300 flex-shrink-0 shadow-sm hover:shadow-md"
                       aria-label={link.platform}
                     >
@@ -158,8 +159,8 @@ const Footer = () => {
                   .filter(item => item.enabled)
                   .map((item) => (
                     <li key={item.href}>
-                      <Link 
-                        to={item.href} 
+                      <Link
+                        to={item.href}
                         className="text-gray-600 hover:text-primary transition-all duration-300 inline-flex items-center gap-3 group text-sm font-medium"
                       >
                         <ArrowRight className="w-4 h-4 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
@@ -181,8 +182,8 @@ const Footer = () => {
                 </div>
                 <div className="min-w-0 text-left">
                   <p className="font-semibold mb-1 text-gray-900">Email Us</p>
-                  <a 
-                    href={`mailto:${footerSettings.contactInfo.email}`} 
+                  <a
+                    href={`mailto:${footerSettings.contactInfo.email}`}
                     className="text-gray-600 hover:text-primary transition-colors duration-300 text-sm break-all"
                   >
                     {footerSettings.contactInfo.email}
@@ -195,8 +196,8 @@ const Footer = () => {
                 </div>
                 <div className="min-w-0 text-left">
                   <p className="font-semibold mb-1 text-gray-900">Call Us</p>
-                  <a 
-                    href={`tel:${footerSettings.contactInfo.phone}`} 
+                  <a
+                    href={`tel:${footerSettings.contactInfo.phone}`}
                     className="text-gray-600 hover:text-primary transition-colors duration-300 text-sm"
                   >
                     {footerSettings.contactInfo.phone}
@@ -269,36 +270,43 @@ const Footer = () => {
 
         {/* Bottom Bar */}
         <div className="pt-8 sm:pt-10 space-y-6 sm:space-y-0 sm:flex sm:flex-row sm:items-center sm:justify-between border-t border-gray-200">
-          <p className="text-sm text-gray-600 text-center sm:text-left font-medium">
-            {footerSettings.copyright}
-          </p>
-          <div className="flex flex-wrap justify-center gap-x-6 sm:gap-x-8 gap-y-3 text-sm">
-            <Link 
-              to="/terms" 
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 text-sm text-gray-600 font-medium">
+            <p className="text-center sm:text-left">
+              {footerSettings.copyright}
+            </p>
+            <Link to="/vendors-consent" className="inline-flex justify-center">
+              <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-xs font-bold uppercase tracking-wider">
+                <Store className="w-3.5 h-3.5" /> Become a Vendor
+              </span>
+            </Link>
+          </div>
+          <div className="flex flex-wrap justify-center sm:justify-end gap-x-6 sm:gap-x-8 gap-y-3 text-sm">
+            <Link
+              to="/terms"
               className="text-gray-600 hover:text-primary transition-colors duration-300 font-medium"
             >
               Terms of Service
             </Link>
-            <Link 
-              to="/privacy" 
+            <Link
+              to="/privacy"
               className="text-gray-600 hover:text-primary transition-colors duration-300 font-medium"
             >
               Privacy Policy
             </Link>
-            <Link 
-              to="/shipping" 
+            <Link
+              to="/shipping"
               className="text-gray-600 hover:text-primary transition-colors duration-300 font-medium"
             >
               Shipping Policy
             </Link>
-            <Link 
-              to="/refund-policy" 
+            <Link
+              to="/refund-policy"
               className="text-gray-600 hover:text-primary transition-colors duration-300 font-medium"
             >
               Refund Policy
             </Link>
-            <Link 
-              to="/cancellation-policy" 
+            <Link
+              to="/cancellation-policy"
               className="text-gray-600 hover:text-primary transition-colors duration-300 font-medium"
             >
               Cancellation Policy
@@ -310,11 +318,11 @@ const Footer = () => {
       {/* Map Section */}
       {footerSettings.showMap && (
         <div className="mt-10 sm:mt-12">
-          <iframe 
-            src={footerSettings.mapEmbedUrl} 
-            className="w-full h-[250px] sm:h-[300px] border-0 rounded-lg shadow-lg" 
-            allowFullScreen 
-            loading="lazy" 
+          <iframe
+            src={footerSettings.mapEmbedUrl}
+            className="w-full h-[250px] sm:h-[300px] border-0 rounded-lg shadow-lg"
+            allowFullScreen
+            loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
           ></iframe>
         </div>

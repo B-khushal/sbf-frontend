@@ -134,7 +134,8 @@ export default defineConfig(({ mode }) => ({
       'axios',
       'framer-motion',
       'date-fns',
-      'recharts'
+      'recharts',
+      'react-signature-canvas',
     ],
     exclude: ['@dnd-kit/core', '@dnd-kit/sortable'] // These can be loaded dynamically
   },

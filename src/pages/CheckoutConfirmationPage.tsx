@@ -37,7 +37,7 @@ const itemVariants = {
     opacity: 1,
     transition: {
       duration: 0.5,
-      ease: [0.25, 0.46, 0.45, 0.94]
+      ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number]
     }
   }
 };
@@ -48,7 +48,7 @@ const successVariants = {
     scale: 1,
     opacity: 1,
     transition: {
-      type: "spring",
+      type: "spring" as const,
       stiffness: 260,
       damping: 20,
       delay: 0.5
@@ -91,14 +91,14 @@ const CheckoutConfirmationPage = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const { addNotification } = useNotification();
-  
+
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isAuthChecking, setIsAuthChecking] = useState<boolean>(true);
   const [isOrderDataFetched, setIsOrderDataFetched] = useState(false);
   const [fromPayment, setFromPayment] = useState<boolean>(false);
   const [notificationSent, setNotificationSent] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
-  
+
   const redirectAttempted = useRef<boolean>(false);
   const initialized = useRef<boolean>(false);
 
@@ -131,7 +131,7 @@ const CheckoutConfirmationPage = () => {
       return formatPriceWithCurrency(convertedAmount, currency);
     }
   };
-  
+
   // First useEffect for authentication and order processing
   useEffect(() => {
     // Only run once - prevent re-initialization
@@ -139,57 +139,57 @@ const CheckoutConfirmationPage = () => {
       console.log('CheckoutConfirmationPage: Already initialized, skipping...');
       return;
     }
-    
+
     initialized.current = true;
-    
+
     // Wrap everything in a try-catch to prevent any errors from blocking the page
     const initializeConfirmationPage = async () => {
       try {
         console.log('CheckoutConfirmationPage: Initializing...');
         console.log('Full URL:', window.location.href);
-        
+
         // Check if coming from payment page
         const fromPaymentFlag = sessionStorage.getItem("from_payment");
         const hasOrderParam = new URLSearchParams(window.location.search).get('order') === 'true';
-        
+
         console.log('Navigation context:', {
           fromPayment: fromPaymentFlag === "true",
           hasOrderParam,
           currentPath: window.location.pathname,
           search: window.location.search
         });
-        
+
         setFromPayment(fromPaymentFlag === "true");
-        
+
         // Get order data with detailed logging
         const savedOrder = localStorage.getItem('lastOrder');
         const backupOrder = sessionStorage.getItem('backup_order');
-        
+
         console.log('Storage check:', {
           lastOrder: savedOrder ? `Found (${savedOrder.length} chars)` : 'NULL',
           backupOrder: backupOrder ? `Found (${backupOrder.length} chars)` : 'NULL',
           allLocalStorageKeys: Object.keys(localStorage),
           allSessionStorageKeys: Object.keys(sessionStorage)
         });
-        
+
         // Try backup if main is missing
         const orderData = savedOrder || backupOrder;
-        
+
         if (!orderData && !redirectAttempted.current) {
           console.error('❌ NO ORDER DATA FOUND - Redirecting to cart');
           console.error('This means payment handler did not store order data properly');
           redirectAttempted.current = true;
-          
+
           toast({
             title: "Order Not Found",
             description: "Redirecting to cart. If you completed payment, please contact support.",
             variant: "destructive",
           });
-          
+
           setTimeout(() => navigate('/cart'), 2000);
           return;
         }
-        
+
         if (orderData) {
           try {
             console.log('📦 Parsing order data...');
@@ -200,7 +200,7 @@ const CheckoutConfirmationPage = () => {
               itemCount: parsedOrder.items?.length,
               total: parsedOrder.total
             });
-            
+
             // --- Normalization logic ---
             // If backend uses shippingDetails, map to shipping
             if (parsedOrder.shippingDetails && !parsedOrder.shipping) {
@@ -223,11 +223,11 @@ const CheckoutConfirmationPage = () => {
             if (typeof parsedOrder.subtotal === 'undefined') {
               parsedOrder.subtotal = Array.isArray(parsedOrder.items)
                 ? parsedOrder.items.reduce((sum: number, item: any) => {
-                    const discountedPrice = item.discount && item.discount > 0 
-                      ? item.price - (item.price * item.discount / 100)
-                      : item.price;
-                    return sum + ((discountedPrice || 0) * (item.quantity || 1));
-                  }, 0)
+                  const discountedPrice = item.discount && item.discount > 0
+                    ? item.price - (item.price * item.discount / 100)
+                    : item.price;
+                  return sum + ((discountedPrice || 0) * (item.quantity || 1));
+                }, 0)
                 : 0;
             }
             if (typeof parsedOrder.total === 'undefined') {
@@ -237,86 +237,86 @@ const CheckoutConfirmationPage = () => {
             if (!parsedOrder.payment && parsedOrder.paymentDetails) {
               parsedOrder.payment = parsedOrder.paymentDetails;
             }
-            
+
             setOrder(parsedOrder);
             setIsOrderDataFetched(true);
             console.log('✅ Order state updated successfully');
-            
+
             // Save to backup if not already there
             if (!backupOrder) {
               sessionStorage.setItem('backup_order', orderData);
             }
-            
+
             // Clear the payment flag after successful load
             sessionStorage.removeItem("from_payment");
-            
+
           } catch (error) {
             console.error('❌ Error parsing order data:', error);
             console.error('Raw order data:', orderData?.substring(0, 200));
-            
+
             if (!redirectAttempted.current) {
               redirectAttempted.current = true;
               toast({
                 title: "Error Loading Order",
                 description: "There was an error loading your order details. Redirecting to cart.",
                 variant: "destructive",
-          });
-          setTimeout(() => navigate('/cart'), 2000);
-        }
-      }
-    }
-    
-    // Set confirmation visited flag
-    sessionStorage.setItem("confirmation_visited", "true");
-    
-    // Auth restoration logic
-    try {
-      const authDataString = sessionStorage.getItem('auth_data');
-      
-      if (authDataString) {
-        console.log('CheckoutConfirmationPage: Found auth_data in sessionStorage');
-        const authData = JSON.parse(authDataString);
-        
-        if (authData.t) {
-          localStorage.setItem('token', authData.t);
-          console.log('CheckoutConfirmationPage: Token restored');
-        }
-        
-        if (authData.u) {
-          try {
-            const decodedUser = decodeURIComponent(atob(authData.u));
-            localStorage.setItem('user', decodedUser);
-            console.log('CheckoutConfirmationPage: User data restored');
-          } catch (e) {
-            console.error('CheckoutConfirmationPage: Error decoding user data:', e);
+              });
+              setTimeout(() => navigate('/cart'), 2000);
+            }
           }
         }
-        
-        if (authData.a) {
-          localStorage.setItem('isAuthenticated', authData.a);
-          console.log('CheckoutConfirmationPage: Auth flag restored');
+
+        // Set confirmation visited flag
+        sessionStorage.setItem("confirmation_visited", "true");
+
+        // Auth restoration logic
+        try {
+          const authDataString = sessionStorage.getItem('auth_data');
+
+          if (authDataString) {
+            console.log('CheckoutConfirmationPage: Found auth_data in sessionStorage');
+            const authData = JSON.parse(authDataString);
+
+            if (authData.t) {
+              localStorage.setItem('token', authData.t);
+              console.log('CheckoutConfirmationPage: Token restored');
+            }
+
+            if (authData.u) {
+              try {
+                const decodedUser = decodeURIComponent(atob(authData.u));
+                localStorage.setItem('user', decodedUser);
+                console.log('CheckoutConfirmationPage: User data restored');
+              } catch (e) {
+                console.error('CheckoutConfirmationPage: Error decoding user data:', e);
+              }
+            }
+
+            if (authData.a) {
+              localStorage.setItem('isAuthenticated', authData.a);
+              console.log('CheckoutConfirmationPage: Auth flag restored');
+            }
+
+            sessionStorage.removeItem('auth_data');
+            window.dispatchEvent(new Event('storageUpdate'));
+          }
+
+          const storedIsAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+          const storedUser = localStorage.getItem('user');
+
+          setIsAuthenticated(!!storedIsAuthenticated && !!storedUser);
+          console.log('CheckoutConfirmationPage: Auth check result:', !!storedIsAuthenticated && !!storedUser);
+        } catch (error) {
+          console.error('CheckoutConfirmationPage: Error during auth check:', error);
+          setIsAuthenticated(false);
+        } finally {
+          setIsAuthChecking(false);
         }
-        
-        sessionStorage.removeItem('auth_data');
-        window.dispatchEvent(new Event('storageUpdate'));
-      }
-      
-      const storedIsAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
-      const storedUser = localStorage.getItem('user');
-      
-      setIsAuthenticated(!!storedIsAuthenticated && !!storedUser);
-      console.log('CheckoutConfirmationPage: Auth check result:', !!storedIsAuthenticated && !!storedUser);
-    } catch (error) {
-      console.error('CheckoutConfirmationPage: Error during auth check:', error);
-      setIsAuthenticated(false);
-    } finally {
-      setIsAuthChecking(false);
-    }
       } catch (globalError) {
         // Catch any unexpected errors to prevent page crash
         console.error('CheckoutConfirmationPage: Unexpected error during initialization:', globalError);
         setIsAuthChecking(false);
-        
+
         // Try to load from localStorage as fallback
         try {
           const storedIsAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
@@ -327,40 +327,52 @@ const CheckoutConfirmationPage = () => {
         }
       }
     };
-    
+
     // Execute the initialization
     initializeConfirmationPage();
   }, []); // Empty dependency array - only run once on mount
-  
+
   const handleContinueShopping = () => {
     // Clear any remaining order data
     localStorage.removeItem('lastOrder');
     sessionStorage.removeItem('backup_order');
     sessionStorage.removeItem('from_payment');
     sessionStorage.removeItem('confirmation_visited');
-    
+
     // Navigate to shop
     navigate('/shop');
   };
 
   const handleDownloadInvoice = async () => {
     if (!order) return;
-    
+
+    // The order from localStorage may have _id (from backend) or id (from frontend type)
+    const orderId = (order as any)._id || order.id;
+
+    if (!orderId) {
+      toast({
+        title: "Download Failed",
+        description: "Order ID not found. Please try again later.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      const response = await api.get(`/orders/${order.id}/invoice`, {
+      const response = await api.get(`/orders/${orderId}/invoice`, {
         responseType: 'blob'
       });
-      
+
       const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `invoice-${order.orderNumber}.pdf`;
+      link.download = `Invoice-${order.orderNumber}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-      
+
       toast({
         title: "Invoice Downloaded",
         description: "Your invoice has been downloaded successfully.",
@@ -374,13 +386,13 @@ const CheckoutConfirmationPage = () => {
       });
     }
   };
-  
+
   const getTimeSlot = (slotId: string) => {
-    return DEFAULT_TIME_SLOTS[slotId] || { 
-      id: slotId, 
+    return DEFAULT_TIME_SLOTS[slotId] || {
+      id: slotId,
       label: slotId,
       time: slotId,
-      available: true 
+      available: true
     };
   };
 
@@ -393,10 +405,10 @@ const CheckoutConfirmationPage = () => {
   if (isAuthChecking || !isOrderDataFetched) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-blue-50 to-purple-50">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-gray-600 text-lg">Loading your order confirmation...</p>
-          </div>
+        </div>
       </div>
     );
   }
@@ -421,7 +433,7 @@ const CheckoutConfirmationPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 relative overflow-hidden">
       <Navigation />
-      
+
       {/* Confetti Effect */}
       <AnimatePresence>
         {showConfetti && (
@@ -454,8 +466,8 @@ const CheckoutConfirmationPage = () => {
           </motion.div>
         )}
       </AnimatePresence>
-      
-      <motion.div 
+
+      <motion.div
         className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-6xl"
         initial="hidden"
         animate="visible"
@@ -463,21 +475,21 @@ const CheckoutConfirmationPage = () => {
       >
         {/* Success Header */}
         <motion.div variants={itemVariants} className="text-center mb-8">
-          <motion.div 
+          <motion.div
             variants={successVariants}
             className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg"
           >
             <CheckCircle className="w-10 h-10 text-white" />
           </motion.div>
-          
+
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-800 mb-4">
             Order <span className="text-green-600">Confirmed!</span>
           </h1>
-          
+
           <p className="text-lg sm:text-xl text-gray-600 mb-2">
             Thank you for your order, {order.shipping?.firstName}!
           </p>
-          
+
           <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
             <span>Order Number:</span>
             <Badge variant="outline" className="font-mono text-base px-3 py-1">
@@ -567,7 +579,7 @@ const CheckoutConfirmationPage = () => {
                         </div>
                         <div className="text-right">
                           <p className="font-semibold">
-                            {displayPrice(((item.discount && item.discount > 0 
+                            {displayPrice(((item.discount && item.discount > 0
                               ? Number(item.price) - (Number(item.price) * item.discount / 100)
                               : Number(item.price)) || 0) * (item.quantity || 1), order.currency, order.currencyRate)}
                           </p>
@@ -603,7 +615,7 @@ const CheckoutConfirmationPage = () => {
                         <p>{order.shipping?.city || ''}{order.shipping?.state ? `, ${order.shipping.state}` : ''}{order.shipping?.zipCode || ''}</p>
                       </div>
                     </div>
-                    
+
                     <div>
                       <div className="flex items-center gap-2 mb-2">
                         <User className="w-4 h-4 text-primary" />
@@ -621,7 +633,7 @@ const CheckoutConfirmationPage = () => {
                       </div>
                     </div>
                   </div>
-                  
+
                   <Separator />
 
                   {/* Delivery Time */}
@@ -640,7 +652,7 @@ const CheckoutConfirmationPage = () => {
                         )}
                       </div>
                     </div>
-                    
+
                     <div>
                       <div className="flex items-center gap-2 mb-2">
                         <Calendar className="w-4 h-4 text-primary" />
@@ -691,7 +703,7 @@ const CheckoutConfirmationPage = () => {
                         <p className="text-sm text-gray-600">You'll receive an email confirmation shortly with your order details.</p>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-start gap-3">
                       <div className="w-6 h-6 bg-primary text-white rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0 mt-0.5">
                         2
@@ -701,7 +713,7 @@ const CheckoutConfirmationPage = () => {
                         <p className="text-sm text-gray-600">Our team will carefully prepare your beautiful floral arrangement.</p>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-start gap-3">
                       <div className="w-6 h-6 bg-primary text-white rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0 mt-0.5">
                         3
@@ -716,7 +728,7 @@ const CheckoutConfirmationPage = () => {
               </Card>
             </motion.div>
           </div>
-          
+
           {/* Right Column - Order Summary & Actions */}
           <div className="lg:col-span-1 space-y-6">
             {/* Order Summary */}
@@ -726,56 +738,56 @@ const CheckoutConfirmationPage = () => {
                   <CardTitle>Order Summary</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                <div className="flex justify-between text-sm">
+                  <div className="flex justify-between text-sm">
                     <span>Subtotal</span>
-                  <span>{isNaN(order.subtotal) ? 'N/A' : displayPrice(order.subtotal, order.currency, order.currencyRate)}</span>
-                </div>
-                  
+                    <span>{isNaN(order.subtotal) ? 'N/A' : displayPrice(order.subtotal, order.currency, order.currencyRate)}</span>
+                  </div>
+
                   {order.deliveryFee && order.deliveryFee > 0 && (
-                <div className="flex justify-between text-sm">
+                    <div className="flex justify-between text-sm">
                       <span>Delivery Fee</span>
                       <span>{displayPrice(order.deliveryFee, order.currency, order.currencyRate)}</span>
-                </div>
+                    </div>
                   )}
-                  
+
                   {order.promoCode && (
                     <div className="flex justify-between text-sm text-green-600">
                       <span>Discount ({order.promoCode.code})</span>
                       <span>-{displayPrice(order.promoCode.discount, order.currency, order.currencyRate)}</span>
                     </div>
                   )}
-                  
+
                   <Separator />
-                  
+
                   <div className="flex justify-between font-semibold text-lg">
                     <span>Total</span>
                     <span>{isNaN(order.total) ? 'N/A' : displayPrice(order.total, order.currency, order.currencyRate)}</span>
                   </div>
-                  
+
                   <div className="text-xs text-gray-500 text-center">
                     Payment Method: {order.payment?.method || 'Razorpay'}
-                </div>
-              </CardContent>
-            </Card>
+                  </div>
+                </CardContent>
+              </Card>
             </motion.div>
-          
+
             {/* Actions */}
             <motion.div variants={itemVariants} className="space-y-3">
-            <Button 
+              <Button
                 onClick={handleDownloadInvoice}
-              variant="outline"
+                variant="outline"
                 className="w-full"
-            >
+              >
                 <Download className="w-4 h-4 mr-2" />
                 Download Invoice
-            </Button>
-            
-            <Button 
-              onClick={handleContinueShopping}
+              </Button>
+
+              <Button
+                onClick={handleContinueShopping}
                 className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90"
-            >
+              >
                 <ShoppingBag className="w-4 h-4 mr-2" />
-              Continue Shopping
+                Continue Shopping
               </Button>
             </motion.div>
 
@@ -794,14 +806,14 @@ const CheckoutConfirmationPage = () => {
                     className="w-full"
                   >
                     Contact Support
-                </Button>
-              </CardContent>
-            </Card>
-          </motion.div>
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
           </div>
         </div>
       </motion.div>
-      
+
       <Footer />
     </div>
   );

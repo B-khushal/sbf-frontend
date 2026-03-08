@@ -95,7 +95,7 @@ export interface VendorProfile {
     totalProducts: number;
     totalOrders: number;
     totalRevenue: number;
-        totalCommissionPaid: number;
+    totalCommissionPaid: number;
   };
   socialMedia: {
     facebook?: string;
@@ -152,6 +152,18 @@ export interface VendorSettingsData {
 }
 
 // Vendor registration and profile
+export const getVendorConsentData = async () => {
+  try {
+    const response = await api.get('/vendors/consent-data');
+    return response.data;
+  } catch (error: any) {
+    if (error.response?.data?.message) {
+      throw new Error(error.response.data.message);
+    }
+    throw new Error('Failed to fetch consent data. Please complete the consent form first.');
+  }
+};
+
 export const registerVendor = async (data: VendorRegistrationData) => {
   try {
     const response = await api.post('/vendors/register', data);
@@ -254,6 +266,28 @@ export const updateVendorSettings = async (data: VendorSettingsData) => {
   return response.data;
 };
 
+// Vendor product deletion
+export const deleteVendorProduct = async (productId: string) => {
+  const response = await api.delete(`/vendors/products/${productId}`);
+  return response.data;
+};
+
+// Vendor order status update
+export const updateVendorOrderStatus = async (orderId: string, status: string) => {
+  const response = await api.put(`/vendors/orders/${orderId}/status`, { status });
+  return response.data;
+};
+
+// Vendor notifications
+export const getVendorNotifications = async (params?: {
+  since?: string;
+  page?: number;
+  limit?: number;
+}) => {
+  const response = await api.get('/vendors/notifications', { params });
+  return response.data;
+};
+
 // Admin functions
 export const getAllVendors = async (params?: {
   page?: number;
@@ -270,8 +304,18 @@ export const updateVendorStatus = async (vendorId: string, status: string) => {
   return response.data;
 };
 
+export const approveVendor = async (vendorId: string, adminSignature: string) => {
+  const response = await api.put(`/vendors/admin/${vendorId}/approve`, { adminSignature });
+  return response.data;
+};
+
 export const getVendorById = async (vendorId: string): Promise<VendorProfile> => {
   const response = await api.get(`/vendors/admin/${vendorId}`);
+  return response.data;
+};
+
+export const deleteVendor = async (vendorId: string) => {
+  const response = await api.delete(`/vendors/admin/${vendorId}`);
   return response.data;
 };
 
@@ -284,9 +328,14 @@ export default {
   getVendorOrders,
   getVendorAnalytics,
   getVendorPayouts,
+  getVendorNotifications,
+  deleteVendorProduct,
+  updateVendorOrderStatus,
   getAllVendors,
   updateVendorStatus,
   getVendorById,
   getVendorSettings,
   updateVendorSettings,
+  approveVendor,
+  deleteVendor,
 }; 
