@@ -19,6 +19,8 @@ type User = {
   provider?: string;
   token?: string;
   vendorStatus?: 'pending' | 'approved' | 'suspended' | 'rejected';
+  lastLogin?: string;
+  createdAt?: string;
 };
 
 interface SignupData {
@@ -92,6 +94,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               vendorStatus: profileData.vendorStatus,
               photoURL: profileData.photoURL,
               provider: profileData.provider,
+              lastLogin: profileData.lastLogin,
+              createdAt: profileData.createdAt,
               token: token,
             };
             setUser(user);
@@ -113,6 +117,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                   vendorStatus: parsedUser.vendorStatus,
                   photoURL: parsedUser.photoURL,
                   provider: parsedUser.provider,
+                  lastLogin: parsedUser.lastLogin,
+                  createdAt: parsedUser.createdAt,
                   token: token,
                 };
                 setUser(user);
@@ -179,6 +185,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         email: profileData.email,
         role: profileData.role,
         vendorStatus: profileData.vendorStatus,
+        lastLogin: profileData.lastLogin,
+        createdAt: profileData.createdAt,
         token: loginResponse.token
       };
       
@@ -223,6 +231,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         email: profileData.email,
         role: profileData.role,
         vendorStatus: profileData.vendorStatus,
+        lastLogin: profileData.lastLogin,
+        createdAt: profileData.createdAt,
         token: registerResponse.token
       };
       
@@ -294,6 +304,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         vendorStatus: profileData.vendorStatus,
         provider: profileData.provider,
         photoURL: profileData.photoURL,
+        lastLogin: profileData.lastLogin,
+        createdAt: profileData.createdAt,
         token: socialLoginResponse.token
       };
       

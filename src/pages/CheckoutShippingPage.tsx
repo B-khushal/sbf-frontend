@@ -362,7 +362,7 @@ const CheckoutShippingPage = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <form onSubmit={handleSubmit} className="space-y-6">
+                  <form onSubmit={handleSubmit} noValidate className="space-y-6">
                     {/* Saved Addresses Dropdown */}
                     {savedAddresses.length > 0 && (
                       <div className="space-y-3">

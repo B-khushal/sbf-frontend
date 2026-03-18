@@ -321,17 +321,20 @@ const CheckoutPaymentPage = () => {
         currency: orderCurrency
       });
 
-             // Prepare order data in correct backend format
-       const orderData = {
-         items: items.map(item => ({
-           product: item._id,           // ✅ Correct field name for backend
-           quantity: item.quantity,
-           price: item.price,
-           finalPrice: item.price, // Always use the total price after customizations
-           customizations: item.customizations || null,  // ✅ Include customizations
-           images: item.images || []  // ✅ Include product images
-         })),
-         shippingDetails: {             // ✅ Correct field name for backend
+      // Prepare order data in correct backend format
+      const orderData = {
+        items: items.map(item => ({
+          product: item.productId || item._id,
+          title: item.title,
+          quantity: item.quantity,
+          price: item.price,
+          finalPrice: item.price,
+          customizations: item.customizations || null,
+          image: item.image || item.images?.[0] || '',
+          images: item.images || [],
+          selectedVariant: item.selectedVariant || null
+        })),
+        shippingDetails: {
            fullName: `${shippingInfo.firstName} ${shippingInfo.lastName}`.trim(),
            email: shippingInfo.email,
            phone: shippingInfo.phone,

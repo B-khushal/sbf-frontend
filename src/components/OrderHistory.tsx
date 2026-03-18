@@ -196,18 +196,21 @@ const OrderHistory = () => {
               </div>
 
               <div className="space-y-4">
-                {order.items.map((item) => {
-                  const imageUrl = getImageUrl(item.product.images?.[0]);
+                {order.items.map((item, itemIndex) => {
+                  const productTitle = item.title || item.product?.title || 'Product';
+                  const productImage = item.image || item.images?.[0] || item.product?.images?.[0] || '';
+                  const imageUrl = getImageUrl(productImage);
+                  const itemKey = item.product?._id || `${order._id}-${itemIndex}`;
 
                   return (
-                    <div key={item.product._id} className={cn(
+                    <div key={itemKey} className={cn(
                       "flex items-center gap-4 rounded-xl p-4",
                       isDelivered ? "bg-green-50" : "bg-white/50"
                     )}>
                       <div className="h-16 w-16 bg-gray-100 rounded-xl relative overflow-hidden flex-shrink-0 border border-gray-200">
                         <img
                           src={imageUrl}
-                          alt={item.product.title}
+                          alt={productTitle}
                           className="w-full h-full object-cover"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
@@ -219,7 +222,7 @@ const OrderHistory = () => {
                         </div>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-gray-800 truncate">{item.product.title}</h4>
+                        <h4 className="font-semibold text-gray-800 truncate">{productTitle}</h4>
                         <div className="text-gray-600 text-sm">
                           {displayOrderPrice(item.price, order.currency, order.currencyRate)} × {item.quantity}
                         </div>

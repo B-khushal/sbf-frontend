@@ -65,10 +65,8 @@ class HolidayService {
 
   // Get holidays for a specific year (public)
   async getHolidaysForYear(year: number): Promise<{ success: boolean; data: Holiday[]; year: number; count: number }> {
-    console.log('HolidayService: getHolidaysForYear called with year:', year);
     try {
       const response = await api.get(`/holidays/year/${year}`);
-      console.log('HolidayService: getHolidaysForYear response:', response.data);
       return response.data;
     } catch (error) {
       console.error('HolidayService: getHolidaysForYear error:', error);

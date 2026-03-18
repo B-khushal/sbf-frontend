@@ -22,7 +22,10 @@ export interface Order {
       title: string;
       price: number;
       images: string[];
-    };
+    } | null;
+    title?: string;
+    image?: string;
+    images?: string[];
     quantity: number;
     price: number;
     finalPrice: number;

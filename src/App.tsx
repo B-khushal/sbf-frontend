@@ -15,6 +15,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import useCart from '@/hooks/use-cart';
 import CartLoader from '@/components/CartLoader';
 import PwaInstallManager from '@/components/PwaInstallManager';
+import ScrollToTop from '@/components/ScrollToTop';
 
 // Core pages that should load immediately
 import HomePage from "./pages/HomePage";
@@ -137,6 +138,7 @@ const App = () => {
                     <Sonner />
                     <BrowserRouter>
                       <PwaInstallManager />
+                      <ScrollToTop />
                       <Suspense fallback={<LoadingFallback />}>
                         <Routes>
                           {/* Main Layout Routes */}

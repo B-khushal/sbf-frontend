@@ -32,7 +32,8 @@ export const useCart = create<CartState>((set, get) => ({
   addToCart: async (item) => {
     // Check if user is authenticated
     const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
-    if (!item._id || !item.title || typeof item.price !== 'number' || typeof item.quantity !== 'number') {
+    const resolvedProductId = item.productId || item._id;
+    if (!resolvedProductId || !item.title || typeof item.price !== 'number' || typeof item.quantity !== 'number') {
       console.error('Invalid cart item:', item);
       throw new Error('Invalid cart item');
     }
@@ -41,7 +42,7 @@ export const useCart = create<CartState>((set, get) => ({
       if (isAuthenticated) {
         // Add to backend with customizations and custom price
         const response = await cartService.addToCart(
-          item._id,
+          resolvedProductId,
           item.quantity,
           item.customizations,
           item.price, // customPrice
@@ -72,9 +73,17 @@ export const useCart = create<CartState>((set, get) => ({
       } else {
         // Guest: Add to local cart
         const currentItems = get().items;
-        // If same product+customizations exists, increase quantity
+        // If same product + variant + customizations exists, increase quantity.
         const matchIndex = currentItems.findIndex(
-          i => i._id === item._id && JSON.stringify(i.customizations) === JSON.stringify(item.customizations)
+          i => {
+            const currentProductId = i.productId || i._id;
+            const incomingProductId = item.productId || item._id;
+            const sameProduct = currentProductId === incomingProductId;
+            const sameVariant = JSON.stringify(i.selectedVariant ?? null) === JSON.stringify(item.selectedVariant ?? null);
+            const sameCustomizations = JSON.stringify(i.customizations ?? null) === JSON.stringify(item.customizations ?? null);
+
+            return sameProduct && sameVariant && sameCustomizations;
+          }
         );
         let newItems;
         if (matchIndex > -1) {

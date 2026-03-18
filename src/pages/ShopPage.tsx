@@ -55,6 +55,13 @@ const CATEGORY_SLUG_MAP: Record<string, string> = {
   // Add more as needed
 };
 
+const CATEGORY_ALIAS_MAP: Record<string, string> = {
+  anivarsery: "Anniversary",
+  aniversary: "Anniversary",
+  "anivarsery gifts": "Anniversary Gifts",
+  "aniversary gifts": "Anniversary Gifts",
+};
+
 const FilterSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => {
   const [isOpen, setIsOpen] = useState(true);
   return (
@@ -74,26 +81,42 @@ const FilterSection: React.FC<{ title: string; children: React.ReactNode }> = ({
   );
 };
 
+const normalizeCategoryValue = (value?: string | null): string => {
+  if (!value) return "";
+
+  const trimmed = value.trim();
+  const lower = trimmed.toLowerCase();
+  const lowerWithSpaces = lower.replace(/-/g, " ");
+
+  if (CATEGORY_SLUG_MAP[lower]) {
+    return CATEGORY_SLUG_MAP[lower];
+  }
+
+  if (CATEGORY_ALIAS_MAP[lower]) {
+    return CATEGORY_ALIAS_MAP[lower];
+  }
+
+  if (CATEGORY_ALIAS_MAP[lowerWithSpaces]) {
+    return CATEGORY_ALIAS_MAP[lowerWithSpaces];
+  }
+
+  // Make generic slugs like "birthday-bouquets" compatible with category matching.
+  return trimmed.replace(/-/g, " ");
+};
+
 const ShopPage = () => {
   const { category: pathCategory } = useParams<{ category: string }>();
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const { convertPrice, formatPrice, currency } = useCurrency();
   
   // Get category from both path params and query params
   const queryCategory = searchParams.get('category');
-  // Normalize the category from the URL slug to the actual category name
-  const normalizedCategory = pathCategory && CATEGORY_SLUG_MAP[pathCategory.toLowerCase()]
-    ? CATEGORY_SLUG_MAP[pathCategory.toLowerCase()]
-    : pathCategory;
-  const category = normalizedCategory || queryCategory || "";
-  
-  // Redirect from query parameter to path parameter if needed
-  useEffect(() => {
-    if (queryCategory && !pathCategory) {
-      navigate(`/shop/${queryCategory}`, { replace: true });
-    }
-  }, [queryCategory, pathCategory, navigate]);
+  // Normalize category from path/query to actual category names used by product data.
+  const normalizedPathCategory = normalizeCategoryValue(pathCategory);
+  const normalizedQueryCategory = normalizeCategoryValue(queryCategory);
+  const normalizedCategory = normalizedPathCategory || normalizedQueryCategory;
+  const category = normalizedCategory || "";
   
   const [selectedCategory, setSelectedCategory] = useState(category);
   const [sortBy, setSortBy] = useState("newest");

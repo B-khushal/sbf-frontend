@@ -209,12 +209,14 @@ const CheckoutConfirmationPage = () => {
             // If backend uses items with product subfield, flatten for display
             if (parsedOrder.items && parsedOrder.items.length > 0 && parsedOrder.items[0].product) {
               parsedOrder.items = parsedOrder.items.map((item: any) => ({
-                id: item.product._id || item.product.id || item.productId || item._id || '',
-                title: item.product.title || item.product.name || item.title || '',
-                image: (item.product.images && item.product.images[0]) || item.image || '',
-                price: item.finalPrice || item.price || (item.product.price ?? 0),
+                id: item.product?._id || item.product?.id || item.productId || item._id || '',
+                title: item.title || item.product?.title || item.product?.name || '',
+                image: item.image || (item.images && item.images[0]) || (item.product?.images && item.product.images[0]) || '',
+                images: item.images || item.product?.images || [],
+                price: item.finalPrice || item.price || (item.product?.price ?? 0),
                 quantity: item.quantity || 1,
                 customizations: item.customizations || null,
+                selectedVariant: item.selectedVariant || null,
                 // fallback for legacy
                 product: item.product
               }));
@@ -528,6 +530,9 @@ const CheckoutConfirmationPage = () => {
                         </div>
                         <div className="flex-1 min-w-0">
                           <h4 className="font-medium text-gray-900 truncate">{item.title || 'Unnamed Product'}</h4>
+                          {item.selectedVariant?.label && (
+                            <p className="text-sm text-primary">Variant: {item.selectedVariant.label}</p>
+                          )}
                           <p className="text-sm text-gray-600">Quantity: {item.quantity ?? 'N/A'}</p>
                           <p className="text-sm text-gray-600">
                             {displayPrice(Number(item.price) || 0, order.currency, order.currencyRate)} × {item.quantity ?? 'N/A'}

@@ -136,8 +136,35 @@ const ProfilePage: React.FC = () => {
           console.log('No reviews data available');
         }
         
-        // Get member since date from user data
-        const memberSince = user.id ? '2024' : ''; // Default to 2024 if no specific date
+        // Get member since from lastLogin (admin-backed user data), then fallback to createdAt
+        const getMemberSince = () => {
+          const authLastLogin = (user as any)?.lastLogin;
+          const authCreatedAt = (user as any)?.createdAt;
+          const storedUserRaw = localStorage.getItem('user');
+
+          let storedLastLogin: string | undefined;
+          let storedCreatedAt: string | undefined;
+          if (storedUserRaw) {
+            try {
+              const parsedUser = JSON.parse(storedUserRaw);
+              storedLastLogin = parsedUser?.lastLogin;
+              storedCreatedAt = parsedUser?.createdAt;
+            } catch {
+              storedLastLogin = undefined;
+              storedCreatedAt = undefined;
+            }
+          }
+
+          const memberDate = authLastLogin || storedLastLogin || authCreatedAt || storedCreatedAt;
+          if (!memberDate) return 'N/A';
+
+          const parsedDate = new Date(memberDate);
+          if (Number.isNaN(parsedDate.getTime())) return 'N/A';
+
+          return format(parsedDate, 'yyyy');
+        };
+
+        const memberSince = getMemberSince();
         
         setUserStats({
           orderCount,
@@ -152,7 +179,7 @@ const ProfilePage: React.FC = () => {
           orderCount: 0,
           wishlistCount: 0,
           reviewCount: 0,
-          memberSince: '2024'
+          memberSince: 'N/A'
         });
       } finally {
         setIsLoadingStats(false);
@@ -692,7 +719,7 @@ const ProfilePage: React.FC = () => {
             variants={fadeInVariants}
           >
             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 bg-white/80 backdrop-blur-md rounded-xl p-2 mb-8 border border-white/20 gap-2">
+              <TabsList className="grid h-auto w-full grid-cols-2 lg:grid-cols-4 bg-white/80 backdrop-blur-md rounded-xl p-2 mb-8 border border-white/20 gap-2">
                 {tabData.map((tab) => {
                   const Icon = tab.icon;
                   return (
@@ -703,7 +730,7 @@ const ProfilePage: React.FC = () => {
                     >
                       <Icon className="w-4 h-4 mr-2" />
                       <span className="hidden sm:inline">{tab.label}</span>
-                      <span className="sm:hidden">{tab.label.substring(0, 4)}</span>
+                      <span className="sm:hidden text-xs">{tab.label}</span>
                     </TabsTrigger>
                   );
                 })}

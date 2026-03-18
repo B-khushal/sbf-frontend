@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Clock, Calendar as CalendarIcon, Info } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Clock, Calendar as CalendarIcon, ChevronRight, Info, X } from 'lucide-react';
 import { 
   Card,
   CardContent
@@ -7,17 +7,26 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
-import { format, isBefore, startOfDay, isValid, isSameDay } from 'date-fns';
+import { addDays, format, isBefore, isSameDay, isValid, startOfDay } from 'date-fns';
 import { useCurrency } from '@/contexts/CurrencyContext';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 import holidayService, { Holiday } from '@/services/holidayService';
+import { useIsMobile } from '@/hooks/use-mobile';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from '@/components/ui/drawer';
 
 export type TimeSlot = {
   id: string;
@@ -215,39 +224,53 @@ const TimeSlotSelector = ({
   selectedDate,
   onSelectDate
 }: TimeSlotSelectorProps) => {
+  const normalizeDate = (value: Date) => startOfDay(value);
+
   // Set default date to today or provided selectedDate
-  const [date, setDate] = useState<Date | null>(selectedDate || new Date());
+  const [date, setDate] = useState<Date | null>(
+    selectedDate && isValid(selectedDate) ? normalizeDate(selectedDate) : normalizeDate(new Date())
+  );
+  const [draftDate, setDraftDate] = useState<Date | null>(
+    selectedDate && isValid(selectedDate) ? normalizeDate(selectedDate) : normalizeDate(new Date())
+  );
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const isMobile = useIsMobile();
   const [holidays, setHolidays] = useState<Holiday[]>([]);
   const [isLoadingHolidays, setIsLoadingHolidays] = useState(true);
   const { formatPrice, convertPrice } = useCurrency();
   
-  // Create a minimum date for the calendar (today)
-  const today = startOfDay(new Date());
-
-  // Create a maximum date for the calendar (December 31st of current year)
-  const endOfYear = new Date(today.getFullYear(), 11, 31); // December is month 11
+  // Keep the delivery window stable for this component instance.
+  const today = useMemo(() => startOfDay(new Date()), []);
+  const maxDeliveryDate = useMemo(() => addDays(today, 90), [today]);
+  const yearsToFetch = useMemo(() => {
+    return Array.from(new Set<number>([today.getFullYear(), maxDeliveryDate.getFullYear()]));
+  }, [today, maxDeliveryDate]);
 
   // Fetch holidays for the current year
   useEffect(() => {
     const fetchHolidays = async () => {
       try {
         setIsLoadingHolidays(true);
-        const currentYear = today.getFullYear();
-        const response = await holidayService.getHolidaysForYear(currentYear);
-        
-        if (response.success && response.data.length > 0) {
-          setHolidays(response.data);
-        } else {
-          // Fallback to hardcoded holidays if API returns empty or fails
-          const fallbackHolidays = calculateFallbackHolidays(currentYear);
-          setHolidays(fallbackHolidays);
-        }
+        const responses = await Promise.all(
+          yearsToFetch.map(async (year) => {
+            try {
+              const response = await holidayService.getHolidaysForYear(year);
+              if (response.success && Array.isArray(response.data) && response.data.length > 0) {
+                return response.data;
+              }
+
+              return calculateFallbackHolidays(year);
+            } catch {
+              return calculateFallbackHolidays(year);
+            }
+          })
+        );
+
+        setHolidays(responses.flat());
       } catch (error) {
         console.error('Error fetching holidays:', error);
-        // Fallback to hardcoded holidays on error
-        const currentYear = today.getFullYear();
-        const fallbackHolidays = calculateFallbackHolidays(currentYear);
+
+        const fallbackHolidays = yearsToFetch.flatMap((year) => calculateFallbackHolidays(year));
         setHolidays(fallbackHolidays);
       } finally {
         setIsLoadingHolidays(false);
@@ -255,80 +278,210 @@ const TimeSlotSelector = ({
     };
 
     fetchHolidays();
-  }, [today.getFullYear()]);
+  }, [yearsToFetch]);
 
   // Function to check if a date is disabled
   const isDateDisabled = (date: Date): boolean => {
+    const normalizedDate = normalizeDate(date);
+
     // Check if date is before today
-    if (isBefore(date, today)) {
+    if (isBefore(normalizedDate, today)) {
       return true;
     }
     
-    // Check if date is after December 31st of current year
-    if (date > endOfYear) {
+    // Check if date is beyond delivery window
+    if (normalizedDate > maxDeliveryDate) {
       return true;
     }
     
     // Check if date is a holiday
     return holidays.some(holiday => {
       const holidayDate = new Date(holiday.date);
-      return isSameDay(holidayDate, date) && holiday.isActive;
+      return isSameDay(holidayDate, normalizedDate) && holiday.isActive;
     });
-  };
-
-  // Function to get the reason why a date is disabled
-  const getDisabledDateReason = (date: Date): string | null => {
-    // Check if date is before today
-    if (isBefore(date, today)) {
-      return "Cannot select past dates";
-    }
-    
-    // Check if date is after December 31st of current year
-    if (date > endOfYear) {
-      return "Delivery not available beyond December 31st";
-    }
-    
-    // Check if date is a holiday
-    const holiday = holidays.find(h => {
-      const holidayDate = new Date(h.date);
-      return isSameDay(holidayDate, date) && h.isActive;
-    });
-    
-    if (holiday) {
-      return holiday.reason;
-    }
-    
-    return null;
   };
 
   // Function to check if a date is a holiday
   const isHoliday = (date: Date): Holiday | null => {
+    const normalizedDate = normalizeDate(date);
+
     return holidays.find(holiday => {
       const holidayDate = new Date(holiday.date);
-      return isSameDay(holidayDate, date) && holiday.isActive;
+      return isSameDay(holidayDate, normalizedDate) && holiday.isActive;
     }) || null;
+  };
+
+  const findNextAvailableDate = (startDate: Date): Date | null => {
+    let cursor = normalizeDate(startDate);
+
+    while (cursor <= maxDeliveryDate) {
+      if (!isDateDisabled(cursor)) {
+        return cursor;
+      }
+
+      cursor = addDays(cursor, 1);
+    }
+
+    return null;
   };
   
   // Sync date state with selectedDate prop
   useEffect(() => {
     if (selectedDate && isValid(selectedDate)) {
-      setDate(selectedDate);
+      const normalizedSelectedDate = normalizeDate(selectedDate);
+      if (!isDateDisabled(normalizedSelectedDate)) {
+        setDate(normalizedSelectedDate);
+        setDraftDate(normalizedSelectedDate);
+        return;
+      }
     }
-  }, [selectedDate]);
+
+    const fallbackDate = findNextAvailableDate(today);
+    if (fallbackDate) {
+      setDate(fallbackDate);
+      setDraftDate(fallbackDate);
+
+      if (onSelectDate && (!selectedDate || !isSameDay(selectedDate, fallbackDate))) {
+        onSelectDate(fallbackDate);
+      }
+    }
+  }, [selectedDate, holidays]);
+
+  useEffect(() => {
+    if (isCalendarOpen) {
+      setDraftDate(date);
+    }
+  }, [isCalendarOpen, date]);
+
+  const handleCalendarOpenChange = (open: boolean) => {
+    if (open) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    if (!open) {
+      setDraftDate(date);
+    }
+
+    setIsCalendarOpen(open);
+  };
+
+  const applyDateSelection = (nextDate: Date) => {
+    const normalizedDate = normalizeDate(nextDate);
+
+    if (isDateDisabled(normalizedDate)) {
+      return;
+    }
+
+    setDraftDate(normalizedDate);
+    setDate(normalizedDate);
+    onSelectDate?.(normalizedDate);
+    setIsCalendarOpen(false);
+  };
   
   // Handle date selection
   const handleDateSelect = (newDate: Date | undefined) => {
-    if (newDate && isValid(newDate) && !isDateDisabled(newDate) && onSelectDate) {
-      setDate(newDate);
-      onSelectDate(newDate);
-      setIsCalendarOpen(false);
-    }
+    if (!newDate || !isValid(newDate)) return;
+
+    const normalizedDate = normalizeDate(newDate);
+    if (isDateDisabled(normalizedDate)) return;
+
+    applyDateSelection(normalizedDate);
   };
 
   const formatDisplayDate = (date: Date | null) => {
     if (!date || !isValid(date)) return "Pick a delivery date";
     return format(date, 'EEEE, MMMM do, yyyy');
   };
+
+  const activeHolidays = useMemo(
+    () => holidays.filter((holiday) => holiday.isActive),
+    [holidays]
+  );
+
+  const holidayPreview = useMemo(
+    () => activeHolidays.slice(0, isMobile ? 6 : 4),
+    [activeHolidays, isMobile]
+  );
+
+  const selectedCalendarDate = draftDate && isValid(draftDate) ? draftDate : date;
+
+  const datePickerContent = (
+    <div className="space-y-4">
+      <div className="rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-rose-50/30 to-amber-50/50 p-4 shadow-sm">
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Delivery Date</p>
+            <p className="mt-1 text-base font-semibold text-slate-900">
+              {formatDisplayDate(selectedCalendarDate)}
+            </p>
+          </div>
+          <div className="rounded-full bg-white/90 px-3 py-1 text-xs font-medium text-slate-600 shadow-sm ring-1 ring-slate-200">
+            Next 90 days
+          </div>
+        </div>
+
+        <Calendar
+          mode="single"
+          selected={selectedCalendarDate || undefined}
+          onSelect={handleDateSelect}
+          fromDate={today}
+          toDate={maxDeliveryDate}
+          disabled={isDateDisabled}
+          modifiers={{
+            holiday: (calendarDate) => Boolean(isHoliday(calendarDate)),
+          }}
+          modifiersClassNames={{
+            holiday: 'after:absolute after:bottom-1.5 after:left-1/2 after:h-1.5 after:w-1.5 after:-translate-x-1/2 after:rounded-full after:bg-rose-500',
+          }}
+          className="mx-auto w-fit rounded-2xl bg-white p-3"
+          classNames={{
+            months: 'flex flex-col space-y-4',
+            month: 'space-y-4',
+            caption: 'flex items-center justify-between px-1 pt-1',
+            caption_label: 'text-sm font-semibold text-slate-900',
+            nav_button: 'h-9 w-9 rounded-full border border-slate-200 bg-white p-0 text-slate-700 opacity-100 shadow-sm transition hover:bg-slate-100',
+            table: 'w-full border-collapse space-y-1.5',
+            head_cell: 'w-11 rounded-md text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-slate-400',
+            row: 'mt-2 flex w-full justify-between gap-1.5',
+            cell: 'relative h-11 w-11 p-0 text-center text-sm',
+            day: 'h-11 w-11 rounded-2xl p-0 text-sm font-medium text-slate-700 transition hover:bg-rose-50 hover:text-rose-700 aria-selected:bg-rose-600 aria-selected:text-white aria-selected:shadow-md',
+            day_today: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200',
+            day_selected: 'bg-rose-600 text-white hover:bg-rose-600 hover:text-white focus:bg-rose-600 focus:text-white',
+            day_disabled: 'cursor-not-allowed text-slate-300 opacity-100 line-through decoration-slate-300',
+            day_outside: 'text-slate-300 opacity-40',
+          }}
+        />
+      </div>
+
+      <div className="rounded-3xl border border-slate-200 bg-slate-50/90 p-4">
+        <p className="text-sm font-semibold text-slate-900">Holidays & Non-Delivery Dates</p>
+        <p className="mt-1 text-xs text-slate-500">Disabled dates are unavailable for delivery and marked in the calendar.</p>
+
+        {isLoadingHolidays ? (
+          <p className="mt-3 text-sm text-slate-500">Loading holiday information...</p>
+        ) : activeHolidays.length > 0 ? (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {holidayPreview.map((holiday) => (
+              <div
+                key={holiday._id}
+                className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-xs font-medium text-slate-700 ring-1 ring-slate-200"
+              >
+                <span className="h-2 w-2 rounded-full bg-rose-500" aria-hidden="true" />
+                <span>{holiday.name}</span>
+              </div>
+            ))}
+            {activeHolidays.length > holidayPreview.length && (
+              <span className="inline-flex items-center rounded-full bg-white px-3 py-1.5 text-xs text-slate-500 ring-1 ring-slate-200">
+                +{activeHolidays.length - holidayPreview.length} more
+              </span>
+            )}
+          </div>
+        ) : (
+          <p className="mt-3 text-sm text-slate-500">No blocked holiday dates configured right now.</p>
+        )}
+      </div>
+    </div>
+  );
   
   // Check if a time slot is available for the selected date
   const isSlotAvailable = (slot: TimeSlot): boolean => {
@@ -442,73 +595,110 @@ const TimeSlotSelector = ({
   
   return (
     <div className={cn('space-y-4', className)}>
-      {/* Delivery Date Picker as Popover */}
       <div>
         <div className="flex items-center gap-2 mb-2">
           <CalendarIcon className="h-5 w-5 text-primary" />
           <span className="font-medium text-base">Select Delivery Date</span>
         </div>
-        <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className="w-full justify-start text-left font-normal py-2 px-4"
-              type="button"
-            >
-              {date && isValid(date) ? (
-                <span>{formatDisplayDate(date)}</span>
-              ) : (
-                <span className="text-muted-foreground">Pick a delivery date</span>
-              )}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent
-            side="bottom"
-            align="start"
-            sideOffset={8}
-            className="w-[min(92vw,22rem)] bg-white p-2"
-          >
-            <div className="space-y-2">
-              <Calendar
-                mode="single"
-                selected={date || undefined}
-                onSelect={handleDateSelect}
-                fromDate={today}
-                toDate={endOfYear}
-                disabled={isDateDisabled}
-                initialFocus
-                classNames={{
-                  day: "relative w-9 h-9 p-0 font-normal aria-selected:opacity-100 hover:bg-accent hover:text-accent-foreground",
-                  day_disabled: "text-muted-foreground opacity-50 cursor-not-allowed",
-                }}
-              />
-              
-              {/* Holiday Legend */}
-              {holidays.length > 0 && !isLoadingHolidays && (
-                <div className="border-t pt-2 mt-2">
-                  <p className="text-xs text-gray-600 mb-1">Holidays & Non-Delivery Dates:</p>
-                  <div className="flex flex-wrap gap-1">
-                    {holidays.slice(0, 3).map((holiday, index) => (
-                      <div key={index} className="flex items-center gap-1 text-xs">
-                        <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                        <span className="text-gray-600">{holiday.name}</span>
-                      </div>
-                    ))}
-                    {holidays.length > 3 && (
-                      <span className="text-xs text-gray-500">+{holidays.length - 3} more</span>
-                    )}
-                  </div>
-                </div>
-              )}
-              
-              {isLoadingHolidays && (
-                <div className="border-t pt-2 mt-2">
-                  <p className="text-xs text-gray-500">Loading holiday information...</p>
-                </div>
-              )}
+        <Button
+          variant="outline"
+          className="flex h-auto w-full items-center justify-between rounded-2xl border-slate-200 bg-white px-4 py-3 text-left shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+          type="button"
+          onClick={() => handleCalendarOpenChange(true)}
+          aria-expanded={isCalendarOpen}
+          aria-haspopup="dialog"
+          aria-controls="delivery-date-surface"
+        >
+          <div className="min-w-0">
+            <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Delivery Date</div>
+            <div className="mt-1 truncate text-sm font-medium text-slate-900">
+              {date && isValid(date) ? formatDisplayDate(date) : 'Pick a delivery date'}
             </div>
-          </PopoverContent>
-        </Popover>
+          </div>
+          <div className="ml-4 flex h-10 w-10 items-center justify-center rounded-full bg-rose-50 text-rose-600">
+            <ChevronRight className="h-5 w-5" />
+          </div>
+        </Button>
+
+        <p className="mt-2 text-sm text-slate-500">
+          Choose a delivery date without shifting the checkout form.
+        </p>
+
+        {isMobile ? (
+          <Drawer open={isCalendarOpen} onOpenChange={handleCalendarOpenChange}>
+            <DrawerContent
+              id="delivery-date-surface"
+              className="max-h-[88dvh] rounded-t-[28px] border-0 bg-white px-0 pb-0 shadow-2xl"
+            >
+              <DrawerHeader className="border-b border-slate-200 px-5 pb-4 pt-2 text-left">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <DrawerTitle className="text-lg font-semibold text-slate-950">Select Delivery Date</DrawerTitle>
+                    <DrawerDescription className="mt-1 text-sm text-slate-500">
+                      Pick an available date for delivery. Swipe down, tap outside, or press close to dismiss.
+                    </DrawerDescription>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    type="button"
+                    onClick={() => handleCalendarOpenChange(false)}
+                    aria-label="Close delivery date selector"
+                    className="rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                  >
+                    <X className="h-5 w-5" />
+                  </Button>
+                </div>
+              </DrawerHeader>
+              <div className="overflow-y-auto px-5 py-4">
+                {datePickerContent}
+              </div>
+              <DrawerFooter className="border-t border-slate-200 bg-white px-5 pb-5 pt-4">
+                <Button
+                  type="button"
+                  className="h-11 rounded-2xl bg-slate-900 text-white hover:bg-slate-800"
+                  onClick={() => {
+                    if (selectedCalendarDate) {
+                      applyDateSelection(selectedCalendarDate);
+                    }
+                  }}
+                  disabled={!selectedCalendarDate || isDateDisabled(selectedCalendarDate)}
+                >
+                  Confirm Delivery Date
+                </Button>
+              </DrawerFooter>
+            </DrawerContent>
+          </Drawer>
+        ) : (
+          <Dialog open={isCalendarOpen} onOpenChange={handleCalendarOpenChange}>
+            <DialogContent
+              id="delivery-date-surface"
+              className="max-h-[90vh] max-w-[40rem] overflow-y-auto rounded-[32px] border-0 bg-white p-0 shadow-2xl"
+            >
+              <DialogHeader className="border-b border-slate-200 px-6 pb-4 pt-6 text-left">
+                <DialogTitle className="text-xl font-semibold text-slate-950">Select Delivery Date</DialogTitle>
+                <DialogDescription className="text-sm text-slate-500">
+                  Delivery dates open in a fixed modal so the checkout layout stays stable while you choose.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="px-6 py-5">
+                {datePickerContent}
+                <Button
+                  type="button"
+                  className="mt-4 h-11 w-full rounded-2xl bg-slate-900 text-white hover:bg-slate-800"
+                  onClick={() => {
+                    if (selectedCalendarDate) {
+                      applyDateSelection(selectedCalendarDate);
+                    }
+                  }}
+                  disabled={!selectedCalendarDate || isDateDisabled(selectedCalendarDate)}
+                >
+                  Confirm Delivery Date
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
       
       {/* Delivery Time Slots */}
