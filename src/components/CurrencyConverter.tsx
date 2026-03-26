@@ -1,48 +1,69 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowRightLeft, DollarSign } from 'lucide-react';
+import { ArrowRightLeft, DollarSign, ChevronDown } from 'lucide-react';
 import { useCurrency } from '@/contexts/CurrencyContext';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 
 const CurrencyConverter: React.FC<{ className?: string }> = ({ className }) => {
-  const { currency, setCurrency, rate } = useCurrency();
+  const { currency, setCurrency } = useCurrency();
+  const [isOpen, setIsOpen] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, []);
+
+  const handleSelectCurrency = (nextCurrency: 'INR' | 'USD') => {
+    setCurrency(nextCurrency);
+    setIsOpen(false);
+  };
 
   return (
-    <div className={className}>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="flex items-center gap-1 h-8 md:h-8"
+    <div ref={wrapperRef} className={`relative dropdown-container ${className || ''}`}>
+      <Button
+        variant="outline"
+        size="sm"
+        className="flex items-center gap-1 h-8 md:h-8"
+        onClick={() => setIsOpen((prev) => !prev)}
+        aria-expanded={isOpen}
+        aria-haspopup="menu"
+      >
+        <span className="md:hidden">
+          <DollarSign size={16} className="text-pink-600" />
+        </span>
+
+        <span className="hidden md:flex items-center gap-1">
+          <span className="font-medium">{currency === 'INR' ? '₹ INR' : '$ USD'}</span>
+          <ArrowRightLeft size={14} />
+          <ChevronDown size={12} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        </span>
+      </Button>
+
+      {isOpen && (
+        <div className="absolute right-0 top-full mt-2 z-dropdown min-w-[190px] rounded-md border bg-white p-1 shadow-md">
+          <button
+            type="button"
+            className="w-full rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent"
+            onClick={() => handleSelectCurrency('INR')}
           >
-            {/* Mobile view - show only DollarSign icon */}
-            <span className="md:hidden">
-              <DollarSign size={16} className="text-pink-600" />
-            </span>
-            
-            {/* Desktop view - show currency text and ArrowRightLeft icon */}
-            <span className="hidden md:flex items-center gap-1">
-              <span className="font-medium">{currency === 'INR' ? '₹ INR' : '$ USD'}</span>
-              <ArrowRightLeft size={14} />
-            </span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" sideOffset={8} className="z-dropdown min-w-[160px] dropdown-responsive">
-          <DropdownMenuItem onClick={() => setCurrency('INR')}>
             ₹ INR (Indian Rupee)
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setCurrency('USD')}>
+          </button>
+          <button
+            type="button"
+            className="w-full rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent"
+            onClick={() => handleSelectCurrency('USD')}
+          >
             $ USD (US Dollar)
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+          </button>
+        </div>
+      )}
     </div>
   );
 };
