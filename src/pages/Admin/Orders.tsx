@@ -117,13 +117,13 @@ const AdminOrders = () => {
       } else if (orderCurrency !== 'INR' && currency === 'INR') {
         // Convert from foreign currency to INR (e.g., USD 32 → INR 2770.415)
         if (orderRate) {
-          // orderRate is the rate when the order was placed (e.g., USD rate = 0.01162)
+          // orderRate is the rate when the order was placed (e.g., USD rate = 0.01199)
           // To convert USD to INR: USD amount ÷ USD rate = INR amount
-          // So $32 ÷ 0.01162 = ₹2753.44
+          // So $32 ÷ 0.01199 = ₹2668.89
           finalAmount = amount / orderRate;
         } else {
           // Fallback: use current USD to INR rate
-          finalAmount = amount / 0.01162; // USD to INR
+          finalAmount = amount / 0.01199; // USD to INR
         }
       } else if (orderCurrency !== 'INR' && currency !== 'INR') {
         // Convert from one foreign currency to another via INR
@@ -145,7 +145,8 @@ const AdminOrders = () => {
 
   const currencies = [
     { code: 'INR', symbol: '₹', rate: 1 },
-    { code: 'USD', symbol: '$', rate: 0.01162 },
+    { code: 'USD', symbol: '$', rate: 0.01199 },
+    { code: 'AED', symbol: 'AED', rate: 0.04405 },
     { code: 'EUR', symbol: '€', rate: 0.011 },
     { code: 'GBP', symbol: '£', rate: 0.0096 },
   ];

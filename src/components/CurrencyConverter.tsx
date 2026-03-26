@@ -1,8 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowRightLeft, DollarSign, ChevronDown } from 'lucide-react';
-import { useCurrency } from '@/contexts/CurrencyContext';
+import { CurrencyCode, useCurrency } from '@/contexts/CurrencyContext';
 import { Button } from '@/components/ui/button';
+
+const CURRENCY_LABEL: Record<CurrencyCode, string> = {
+  INR: '₹ INR',
+  USD: '$ USD',
+  AED: 'AED',
+  EUR: '€ EUR',
+  GBP: '£ GBP'
+};
 
 const CurrencyConverter: React.FC<{ className?: string }> = ({ className }) => {
   const { currency, setCurrency } = useCurrency();
@@ -20,7 +28,7 @@ const CurrencyConverter: React.FC<{ className?: string }> = ({ className }) => {
     return () => document.removeEventListener('mousedown', handleOutsideClick);
   }, []);
 
-  const handleSelectCurrency = (nextCurrency: 'INR' | 'USD') => {
+  const handleSelectCurrency = (nextCurrency: CurrencyCode) => {
     setCurrency(nextCurrency);
     setIsOpen(false);
   };
@@ -40,7 +48,7 @@ const CurrencyConverter: React.FC<{ className?: string }> = ({ className }) => {
         </span>
 
         <span className="hidden md:flex items-center gap-1">
-          <span className="font-medium">{currency === 'INR' ? '₹ INR' : '$ USD'}</span>
+          <span className="font-medium">{CURRENCY_LABEL[currency]}</span>
           <ArrowRightLeft size={14} />
           <ChevronDown size={12} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
         </span>
@@ -62,6 +70,13 @@ const CurrencyConverter: React.FC<{ className?: string }> = ({ className }) => {
           >
             $ USD (US Dollar)
           </button>
+          <button
+            type="button"
+            className="w-full rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent"
+            onClick={() => handleSelectCurrency('AED')}
+          >
+            AED (UAE Dirham)
+          </button>
         </div>
       )}
     </div>
@@ -71,6 +86,13 @@ const CurrencyConverter: React.FC<{ className?: string }> = ({ className }) => {
 // Also export a more detailed card version that can be used elsewhere
 export const CurrencyConverterCard: React.FC = () => {
   const { currency, setCurrency, getExchangeRateDisplay } = useCurrency();
+
+  const handleToggleCurrency = () => {
+    const order: CurrencyCode[] = ['INR', 'USD', 'AED'];
+    const currentIndex = order.indexOf(currency);
+    const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % order.length;
+    setCurrency(order[nextIndex]);
+  };
 
   return (
     <Card className="w-full">
@@ -84,10 +106,10 @@ export const CurrencyConverterCard: React.FC = () => {
         <div className="space-y-4">
           <Button
             variant="outline"
-            onClick={() => setCurrency(currency === 'INR' ? 'USD' : 'INR')}
+            onClick={handleToggleCurrency}
             className="w-full flex justify-between items-center"
           >
-            <span>Currently viewing in: <strong>{currency === 'INR' ? '₹ INR' : '$ USD'}</strong></span>
+            <span>Currently viewing in: <strong>{CURRENCY_LABEL[currency]}</strong></span>
             <ArrowRightLeft className="h-4 w-4" />
           </Button>
           

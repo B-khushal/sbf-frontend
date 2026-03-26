@@ -4,7 +4,7 @@ import ProductGrid from "@/components/ProductGrid";
 import useCart from "@/hooks/use-cart";
 import api from "@/services/api";
 import { Search, Filter, Grid3X3, List, Star, Heart, Eye, ExternalLink, Sparkles, Leaf, Gift, ShoppingBag, X, ChevronDown } from "lucide-react";
-import { useCurrency } from "@/contexts/CurrencyContext";
+import { EXCHANGE_RATES, useCurrency } from "@/contexts/CurrencyContext";
 import { useSettings } from "@/contexts/SettingsContext";
 import { toast } from "sonner";
 import { getImageUrl, getSquareImageUrl } from "@/config";
@@ -265,20 +265,12 @@ const ShopPage = () => {
         // Convert the filter range from display currency back to INR for comparison
         let minPriceInINR, maxPriceInINR;
         
-        if (currency === 'USD') {
-          minPriceInINR = min ? min * 84 : 0; // Approximate USD to INR
-          maxPriceInINR = max ? max * 84 : Number.MAX_VALUE;
-        } else if (currency === 'EUR') {
-          minPriceInINR = min ? min * 91 : 0; // Approximate EUR to INR
-          maxPriceInINR = max ? max * 91 : Number.MAX_VALUE;
-        } else if (currency === 'GBP') {
-          minPriceInINR = min ? min * 105 : 0; // Approximate GBP to INR
-          maxPriceInINR = max ? max * 105 : Number.MAX_VALUE;
-        } else {
-          // INR - use directly
-          minPriceInINR = min || 0;
-          maxPriceInINR = max || Number.MAX_VALUE;
-        }
+        const selectedRate = EXCHANGE_RATES[currency] || 1;
+        const inrMultiplier = selectedRate > 0 ? 1 / selectedRate : 1;
+
+        // Convert selected display range back to INR to compare with stored product prices.
+        minPriceInINR = min ? min * inrMultiplier : 0;
+        maxPriceInINR = max ? max * inrMultiplier : Number.MAX_VALUE;
         
         const productPriceInINR = product.price; // Product prices are stored in INR
         

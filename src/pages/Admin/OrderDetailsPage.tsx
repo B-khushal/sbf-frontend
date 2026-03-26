@@ -41,12 +41,12 @@ const OrderDetailsPage: React.FC = () => {
       } else if (orderCurrency !== 'INR' && currency === 'INR') {
         // Convert from foreign currency to INR (e.g., USD 32 → INR 2770.415)
         if (orderRate) {
-          // orderRate is the rate when the order was placed (e.g., USD rate = 0.01162)
+          // orderRate is the rate when the order was placed (e.g., USD rate = 0.01199)
           // To convert USD to INR: USD amount ÷ USD rate = INR amount
           finalAmount = amount / orderRate;
         } else {
           // Fallback: use current USD to INR rate
-          finalAmount = amount / 0.01162; // USD to INR
+          finalAmount = amount / 0.01199; // USD to INR
         }
       } else if (orderCurrency !== 'INR' && currency !== 'INR') {
         // Convert from one foreign currency to another via INR
