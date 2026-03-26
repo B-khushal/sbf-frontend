@@ -53,6 +53,7 @@ const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const AdminDashboardHome = lazy(() => import("./pages/Admin/Dashboard"));
 const AdminProducts = lazy(() => import("./pages/Admin/Products"));
 const AdminOrders = lazy(() => import("./pages/Admin/Orders"));
+const AdminTodayOrders = lazy(() => import("./pages/Admin/TodayOrders"));
 const AdminUsers = lazy(() => import("./pages/Admin/Users"));
 const AdminVendorManagement = lazy(() => import("./pages/Admin/VendorManagement"));
 const AdminVendorDetailsPage = lazy(() => import("./pages/Admin/VendorDetailsPage"));
@@ -291,6 +292,11 @@ const App = () => {
                             <Route path="orders" element={
                               <Suspense fallback={<LoadingFallback message="Loading orders..." />}>
                                 <AdminOrders />
+                              </Suspense>
+                            } />
+                            <Route path="orders/today" element={
+                              <Suspense fallback={<LoadingFallback message="Loading today\'s orders..." />}>
+                                <AdminTodayOrders />
                               </Suspense>
                             } />
                             <Route path="users" element={

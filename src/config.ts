@@ -19,6 +19,24 @@ const validateAndFixUrl = (url: string | undefined, defaultUrl: string): string 
     console.error('❌ Invalid API URL - missing protocol:', fixedUrl);
     return defaultUrl;
   }
+
+  // If frontend is opened via LAN IP on mobile, remap localhost backend URL to current host.
+  if (typeof window !== 'undefined') {
+    try {
+      const parsed = new URL(fixedUrl);
+      const currentHost = window.location.hostname;
+      const isBackendLocalhost = parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1';
+      const isFrontendLocalhost = currentHost === 'localhost' || currentHost === '127.0.0.1';
+
+      if (isBackendLocalhost && !isFrontendLocalhost) {
+        parsed.hostname = currentHost;
+        fixedUrl = parsed.toString();
+      }
+    } catch (error) {
+      console.error('❌ Error normalizing URL host:', fixedUrl, error);
+      return defaultUrl;
+    }
+  }
   
   // Validate URL format
   try {

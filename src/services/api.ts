@@ -4,7 +4,7 @@ import { API_URL } from '../config';
 
 // Create an axios instance with base URL and default headers
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  baseURL: API_URL,
   timeout: 15000, // Reduced from 30s to 15s for better UX
   maxRedirects: 0, // Prevent redirect issues
   maxContentLength: 50000000, // 50MB - allow large payloads like base64 images

@@ -97,6 +97,21 @@ export const updateOrderStatus = async (orderId: string, status: string) => {
   return response.data;
 };
 
+// Admin: Get today's orders with optional worker status grouping
+export const getTodayOrders = async (status: 'all' | 'pending' | 'completed' = 'all'): Promise<Order[]> => {
+  const response = await api.get(`/orders/today?status=${status}`);
+  if (response.data?.success && Array.isArray(response.data.orders)) {
+    return response.data.orders;
+  }
+  return [];
+};
+
+// Admin: Mark order as delivered from workflow page
+export const markOrderDelivered = async (orderId: string) => {
+  const response = await api.put(`/orders/${orderId}/status`, { status: 'delivered' });
+  return response.data;
+};
+
 export const getOrders = async (): Promise<Order[]> => {
   const response = await api.get('/orders/myorders');
   return response.data;

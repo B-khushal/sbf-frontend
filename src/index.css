@@ -94,9 +94,59 @@
     scroll-behavior: smooth;
   }
 
+  body.kitchen-mode-active {
+    overflow: hidden !important;
+  }
+
+  body.kitchen-mode-active .admin-desktop-sidebar,
+  body.kitchen-mode-active .admin-mobile-sidebar,
+  body.kitchen-mode-active .admin-mobile-topbar,
+  body.kitchen-mode-active .admin-collapsed-topbar,
+  body.kitchen-mode-active .admin-navbar-shell {
+    display: none !important;
+  }
+
+  body.kitchen-mode-active .panel-content {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+  }
+
   ::selection {
     @apply bg-primary/10 text-primary;
   }
+}
+
+/* Kitchen Mode: full-screen, layout-independent worker display */
+.kitchen-mode-root {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #0b1220;
+  z-index: 999999;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.kitchen-mode-root * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.kitchen-mode-root .container {
+  max-width: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.kitchen-mode-root .sidebar,
+.kitchen-mode-root .header,
+.kitchen-mode-root nav {
+  display: none !important;
 }
 
 @layer components {

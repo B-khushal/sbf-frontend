@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, Link, Outlet } from 'react-router-dom';
+import { useNavigate, Link, Outlet, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { BarChart, Users, ShoppingBag, Package, Settings, LogOut, Menu, TrendingUp, ChevronLeft, ChevronRight, Tag, Gift, Store, Calendar, CheckCircle } from 'lucide-react';
+import { BarChart, Users, ShoppingBag, Package, Settings, LogOut, Menu, TrendingUp, ChevronLeft, ChevronRight, Tag, Gift, Store, Calendar, CheckCircle, ClipboardList } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
@@ -11,6 +11,7 @@ import AdminNavbar from '@/components/AdminNavbar';
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const { logout, user, isLoading } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -19,6 +20,7 @@ const AdminDashboard: React.FC = () => {
     const saved = localStorage.getItem('adminSidebarCollapsed');
     return saved ? JSON.parse(saved) : false;
   });
+  const [isKitchenModeActive, setIsKitchenModeActive] = useState(false);
   
   // Check if user is admin, if not redirect
   useEffect(() => {
@@ -56,6 +58,32 @@ const AdminDashboard: React.FC = () => {
       document.body.style.overflow = '';
     };
   }, [isSidebarOpen]);
+
+  useEffect(() => {
+    const syncKitchenModeState = () => {
+      const isFullscreen = Boolean(document.fullscreenElement);
+      const hasBodyClass = document.body.classList.contains('kitchen-mode-active');
+      setIsKitchenModeActive(isFullscreen || hasBodyClass);
+    };
+
+    const handleKitchenModeToggle = (event: Event) => {
+      const customEvent = event as CustomEvent<{ active?: boolean }>;
+      if (typeof customEvent.detail?.active === 'boolean') {
+        setIsKitchenModeActive(customEvent.detail.active);
+      } else {
+        syncKitchenModeState();
+      }
+    };
+
+    syncKitchenModeState();
+    document.addEventListener('fullscreenchange', syncKitchenModeState);
+    window.addEventListener('kitchen-mode-toggle', handleKitchenModeToggle as EventListener);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', syncKitchenModeState);
+      window.removeEventListener('kitchen-mode-toggle', handleKitchenModeToggle as EventListener);
+    };
+  }, []);
   
   // Show loading state while checking auth
   if (isLoading) {
@@ -72,6 +100,11 @@ const AdminDashboard: React.FC = () => {
   // If no user or not admin after loading completes, don't render dashboard
   if (!user || user.role !== 'admin') {
     return null;
+  }
+
+  const isTodayOrdersRoute = location.pathname === '/admin/orders/today';
+  if (isTodayOrdersRoute && isKitchenModeActive) {
+    return <Outlet />;
   }
   
   const handleLogout = () => {
@@ -161,6 +194,19 @@ const AdminDashboard: React.FC = () => {
             <ShoppingBag className="h-4 w-4 text-muted-foreground" />
           </div>
           {!isCollapsed && <span className="sidebar-item-text">Orders</span>}
+        </Link>
+        <Link 
+          to="/admin/orders/today" 
+          className={cn(
+            "sidebar-item",
+            isCollapsed ? "sidebar-item-collapsed" : "sidebar-item-expanded"
+          )}
+          title={isCollapsed ? "Today's Orders" : ''}
+        >
+          <div className="sidebar-item-icon">
+            <ClipboardList className="h-4 w-4 text-muted-foreground" />
+          </div>
+          {!isCollapsed && <span className="sidebar-item-text">Today's Orders</span>}
         </Link>
         <Link 
           to="/admin/users" 
@@ -284,7 +330,7 @@ const AdminDashboard: React.FC = () => {
         <aside
           id="admin-mobile-sidebar"
           className={cn(
-            "fixed inset-y-0 left-0 z-sheet w-[85vw] max-w-xs bg-white dark:bg-gray-800 shadow-xl transition-transform duration-300 md:hidden",
+            "admin-mobile-sidebar fixed inset-y-0 left-0 z-sheet w-[85vw] max-w-xs bg-white dark:bg-gray-800 shadow-xl transition-transform duration-300 md:hidden",
             isSidebarOpen ? "translate-x-0" : "-translate-x-full"
           )}
         >
@@ -294,7 +340,7 @@ const AdminDashboard: React.FC = () => {
         </aside>
 
         {/* Desktop Sidebar */}
-        <aside className={`hidden md:flex bg-white dark:bg-gray-800 h-screen sticky top-0 shadow-md flex-col transition-all duration-300 ${
+        <aside className={`admin-desktop-sidebar hidden md:flex bg-white dark:bg-gray-800 h-screen sticky top-0 shadow-md flex-col transition-all duration-300 ${
           isSidebarCollapsed ? 'w-16' : 'w-64'
         }`}>
           {/* Sidebar Toggle Button */}
@@ -321,7 +367,7 @@ const AdminDashboard: React.FC = () => {
         
         {/* Main Content */}
         <div className="dashboard-main flex flex-col min-h-screen">
-          <div className="md:hidden flex items-center justify-between border-b bg-white dark:bg-gray-800 px-3 py-2.5 sticky top-0 z-nav">
+          <div className="admin-mobile-topbar md:hidden flex items-center justify-between border-b bg-white dark:bg-gray-800 px-3 py-2.5 sticky top-0 z-nav">
             <Button
               variant="ghost"
               size="icon"
@@ -337,7 +383,7 @@ const AdminDashboard: React.FC = () => {
           </div>
           {/* Top bar with sidebar toggle for collapsed state */}
           {isSidebarCollapsed && (
-            <div className="hidden md:flex items-center p-4 border-b bg-white dark:bg-gray-800">
+            <div className="admin-collapsed-topbar hidden md:flex items-center p-4 border-b bg-white dark:bg-gray-800">
               <Button
                 variant="ghost"
                 size="icon"
@@ -353,7 +399,9 @@ const AdminDashboard: React.FC = () => {
             </div>
           )}
           
-          <AdminNavbar />
+          <div className="admin-navbar-shell">
+            <AdminNavbar />
+          </div>
           <div className="panel-content overflow-x-hidden overflow-y-auto">
             <Outlet />
           </div>
