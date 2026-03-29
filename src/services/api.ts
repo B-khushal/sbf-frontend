@@ -15,9 +15,18 @@ const api = axios.create({
   withCredentials: true, // Enable sending cookies with requests
 });
 
+const isNgrokApi = API_URL.includes('.ngrok-free.app') || API_URL.includes('.ngrok.app');
+
+if (isNgrokApi) {
+  api.defaults.headers.common['ngrok-skip-browser-warning'] = 'true';
+}
+
 if (import.meta.env.DEV && typeof window !== 'undefined') {
   console.log('API URL:', API_URL);
   console.log('Current origin:', window.location.origin);
+  if (isNgrokApi) {
+    console.log('ngrok browser warning bypass enabled for API requests');
+  }
 }
 
 // Add a request interceptor to include the auth token in requests
