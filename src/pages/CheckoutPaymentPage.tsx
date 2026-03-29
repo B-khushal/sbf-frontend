@@ -508,23 +508,26 @@ const CheckoutPaymentPage = () => {
                 return;
               }
 
-              const confirmationUrl = '/checkout/confirmation';
+              const confirmationPath = '/checkout/confirmation';
+              const confirmationUrl = `${window.location.origin}${confirmationPath}`;
+              console.log('Current URL:', window.location.href);
+              console.log('Origin:', window.location.origin);
+              console.log('Redirecting to:', confirmationUrl);
               console.log('🚀 Scheduling confirmation redirect:', confirmationUrl);
-              console.log('Current location before scheduled redirect:', window.location.href);
               console.log('Environment:', import.meta.env.MODE);
 
               setTimeout(() => {
                 try {
                   console.log('📍 Navigating with React Router:', confirmationUrl);
-                  navigate(confirmationUrl, { replace: true });
+                  window.location.replace(confirmationUrl);
 
                   setTimeout(() => {
-                    if (window.location.pathname !== confirmationUrl) {
+                    if (!window.location.pathname.includes(confirmationPath)) {
                       console.warn('⚠️ React Router navigation did not complete, using hard fallback');
                       console.warn('Current location before fallback:', window.location.href);
                       window.location.assign(confirmationUrl);
                     }
-                  }, 1000);
+                  }, 1500);
                 } catch (navError) {
                   console.error('❌ React Router navigation failed:', navError);
                   window.location.assign(confirmationUrl);
