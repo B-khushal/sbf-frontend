@@ -102,6 +102,19 @@ const CheckoutConfirmationPage = () => {
   const redirectAttempted = useRef<boolean>(false);
   const initialized = useRef<boolean>(false);
 
+  const getStoredOrderData = () => {
+    const localOrder = localStorage.getItem('lastOrder');
+    const sessionOrder = sessionStorage.getItem('lastOrder');
+    const backupOrder = sessionStorage.getItem('backup_order');
+
+    return {
+      localOrder,
+      sessionOrder,
+      backupOrder,
+      orderData: localOrder || sessionOrder || backupOrder,
+    };
+  };
+
   // Helper function to format price with specific currency
   const formatPriceWithCurrency = (amount: number, targetCurrency: string) => {
     return new Intl.NumberFormat(targetCurrency === 'INR' ? 'en-IN' : 'en-US', {
@@ -162,18 +175,16 @@ const CheckoutConfirmationPage = () => {
         setFromPayment(fromPaymentFlag === "true");
 
         // Get order data with detailed logging
-        const savedOrder = localStorage.getItem('lastOrder');
-        const backupOrder = sessionStorage.getItem('backup_order');
+        const { localOrder, sessionOrder, backupOrder, orderData } = getStoredOrderData();
 
         console.log('Storage check:', {
-          lastOrder: savedOrder ? `Found (${savedOrder.length} chars)` : 'NULL',
+          currentUrl: window.location.href,
+          lastOrder: localOrder ? `Found (${localOrder.length} chars)` : 'NULL',
+          sessionLastOrder: sessionOrder ? `Found (${sessionOrder.length} chars)` : 'NULL',
           backupOrder: backupOrder ? `Found (${backupOrder.length} chars)` : 'NULL',
           allLocalStorageKeys: Object.keys(localStorage),
           allSessionStorageKeys: Object.keys(sessionStorage)
         });
-
-        // Try backup if main is missing
-        const orderData = savedOrder || backupOrder;
 
         if (!orderData && !redirectAttempted.current) {
           console.error('❌ NO ORDER DATA FOUND - Redirecting to cart');
@@ -244,7 +255,13 @@ const CheckoutConfirmationPage = () => {
             setIsOrderDataFetched(true);
             console.log('✅ Order state updated successfully');
 
-            // Save to backup if not already there
+            // Keep order data available in both storage layers for refreshes and hard redirects.
+            if (!localOrder) {
+              localStorage.setItem('lastOrder', orderData);
+            }
+            if (!sessionOrder) {
+              sessionStorage.setItem('lastOrder', orderData);
+            }
             if (!backupOrder) {
               sessionStorage.setItem('backup_order', orderData);
             }

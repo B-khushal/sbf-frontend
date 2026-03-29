@@ -248,6 +248,25 @@ const CheckoutPaymentPage = () => {
   const orderTotal = subtotal + deliveryFee - promoDiscount;
   
   const handlePayment = async () => {
+      let modalObserver: MutationObserver | null = null;
+
+      const stopObservingRazorpay = () => {
+        if (modalObserver) {
+          modalObserver.disconnect();
+          modalObserver = null;
+        }
+      };
+
+      const releasePaymentUi = () => {
+        stopObservingRazorpay();
+        document.body.style.overflow = '';
+        document.documentElement.style.overflow = '';
+
+        if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur();
+        }
+      };
+
       if (!isRazorpayLoaded) {
         toast({
         title: "Payment gateway not ready",
@@ -426,6 +445,7 @@ const CheckoutPaymentPage = () => {
 
             if (verificationResponse.data.success) {
               console.log('✅ Payment verification successful, preparing for redirection');
+              console.log('🔁 Current URL before redirect:', window.location.href);
               
               // Store order data for confirmation page
               const confirmedOrder = verificationResponse.data.order;
@@ -435,12 +455,15 @@ const CheckoutPaymentPage = () => {
                 total: confirmedOrder.total
               });
               
+              let isOrderReadyForRedirect = false;
+
               // CRITICAL: Store all data FIRST (synchronous operations)
               try {
                 const orderJSON = JSON.stringify(confirmedOrder);
                 console.log('💾 Storing order data (size: ' + orderJSON.length + ' chars)...');
                 
                 localStorage.setItem('lastOrder', orderJSON);
+                sessionStorage.setItem('lastOrder', orderJSON);
                 sessionStorage.setItem('from_payment', 'true');
                 sessionStorage.setItem('backup_order', orderJSON); // Backup in session too
                 
@@ -466,8 +489,14 @@ const CheckoutPaymentPage = () => {
                   title: 'Payment Successful!',
                   message: `Your order #${confirmedOrder.orderNumber} has been confirmed.`
                 });
+
+                releasePaymentUi();
+                setIsProcessing(false);
+                isOrderReadyForRedirect = true;
               } catch (storageError) {
                 console.error('❌ Storage error:', storageError);
+                releasePaymentUi();
+                setIsProcessing(false);
                 toast({
                   title: "Warning",
                   description: "Order saved but there may be display issues. Contact support if needed.",
@@ -475,49 +504,39 @@ const CheckoutPaymentPage = () => {
                 });
               }
               
-              // NOW navigate immediately - Use window.location for production reliability
-              const confirmationUrl = '/checkout/confirmation?order=true';
-              console.log('🚀 NAVIGATING NOW:', confirmationUrl);
-              console.log('Current location:', window.location.href);
-              console.log('Environment:', import.meta.env.MODE);
-              
-              // Use window.location.href for most reliable navigation
-              // This works consistently across all environments (local & production)
-              try {
-                console.log('📍 Navigating with window.location.href...');
-                
-                // Force navigation using href (works reliably on Render/Netlify)
-                window.location.href = confirmationUrl;
-                
-                console.log('✅ Navigation initiated');
-              } catch (error) {
-                console.error('❌ Navigation failed:', error);
-                
-                // Absolute fallback: try with full URL construction
-                try {
-                  const fullUrl = `${window.location.origin}${confirmationUrl}`;
-                  console.log('📍 Fallback: Using full URL:', fullUrl);
-                  window.location.href = fullUrl;
-                } catch (fallbackError) {
-                  console.error('❌ Fallback navigation also failed:', fallbackError);
-                  toast({
-                    title: "Navigation Issue",
-                    description: "Please click 'Continue' to view your order.",
-                    action: {
-                      label: "Continue",
-                      onClick: () => {
-                        window.location.href = confirmationUrl;
-                      }
-                    }
-                  });
-                }
+              if (!isOrderReadyForRedirect) {
+                return;
               }
+
+              const confirmationUrl = '/checkout/confirmation';
+              console.log('🚀 Scheduling confirmation redirect:', confirmationUrl);
+              console.log('Current location before scheduled redirect:', window.location.href);
+              console.log('Environment:', import.meta.env.MODE);
+
+              setTimeout(() => {
+                try {
+                  console.log('📍 Navigating with React Router:', confirmationUrl);
+                  navigate(confirmationUrl, { replace: true });
+
+                  setTimeout(() => {
+                    if (window.location.pathname !== confirmationUrl) {
+                      console.warn('⚠️ React Router navigation did not complete, using hard fallback');
+                      console.warn('Current location before fallback:', window.location.href);
+                      window.location.assign(confirmationUrl);
+                    }
+                  }, 1000);
+                } catch (navError) {
+                  console.error('❌ React Router navigation failed:', navError);
+                  window.location.assign(confirmationUrl);
+                }
+              }, 300);
             } else {
               console.error('❌ Payment verification failed:', verificationResponse.data);
               throw new Error(verificationResponse.data.message || 'Payment verification failed');
             }
           } catch (error: any) {
             console.error('❌ Payment verification error:', error);
+            releasePaymentUi();
             toast({
               title: "Payment verification failed",
               description: error.message || "Please contact support if amount was deducted.",
@@ -539,6 +558,7 @@ const CheckoutPaymentPage = () => {
           confirm_close: true,
           ondismiss: () => {
             console.log('🚫 Payment dialog closed by user');
+            releasePaymentUi();
             setIsProcessing(false);
             toast({
               title: "Payment Cancelled",
@@ -570,6 +590,8 @@ const CheckoutPaymentPage = () => {
         // Add error event handler
         rzp.on('payment.failed', function (response: any) {
           console.error('💳 Payment failed:', response.error);
+          releasePaymentUi();
+          setIsProcessing(false);
           toast({
             title: "Payment Failed",
             description: response.error.description || "Your payment could not be processed. Please try again.",
@@ -690,7 +712,7 @@ const CheckoutPaymentPage = () => {
         });
         
         // Set up a MutationObserver to detect when Razorpay popup appears
-        const observer = new MutationObserver((mutations) => {
+        modalObserver = new MutationObserver((mutations) => {
           mutations.forEach((mutation) => {
             if (mutation.type === 'childList') {
               mutation.addedNodes.forEach((node) => {
@@ -742,19 +764,20 @@ const CheckoutPaymentPage = () => {
         });
         
         // Start observing the document body for changes
-        observer.observe(document.body, {
+        modalObserver.observe(document.body, {
           childList: true,
           subtree: true
         });
         
         // Clean up observer after 10 seconds
         setTimeout(() => {
-          observer.disconnect();
+          stopObservingRazorpay();
         }, 10000);
         
         rzp.open();
       } catch (rzpError) {
         console.error('💥 Razorpay initialization error:', rzpError);
+        releasePaymentUi();
         toast({
           title: "Payment System Error",
           description: "Could not initialize payment system. Please try again later.",
@@ -765,6 +788,7 @@ const CheckoutPaymentPage = () => {
 
     } catch (error: any) {
       console.error('Payment initiation error:', error);
+      releasePaymentUi();
       toast({
         title: "Payment failed",
         description: error.response?.data?.message || "Unable to process payment. Please try again.",
