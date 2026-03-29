@@ -2,19 +2,14 @@ const LOCAL_API_URL = 'http://localhost:5000/api';
 const LOCAL_UPLOADS_URL = 'http://localhost:5000';
 const REMOTE_API_URL = 'https://sbf-backend.onrender.com/api';
 const REMOTE_UPLOADS_URL = 'https://sbf-backend.onrender.com';
-const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1']);
-const NGROK_HOST_PATTERN = /\.ngrok(?:-free)?\.app$/i;
-const PRIVATE_NETWORK_PATTERN = /^(10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3})$/;
 
-const isLocalHost = (hostname: string): boolean => LOCAL_HOSTS.has(hostname);
+const getDefaultUrl = (localUrl: string, remoteUrl: string): string => {
+  return import.meta.env.PROD ? remoteUrl : localUrl;
+};
 
-// API Configuration - Development settings with production fallback
-
-// URL validation and correction function
 const validateAndFixUrl = (
   url: string | undefined,
-  defaultUrl: string,
-  remoteFallback: string
+  defaultUrl: string
 ): string => {
   let fixedUrl = (url || defaultUrl).trim();
 
@@ -28,30 +23,8 @@ const validateAndFixUrl = (
 
   // Case 3: Ensure protocol exists
   if (!fixedUrl.startsWith('http://') && !fixedUrl.startsWith('https://')) {
-    console.error('Invalid API URL - missing protocol:', fixedUrl);
+    console.error('Invalid URL - missing protocol:', fixedUrl);
     return defaultUrl;
-  }
-
-  if (typeof window !== 'undefined') {
-    try {
-      const parsed = new URL(fixedUrl);
-      const currentHost = window.location.hostname;
-      const currentProtocol = window.location.protocol;
-      const isBackendLocalhost = isLocalHost(parsed.hostname);
-      const isFrontendLocalhost = isLocalHost(currentHost);
-      const isPrivateNetworkFrontend = PRIVATE_NETWORK_PATTERN.test(currentHost);
-      const isExternalFrontend = !isFrontendLocalhost && !isPrivateNetworkFrontend;
-
-      if (isBackendLocalhost && isPrivateNetworkFrontend && currentProtocol === 'http:') {
-        parsed.hostname = currentHost;
-        fixedUrl = parsed.toString().replace(/\/$/, '');
-      } else if (isBackendLocalhost && (isExternalFrontend || currentProtocol === 'https:' || NGROK_HOST_PATTERN.test(currentHost))) {
-        fixedUrl = remoteFallback;
-      }
-    } catch (error) {
-      console.error('Error normalizing URL host:', fixedUrl, error);
-      return remoteFallback;
-    }
   }
 
   // Validate URL format
@@ -67,9 +40,11 @@ const validateAndFixUrl = (
 // Validate and fix environment variables
 const rawApiUrl = import.meta.env.VITE_API_URL;
 const rawUploadsUrl = import.meta.env.VITE_UPLOADS_URL;
+const defaultApiUrl = getDefaultUrl(LOCAL_API_URL, REMOTE_API_URL);
+const defaultUploadsUrl = getDefaultUrl(LOCAL_UPLOADS_URL, REMOTE_UPLOADS_URL);
 
-export const API_URL = validateAndFixUrl(rawApiUrl, LOCAL_API_URL, REMOTE_API_URL);
-export const UPLOADS_URL = validateAndFixUrl(rawUploadsUrl, LOCAL_UPLOADS_URL, REMOTE_UPLOADS_URL);
+export const API_URL = validateAndFixUrl(rawApiUrl, defaultApiUrl);
+export const UPLOADS_URL = validateAndFixUrl(rawUploadsUrl, defaultUploadsUrl);
 
 // Validate HTTPS in production
 if (import.meta.env.PROD) {

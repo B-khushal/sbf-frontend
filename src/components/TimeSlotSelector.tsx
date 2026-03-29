@@ -27,6 +27,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
+import { Badge } from '@/components/ui/badge';
 
 export type TimeSlot = {
   id: string;
@@ -354,10 +355,6 @@ const TimeSlotSelector = ({
   }, [isCalendarOpen, date]);
 
   const handleCalendarOpenChange = (open: boolean) => {
-    if (open) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
     if (!open) {
       setDraftDate(date);
     }
@@ -385,7 +382,11 @@ const TimeSlotSelector = ({
     const normalizedDate = normalizeDate(newDate);
     if (isDateDisabled(normalizedDate)) return;
 
-    applyDateSelection(normalizedDate);
+    setDraftDate(normalizedDate);
+
+    if (!isMobile) {
+      applyDateSelection(normalizedDate);
+    }
   };
 
   const formatDisplayDate = (date: Date | null) => {
@@ -404,6 +405,21 @@ const TimeSlotSelector = ({
   );
 
   const selectedCalendarDate = draftDate && isValid(draftDate) ? draftDate : date;
+  const quickDateOptions = useMemo(() => {
+    const options = [
+      normalizeDate(today),
+      addDays(today, 1),
+      addDays(today, 2),
+    ];
+
+    return options
+      .map((optionDate) => normalizeDate(optionDate))
+      .filter((optionDate, index, array) => {
+        if (isDateDisabled(optionDate)) return false;
+
+        return array.findIndex((candidate) => isSameDay(candidate, optionDate)) === index;
+      });
+  }, [today, holidays]);
 
   const datePickerContent = (
     <div className="space-y-4">
@@ -419,6 +435,29 @@ const TimeSlotSelector = ({
             Next 90 days
           </div>
         </div>
+
+        {isMobile && quickDateOptions.length > 0 && (
+          <div className="mb-4 flex flex-wrap gap-2">
+            {quickDateOptions.map((optionDate) => {
+              const isSelected = Boolean(selectedCalendarDate && isSameDay(optionDate, selectedCalendarDate));
+
+              return (
+                <Button
+                  key={optionDate.toISOString()}
+                  type="button"
+                  variant="outline"
+                  className={cn(
+                    'h-10 rounded-full border-slate-200 bg-white px-4 text-sm font-medium text-slate-700',
+                    isSelected && 'border-rose-300 bg-rose-50 text-rose-700'
+                  )}
+                  onClick={() => setDraftDate(optionDate)}
+                >
+                  {format(optionDate, 'EEE, MMM d')}
+                </Button>
+              );
+            })}
+          </div>
+        )}
 
         <Calendar
           mode="single"
@@ -621,7 +660,7 @@ const TimeSlotSelector = ({
         </Button>
 
         <p className="mt-2 text-sm text-slate-500">
-          Choose a delivery date without shifting the checkout form.
+          {isMobile ? 'Choose a date, then confirm it below.' : 'Choose a delivery date without shifting the checkout form.'}
         </p>
 
         {isMobile ? (
@@ -654,6 +693,17 @@ const TimeSlotSelector = ({
                 {datePickerContent}
               </div>
               <DrawerFooter className="border-t border-slate-200 bg-white px-5 pb-5 pt-4">
+                <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm">
+                  <div>
+                    <p className="font-medium text-slate-900">Selected date</p>
+                    <p className="text-slate-500">
+                      {selectedCalendarDate ? formatDisplayDate(selectedCalendarDate) : 'Pick a delivery date'}
+                    </p>
+                  </div>
+                  <Badge variant="secondary" className="rounded-full px-3 py-1 text-xs">
+                    Step 1
+                  </Badge>
+                </div>
                 <Button
                   type="button"
                   className="h-11 rounded-2xl bg-slate-900 text-white hover:bg-slate-800"
@@ -707,6 +757,13 @@ const TimeSlotSelector = ({
           <Clock className="h-5 w-5 text-primary" />
           <span className="font-medium text-base">Select Delivery Time</span>
         </div>
+
+        {isMobile && date && isValid(date) && (
+          <div className="mb-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+            Delivery date selected:
+            <span className="ml-1 font-medium text-slate-900">{formatDisplayDate(date)}</span>
+          </div>
+        )}
         
         {date && isValid(date) && (() => {
           const now = new Date();

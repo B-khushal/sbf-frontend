@@ -48,6 +48,7 @@ const itemVariants = {
 
 const inputClassName = 'h-12 rounded-xl border-slate-300 text-base shadow-sm focus-visible:ring-2 focus-visible:ring-emerald-500';
 const sectionCardClassName = 'space-y-4 rounded-2xl border border-slate-200 bg-slate-50/80 p-4 shadow-sm sm:p-5';
+const mobileActionButtonClassName = 'h-12 rounded-xl text-sm font-semibold shadow-sm';
 
 const CheckoutShippingPage = () => {
   const navigate = useNavigate();
@@ -440,7 +441,7 @@ const CheckoutShippingPage = () => {
                     onSubmit={handleSubmit}
                     noValidate
                     onFocusCapture={handleFieldFocusCapture}
-                    className="space-y-5 pb-24 lg:pb-0"
+                    className="space-y-5 pb-32 lg:pb-0"
                   >
                     {/* Saved Addresses Dropdown */}
                     {savedAddresses.length > 0 && (
@@ -1144,24 +1145,40 @@ const CheckoutShippingPage = () => {
         </div>
       </motion.div>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 px-4 py-3 shadow-2xl backdrop-blur lg:hidden">
-        <div className="mx-auto flex max-w-md items-center gap-3">
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 shadow-2xl backdrop-blur lg:hidden">
+        <div className="mx-auto max-w-md space-y-3">
+          <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Order Total</p>
+              <p className="text-base font-semibold text-slate-900">{formatPrice(convertPrice(orderTotal))}</p>
+            </div>
+            <div className="text-right text-xs text-slate-500">
+              <p>{selectedDate ? selectedDate.toLocaleDateString() : 'Select date'}</p>
+              <p>{selectedTimeSlot ? selectedTimeSlot.charAt(0).toUpperCase() + selectedTimeSlot.slice(1) : 'Select slot'}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
           <Button
             variant="outline"
             type="button"
             onClick={() => navigate('/cart')}
-            className="h-12 min-w-[96px] rounded-xl border-slate-300 px-4"
+            className={cn(mobileActionButtonClassName, 'border-slate-300 px-4')}
           >
-            Cart
+            Back to Cart
           </Button>
           <Button
             type="submit"
             form="shipping-form"
             disabled={isContinueDisabled}
-            className="h-12 flex-1 rounded-xl bg-gradient-to-r from-green-600 to-blue-600 text-base hover:from-green-700 hover:to-blue-700"
+            className={cn(
+              mobileActionButtonClassName,
+              'bg-gradient-to-r from-green-600 to-blue-600 px-4 text-sm text-white hover:from-green-700 hover:to-blue-700'
+            )}
           >
             Continue to Payment
           </Button>
+        </div>
         </div>
       </div>
       
