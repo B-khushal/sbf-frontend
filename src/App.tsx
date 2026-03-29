@@ -103,6 +103,12 @@ const LoadingFallback = ({ message = "Loading..." }: { message?: string }) => (
   </div>
 );
 
+const TestModeBanner = () => (
+  <div className="w-full bg-amber-100 border-b border-amber-300 px-4 py-2 text-center text-xs sm:text-sm font-medium text-amber-900">
+    TEST MODE: This store is in testing. Do not place real orders or enter real payment details.
+  </div>
+);
+
 const App = () => {
   // Check for order data in sessionStorage and restore it
   useEffect(() => {
@@ -138,6 +144,7 @@ const App = () => {
                     <Toaster />
                     <Sonner />
                     <BrowserRouter>
+                      <TestModeBanner />
                       <PwaInstallManager />
                       <ScrollToTop />
                       <Suspense fallback={<LoadingFallback />}>
