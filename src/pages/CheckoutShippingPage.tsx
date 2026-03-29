@@ -10,7 +10,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import TimeSlotSelector from '@/components/TimeSlotSelector';
 import MessageCard from '@/components/MessageCard';
@@ -20,9 +19,8 @@ import useCart, { useCartSelectors } from '@/hooks/use-cart';
 import { useToast } from '@/hooks/use-toast';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import api from '@/services/api';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import PinCodeInput from '@/components/ui/PinCodeInput';
+import PinCodeInput, { type PinCodeSelection } from '@/components/ui/PinCodeInput';
+import { cn } from '@/lib/utils';
 
 // Animation variants
 const containerVariants = {
@@ -48,6 +46,9 @@ const itemVariants = {
   }
 };
 
+const inputClassName = 'h-12 rounded-xl border-slate-300 text-base shadow-sm focus-visible:ring-2 focus-visible:ring-emerald-500';
+const sectionCardClassName = 'space-y-4 rounded-2xl border border-slate-200 bg-slate-50/80 p-4 shadow-sm sm:p-5';
+
 const CheckoutShippingPage = () => {
   const navigate = useNavigate();
   const { items } = useCart();
@@ -58,12 +59,10 @@ const CheckoutShippingPage = () => {
   const [giftMessage, setGiftMessage] = useState('');
   const { formatPrice, convertPrice } = useCurrency();
   const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
-  const [showSavedAddresses, setShowSavedAddresses] = useState(false);
   const [showOrderSummary, setShowOrderSummary] = useState(false);
   const [isSavedAddressesOpen, setIsSavedAddressesOpen] = useState(false);
 
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [shippingMethod, setShippingMethod] = useState('standard');
   const [formData, setFormData] = useState({
     // Sender details
     firstName: '',
@@ -91,8 +90,16 @@ const CheckoutShippingPage = () => {
   });
 
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
-  const [isPinCodeValid, setIsPinCodeValid] = useState(true);
-  const [pinCodeValidationMessage, setPinCodeValidationMessage] = useState('');
+  const [selectedSenderPin, setSelectedSenderPin] = useState<PinCodeSelection | null>(null);
+  const [selectedReceiverPin, setSelectedReceiverPin] = useState<PinCodeSelection | null>(null);
+  const [senderPinValidation, setSenderPinValidation] = useState({
+    isValid: false,
+    message: 'Select a valid delivery pincode to continue.',
+  });
+  const [receiverPinValidation, setReceiverPinValidation] = useState({
+    isValid: false,
+    message: 'Select a valid delivery pincode to continue.',
+  });
   
   // Calculate midnight delivery fee
   const midnightDeliveryFee = 300.00; // ₹300
@@ -148,10 +155,45 @@ const CheckoutShippingPage = () => {
     setFormData(prev => ({ ...prev, receiverZipCode: value }));
   };
 
-  const handlePinCodeValidation = (isValid: boolean, message?: string) => {
-    setIsPinCodeValid(isValid);
-    setPinCodeValidationMessage(message || '');
-  };  
+  const handleSenderPinSelect = (selection: PinCodeSelection | null) => {
+    setSelectedSenderPin(selection);
+
+    if (selection) {
+      setFormData(prev => ({
+        ...prev,
+        zipCode: selection.code,
+        city: selection.city,
+        state: selection.state,
+      }));
+    }
+  };
+
+  const handleReceiverPinSelect = (selection: PinCodeSelection | null) => {
+    setSelectedReceiverPin(selection);
+
+    if (selection) {
+      setFormData(prev => ({
+        ...prev,
+        receiverZipCode: selection.code,
+        receiverCity: selection.city,
+        receiverState: selection.state,
+      }));
+    }
+  };
+
+  const handleSenderPinValidation = (isValid: boolean, message?: string) => {
+    setSenderPinValidation({
+      isValid,
+      message: message || (isValid ? '' : 'Select a valid delivery pincode to continue.'),
+    });
+  };
+
+  const handleReceiverPinValidation = (isValid: boolean, message?: string) => {
+    setReceiverPinValidation({
+      isValid,
+      message: message || (isValid ? '' : 'Select a valid delivery pincode to continue.'),
+    });
+  };
 
   const handleSavedAddressSelect = (address: any) => {
     if (address.deliveryOption === 'self') {
@@ -168,6 +210,13 @@ const CheckoutShippingPage = () => {
         email: address.email,
         notes: address.notes || '',
       });
+      setSelectedSenderPin({
+        code: address.zipCode,
+        area: '',
+        city: address.city,
+        state: address.state,
+      });
+      setSenderPinValidation({ isValid: true, message: '' });
     } else {
       setFormData({
         ...formData,
@@ -185,6 +234,13 @@ const CheckoutShippingPage = () => {
         receiverPhone: address.receiverPhone,
         receiverEmail: address.receiverEmail || '',
       });
+      setSelectedReceiverPin({
+        code: address.receiverZipCode,
+        area: '',
+        city: address.receiverCity,
+        state: address.receiverState,
+      });
+      setReceiverPinValidation({ isValid: true, message: '' });
       
       if (address.giftMessage) {
         setGiftMessage(address.giftMessage);
@@ -214,10 +270,10 @@ const CheckoutShippingPage = () => {
     }
     
     // Check PIN code validation first
-    if (!isPinCodeValid) {
+    if (!activePinValidation.isValid || !selectedDeliveryPin?.code) {
       toast({
         title: "Invalid PIN code",
-        description: pinCodeValidationMessage,
+        description: activePinValidation.message,
         variant: "destructive"
       });
       return;
@@ -308,16 +364,30 @@ const CheckoutShippingPage = () => {
     setSelectedTimeSlot(slotId);
   };
 
-  const navigateToProfile = () => {
-    navigate('/profile');
+  const handleFieldFocusCapture = (event: React.FocusEvent<HTMLFormElement>) => {
+    const target = event.target as HTMLElement;
+
+    if (target.matches('input, textarea, button, [role="combobox"]')) {
+      window.setTimeout(() => {
+        target.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+          inline: 'nearest',
+        });
+      }, 150);
+    }
   };
+
+  const activePinValidation = deliveryOption === 'self' ? senderPinValidation : receiverPinValidation;
+  const selectedDeliveryPin = deliveryOption === 'self' ? selectedSenderPin : selectedReceiverPin;
+  const isContinueDisabled = !selectedDeliveryPin?.code || !activePinValidation.isValid;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50">
       <Navigation />
       
       <motion.div 
-        className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl"
+        className="container mx-auto max-w-6xl px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8"
         initial="hidden"
         animate="visible"
         variants={containerVariants}
@@ -349,23 +419,32 @@ const CheckoutShippingPage = () => {
         </motion.div>
 
         {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
           {/* Left Column - Shipping Form */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="mx-auto w-full max-w-md space-y-6 lg:col-span-2 lg:max-w-none">
             {/* Shipping Information */}
             <motion.div variants={itemVariants}>
-              <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
-                <CardHeader>
+              <Card className="overflow-visible border-0 bg-white/85 shadow-lg backdrop-blur-sm">
+                <CardHeader className="space-y-2 px-4 pb-0 pt-5 sm:px-6">
                   <CardTitle className="flex items-center gap-2 text-lg">
                     <Truck className="w-5 h-5 text-primary" />
                     Shipping Information
                   </CardTitle>
+                  <p className="text-sm text-slate-600">
+                    Fill in the delivery details below. On mobile, your pincode search opens in a full-width picker for easier selection.
+                  </p>
                 </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleSubmit} noValidate className="space-y-6">
+                <CardContent className="px-4 pb-6 pt-4 sm:px-6">
+                  <form
+                    id="shipping-form"
+                    onSubmit={handleSubmit}
+                    noValidate
+                    onFocusCapture={handleFieldFocusCapture}
+                    className="space-y-5 pb-24 lg:pb-0"
+                  >
                     {/* Saved Addresses Dropdown */}
                     {savedAddresses.length > 0 && (
-                      <div className="space-y-3">
+                      <div className={sectionCardClassName}>
                         <div className="flex items-center gap-2">
                           <Home className="h-4 w-4 text-primary" />
                           <span className="text-sm font-medium">Saved Addresses</span>
@@ -379,7 +458,7 @@ const CheckoutShippingPage = () => {
                             <Button 
                               type="button" 
                               variant="outline" 
-                              className="w-full justify-between"
+                              className="h-12 w-full justify-between rounded-xl border-slate-300 text-base"
                             >
                               <span>Select a saved address</span>
                               {isSavedAddressesOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -387,7 +466,7 @@ const CheckoutShippingPage = () => {
                           </CollapsibleTrigger>
                           <CollapsibleContent className="space-y-2 mt-2">
                             {savedAddresses.map((address: any) => (
-                              <Card key={address.id} className="cursor-pointer hover:border-primary transition-colors">
+                              <Card key={address.id} className="cursor-pointer border-slate-200 transition-colors hover:border-primary">
                                 <CardContent className="p-3" onClick={() => handleSavedAddressSelect(address)}>
                                   <div className="flex items-start justify-between">
                                     <div className="flex-1">
@@ -445,19 +524,19 @@ const CheckoutShippingPage = () => {
                     )}
                     
                     {/* Delivery Options */}
-                    <div className="space-y-4">
+                    <div className={sectionCardClassName}>
                       <div className="flex items-center gap-2">
                         <Gift className="h-4 w-4 text-primary" />
                         <span className="text-sm font-medium">Delivery Type</span>
                       </div>
                       
                       <Tabs defaultValue="self" onValueChange={(value) => setDeliveryOption(value as 'self' | 'gift')}>
-                        <TabsList className="grid grid-cols-2 w-full">
-                          <TabsTrigger value="self" className="flex items-center gap-2">
+                        <TabsList className="grid h-auto w-full grid-cols-2 rounded-xl bg-slate-100 p-1">
+                          <TabsTrigger value="self" className="flex min-h-[44px] items-center gap-2 rounded-lg text-sm">
                             <User className="h-4 w-4" />
                             For Myself
                           </TabsTrigger>
-                          <TabsTrigger value="gift" className="flex items-center gap-2">
+                          <TabsTrigger value="gift" className="flex min-h-[44px] items-center gap-2 rounded-lg text-sm">
                             <Gift className="h-4 w-4" />
                             Send as Gift
                           </TabsTrigger>
@@ -482,7 +561,7 @@ const CheckoutShippingPage = () => {
                     </div>
                     
                     {/* Sender Information */}
-                    <div className="space-y-4">
+                    <div className={sectionCardClassName}>
                       <div className="flex items-center gap-2">
                         <User size={18} className="text-primary" />
                         <h2 className="text-lg font-medium">
@@ -490,7 +569,7 @@ const CheckoutShippingPage = () => {
                         </h2>
                       </div>
                       
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div className="space-y-2">
                           <label htmlFor="firstName" className="block text-sm font-medium">
                             First Name *
@@ -502,6 +581,7 @@ const CheckoutShippingPage = () => {
                             onChange={handleInputChange}
                             required
                             placeholder="Enter first name"
+                            className={inputClassName}
                           />
                         </div>
                         
@@ -516,11 +596,12 @@ const CheckoutShippingPage = () => {
                             onChange={handleInputChange}
                             required
                             placeholder="Enter last name"
+                            className={inputClassName}
                           />
                         </div>
                       </div>
                       
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div className="space-y-2">
                           <label htmlFor="phone" className="block text-sm font-medium">
                             Phone *
@@ -533,6 +614,7 @@ const CheckoutShippingPage = () => {
                             onChange={handleInputChange}
                             required
                             placeholder="Enter phone number"
+                            className={inputClassName}
                           />
                         </div>
                         
@@ -547,6 +629,7 @@ const CheckoutShippingPage = () => {
                             value={formData.email}
                             onChange={handleInputChange}
                             placeholder="Enter email address"
+                            className={inputClassName}
                           />
                         </div>
                       </div>
@@ -564,6 +647,7 @@ const CheckoutShippingPage = () => {
                               onChange={handleInputChange}
                               required
                               placeholder="Enter your address"
+                              className={inputClassName}
                             />
                           </div>
                           
@@ -577,10 +661,25 @@ const CheckoutShippingPage = () => {
                               value={formData.apartment}
                               onChange={handleInputChange}
                               placeholder="Apartment, suite, etc."
+                              className={inputClassName}
                             />
                           </div>
                           
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                            <div className="space-y-2 sm:col-span-3">
+                              <label htmlFor="zipCode" className="block text-sm font-medium">
+                                Delivery PIN Code *
+                              </label>
+                              <PinCodeInput
+                                value={formData.zipCode}
+                                onChange={handleZipCodeChange}
+                                placeholder="Enter PIN code"
+                                required
+                                inputClassName={inputClassName}
+                                onSelectPinCode={handleSenderPinSelect}
+                                onValidationChange={handleSenderPinValidation}
+                              />
+                            </div>
                             <div className="space-y-2">
                               <label htmlFor="city" className="block text-sm font-medium">
                                 City *
@@ -591,7 +690,9 @@ const CheckoutShippingPage = () => {
                                 value={formData.city}
                                 onChange={handleInputChange}
                                 required
-                                placeholder="Enter city"
+                                readOnly
+                                placeholder="Auto-filled from pincode"
+                                className={cn(inputClassName, 'bg-slate-100')}
                               />
                             </div>
                             
@@ -605,24 +706,34 @@ const CheckoutShippingPage = () => {
                                 value={formData.state}
                                 onChange={handleInputChange}
                                 required
-                                placeholder="Enter state"
+                                readOnly
+                                placeholder="Auto-filled from pincode"
+                                className={cn(inputClassName, 'bg-slate-100')}
                               />
                             </div>
                             
                             <div className="space-y-2">
-                              <label htmlFor="zipCode" className="block text-sm font-medium">
-                                Zip/Postal Code *
+                              <label htmlFor="zipCodeDisplay" className="block text-sm font-medium">
+                                Selected PIN
                               </label>
-                              <PinCodeInput
+                              <Input
+                                id="zipCodeDisplay"
                                 value={formData.zipCode}
-                                onChange={handleZipCodeChange}
-                                placeholder="Enter PIN code"
-                                required
-                                onValidationChange={handlePinCodeValidation}
+                                readOnly
+                                placeholder="Choose a pincode above"
+                                className={cn(inputClassName, 'bg-slate-100')}
                               />
                             </div>
                           </div>
                           
+                          {!senderPinValidation.isValid && (
+                            <Alert className="border-amber-200 bg-amber-50">
+                              <AlertDescription className="text-amber-700">
+                                {senderPinValidation.message}
+                              </AlertDescription>
+                            </Alert>
+                          )}
+
                           <div className="space-y-2">
                             <label htmlFor="notes" className="block text-sm font-medium">
                               Delivery Notes (optional)
@@ -634,6 +745,7 @@ const CheckoutShippingPage = () => {
                               onChange={handleInputChange}
                               placeholder="Any special instructions for delivery..."
                               rows={3}
+                              className="min-h-[112px] rounded-xl border-slate-300 text-base shadow-sm focus-visible:ring-2 focus-visible:ring-emerald-500"
                             />
                           </div>
                         </div>
@@ -642,13 +754,13 @@ const CheckoutShippingPage = () => {
                     
                     {/* Receiver Information (for gift option) */}
                     {deliveryOption === 'gift' && (
-                      <div className="space-y-4">
+                      <div className={sectionCardClassName}>
                         <div className="flex items-center gap-2">
                           <User size={18} className="text-primary" />
                           <h2 className="text-lg font-medium">Receiver Information</h2>
                         </div>
                         
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                           <div className="space-y-2">
                             <label htmlFor="receiverFirstName" className="block text-sm font-medium">
                               First Name *
@@ -660,6 +772,7 @@ const CheckoutShippingPage = () => {
                               onChange={handleInputChange}
                               required={deliveryOption === 'gift'}
                               placeholder="Enter receiver's first name"
+                              className={inputClassName}
                             />
                           </div>
                           
@@ -674,6 +787,7 @@ const CheckoutShippingPage = () => {
                               onChange={handleInputChange}
                               required={deliveryOption === 'gift'}
                               placeholder="Enter receiver's last name"
+                              className={inputClassName}
                             />
                           </div>
                         </div>
@@ -689,6 +803,7 @@ const CheckoutShippingPage = () => {
                             onChange={handleInputChange}
                             required={deliveryOption === 'gift'}
                             placeholder="Enter receiver's address"
+                            className={inputClassName}
                           />
                         </div>
                         
@@ -702,10 +817,25 @@ const CheckoutShippingPage = () => {
                             value={formData.receiverApartment}
                             onChange={handleInputChange}
                             placeholder="Apartment, suite, etc."
+                            className={inputClassName}
                           />
                         </div>
                         
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                          <div className="space-y-2 sm:col-span-3">
+                            <label htmlFor="receiverZipCode" className="block text-sm font-medium">
+                              Receiver PIN Code *
+                            </label>
+                            <PinCodeInput
+                              value={formData.receiverZipCode}
+                              onChange={handleReceiverZipCodeChange}
+                              placeholder="Enter PIN code"
+                              required={deliveryOption === 'gift'}
+                              inputClassName={inputClassName}
+                              onSelectPinCode={handleReceiverPinSelect}
+                              onValidationChange={handleReceiverPinValidation}
+                            />
+                          </div>
                           <div className="space-y-2">
                             <label htmlFor="receiverCity" className="block text-sm font-medium">
                               City *
@@ -713,12 +843,14 @@ const CheckoutShippingPage = () => {
                             <Input
                               id="receiverCity"
                               name="receiverCity"
-                              value={formData.receiverCity}
-                              onChange={handleInputChange}
-                              required={deliveryOption === 'gift'}
-                              placeholder="Enter city"
-                            />
-                          </div>
+                                value={formData.receiverCity}
+                                onChange={handleInputChange}
+                                required={deliveryOption === 'gift'}
+                                readOnly
+                                placeholder="Auto-filled from pincode"
+                                className={cn(inputClassName, 'bg-slate-100')}
+                              />
+                            </div>
                           
                           <div className="space-y-2">
                             <label htmlFor="receiverState" className="block text-sm font-medium">
@@ -727,28 +859,38 @@ const CheckoutShippingPage = () => {
                             <Input
                               id="receiverState"
                               name="receiverState"
-                              value={formData.receiverState}
-                              onChange={handleInputChange}
-                              required={deliveryOption === 'gift'}
-                              placeholder="Enter state"
-                            />
+                                value={formData.receiverState}
+                                onChange={handleInputChange}
+                                required={deliveryOption === 'gift'}
+                                readOnly
+                                placeholder="Auto-filled from pincode"
+                                className={cn(inputClassName, 'bg-slate-100')}
+                              />
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <label htmlFor="receiverZipCodeDisplay" className="block text-sm font-medium">
+                                Selected PIN
+                              </label>
+                              <Input
+                                id="receiverZipCodeDisplay"
+                                value={formData.receiverZipCode}
+                                readOnly
+                                placeholder="Choose a pincode above"
+                                className={cn(inputClassName, 'bg-slate-100')}
+                              />
+                            </div>
                           </div>
-                          
-                          <div className="space-y-2">
-                            <label htmlFor="receiverZipCode" className="block text-sm font-medium">
-                              Zip/Postal Code *
-                            </label>
-                            <PinCodeInput
-                              value={formData.receiverZipCode}
-                              onChange={handleReceiverZipCodeChange}
-                              placeholder="Enter PIN code"
-                              required={deliveryOption === 'gift'}
-                              onValidationChange={handlePinCodeValidation}
-                            />
-                          </div>
-                        </div>
+
+                          {!receiverPinValidation.isValid && (
+                            <Alert className="border-amber-200 bg-amber-50">
+                              <AlertDescription className="text-amber-700">
+                                {receiverPinValidation.message}
+                              </AlertDescription>
+                            </Alert>
+                          )}
                         
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                           <div className="space-y-2">
                             <label htmlFor="receiverPhone" className="block text-sm font-medium">
                               Phone *
@@ -761,6 +903,7 @@ const CheckoutShippingPage = () => {
                               onChange={handleInputChange}
                               required={deliveryOption === 'gift'}
                               placeholder="Enter receiver's phone"
+                              className={inputClassName}
                             />
                           </div>
                           
@@ -775,6 +918,7 @@ const CheckoutShippingPage = () => {
                               value={formData.receiverEmail}
                               onChange={handleInputChange}
                               placeholder="Enter receiver's email"
+                              className={inputClassName}
                             />
                           </div>
                         </div>
@@ -793,7 +937,7 @@ const CheckoutShippingPage = () => {
                     )}
                     
                     {/* Time Slot Selector */}
-                    <div className="space-y-4">
+                    <div className={sectionCardClassName}>
                       <div className="flex items-center gap-2">
                         <Clock size={18} className="text-primary" />
                         <h2 className="text-lg font-medium">Delivery Time</h2>
@@ -812,31 +956,37 @@ const CheckoutShippingPage = () => {
                     </div>
                     
                     {/* Save Information Checkbox */}
-                    <div className="flex items-center space-x-2 p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-start space-x-3 rounded-2xl border border-slate-200 bg-gray-50 p-4">
                       <Checkbox 
                         id="saveInfo" 
                         checked={formData.saveInfo}
                         onCheckedChange={handleCheckboxChange}
+                        className="mt-0.5"
                       />
                       <label
                         htmlFor="saveInfo"
-                        className="text-sm font-medium leading-none cursor-pointer"
+                        className="cursor-pointer text-sm font-medium leading-5"
                       >
                         Save this information for next time
                       </label>
                     </div>
                     
                     {/* Form Actions */}
-                    <div className="flex justify-between items-center pt-4 border-t">
+                    <div className="hidden items-center justify-between border-t pt-4 lg:flex">
                       <Button
                         variant="outline"
                         type="button"
                         onClick={() => navigate('/cart')}
+                        className="h-12 rounded-xl px-5"
                       >
                         Back to Cart
                       </Button>
                       
-                      <Button type="submit" className="gap-2 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700">
+                      <Button
+                        type="submit"
+                        disabled={isContinueDisabled}
+                        className="h-12 gap-2 rounded-xl bg-gradient-to-r from-green-600 to-blue-600 px-6 hover:from-green-700 hover:to-blue-700"
+                      >
                         Continue to Payment
                         <ArrowRight size={16} />
                       </Button>
@@ -993,6 +1143,27 @@ const CheckoutShippingPage = () => {
           </div>
         </div>
       </motion.div>
+
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 px-4 py-3 shadow-2xl backdrop-blur lg:hidden">
+        <div className="mx-auto flex max-w-md items-center gap-3">
+          <Button
+            variant="outline"
+            type="button"
+            onClick={() => navigate('/cart')}
+            className="h-12 min-w-[96px] rounded-xl border-slate-300 px-4"
+          >
+            Cart
+          </Button>
+          <Button
+            type="submit"
+            form="shipping-form"
+            disabled={isContinueDisabled}
+            className="h-12 flex-1 rounded-xl bg-gradient-to-r from-green-600 to-blue-600 text-base hover:from-green-700 hover:to-blue-700"
+          >
+            Continue to Payment
+          </Button>
+        </div>
+      </div>
       
       <Footer />
     </div>

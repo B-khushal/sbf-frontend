@@ -1,49 +1,65 @@
+const LOCAL_API_URL = 'http://localhost:5000/api';
+const LOCAL_UPLOADS_URL = 'http://localhost:5000';
+const REMOTE_API_URL = 'https://sbf-backend.onrender.com/api';
+const REMOTE_UPLOADS_URL = 'https://sbf-backend.onrender.com';
+const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1']);
+const NGROK_HOST_PATTERN = /\.ngrok(?:-free)?\.app$/i;
+const PRIVATE_NETWORK_PATTERN = /^(10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3})$/;
+
+const isLocalHost = (hostname: string): boolean => LOCAL_HOSTS.has(hostname);
+
 // API Configuration - Development settings with production fallback
 
 // URL validation and correction function
-const validateAndFixUrl = (url: string | undefined, defaultUrl: string): string => {
-  if (!url) return defaultUrl;
-  
-  let fixedUrl = url.trim();
-  
+const validateAndFixUrl = (
+  url: string | undefined,
+  defaultUrl: string,
+  remoteFallback: string
+): string => {
+  let fixedUrl = (url || defaultUrl).trim();
+
   // Fix common malformations
   // Case 1: Missing colon after protocol (https// instead of https://)
   fixedUrl = fixedUrl.replace(/^https\/\//, 'https://');
   fixedUrl = fixedUrl.replace(/^http\/\//, 'http://');
-  
+
   // Case 2: Double protocol (http://https:// or similar)
   fixedUrl = fixedUrl.replace(/^https?:\/\/https?:\/\//, 'https://');
-  
+
   // Case 3: Ensure protocol exists
   if (!fixedUrl.startsWith('http://') && !fixedUrl.startsWith('https://')) {
-    console.error('❌ Invalid API URL - missing protocol:', fixedUrl);
+    console.error('Invalid API URL - missing protocol:', fixedUrl);
     return defaultUrl;
   }
 
-  // If frontend is opened via LAN IP on mobile, remap localhost backend URL to current host.
   if (typeof window !== 'undefined') {
     try {
       const parsed = new URL(fixedUrl);
       const currentHost = window.location.hostname;
-      const isBackendLocalhost = parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1';
-      const isFrontendLocalhost = currentHost === 'localhost' || currentHost === '127.0.0.1';
+      const currentProtocol = window.location.protocol;
+      const isBackendLocalhost = isLocalHost(parsed.hostname);
+      const isFrontendLocalhost = isLocalHost(currentHost);
+      const isPrivateNetworkFrontend = PRIVATE_NETWORK_PATTERN.test(currentHost);
+      const isExternalFrontend = !isFrontendLocalhost && !isPrivateNetworkFrontend;
 
-      if (isBackendLocalhost && !isFrontendLocalhost) {
+      if (isBackendLocalhost && isPrivateNetworkFrontend && currentProtocol === 'http:') {
         parsed.hostname = currentHost;
-        fixedUrl = parsed.toString();
+        fixedUrl = parsed.toString().replace(/\/$/, '');
+      } else if (isBackendLocalhost && (isExternalFrontend || currentProtocol === 'https:' || NGROK_HOST_PATTERN.test(currentHost))) {
+        fixedUrl = remoteFallback;
       }
     } catch (error) {
-      console.error('❌ Error normalizing URL host:', fixedUrl, error);
-      return defaultUrl;
+      console.error('Error normalizing URL host:', fixedUrl, error);
+      return remoteFallback;
     }
   }
-  
+
   // Validate URL format
   try {
     new URL(fixedUrl);
-    return fixedUrl;
+    return fixedUrl.replace(/\/$/, '');
   } catch (error) {
-    console.error('❌ Invalid URL format:', fixedUrl, error);
+    console.error('Invalid URL format:', fixedUrl, error);
     return defaultUrl;
   }
 };
@@ -52,17 +68,17 @@ const validateAndFixUrl = (url: string | undefined, defaultUrl: string): string 
 const rawApiUrl = import.meta.env.VITE_API_URL;
 const rawUploadsUrl = import.meta.env.VITE_UPLOADS_URL;
 
-export const API_URL = validateAndFixUrl(rawApiUrl, 'http://localhost:5000/api');
-export const UPLOADS_URL = validateAndFixUrl(rawUploadsUrl, 'http://localhost:5000');
+export const API_URL = validateAndFixUrl(rawApiUrl, LOCAL_API_URL, REMOTE_API_URL);
+export const UPLOADS_URL = validateAndFixUrl(rawUploadsUrl, LOCAL_UPLOADS_URL, REMOTE_UPLOADS_URL);
 
 // Validate HTTPS in production
 if (import.meta.env.PROD) {
   if (!API_URL.startsWith('https://')) {
-    console.error('🚨 SECURITY WARNING: Production API URL must use HTTPS!', API_URL);
+    console.error('SECURITY WARNING: Production API URL must use HTTPS!', API_URL);
     console.error('Current environment:', import.meta.env.MODE);
   }
   if (!UPLOADS_URL.startsWith('https://')) {
-    console.error('🚨 SECURITY WARNING: Production UPLOADS URL must use HTTPS!', UPLOADS_URL);
+    console.error('SECURITY WARNING: Production UPLOADS URL must use HTTPS!', UPLOADS_URL);
   }
 }
 
@@ -287,4 +303,4 @@ export const getImageUrlWithCacheBuster = (imagePath: string | undefined, option
 // Other configuration constants can be added here
 export const ITEMS_PER_PAGE = 10;
 export const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
-export const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']; 
+export const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];

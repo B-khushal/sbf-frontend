@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import ReactSignatureCanvas from "react-signature-canvas";
+import { UPLOADS_URL } from '@/config';
 
 const VendorDetailsPage = () => {
     const { id } = useParams<{ id: string }>();
@@ -119,8 +120,7 @@ const VendorDetailsPage = () => {
 
     const getPdfUrl = (pdfPath: string) => {
         if (!pdfPath) return '';
-        const baseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/api$/, '');
-        return `${baseUrl}${pdfPath}`;
+        return `${UPLOADS_URL}${pdfPath}`;
     };
 
     if (loading) {

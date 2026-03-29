@@ -21,6 +21,7 @@ import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, A
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { getAllVendors, updateVendorStatus, getVendorById, approveVendor, deleteVendor } from '@/services/vendorService';
 import { useNavigate } from 'react-router-dom';
+import { UPLOADS_URL } from '@/config';
 
 type Vendor = {
   _id: string;
@@ -332,9 +333,7 @@ const AdminVendorManagement: React.FC = () => {
 
   const getPdfUrl = (pdfPath: string) => {
     if (!pdfPath) return '';
-    // VITE_API_URL is typically 'http://localhost:5000/api'
-    const baseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/api$/, '');
-    return `${baseUrl}${pdfPath}`;
+    return `${UPLOADS_URL}${pdfPath}`;
   };
 
   if (loading) {

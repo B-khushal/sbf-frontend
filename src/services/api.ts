@@ -15,6 +15,11 @@ const api = axios.create({
   withCredentials: true, // Enable sending cookies with requests
 });
 
+if (import.meta.env.DEV && typeof window !== 'undefined') {
+  console.log('API URL:', API_URL);
+  console.log('Current origin:', window.location.origin);
+}
+
 // Add a request interceptor to include the auth token in requests
 api.interceptors.request.use(
   (config) => {
