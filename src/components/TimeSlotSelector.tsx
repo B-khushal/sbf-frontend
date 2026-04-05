@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Clock, Calendar as CalendarIcon, ChevronRight, Info, X } from 'lucide-react';
+import { Clock, Calendar as CalendarIcon, ChevronRight, Info } from 'lucide-react';
 import { 
   Card,
   CardContent
@@ -19,15 +19,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  Drawer,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-} from '@/components/ui/drawer';
-import { Badge } from '@/components/ui/badge';
 
 export type TimeSlot = {
   id: string;
@@ -672,87 +663,32 @@ const TimeSlotSelector = ({
             />
           </div>
         )}
-        <Button
-          variant="outline"
-          className="flex h-auto w-full items-center justify-between rounded-2xl border-slate-200 bg-white px-4 py-3 text-left shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
-          type="button"
-          onClick={() => handleCalendarOpenChange(true)}
-          aria-expanded={isCalendarOpen}
-          aria-haspopup="dialog"
-          aria-controls="delivery-date-surface"
-        >
-          <div className="min-w-0">
-            <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Delivery Date</div>
-            <div className="mt-1 truncate text-sm font-medium text-slate-900">
-              {date && isValid(date) ? formatDisplayDate(date) : 'Pick a delivery date'}
-            </div>
-          </div>
-          <div className="ml-4 flex h-10 w-10 items-center justify-center rounded-full bg-rose-50 text-rose-600">
-            <ChevronRight className="h-5 w-5" />
-          </div>
-        </Button>
-
-        <p className="mt-2 text-sm text-slate-500">
-          {isMobile ? 'Choose a date, then confirm it below.' : 'Choose a delivery date without shifting the checkout form.'}
-        </p>
-
-        {isMobile ? (
-          <Drawer open={isCalendarOpen} onOpenChange={handleCalendarOpenChange}>
-            <DrawerContent
-              id="delivery-date-surface"
-              className="max-h-[88dvh] rounded-t-[28px] border-0 bg-white px-0 pb-0 shadow-2xl"
+        {!isMobile && (
+          <>
+            <Button
+              variant="outline"
+              className="flex h-auto w-full items-center justify-between rounded-2xl border-slate-200 bg-white px-4 py-3 text-left shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+              type="button"
+              onClick={() => handleCalendarOpenChange(true)}
+              aria-expanded={isCalendarOpen}
+              aria-haspopup="dialog"
+              aria-controls="delivery-date-surface"
             >
-              <DrawerHeader className="border-b border-slate-200 px-5 pb-4 pt-2 text-left">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <DrawerTitle className="text-lg font-semibold text-slate-950">Select Delivery Date</DrawerTitle>
-                    <DrawerDescription className="mt-1 text-sm text-slate-500">
-                      Pick an available date for delivery. Swipe down, tap outside, or press close to dismiss.
-                    </DrawerDescription>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    type="button"
-                    onClick={() => handleCalendarOpenChange(false)}
-                    aria-label="Close delivery date selector"
-                    className="rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-900"
-                  >
-                    <X className="h-5 w-5" />
-                  </Button>
+              <div className="min-w-0">
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Delivery Date</div>
+                <div className="mt-1 truncate text-sm font-medium text-slate-900">
+                  {date && isValid(date) ? formatDisplayDate(date) : 'Pick a delivery date'}
                 </div>
-              </DrawerHeader>
-              <div className="overflow-y-auto overflow-x-hidden px-5 py-4">
-                {datePickerContent}
               </div>
-              <DrawerFooter className="border-t border-slate-200 bg-white px-5 pb-5 pt-4">
-                <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm">
-                  <div>
-                    <p className="font-medium text-slate-900">Selected date</p>
-                    <p className="text-slate-500">
-                      {selectedCalendarDate ? formatDisplayDate(selectedCalendarDate) : 'Pick a delivery date'}
-                    </p>
-                  </div>
-                  <Badge variant="secondary" className="rounded-full px-3 py-1 text-xs">
-                    Step 1
-                  </Badge>
-                </div>
-                <Button
-                  type="button"
-                  className="h-11 rounded-2xl bg-slate-900 text-white hover:bg-slate-800"
-                  onClick={() => {
-                    if (selectedCalendarDate) {
-                      applyDateSelection(selectedCalendarDate);
-                    }
-                  }}
-                  disabled={!selectedCalendarDate || isDateDisabled(selectedCalendarDate)}
-                >
-                  Confirm Delivery Date
-                </Button>
-              </DrawerFooter>
-            </DrawerContent>
-          </Drawer>
-        ) : (
+              <div className="ml-4 flex h-10 w-10 items-center justify-center rounded-full bg-rose-50 text-rose-600">
+                <ChevronRight className="h-5 w-5" />
+              </div>
+            </Button>
+
+            <p className="mt-2 text-sm text-slate-500">
+              Choose a delivery date without shifting the checkout form.
+            </p>
+
           <Dialog open={isCalendarOpen} onOpenChange={handleCalendarOpenChange}>
             <DialogContent
               id="delivery-date-surface"
@@ -781,6 +717,7 @@ const TimeSlotSelector = ({
               </div>
             </DialogContent>
           </Dialog>
+          </>
         )}
       </div>
       
