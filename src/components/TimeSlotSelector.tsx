@@ -226,6 +226,7 @@ const TimeSlotSelector = ({
   onSelectDate
 }: TimeSlotSelectorProps) => {
   const normalizeDate = (value: Date) => startOfDay(value);
+  const toDateInputValue = (value: Date) => format(value, 'yyyy-MM-dd');
 
   // Set default date to today or provided selectedDate
   const [date, setDate] = useState<Date | null>(
@@ -389,6 +390,24 @@ const TimeSlotSelector = ({
     }
   };
 
+  const handleNativeDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const nextValue = event.target.value;
+
+    if (!nextValue) {
+      return;
+    }
+
+    const parsedDate = startOfDay(new Date(`${nextValue}T00:00:00`));
+
+    if (!isValid(parsedDate) || isDateDisabled(parsedDate)) {
+      return;
+    }
+
+    setDraftDate(parsedDate);
+    setDate(parsedDate);
+    onSelectDate?.(parsedDate);
+  };
+
   const formatDisplayDate = (date: Date | null) => {
     if (!date || !isValid(date)) return "Pick a delivery date";
     return format(date, 'EEEE, MMMM do, yyyy');
@@ -459,37 +478,39 @@ const TimeSlotSelector = ({
           </div>
         )}
 
-        <Calendar
-          mode="single"
-          selected={selectedCalendarDate || undefined}
-          onSelect={handleDateSelect}
-          fromDate={today}
-          toDate={maxDeliveryDate}
-          disabled={isDateDisabled}
-          modifiers={{
-            holiday: (calendarDate) => Boolean(isHoliday(calendarDate)),
-          }}
-          modifiersClassNames={{
-            holiday: 'after:absolute after:bottom-1.5 after:left-1/2 after:h-1.5 after:w-1.5 after:-translate-x-1/2 after:rounded-full after:bg-rose-500',
-          }}
-          className="mx-auto w-fit rounded-2xl bg-white p-3"
-          classNames={{
-            months: 'flex flex-col space-y-4',
-            month: 'space-y-4',
-            caption: 'flex items-center justify-between px-1 pt-1',
-            caption_label: 'text-sm font-semibold text-slate-900',
-            nav_button: 'h-9 w-9 rounded-full border border-slate-200 bg-white p-0 text-slate-700 opacity-100 shadow-sm transition hover:bg-slate-100',
-            table: 'w-full border-collapse space-y-1.5',
-            head_cell: 'w-11 rounded-md text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-slate-400',
-            row: 'mt-2 flex w-full justify-between gap-1.5',
-            cell: 'relative h-11 w-11 p-0 text-center text-sm',
-            day: 'h-11 w-11 rounded-2xl p-0 text-sm font-medium text-slate-700 transition hover:bg-rose-50 hover:text-rose-700 aria-selected:bg-rose-600 aria-selected:text-white aria-selected:shadow-md',
-            day_today: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200',
-            day_selected: 'bg-rose-600 text-white hover:bg-rose-600 hover:text-white focus:bg-rose-600 focus:text-white',
-            day_disabled: 'cursor-not-allowed text-slate-300 opacity-100 line-through decoration-slate-300',
-            day_outside: 'text-slate-300 opacity-40',
-          }}
-        />
+        <div className="w-full overflow-x-auto">
+          <Calendar
+            mode="single"
+            selected={selectedCalendarDate || undefined}
+            onSelect={handleDateSelect}
+            fromDate={today}
+            toDate={maxDeliveryDate}
+            disabled={isDateDisabled}
+            modifiers={{
+              holiday: (calendarDate) => Boolean(isHoliday(calendarDate)),
+            }}
+            modifiersClassNames={{
+              holiday: 'after:absolute after:bottom-1.5 after:left-1/2 after:h-1.5 after:w-1.5 after:-translate-x-1/2 after:rounded-full after:bg-rose-500',
+            }}
+            className="mx-auto w-fit rounded-2xl bg-white p-3"
+            classNames={{
+              months: 'flex flex-col space-y-4',
+              month: 'space-y-4',
+              caption: 'flex items-center justify-between px-1 pt-1',
+              caption_label: 'text-sm font-semibold text-slate-900',
+              nav_button: 'h-9 w-9 rounded-full border border-slate-200 bg-white p-0 text-slate-700 opacity-100 shadow-sm transition hover:bg-slate-100',
+              table: 'w-full border-collapse space-y-1.5',
+              head_cell: 'w-11 rounded-md text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-slate-400',
+              row: 'mt-2 flex w-full justify-between gap-1.5',
+              cell: 'relative h-11 w-11 p-0 text-center text-sm',
+              day: 'h-11 w-11 rounded-2xl p-0 text-sm font-medium text-slate-700 transition hover:bg-rose-50 hover:text-rose-700 aria-selected:bg-rose-600 aria-selected:text-white aria-selected:shadow-md',
+              day_today: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200',
+              day_selected: 'bg-rose-600 text-white hover:bg-rose-600 hover:text-white focus:bg-rose-600 focus:text-white',
+              day_disabled: 'cursor-not-allowed text-slate-300 opacity-100 line-through decoration-slate-300',
+              day_outside: 'text-slate-300 opacity-40',
+            }}
+          />
+        </div>
       </div>
 
       <div className="rounded-3xl border border-slate-200 bg-slate-50/90 p-4">
@@ -633,12 +654,24 @@ const TimeSlotSelector = ({
   };
   
   return (
-    <div className={cn('space-y-4', className)}>
+    <div className={cn('w-full space-y-4 overflow-x-hidden', className)}>
       <div>
         <div className="flex items-center gap-2 mb-2">
           <CalendarIcon className="h-5 w-5 text-primary" />
           <span className="font-medium text-base">Select Delivery Date</span>
         </div>
+        {isMobile && (
+          <div className="mb-3 w-full">
+            <input
+              type="date"
+              className="h-12 w-full rounded-xl border border-slate-300 px-3 text-base"
+              value={date && isValid(date) ? toDateInputValue(date) : ''}
+              min={toDateInputValue(today)}
+              max={toDateInputValue(maxDeliveryDate)}
+              onChange={handleNativeDateChange}
+            />
+          </div>
+        )}
         <Button
           variant="outline"
           className="flex h-auto w-full items-center justify-between rounded-2xl border-slate-200 bg-white px-4 py-3 text-left shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
@@ -689,7 +722,7 @@ const TimeSlotSelector = ({
                   </Button>
                 </div>
               </DrawerHeader>
-              <div className="overflow-y-auto px-5 py-4">
+              <div className="overflow-y-auto overflow-x-hidden px-5 py-4">
                 {datePickerContent}
               </div>
               <DrawerFooter className="border-t border-slate-200 bg-white px-5 pb-5 pt-4">

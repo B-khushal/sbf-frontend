@@ -20,6 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import PinCodeInput, { type PinCodeSelection } from '@/components/ui/PinCodeInput';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 
 // Animation variants
@@ -48,7 +49,7 @@ const itemVariants = {
 
 const inputClassName = 'h-12 rounded-xl border-slate-300 text-base shadow-sm focus-visible:ring-2 focus-visible:ring-emerald-500';
 const sectionCardClassName = 'space-y-4 rounded-2xl border border-slate-200 bg-slate-50/80 p-4 shadow-sm sm:p-5';
-const mobileActionButtonClassName = 'h-12 rounded-xl text-sm font-semibold shadow-sm';
+const mobileActionButtonClassName = 'h-14 min-h-[48px] rounded-xl text-base font-semibold shadow-sm';
 
 const CheckoutShippingPage = () => {
   const navigate = useNavigate();
@@ -59,6 +60,7 @@ const CheckoutShippingPage = () => {
   const [deliveryOption, setDeliveryOption] = useState<'self' | 'gift'>('self');
   const [giftMessage, setGiftMessage] = useState('');
   const { formatPrice, convertPrice } = useCurrency();
+  const isMobile = useIsMobile();
   const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
   const [showOrderSummary, setShowOrderSummary] = useState(false);
   const [isSavedAddressesOpen, setIsSavedAddressesOpen] = useState(false);
@@ -367,9 +369,20 @@ const CheckoutShippingPage = () => {
 
   const handleFieldFocusCapture = (event: React.FocusEvent<HTMLFormElement>) => {
     const target = event.target as HTMLElement;
+    const mobileFocusableSelector = 'input, textarea, select, [role="combobox"], [contenteditable="true"]';
+    const desktopFocusableSelector = 'input, textarea, button, [role="combobox"]';
 
-    if (target.matches('input, textarea, button, [role="combobox"]')) {
+    if (target.matches(isMobile ? mobileFocusableSelector : desktopFocusableSelector)) {
       window.setTimeout(() => {
+        if (isMobile) {
+          const targetTop = target.getBoundingClientRect().top + window.scrollY;
+          window.scrollTo({
+            top: Math.max(0, targetTop - 100),
+            behavior: 'smooth',
+          });
+          return;
+        }
+
         target.scrollIntoView({
           behavior: 'smooth',
           block: 'center',
@@ -384,11 +397,11 @@ const CheckoutShippingPage = () => {
   const isContinueDisabled = !selectedDeliveryPin?.code || !activePinValidation.isValid;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50">
+    <div className="min-h-screen overflow-x-hidden bg-gradient-to-br from-green-50 via-blue-50 to-purple-50">
       <Navigation />
       
       <motion.div 
-        className="container mx-auto max-w-6xl px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8"
+        className="container mx-auto max-w-6xl px-4 py-4 pb-32 sm:px-6 sm:py-6 lg:px-8 lg:py-8 lg:pb-8"
         initial="hidden"
         animate="visible"
         variants={containerVariants}
@@ -441,7 +454,7 @@ const CheckoutShippingPage = () => {
                     onSubmit={handleSubmit}
                     noValidate
                     onFocusCapture={handleFieldFocusCapture}
-                    className="space-y-5 pb-32 lg:pb-0"
+                    className="space-y-4 pb-40 lg:space-y-5 lg:pb-0"
                   >
                     {/* Saved Addresses Dropdown */}
                     {savedAddresses.length > 0 && (
@@ -938,7 +951,7 @@ const CheckoutShippingPage = () => {
                     )}
                     
                     {/* Time Slot Selector */}
-                    <div className={sectionCardClassName}>
+                    <div className={cn(sectionCardClassName, 'scroll-mb-44')}>
                       <div className="flex items-center gap-2">
                         <Clock size={18} className="text-primary" />
                         <h2 className="text-lg font-medium">Delivery Time</h2>
@@ -1145,44 +1158,48 @@ const CheckoutShippingPage = () => {
         </div>
       </motion.div>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 shadow-2xl backdrop-blur lg:hidden">
-        <div className="mx-auto max-w-md space-y-3">
-          <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Order Total</p>
-              <p className="text-base font-semibold text-slate-900">{formatPrice(convertPrice(orderTotal))}</p>
+      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200 bg-white shadow-lg lg:hidden">
+        <div className="mx-auto w-full max-w-md px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white/95 shadow-sm backdrop-blur">
+            <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-4 py-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Order Total</p>
+                <p className="text-base font-semibold text-slate-900">{formatPrice(convertPrice(orderTotal))}</p>
+              </div>
+              <div className="text-right text-xs text-slate-500">
+                <p>{selectedDate ? selectedDate.toLocaleDateString() : 'Select date'}</p>
+                <p>{selectedTimeSlot ? selectedTimeSlot.charAt(0).toUpperCase() + selectedTimeSlot.slice(1) : 'Select slot'}</p>
+              </div>
             </div>
-            <div className="text-right text-xs text-slate-500">
-              <p>{selectedDate ? selectedDate.toLocaleDateString() : 'Select date'}</p>
-              <p>{selectedTimeSlot ? selectedTimeSlot.charAt(0).toUpperCase() + selectedTimeSlot.slice(1) : 'Select slot'}</p>
+
+            <div className="grid grid-cols-2 gap-3 p-4">
+              <Button
+                variant="outline"
+                type="button"
+                onClick={() => navigate('/cart')}
+                className={cn(mobileActionButtonClassName, 'border-slate-300 px-4')}
+              >
+                Back to Cart
+              </Button>
+              <Button
+                type="submit"
+                form="shipping-form"
+                disabled={isContinueDisabled}
+                className={cn(
+                  mobileActionButtonClassName,
+                  'bg-gradient-to-r from-green-600 to-blue-600 px-4 text-sm text-white hover:from-green-700 hover:to-blue-700'
+                )}
+              >
+                Continue to Payment
+              </Button>
             </div>
           </div>
-
-          <div className="grid grid-cols-2 gap-3">
-          <Button
-            variant="outline"
-            type="button"
-            onClick={() => navigate('/cart')}
-            className={cn(mobileActionButtonClassName, 'border-slate-300 px-4')}
-          >
-            Back to Cart
-          </Button>
-          <Button
-            type="submit"
-            form="shipping-form"
-            disabled={isContinueDisabled}
-            className={cn(
-              mobileActionButtonClassName,
-              'bg-gradient-to-r from-green-600 to-blue-600 px-4 text-sm text-white hover:from-green-700 hover:to-blue-700'
-            )}
-          >
-            Continue to Payment
-          </Button>
-        </div>
         </div>
       </div>
       
-      <Footer />
+      <div className="hidden lg:block">
+        <Footer />
+      </div>
     </div>
   );
 };

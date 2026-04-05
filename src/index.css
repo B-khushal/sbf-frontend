@@ -85,6 +85,7 @@
     -webkit-font-smoothing: antialiased;
     scroll-behavior: smooth;
     font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
   }
   
   body {
@@ -92,6 +93,10 @@
     overflow-x: hidden;
     /* Ensure proper scroll behavior for dropdowns */
     scroll-behavior: smooth;
+  }
+
+  #root {
+    overflow-x: hidden;
   }
 
   body.kitchen-mode-active {
