@@ -49,7 +49,7 @@ const itemVariants = {
 
 const inputClassName = 'h-12 rounded-xl border-slate-300 text-base shadow-sm focus-visible:ring-2 focus-visible:ring-emerald-500';
 const sectionCardClassName = 'space-y-4 rounded-2xl border border-slate-200 bg-slate-50/80 p-4 shadow-sm sm:p-5';
-const mobileActionButtonClassName = 'h-14 min-h-[48px] rounded-xl text-base font-semibold shadow-sm';
+const mobileActionButtonClassName = 'h-12 min-h-[48px] rounded-xl text-sm font-semibold shadow-sm';
 
 const CheckoutShippingPage = () => {
   const navigate = useNavigate();
@@ -454,7 +454,7 @@ const CheckoutShippingPage = () => {
                     onSubmit={handleSubmit}
                     noValidate
                     onFocusCapture={handleFieldFocusCapture}
-                    className="space-y-4 pb-40 lg:space-y-5 lg:pb-0"
+                    className="space-y-4 pb-28 lg:space-y-5 lg:pb-0"
                   >
                     {/* Saved Addresses Dropdown */}
                     {savedAddresses.length > 0 && (
@@ -1158,41 +1158,39 @@ const CheckoutShippingPage = () => {
         </div>
       </motion.div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200 bg-white shadow-lg lg:hidden">
-        <div className="mx-auto w-full max-w-md px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white/95 shadow-sm backdrop-blur">
-            <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-4 py-3">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Order Total</p>
-                <p className="text-base font-semibold text-slate-900">{formatPrice(convertPrice(orderTotal))}</p>
-              </div>
-              <div className="text-right text-xs text-slate-500">
-                <p>{selectedDate ? selectedDate.toLocaleDateString() : 'Select date'}</p>
-                <p>{selectedTimeSlot ? selectedTimeSlot.charAt(0).toUpperCase() + selectedTimeSlot.slice(1) : 'Select slot'}</p>
-              </div>
+      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200 bg-white/95 shadow-lg backdrop-blur lg:hidden">
+        <div className="mx-auto w-full max-w-lg px-4 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Order Total</p>
+              <p className="text-base font-semibold text-slate-900">{formatPrice(convertPrice(orderTotal))}</p>
             </div>
+            <div className="text-right text-xs leading-tight text-slate-500">
+              <p>{selectedDate ? selectedDate.toLocaleDateString() : 'Select date'}</p>
+              <p>{selectedTimeSlot ? selectedTimeSlot.charAt(0).toUpperCase() + selectedTimeSlot.slice(1) : 'Select slot'}</p>
+            </div>
+          </div>
 
-            <div className="grid grid-cols-2 gap-3 p-4">
-              <Button
-                variant="outline"
-                type="button"
-                onClick={() => navigate('/cart')}
-                className={cn(mobileActionButtonClassName, 'border-slate-300 px-4')}
-              >
-                Back to Cart
-              </Button>
-              <Button
-                type="submit"
-                form="shipping-form"
-                disabled={isContinueDisabled}
-                className={cn(
-                  mobileActionButtonClassName,
-                  'bg-gradient-to-r from-green-600 to-blue-600 px-4 text-sm text-white hover:from-green-700 hover:to-blue-700'
-                )}
-              >
-                Continue to Payment
-              </Button>
-            </div>
+          <div className="grid grid-cols-2 gap-2 pt-2">
+            <Button
+              variant="outline"
+              type="button"
+              onClick={() => navigate('/cart')}
+              className={cn(mobileActionButtonClassName, 'border-slate-300 px-3')}
+            >
+              Back to Cart
+            </Button>
+            <Button
+              type="submit"
+              form="shipping-form"
+              disabled={isContinueDisabled}
+              className={cn(
+                mobileActionButtonClassName,
+                'bg-gradient-to-r from-green-600 to-blue-600 px-3 text-white hover:from-green-700 hover:to-blue-700'
+              )}
+            >
+              Continue to Payment
+            </Button>
           </div>
         </div>
       </div>
