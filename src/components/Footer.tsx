@@ -85,7 +85,7 @@ const Footer = () => {
             {[
               { label: 'Home', href: '/' },
               { label: 'Shop', href: '/shop' },
-              { label: 'Track Order', href: '/track-order' },
+              { label: 'Track Order', href: '/profile' },
               { label: 'Contact', href: '/contact' },
               { label: 'About', href: '/about' },
             ].map((item) => (
@@ -138,7 +138,7 @@ const Footer = () => {
               </summary>
               <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
                 <Link to="/contact" className="rounded-lg bg-sky-50 px-3 py-2 text-gray-700">Contact</Link>
-                <Link to="/track-order" className="rounded-lg bg-sky-50 px-3 py-2 text-gray-700">Track Order</Link>
+                <Link to="/profile" className="rounded-lg bg-sky-50 px-3 py-2 text-gray-700">Track Order</Link>
               </div>
             </details>
             <details className="rounded-xl border border-gray-200 bg-white px-3 py-2">
