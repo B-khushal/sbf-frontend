@@ -8,6 +8,7 @@ import { EXCHANGE_RATES, useCurrency } from "@/contexts/CurrencyContext";
 import { useSettings } from "@/contexts/SettingsContext";
 import { toast } from "sonner";
 import { getImageUrl, getSquareImageUrl } from "@/config";
+import { cn } from "@/lib/utils";
 import ContactModal from "@/components/ui/ContactModal";
 
 const CATEGORY_SLUG_MAP: Record<string, string> = {
@@ -122,6 +123,8 @@ const ShopPage = () => {
   const [sortBy, setSortBy] = useState("newest");
   const [viewMode, setViewMode] = useState("grid");
   const [priceRange, setPriceRange] = useState("all");
+  const [deliveryOption, setDeliveryOption] = useState("");
+  const [occasionFilter, setOccasionFilter] = useState("");
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -129,6 +132,8 @@ const ShopPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+  const [activeFilterSection, setActiveFilterSection] = useState<string | null>(null);
 
   const {
     addToCart,
@@ -410,87 +415,470 @@ const ShopPage = () => {
             </div>
           )}
 
-          {/* Main Content: Filters and Product Grid */}
-          <div className="flex items-center justify-end mb-4">
-            <button 
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-primary"
+          {/* Main Content: Mobile Horizontal Dropdown Filters + Product Grid */}
+          {/* Mobile Horizontal Filter Pills */}
+          <div className="lg:hidden">
+            <div 
+              className="flex overflow-x-auto gap-2 px-2 py-3"
+              style={{ 
+                scrollBehavior: 'smooth', 
+                WebkitOverflowScrolling: 'touch',
+                scrollbarWidth: 'none'
+              }}
             >
-              <Filter size={16} />
-              {showFilters ? 'Hide' : 'Show'} Filters
-            </button>
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mt-4">
+              <style>{`
+                .mobile-filter-row::-webkit-scrollbar { display: none; }
+                .mobile-filter-row { scrollbar-width: none; }
+              `}</style>
+              
+              <div className="mobile-filter-row flex gap-2 overflow-x-auto flex-nowrap">
+                {/* Filters Button */}
+                <button
+                  onClick={() => {
+                    setMobileFilterOpen(true);
+                    setActiveFilterSection(null);
+                  }}
+                  className={cn(
+                    'flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap',
+                    'bg-gradient-to-r from-primary/80 to-pink-600/80 text-white transition-all duration-200',
+                    'hover:shadow-md active:scale-95 flex-shrink-0'
+                  )}
+                >
+                  <Filter size={16} />
+                  Filters
+                </button>
+
+                {/* Sort By Button */}
+                <button
+                  onClick={() => {
+                    setMobileFilterOpen(true);
+                    setActiveFilterSection("sort");
+                  }}
+                  className={cn(
+                    'flex items-center gap-1 px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap',
+                    'bg-white border-2 transition-all duration-200 flex-shrink-0',
+                    sortBy && sortBy !== "newest" 
+                      ? 'border-primary bg-gradient-to-br from-primary/5 to-pink-600/5 text-primary' 
+                      : 'border-gray-300 text-gray-700 hover:border-primary'
+                  )}
+                >
+                  {sortBy === "newest" ? "Sort" : sortBy === "price-asc" ? "Low to High" : "High to Low"}
+                  <ChevronDown size={14} />
+                </button>
+
+                {/* Price Button */}
+                <button
+                  onClick={() => {
+                    setMobileFilterOpen(true);
+                    setActiveFilterSection("price");
+                  }}
+                  className={cn(
+                    'flex items-center gap-1 px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap',
+                    'bg-white border-2 transition-all duration-200 flex-shrink-0',
+                    priceRange && priceRange !== "all"
+                      ? 'border-primary bg-gradient-to-br from-primary/5 to-pink-600/5 text-primary'
+                      : 'border-gray-300 text-gray-700 hover:border-primary'
+                  )}
+                >
+                  {priceRange === "all" ? "Price" : `Price: ${priceRange}`}
+                  <ChevronDown size={14} />
+                </button>
+
+                {/* Category Button */}
+                <button
+                  onClick={() => {
+                    setMobileFilterOpen(true);
+                    setActiveFilterSection("category");
+                  }}
+                  className={cn(
+                    'flex items-center gap-1 px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap',
+                    'bg-white border-2 transition-all duration-200 flex-shrink-0',
+                    selectedCategory
+                      ? 'border-primary bg-gradient-to-br from-primary/5 to-pink-600/5 text-primary'
+                      : 'border-gray-300 text-gray-700 hover:border-primary'
+                  )}
+                >
+                  {selectedCategory ? `Category: ${selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)}` : 'Category'}
+                  <ChevronDown size={14} />
+                </button>
+
+                {/* Delivery Button */}
+                <button
+                  onClick={() => {
+                    setMobileFilterOpen(true);
+                    setActiveFilterSection("delivery");
+                  }}
+                  className={cn(
+                    'flex items-center gap-1 px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap',
+                    'bg-white border-2 transition-all duration-200 flex-shrink-0',
+                    deliveryOption
+                      ? 'border-primary bg-gradient-to-br from-primary/5 to-pink-600/5 text-primary'
+                      : 'border-gray-300 text-gray-700 hover:border-primary'
+                  )}
+                >
+                  {deliveryOption ? `Delivery: ${deliveryOption.replace('-', ' ')}` : 'Delivery'}
+                  <ChevronDown size={14} />
+                </button>
+
+                {/* Occasion Button */}
+                <button
+                  onClick={() => {
+                    setMobileFilterOpen(true);
+                    setActiveFilterSection("occasion");
+                  }}
+                  className={cn(
+                    'flex items-center gap-1 px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap',
+                    'bg-white border-2 transition-all duration-200 flex-shrink-0',
+                    occasionFilter
+                      ? 'border-primary bg-gradient-to-br from-primary/5 to-pink-600/5 text-primary'
+                      : 'border-gray-300 text-gray-700 hover:border-primary'
+                  )}
+                >
+                  {occasionFilter ? `Occasion: ${occasionFilter.replace('-', ' ')}` : 'Occasion'}
+                  <ChevronDown size={14} />
+                </button>
+
+                {/* Reset Button */}
+                <button
+                  onClick={() => {
+                    setSelectedCategory("");
+                    setPriceRange("all");
+                    setSortBy("newest");
+                    setDeliveryOption("");
+                    setOccasionFilter("");
+                    navigate("/shop");
+                  }}
+                  className={cn(
+                    'flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap',
+                    'bg-white border border-red-300 text-red-600 transition-all duration-200',
+                    'hover:bg-red-50 hover:shadow-sm active:scale-95 flex-shrink-0'
+                  )}
+                >
+                  <X size={16} />
+                  Reset
+                </button>
+              </div>
+            </div>
             
-            {/* Filters Sidebar */}
-            {showFilters && (
-              <div className="lg:col-span-1">
-                <div className="bg-white/60 backdrop-blur-md rounded-xl shadow-sm p-4 sticky top-24">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                      <Filter size={18} />
-                      Filters
-                    </h2>
-                    <button 
-                      onClick={() => {
-                        setSelectedCategory("");
-                        setPriceRange("all");
-                        setSortBy("newest");
-                        navigate("/shop");
-                      }}
-                      className="text-xs font-medium text-gray-500 hover:text-primary"
+            {/* Inline Expandable Filter Panel */}
+            <div
+              className={cn(
+                "overflow-hidden transition-all duration-300 ease-out",
+                mobileFilterOpen ? "max-h-[1200px] opacity-100 translate-y-0 mt-3 mb-4" : "max-h-0 opacity-0 -translate-y-1"
+              )}
+            >
+              <div className="w-full rounded-2xl bg-white shadow-md border border-gray-200 p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-lg font-bold text-gray-900">Filters</h2>
+                  <button
+                    onClick={() => setMobileFilterOpen(false)}
+                    className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                    aria-label="Close filters"
+                  >
+                    <X size={20} className="text-gray-700" />
+                  </button>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="border border-gray-200 rounded-lg p-4">
+                    <button
+                      onClick={() => setActiveFilterSection(activeFilterSection === "sort" ? null : "sort")}
+                      className="flex items-center justify-between w-full text-left"
                     >
-                      Reset
+                      <h3 className="font-semibold text-gray-800">Sort By</h3>
+                      <ChevronDown
+                        size={18}
+                        className={cn(
+                          "transition-transform duration-200",
+                          activeFilterSection === "sort" && "rotate-180"
+                        )}
+                      />
                     </button>
+                    {activeFilterSection === "sort" && (
+                      <div className="mt-3 space-y-2">
+                        {[
+                          { label: 'Newest', value: 'newest' },
+                          { label: 'Price: Low to High', value: 'price-asc' },
+                          { label: 'Price: High to Low', value: 'price-desc' },
+                        ].map(option => (
+                          <label key={option.value} className="flex items-center gap-3 cursor-pointer group">
+                            <input
+                              type="radio"
+                              name="sort"
+                              value={option.value}
+                              checked={sortBy === option.value}
+                              onChange={(e) => setSortBy(e.target.value)}
+                              className="w-5 h-5 cursor-pointer"
+                            />
+                            <span className="text-gray-700 group-hover:text-primary transition-colors">{option.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
-                  <FilterSection title="Category">
-                    {categories.map((cat) => (
-                      <button
-                        key={cat}
-                        onClick={() => setSelectedCategory(cat)}
-                        className={`w-full text-left px-3 py-1 rounded-md transition-colors text-xs hover:bg-gray-100 ${
-                          selectedCategory === cat ? "bg-primary text-white font-medium" : "text-gray-600"
-                        }`}
-                      >
-                        {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                      </button>
-                    ))}
-                  </FilterSection>
+                  <div className="border border-gray-200 rounded-lg p-4">
+                    <button
+                      onClick={() => setActiveFilterSection(activeFilterSection === "price" ? null : "price")}
+                      className="flex items-center justify-between w-full text-left"
+                    >
+                      <h3 className="font-semibold text-gray-800">Price Range</h3>
+                      <ChevronDown
+                        size={18}
+                        className={cn(
+                          "transition-transform duration-200",
+                          activeFilterSection === "price" && "rotate-180"
+                        )}
+                      />
+                    </button>
+                    {activeFilterSection === "price" && (
+                      <div className="mt-3 space-y-2">
+                        {[
+                          { label: 'All Prices', value: 'all' },
+                          { label: 'Under ₹1000', value: '0-1000' },
+                          { label: '₹1000 - ₹2000', value: '1000-2000' },
+                          { label: '₹2000 - ₹5000', value: '2000-5000' },
+                          { label: 'Above ₹5000', value: '5000+' },
+                        ].map(option => (
+                          <label key={option.value} className="flex items-center gap-3 cursor-pointer group">
+                            <input
+                              type="radio"
+                              name="price"
+                              value={option.value}
+                              checked={priceRange === option.value}
+                              onChange={(e) => setPriceRange(e.target.value)}
+                              className="w-5 h-5 cursor-pointer"
+                            />
+                            <span className="text-gray-700 group-hover:text-primary transition-colors">{option.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
 
-                  <FilterSection title="Price Range">
-                    {["0-1000", "1000-2000", "2000-5000", "5000+"].map((range) => (
-                      <button
-                        key={range}
-                        onClick={() => setPriceRange(range)}
-                        className={`w-full text-left px-3 py-1 rounded-md transition-colors text-xs hover:bg-gray-100 ${
-                          priceRange === range ? "bg-primary text-white font-medium" : "text-gray-600"
-                        }`}
-                      >
-                        ₹{range.replace("-", " - ")}
-                      </button>
-                    ))}
-                  </FilterSection>
+                  <div className="border border-gray-200 rounded-lg p-4">
+                    <button
+                      onClick={() => setActiveFilterSection(activeFilterSection === "category" ? null : "category")}
+                      className="flex items-center justify-between w-full text-left"
+                    >
+                      <h3 className="font-semibold text-gray-800">Category</h3>
+                      <ChevronDown
+                        size={18}
+                        className={cn(
+                          "transition-transform duration-200",
+                          activeFilterSection === "category" && "rotate-180"
+                        )}
+                      />
+                    </button>
+                    {activeFilterSection === "category" && (
+                      <div className="mt-3 space-y-2 max-h-48 overflow-y-auto">
+                        {(() => {
+                          const predefined = [
+                            { label: 'Bouquets', value: 'bouquets' },
+                            { label: 'Baskets', value: 'baskets' },
+                            { label: 'Roses', value: 'roses' },
+                            { label: 'Birthday', value: 'birthday' },
+                            { label: 'Anniversary', value: 'anniversary' },
+                          ];
+                          const predefinedValues = new Set(predefined.map(p => p.value));
+                          const dynamicCategories = categories
+                            .slice(0, 10)
+                            .filter(cat => !predefinedValues.has(cat.toLowerCase()))
+                            .map(cat => ({
+                              label: cat.charAt(0).toUpperCase() + cat.slice(1),
+                              value: cat.toLowerCase()
+                            }));
 
-                  <FilterSection title="Sort By">
-                    {["newest", "price-asc", "price-desc"].map((sortOption) => (
-                      <button
-                        key={sortOption}
-                        onClick={() => setSortBy(sortOption)}
-                        className={`w-full text-left px-3 py-1 rounded-md transition-colors text-xs hover:bg-gray-100 ${
-                          sortBy === sortOption ? "bg-primary text-white font-medium" : "text-gray-600"
-                        }`}
-                      >
-                        {sortOption.replace("-", " ").replace(/\b\w/g, l => l.toUpperCase())}
-                      </button>
-                    ))}
-                  </FilterSection>
+                          return [...predefined, ...dynamicCategories].map(option => (
+                            <label key={option.value} className="flex items-center gap-3 cursor-pointer group">
+                              <input
+                                type="radio"
+                                name="category"
+                                value={option.value}
+                                checked={selectedCategory === option.value}
+                                onChange={(e) => setSelectedCategory(e.target.value)}
+                                className="w-5 h-5 cursor-pointer"
+                              />
+                              <span className="text-gray-700 group-hover:text-primary transition-colors">{option.label}</span>
+                            </label>
+                          ));
+                        })()}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="border border-gray-200 rounded-lg p-4">
+                    <button
+                      onClick={() => setActiveFilterSection(activeFilterSection === "delivery" ? null : "delivery")}
+                      className="flex items-center justify-between w-full text-left"
+                    >
+                      <h3 className="font-semibold text-gray-800">Delivery</h3>
+                      <ChevronDown
+                        size={18}
+                        className={cn(
+                          "transition-transform duration-200",
+                          activeFilterSection === "delivery" && "rotate-180"
+                        )}
+                      />
+                    </button>
+                    {activeFilterSection === "delivery" && (
+                      <div className="mt-3 space-y-2">
+                        {[
+                          { label: 'Same Day', value: 'same-day' },
+                          { label: 'Tomorrow', value: 'tomorrow' },
+                          { label: 'Midnight', value: 'midnight' },
+                        ].map(option => (
+                          <label key={option.value} className="flex items-center gap-3 cursor-pointer group">
+                            <input
+                              type="radio"
+                              name="delivery"
+                              value={option.value}
+                              checked={deliveryOption === option.value}
+                              onChange={(e) => setDeliveryOption(e.target.value)}
+                              className="w-5 h-5 cursor-pointer"
+                            />
+                            <span className="text-gray-700 group-hover:text-primary transition-colors">{option.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="border border-gray-200 rounded-lg p-4">
+                    <button
+                      onClick={() => setActiveFilterSection(activeFilterSection === "occasion" ? null : "occasion")}
+                      className="flex items-center justify-between w-full text-left"
+                    >
+                      <h3 className="font-semibold text-gray-800">Occasion</h3>
+                      <ChevronDown
+                        size={18}
+                        className={cn(
+                          "transition-transform duration-200",
+                          activeFilterSection === "occasion" && "rotate-180"
+                        )}
+                      />
+                    </button>
+                    {activeFilterSection === "occasion" && (
+                      <div className="mt-3 space-y-2 max-h-48 overflow-y-auto">
+                        {[
+                          { label: 'Birthday', value: 'birthday' },
+                          { label: 'Anniversary', value: 'anniversary' },
+                          { label: 'Love & Romance', value: 'love' },
+                          { label: 'Congratulations', value: 'congratulations' },
+                          { label: 'Get Well', value: 'get-well' },
+                          { label: 'Thank You', value: 'thank-you' },
+                        ].map(option => (
+                          <label key={option.value} className="flex items-center gap-3 cursor-pointer group">
+                            <input
+                              type="radio"
+                              name="occasion"
+                              value={option.value}
+                              checked={occasionFilter === option.value}
+                              onChange={(e) => setOccasionFilter(e.target.value)}
+                              className="w-5 h-5 cursor-pointer"
+                            />
+                            <span className="text-gray-700 group-hover:text-primary transition-colors">{option.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="border-t border-gray-200 mt-4 pt-4 space-y-3">
+                  <button
+                    onClick={() => setMobileFilterOpen(false)}
+                    className="w-full py-3 bg-gradient-to-r from-primary to-pink-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-200"
+                  >
+                    Apply Filters
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSelectedCategory("");
+                      setPriceRange("all");
+                      setSortBy("newest");
+                      setDeliveryOption("");
+                      setOccasionFilter("");
+                      navigate("/shop");
+                    }}
+                    className="w-full py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-all duration-200"
+                  >
+                    Reset All Filters
+                  </button>
                 </div>
               </div>
-            )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mt-4">
+            
+            {/* Filters Sidebar - Desktop Only (>= lg) */}
+            <div className="hidden lg:block lg:col-span-1">
+              <div className="bg-white/60 backdrop-blur-md rounded-xl shadow-sm p-4 sticky top-24">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                    <Filter size={18} />
+                    Filters
+                  </h2>
+                  <button 
+                    onClick={() => {
+                      setSelectedCategory("");
+                      setPriceRange("all");
+                      setSortBy("newest");
+                      navigate("/shop");
+                    }}
+                    className="text-xs font-medium text-gray-500 hover:text-primary"
+                  >
+                    Reset
+                  </button>
+                </div>
+
+                <FilterSection title="Category">
+                  {categories.map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => setSelectedCategory(cat)}
+                      className={`w-full text-left px-3 py-1 rounded-md transition-colors text-xs hover:bg-gray-100 ${
+                        selectedCategory === cat ? "bg-primary text-white font-medium" : "text-gray-600"
+                      }`}
+                    >
+                      {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                    </button>
+                  ))}
+                </FilterSection>
+
+                <FilterSection title="Price Range">
+                  {["0-1000", "1000-2000", "2000-5000", "5000+"].map((range) => (
+                    <button
+                      key={range}
+                      onClick={() => setPriceRange(range)}
+                      className={`w-full text-left px-3 py-1 rounded-md transition-colors text-xs hover:bg-gray-100 ${
+                        priceRange === range ? "bg-primary text-white font-medium" : "text-gray-600"
+                      }`}
+                    >
+                      ₹{range.replace("-", " - ")}
+                    </button>
+                  ))}
+                </FilterSection>
+
+                <FilterSection title="Sort By">
+                  {["newest", "price-asc", "price-desc"].map((sortOption) => (
+                    <button
+                      key={sortOption}
+                      onClick={() => setSortBy(sortOption)}
+                      className={`w-full text-left px-3 py-1 rounded-md transition-colors text-xs hover:bg-gray-100 ${
+                        sortBy === sortOption ? "bg-primary text-white font-medium" : "text-gray-600"
+                      }`}
+                    >
+                      {sortOption.replace("-", " ").replace(/\b\w/g, l => l.toUpperCase())}
+                    </button>
+                  ))}
+                </FilterSection>
+              </div>
+            </div>
 
             {/* Products Grid */}
-            <div className={showFilters ? "lg:col-span-3" : "lg:col-span-4"}>
+            <div className="lg:col-span-3">
               {isLoading ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                   {[...Array(6)].map((_, i) => (

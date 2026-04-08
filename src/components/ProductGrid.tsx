@@ -226,7 +226,7 @@ const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCar
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 sm:gap-5 md:gap-6 lg:gap-7 xl:gap-9">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-3 sm:gap-4 md:gap-5 lg:gap-6 xl:gap-8">
           {visibleProducts.map((product) => (
             <ProductCard key={product._id} product={product} onAddToCart={onAddToCart} />
           ))}
@@ -449,33 +449,32 @@ const ProductCard = ({ product, onAddToCart }: {
         }`}
       onClick={handleCardClick}
     >
-      {/* Product Image */}
+      {/* Product Image - Optimized for mobile */}
       <div className="relative aspect-square overflow-hidden bg-gray-100">
         {/* Badges Container */}
-        <div className="absolute top-2 left-2 z-10 flex flex-col gap-1">
+        <div className="absolute top-1 left-1 z-10 flex flex-col gap-0.5">
           {product.discount > 0 && (
-            <Badge variant="destructive" className="text-xs px-2 py-1">
+            <Badge variant="destructive" className="text-xs px-1.5 py-0.5">
               -{product.discount}%
             </Badge>
           )}
           {isFeaturedProduct() && (
-            <Badge variant="default" className="bg-yellow-400 text-white text-xs px-2 py-1">
-              ⭐ Featured
+            <Badge variant="default" className="bg-yellow-400 text-white text-xs px-1.5 py-0.5">
+              ⭐
             </Badge>
           )}
           {isNewProduct() && (
-            <Badge variant="default" className="bg-green-500 text-xs px-2 py-1">
+            <Badge variant="default" className="bg-green-500 text-xs px-1.5 py-0.5">
               NEW
             </Badge>
           )}
           {product.isCustomizable && (
-            <Badge variant="secondary" className="text-xs px-2 py-1 flex items-center gap-1">
+            <Badge variant="secondary" className="text-xs px-1.5 py-0.5 flex items-center gap-0.5">
               <Wand2 className="h-3 w-3" />
-              Customizable
             </Badge>
           )}
           {product.hidden && (
-            <Badge variant="outline" className="text-xs px-2 py-1 border-orange-500 text-orange-600">
+            <Badge variant="outline" className="text-xs px-1.5 py-0.5 border-orange-500 text-orange-600">
               Hidden
             </Badge>
           )}
@@ -484,11 +483,11 @@ const ProductCard = ({ product, onAddToCart }: {
         {/* Wishlist Button */}
         <button
           onClick={handleWishlistToggle}
-          className="absolute top-2 right-2 z-10 p-1.5 rounded-full bg-white/80 hover:bg-white shadow-sm transition-colors duration-200"
+          className="absolute top-1 right-1 z-10 p-1 rounded-full bg-white/80 hover:bg-white shadow-sm transition-colors duration-200"
         >
           <Heart
             className={cn(
-              "h-4 w-4 transition-colors duration-200",
+              "h-3.5 w-3.5 transition-colors duration-200",
               isInWishlist ? "fill-red-500 stroke-red-500" : "stroke-gray-600"
             )}
           />
@@ -508,17 +507,17 @@ const ProductCard = ({ product, onAddToCart }: {
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
       </div>
 
-      {/* Product Info */}
-      <div className="p-3">
-        <h3 className="font-medium text-sm text-gray-900 mb-1 line-clamp-2 group-hover:text-primary transition-colors">
+      {/* Product Info - Optimized Padding for Mobile */}
+      <div className="p-2.5">
+        <h3 className="font-medium text-xs text-gray-900 mb-1 line-clamp-2 group-hover:text-primary transition-colors">
           {product.title}
         </h3>
 
-        {/* Price */}
-        <div className="flex items-center gap-1">
+        {/* Price - Compact */}
+        <div className="flex items-center gap-0.5 mb-2">
           {product.category === 'combos' && product.comboItems && product.comboItems.length > 0 ? (
             <span className={cn(
-              "text-sm font-bold",
+              "text-xs font-bold",
               product.discount > 0 ? "text-red-600" : "text-black"
             )}>
               {formatPrice(convertPrice(getComboMaxPrice(product)))}
@@ -526,7 +525,7 @@ const ProductCard = ({ product, onAddToCart }: {
           ) : (
             <>
               <span className={cn(
-                "text-sm font-bold",
+                "text-xs font-bold",
                 product.discount > 0 ? "text-red-600" : "text-black"
               )}>
                 {formatPrice(convertPrice(product.discount ? product.price * (1 - product.discount / 100) : product.price))}
@@ -540,27 +539,27 @@ const ProductCard = ({ product, onAddToCart }: {
           )}
         </div>
 
-        {/* Action Buttons */}
-        <div className="mt-3 flex items-center gap-2">
+        {/* Action Buttons - Optimized for mobile */}
+        <div className="flex items-center gap-1">
           {product.isCustomizable ? (
             <Button
               variant="outline"
               size="sm"
-              className={`flex-1 bg-purple-600 text-white hover:bg-purple-700 hover:shadow-lg transition-all duration-200`}
+              className={`flex-1 px-2 py-1 h-8 text-xs bg-purple-600 text-white hover:bg-purple-700 hover:shadow-lg transition-all duration-200`}
               onClick={handleCustomizeAndAddToCart}
             >
-              <Wand2 className="h-4 w-4 mr-1" />
-              Customize & Add to Cart
+              <Wand2 className="h-3 w-3 mr-0.5" />
+              Customize
             </Button>
           ) : (
             <Button
               variant="outline"
               size="sm"
-              className={`flex-1 bg-primary text-white hover:bg-primary/90 hover:shadow-lg transition-all duration-200`}
+              className={`flex-1 px-2 py-1 h-8 text-xs bg-primary text-white hover:bg-primary/90 hover:shadow-lg transition-all duration-200`}
               onClick={handleAddToCart}
             >
-              <ShoppingBag className="h-4 w-4 mr-1" />
-              Add to Cart
+              <ShoppingBag className="h-3 w-3 mr-0.5" />
+              Add
             </Button>
           )}
         </div>
