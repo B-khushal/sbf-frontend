@@ -13,6 +13,32 @@ interface RegisterData {
   role?: string;
 }
 
+export interface SavedAddress {
+  id: string;
+  firstName: string;
+  lastName: string;
+  address: string;
+  apartment?: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  phone: string;
+  email?: string;
+  notes?: string;
+  deliveryOption: 'self' | 'gift';
+  isDefault?: boolean;
+  giftMessage?: string;
+  receiverFirstName?: string;
+  receiverLastName?: string;
+  receiverEmail?: string;
+  receiverPhone?: string;
+  receiverAddress?: string;
+  receiverApartment?: string;
+  receiverCity?: string;
+  receiverState?: string;
+  receiverZipCode?: string;
+}
+
 interface UserProfile {
   name?: string;
   email?: string;
@@ -26,6 +52,7 @@ interface UserProfile {
     zipCode?: string;
     country?: string;
   };
+  addresses?: SavedAddress[];
 }
 
 // Login user

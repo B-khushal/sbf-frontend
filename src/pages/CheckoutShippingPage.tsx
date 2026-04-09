@@ -22,6 +22,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import PinCodeInput, { type PinCodeSelection } from '@/components/ui/PinCodeInput';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
+import { getUserProfile, updateUserProfile, SavedAddress } from '@/services/authService';
 
 // Animation variants
 const containerVariants = {
@@ -61,7 +62,7 @@ const CheckoutShippingPage = () => {
   const [giftMessage, setGiftMessage] = useState('');
   const { formatPrice, convertPrice } = useCurrency();
   const isMobile = useIsMobile();
-  const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
+  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
   const [showOrderSummary, setShowOrderSummary] = useState(false);
   const [isSavedAddressesOpen, setIsSavedAddressesOpen] = useState(false);
 
@@ -133,12 +134,16 @@ const CheckoutShippingPage = () => {
   
   // Load saved addresses on component mount
   useEffect(() => {
-    try {
-      const addresses = JSON.parse(localStorage.getItem('savedAddresses') || '[]');
-      setSavedAddresses(addresses);
-    } catch (error) {
-      console.error('Error loading saved addresses:', error);
-    }
+    const loadSavedAddresses = async () => {
+      try {
+        const profile = await getUserProfile();
+        setSavedAddresses(profile.addresses || []);
+      } catch (error) {
+        console.error('Error loading saved addresses:', error);
+      }
+    };
+
+    loadSavedAddresses();
   }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -198,7 +203,7 @@ const CheckoutShippingPage = () => {
     });
   };
 
-  const handleSavedAddressSelect = (address: any) => {
+  const handleSavedAddressSelect = (address: SavedAddress) => {
     if (address.deliveryOption === 'self') {
       setFormData({
         ...formData,
@@ -324,15 +329,35 @@ const CheckoutShippingPage = () => {
     // Save address if requested
     if (formData.saveInfo) {
       try {
-        const existingAddresses = JSON.parse(localStorage.getItem('savedAddresses') || '[]');
-        const newAddress = {
+        const newAddress: SavedAddress = {
           id: Date.now().toString(),
-          ...shippingInfo,
-          isDefault: existingAddresses.length === 0
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          address: deliveryOption === 'self' ? formData.address : formData.receiverAddress,
+          apartment: deliveryOption === 'self' ? formData.apartment : formData.receiverApartment,
+          city: deliveryOption === 'self' ? formData.city : formData.receiverCity,
+          state: deliveryOption === 'self' ? formData.state : formData.receiverState,
+          zipCode: deliveryOption === 'self' ? formData.zipCode : formData.receiverZipCode,
+          phone: deliveryOption === 'self' ? formData.phone : formData.receiverPhone,
+          email: deliveryOption === 'self' ? formData.email : formData.receiverEmail,
+          notes: formData.notes,
+          deliveryOption,
+          isDefault: savedAddresses.length === 0,
+          giftMessage: deliveryOption === 'gift' ? giftMessage : '',
+          receiverFirstName: formData.receiverFirstName,
+          receiverLastName: formData.receiverLastName,
+          receiverEmail: formData.receiverEmail,
+          receiverPhone: formData.receiverPhone,
+          receiverAddress: formData.receiverAddress,
+          receiverApartment: formData.receiverApartment,
+          receiverCity: formData.receiverCity,
+          receiverState: formData.receiverState,
+          receiverZipCode: formData.receiverZipCode,
         };
-        
-        const updatedAddresses = [...existingAddresses, newAddress];
-        localStorage.setItem('savedAddresses', JSON.stringify(updatedAddresses));
+
+        const updatedAddresses = [...savedAddresses, newAddress];
+        const updatedProfile = await updateUserProfile({ addresses: updatedAddresses });
+        setSavedAddresses(updatedProfile.addresses || updatedAddresses);
         
         toast({
           title: "Address saved",
@@ -347,12 +372,11 @@ const CheckoutShippingPage = () => {
     navigate('/checkout/payment');
   };
 
-  const handleDeleteAddress = (addressId: string) => {
+  const handleDeleteAddress = async (addressId: string) => {
     try {
-      const existingAddresses = JSON.parse(localStorage.getItem('savedAddresses') || '[]');
-      const updatedAddresses = existingAddresses.filter((addr: any) => addr.id !== addressId);
-      localStorage.setItem('savedAddresses', JSON.stringify(updatedAddresses));
-      setSavedAddresses(updatedAddresses);
+      const updatedAddresses = savedAddresses.filter((addr) => addr.id !== addressId);
+      const updatedProfile = await updateUserProfile({ addresses: updatedAddresses });
+      setSavedAddresses(updatedProfile.addresses || updatedAddresses);
       
       toast({
         title: "Address deleted",
@@ -479,7 +503,7 @@ const CheckoutShippingPage = () => {
                             </Button>
                           </CollapsibleTrigger>
                           <CollapsibleContent className="space-y-2 mt-2">
-                            {savedAddresses.map((address: any) => (
+                            {savedAddresses.map((address) => (
                               <Card key={address.id} className="cursor-pointer border-slate-200 transition-colors hover:border-primary">
                                 <CardContent className="p-3" onClick={() => handleSavedAddressSelect(address)}>
                                   <div className="flex items-start justify-between">

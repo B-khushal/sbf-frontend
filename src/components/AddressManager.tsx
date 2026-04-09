@@ -3,39 +3,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
-import { MapPin, Edit, Trash2, Plus } from 'lucide-react';
+import { MapPin, Edit, Trash2, Plus, ChevronDown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogTitle, DialogFooter, DialogHeader, DialogDescription } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import PinCodeInput from '@/components/ui/PinCodeInput';
+import { getUserProfile, updateUserProfile, SavedAddress } from '@/services/authService';
 
-interface Address {
-  id: string;
-  userId: string;
-  firstName: string;
-  lastName: string;
-  address: string;
-  apartment?: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  phone: string;
-  email: string;
-  notes?: string;
-  deliveryOption: 'self' | 'gift';
-  isDefault?: boolean;
-  giftMessage?: string;
-  receiverFirstName?: string;
-  receiverLastName?: string;
-  receiverEmail?: string;
-  receiverPhone?: string;
-  receiverAddress?: string;
-  receiverApartment?: string;
-  receiverCity?: string;
-  receiverState?: string;
-  receiverZipCode?: string;
-}
+type Address = SavedAddress;
 
 const AddressManager: React.FC = () => {
   const { toast } = useToast();
@@ -84,11 +59,15 @@ const AddressManager: React.FC = () => {
     }
   }, [currentAddress, user]);
 
-  const loadAddresses = () => {
+  const loadAddresses = async () => {
+    if (!user?.id) {
+      setAddresses([]);
+      return;
+    }
+
     try {
-      // Load all addresses from localStorage without filtering by userId
-      const allAddresses = JSON.parse(localStorage.getItem('savedAddresses') || '[]');
-      setAddresses(allAddresses);
+      const profile = await getUserProfile();
+      setAddresses(profile.addresses || []);
     } catch (error) {
       console.error('Error loading addresses:', error);
       toast({
@@ -97,6 +76,16 @@ const AddressManager: React.FC = () => {
         description: "Failed to load your saved addresses"
       });
     }
+  };
+
+  const persistAddresses = async (updatedAddresses: Address[], successTitle: string, successDescription: string) => {
+    const updatedProfile = await updateUserProfile({ addresses: updatedAddresses });
+    setAddresses(updatedProfile.addresses || updatedAddresses);
+
+    toast({
+      title: successTitle,
+      description: successDescription,
+    });
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -112,7 +101,7 @@ const AddressManager: React.FC = () => {
     setIsPinCodeValid(isValid);
   };
 
-  const handleSaveAddress = () => {
+  const handleSaveAddress = async () => {
     if (!user?.id) {
       toast({
         variant: "destructive",
@@ -142,42 +131,61 @@ const AddressManager: React.FC = () => {
     }
 
     try {
-      // Get all saved addresses
-      const allAddresses = JSON.parse(localStorage.getItem('savedAddresses') || '[]');
+      const normalizedAddress: Address = {
+        id: currentAddress?.id || Date.now().toString(),
+        firstName: formData.firstName || '',
+        lastName: formData.lastName || '',
+        address: formData.address || '',
+        apartment: formData.apartment || '',
+        city: formData.city || '',
+        state: formData.state || '',
+        zipCode: formData.zipCode || '',
+        phone: formData.phone || '',
+        email: formData.email || '',
+        notes: formData.notes || '',
+        deliveryOption: formData.deliveryOption || 'self',
+        isDefault: currentAddress?.isDefault || false,
+        giftMessage: formData.giftMessage || '',
+        receiverFirstName: formData.receiverFirstName || '',
+        receiverLastName: formData.receiverLastName || '',
+        receiverEmail: formData.receiverEmail || '',
+        receiverPhone: formData.receiverPhone || '',
+        receiverAddress: formData.receiverAddress || '',
+        receiverApartment: formData.receiverApartment || '',
+        receiverCity: formData.receiverCity || '',
+        receiverState: formData.receiverState || '',
+        receiverZipCode: formData.receiverZipCode || '',
+      };
       
       if (currentAddress) {
-        // Update existing address
-        const updatedAddresses = allAddresses.map((addr: Address) => 
-          addr.id === currentAddress.id ? { ...formData, userId: user.id, id: currentAddress.id } : addr
+        const updatedAddresses = addresses.map((addr: Address) =>
+          addr.id === currentAddress.id ? normalizedAddress : addr
         );
-        localStorage.setItem('savedAddresses', JSON.stringify(updatedAddresses));
-        
-        toast({
-          title: "Address Updated",
-          description: "Your address has been updated successfully"
-        });
+
+        await persistAddresses(
+          updatedAddresses,
+          "Address Updated",
+          "Your address has been updated successfully"
+        );
       } else {
-        // Add new address
-        const newAddress = {
-          ...formData,
-          userId: user.id,
-          id: Date.now().toString(),
-          isDefault: addresses.length === 0 // Make it default if it's the first address
-        };
-        
-        allAddresses.push(newAddress);
-        localStorage.setItem('savedAddresses', JSON.stringify(allAddresses));
-        
-        toast({
-          title: "Address Saved",
-          description: "Your address has been saved successfully"
-        });
+        const updatedAddresses = [
+          ...addresses,
+          {
+            ...normalizedAddress,
+            isDefault: addresses.length === 0,
+          },
+        ];
+
+        await persistAddresses(
+          updatedAddresses,
+          "Address Saved",
+          "Your address has been saved successfully"
+        );
       }
       
       // Reset form and refresh addresses
       setCurrentAddress(null);
       setShowAddressForm(false);
-      loadAddresses();
       
     } catch (error) {
       console.error('Error saving address:', error);
@@ -189,18 +197,14 @@ const AddressManager: React.FC = () => {
     }
   };
 
-  const handleDeleteAddress = (id: string) => {
+  const handleDeleteAddress = async (id: string) => {
     try {
-      const allAddresses = JSON.parse(localStorage.getItem('savedAddresses') || '[]');
-      const updatedAddresses = allAddresses.filter((addr: Address) => addr.id !== id);
-      localStorage.setItem('savedAddresses', JSON.stringify(updatedAddresses));
-      
-      toast({
-        title: "Address Deleted",
-        description: "The address has been deleted successfully"
-      });
-      
-      loadAddresses();
+      const updatedAddresses = addresses.filter((addr: Address) => addr.id !== id);
+      await persistAddresses(
+        updatedAddresses,
+        "Address Deleted",
+        "The address has been deleted successfully"
+      );
     } catch (error) {
       console.error('Error deleting address:', error);
       toast({
@@ -211,21 +215,18 @@ const AddressManager: React.FC = () => {
     }
   };
 
-  const handleSetDefaultAddress = (id: string) => {
+  const handleSetDefaultAddress = async (id: string) => {
     try {
-      const allAddresses = JSON.parse(localStorage.getItem('savedAddresses') || '[]');
-      const updatedAddresses = allAddresses.map((addr: Address) => ({
+      const updatedAddresses = addresses.map((addr: Address) => ({
         ...addr,
         isDefault: addr.id === id
       }));
-      localStorage.setItem('savedAddresses', JSON.stringify(updatedAddresses));
-      
-      toast({
-        title: "Default Address Set",
-        description: "Your default address has been updated"
-      });
-      
-      loadAddresses();
+
+      await persistAddresses(
+        updatedAddresses,
+        "Default Address Set",
+        "Your default address has been updated"
+      );
     } catch (error) {
       console.error('Error setting default address:', error);
       toast({
@@ -241,6 +242,178 @@ const AddressManager: React.FC = () => {
     setShowAddressForm(true);
   };
 
+  const closeAddressForm = () => {
+    setShowAddressForm(false);
+    setCurrentAddress(null);
+  };
+
+  const renderAddressFormFields = () => (
+    <div className="space-y-4 py-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="firstName">First Name *</Label>
+          <Input 
+            id="firstName"
+            name="firstName"
+            value={formData.firstName || ''}
+            onChange={handleInputChange}
+            required
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="lastName">Last Name *</Label>
+          <Input 
+            id="lastName"
+            name="lastName"
+            value={formData.lastName || ''}
+            onChange={handleInputChange}
+            required
+          />
+        </div>
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="address">Address *</Label>
+        <Input 
+          id="address"
+          name="address"
+          value={formData.address || ''}
+          onChange={handleInputChange}
+          required
+        />
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="apartment">Apartment/Suite (Optional)</Label>
+        <Input 
+          id="apartment"
+          name="apartment"
+          value={formData.apartment || ''}
+          onChange={handleInputChange}
+        />
+      </div>
+      
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="city">City *</Label>
+          <Input 
+            id="city"
+            name="city"
+            value={formData.city || ''}
+            onChange={handleInputChange}
+            required
+            disabled
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="state">State *</Label>
+          <Input 
+            id="state"
+            name="state"
+            value={formData.state || ''}
+            onChange={handleInputChange}
+            required
+            disabled
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="zipCode">Zip Code *</Label>
+          <PinCodeInput
+            value={formData.zipCode || ''}
+            onChange={handleZipCodeChange}
+            placeholder="Enter PIN code"
+            required
+            onValidationChange={handlePinCodeValidation}
+          />
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="phone">Phone *</Label>
+          <Input 
+            id="phone"
+            name="phone"
+            type="tel"
+            value={formData.phone || ''}
+            onChange={handleInputChange}
+            required
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input 
+            id="email"
+            name="email"
+            type="email"
+            value={formData.email || ''}
+            onChange={handleInputChange}
+          />
+        </div>
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="notes">Delivery Notes (Optional)</Label>
+        <Input 
+          id="notes"
+          name="notes"
+          value={formData.notes || ''}
+          onChange={handleInputChange}
+        />
+      </div>
+    </div>
+  );
+
+  const renderAddressDropdownPanel = () => (
+    <div className="rounded-2xl border border-sky-100 bg-white shadow-md overflow-hidden">
+      <button
+        type="button"
+        onClick={() => {
+          if (showAddressForm) {
+            closeAddressForm();
+          } else {
+            setCurrentAddress(null);
+            setShowAddressForm(true);
+          }
+        }}
+        className="w-full flex items-center justify-between px-4 sm:px-5 py-4 text-left border-b border-sky-100"
+      >
+        <div>
+          <h4 className="text-base font-semibold text-transparent bg-clip-text bg-gradient-to-r from-sky-500 to-pink-500">
+            {currentAddress ? 'Edit Address' : 'Add New Address'}
+          </h4>
+          <p className="text-sm text-muted-foreground mt-1">
+            {currentAddress ? 'Update your address information.' : 'Add a new delivery address to your account.'}
+          </p>
+        </div>
+        <ChevronDown
+          className={`h-5 w-5 text-sky-500 transition-transform duration-200 ${showAddressForm ? 'rotate-180' : ''}`}
+        />
+      </button>
+
+      <div
+        className={`transition-all duration-300 ease-out overflow-hidden ${showAddressForm ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}
+      >
+        <div className="px-4 sm:px-5">
+          {renderAddressFormFields()}
+
+          <div className="flex flex-col sm:flex-row gap-2 border-t border-sky-100 pt-4 pb-5">
+            <Button variant="outline" onClick={closeAddressForm} className="w-full sm:w-auto">
+              Cancel
+            </Button>
+            <Button onClick={handleSaveAddress} className="w-full sm:w-auto">
+              {currentAddress ? 'Update Address' : 'Save Address'}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-4">
       {addresses.length === 0 ? (
@@ -248,7 +421,15 @@ const AddressManager: React.FC = () => {
           <MapPin className="mx-auto h-12 w-12 text-muted-foreground opacity-50 mb-4" />
           <h3 className="text-lg font-medium mb-2">No Saved Addresses</h3>
           <p className="text-muted-foreground mb-4">You don't have any saved addresses yet.</p>
-          <Button onClick={() => setShowAddressForm(true)}>Add New Address</Button>
+          <Button
+            onClick={() => {
+              setCurrentAddress(null);
+              setShowAddressForm(true);
+            }}
+          >
+            Add New Address
+          </Button>
+          <div className="mt-6 text-left">{renderAddressDropdownPanel()}</div>
         </div>
       ) : (
         <>
@@ -265,6 +446,8 @@ const AddressManager: React.FC = () => {
               <Plus className="mr-1 h-4 w-4" /> Add New Address
             </Button>
           </div>
+
+          {renderAddressDropdownPanel()}
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {addresses.map(address => (
@@ -341,157 +524,6 @@ const AddressManager: React.FC = () => {
           </div>
         </>
       )}
-      
-      <Dialog open={showAddressForm} onOpenChange={setShowAddressForm}>
-        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {currentAddress ? 'Edit Address' : 'Add New Address'}
-            </DialogTitle>
-            <DialogDescription>
-              {currentAddress ? 'Update your address information.' : 'Add a new delivery address to your account.'}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">First Name *</Label>
-                <Input 
-                  id="firstName"
-                  name="firstName"
-                  value={formData.firstName || ''}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name *</Label>
-                <Input 
-                  id="lastName"
-                  name="lastName"
-                  value={formData.lastName || ''}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="address">Address *</Label>
-              <Input 
-                id="address"
-                name="address"
-                value={formData.address || ''}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="apartment">Apartment/Suite (Optional)</Label>
-              <Input 
-                id="apartment"
-                name="apartment"
-                value={formData.apartment || ''}
-                onChange={handleInputChange}
-              />
-            </div>
-            
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="city">City *</Label>
-                <Input 
-                  id="city"
-                  name="city"
-                  value={formData.city || ''}
-                  onChange={handleInputChange}
-                  required
-                  disabled
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="state">State *</Label>
-                <Input 
-                  id="state"
-                  name="state"
-                  value={formData.state || ''}
-                  onChange={handleInputChange}
-                  required
-                  disabled
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="zipCode">Zip Code *</Label>
-                <PinCodeInput
-                  value={formData.zipCode || ''}
-                  onChange={handleZipCodeChange}
-                  placeholder="Enter PIN code"
-                  required
-                  onValidationChange={handlePinCodeValidation}
-                />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone *</Label>
-                <Input 
-                  id="phone"
-                  name="phone"
-                  type="tel"
-                  value={formData.phone || ''}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input 
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={formData.email || ''}
-                  onChange={handleInputChange}
-                />
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="notes">Delivery Notes (Optional)</Label>
-              <Input 
-                id="notes"
-                name="notes"
-                value={formData.notes || ''}
-                onChange={handleInputChange}
-              />
-            </div>
-          </div>
-          
-          <DialogFooter className="flex flex-col sm:flex-row gap-2">
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                setShowAddressForm(false);
-                setCurrentAddress(null);
-              }}
-              className="w-full sm:w-auto"
-            >
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleSaveAddress}
-              className="w-full sm:w-auto"
-            >
-              {currentAddress ? 'Update Address' : 'Save Address'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
