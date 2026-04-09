@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 import { useNavigate } from 'react-router-dom';
@@ -12,7 +12,6 @@ import { Input } from '@/components/ui/input';
 import PromoCodeInput from '@/components/PromoCodeInput';
 import { useState } from 'react';
 import type { PromoCodeValidationResult } from '@/services/promoCodeService';
-import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
 
 // Animation variants
@@ -41,9 +40,8 @@ const itemVariants = {
 
 const CartPage: React.FC = () => {
   const navigate = useNavigate();
-  const { items, updateItemQuantity, removeItem, showContactModal, contactModalProduct, closeContactModal, loadCart } = useCart();
+  const { items, updateItemQuantity, removeItem, showContactModal, contactModalProduct, closeContactModal } = useCart();
   const { formatPrice, convertPrice } = useCurrency();
-  const { user } = useAuth();
   
   // State for promo code functionality
   const [appliedPromoCode, setAppliedPromoCode] = useState<{
@@ -62,15 +60,6 @@ const CartPage: React.FC = () => {
   const subtotal = items.reduce((total, item) => {
     return total + (item.price || 0) * (item.quantity || 0);
   }, 0);
-
-  // Load cart data when component mounts or user changes
-  useEffect(() => {
-    if (user) {
-      loadCart(user.id);
-    } else {
-      loadCart();
-    }
-  }, [user, loadCart]);
 
   // Calculate final total with promo code discount (apply discount to original INR amount, then convert)
   const finalTotal = appliedPromoCode ? (subtotal - appliedPromoCode.discount) : subtotal;

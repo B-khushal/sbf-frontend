@@ -5,6 +5,7 @@ import ProductGrid from '@/components/ProductGrid';
 import useCart from '@/hooks/use-cart';
 import api from '@/services/api';
 import productService, { ProductData } from '@/services/productService';
+import { trackProductView } from '@/services/activityService';
 
 type Product = ProductData & {
   _id: string;
@@ -50,6 +51,18 @@ const ProductPage = () => {
     // Scroll to top with smooth behavior when product changes
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [actualId, navigate]);
+
+  useEffect(() => {
+    if (!product?._id) {
+      return;
+    }
+
+    void trackProductView(
+      product._id,
+      product.title,
+      `/product/${product._id}`
+    );
+  }, [product?._id, product?.title]);
 
   const handleAddToCart = (item: {
     id: string;

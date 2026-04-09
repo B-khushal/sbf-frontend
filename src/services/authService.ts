@@ -55,6 +55,11 @@ interface UserProfile {
   addresses?: SavedAddress[];
 }
 
+let profileRequestPromise: Promise<any> | null = null;
+let profileCache: any = null;
+let profileCacheTime = 0;
+const PROFILE_CACHE_TTL_MS = 5000;
+
 // Login user
 export const login = async (credentials: LoginCredentials) => {
   try {
@@ -117,6 +122,11 @@ export const logout = () => {
   // Get user ID before clearing user data
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const userId = user._id || user.id;
+
+  // Trigger backend logout while token is still present.
+  const logoutRequest = api.post('/auth/logout').catch((error) => {
+    console.error('Logout error:', error);
+  });
   
   // Clear user-specific cart if user was logged in
   if (userId) {
@@ -127,19 +137,37 @@ export const logout = () => {
   localStorage.removeItem('user');
   localStorage.removeItem('token');
   localStorage.removeItem('isAuthenticated');
-  
-  try {
-    api.post('/auth/logout');
-  } catch (error) {
-    console.error('Logout error:', error);
-  }
+
+  void logoutRequest;
 };
 
 // Get user profile
-export const getUserProfile = async () => {
+export const getUserProfile = async (options?: { force?: boolean }) => {
+  const force = !!options?.force;
+  const now = Date.now();
+
+  if (!force && profileCache && now - profileCacheTime < PROFILE_CACHE_TTL_MS) {
+    return profileCache;
+  }
+
+  if (!force && profileRequestPromise) {
+    return profileRequestPromise;
+  }
+
+  const request = api.get('/auth/profile')
+    .then((response) => {
+      profileCache = response.data;
+      profileCacheTime = Date.now();
+      return response.data;
+    })
+    .finally(() => {
+      profileRequestPromise = null;
+    });
+
+  profileRequestPromise = request;
+
   try {
-    const response = await api.get('/auth/profile');
-    return response.data;
+    return await request;
   } catch (error) {
     console.warn('getUserProfile API call failed, using fallback:', error);
     
@@ -170,6 +198,11 @@ export const updateUserProfile = async (profileData: UserProfile) => {
       localStorage.setItem('user', JSON.stringify(updatedUser));
       localStorage.setItem('token', response.data.token);
     }
+
+    // Invalidate profile cache so next read fetches fresh profile once.
+    profileCache = null;
+    profileCacheTime = 0;
+    profileRequestPromise = null;
     
     return response.data;
   } catch (error) {

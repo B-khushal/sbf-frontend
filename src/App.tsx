@@ -16,6 +16,7 @@ import useCart from '@/hooks/use-cart';
 import CartLoader from '@/components/CartLoader';
 import PwaInstallManager from '@/components/PwaInstallManager';
 import ScrollToTop from '@/components/ScrollToTop';
+import ActivityRouteTracker from '@/components/ActivityRouteTracker';
 
 // Core pages that should load immediately
 import HomePage from "./pages/HomePage";
@@ -67,6 +68,7 @@ const ProductForm = lazy(() => import('@/pages/Admin/ProductForm'));
 const ProductApproval = lazy(() => import('@/pages/Admin/ProductApproval'));
 const UserViewPage = lazy(() => import('./pages/Admin/UserViewPage'));
 const UserEditPage = lazy(() => import('./pages/Admin/UserEditPage'));
+const UserActivityLogs = lazy(() => import('./pages/Admin/UserActivityLogs'));
 
 // Vendor Pages (lazy loaded as they're vendor-only)
 const VendorPage = lazy(() => import("./pages/VendorPage"));
@@ -147,6 +149,7 @@ const App = () => {
                       <TestModeBanner />
                       <PwaInstallManager />
                       <ScrollToTop />
+                      <ActivityRouteTracker />
                       <Suspense fallback={<LoadingFallback />}>
                         <Routes>
                           {/* Main Layout Routes */}
@@ -319,6 +322,11 @@ const App = () => {
                             <Route path="users/edit/:userId" element={
                               <Suspense fallback={<LoadingFallback message="Loading user edit form..." />}>
                                 <UserEditPage />
+                              </Suspense>
+                            } />
+                            <Route path="activity-logs" element={
+                              <Suspense fallback={<LoadingFallback message="Loading activity logs..." />}>
+                                <UserActivityLogs />
                               </Suspense>
                             } />
                             <Route path="vendors" element={

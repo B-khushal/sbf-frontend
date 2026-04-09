@@ -5,12 +5,12 @@ import useCart from '@/hooks/use-cart';
 const CartLoader = () => {
   const { user } = useAuth();
   const loadCart = useCart((state) => state.loadCart);
+  const userId = user?.id;
   
   useEffect(() => {
     // Load cart for current user (or anonymous if no user)
-    const userId = user?.id;
     loadCart(userId);
-  }, [loadCart, user]);
+  }, [loadCart, userId]);
 
   // This component doesn't render anything
   return null;

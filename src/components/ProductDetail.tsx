@@ -663,8 +663,6 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                 )}
               </div>
 
-              <p className="text-muted-foreground mb-6">{product.description}</p>
-
               {/* Quantity Selector */}
               <div className="flex items-center mb-6">
                 <span className="text-sm mr-4">Quantity</span>
@@ -765,6 +763,25 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                   </div>
                 </AccordionContent>
               </AccordionItem>
+
+              {/* Description */}
+              {product.description && (
+                <AccordionItem value="description">
+                  <AccordionTrigger>
+                    <Info className="mr-2 h-5 w-5 text-blue-700" />
+                    Description
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="bg-blue-50 p-3 rounded-lg border-l-4 border-blue-500">
+                      <div className="flex items-start gap-3">
+                        <span className="text-blue-600 text-sm">🔸</span>
+                        <p className="text-blue-800 text-sm leading-6 font-medium">{product.description}</p>
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              )}
+
               {/* Combo Contents */}
               {product.category === "combos" && product.comboItems && product.comboItems.length > 0 && (
                 <AccordionItem value="combo">
