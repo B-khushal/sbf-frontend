@@ -69,6 +69,7 @@ export interface ProductData {
   price: number;
   discount: number;
   category: string;
+  subcategory: string;
   categories: string[];
   countInStock: number;
   images: string[];
@@ -95,6 +96,7 @@ interface BackendProductData {
   price: number;
   discount?: number;
   category: string;
+  subcategory?: string;
   categories?: string[];
   brand?: string;
   countInStock: number;

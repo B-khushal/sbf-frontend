@@ -18,76 +18,13 @@ import api from '../../services/api';
 import axios from 'axios'; // Keep for axios.isAxiosError
 import ProductFeaturesToggle from '@/components/ui/ProductFeaturesToggle';
 import { getImageUrl } from '@/config';
+import { PRIMARY_CATEGORIES, getAdditionalCategoryOptions, getSubcategoryOptions, normalizeCategoryKey } from '@/utils/categoryTaxonomy';
 
 type FormErrors = {
   [key in keyof ProductData]?: string;
 };
 
-const CATEGORIES = [
-  { value: "bouquets", label: "Bouquets" },
-  { value: "flowers", label: "Flowers" },
-  { value: "plants", label: "Plants" },
-  { value: "combos", label: "Combos" },
-  { value: "occasions", label: "Occasions" },
-  { value: "baskets", label: "Baskets" },
-  { value: "chocolate-baskets", label: "Chocolate Baskets" },
-  { value: "chocolate-bouquets", label: "Chocolate Bouquets" },
-  { value: "chocolate-gift-sets", label: "Chocolate Gift Sets" },
-  { value: "premium-chocolates", label: "Premium Chocolates" },
-  { value: "anniversary", label: "Anniversary" },
-  { value: "birthday", label: "Birthday" },
-  { value: "wedding", label: "Wedding" },
-  { value: "funeral", label: "Funeral" },
-  { value: "congratulations", label: "Congratulations" },
-  { value: "get-well", label: "Get Well" },
-  { value: "sympathy", label: "Sympathy" },
-  { value: "condolence", label: "Condolence" },
-  { value: "memorial-flowers", label: "Memorial Flowers" },
-  { value: "peaceful-arrangements", label: "Peaceful Arrangements" },
-  { value: "roses", label: "Roses" },
-  { value: "sunflowers", label: "Sunflowers" },
-  { value: "tulips", label: "Tulips" },
-  { value: "orchids", label: "Orchids" },
-  { value: "lilies", label: "Lilies" },
-  { value: "cakes", label: "Cakes" },
-  { value: "bunches", label: "Bunches" },
-  { value: "gift-hampers", label: "Gift Hampers" },
-  { value: "fruit-baskets", label: "Fruit Baskets" },
-  { value: "flower-baskets", label: "Flower Baskets" },
-  { value: "mixed-baskets", label: "Mixed Baskets" },
-  { value: "mixed-arrangements", label: "Mixed Arrangements" },
-  { value: "premium-collections", label: "Premium Collections" },
-  { value: "seasonal-specials", label: "Seasonal Specials" },
-  { value: "corporate-gifts", label: "Corporate Gifts" },
-  { value: "baby-shower", label: "Baby Shower" },
-  { value: "housewarming", label: "Housewarming" },
-  { value: "thank-you", label: "Thank You" },
-  { value: "apology", label: "Apology" },
-  { value: "graduation", label: "Graduation" },
-  { value: "valentines-day", label: "Valentine's Day" },
-  { value: "mothers-day", label: "Mother's Day" },
-  { value: "fathers-day", label: "Father's Day" },
-  { value: "christmas", label: "Christmas" },
-  { value: "new-year", label: "New Year" },
-  { value: "diwali", label: "Diwali" },
-  { value: "holi", label: "Holi" },
-  { value: "raksha-bandhan", label: "Raksha Bandhan" },
-  { value: "party-arrangements", label: "Party Arrangements" },
-  { value: "kids-birthday", label: "Kids Birthday" },
-  { value: "birthday-cakes", label: "Birthday Cakes" },
-  { value: "romantic-bouquets", label: "Romantic Bouquets" },
-  { value: "love-arrangements", label: "Love Arrangements" },
-  { value: "anniversary-gifts", label: "Anniversary Gifts" },
-  { value: "gift-sets", label: "Gift Sets" },
-  { value: "chocolates", label: "Chocolates" },
-  { value: "combo-packs", label: "Combo Packs" },
-  { value: "indoor-plants", label: "Indoor Plants" },
-  { value: "succulents", label: "Succulents" },
-  { value: "garden-plants", label: "Garden Plants" },
-  { value: "air-purifying", label: "Air Purifying" },
-  { value: "sympathy-bouquets", label: "Sympathy Bouquets" },
-  { value: "condolence-arrangements", label: "Condolence Arrangements" }
-];
+const CATEGORIES = PRIMARY_CATEGORIES;
 
 const COMBO_SUBCATEGORIES = [
   { value: "cake-combo", label: "Cake Combo" },
@@ -177,6 +114,7 @@ const initialFormData: ProductData = {
   isCustomizable: false,
   hasPriceVariants: false,
   priceVariants: [],
+  subcategory: '',
   customizationOptions: {
     allowPhotoUpload: false,
     allowNumberInput: false,
@@ -267,6 +205,14 @@ const ProductForm = () => {
       if (!data.categories) {
         data.categories = [];
       }
+
+      if (!data.subcategory) {
+        const categorySubcategories = getSubcategoryOptions(data.category);
+        const existingMatch = (data.categories || []).find((item) =>
+          categorySubcategories.some((subcategory) => normalizeCategoryKey(subcategory.value) === normalizeCategoryKey(item))
+        );
+        data.subcategory = existingMatch || '';
+      }
       
       // Ensure customization options are properly set
       if (!data.customizationOptions) {
@@ -319,6 +265,7 @@ const ProductForm = () => {
         hasPriceVariants: Boolean(data.hasPriceVariants),
         priceVariants: Array.isArray(data.priceVariants) ? data.priceVariants : [],
         categories: Array.isArray(data.categories) ? data.categories : [],
+        subcategory: data.subcategory || '',
         details: Array.isArray(data.details) ? data.details : [],
         careInstructions: Array.isArray(data.careInstructions) ? data.careInstructions : [],
         images: Array.isArray(data.images) ? data.images : [],
@@ -508,6 +455,10 @@ const ProductForm = () => {
 
     if (!formData.category) {
       newErrors.category = 'Primary category is required';
+    }
+
+    if (formData.category && getSubcategoryOptions(formData.category).length > 0 && !formData.subcategory) {
+      newErrors.subcategory = 'Subcategory is required';
     }
 
     if (formData.images.length === 0 || !formData.images[0]) {
@@ -768,7 +719,17 @@ const ProductForm = () => {
   const handleCategoryChange = (value: string) => {
     setFormData(prev => ({
       ...prev,
-      category: value
+      category: value,
+      subcategory: getSubcategoryOptions(value).some((subcategory) => subcategory.value === prev.subcategory)
+        ? prev.subcategory
+        : ''
+    }));
+  };
+
+  const handleSubcategoryChange = (value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      subcategory: value
     }));
   };
 
@@ -790,7 +751,9 @@ const ProductForm = () => {
   };
 
   const getAvailableCategories = () => {
-    return CATEGORIES.filter(cat => !(formData.categories || []).includes(cat.value));
+    return getAdditionalCategoryOptions(formData.category, formData.subcategory).filter(
+      (category) => !(formData.categories || []).includes(category.value)
+    );
   };
 
   const handleDetailChange = (index: number, value: string) => {
@@ -894,6 +857,7 @@ const ProductForm = () => {
         isCustomizable: Boolean(formData.isCustomizable),
         hasPriceVariants: Boolean(formData.hasPriceVariants),
         priceVariants: formData.priceVariants || [],
+        subcategory: formData.subcategory || '',
         categories: formData.categories || [],
         customizationOptions: formData.isCustomizable ? {
           allowPhotoUpload: Boolean(formData.customizationOptions?.allowPhotoUpload),
@@ -1596,6 +1560,32 @@ const ProductForm = () => {
                 <p className="text-sm text-red-500">{errors.category}</p>
               )}
             </div>
+
+            {/* Subcategory */}
+            {formData.category && getSubcategoryOptions(formData.category).length > 0 && (
+              <div className="space-y-2">
+                <Label htmlFor="subcategory">Subcategory *</Label>
+                <Select
+                  value={formData.subcategory}
+                  onValueChange={handleSubcategoryChange}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select subcategory" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getSubcategoryOptions(formData.category).map((subcategory) => (
+                      <SelectItem key={subcategory.value} value={subcategory.value}>
+                        {subcategory.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.subcategory && (
+                  <p className="text-sm text-red-500">{errors.subcategory}</p>
+                )}
+              </div>
+            )}
+
             {/* Combo Subcategory Dropdown */}
             {formData.category === 'combos' && (
               <div className="space-y-2">
@@ -1618,14 +1608,14 @@ const ProductForm = () => {
               </div>
             )}
 
-            {/* Multiple Categories */}
+            {/* Additional Categories */}
             <div className="space-y-4">
               <Label>Additional Categories</Label>
               <div className="space-y-3">
                 {/* Current Categories */}
                 {formData.categories && formData.categories.length > 0 && (
                   <div className="flex flex-wrap gap-2">
-                    {formData.categories.map((category, index) => (
+                    {formData.categories.filter((category) => normalizeCategoryKey(category) !== normalizeCategoryKey(formData.subcategory)).map((category, index) => (
                       <Badge
                         key={index}
                         variant="secondary"
@@ -1660,7 +1650,7 @@ const ProductForm = () => {
                   </Select>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Add multiple categories to make your product discoverable in different sections
+                  Add optional category tags beyond the main subcategory
                 </p>
               </div>
             </div>

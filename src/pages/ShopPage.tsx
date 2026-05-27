@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { getImageUrl, getSquareImageUrl } from "@/config";
 import { cn } from "@/lib/utils";
 import ContactModal from "@/components/ui/ContactModal";
+import { PRIMARY_CATEGORIES, matchesCategoryGroup, normalizeCategoryKey, normalizeCategoryLabel } from "@/utils/categoryTaxonomy";
 
 const CATEGORY_SLUG_MAP: Record<string, string> = {
   "chocolate-baskets": "Chocolate Baskets",
@@ -265,8 +266,7 @@ const normalizeCategoryValue = (value?: string | null): string => {
     return CATEGORY_ALIAS_MAP[lowerWithSpaces];
   }
 
-  // Make generic slugs like "birthday-bouquets" compatible with category matching.
-  return trimmed.replace(/-/g, " ");
+  return normalizeCategoryLabel(trimmed) || trimmed;
 };
 
 const ShopPage = () => {
@@ -282,6 +282,10 @@ const ShopPage = () => {
   const normalizedQueryCategory = normalizeCategoryValue(queryCategory);
   const normalizedCategory = normalizedPathCategory || normalizedQueryCategory;
   const category = normalizedCategory || "";
+  const normalizedPathCategoryKey = normalizeCategoryKey(pathCategory);
+  const normalizedQueryCategoryKey = normalizeCategoryKey(queryCategory);
+  const selectedCategoryKey = normalizedPathCategoryKey || normalizedQueryCategoryKey;
+  const isParentCategoryRoute = PRIMARY_CATEGORIES.some((category) => category.value === selectedCategoryKey);
   
   const [selectedCategory, setSelectedCategory] = useState(category);
   const [sortBy, setSortBy] = useState("newest");
@@ -418,14 +422,22 @@ const ShopPage = () => {
       });
     }
 
-    // Filter by category - check both primary category and additional categories
-    if (selectedCategory) {
+    // Filter by category - support slug/space variants and parent category groups.
+    if (selectedCategoryKey) {
       filtered = filtered.filter(product => {
-        const primaryMatch = product.category?.toLowerCase() === selectedCategory.toLowerCase();
-        const additionalMatch = product.categories?.some(cat => 
-          cat.toLowerCase() === selectedCategory.toLowerCase()
-        );
-        return primaryMatch || additionalMatch;
+        if (isParentCategoryRoute) {
+          return matchesCategoryGroup(product.category, selectedCategoryKey, product.categories, product.subcategory);
+        }
+
+        const exactMatches = [
+          product.subcategory,
+          product.category,
+          ...(Array.isArray(product.categories) ? product.categories : []),
+        ]
+          .map((value) => normalizeCategoryKey(value))
+          .filter(Boolean);
+
+        return exactMatches.includes(selectedCategoryKey);
       });
     }
 
@@ -450,7 +462,7 @@ const ShopPage = () => {
     });
 
     setFilteredProducts(filtered);
-  }, [products, selectedCategory, minPriceFilter, maxPriceFilter, sortBy, searchQuery]);
+  }, [products, selectedCategoryKey, isParentCategoryRoute, minPriceFilter, maxPriceFilter, sortBy, searchQuery]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-bloom-blue-50 via-bloom-pink-50 to-bloom-green-50">

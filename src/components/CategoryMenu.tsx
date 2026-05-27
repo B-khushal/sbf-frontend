@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronRight, Sparkles } from 'lucide-react';
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import productService from '@/services/productService';
+import { CATEGORY_NAV_ITEMS, normalizeCategoryKey } from '@/utils/categoryTaxonomy';
 
 const CategoryMenu = () => {
   const { pathname } = useLocation();
@@ -39,7 +40,8 @@ const CategoryMenu = () => {
         const counts = await productService.getCategoriesWithCounts();
         const countsMap: { [key: string]: number } = {};
         counts.forEach(item => {
-          countsMap[item.name.toLowerCase()] = item.count;
+          const normalizedKey = normalizeCategoryKey(item.name);
+          countsMap[normalizedKey] = item.count;
         });
         setCategoryCounts(countsMap);
       } catch (error) {
@@ -77,130 +79,18 @@ const CategoryMenu = () => {
 
   // Helper function to get count for a category
   const getCategoryCount = (categoryName: string): number => {
-    const key = categoryName.toLowerCase();
+    const key = normalizeCategoryKey(categoryName);
     return categoryCounts[key] || 0;
   };
   
-  const categories = [
-    { 
-      name: "🌹 Flowers", 
-      path: "/shop/flowers", 
-      emoji: "🌹",
-      description: "Fresh blooms for every occasion",
-      popular: true,
-      subcategories: [
-        { name: "Roses", path: "/shop/roses", count: getCategoryCount("roses") },
-        { name: "Lilies", path: "/shop/lilies", count: getCategoryCount("lilies") },
-        { name: "Tulips", path: "/shop/tulips", count: getCategoryCount("tulips") },
-        { name: "Orchids", path: "/shop/orchids", count: getCategoryCount("orchids") },
-        { name: "Sunflowers", path: "/shop/sunflowers", count: getCategoryCount("sunflowers") },
-      ]
-    },
-    { 
-      name: "🍫 Chocolate", 
-      path: "/shop/chocolate", 
-      emoji: "🍫",
-      description: "Delicious chocolate arrangements",
-      popular: true,
-      subcategories: [
-        { name: "Chocolate Baskets", path: "/shop/chocolate-baskets", count: getCategoryCount("chocolate baskets") },
-        { name: "Chocolate Bouquets", path: "/shop/chocolate-bouquets", count: getCategoryCount("chocolate bouquets") },
-        { name: "Chocolate Gift Sets", path: "/shop/chocolate-gift-sets", count: getCategoryCount("chocolate gift sets") },
-        { name: "Premium Chocolates", path: "/shop/premium-chocolates", count: getCategoryCount("premium chocolates") },
-      ]
-    },
-    { 
-      name: "🎂 Birthday", 
-      path: "/shop/birthday", 
-      emoji: "🎂",
-      description: "Celebrate special moments",
-      popular: true,
-      subcategories: [
-        { name: "Birthday Bouquets", path: "/shop/birthday-bouquets", count: getCategoryCount("birthday bouquets") },
-        { name: "Party Arrangements", path: "/shop/party-arrangements", count: getCategoryCount("party arrangements") },
-        { name: "Kids Birthday", path: "/shop/kids-birthday", count: getCategoryCount("kids birthday") },
-        { name: "Birthday Cakes", path: "/shop/birthday-cakes", count: getCategoryCount("birthday cakes") },
-      ]
-    },
-    { 
-      name: "💕 Anniversary", 
-      path: "/shop/anniversary", 
-      emoji: "💕",
-      description: "Romantic gestures made perfect",
-      popular: false,
-      subcategories: [
-        { name: "Romantic Bouquets", path: "/shop/romantic-bouquets", count: getCategoryCount("romantic bouquets") },
-        { name: "Premium Roses", path: "/shop/premium-roses", count: getCategoryCount("premium roses") },
-        { name: "Love Arrangements", path: "/shop/love-arrangements", count: getCategoryCount("love arrangements") },
-        { name: "Anniversary Gifts", path: "/shop/anniversary-gifts", count: getCategoryCount("anniversary gifts") },
-      ]
-    },
-    { 
-      name: "🧺 Baskets", 
-      path: "/shop/baskets", 
-      emoji: "🧺",
-      description: "Elegant gift baskets",
-      popular: false,
-      subcategories: [
-        { name: "Fruit Baskets", path: "/shop/fruit-baskets", count: getCategoryCount("fruit baskets") },
-        { name: "Flower Baskets", path: "/shop/flower-baskets", count: getCategoryCount("flower baskets") },
-        { name: "Mixed Baskets", path: "/shop/mixed-baskets", count: getCategoryCount("mixed baskets") },
-        { name: "Gift Hampers", path: "/shop/gift-hampers", count: getCategoryCount("gift hampers") },
-      ]
-    },
-    { 
-      name: "🎁 Combos", 
-      path: "/shop/combos", 
-      emoji: "🎁",
-      description: "Perfect combo packages",
-      popular: true,
-      subcategories: [
-        { name: "Birthday Combos", path: "/shop/birthday-combos", count: getCategoryCount("birthday combos") },
-        { name: "Anniversary Combos", path: "/shop/anniversary-combos", count: getCategoryCount("anniversary combos") },
-        { name: "Romantic Combos", path: "/shop/romantic-combos", count: getCategoryCount("romantic combos") },
-        { name: "Special Occasion Combos", path: "/shop/special-occasion-combos", count: getCategoryCount("special occasion combos") },
-      ]
-    },
-    { 
-      name: "🌿 Plants", 
-      path: "/shop/plants", 
-      emoji: "🌿",
-      description: "Indoor & outdoor plants",
-      popular: false,
-      subcategories: [
-        { name: "Indoor Plants", path: "/shop/indoor-plants", count: getCategoryCount("indoor plants") },
-        { name: "Succulents", path: "/shop/succulents", count: getCategoryCount("succulents") },
-        { name: "Garden Plants", path: "/shop/garden-plants", count: getCategoryCount("garden plants") },
-        { name: "Air Purifying", path: "/shop/air-purifying", count: getCategoryCount("air purifying") },
-      ]
-    },
-    { 
-      name: "💙 Sympathy", 
-      path: "/shop/sympathy", 
-      emoji: "💙",
-      description: "Comforting arrangements",
-      popular: false,
-      subcategories: [
-        { name: "Sympathy Bouquets", path: "/shop/sympathy-bouquets", count: getCategoryCount("sympathy bouquets") },
-        { name: "Condolence Arrangements", path: "/shop/condolence", count: getCategoryCount("condolence") },
-        { name: "Memorial Flowers", path: "/shop/memorial-flowers", count: getCategoryCount("memorial flowers") },
-        { name: "Peaceful Arrangements", path: "/shop/peaceful-arrangements", count: getCategoryCount("peaceful arrangements") },
-      ]
-    },
-    { 
-      name: "🎉 Occasions", 
-      path: "/shop/occasions", 
-      emoji: "🎉",
-      description: "Special celebrations",
-      popular: false,
-      subcategories: [
-        { name: "Wedding", path: "/shop/wedding", count: getCategoryCount("wedding") },
-        { name: "Graduation", path: "/shop/graduation", count: getCategoryCount("graduation") },
-        { name: "Baby Shower", path: "/shop/baby-shower", count: getCategoryCount("baby shower") },
-        { name: "Housewarming", path: "/shop/housewarming", count: getCategoryCount("housewarming") },
-      ]
-    },
-  ];
+  const categories = CATEGORY_NAV_ITEMS.map((category) => ({
+    ...category,
+    subcategories: category.subcategories.map((subcategory) => ({
+      name: subcategory.label,
+      path: subcategory.path,
+      count: getCategoryCount(subcategory.value),
+    })),
+  }));
 
   const activeCategory = categories.find(c => c.name === hoveredCategory);
 
