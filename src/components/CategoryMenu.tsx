@@ -272,7 +272,7 @@ const CategoryMenu = () => {
 
   return (
     <nav 
-      className="relative bg-white/98 backdrop-blur-xl border-b border-gray-100/80 z-nav-sub shadow-sm" 
+      className="bg-white/98 backdrop-blur-xl border-b border-gray-100/80 sticky top-0 z-nav-sub shadow-sm" 
       ref={navRef}
       onMouseLeave={handleMouseLeave}
     >

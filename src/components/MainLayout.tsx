@@ -18,10 +18,11 @@ const MainLayout: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <div className="sticky top-0 z-50">
+      <div className="fixed top-0 inset-x-0 z-50">
         <Navigation />
         {isHomePage && <CategoryMenu />}
       </div>
+      <div className={isHomePage ? "h-[176px] sm:h-[184px] lg:h-[192px]" : "h-[104px] sm:h-[112px] lg:h-[120px]"} aria-hidden="true" />
       <main className="flex-grow">
         <Outlet />
       </main>
