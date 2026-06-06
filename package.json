@@ -130,5 +130,8 @@
     "online-store"
   ],
   "author": "B-khushal",
-  "license": "MIT"
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  }
 }
