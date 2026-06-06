@@ -2,8 +2,8 @@ import Razorpay from 'razorpay';
 import crypto from 'crypto';
 
 const razorpay = new Razorpay({
-  key_id: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_Rmp68AvXeC3M3w',
-  key_secret: import.meta.env.VITE_RAZORPAY_KEY_SECRET || 'YOUR_KEY_SECRET'
+  key_id: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_live_SyHCsl7NYNB7JB',
+  key_secret: import.meta.env.VITE_RAZORPAY_KEY_SECRET || 'VjvZiPMWe979GtEGwoIVXuLP'
 });
 
 export const createOrder = async (amount: number, currency: string = 'INR') => {
@@ -28,7 +28,7 @@ export const verifyPayment = (
   razorpay_signature: string
 ) => {
   try {
-    const secret = import.meta.env.VITE_RAZORPAY_KEY_SECRET || 'YOUR_KEY_SECRET';
+    const secret = import.meta.env.VITE_RAZORPAY_KEY_SECRET || 'VjvZiPMWe979GtEGwoIVXuLP';
     const sign = razorpay_order_id + '|' + razorpay_payment_id;
     const expectedSign = crypto
       .createHmac('sha256', secret)

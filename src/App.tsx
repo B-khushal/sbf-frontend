@@ -146,7 +146,6 @@ const App = () => {
                     <Toaster />
                     <Sonner />
                     <BrowserRouter>
-                      <TestModeBanner />
                       <PwaInstallManager />
                       <ScrollToTop />
                       <ActivityRouteTracker />

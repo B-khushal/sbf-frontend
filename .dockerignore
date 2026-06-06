@@ -1,0 +1,61 @@
+# Dependencies (re-installed in Docker)
+node_modules/
+npm-debug.log*
+
+# Environment files (passed as build args)
+.env
+.env.*
+!.env.example
+
+# Git
+.git/
+.gitignore
+.github/
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker (prevent recursive copy)
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# Build artifacts (we build fresh inside Docker)
+dist/
+build/
+
+# Documentation
+*.md
+Md files/
+
+# Debug scripts
+debug-*.js
+
+# Deployment configs for other platforms
+netlify.toml
+vercel.json
+render.yaml
+build-production.bat
+build-render.sh
+
+# Lockfiles for other package managers
+bun.lockb
+yarn.lock
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Logs
+logs/
+*.log
+
+# Sound files (usually in public/ which is copied)
+sounds/

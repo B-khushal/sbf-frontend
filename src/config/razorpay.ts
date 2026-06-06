@@ -1,8 +1,8 @@
 // Razorpay Configuration
 export const RAZORPAY_CONFIG = {
   // Live credentials from environment variables (replace test fallbacks with your live keys)
-  keyId: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_Rmp68AvXeC3M3w',
-  keySecret: import.meta.env.VITE_RAZORPAY_KEY_SECRET || 'lZEQbuduY11quBXY0JAkUHnj',
+  keyId: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_live_SyHCsl7NYNB7JB',
+  keySecret: import.meta.env.VITE_RAZORPAY_KEY_SECRET || 'VjvZiPMWe979GtEGwoIVXuLP',
   
   // Configuration options
   currency: 'INR',
