@@ -441,7 +441,7 @@ const TermsPage: React.FC = () => {
                         <p className="text-gray-700">Door No. 12-2-786/A & B, Najam Centre,
                         Pillar No. 32,Rethi Bowli, Mehdipatnam, Hyderabad, Telangana 500028</p>
                         <p className="text-gray-700">Email: 2006sbf@gmail.com</p>
-                        <p className="text-gray-700">Phone: +91 9849589710</p>
+                        <p className="text-gray-700">Phone: +91 9949683222</p>
                       </div>
                     </motion.div>
 

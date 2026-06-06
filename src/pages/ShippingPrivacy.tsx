@@ -372,7 +372,7 @@ const ShippingPage = () => {
                       <div className="bg-white/50 p-4 rounded-xl border border-white/30">
                         <p className="text-gray-700 mb-2"><strong>Address:</strong> Door No. 12-2-786/A & B, Najam Centre, Pillar No. 32, Rethi Bowli, Mehdipatnam, Hyderabad, Telangana 500028</p>
                         <p className="text-gray-700 mb-2"><strong>Email:</strong> 2006sbf@gmail.com</p>
-                        <p className="text-gray-700"><strong>Phone:</strong> +91 9849589710</p>
+                        <p className="text-gray-700"><strong>Phone:</strong> +91 9949683222</p>
                       </div>
                     </motion.div>
 

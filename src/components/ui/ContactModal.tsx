@@ -42,7 +42,7 @@ Best regards`;
   };
 
   const handleCallClick = () => {
-    window.location.href = 'tel:+919849589710';
+    window.location.href = 'tel:+919949683222';
   };
 
   return (
@@ -101,7 +101,7 @@ Best regards`;
               <Phone size={24} />
               <div className="text-left">
                 <div>Call Us</div>
-                <div className="text-sm opacity-90">+91 98495 89710</div>
+                <div className="text-sm opacity-90">+91 99496 83222</div>
               </div>
             </Button>
           </div>

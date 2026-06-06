@@ -158,7 +158,7 @@ const AdminSettingsPage: React.FC = () => {
     ],
     contactInfo: {
       email: "2006sbf@gmail.com",
-      phone: "+91 9849589710",
+      phone: "+91 9949683222",
       address: "Door No. 12-2-786/A & B, Najam Centre, Pillar No. 32,Rethi Bowli, Mehdipatnam, Hyderabad, Telangana 500028"
     },
     links: [
@@ -566,6 +566,39 @@ const AdminSettingsPage: React.FC = () => {
     }
   };
 
+  const handleGenerateSamplePdf = async () => {
+    try {
+      toast({
+        title: "Generating...",
+        description: "Generating your sample invoice PDF. Please wait.",
+      });
+      const response = await api.get('/settings/sample-pdf', {
+        responseType: 'blob'
+      });
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'sample_invoice.pdf');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Success",
+        description: "Sample invoice PDF generated and downloaded successfully.",
+      });
+    } catch (error: any) {
+      console.error("Error generating sample PDF:", error);
+      toast({
+        title: "Error",
+        description: "Failed to generate sample PDF. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Hero Slides Management
   const handleSlideImageUpload = async (slideId: number, file: File) => {
     try {
@@ -657,24 +690,35 @@ const AdminSettingsPage: React.FC = () => {
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Website Settings</h1>
           <p className="text-gray-600">Manage all aspects of your homepage including hero slides, sections, and content</p>
         </div>
-        <Button 
-          onClick={saveAllSettings} 
-          disabled={saving}
-          size="lg"
-          className="bg-primary hover:bg-primary/90 w-full sm:w-auto"
-        >
-          {saving ? (
-            <>
-              <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-              Saving...
-            </>
-          ) : (
-            <>
-              <Save className="w-4 h-4 mr-2" />
-              Save All Settings
-            </>
-          )}
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <Button
+            onClick={handleGenerateSamplePdf}
+            variant="outline"
+            size="lg"
+            className="w-full sm:w-auto border-emerald-600 text-emerald-700 hover:bg-emerald-50"
+          >
+            <Eye className="w-4 h-4 mr-2" />
+            Generate Sample PDF
+          </Button>
+          <Button 
+            onClick={saveAllSettings} 
+            disabled={saving}
+            size="lg"
+            className="bg-primary hover:bg-primary/90 w-full sm:w-auto"
+          >
+            {saving ? (
+              <>
+                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4 mr-2" />
+                Save All Settings
+              </>
+            )}
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="hero-slides" className="space-y-6">
@@ -1410,7 +1454,7 @@ const AdminSettingsPage: React.FC = () => {
                         ...prev,
                         contactInfo: { ...prev.contactInfo, phone: e.target.value }
                       }))}
-                      placeholder="+91 9849589710"
+                      placeholder="+91 9949683222"
                     />
                   </div>
 

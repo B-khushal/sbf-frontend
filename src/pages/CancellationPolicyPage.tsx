@@ -191,7 +191,7 @@ const CancellationPolicyPage: React.FC = () => {
                           <Phone className="w-5 h-5 text-gray-600" />
                           <div>
                             <p className="font-semibold text-gray-800">Phone Support</p>
-                            <p className="text-gray-700">+91 9849589710</p>
+                            <p className="text-gray-700">+91 9949683222</p>
                             <p className="text-sm text-gray-600">9 AM - 10 PM (Daily)</p>
                           </div>
                         </div>

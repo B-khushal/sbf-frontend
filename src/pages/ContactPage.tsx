@@ -112,7 +112,7 @@ ${formData.message}
 Sent from Spring Blossoms Florist Website`;
 
       // Send via WhatsApp
-      const whatsappNumber = "9849589710";
+      const whatsappNumber = "9949683222";
       const encodedMessage = encodeURIComponent(contactMessage);
       const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
       
@@ -148,7 +148,7 @@ Sent from Spring Blossoms Florist Website`;
     } catch (error: any) {
       toast({
         title: "Message Failed",
-        description: "Failed to send message. Please try contacting us directly at +91 9849589710.",
+        description: "Failed to send message. Please try contacting us directly at +91 9949683222.",
         variant: "destructive",
       });
     } finally {
@@ -394,10 +394,10 @@ Sent from Spring Blossoms Florist Website`;
                       </div>
                       <div className="flex-1">
                         <h3 className="text-xl font-bold text-gray-800 mb-2">📞 Phone</h3>
-                        <p className="text-gray-600 text-lg mb-1">+91 9849589710</p>
+                        <p className="text-gray-600 text-lg mb-1">+91 9949683222</p>
                         <p className="text-sm text-gray-500 mb-3">Available during business hours</p>
                         <Button
-                          onClick={() => window.location.href = 'tel:+919849589710'}
+                          onClick={() => window.location.href = 'tel:+919949683222'}
                           variant="outline"
                           size="sm"
                           className="text-blue-600 border-blue-200 hover:bg-blue-50"
@@ -415,13 +415,13 @@ Sent from Spring Blossoms Florist Website`;
                       </div>
                       <div className="flex-1">
                         <h3 className="text-xl font-bold text-gray-800 mb-2">💬 WhatsApp</h3>
-                        <p className="text-green-600 text-lg font-semibold mb-1">9849589710</p>
+                        <p className="text-green-600 text-lg font-semibold mb-1">9949683222</p>
                         <p className="text-sm text-gray-500 mb-3">Chat with us instantly</p>
                         <Button
                           onClick={() => {
                             const message = "Hello! I'm interested in your flower arrangements.";
                             const encodedMessage = encodeURIComponent(message);
-                            const whatsappUrl = `https://wa.me/9849589710?text=${encodedMessage}`;
+                            const whatsappUrl = `https://wa.me/9949683222?text=${encodedMessage}`;
                             window.open(whatsappUrl, '_blank');
                           }}
                           variant="outline"

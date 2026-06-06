@@ -326,10 +326,18 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                 </div>
                 
                 {/* Mobile Logo */}
-                <div className="md:hidden">
-                  <div className="text-xl sm:text-2xl font-black bg-gradient-to-r from-pink-500 via-purple-600 to-blue-600 bg-clip-text text-transparent tracking-wider transition-all duration-300 group-hover:from-blue-600 group-hover:via-pink-500 group-hover:to-purple-600">
-                    SBF
-                  </div>
+                <div className="md:hidden flex items-center">
+                  {headerSettings?.logo ? (
+                    <img
+                      src={headerSettings.logo}
+                      alt="Best Florist in Hyderabad - Flower Delivery in Hyderabad | Spring Blossoms Florist"
+                      className="h-8 w-auto object-contain transition-all duration-300 ease-in-out group-hover:scale-105 drop-shadow-sm"
+                    />
+                  ) : (
+                    <div className="text-xl sm:text-2xl font-black bg-gradient-to-r from-pink-500 via-purple-600 to-blue-600 bg-clip-text text-transparent tracking-wider transition-all duration-300 group-hover:from-blue-600 group-hover:via-pink-500 group-hover:to-purple-600">
+                      SBF
+                    </div>
+                  )}
                 </div>
               </Link>
             </motion.div>

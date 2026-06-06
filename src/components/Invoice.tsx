@@ -192,7 +192,7 @@ const Invoice: React.FC<InvoiceProps> = ({ order, isAdmin = false }) => {
                 <p><strong>Address:</strong> Door No. 12-2-786/A & B, Najam Centre, Pillar No. 32</p>
                 <p>Rethi Bowli, Mehdipatnam, Hyderabad, Telangana 500028</p>
                 <p><strong>GSTIN:</strong> 36AABFS1234Z1Z5</p>
-                <p><strong>Phone:</strong> +91 9849589710 | <strong>Email:</strong> 2006sbf@gmail.com</p>
+                <p><strong>Phone:</strong> +91 9949683222 | <strong>Email:</strong> 2006sbf@gmail.com</p>
                 <p><strong>Website:</strong> www.sbflorist.com</p>
               </div>
             </div>
@@ -480,7 +480,7 @@ const Invoice: React.FC<InvoiceProps> = ({ order, isAdmin = false }) => {
             <div className="text-center">
               <h4 className="font-semibold text-gray-800 mb-3">📞 Contact Information</h4>
               <div className="text-sm text-gray-600 space-y-1">
-                <p><strong>Phone:</strong> +91 9849589710</p>
+                <p><strong>Phone:</strong> +91 9949683222</p>
                 <p><strong>Email:</strong> 2006sbf@gmail.com</p>
                 <p><strong>Website:</strong> www.sbflorist.com</p>
               </div>

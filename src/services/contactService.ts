@@ -80,7 +80,7 @@ export const getContactInfo = async (): Promise<ContactInfo> => {
         landmark: 'Near Tolichihocki, HITEC City'
       },
       phone: {
-        primary: '+91 9849589710',
+        primary: '+91 9949683222',
         whatsapp: '9949683222'
       },
       email: '2006sbf@gmail.com',
@@ -124,7 +124,7 @@ export const openEmail = (subject?: string, body?: string) => {
 };
 
 export const callPhone = () => {
-  window.location.href = 'tel:+919849589710';
+  window.location.href = 'tel:+919949683222';
 };
 
 export const openGoogleMaps = () => {
