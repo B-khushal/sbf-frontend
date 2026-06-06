@@ -4,8 +4,9 @@
  */
 
 import axios from 'axios';
+import { API_URL } from '../config';
 
-const BACKEND_URL = 'https://www.sbflorist.in';
+const BACKEND_URL = API_URL.replace(/\/api$/, '');
 const WAKE_UP_INTERVAL = 14 * 60 * 1000; // 14 minutes (before 15-minute sleep threshold)
 
 let wakeUpInterval: NodeJS.Timeout | null = null;
@@ -84,7 +85,7 @@ export const manualWakeUp = async (): Promise<boolean> => {
 
 // Auto-start the service when this module is imported
 // Only start in production or when backend is remote
-if (BACKEND_URL.includes('onrender.com') || BACKEND_URL.includes('herokuapp.com')) {
+if (!BACKEND_URL.includes('localhost') && !BACKEND_URL.includes('127.0.0.1')) {
   // Start after a short delay to allow app initialization
   setTimeout(() => {
     startWakeUpService();

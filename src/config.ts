@@ -1,7 +1,8 @@
 const LOCAL_API_URL = 'http://localhost:5000/api';
 const LOCAL_UPLOADS_URL = 'http://localhost:5000';
-const REMOTE_API_URL = 'https://sbf-backend.onrender.com/api';
-const REMOTE_UPLOADS_URL = 'https://sbf-backend.onrender.com';
+const REMOTE_API_URL = 'https://api.sbflorist.in/api';
+const REMOTE_UPLOADS_URL = 'https://api.sbflorist.in';
+
 
 const getDefaultUrl = (localUrl: string, remoteUrl: string): string => {
   return import.meta.env.PROD ? remoteUrl : localUrl;
@@ -38,7 +39,9 @@ const validateAndFixUrl = (
 };
 
 // Validate and fix environment variables
-const rawApiUrl = import.meta.env.VITE_API_URL;
+const rawApiUrl = import.meta.env.VITE_API_URL
+  ? (import.meta.env.VITE_API_URL.endsWith('/api') ? import.meta.env.VITE_API_URL : `${import.meta.env.VITE_API_URL}/api`)
+  : undefined;
 const rawUploadsUrl = import.meta.env.VITE_UPLOADS_URL;
 const defaultApiUrl = getDefaultUrl(LOCAL_API_URL, REMOTE_API_URL);
 const defaultUploadsUrl = getDefaultUrl(LOCAL_UPLOADS_URL, REMOTE_UPLOADS_URL);
