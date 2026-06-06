@@ -179,7 +179,7 @@ const LoginPage = () => {
       } else {
         toast({
           title: "Registration failed",
-          description: "Failed to create your account. Please try again.",
+          description: signupResult.message || "Failed to create your account. Please try again.",
           variant: "destructive"
         });
       }

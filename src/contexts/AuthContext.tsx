@@ -281,9 +281,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       
       return { success: true, redirectTo };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Signup error:', error);
-      return { success: false };
+      const message = error.response?.data?.message || 'Failed to create your account. Please try again.';
+      return { success: false, message };
     } finally {
       setIsLoading(false);
     }

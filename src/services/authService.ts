@@ -98,8 +98,9 @@ export const register = async (userData: RegisterData) => {
     }
     
     return response.data;
-  } catch (error) {
-    if (process.env.NODE_ENV === 'development') {
+  } catch (error: any) {
+    // Only fall back to mock registration if the backend server is unreachable
+    if (process.env.NODE_ENV === 'development' && !error.response) {
       console.warn('Using mock registration for development');
       const mockUser = {
         _id: 'user123',
@@ -205,8 +206,9 @@ export const updateUserProfile = async (profileData: UserProfile) => {
     profileRequestPromise = null;
     
     return response.data;
-  } catch (error) {
-    if (process.env.NODE_ENV === 'development') {
+  } catch (error: any) {
+    // Only fall back to mock update if the backend server is unreachable
+    if (process.env.NODE_ENV === 'development' && !error.response) {
       console.warn('Using mock profile update for development');
       const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
       const updatedUser = { 
@@ -261,9 +263,9 @@ export const socialLogin = async (provider: string, credential?: string, agreedT
     }
     
     return response.data;
-  } catch (error) {
-    // Fallback to mock for development if backend is not ready
-    if (process.env.NODE_ENV === 'development') {
+  } catch (error: any) {
+    // Fallback to mock for development if backend is not ready/unreachable
+    if (process.env.NODE_ENV === 'development' && !error.response) {
       console.warn('Using mock social login for development');
       const mockUser = {
         _id: 'social123',
