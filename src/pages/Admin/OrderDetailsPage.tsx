@@ -2,22 +2,162 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '@/services/api';
 import { Order } from '@/services/orderService';
+import Invoice from '@/components/Invoice';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
+} from '@/components/ui/select';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { format } from 'date-fns';
-import { Download, Camera, Hash, MessageSquare, Flower2, Gift } from 'lucide-react';
+import { 
+  Download, Camera, Hash, MessageSquare, Flower2, Gift, Mail, Phone,
+  ArrowLeft, Clock, User, MapPin, CreditCard, Calendar, ChevronRight,
+  ExternalLink, Copy, Check, CheckCircle2, AlertCircle, ShoppingBag, 
+  HelpCircle, ChevronDown, Plus, Heart, Trash2
+} from 'lucide-react';
 // @ts-ignore
 import html2pdf from 'html2pdf.js';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
+
+const STATUS_CONFIG: Record<string, { label: string; bg: string; border: string; text: string; glow: string; icon: React.ReactNode }> = {
+  order_placed: {
+    label: 'Order Placed',
+    bg: 'bg-blue-50/70 dark:bg-blue-950/20 backdrop-blur-sm',
+    border: 'border-blue-200/60 dark:border-blue-900/40',
+    text: 'text-blue-700 dark:text-blue-400',
+    glow: 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]',
+    icon: <span className="h-1.5 w-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
+  },
+  received: {
+    label: 'Received',
+    bg: 'bg-purple-50/70 dark:bg-purple-950/20 backdrop-blur-sm',
+    border: 'border-purple-200/60 dark:border-purple-900/40',
+    text: 'text-purple-700 dark:text-purple-400',
+    glow: 'bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.5)]',
+    icon: <span className="h-1.5 w-1.5 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.5)]" />
+  },
+  being_made: {
+    label: 'Being Made',
+    bg: 'bg-amber-50/70 dark:bg-amber-950/20 backdrop-blur-sm',
+    border: 'border-amber-200/60 dark:border-amber-800/40',
+    text: 'text-amber-700 dark:text-amber-400',
+    glow: 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]',
+    icon: <span className="h-1.5 w-1.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)] animate-pulse" />
+  },
+  out_for_delivery: {
+    label: 'Out for Delivery',
+    bg: 'bg-indigo-50/70 dark:bg-indigo-950/20 backdrop-blur-sm',
+    border: 'border-indigo-200/60 dark:border-indigo-800/40',
+    text: 'text-indigo-700 dark:text-indigo-400',
+    glow: 'bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]',
+    icon: <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)] animate-bounce" />
+  },
+  delivered: {
+    label: 'Delivered',
+    bg: 'bg-emerald-50/70 dark:bg-emerald-950/20 backdrop-blur-sm',
+    border: 'border-emerald-200/60 dark:border-emerald-800/40',
+    text: 'text-emerald-700 dark:text-emerald-400',
+    glow: 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]',
+    icon: <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+  },
+  cancelled: {
+    label: 'Cancelled',
+    bg: 'bg-rose-50/70 dark:bg-rose-950/20 backdrop-blur-sm',
+    border: 'border-rose-200/60 dark:border-rose-900/40',
+    text: 'text-rose-700 dark:text-rose-400',
+    glow: 'bg-rose-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]',
+    icon: <span className="h-1.5 w-1.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
+  },
+  pending: {
+    label: 'Pending',
+    bg: 'bg-slate-50/70 dark:bg-slate-900/20 backdrop-blur-sm',
+    border: 'border-slate-200/60 dark:border-slate-800/40',
+    text: 'text-slate-700 dark:text-slate-400',
+    glow: 'bg-slate-500',
+    icon: <span className="h-1.5 w-1.5 rounded-full bg-slate-500" />
+  },
+  processing: {
+    label: 'Processing',
+    bg: 'bg-amber-50/70 dark:bg-amber-950/20 backdrop-blur-sm',
+    border: 'border-amber-200/60 dark:border-amber-800/40',
+    text: 'text-amber-700 dark:text-amber-400',
+    glow: 'bg-amber-500',
+    icon: <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+  },
+  completed: {
+    label: 'Completed',
+    bg: 'bg-emerald-50/70 dark:bg-emerald-950/20 backdrop-blur-sm',
+    border: 'border-emerald-200/60 dark:border-emerald-800/40',
+    text: 'text-emerald-700 dark:text-emerald-400',
+    glow: 'bg-emerald-500',
+    icon: <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+  }
+};
+
+const getStatusConfig = (status: string) => {
+  return STATUS_CONFIG[status] || STATUS_CONFIG.pending;
+};
+
+// Formats messy raw database slot strings beautifully
+const formatTimeSlot = (slot: string) => {
+  if (!slot) return 'N/A';
+  
+  const lower = slot.toLowerCase().trim();
+  if (lower === 'morning') return '9:00 AM – 12:00 PM';
+  if (lower === 'afternoon') return '12:00 PM – 4:00 PM';
+  if (lower === 'evening') return '4:00 PM – 8:00 PM';
+  if (lower === 'midnight') return '12:00 AM – 6:00 AM';
+  
+  // slot_H_H patterns e.g., slot_16_18
+  const slotMatch = slot.match(/slot_(\d+)_(\d+)/i);
+  if (slotMatch) {
+    const start = parseInt(slotMatch[1], 10);
+    const end = parseInt(slotMatch[2], 10);
+    const formatHour = (h: number) => {
+      const suffix = h >= 12 ? 'PM' : 'AM';
+      const displayHour = h % 12 === 0 ? 12 : h % 12;
+      return `${displayHour}:00 ${suffix}`;
+    };
+    return `${formatHour(start)} – ${formatHour(end)}`;
+  }
+  
+  // standard hour range e.g., 4-6, 16-18
+  const rangeMatch = slot.match(/(\d+)\s*-\s*(\d+)/);
+  if (rangeMatch) {
+    const start = parseInt(rangeMatch[1], 10);
+    const end = parseInt(rangeMatch[2], 10);
+    
+    const formatHourGuess = (h: number) => {
+      let finalHour = h;
+      let suffix = 'AM';
+      if (h >= 12) {
+        suffix = 'PM';
+        finalHour = h > 12 ? h - 12 : 12;
+      } else {
+        if (h >= 1 && h <= 8) {
+          suffix = 'PM';
+        }
+      }
+      return `${finalHour}:00 ${suffix}`;
+    };
+    return `${formatHourGuess(start)} – ${formatHourGuess(end)}`;
+  }
+  
+  return slot.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+};
 
 const OrderDetailsPage: React.FC = () => {
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
+  const [copiedId, setCopiedId] = useState(false);
   const { formatPrice, convertPrice, currency } = useCurrency();
+  const { toast } = useToast();
+  const orderRef = useRef<HTMLDivElement>(null);
 
   // Helper function to format price with specific currency
   const formatPriceWithCurrency = (amount: number, targetCurrency: string) => {
@@ -30,41 +170,29 @@ const OrderDetailsPage: React.FC = () => {
 
   // Helper function to handle currency display based on order's original currency
   const displayOrderPrice = (amount: number, orderCurrency?: string, orderRate?: number) => {
-    // Always convert and display in the current selected currency
     let finalAmount = amount;
     
     if (orderCurrency && orderCurrency !== currency) {
-      // Order is in different currency, need to convert
       if (orderCurrency === 'INR' && currency !== 'INR') {
-        // Convert from INR to selected currency (e.g., INR 1000 → USD 11.62)
         finalAmount = convertPrice(amount);
       } else if (orderCurrency !== 'INR' && currency === 'INR') {
-        // Convert from foreign currency to INR (e.g., USD 32 → INR 2770.415)
         if (orderRate) {
-          // orderRate is the rate when the order was placed (e.g., USD rate = 0.01199)
-          // To convert USD to INR: USD amount ÷ USD rate = INR amount
           finalAmount = amount / orderRate;
         } else {
-          // Fallback: use current USD to INR rate
-          finalAmount = amount / 0.01199; // USD to INR
+          finalAmount = amount / 0.01199; // Fallback
         }
       } else if (orderCurrency !== 'INR' && currency !== 'INR') {
-        // Convert from one foreign currency to another via INR
         if (orderRate) {
           const amountInINR = amount / orderRate;
           finalAmount = convertPrice(amountInINR);
         }
       }
     } else if (!orderCurrency) {
-      // No order currency specified, assume INR and convert
       finalAmount = convertPrice(amount);
     }
     
-    // Format in the current selected currency
     return formatPriceWithCurrency(finalAmount, currency);
   };
-  const orderRef = useRef<HTMLDivElement>(null);
-  const { toast } = useToast();
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -74,6 +202,11 @@ const OrderDetailsPage: React.FC = () => {
         setOrder(response.data);
       } catch (error) {
         setOrder(null);
+        toast({
+          title: "Error",
+          description: "Could not fetch order details.",
+          variant: "destructive",
+        });
       } finally {
         setLoading(false);
       }
@@ -89,17 +222,73 @@ const OrderDetailsPage: React.FC = () => {
         link.href = window.URL.createObjectURL(blob);
         link.download = `${title.replace(/\s+/g, '_')}.jpg`;
         link.click();
+        toast({
+          title: "Download Started",
+          description: `Downloading custom design image for "${title}"`,
+        });
+      })
+      .catch(() => {
+        toast({
+          title: "Error",
+          description: "Failed to download image. Try right-clicking it.",
+          variant: "destructive",
+        });
       });
   };
 
   const handleDownloadPDF = () => {
-    if (orderRef.current) {
-      html2pdf().from(orderRef.current).set({
+    const element = document.getElementById('clean-invoice-pdf');
+    if (element) {
+      toast({
+        title: "Exporting PDF",
+        description: `Generating high-quality invoice for order #${order?.orderNumber}`,
+      });
+      html2pdf().from(element).set({
+        margin: [0.3, 0.4, 0.3, 0.4],
+        filename: `invoice-order-${order?.orderNumber}.pdf`,
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+      }).save();
+    } else if (orderRef.current) {
+      // Fallback to old behavior if element is missing
+      const fallbackElement = document.getElementById('order-details-pdf') || orderRef.current;
+      toast({
+        title: "Exporting PDF (Fallback)",
+        description: `Generating invoice for order #${order?.orderNumber}`,
+      });
+      html2pdf().from(fallbackElement).set({
         margin: 0.5,
-        filename: `order-${order?.orderNumber}.pdf`,
+        filename: `invoice-order-${order?.orderNumber}.pdf`,
         html2canvas: { scale: 2 },
         jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
       }).save();
+    }
+  };
+
+  const handleStatusUpdate = async (newStatus: Order['status']) => {
+    if (!order) return;
+    try {
+      const response = await api.put(`/orders/${order._id}/status`, { status: newStatus });
+      if (response.data) {
+        setOrder({ ...order, status: newStatus });
+        toast({
+          title: "Success",
+          description: `Order status updated to "${getStatusConfig(newStatus).label}" successfully.`,
+        });
+        if (newStatus === 'delivered') {
+          toast({
+            title: "🎉 Order Delivered!",
+            description: "Email notification with invoice has been sent to the customer.",
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error updating status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update order status.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -128,7 +317,7 @@ const OrderDetailsPage: React.FC = () => {
           variant: "destructive",
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error testing delivery email:', error);
       toast({
         title: "❌ Email Test Failed",
@@ -138,189 +327,535 @@ const OrderDetailsPage: React.FC = () => {
     }
   };
 
-  if (loading) return <div className="p-8 text-center">Loading order details...</div>;
-  if (!order) return <div className="p-8 text-center text-red-500">Order not found.</div>;
+  const copyOrderIdToClipboard = () => {
+    if (!order) return;
+    navigator.clipboard.writeText(order._id);
+    setCopiedId(true);
+    toast({
+      title: "Copied!",
+      description: "Database Order ID copied to clipboard.",
+    });
+    setTimeout(() => setCopiedId(false), 2000);
+  };
 
-  return (
-    <div className="max-w-3xl mx-auto p-4">
-      <Button variant="outline" onClick={() => navigate('/admin/orders')} className="mb-4">&larr; Back to Orders</Button>
-      <div className="flex justify-end mb-4 gap-2">
-        <Button variant="secondary" onClick={handleDownloadPDF}>
-          <Download className="mr-2 h-4 w-4" /> Download Order as PDF
-        </Button>
-        <Button 
-          variant="outline" 
-          onClick={testDeliveryEmail}
-          className="gap-2"
-        >
-          📧 Test Delivery Email
+  const getWhatsAppLink = (phone: string, name: string, orderNumber: string) => {
+    const cleanPhone = phone.replace(/\D/g, '');
+    const phoneWithCC = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
+    const message = encodeURIComponent(`Hello ${name}, this is Spring Blossoms Florist. We are reaching out regarding your order #${orderNumber}.`);
+    return `https://wa.me/${phoneWithCC}?text=${message}`;
+  };
+
+  if (loading) {
+    return (
+      <div className="max-w-6xl mx-auto p-6 space-y-6">
+        <div className="h-10 w-32 bg-slate-200 dark:bg-slate-800 rounded-lg animate-pulse" />
+        <div className="h-40 bg-slate-200 dark:bg-slate-800 rounded-2xl animate-pulse" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="h-96 md:col-span-2 bg-slate-200 dark:bg-slate-800 rounded-2xl animate-pulse" />
+          <div className="h-96 bg-slate-200 dark:bg-slate-800 rounded-2xl animate-pulse" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!order) {
+    return (
+      <div className="max-w-xl mx-auto p-12 text-center bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-850 rounded-2xl mt-12 shadow-sm">
+        <div className="h-16 w-16 bg-rose-50 dark:bg-rose-950/20 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4">
+          <AlertCircle className="h-8 w-8" />
+        </div>
+        <h3 className="text-xl font-bold text-slate-900 dark:text-white">Order Not Found</h3>
+        <p className="text-sm text-slate-400 dark:text-slate-500 mt-2">The order ID does not exist or may have been deleted.</p>
+        <Button variant="outline" onClick={() => navigate('/admin/orders')} className="mt-5 border-slate-200 dark:border-slate-800 rounded-xl">
+          Back to Orders
         </Button>
       </div>
-      <Card ref={orderRef} id="order-details-pdf">
-        <CardHeader>
-          <CardTitle>Order #{order.orderNumber}</CardTitle>
-          <div className="flex gap-2 mt-2">
-            <Badge variant="outline">{order.status}</Badge>
-            <span className="text-xs text-gray-500">Placed: {format(new Date(order.createdAt), 'PPpp')}</span>
+    );
+  }
+
+  const statusCfg = getStatusConfig(order.status);
+
+  return (
+    <div className="max-w-6xl mx-auto p-4 sm:p-6 space-y-6">
+      
+      {/* Top Breadcrumb Navigation */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 dark:border-slate-800 pb-5">
+        <div>
+          <button 
+            onClick={() => navigate('/admin/orders')} 
+            className="flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-slate-700 dark:hover:text-slate-250 uppercase tracking-wider transition-colors mb-2"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Back to orders
+          </button>
+          
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">Order #{order.orderNumber}</h1>
+            
+            {/* Database ID Copy pill */}
+            <button 
+              onClick={copyOrderIdToClipboard}
+              className="inline-flex items-center gap-1 text-[10px] font-mono text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-md px-2 py-0.5 hover:bg-slate-100 dark:hover:bg-slate-850 transition-colors"
+              title="Copy Database ID"
+            >
+              <span>ID: {order._id.substring(0, 8)}...</span>
+              {copiedId ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
+            </button>
           </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div>
-            <h3 className="font-semibold mb-2">Delivery Address</h3>
-            <div className="bg-gray-50 p-3 rounded border">
-              <div className="flex items-center gap-2 mb-2">
-                <Badge variant="outline">
-                  {order.shippingDetails.notes?.toLowerCase().includes('gift') ? '🎁 Gift Delivery' : '📦 Deliver to Myself'}
-                </Badge>
+          
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 font-semibold">
+            Placed on {format(new Date(order.createdAt), 'MMMM d, yyyy • h:mm a')}
+          </p>
+        </div>
+
+        {/* Global Details Actions & Status Switcher */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Quick status dropdown switcher */}
+          <Select
+            value={order.status}
+            onValueChange={(value) => handleStatusUpdate(value as Order['status'])}
+          >
+            <SelectTrigger className="border-0 p-0 h-auto w-auto bg-transparent focus:ring-0 focus:ring-offset-0">
+              <div className={cn(
+                "flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold border transition-all duration-200 cursor-pointer shadow-sm hover:scale-[1.02]",
+                statusCfg.bg,
+                statusCfg.border,
+                statusCfg.text
+              )}>
+                {statusCfg.icon}
+                <span>{statusCfg.label}</span>
+                <ChevronDown className="h-3.5 w-3.5 opacity-60 ml-0.5" />
               </div>
-              <div className="space-y-1 text-sm">
-                <div><strong>Recipient:</strong> {order.shippingDetails.fullName}</div>
-                <div><strong>Email:</strong> {order.shippingDetails.email}</div>
-                <div><strong>Phone:</strong> {order.shippingDetails.phone}</div>
-                <div><strong>Address:</strong></div>
-                <div className="ml-4">
-                  {order.shippingDetails.address}
-                  {order.shippingDetails.apartment && <div>{order.shippingDetails.apartment}</div>}
-                  <div>{order.shippingDetails.city}, {order.shippingDetails.state} {order.shippingDetails.zipCode}</div>
-                </div>
-                {order.shippingDetails.notes && (
-                  <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded">
-                    <strong>Notes:</strong> {order.shippingDetails.notes}
-                  </div>
-                )}
-                <div className="mt-2 text-xs text-gray-600">
-                  <div><strong>Delivery Date:</strong> {format(new Date(order.shippingDetails.deliveryDate), 'PPP')}</div>
-                  <div><strong>Time Slot:</strong> {order.shippingDetails.timeSlot}</div>
-                </div>
-              </div>
+            </SelectTrigger>
+            <SelectContent align="end" className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-xl">
+              <SelectItem value="order_placed" className="text-xs font-medium">Order Placed</SelectItem>
+              <SelectItem value="received" className="text-xs font-medium">Received</SelectItem>
+              <SelectItem value="being_made" className="text-xs font-medium">Being Made</SelectItem>
+              <SelectItem value="out_for_delivery" className="text-xs font-medium">Out for Delivery</SelectItem>
+              <SelectItem value="delivered" className="text-xs font-medium">Delivered</SelectItem>
+              <SelectItem value="cancelled" className="text-xs font-medium">Cancelled</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleDownloadPDF} 
+            className="h-9 gap-1.5 text-xs border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 bg-white dark:bg-slate-900 font-semibold text-slate-700 dark:text-slate-300"
+          >
+            <Download className="h-4 w-4" /> Invoice PDF
+          </Button>
+
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={testDeliveryEmail}
+            className="h-9 gap-1.5 text-xs border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 bg-white dark:bg-slate-900 font-semibold text-slate-700 dark:text-slate-300"
+          >
+            <Mail className="h-4 w-4 text-blue-500" /> Test Email
+          </Button>
+        </div>
+      </div>
+
+      {/* Main Two-Column Layout Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start" ref={orderRef} id="order-details-pdf">
+        
+        {/* Brand Invoice Header */}
+        <div className="col-span-1 lg:col-span-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex items-center gap-4">
+            <div className="h-14 w-14 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center text-3xl shadow-sm border border-emerald-100 dark:border-emerald-900/30">
+              🌸
+            </div>
+            <div>
+              <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">Spring Blossoms Florist</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-0.5">Premium Floral Arrangements & Gift Services</p>
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mt-0.5">Najam Centre, Pillar No. 32, Rethi Bowli, Mehdipatnam, Hyderabad | GSTIN: 36AABFS1234Z1Z5</p>
             </div>
           </div>
-          <div>
-            <h3 className="font-semibold mb-2">Order Items</h3>
-            <ul className="space-y-4">
-              {order.items.map((item, idx) => (
-                <li key={idx} className="flex gap-4 items-center border-b pb-4">
-                  <div className="relative">
-                    {item.product.images && item.product.images.length > 0 && (
-                      <>
-                        <img
-                          src={item.product.images[0]}
-                          alt={item.product.title}
-                          className="w-20 h-20 object-cover rounded border"
-                        />
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="absolute top-1 right-1 bg-white/80 hover:bg-white"
-                          onClick={() => handleDownloadImage(item.product.images[0], item.product.title)}
-                          title="Download Image"
-                        >
-                          <Download className="h-4 w-4 text-blue-600" />
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-medium text-lg">{item.product.title}</div>
-                    <div className="text-xs text-gray-500">Product ID: {item.product._id}</div>
-                    <div className="text-sm">Qty: {item.quantity}</div>
-                    <div className="text-sm">
-                      Price: {displayOrderPrice(item.price, order?.currency, order?.currencyRate)}
-                      {item.finalPrice !== item.price && (
-                        <span className="ml-2 text-green-600">Final: {displayOrderPrice(item.finalPrice, order?.currency, order?.currencyRate)}</span>
-                      )}
-                    </div>
-                    {/* Customizations */}
-                    <div className="mt-2">
-                      <div className="font-semibold text-purple-700 flex items-center gap-2">
-                        🎨 Customization Details
-                      </div>
-                      {item.customizations ? (
-                        <div className="space-y-1 mt-1 text-xs">
-                          {item.customizations.photo && (
-                            <div className="flex items-center gap-2 text-blue-700">
-                              📸 <span>Photo uploaded</span>
-                              <a href={item.customizations.photo} download className="underline ml-2" target="_blank" rel="noopener noreferrer">Download</a>
-                            </div>
-                          )}
-                          {item.customizations.number && (
-                            <div className="flex items-center gap-2 text-green-700">
-                              🔢 <span>Number: {item.customizations.number}</span>
-                            </div>
-                          )}
-                          {item.customizations.messageCard && (
-                            <div className="flex items-center gap-2 text-yellow-700">
-                              ✍ <span>Message: {item.customizations.messageCard}</span>
-                            </div>
-                          )}
-                          {item.customizations.selectedFlowers && item.customizations.selectedFlowers.length > 0 && (
-                            <div className="flex items-center gap-2 text-pink-700">
-                              🌸 <span>
-                                {item.customizations.selectedFlowers.reduce((total: number, f: any) => total + (f.quantity || 1), 0)} flower add-on(s):
-                                {item.customizations.selectedFlowers.map((f: any) => `${f.name}${(f.quantity || 1) > 1 ? `×${f.quantity || 1}` : ''}`).join(', ')}
-                              </span>
-                            </div>
-                          )}
-                          {item.customizations.selectedChocolates && item.customizations.selectedChocolates.length > 0 && (
-                            <div className="flex items-center gap-2 text-orange-700">
-                              🍫 <span>
-                                {item.customizations.selectedChocolates.reduce((total: number, c: any) => total + (c.quantity || 1), 0)} chocolate add-on(s):
-                                {item.customizations.selectedChocolates.map((c: any) => `${c.name}${(c.quantity || 1) > 1 ? `×${c.quantity || 1}` : ''}`).join(', ')}
-                              </span>
-                            </div>
-                          )}
+          <div className="text-left sm:text-right border-t sm:border-t-0 border-slate-100 dark:border-slate-800 pt-3 sm:pt-0 w-full sm:w-auto">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Official Invoice</span>
+            <span className="text-lg font-extrabold text-emerald-600 dark:text-emerald-400">INV-{order.orderNumber}</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold block mt-0.5">Date: {format(new Date(order.createdAt), 'dd/MM/yyyy')}</span>
+          </div>
+        </div>
+
+        {/* Left Column: Order Items, Customizations, Timeline (Takes 2/3 space) */}
+        <div className="lg:col-span-2 space-y-6">
+          
+          {/* Card 1: Product Items */}
+          <Card className="border-slate-100 dark:border-slate-850 shadow-sm rounded-2xl overflow-hidden bg-white dark:bg-slate-900">
+            <CardHeader className="border-b border-slate-50 dark:border-slate-850/50 pb-4">
+              <CardTitle className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                <ShoppingBag className="h-4 w-4 text-slate-500" />
+                Items Ordered
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <ul className="divide-y divide-slate-100 dark:divide-slate-850/60">
+                {order.items.map((item, idx) => (
+                  <li key={idx} className="p-5 flex flex-col sm:flex-row gap-4 sm:items-start group transition-colors hover:bg-slate-50/20">
+                    
+                    {/* Item Thumbnail */}
+                    <div className="relative shrink-0">
+                      {item.product?.images && item.product.images.length > 0 ? (
+                        <div className="relative overflow-hidden rounded-xl border border-slate-100 dark:border-slate-800 h-24 w-24">
+                          <img
+                            src={item.product.images[0]}
+                            alt={item.product.title}
+                            className="h-full w-full object-cover transition-transform duration-300 hover:scale-110"
+                          />
+                          <button
+                            onClick={() => handleDownloadImage(item.product!.images[0], item.product!.title)}
+                            className="absolute bottom-1 right-1 h-6 w-6 rounded-md bg-white/90 hover:bg-white text-slate-600 dark:text-slate-800 hover:text-blue-600 shadow-sm flex items-center justify-center transition-colors border border-slate-200/50"
+                            title="Download Image"
+                          >
+                            <Download className="h-3.5 w-3.5" />
+                          </button>
                         </div>
                       ) : (
-                        <div className="text-xs text-gray-400 mt-1">No customization applied for this order.</div>
+                        <div className="h-24 w-24 bg-slate-50 dark:bg-slate-950 border border-slate-200/50 dark:border-slate-850 rounded-xl flex items-center justify-center">
+                          <Flower2 className="h-8 w-8 text-slate-400" />
+                        </div>
                       )}
                     </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <h3 className="font-semibold mb-2">Total</h3>
-            <div className="text-lg font-bold">{displayOrderPrice(order.totalAmount, order?.currency, order?.currencyRate)}</div>
-            {order.currency && order.currency !== currency && (
-              <div className="text-xs text-gray-500">
-                Originally {formatPriceWithCurrency(order.totalAmount, order.currency)}
-              </div>
-            )}
-          </div>
-          <div>
-            <h3 className="font-semibold mb-2">Payment</h3>
-            <div>Method: {order.paymentDetails.method}</div>
-            {order.paymentDetails.razorpayOrderId && (
-              <div>Razorpay Order ID: {order.paymentDetails.razorpayOrderId}</div>
-            )}
-            {order.paymentDetails.razorpayPaymentId && (
-              <div>Razorpay Payment ID: {order.paymentDetails.razorpayPaymentId}</div>
-            )}
-            {order.paymentDetails.razorpaySignature && (
-              <div>Razorpay Signature: {order.paymentDetails.razorpaySignature}</div>
-            )}
-          </div>
-          {/* Delivery Info Section */}
-          {order.trackingHistory && order.trackingHistory.length > 0 && (
-            <div>
-              <h3 className="font-semibold mb-2">Delivery & Tracking History</h3>
-              <ul className="space-y-2">
-                {order.trackingHistory.map((track, idx) => (
-                  <li key={idx} className="border rounded p-2 bg-gray-50">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="secondary">{track.status.replace(/_/g, ' ')}</Badge>
-                      <span className="text-xs text-gray-500">{format(new Date(track.timestamp), 'PPpp')}</span>
+
+                    {/* Item Metadata */}
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <div className="flex justify-between items-start gap-4">
+                        <div>
+                          <h4 className="text-sm font-bold text-slate-900 dark:text-white">{item.product?.title || item.title || 'Florist Arrangement'}</h4>
+                          <p className="text-[10px] font-mono text-slate-400 dark:text-slate-500 mt-0.5">PID: {item.product?._id || 'N/A'}</p>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-xs.5 font-extrabold text-slate-900 dark:text-white">
+                            {displayOrderPrice(item.finalPrice, order.currency, order.currencyRate)}
+                          </div>
+                          {item.finalPrice !== item.price && (
+                            <div className="text-[10px] text-slate-400 font-semibold line-through">
+                              {displayOrderPrice(item.price, order.currency, order.currencyRate)}
+                            </div>
+                          )}
+                          <span className="text-[10px] text-slate-400 font-bold block mt-0.5">Qty: {item.quantity}</span>
+                        </div>
+                      </div>
+
+                      {/* Customizations Section */}
+                      <div className="pt-2">
+                        {item.customizations ? (
+                          <div className="grid grid-cols-1 gap-2.5 mt-1 text-xs">
+                            
+                            {/* Message Card */}
+                            {item.customizations.messageCard && (
+                              <div className="bg-amber-50/50 dark:bg-amber-950/10 border border-amber-200/40 dark:border-amber-900/20 p-3 rounded-xl space-y-1">
+                                <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400 font-bold text-[10px] uppercase tracking-wider">
+                                  <MessageSquare className="h-3.5 w-3.5" />
+                                  <span>Written Card Message</span>
+                                </div>
+                                <p className="text-xs text-slate-700 dark:text-slate-300 italic font-medium">
+                                  "{item.customizations.messageCard}"
+                                </p>
+                              </div>
+                            )}
+
+                            {/* Photo Upload */}
+                            {item.customizations.photo && (
+                              <div className="bg-blue-50/50 dark:bg-blue-950/10 border border-blue-200/40 dark:border-blue-900/20 p-2.5 rounded-xl flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <Camera className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                  <span className="text-xs font-semibold text-blue-800 dark:text-blue-400">Attached Custom Image</span>
+                                </div>
+                                <a 
+                                  href={item.customizations.photo} 
+                                  download 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:underline px-2.5 py-1 rounded bg-blue-100/40 dark:bg-blue-950/30"
+                                >
+                                  <span>View Image</span>
+                                  <ExternalLink className="h-3 w-3" />
+                                </a>
+                              </div>
+                            )}
+
+                            {/* Custom Number */}
+                            {item.customizations.number && (
+                              <div className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200/40 dark:border-slate-800/40 px-2.5 py-1.5 rounded-xl flex items-center gap-2">
+                                <span className="text-[10px] font-semibold bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-700 dark:text-slate-300">🔢 Number</span>
+                                <span className="font-bold text-slate-800 dark:text-slate-200">{item.customizations.number}</span>
+                              </div>
+                            )}
+
+                            {/* Flower Addons */}
+                            {item.customizations.selectedFlowers && item.customizations.selectedFlowers.length > 0 && (
+                              <div className="bg-pink-50/50 dark:bg-pink-950/10 border border-pink-200/40 dark:border-pink-900/20 p-2.5 rounded-xl">
+                                <div className="flex items-center gap-1.5 text-pink-700 dark:text-pink-400 font-bold text-[10px] uppercase tracking-wider mb-1">
+                                  <Heart className="h-3.5 w-3.5" />
+                                  <span>Flower Add-ons ({item.customizations.selectedFlowers.reduce((tot: number, f: any) => tot + (f.quantity || 1), 0)})</span>
+                                </div>
+                                <div className="flex flex-wrap gap-1">
+                                  {item.customizations.selectedFlowers.map((f: any, idx: number) => (
+                                    <Badge key={idx} variant="outline" className="text-[10px] bg-white/70 dark:bg-slate-900 border-pink-100 dark:border-pink-950 text-pink-700 dark:text-pink-400 font-semibold rounded-lg py-0.5 px-2">
+                                      🌸 {f.name} (x{f.quantity || 1})
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Chocolate Addons */}
+                            {item.customizations.selectedChocolates && item.customizations.selectedChocolates.length > 0 && (
+                              <div className="bg-amber-900/[0.04] dark:bg-amber-950/10 border border-amber-800/20 dark:border-amber-900/20 p-2.5 rounded-xl">
+                                <div className="flex items-center gap-1.5 text-amber-800 dark:text-amber-400 font-bold text-[10px] uppercase tracking-wider mb-1">
+                                  <span>🍫</span>
+                                  <span>Chocolate Add-ons ({item.customizations.selectedChocolates.reduce((tot: number, c: any) => tot + (c.quantity || 1), 0)})</span>
+                                </div>
+                                <div className="flex flex-wrap gap-1">
+                                  {item.customizations.selectedChocolates.map((c: any, idx: number) => (
+                                    <Badge key={idx} variant="outline" className="text-[10px] bg-white/70 dark:bg-slate-900 border-amber-100 dark:border-amber-950 text-amber-800 dark:text-amber-400 font-semibold rounded-lg py-0.5 px-2">
+                                      🍫 {c.name} (x{c.quantity || 1})
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="text-[10px] text-slate-400 italic font-semibold mt-1">No customizations configured.</div>
+                        )}
+                      </div>
                     </div>
-                    {track.message && <div className="text-sm mt-1">{track.message}</div>}
-                    {track.updatedBy && <div className="text-xs text-gray-400">Updated by: {track.updatedBy}</div>}
                   </li>
                 ))}
               </ul>
-            </div>
+            </CardContent>
+          </Card>
+
+          {/* Card 2: Tracking History Timeline */}
+          {order.trackingHistory && order.trackingHistory.length > 0 && (
+            <Card className="border-slate-100 dark:border-slate-850 shadow-sm rounded-2xl bg-white dark:bg-slate-900">
+              <CardHeader className="border-b border-slate-50 dark:border-slate-850/50 pb-4">
+                <CardTitle className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-slate-500" />
+                  Activity & Tracking Log
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="relative border-l border-slate-150 dark:border-slate-800 ml-3.5 space-y-6">
+                  {order.trackingHistory.map((track, idx) => {
+                    const trackCfg = getStatusConfig(track.status);
+                    return (
+                      <div key={idx} className="relative pl-7 group">
+                        {/* Timeline Circle checkpoint */}
+                        <div className={cn(
+                          "absolute -left-2.5 top-0.5 rounded-full border-4 border-white dark:border-slate-900 flex items-center justify-center h-5 w-5",
+                          trackCfg.glow
+                        )} />
+
+                        {/* Timeline Entry Body */}
+                        <div className="space-y-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className={cn(
+                              "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg border",
+                              trackCfg.bg,
+                              trackCfg.border,
+                              trackCfg.text
+                            )}>
+                              {trackCfg.label}
+                            </span>
+                            <span className="text-[10px] text-slate-400 font-semibold">
+                              {format(new Date(track.timestamp), 'MMM d, yyyy • h:mm a')}
+                            </span>
+                          </div>
+                          {track.message && (
+                            <p className="text-xs text-slate-700 dark:text-slate-300 font-medium">
+                              {track.message}
+                            </p>
+                          )}
+                          {track.updatedBy && (
+                            <p className="text-[10px] text-slate-400 font-semibold italic">
+                              Changed by: {track.updatedBy}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
           )}
-        </CardContent>
-      </Card>
+        </div>
+
+        {/* Right Column: Customer Details, Schedule & Financial Summary (Takes 1/3 space) */}
+        <div className="space-y-6">
+
+          {/* Card 1: Delivery Schedule & Address Info */}
+          <Card className="border-slate-100 dark:border-slate-850 shadow-sm rounded-2xl bg-white dark:bg-slate-900 overflow-hidden">
+            <CardHeader className="border-b border-slate-50 dark:border-slate-850/50 pb-4">
+              <CardTitle className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-slate-500" />
+                Delivery Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-5 space-y-4">
+              
+              {/* Delivery schedule (Time slot display) */}
+              <div className="bg-slate-50 dark:bg-slate-950 border border-slate-150/40 dark:border-slate-850 p-4 rounded-xl flex items-start gap-3">
+                <div className="p-2 bg-indigo-50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400 rounded-lg border border-indigo-100/50 shrink-0">
+                  <Calendar className="h-5 w-5" />
+                </div>
+                <div>
+                  <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-0.5">Delivery Schedule</span>
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">
+                    {order.shippingDetails.deliveryDate ? format(new Date(order.shippingDetails.deliveryDate), 'MMMM d, yyyy') : 'Date not set'}
+                  </p>
+                  <span className="inline-block text-[10px] font-bold text-indigo-700 dark:text-indigo-400 bg-indigo-100/50 dark:bg-indigo-950/25 border border-indigo-200/20 px-2 py-0.5 rounded-md mt-1">
+                    {formatTimeSlot(order.shippingDetails.timeSlot)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Recipient Profile */}
+              <div className="space-y-2 border-t border-slate-50 dark:border-slate-850/50 pt-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Recipient Details</span>
+                  <Badge variant="outline" className="text-[9px] bg-slate-50/50 border-slate-200 dark:border-slate-800 uppercase tracking-wider px-1.5">
+                    {order.shippingDetails.notes?.toLowerCase().includes('gift') ? '🎁 Gift Delivery' : '📦 Self Delivery'}
+                  </Badge>
+                </div>
+                
+                <div className="space-y-1">
+                  <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{order.shippingDetails.fullName}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1.5">
+                    <Mail className="h-3.5 w-3.5 text-slate-400" />
+                    {order.shippingDetails.email}
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1.5">
+                    <Phone className="h-3.5 w-3.5 text-slate-400" />
+                    {order.shippingDetails.phone}
+                  </p>
+                </div>
+
+                {/* Direct Call / WhatsApp Quick Actions */}
+                <div className="grid grid-cols-2 gap-2 pt-2">
+                  <a 
+                    href={`tel:${order.shippingDetails.phone}`}
+                    className="flex items-center justify-center gap-2 h-9 text-xs font-bold rounded-xl border border-slate-250 bg-white hover:bg-slate-50 text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-850 shadow-sm"
+                  >
+                    <Phone className="h-3.5 w-3.5" /> Call Customer
+                  </a>
+                  <a 
+                    href={getWhatsAppLink(order.shippingDetails.phone, order.shippingDetails.fullName, order.orderNumber)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 h-9 text-xs font-bold rounded-xl bg-green-500 hover:bg-green-600 text-white shadow-sm transition-all duration-200 hover:scale-[1.01]"
+                  >
+                    <MessageSquare className="h-3.5 w-3.5" /> WhatsApp
+                  </a>
+                </div>
+              </div>
+
+              {/* Delivery Address */}
+              <div className="space-y-1.5 border-t border-slate-50 dark:border-slate-850/50 pt-3">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Address</span>
+                <p className="text-xs text-slate-800 dark:text-slate-200 leading-relaxed font-semibold">
+                  {order.shippingDetails.address}
+                  {order.shippingDetails.apartment && <span className="block mt-0.5 text-slate-500 dark:text-slate-400">Apt: {order.shippingDetails.apartment}</span>}
+                  <span className="block mt-0.5 text-slate-600 dark:text-slate-400 font-bold">{order.shippingDetails.city}, {order.shippingDetails.state} {order.shippingDetails.zipCode}</span>
+                </p>
+              </div>
+
+              {/* Special Notes / Card Instructions */}
+              {order.shippingDetails.notes && (
+                <div className="bg-amber-50/50 dark:bg-amber-950/10 border border-amber-200/30 p-3 rounded-xl space-y-1">
+                  <span className="text-[9px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider block">Instructions & Notes</span>
+                  <p className="text-xs text-slate-700 dark:text-slate-300 italic font-medium leading-relaxed">
+                    "{order.shippingDetails.notes}"
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Card 2: Financial Summary & Payments */}
+          <Card className="border-slate-100 dark:border-slate-850 shadow-sm rounded-2xl bg-white dark:bg-slate-900 overflow-hidden">
+            <CardHeader className="border-b border-slate-50 dark:border-slate-850/50 pb-4">
+              <CardTitle className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                <CreditCard className="h-4 w-4 text-slate-500" />
+                Invoice Summary
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-5 space-y-4">
+              
+              {/* Core numbers breakdown */}
+              <div className="space-y-2 text-xs font-semibold text-slate-600 dark:text-slate-400">
+                <div className="flex justify-between">
+                  <span>Items Subtotal</span>
+                  <span className="text-slate-900 dark:text-white">
+                    {displayOrderPrice(order.items.reduce((sum, item) => sum + (item.finalPrice || item.price), 0), order.currency, order.currencyRate)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Delivery fee</span>
+                  <span className="text-slate-900 dark:text-white">
+                    {displayOrderPrice(0, order.currency, order.currencyRate)}
+                  </span>
+                </div>
+                <div className="flex justify-between border-t border-slate-50 dark:border-slate-850/40 pt-2 text-sm">
+                  <span className="font-bold text-slate-800 dark:text-slate-200">Grand Total</span>
+                  <span className="font-extrabold text-slate-900 dark:text-white">
+                    {displayOrderPrice(order.totalAmount, order.currency, order.currencyRate)}
+                  </span>
+                </div>
+                {order.currency && order.currency !== currency && (
+                  <div className="text-[10px] text-slate-400 font-semibold text-right italic pt-0.5">
+                    Original placement amount: {formatPriceWithCurrency(order.totalAmount, order.currency)}
+                  </div>
+                )}
+              </div>
+
+              {/* Payment details */}
+              <div className="border-t border-slate-50 dark:border-slate-850/50 pt-3 space-y-2">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Payment Details</span>
+                
+                <div className="space-y-1.5 text-xs text-slate-500 font-medium">
+                  <div className="flex justify-between">
+                    <span>Method</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-250 uppercase">{order.paymentDetails.method || 'Online'}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>Payment Status</span>
+                    <Badge className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/40 text-[10px] font-bold capitalize py-0.5 shadow-sm">
+                      Completed
+                    </Badge>
+                  </div>
+                  
+                  {order.paymentDetails.razorpayPaymentId && (
+                    <div className="flex flex-col pt-1.5 gap-0.5 border-t border-slate-50 dark:border-slate-850/30 mt-1.5">
+                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Transaction ID</span>
+                      <span className="font-mono text-[10px] text-slate-700 dark:text-slate-300 break-all select-all font-semibold">{order.paymentDetails.razorpayPaymentId}</span>
+                    </div>
+                  )}
+
+                  {order.paymentDetails.razorpayOrderId && (
+                    <div className="flex flex-col pt-1 gap-0.5">
+                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Razorpay Order ID</span>
+                      <span className="font-mono text-[10px] text-slate-600 dark:text-slate-400 break-all select-all">{order.paymentDetails.razorpayOrderId}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+      
+      {/* Offscreen print-ready invoice */}
+      <div style={{ position: 'absolute', left: '-9999px', top: '-9999px', width: '794px' }}>
+        <div id="clean-invoice-pdf" className="bg-white">
+          <Invoice order={order} />
+        </div>
+      </div>
     </div>
   );
 };

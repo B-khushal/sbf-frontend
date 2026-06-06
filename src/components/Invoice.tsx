@@ -1,134 +1,79 @@
 import React from 'react';
 import { format } from 'date-fns';
-import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface InvoiceProps {
-  order: {
-    id?: string;
-    orderNumber: string;
-    createdAt?: string;
-    date?: string;
-    shippingDetails: {
-      firstName: string;
-      lastName: string;
-      email: string;
-      phone: string;
-      address: string;
-      apartment?: string;
-      city: string;
-      state: string;
-      zipCode: string;
-      notes?: string;
-      deliveryOption?: 'self' | 'gift';
-      giftMessage?: string;
-      receiverFirstName?: string;
-      receiverLastName?: string;
-      receiverEmail?: string;
-      receiverPhone?: string;
-      receiverAddress?: string;
-      receiverApartment?: string;
-      receiverCity?: string;
-      receiverState?: string;
-      receiverZipCode?: string;
-      timeSlot: string;
-      deliveryDate?: string;
-    };
-    items: Array<{
-      product: {
-        id?: string;
-        name: string;
-        title: string;
-        images?: string[];
-        image?: string;
-        price: number;
-        discount?: number;
-      };
-      quantity: number;
-      price: number;
-      finalPrice: number;
-    }>;
-    totalAmount: number;
-    shippingFee?: number;
-    status: string;
-    paymentDetails: {
-      method: string;
-      status: string;
-      transactionId?: string;
-      razorpayPaymentId?: string;
-      paymentId?: string;
-    };
-    currency?: string;
-    currencyRate?: number;
-    originalCurrency?: string;
-  };
+  order: any;
   isAdmin?: boolean;
 }
 
 const Invoice: React.FC<InvoiceProps> = ({ order, isAdmin = false }) => {
-  const { formatPrice, convertPrice, currency, rate } = useCurrency();
+  if (!order) return null;
 
-  // Helper function to format price with specific currency
-  const formatPriceWithCurrency = (amount: number, targetCurrency: string) => {
-    return new Intl.NumberFormat(targetCurrency === 'INR' ? 'en-IN' : 'en-US', {
+  // Resolve shipping / delivery structure
+  const shipping = order.shippingDetails || order.shipping || {};
+  
+  // Resolve customer details
+  const customerName = shipping.fullName || shipping.firstName 
+    ? `${shipping.firstName || ''} ${shipping.lastName || ''}`.trim()
+    : 'Valued Customer';
+  
+  const customerEmail = shipping.email || order.user?.email || 'N/A';
+  const customerPhone = shipping.phone || order.user?.phone || 'N/A';
+
+  // Resolve gift vs standard delivery details
+  const isGift = shipping.deliveryOption === 'gift' || (order.giftDetails && order.giftDetails.message);
+  
+  const recipientName = isGift
+    ? (order.giftDetails?.recipientName || `${shipping.receiverFirstName || ''} ${shipping.receiverLastName || ''}`.trim() || customerName)
+    : customerName;
+  
+  const recipientPhone = isGift
+    ? (order.giftDetails?.recipientPhone || shipping.receiverPhone || 'N/A')
+    : customerPhone;
+  
+  const recipientAddress = isGift
+    ? (order.giftDetails?.recipientAddress || shipping.receiverAddress || 'N/A')
+    : (shipping.address || 'N/A');
+  
+  const recipientApartment = isGift
+    ? (order.giftDetails?.recipientApartment || shipping.receiverApartment)
+    : (shipping.apartment);
+  
+  const recipientCity = isGift
+    ? (order.giftDetails?.recipientCity || shipping.receiverCity || '')
+    : (shipping.city || '');
+  
+  const recipientState = isGift
+    ? (order.giftDetails?.recipientState || shipping.receiverState || '')
+    : (shipping.state || '');
+  
+  const recipientZip = isGift
+    ? (order.giftDetails?.recipientZipCode || shipping.receiverZipCode || '')
+    : (shipping.zipCode || '');
+
+  // Resolve payment details
+  const payment = order.paymentDetails || order.payment || {};
+  const paymentMethod = payment.method === 'razorpay' 
+    ? 'Razorpay (Online Payment)' 
+    : (payment.method || 'Online Payment');
+  const paymentStatus = payment.status || 'Completed';
+  const transactionId = payment.razorpayPaymentId || payment.paymentId || payment.transactionId || '';
+
+  // Resolve items list
+  const items = order.items || [];
+
+  // Helper function to format currency
+  const formatCurrency = (amount: number) => {
+    const currencyCode = order.currency || 'INR';
+    return new Intl.NumberFormat(currencyCode === 'INR' ? 'en-IN' : 'en-US', {
       style: 'currency',
-      currency: targetCurrency,
+      currency: currencyCode,
       minimumFractionDigits: 2,
     }).format(amount);
   };
 
-  // Helper function to handle currency display based on order's original currency
-  const displayPrice = (amount: number) => {
-    // Always display in INR for official invoices (GST compliance)
-    if (order.currency && order.currency !== 'INR' && order.currencyRate) {
-      // Convert from order currency to INR
-      const amountInINR = amount / order.currencyRate;
-      return formatPriceWithCurrency(amountInINR, 'INR');
-    } else if (order.currency === 'INR') {
-      return formatPriceWithCurrency(amount, 'INR');
-    } else {
-      // Fallback: treat as INR
-      return formatPriceWithCurrency(amount, 'INR');
-    }
-  };
-
-  // Helper function to get INR amount for calculations
-  const getINRAmount = (amount: number) => {
-    if (order.currency && order.currency !== 'INR' && order.currencyRate) {
-      return amount / order.currencyRate;
-    } else if (order.currency === 'INR') {
-      return amount;
-    } else {
-      return amount; // Fallback: treat as INR
-    }
-  };
-
-  const calculateSubtotal = () => {
-    const subtotal = order.items.reduce((sum, item) => sum + item.finalPrice, 0);
-    return getINRAmount(subtotal);
-  };
-
-  const calculateCGST = (subtotal: number) => {
-    return subtotal * 0.025; // 2.5% CGST
-  };
-
-  const calculateSGST = (subtotal: number) => {
-    return subtotal * 0.025; // 2.5% SGST
-  };
-
-  const calculateShipping = () => {
-    return getINRAmount(order.shippingFee || 0);
-  };
-
-  const calculateGrandTotal = () => {
-    const subtotal = calculateSubtotal();
-    const cgst = calculateCGST(subtotal);
-    const sgst = calculateSGST(subtotal);
-    const shipping = calculateShipping();
-    return subtotal + cgst + sgst + shipping;
-  };
-
   // Safe date formatting helper
-  const formatDate = (dateStr: string | undefined) => {
+  const formatDate = (dateStr: string | undefined | Date) => {
     if (!dateStr) return 'N/A';
     try {
       const date = new Date(dateStr);
@@ -136,369 +81,207 @@ const Invoice: React.FC<InvoiceProps> = ({ order, isAdmin = false }) => {
       return format(date, 'dd/MM/yyyy');
     } catch (error) {
       console.error('Date formatting error:', error);
-      return 'Invalid date';
+      return 'N/A';
     }
   };
 
-  const formatTimeSlot = (timeSlot: string) => {
-    switch (timeSlot) {
-      case 'morning':
-        return '9:00 AM - 12:00 PM';
-      case 'afternoon':
-        return '12:00 PM - 4:00 PM';
-      case 'evening':
-        return '4:00 PM - 8:00 PM';
-      case 'midnight':
-        return '12:00 AM - 6:00 AM (Midnight Delivery)';
-      default:
-        return timeSlot || '7:00 PM - 9:00 PM';
-    }
-  };
+  // Pricing calculations
+  const itemsSubtotal = order.subtotal || items.reduce((sum: number, item: any) => {
+    return sum + ((item.finalPrice || item.price || 0) * item.quantity);
+  }, 0);
 
-  const getPaymentMethod = () => {
-    if (order.paymentDetails.method === 'razorpay') {
-      return 'Razorpay (Online Payment)';
-    }
-    return order.paymentDetails.method || 'Online Payment';
-  };
-
-  const getTransactionId = () => {
-    return order.paymentDetails.razorpayPaymentId || 
-           order.paymentDetails.paymentId || 
-           order.paymentDetails.transactionId || 
-           'N/A';
-  };
-
-  const subtotal = calculateSubtotal();
-  const cgst = calculateCGST(subtotal);
-  const sgst = calculateSGST(subtotal);
-  const shipping = calculateShipping();
-  const grandTotal = calculateGrandTotal();
+  const deliveryFee = order.deliveryFee || order.shippingFee || shipping.deliveryFee || 0;
+  const promoDiscount = order.promoCode?.discount || order.discountAmount || 0;
+  const hasDeliveryFee = deliveryFee > 0;
+  const hasPromo = promoDiscount > 0;
+  const grandTotal = order.totalAmount || order.total || (itemsSubtotal + deliveryFee - promoDiscount);
 
   return (
-    <div className="bg-white max-w-4xl mx-auto" style={{ fontFamily: 'Arial, sans-serif' }}>
-      {/* Professional Header with Business Information */}
-      <div className="border-b-4 border-emerald-600 p-8">
-        <div className="flex justify-between items-start">
-          {/* Company Information */}
-          <div className="flex items-start gap-6">
-            <div className="w-20 h-20 bg-emerald-100 rounded-lg flex items-center justify-center border-2 border-emerald-200">
-              <span className="text-3xl">🌸</span>
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">Spring Blossoms Florist</h1>
-              <p className="text-lg text-gray-600 mb-3">Premium Floral Arrangements & Gift Services</p>
-              <div className="text-sm text-gray-600 space-y-1">
-                <p><strong>Address:</strong> Door No. 12-2-786/A & B, Najam Centre, Pillar No. 32</p>
-                <p>Rethi Bowli, Mehdipatnam, Hyderabad, Telangana 500028</p>
-                <p><strong>GSTIN:</strong> 36AABFS1234Z1Z5</p>
-                <p><strong>Phone:</strong> +91 9949683222 | <strong>Email:</strong> 2006sbf@gmail.com</p>
-                <p><strong>Website:</strong> www.sbflorist.com</p>
-              </div>
+    <div className="bg-white text-slate-800 max-w-4xl mx-auto p-8" style={{ fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif" }}>
+      {/* Brand Header */}
+      <div className="flex justify-between items-start mb-6">
+        <div className="flex items-start gap-4">
+          <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center border border-emerald-100 text-3xl shadow-sm">
+            🌸
+          </div>
+          <div>
+            <h1 className="text-2xl font-extrabold text-emerald-800 tracking-tight">Spring Blossoms Florist</h1>
+            <p className="text-xs font-bold text-amber-600 uppercase tracking-widest mt-0.5">Premium Floral Arrangements & Gifts</p>
+            <div className="text-[11px] text-slate-500 space-y-0.5 mt-1.5 leading-relaxed">
+              <p>Door No. 12-2-786/A & B, Najam Centre, Pillar No. 32</p>
+              <p>Rethi Bowli, Mehdipatnam, Hyderabad, Telangana 500028</p>
+              <p><strong>GSTIN:</strong> 36AABFS1234Z1Z5 | <strong>Ph:</strong> +91 9949683222</p>
             </div>
           </div>
-          
-          {/* Invoice Details */}
-          <div className="text-right">
-            <div className="bg-emerald-50 p-4 rounded-lg border border-emerald-200">
-              <h2 className="text-2xl font-bold text-emerald-700 mb-2">INVOICE</h2>
-              <div className="space-y-2 text-sm">
-                <p><strong>Invoice No:</strong> INV-{order.orderNumber}</p>
-                <p><strong>Invoice Date:</strong> {formatDate(order.createdAt || order.date)}</p>
-                <p><strong>Order ID:</strong> {order.orderNumber}</p>
-                <p><strong>Due Date:</strong> {formatDate(order.createdAt || order.date)}</p>
+        </div>
+
+        <div className="text-right">
+          <div className="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100/60 inline-block text-left min-w-[200px]">
+            <h2 className="text-sm font-bold text-emerald-800 uppercase tracking-wider border-b-2 border-emerald-800 pb-1.5 mb-2 text-right">TAX INVOICE</h2>
+            <div className="space-y-1 text-xs">
+              <div className="flex justify-between">
+                <span className="text-slate-500 font-semibold">Invoice No:</span>
+                <span className="font-bold text-emerald-800">INV-{order.orderNumber}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500 font-semibold">Order Date:</span>
+                <span className="font-semibold text-slate-700">{formatDate(order.createdAt)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500 font-semibold">Delivery Date:</span>
+                <span className="font-semibold text-slate-700">{formatDate(shipping.deliveryDate || order.createdAt)}</span>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Invoice Content */}
-      <div className="p-8">
-        {/* Customer and Delivery Information */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          {/* Bill To */}
-          <div className="border border-gray-200 rounded-lg p-6">
-            <h3 className="text-lg font-bold text-gray-800 mb-4 border-b border-gray-200 pb-2">
-              Bill To
-            </h3>
-            <div className="space-y-3">
-              <p className="text-lg font-semibold text-gray-800">
-                {order.shippingDetails.firstName} {order.shippingDetails.lastName}
-              </p>
-              <div className="text-sm text-gray-600 space-y-1">
-                <p><strong>Email:</strong> {order.shippingDetails.email}</p>
-                <p><strong>Phone:</strong> {order.shippingDetails.phone}</p>
-              </div>
-              <div className="pt-3 border-t border-gray-100">
-                <p className="font-semibold text-gray-700 mb-2">Billing Address</p>
-                <div className="text-sm text-gray-600 space-y-1">
-                  <p>{order.shippingDetails.address}</p>
-                  {order.shippingDetails.apartment && <p>{order.shippingDetails.apartment}</p>}
-                  <p>{order.shippingDetails.city}, {order.shippingDetails.state} {order.shippingDetails.zipCode}</p>
-                </div>
-              </div>
-            </div>
-          </div>
+      {/* Decorative Border */}
+      <div className="h-1 bg-emerald-800 rounded mb-0.5"></div>
+      <div className="h-[1px] bg-amber-500 mb-6"></div>
 
-          {/* Ship To */}
-          <div className="border border-gray-200 rounded-lg p-6">
-            <h3 className="text-lg font-bold text-gray-800 mb-4 border-b border-gray-200 pb-2">
-              Ship To
-            </h3>
-            <div className="space-y-3">
-              {order.shippingDetails.deliveryOption === 'gift' && order.shippingDetails.receiverFirstName ? (
-                <>
-                  <p className="text-lg font-semibold text-gray-800">
-                    {order.shippingDetails.receiverFirstName} {order.shippingDetails.receiverLastName || ''}
-                  </p>
-                  <div className="text-sm text-gray-600 space-y-1">
-                    <p><strong>Phone:</strong> {order.shippingDetails.receiverPhone}</p>
-                  </div>
-                  <div className="pt-3 border-t border-gray-100">
-                    <p className="font-semibold text-gray-700 mb-2">Delivery Address</p>
-                    <div className="text-sm text-gray-600 space-y-1">
-                      <p>{order.shippingDetails.receiverAddress}</p>
-                      {order.shippingDetails.receiverApartment && <p>{order.shippingDetails.receiverApartment}</p>}
-                      <p>{order.shippingDetails.receiverCity}, {order.shippingDetails.receiverState} {order.shippingDetails.receiverZipCode}</p>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <p className="text-lg font-semibold text-gray-800">
-                    {order.shippingDetails.firstName} {order.shippingDetails.lastName}
-                  </p>
-                  <div className="text-sm text-gray-600 space-y-1">
-                    <p><strong>Phone:</strong> {order.shippingDetails.phone}</p>
-                  </div>
-                  <div className="pt-3 border-t border-gray-100">
-                    <p className="font-semibold text-gray-700 mb-2">Delivery Address</p>
-                    <div className="text-sm text-gray-600 space-y-1">
-                      <p>{order.shippingDetails.address}</p>
-                      {order.shippingDetails.apartment && <p>{order.shippingDetails.apartment}</p>}
-                      <p>{order.shippingDetails.city}, {order.shippingDetails.state} {order.shippingDetails.zipCode}</p>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
+      {/* Billing & Shipping Information Grid */}
+      <div className="grid grid-cols-2 gap-6 mb-6">
+        {/* Bill To */}
+        <div className="border border-slate-200 bg-slate-50/50 rounded-xl p-5 border-l-4 border-l-emerald-850">
+          <h3 className="text-xs font-bold text-emerald-850 uppercase tracking-wider border-b border-slate-200 pb-2 mb-3">
+            Billing Details
+          </h3>
+          <p className="text-sm font-bold text-slate-800">
+            {order.shippingDetails?.fullName || order.shipping?.fullName || customerName}
+          </p>
+          <div className="text-xs text-slate-600 space-y-1.5 mt-2">
+            <p><strong>Email:</strong> {customerEmail}</p>
+            <p><strong>Phone:</strong> {customerPhone}</p>
+            <p className="text-[10px] text-slate-400 mt-1 italic">Billing Address same as Shipping Address</p>
           </div>
         </div>
 
-        {/* Order and Delivery Information */}
-        <div className="bg-gray-50 p-6 rounded-lg mb-8">
-          <h3 className="text-lg font-bold text-gray-800 mb-4 border-b border-gray-200 pb-2">
-            Order & Delivery Information
+        {/* Ship To */}
+        <div className="border border-slate-200 bg-slate-50/50 rounded-xl p-5 border-l-4 border-l-amber-500">
+          <h3 className="text-xs font-bold text-amber-600 uppercase tracking-wider border-b border-slate-200 pb-2 mb-3">
+            {isGift ? 'Delivery Recipient (Gift)' : 'Delivery Address'}
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <p className="text-sm text-gray-600 mb-1"><strong>Order Date</strong></p>
-              <p className="font-semibold text-gray-800">{formatDate(order.createdAt || order.date)}</p>
+          <p className="text-sm font-bold text-slate-800">
+            {recipientName}
+          </p>
+          <div className="text-xs text-slate-600 space-y-1 mt-2 leading-relaxed">
+            <p><strong>Phone:</strong> {recipientPhone}</p>
+            <p><strong>Address:</strong> {recipientAddress}{recipientApartment ? `, ${recipientApartment}` : ''}, {recipientCity}{recipientState ? `, ${recipientState}` : ''} {recipientZip}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Items Table */}
+      <div className="border border-slate-200 rounded-xl overflow-hidden mb-6">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="bg-emerald-50 text-emerald-800 border-b-2 border-b-emerald-800 text-left text-xs font-bold uppercase tracking-wider">
+              <th className="px-5 py-3">Item Description</th>
+              <th className="px-5 py-3 text-center w-20">Qty</th>
+              <th className="px-5 py-3 text-right w-32">Unit Price</th>
+              <th className="px-5 py-3 text-right w-32">Total</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-200 text-xs">
+            {items.map((item: any, idx: number) => {
+              const title = item.product?.title || item.title || 'Florist Arrangement';
+              const variantText = item.selectedVariant?.label ? `Variant: ${item.selectedVariant.label}` : 'Premium Arrangement';
+              const customText = item.customizations?.messageCard ? `Message Card Included` : '';
+
+              return (
+                <tr key={idx} className="hover:bg-slate-50/50">
+                  <td className="px-5 py-3.5">
+                    <div className="font-bold text-slate-900">{title}</div>
+                    <div className="text-[10px] text-slate-500 mt-0.5">{variantText}</div>
+                    {customText && <div className="text-[9px] text-amber-700 font-semibold mt-0.5">✨ {customText}</div>}
+                  </td>
+                  <td className="px-5 py-3.5 text-center text-slate-600">{item.quantity}</td>
+                  <td className="px-5 py-3.5 text-right text-slate-600">{formatCurrency(item.finalPrice || item.price)}</td>
+                  <td className="px-5 py-3.5 text-right font-bold text-slate-900">{formatCurrency((item.finalPrice || item.price) * item.quantity)}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Totals & Metadata Grid */}
+      <div className="grid grid-cols-5 gap-6 items-start">
+        {/* Payment & Delivery Logistics */}
+        <div className="col-span-3 space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="border border-slate-200 bg-white rounded-xl p-3 border-l-2 border-l-blue-500">
+              <h4 className="text-[10px] font-bold text-blue-600 uppercase tracking-wider border-b border-slate-100 pb-1 mb-1.5">
+                Payment Status
+              </h4>
+              <div className="text-[11px] text-slate-700 space-y-0.5">
+                <p><strong>Method:</strong> {paymentMethod}</p>
+                <p><strong>Status:</strong> <span className="text-emerald-600 font-bold">● {paymentStatus}</span></p>
+                {transactionId && <p className="text-[9px] text-slate-400 mt-1 truncate"><strong>TxID:</strong> {transactionId}</p>}
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-gray-600 mb-1"><strong>Delivery Date</strong></p>
-              <p className="font-semibold text-gray-800">{formatDate(order.shippingDetails.deliveryDate)}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600 mb-1"><strong>Time Slot</strong></p>
-              <p className="font-semibold text-gray-800">{formatTimeSlot(order.shippingDetails.timeSlot)}</p>
+
+            <div className="border border-slate-200 bg-white rounded-xl p-3 border-l-2 border-l-purple-500">
+              <h4 className="text-[10px] font-bold text-purple-600 uppercase tracking-wider border-b border-slate-100 pb-1 mb-1.5">
+                Delivery Logistics
+              </h4>
+              <div className="text-[11px] text-slate-700 space-y-0.5">
+                <p><strong>Date:</strong> {formatDate(shipping.deliveryDate)}</p>
+                <p><strong>Slot:</strong> {shipping.timeSlot || 'Standard Delivery'}</p>
+              </div>
             </div>
           </div>
-          {(order.shippingDetails.notes || order.shippingDetails.giftMessage) && (
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              {order.shippingDetails.notes && (
-                <div className="mb-2">
-                  <p className="text-sm text-gray-600 mb-1"><strong>Delivery Notes</strong></p>
-                  <p className="text-sm text-gray-800 italic">"{order.shippingDetails.notes}"</p>
-                </div>
-              )}
-              {order.shippingDetails.giftMessage && (
-                <div>
-                  <p className="text-sm text-gray-600 mb-1"><strong>Gift Message</strong></p>
-                  <p className="text-sm text-gray-800 italic">"{order.shippingDetails.giftMessage}"</p>
-                </div>
-              )}
+
+          {shipping.giftMessage && (
+            <div className="border border-dashed border-amber-300 bg-amber-50/30 rounded-xl p-3.5">
+              <h4 className="text-[10px] font-bold text-amber-600 uppercase tracking-wider border-b border-amber-200/50 pb-1 mb-1.5">
+                🎁 Gift Card Message
+              </h4>
+              <p className="text-xs font-medium text-slate-700 italic leading-relaxed">
+                "{shipping.giftMessage}"
+              </p>
             </div>
           )}
         </div>
 
-        {/* Order Details Table */}
-        <div className="mb-8">
-          <h3 className="text-lg font-bold text-gray-800 mb-4 border-b border-gray-200 pb-2">
-            Order Details
-          </h3>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-gray-800 text-white">
-                  <th className="px-4 py-3 text-left font-semibold border border-gray-600">S.No</th>
-                  <th className="px-4 py-3 text-left font-semibold border border-gray-600">Item Description</th>
-                  <th className="px-4 py-3 text-right font-semibold border border-gray-600">Unit Price (₹)</th>
-                  <th className="px-4 py-3 text-center font-semibold border border-gray-600">Qty</th>
-                  <th className="px-4 py-3 text-right font-semibold border border-gray-600">Amount (₹)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {order.items.map((item, index) => (
-                  <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
-                    <td className="px-4 py-3 border border-gray-300 text-sm">{index + 1}</td>
-                    <td className="px-4 py-3 border border-gray-300">
-                      <div>
-                        <p className="font-semibold text-gray-800">{item.product.title}</p>
-                        <p className="text-xs text-gray-600">Premium Floral Arrangement</p>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 border border-gray-300 text-right font-semibold">
-                      {new Intl.NumberFormat('en-IN', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      }).format(getINRAmount(item.price))}
-                    </td>
-                    <td className="px-4 py-3 border border-gray-300 text-center">
-                      {item.quantity}
-                    </td>
-                    <td className="px-4 py-3 border border-gray-300 text-right font-bold text-emerald-600">
-                      {new Intl.NumberFormat('en-IN', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      }).format(getINRAmount(item.finalPrice))}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {/* Pricing Summary */}
+        <div className="col-span-2">
+          <div className="space-y-2.5 text-xs text-slate-600 pr-2">
+            <div className="flex justify-between">
+              <span>Subtotal</span>
+              <span className="font-semibold text-slate-900">{formatCurrency(itemsSubtotal)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Delivery Fee</span>
+              <span className="font-semibold text-slate-900">{hasDeliveryFee ? formatCurrency(deliveryFee) : 'FREE'}</span>
+            </div>
+            {hasPromo && (
+              <div className="flex justify-between text-red-600">
+                <span>Promo Discount {order.promoCode?.code ? `(${order.promoCode.code})` : ''}</span>
+                <span className="font-semibold">-{formatCurrency(promoDiscount)}</span>
+              </div>
+            )}
+            <div className="h-[1px] bg-slate-200 my-1"></div>
+            <div className="flex justify-between items-center text-sm font-bold text-emerald-800 pt-1 border-t-2 border-emerald-800">
+              <span>Grand Total</span>
+              <span className="text-base">{formatCurrency(grandTotal)}</span>
+            </div>
           </div>
         </div>
+      </div>
 
-        {/* Payment Summary */}
-        <div className="flex justify-end mb-8">
-          <div className="w-96">
-            <div className="border border-gray-300 rounded-lg overflow-hidden">
-              <div className="bg-gray-800 text-white px-4 py-3">
-                <h3 className="font-bold text-lg">Payment Summary</h3>
-              </div>
-              <div className="p-4 space-y-3">
-                <div className="flex justify-between py-2 border-b border-gray-200">
-                  <span className="text-gray-600">Subtotal</span>
-                  <span className="font-semibold">
-                    ₹{new Intl.NumberFormat('en-IN', {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    }).format(subtotal)}
-                  </span>
-                </div>
-                
-                <div className="flex justify-between py-2 border-b border-gray-200">
-                  <span className="text-gray-600">CGST (2.5%)</span>
-                  <span className="font-semibold">
-                    ₹{new Intl.NumberFormat('en-IN', {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    }).format(cgst)}
-                  </span>
-                </div>
-                
-                <div className="flex justify-between py-2 border-b border-gray-200">
-                  <span className="text-gray-600">SGST (2.5%)</span>
-                  <span className="font-semibold">
-                    ₹{new Intl.NumberFormat('en-IN', {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    }).format(sgst)}
-                  </span>
-                </div>
-                
-                {shipping > 0 && (
-                  <div className="flex justify-between py-2 border-b border-gray-200">
-                    <span className="text-gray-600">Delivery Charges</span>
-                    <span className="font-semibold">
-                      ₹{new Intl.NumberFormat('en-IN', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      }).format(shipping)}
-                    </span>
-                  </div>
-                )}
-                
-                <div className="bg-emerald-600 text-white p-4 rounded-lg">
-                  <div className="flex justify-between items-center">
-                    <span className="text-lg font-bold">TOTAL AMOUNT</span>
-                    <span className="text-2xl font-bold">
-                      ₹{new Intl.NumberFormat('en-IN', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      }).format(grandTotal)}
-                    </span>
-                  </div>
-                  <p className="text-emerald-100 text-sm mt-1">All charges inclusive</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Payment Information */}
-        <div className="bg-blue-50 p-6 rounded-lg mb-8 border border-blue-200">
-          <h3 className="text-lg font-bold text-gray-800 mb-4 border-b border-blue-200 pb-2">
-            Payment Information
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <p className="text-sm text-gray-600 mb-1"><strong>Payment Method</strong></p>
-              <p className="font-semibold text-gray-800">{getPaymentMethod()}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600 mb-1"><strong>Payment Status</strong></p>
-              <p className="font-semibold text-green-600">
-                {order.paymentDetails.status === 'completed' ? '✅ Completed' : order.paymentDetails.status}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600 mb-1"><strong>Transaction ID</strong></p>
-              <p className="font-mono text-sm text-gray-700">{getTransactionId()}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Professional Footer */}
-        <div className="border-t-4 border-emerald-600 p-8 bg-gray-50 rounded-lg">
-          <div className="text-center mb-6">
-            <h3 className="text-2xl font-bold text-gray-800 mb-2">Thank You for Your Business!</h3>
-            <p className="text-gray-600">We appreciate your trust in Spring Blossoms Florist</p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
-            <div className="text-center">
-              <h4 className="font-semibold text-gray-800 mb-3">🏪 Visit Our Store</h4>
-              <div className="text-sm text-gray-600 space-y-1">
-                <p>Door No. 12-2-786/A & B, Najam Centre</p>
-                <p>Pillar No. 32, Rethi Bowli, Mehdipatnam</p>
-                <p>Hyderabad, Telangana 500028</p>
-              </div>
-            </div>
-            <div className="text-center">
-              <h4 className="font-semibold text-gray-800 mb-3">📞 Contact Information</h4>
-              <div className="text-sm text-gray-600 space-y-1">
-                <p><strong>Phone:</strong> +91 9949683222</p>
-                <p><strong>Email:</strong> 2006sbf@gmail.com</p>
-                <p><strong>Website:</strong> www.sbflorist.com</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="border-t border-gray-300 pt-4 text-center">
-            <p className="text-gray-600 text-sm mb-2">
-              <strong>Business Hours:</strong> Monday - Saturday, 9:00 AM - 6:00 PM IST
-            </p>
-            <p className="text-gray-500 text-xs">
-              Terms and conditions apply. For returns and refunds, please contact us within 24 hours of delivery.
-            </p>
-          </div>
-        </div>
+      {/* Elegant Footer */}
+      <div className="text-center text-slate-500 border-t border-slate-200 pt-5 mt-8 leading-relaxed">
+        <h4 className="text-xs font-bold text-emerald-850">Thank you for choosing Spring Blossoms Florist.</h4>
+        <p className="text-[10px] text-slate-400 mt-1.5">
+          We design premium floral arrangements and curated gift solutions to make your moments unforgettable.<br />
+          For any queries or modifications to your delivery, please contact +91 9949683222 or email 2006sbf@gmail.com.<br />
+          This is a computer-generated tax invoice and requires no signature.
+        </p>
       </div>
     </div>
   );
 };
 
-export default Invoice; 
+export default Invoice;

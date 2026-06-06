@@ -143,7 +143,7 @@ const useWishlist = () => {
   // Load wishlist on mount and when authentication status changes
   useEffect(() => {
     loadWishlist();
-  }, [loadWishlist]);
+  }, [isAuthenticated]);
 
   // Also load cached data on mount for better UX
   useEffect(() => {
