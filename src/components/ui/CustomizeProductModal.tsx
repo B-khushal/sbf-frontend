@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -364,15 +365,25 @@ export function CustomizeProductModal({
   return (
     <TooltipProvider>
       <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="p-0 border-none bg-transparent shadow-none overflow-visible w-full max-w-full sm:max-w-4xl h-full sm:h-auto flex items-end sm:items-center justify-center">
+        <DialogPrimitive.Portal>
+          {/* Backdrop Blur Overlay */}
+          <DialogPrimitive.Overlay className="fixed inset-0 z-modal bg-black/45 backdrop-blur-sm transition-all duration-300" />
           
-          <motion.div
-            initial={{ y: "100%", opacity: 0.5 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: "100%", opacity: 0.5 }}
-            transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 rounded-t-[28px] sm:rounded-3xl shadow-2xl flex flex-col max-h-[92vh] sm:max-h-[85vh] overflow-hidden"
-          >
+          {/* Top-Centered Container */}
+          <div className="fixed inset-0 z-modal overflow-y-auto flex items-start justify-center p-4 sm:p-10">
+            
+            {/* Modal Dialog Content Primitive */}
+            <DialogPrimitive.Content asChild>
+              <motion.div
+                initial={{ y: -20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -20, opacity: 0 }}
+                transition={{ type: "spring", damping: 25, stiffness: 250 }}
+                className="relative w-full max-w-4xl bg-slate-50 dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 rounded-2xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[85vh] sm:max-h-[80vh] overflow-hidden outline-none"
+              >
+                <DialogPrimitive.Description className="sr-only">
+                  Customize your selected flower bouquet or gift items, add message cards, uploaded photos, and treats.
+                </DialogPrimitive.Description>
             {/* Header section */}
             <div className="relative bg-white dark:bg-slate-950 px-5 pt-3 pb-4 border-b border-slate-100 dark:border-slate-800 flex-shrink-0">
               
@@ -408,7 +419,7 @@ export function CustomizeProductModal({
             {/* Main scrollable customization zone */}
             <div 
               ref={scrollContainerRef}
-              className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 pb-28 md:pb-6 flex flex-col md:flex-row gap-6 min-h-0"
+              className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 pb-28 flex flex-col md:flex-row gap-6 min-h-0"
             >
               <AnimatePresence mode="wait">
                 {!isConfirmed ? (
@@ -1020,7 +1031,7 @@ export function CustomizeProductModal({
                     </div>
 
                     {/* Right side Sticky Review panel (Desktop only) */}
-                    <div className="hidden md:block w-80 sticky top-0 flex-shrink-0">
+                    <div className="hidden md:block w-80 sticky top-0 flex-shrink-0 max-h-[calc(80vh-190px)] sidebar-scrollable pr-1">
                       <Card className="border border-slate-200 dark:border-slate-800/80 bg-white/70 dark:bg-slate-950/70 backdrop-blur-md shadow-lg rounded-2xl p-4 space-y-4">
                         <div className="text-center">
                           <img
@@ -1301,8 +1312,10 @@ export function CustomizeProductModal({
               </div>
             </div>
 
-          </motion.div>
-        </DialogContent>
+              </motion.div>
+            </DialogPrimitive.Content>
+          </div>
+        </DialogPrimitive.Portal>
       </Dialog>
     </TooltipProvider>
   );
