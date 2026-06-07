@@ -419,7 +419,7 @@ export function CustomizeProductModal({
             {/* Main scrollable customization zone */}
             <div 
               ref={scrollContainerRef}
-              className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 pb-28 flex flex-col md:flex-row gap-6 min-h-0"
+              className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 pb-28 flex flex-col md:flex-row gap-6 min-h-0 max-h-[calc(85vh-170px)] sm:max-h-[calc(80vh-170px)]"
             >
               <AnimatePresence mode="wait">
                 {!isConfirmed ? (
