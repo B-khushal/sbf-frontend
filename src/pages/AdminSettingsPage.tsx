@@ -53,7 +53,8 @@ import { cn } from "@/lib/utils";
 const TABS = [
   { id: "hero-slides", label: "Hero Banners", icon: ImageIcon, desc: "Hero slideshow slides, CTA links, image overlays" },
   { id: "sections", label: "Section Builder", icon: Layers, desc: "Order and customize homepage collections & banners" },
-  { id: "categories", label: "Category Details", icon: LayoutGrid, desc: "Manage catalog hierarchy,slugs, priority themes" },
+  { id: "categories", label: "Category Details", icon: LayoutGrid, desc: "Manage catalog hierarchy, slugs, priority themes" },
+  { id: "shop-categories", label: "Shop Categories", icon: LayoutGrid, desc: "Manage categories displayed in the shop catalog" },
   { id: "header", label: "Dynamic Header", icon: Settings, desc: "Logos, navigation items, announcements bar" },
   { id: "footer", label: "Footer Builder", icon: Sliders, desc: "Multi-column links, newsletter, payment cards" },
   { id: "notifications", label: "Floating Widgets", icon: Bell, desc: "Push messages, WhatsApp float, exit popup" },
@@ -72,6 +73,38 @@ const AdminSettingsPage = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState<string | null>(null);
+
+  const handleImageUpload = async (
+    file: File,
+    type: "hero" | "category" | "logo",
+    uploadId: string,
+    callback: (url: string) => void
+  ) => {
+    setUploadingImage(uploadId);
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+      const res = await uploadImage(formData, type);
+      if (res && res.imageUrl) {
+        callback(res.imageUrl);
+        toast({
+          title: "Upload Successful",
+          description: "Image has been uploaded and applied."
+        });
+      } else {
+        throw new Error("Invalid response from upload service");
+      }
+    } catch (err: any) {
+      console.error("Image upload failed:", err);
+      toast({
+        title: "Upload Failed",
+        description: err?.response?.data?.message || "An error occurred while uploading the image file.",
+        variant: "destructive"
+      });
+    } finally {
+      setUploadingImage(null);
+    }
+  };
   
   // Settings States
   const [localSettings, setLocalSettings] = useState<any>({});
@@ -670,32 +703,39 @@ const AdminSettingsPage = () => {
 
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {/* Desktop & Mobile image uploaders */}
-                                    <div className="space-y-3">
-                                      <div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                      <div className="space-y-1.5">
                                         <Label className="text-xs text-slate-300 font-bold">Desktop Slide Banner</Label>
-                                        <Input
-                                          value={slide.image}
-                                          onChange={(e) => {
-                                            const copy = localSettings.heroSlides.map((s: any) => 
-                                              s.id === slide.id ? { ...s, image: e.target.value } : s
-                                            );
-                                            updateSettingsState({ ...localSettings, heroSlides: copy });
+                                        <ImageUpload
+                                          currentImage={slide.image}
+                                          onImageUpload={async (file) => {
+                                            await handleImageUpload(file, "hero", `hero-desktop-${slide.id}`, (url) => {
+                                              const copy = localSettings.heroSlides.map((s: any) => 
+                                                s.id === slide.id ? { ...s, image: url } : s
+                                              );
+                                              updateSettingsState({ ...localSettings, heroSlides: copy });
+                                            });
                                           }}
-                                          className="bg-slate-900 border-slate-700 text-slate-200 mt-1"
+                                          isUploading={uploadingImage === `hero-desktop-${slide.id}`}
+                                          aspectRatio="landscape"
+                                          placeholder="Upload Desktop Banner"
                                         />
                                       </div>
-                                      <div>
+                                      <div className="space-y-1.5">
                                         <Label className="text-xs text-slate-300 font-bold">Mobile Slide Banner (Optional)</Label>
-                                        <Input
-                                          value={slide.mobileImage || ""}
-                                          onChange={(e) => {
-                                            const copy = localSettings.heroSlides.map((s: any) => 
-                                              s.id === slide.id ? { ...s, mobileImage: e.target.value } : s
-                                            );
-                                            updateSettingsState({ ...localSettings, heroSlides: copy });
+                                        <ImageUpload
+                                          currentImage={slide.mobileImage}
+                                          onImageUpload={async (file) => {
+                                            await handleImageUpload(file, "hero", `hero-mobile-${slide.id}`, (url) => {
+                                              const copy = localSettings.heroSlides.map((s: any) => 
+                                                s.id === slide.id ? { ...s, mobileImage: url } : s
+                                              );
+                                              updateSettingsState({ ...localSettings, heroSlides: copy });
+                                            });
                                           }}
-                                          placeholder="Fallback standard image"
-                                          className="bg-slate-900 border-slate-700 text-slate-200 mt-1"
+                                          isUploading={uploadingImage === `hero-mobile-${slide.id}`}
+                                          aspectRatio="portrait"
+                                          placeholder="Upload Mobile Banner"
                                         />
                                       </div>
                                     </div>
@@ -1084,7 +1124,7 @@ const AdminSettingsPage = () => {
                               </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div>
                                 <Label className="text-xs text-slate-300">Name</Label>
                                 <Input
@@ -1111,18 +1151,53 @@ const AdminSettingsPage = () => {
                                   className="bg-slate-900 border-slate-700 text-slate-200 mt-1"
                                 />
                               </div>
-                              <div>
-                                <Label className="text-xs text-slate-300">Image Icon Link</Label>
-                                <Input
-                                  value={cat.image}
-                                  onChange={(e) => {
-                                    const copy = localSettings.categories.map((c: any) => 
-                                      c.id === cat.id ? { ...c, image: e.target.value } : c
-                                    );
-                                    updateSettingsState({ ...localSettings, categories: copy });
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-1.5">
+                                <Label className="text-xs text-slate-300 font-bold">Category Image</Label>
+                                <ImageUpload
+                                  currentImage={cat.image}
+                                  onImageUpload={async (file) => {
+                                    await handleImageUpload(file, "category", `category-${cat.id}`, (url) => {
+                                      const copy = localSettings.categories.map((c: any) => 
+                                        c.id === cat.id ? { ...c, image: url } : c
+                                      );
+                                      updateSettingsState({ ...localSettings, categories: copy });
+                                    });
                                   }}
-                                  className="bg-slate-900 border-slate-700 text-slate-200 mt-1"
+                                  isUploading={uploadingImage === `category-${cat.id}`}
+                                  aspectRatio="square"
+                                  placeholder="Upload Category Image"
                                 />
+                              </div>
+                              <div className="space-y-3">
+                                <div>
+                                  <Label className="text-xs text-slate-300">Description</Label>
+                                  <Input
+                                    value={cat.description || ""}
+                                    onChange={(e) => {
+                                      const copy = localSettings.categories.map((c: any) => 
+                                        c.id === cat.id ? { ...c, description: e.target.value } : c
+                                      );
+                                      updateSettingsState({ ...localSettings, categories: copy });
+                                    }}
+                                    className="bg-slate-900 border-slate-700 text-slate-200 mt-1"
+                                  />
+                                </div>
+                                <div>
+                                  <Label className="text-xs text-slate-300">Link URL</Label>
+                                  <Input
+                                    value={cat.link || ""}
+                                    onChange={(e) => {
+                                      const copy = localSettings.categories.map((c: any) => 
+                                        c.id === cat.id ? { ...c, link: e.target.value } : c
+                                      );
+                                      updateSettingsState({ ...localSettings, categories: copy });
+                                    }}
+                                    className="bg-slate-900 border-slate-700 text-slate-200 mt-1"
+                                  />
+                                </div>
                               </div>
                             </div>
 
@@ -1190,6 +1265,213 @@ const AdminSettingsPage = () => {
                   </div>
                 )}
 
+                {/* 3b. SHOP CATEGORIES MANAGEMENT */}
+                {activeTab === "shop-categories" && (
+                  <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2">
+                          <LayoutGrid className="h-5 w-5 text-cyan-400" />
+                          Shop Category Management
+                        </h2>
+                        <p className="text-xs text-slate-400">Configure catalog slugs, priority themes, and parent-child levels for shop catalog</p>
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          const list = [...(localSettings.shopCategories || [])];
+                          const maxId = list.reduce((max, s) => Math.max(max, s.id || 0), 0);
+                          list.push({
+                            id: `shop_category_${Date.now()}`,
+                            name: "New Shop Category",
+                            description: "Catalog selection",
+                            image: "/images/placeholder.jpg",
+                            link: "/shop/new-category",
+                            enabled: true,
+                            order: list.length,
+                            slug: "new-category",
+                            priority: list.length,
+                            featured: false
+                          });
+                          updateSettingsState({ ...localSettings, shopCategories: list });
+                        }}
+                        className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold"
+                      >
+                        <Plus className="h-4 w-4 mr-1" /> Add Shop Category
+                      </Button>
+                    </div>
+
+                    <div className="space-y-4">
+                      {(localSettings.shopCategories || []).map((cat: any) => (
+                        <Card key={cat.id} className="bg-slate-800/40 border-slate-800">
+                          <CardContent className="p-4 space-y-4">
+                            <div className="flex items-center justify-between">
+                              <Badge className="bg-slate-700 text-cyan-300">{cat.name}</Badge>
+                              <div className="flex items-center gap-3">
+                                <Switch
+                                  checked={cat.enabled}
+                                  onCheckedChange={(checked) => {
+                                    const copy = localSettings.shopCategories.map((c: any) => 
+                                      c.id === cat.id ? { ...c, enabled: checked } : c
+                                    );
+                                    updateSettingsState({ ...localSettings, shopCategories: copy });
+                                  }}
+                                />
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => {
+                                    const copy = localSettings.shopCategories.filter((c: any) => c.id !== cat.id);
+                                    updateSettingsState({ ...localSettings, shopCategories: copy });
+                                  }}
+                                  className="text-red-400 hover:text-red-300 h-8 w-8"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <Label className="text-xs text-slate-300">Name</Label>
+                                <Input
+                                  value={cat.name}
+                                  onChange={(e) => {
+                                    const copy = localSettings.shopCategories.map((c: any) => 
+                                      c.id === cat.id ? { ...c, name: e.target.value } : c
+                                    );
+                                    updateSettingsState({ ...localSettings, shopCategories: copy });
+                                  }}
+                                  className="bg-slate-900 border-slate-700 text-slate-200 mt-1"
+                                />
+                              </div>
+                              <div>
+                                <Label className="text-xs text-slate-300">SEO Slug</Label>
+                                <Input
+                                  value={cat.slug || ""}
+                                  onChange={(e) => {
+                                    const copy = localSettings.shopCategories.map((c: any) => 
+                                      c.id === cat.id ? { ...c, slug: e.target.value } : c
+                                    );
+                                    updateSettingsState({ ...localSettings, shopCategories: copy });
+                                  }}
+                                  className="bg-slate-900 border-slate-700 text-slate-200 mt-1"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-1.5">
+                                <Label className="text-xs text-slate-300 font-bold">Category Image</Label>
+                                <ImageUpload
+                                  currentImage={cat.image}
+                                  onImageUpload={async (file) => {
+                                    await handleImageUpload(file, "category", `shop-category-${cat.id}`, (url) => {
+                                      const copy = localSettings.shopCategories.map((c: any) => 
+                                        c.id === cat.id ? { ...c, image: url } : c
+                                      );
+                                      updateSettingsState({ ...localSettings, shopCategories: copy });
+                                    });
+                                  }}
+                                  isUploading={uploadingImage === `shop-category-${cat.id}`}
+                                  aspectRatio="square"
+                                  placeholder="Upload Category Image"
+                                />
+                              </div>
+                              <div className="space-y-3">
+                                <div>
+                                  <Label className="text-xs text-slate-300">Description</Label>
+                                  <Input
+                                    value={cat.description || ""}
+                                    onChange={(e) => {
+                                      const copy = localSettings.shopCategories.map((c: any) => 
+                                        c.id === cat.id ? { ...c, description: e.target.value } : c
+                                      );
+                                      updateSettingsState({ ...localSettings, shopCategories: copy });
+                                    }}
+                                    className="bg-slate-900 border-slate-700 text-slate-200 mt-1"
+                                  />
+                                </div>
+                                <div>
+                                  <Label className="text-xs text-slate-300">Link URL</Label>
+                                  <Input
+                                    value={cat.link || ""}
+                                    onChange={(e) => {
+                                      const copy = localSettings.shopCategories.map((c: any) => 
+                                        c.id === cat.id ? { ...c, link: e.target.value } : c
+                                      );
+                                      updateSettingsState({ ...localSettings, shopCategories: copy });
+                                    }}
+                                    className="bg-slate-900 border-slate-700 text-slate-200 mt-1"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2 border-t border-slate-800/50">
+                              <div>
+                                <Label className="text-[10px] text-slate-400 font-bold">Featured Catalog</Label>
+                                <div className="mt-1">
+                                  <Switch
+                                    checked={cat.featured || false}
+                                    onCheckedChange={(checked) => {
+                                      const copy = localSettings.shopCategories.map((c: any) => 
+                                        c.id === cat.id ? { ...c, featured: checked } : c
+                                      );
+                                      updateSettingsState({ ...localSettings, shopCategories: copy });
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                              <div>
+                                <Label className="text-[10px] text-slate-400 font-bold">Display Priority</Label>
+                                <Input
+                                  type="number"
+                                  value={cat.priority || 0}
+                                  onChange={(e) => {
+                                    const copy = localSettings.shopCategories.map((c: any) => 
+                                      c.id === cat.id ? { ...c, priority: parseInt(e.target.value) } : c
+                                    );
+                                    updateSettingsState({ ...localSettings, shopCategories: copy });
+                                  }}
+                                  className="bg-slate-900 border-slate-700 text-slate-200 text-xs mt-1"
+                                />
+                              </div>
+                              <div>
+                                <Label className="text-[10px] text-slate-400 font-bold">Color Theme Hex</Label>
+                                <Input
+                                  value={cat.colorTheme || ""}
+                                  onChange={(e) => {
+                                    const copy = localSettings.shopCategories.map((c: any) => 
+                                      c.id === cat.id ? { ...c, colorTheme: e.target.value } : c
+                                    );
+                                    updateSettingsState({ ...localSettings, shopCategories: copy });
+                                  }}
+                                  className="bg-slate-900 border-slate-700 text-slate-200 text-xs mt-1"
+                                />
+                              </div>
+                              <div>
+                                <Label className="text-[10px] text-slate-400 font-bold">Parent Category ID</Label>
+                                <Input
+                                  value={cat.parentId || ""}
+                                  onChange={(e) => {
+                                    const copy = localSettings.shopCategories.map((c: any) => 
+                                      c.id === cat.id ? { ...c, parentId: e.target.value || null } : c
+                                    );
+                                    updateSettingsState({ ...localSettings, shopCategories: copy });
+                                  }}
+                                  className="bg-slate-900 border-slate-700 text-slate-200 text-xs mt-1"
+                                  placeholder="Sub-category parent id"
+                                />
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* 4. HEADER MANAGEMENT */}
                 {activeTab === "header" && (
                   <div className="space-y-6">
@@ -1199,26 +1481,34 @@ const AdminSettingsPage = () => {
                     </h2>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label className="text-xs text-slate-300">Logo Image Link</Label>
-                        <Input
-                          value={localSettings.headerSettings?.logo || ""}
-                          onChange={(e) => {
-                            const copy = { ...localSettings.headerSettings, logo: e.target.value };
-                            updateSettingsState({ ...localSettings, headerSettings: copy });
+                      <div className="space-y-1.5">
+                        <Label className="text-xs text-slate-300 font-bold">Logo Image</Label>
+                        <ImageUpload
+                          currentImage={localSettings.headerSettings?.logo}
+                          onImageUpload={async (file) => {
+                            await handleImageUpload(file, "logo", "logo", (url) => {
+                              const copy = { ...localSettings.headerSettings, logo: url };
+                              updateSettingsState({ ...localSettings, headerSettings: copy });
+                            });
                           }}
-                          className="bg-slate-900 border-slate-700 text-slate-200 mt-1"
+                          isUploading={uploadingImage === "logo"}
+                          aspectRatio="landscape"
+                          placeholder="Upload Brand Logo"
                         />
                       </div>
-                      <div>
-                        <Label className="text-xs text-slate-300">Sticky Navigation Logo</Label>
-                        <Input
-                          value={localSettings.headerSettings?.stickyLogo || ""}
-                          onChange={(e) => {
-                            const copy = { ...localSettings.headerSettings, stickyLogo: e.target.value };
-                            updateSettingsState({ ...localSettings, headerSettings: copy });
+                      <div className="space-y-1.5">
+                        <Label className="text-xs text-slate-300 font-bold">Sticky Navigation Logo</Label>
+                        <ImageUpload
+                          currentImage={localSettings.headerSettings?.stickyLogo}
+                          onImageUpload={async (file) => {
+                            await handleImageUpload(file, "logo", "stickyLogo", (url) => {
+                              const copy = { ...localSettings.headerSettings, stickyLogo: url };
+                              updateSettingsState({ ...localSettings, headerSettings: copy });
+                            });
                           }}
-                          className="bg-slate-900 border-slate-700 text-slate-200 mt-1"
+                          isUploading={uploadingImage === "stickyLogo"}
+                          aspectRatio="landscape"
+                          placeholder="Upload Sticky Logo"
                         />
                       </div>
                     </div>
