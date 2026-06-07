@@ -230,18 +230,14 @@ const App = () => {
 
                           {/* Checkout Routes */}
                           <Route path="/checkout/shipping" element={
-                            <ProtectedRoute>
-                              <Suspense fallback={<LoadingFallback message="Loading checkout..." />}>
-                                <CheckoutShippingPage />
-                              </Suspense>
-                            </ProtectedRoute>
+                            <Suspense fallback={<LoadingFallback message="Loading checkout..." />}>
+                              <CheckoutShippingPage />
+                            </Suspense>
                           } />
                           <Route path="/checkout/payment" element={
-                            <ProtectedRoute>
-                              <Suspense fallback={<LoadingFallback message="Processing payment..." />}>
-                                <CheckoutPaymentPage />
-                              </Suspense>
-                            </ProtectedRoute>
+                            <Suspense fallback={<LoadingFallback message="Processing payment..." />}>
+                              <CheckoutPaymentPage />
+                            </Suspense>
                           } />
                           <Route path="/checkout/confirmation" element={
                             <Suspense fallback={<LoadingFallback message="Loading confirmation..." />}>

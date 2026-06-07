@@ -11,7 +11,7 @@ import {
   Search, Eye, Download, Calendar, Clock, AlertTriangle, Filter, X, 
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Copy, Check, 
   Phone, MessageSquare, List, Grid, ChevronDown, Sparkles, AlertCircle, 
-  ArrowUpDown, ExternalLink, Mail, ShieldAlert
+  ArrowUpDown, ExternalLink, Mail, ShieldAlert, Truck
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -190,6 +190,7 @@ const AdminOrders = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [highlight3Days, setHighlight3Days] = useState(true);
+  const [firstOrderFilter, setFirstOrderFilter] = useState('all');
   
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -303,7 +304,7 @@ const AdminOrders = () => {
   useEffect(() => {
     fetchOrders();
     fetchUpcomingDeliveries();
-  }, [selectedStatus, dateRange, deliveryDateRange, searchTerm, highlight3Days, currentPage, pageSize]);
+  }, [selectedStatus, dateRange, deliveryDateRange, searchTerm, highlight3Days, currentPage, pageSize, firstOrderFilter]);
 
   // Reset to first page when filters change
   useEffect(() => {
@@ -331,6 +332,8 @@ const AdminOrders = () => {
       if (deliveryDateRange.from) params.append('deliveryDateFrom', deliveryDateRange.from.toISOString());
       if (deliveryDateRange.to) params.append('deliveryDateTo', deliveryDateRange.to.toISOString());
       if (highlight3Days) params.append('highlight3Days', 'true');
+      if (firstOrderFilter === 'applied') params.append('firstOrderFreeDelivery', 'true');
+      if (firstOrderFilter === 'standard') params.append('firstOrderFreeDelivery', 'false');
 
       const response = await api.get(`/orders?${params.toString()}`);
       
@@ -449,6 +452,7 @@ const AdminOrders = () => {
     setDeliveryDateRange({ from: undefined, to: undefined });
     setSearchTerm('');
     setSelectedStatus('all');
+    setFirstOrderFilter('all');
     setCurrentPage(1);
   };
 
@@ -678,8 +682,9 @@ const AdminOrders = () => {
     const hasStatus = selectedStatus !== 'all';
     const hasOrderDate = dateRange.from !== undefined;
     const hasDeliveryDate = deliveryDateRange.from !== undefined;
+    const hasFirstOrder = firstOrderFilter !== 'all';
 
-    if (!hasSearch && !hasStatus && !hasOrderDate && !hasDeliveryDate) return null;
+    if (!hasSearch && !hasStatus && !hasOrderDate && !hasDeliveryDate && !hasFirstOrder) return null;
 
     return (
       <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800/50">
@@ -717,6 +722,15 @@ const AdminOrders = () => {
             <span className="font-semibold">Delivery Date:</span> {format(deliveryDateRange.from!, "MMM d")} - {deliveryDateRange.to ? format(deliveryDateRange.to, "MMM d") : '...' }
             <Button size="icon" variant="ghost" className="h-4 w-4 p-0 hover:bg-slate-200 dark:hover:bg-slate-700 rounded" onClick={() => setDeliveryDateRange({ from: undefined, to: undefined })}>
               <X className="h-3 w-3" />
+            </Button>
+          </Badge>
+        )}
+
+        {hasFirstOrder && (
+          <Badge variant="secondary" className="gap-1.5 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 py-1 pl-2.5 pr-1.5 border border-slate-100 dark:border-slate-700/55 rounded-lg">
+            <span className="font-semibold">Delivery Charge:</span> {firstOrderFilter === 'applied' ? 'First Order Free' : 'Standard Charge'}
+            <Button size="icon" variant="ghost" className="h-4 w-4 p-0 hover:bg-slate-200 dark:hover:bg-slate-700 rounded" onClick={() => setFirstOrderFilter('all')}>
+              <X className="h-3.5 w-3.5 text-slate-400" />
             </Button>
           </Badge>
         )}
@@ -914,7 +928,7 @@ const AdminOrders = () => {
       {/* Control Card (Filters & Toggles) */}
       <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-2xl p-5 shadow-sm space-y-4">
         {/* Filters Top Row */}
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
           {/* Search */}
           <div className="relative">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400 dark:text-slate-500" />
@@ -1013,6 +1027,21 @@ const AdminOrders = () => {
               />
             </PopoverContent>
           </Popover>
+
+          {/* First Order Free Filter */}
+          <Select value={firstOrderFilter} onValueChange={setFirstOrderFilter}>
+            <SelectTrigger className="h-9 text-xs bg-slate-50/50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 rounded-xl">
+              <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
+                <Truck className="h-3.5 w-3.5 opacity-60" />
+                <SelectValue placeholder="Delivery Fee" />
+              </div>
+            </SelectTrigger>
+            <SelectContent className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 rounded-xl">
+              <SelectItem value="all" className="text-xs">All Delivery Fees</SelectItem>
+              <SelectItem value="applied" className="text-xs">First Order Free</SelectItem>
+              <SelectItem value="standard" className="text-xs">Standard Fee</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Filters Action Row & View Toggles */}
@@ -1136,10 +1165,11 @@ const AdminOrders = () => {
               <Table className="min-w-[65rem]">
                 <TableHeader className="bg-slate-50/75 dark:bg-slate-900/50">
                   <TableRow className="hover:bg-transparent border-slate-100 dark:border-slate-800">
-                    <TableHead className="w-40 font-bold text-slate-600 dark:text-slate-400 text-xs uppercase tracking-wider h-11">Order</TableHead>
+                     <TableHead className="w-40 font-bold text-slate-600 dark:text-slate-400 text-xs uppercase tracking-wider h-11">Order</TableHead>
                     <TableHead className="w-56 font-bold text-slate-600 dark:text-slate-400 text-xs uppercase tracking-wider h-11">Customer</TableHead>
                     <TableHead className="w-44 font-bold text-slate-600 dark:text-slate-400 text-xs uppercase tracking-wider h-11">Order Placed</TableHead>
                     <TableHead className="w-60 font-bold text-slate-600 dark:text-slate-400 text-xs uppercase tracking-wider h-11">Delivery Schedule</TableHead>
+                    <TableHead className="w-40 text-right font-bold text-slate-600 dark:text-slate-400 text-xs uppercase tracking-wider h-11">Delivery Fee</TableHead>
                     <TableHead className="w-44 text-right font-bold text-slate-600 dark:text-slate-400 text-xs uppercase tracking-wider h-11">Amount</TableHead>
                     <TableHead className="w-44 font-bold text-slate-600 dark:text-slate-400 text-xs uppercase tracking-wider h-11">Status</TableHead>
                     <TableHead className="w-28 text-right font-bold text-slate-600 dark:text-slate-400 text-xs uppercase tracking-wider h-11">Actions</TableHead>
@@ -1241,6 +1271,26 @@ const AdminOrders = () => {
                               </>
                             ) : (
                               <span className="text-slate-400 text-xs italic">Not scheduled</span>
+                            )}
+                          </div>
+                        </TableCell>
+
+                         {/* Delivery Charge */}
+                        <TableCell className="align-middle text-right py-3.5">
+                          <div className="flex flex-col items-end gap-1">
+                            <span className="font-semibold text-slate-800 dark:text-slate-200 text-xs">
+                              {order.isFirstOrderFreeDelivery ? (
+                                <span className="text-emerald-600 font-extrabold bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-250 dark:border-emerald-900/40 px-1.5 py-0.5 rounded text-[10px] whitespace-nowrap animate-pulse">
+                                  FREE
+                                </span>
+                              ) : (
+                                displayOrderPrice(order.deliveryCharge ?? 150, order.currency, order.currencyRate)
+                              )}
+                            </span>
+                            {order.isFirstOrderFreeDelivery && (
+                              <Badge className="text-[9px] py-0 px-1 font-bold bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 hover:bg-emerald-100 border-transparent shadow-none scale-90 origin-right whitespace-nowrap">
+                                First Order Free
+                              </Badge>
                             )}
                           </div>
                         </TableCell>
@@ -1479,11 +1529,25 @@ const AdminOrders = () => {
 
                       {/* Card Footer actions */}
                       <div className="flex justify-between items-center pt-4 mt-auto">
-                        <div className="text-left">
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Amount</span>
-                          <span className="text-base font-extrabold text-slate-950 dark:text-white">
-                            {displayOrderPrice(order.totalAmount, order.currency, order.currencyRate)}
-                          </span>
+                        <div className="flex items-center gap-4 text-left">
+                          <div>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Delivery Fee</span>
+                            <span className="text-xs font-semibold text-slate-850 dark:text-slate-200">
+                              {order.isFirstOrderFreeDelivery ? (
+                                <span className="text-emerald-600 font-extrabold bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-250 dark:border-emerald-900/40 px-1 py-0.5 rounded text-[9px] whitespace-nowrap">
+                                  FREE
+                                </span>
+                              ) : (
+                                displayOrderPrice(order.deliveryCharge ?? 150, order.currency, order.currencyRate)
+                              )}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Amount</span>
+                            <span className="text-base font-extrabold text-slate-950 dark:text-white">
+                              {displayOrderPrice(order.totalAmount, order.currency, order.currencyRate)}
+                            </span>
+                          </div>
                         </div>
 
                         <div className="flex items-center gap-1.5">

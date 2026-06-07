@@ -196,9 +196,14 @@ const CheckoutPaymentPage = () => {
       const parsedInfo = JSON.parse(savedShippingInfo);
       
       // Ensure deliveryFee is set correctly
-      if (parsedInfo.timeSlot === 'midnight' && (!parsedInfo.deliveryFee || parsedInfo.deliveryFee !== 300)) {
-        parsedInfo.deliveryFee = 300;
-        localStorage.setItem('shippingInfo', JSON.stringify(parsedInfo));
+      if (!parsedInfo.isFirstOrderFreeDelivery) {
+        if (parsedInfo.timeSlot === 'midnight' && (!parsedInfo.deliveryFee || parsedInfo.deliveryFee !== 300)) {
+          parsedInfo.deliveryFee = 300;
+          localStorage.setItem('shippingInfo', JSON.stringify(parsedInfo));
+        } else if (parsedInfo.timeSlot !== 'midnight' && (!parsedInfo.deliveryFee || parsedInfo.deliveryFee !== 150)) {
+          parsedInfo.deliveryFee = 150;
+          localStorage.setItem('shippingInfo', JSON.stringify(parsedInfo));
+        }
       }
       
       setShippingInfo(parsedInfo);
@@ -367,6 +372,11 @@ const CheckoutPaymentPage = () => {
            timeSlot: shippingInfo.timeSlot
          },
          totalAmount: orderTotal,       // ✅ Correct field name for backend
+         subtotal: subtotal,
+         deliveryCharge: deliveryFee,
+         discount: promoDiscount,
+         finalTotal: orderTotal,
+         isFirstOrderFreeDelivery: shippingInfo?.isFirstOrderFreeDelivery || false,
          currency: 'INR',
          currencyRate: rate || 1,       // ✅ Correct field name for backend
          originalCurrency: 'INR'
@@ -1176,12 +1186,25 @@ const CheckoutPaymentPage = () => {
                           <span>{formatPrice(convertPrice(subtotal))}</span>
                     </div>
 
-                        {deliveryFee > 0 && (
-                    <div className="flex justify-between text-sm">
-                            <span>Midnight Delivery Fee</span>
-                            <span>{formatPrice(convertPrice(deliveryFee))}</span>
-                    </div>
-                        )}
+                         <div className="flex justify-between text-sm">
+                          <span>
+                            {shippingInfo?.timeSlot === 'midnight' ? 'Midnight Delivery Fee' : 'Standard Delivery Fee'}
+                          </span>
+                          <span className="font-semibold text-right">
+                            {shippingInfo?.isFirstOrderFreeDelivery ? (
+                              <span className="flex items-center gap-1.5 justify-end">
+                                <span className="text-gray-400 line-through text-xs">
+                                  {formatPrice(convertPrice(shippingInfo.timeSlot === 'midnight' ? 300 : 150))}
+                                </span>
+                                <span className="text-emerald-600 font-bold text-xs bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 animate-pulse whitespace-nowrap">
+                                  FREE
+                                </span>
+                              </span>
+                            ) : (
+                              formatPrice(convertPrice(deliveryFee))
+                            )}
+                          </span>
+                        </div>
                         
                         {appliedPromoCode && (
                           <div className="flex justify-between text-sm text-green-600">

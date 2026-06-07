@@ -38,6 +38,11 @@ export interface Order {
     razorpaySignature?: string;
   };
   totalAmount: number;
+  subtotal: number;
+  deliveryCharge: number;
+  discount: number;
+  finalTotal: number;
+  isFirstOrderFreeDelivery: boolean;
   currency?: string;
   currencyRate?: number;
   originalCurrency?: string;
@@ -50,6 +55,22 @@ export interface Order {
   }[];
   createdAt: string;
 }
+
+export interface DeliveryCalculation {
+  deliveryCharge: number;
+  isFirstOrderFreeDelivery: boolean;
+  standardFee: number;
+}
+
+export const calculateDeliveryFee = async (data: {
+  subtotal: number;
+  timeSlot?: string;
+  email?: string;
+  phone?: string;
+}): Promise<DeliveryCalculation> => {
+  const response = await api.post('/orders/calculate-delivery', data);
+  return response.data;
+};
 
 // Create order
 export const createOrder = async (orderData: any) => {

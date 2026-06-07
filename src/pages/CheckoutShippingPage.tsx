@@ -23,6 +23,7 @@ import PinCodeInput, { type PinCodeSelection } from '@/components/ui/PinCodeInpu
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { getUserProfile, updateUserProfile, SavedAddress } from '@/services/authService';
+import { calculateDeliveryFee } from '@/services/orderService';
 
 // Animation variants
 const containerVariants = {
@@ -105,10 +106,32 @@ const CheckoutShippingPage = () => {
     message: 'Select a valid delivery pincode to continue.',
   });
   
-  // Calculate midnight delivery fee
-  const midnightDeliveryFee = 300.00; // ₹300
-  const hasMidnightFee = selectedTimeSlot === 'midnight';
-  const deliveryFee = hasMidnightFee ? midnightDeliveryFee : 0;
+  // State for dynamic delivery calculation
+  const [deliveryCalculation, setDeliveryCalculation] = useState<{
+    deliveryCharge: number;
+    isFirstOrderFreeDelivery: boolean;
+    standardFee: number;
+  } | null>(null);
+
+  // Fetch dynamic delivery fee
+  useEffect(() => {
+    const fetchDeliveryFee = async () => {
+      try {
+        const result = await calculateDeliveryFee({
+          subtotal,
+          timeSlot: selectedTimeSlot || undefined,
+          email: formData.email || undefined,
+          phone: formData.phone || undefined
+        });
+        setDeliveryCalculation(result);
+      } catch (err) {
+        console.error('Error fetching delivery calculation:', err);
+      }
+    };
+    fetchDeliveryFee();
+  }, [subtotal, selectedTimeSlot, formData.email, formData.phone]);
+
+  const deliveryFee = deliveryCalculation?.deliveryCharge ?? (selectedTimeSlot === 'midnight' ? 300 : 150);
 
   // Load promo code discount from localStorage if available
   const [appliedPromoCode, setAppliedPromoCode] = useState<{
@@ -320,6 +343,7 @@ const CheckoutShippingPage = () => {
       timeSlot: selectedTimeSlot,
       deliveryOption,
       deliveryFee,
+      isFirstOrderFreeDelivery: deliveryCalculation?.isFirstOrderFreeDelivery ?? false,
       selectedDate: selectedDate.toISOString(),
       giftMessage: deliveryOption === 'gift' ? giftMessage : undefined,
     };
@@ -1134,12 +1158,25 @@ const CheckoutShippingPage = () => {
                           <span>{formatPrice(convertPrice(subtotal))}</span>
                         </div>
 
-                        {deliveryFee > 0 && (
-                          <div className="flex justify-between text-sm">
-                            <span>Midnight Delivery Fee</span>
-                            <span>{formatPrice(convertPrice(deliveryFee))}</span>
-                          </div>
-                        )}
+                         <div className="flex justify-between text-sm">
+                          <span>
+                            {selectedTimeSlot === 'midnight' ? 'Midnight Delivery Fee' : 'Standard Delivery Fee'}
+                          </span>
+                          <span className="font-semibold text-right">
+                            {deliveryCalculation?.isFirstOrderFreeDelivery ? (
+                              <span className="flex items-center gap-1.5 justify-end">
+                                <span className="text-gray-400 line-through text-xs">
+                                  {formatPrice(convertPrice(deliveryCalculation.standardFee))}
+                                </span>
+                                <span className="text-emerald-600 font-bold text-xs bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 animate-pulse whitespace-nowrap">
+                                  FREE
+                                </span>
+                              </span>
+                            ) : (
+                              formatPrice(convertPrice(deliveryFee))
+                            )}
+                          </span>
+                        </div>
                         
                         {appliedPromoCode && (
                           <div className="flex justify-between text-sm text-green-600">

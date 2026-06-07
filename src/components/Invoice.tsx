@@ -254,7 +254,15 @@ const Invoice: React.FC<InvoiceProps> = ({ order, isAdmin = false }) => {
             </div>
             <div className="flex justify-between">
               <span>Delivery Fee</span>
-              <span className="font-semibold text-slate-900">{hasDeliveryFee ? formatCurrency(deliveryFee) : 'FREE'}</span>
+              <span className="font-semibold text-slate-900">
+                {order.isFirstOrderFreeDelivery ? (
+                  <span className="text-emerald-700">
+                    FREE ({formatCurrency((shipping.timeSlot === 'midnight' ? 300 : 150) * (order.currencyRate || 1))} waived)
+                  </span>
+                ) : (
+                  hasDeliveryFee ? formatCurrency(deliveryFee) : 'FREE'
+                )}
+              </span>
             </div>
             {hasPromo && (
               <div className="flex justify-between text-red-600">

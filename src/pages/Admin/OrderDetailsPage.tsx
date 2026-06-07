@@ -788,20 +788,34 @@ const OrderDetailsPage: React.FC = () => {
             <CardContent className="p-5 space-y-4">
               
               {/* Core numbers breakdown */}
-              <div className="space-y-2 text-xs font-semibold text-slate-600 dark:text-slate-400">
+              <div className="space-y-2.5 text-xs font-semibold text-slate-600 dark:text-slate-400">
                 <div className="flex justify-between">
                   <span>Items Subtotal</span>
                   <span className="text-slate-900 dark:text-white">
-                    {displayOrderPrice(order.items.reduce((sum, item) => sum + (item.finalPrice || item.price), 0), order.currency, order.currencyRate)}
+                    {displayOrderPrice(order.subtotal || order.items.reduce((sum: number, item: any) => sum + (item.finalPrice || item.price) * item.quantity, 0), order.currency, order.currencyRate)}
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <span>Delivery fee</span>
-                  <span className="text-slate-900 dark:text-white">
-                    {displayOrderPrice(0, order.currency, order.currencyRate)}
+                <div className="flex justify-between items-center">
+                  <span>Delivery Fee</span>
+                  <span className="text-slate-900 dark:text-white font-semibold text-right">
+                    {order.isFirstOrderFreeDelivery ? (
+                      <span className="text-emerald-600 font-bold bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/40 px-1.5 py-0.5 rounded text-[10px] whitespace-nowrap animate-pulse">
+                        FREE (waived)
+                      </span>
+                    ) : (
+                      displayOrderPrice(order.deliveryCharge ?? 150, order.currency, order.currencyRate)
+                    )}
                   </span>
                 </div>
-                <div className="flex justify-between border-t border-slate-50 dark:border-slate-850/40 pt-2 text-sm">
+                {order.discount > 0 && (
+                  <div className="flex justify-between text-rose-600">
+                    <span>Promo Discount</span>
+                    <span className="font-bold">
+                      -{displayOrderPrice(order.discount, order.currency, order.currencyRate)}
+                    </span>
+                  </div>
+                )}
+                <div className="flex justify-between border-t border-slate-50 dark:border-slate-850/40 pt-2.5 text-sm">
                   <span className="font-bold text-slate-800 dark:text-slate-200">Grand Total</span>
                   <span className="font-extrabold text-slate-900 dark:text-white">
                     {displayOrderPrice(order.totalAmount, order.currency, order.currencyRate)}

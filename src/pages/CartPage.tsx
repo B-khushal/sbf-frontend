@@ -13,6 +13,7 @@ import PromoCodeInput from '@/components/PromoCodeInput';
 import { useState } from 'react';
 import type { PromoCodeValidationResult } from '@/services/promoCodeService';
 import { cn } from '@/lib/utils';
+import { calculateDeliveryFee } from '@/services/orderService';
 
 // Animation variants
 const containerVariants = {
@@ -49,6 +50,13 @@ const CartPage: React.FC = () => {
     discount: number;
     finalAmount: number;
   } | null>(null);
+
+  // State for dynamic delivery calculation
+  const [deliveryCalculation, setDeliveryCalculation] = useState<{
+    deliveryCharge: number;
+    isFirstOrderFreeDelivery: boolean;
+    standardFee: number;
+  } | null>(null);
   
   // Intersection observer for animations
   const [summaryRef, summaryInView] = useInView({
@@ -61,8 +69,27 @@ const CartPage: React.FC = () => {
     return total + (item.price || 0) * (item.quantity || 0);
   }, 0);
 
-  // Calculate final total with promo code discount (apply discount to original INR amount, then convert)
-  const finalTotal = appliedPromoCode ? (subtotal - appliedPromoCode.discount) : subtotal;
+  // Fetch dynamic delivery fee
+  useEffect(() => {
+    const fetchDeliveryFee = async () => {
+      try {
+        const result = await calculateDeliveryFee({ subtotal });
+        setDeliveryCalculation(result);
+      } catch (err) {
+        console.error('Error fetching delivery calculation:', err);
+      }
+    };
+    if (subtotal > 0) {
+      fetchDeliveryFee();
+    } else {
+      setDeliveryCalculation(null);
+    }
+  }, [subtotal]);
+
+  const deliveryFee = deliveryCalculation?.deliveryCharge ?? 0;
+
+  // Calculate final total with promo code discount and delivery fee
+  const finalTotal = (subtotal + deliveryFee) - (appliedPromoCode ? appliedPromoCode.discount : 0);
   
   const handleCheckout = () => {
     // Save promo code info to localStorage for checkout process
@@ -70,6 +97,10 @@ const CartPage: React.FC = () => {
       localStorage.setItem('appliedPromoCode', JSON.stringify(appliedPromoCode));
     } else {
       localStorage.removeItem('appliedPromoCode');
+    }
+    // Save delivery fee info to localStorage for checkout process
+    if (deliveryCalculation) {
+      localStorage.setItem('checkoutDeliveryCalculation', JSON.stringify(deliveryCalculation));
     }
     navigate('/checkout/shipping');
   };
@@ -343,9 +374,25 @@ const CartPage: React.FC = () => {
                         <span className="text-sm sm:text-base text-gray-600">Subtotal</span>
                         <span className="font-bold text-gray-800 text-sm sm:text-base">{formatPrice(convertPrice(subtotal))}</span>
                       </div>
+                      
                       <div className="flex justify-between items-center py-2">
-                        <span className="text-sm sm:text-base text-gray-600">Shipping</span>
-                        <span className="text-xs sm:text-sm text-gray-500">Calculated at checkout</span>
+                        <span className="text-sm sm:text-base text-gray-600 flex items-center gap-1.5">
+                          <span className="text-rose-500">🚚</span> Delivery Charge
+                        </span>
+                        <span className="font-bold text-sm sm:text-base text-right">
+                          {deliveryCalculation?.isFirstOrderFreeDelivery ? (
+                            <span className="flex flex-col sm:flex-row items-end sm:items-center gap-1.5 justify-end">
+                              <span className="text-gray-400 line-through text-xs">
+                                {formatPrice(convertPrice(deliveryCalculation.standardFee))}
+                              </span>
+                              <span className="text-emerald-600 font-extrabold text-xs bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 animate-pulse whitespace-nowrap">
+                                FREE DELIVERY
+                              </span>
+                            </span>
+                          ) : (
+                            formatPrice(convertPrice(deliveryCalculation?.deliveryCharge ?? 150))
+                          )}
+                        </span>
                       </div>
 
                       {/* Promo Code Section */}
