@@ -10,7 +10,7 @@ import ContactModal from '@/components/ui/ContactModal';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import PromoCodeInput from '@/components/PromoCodeInput';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { PromoCodeValidationResult } from '@/services/promoCodeService';
 import { cn } from '@/lib/utils';
 import { calculateDeliveryFee } from '@/services/orderService';
