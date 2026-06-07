@@ -553,6 +553,29 @@ export const registerServiceWorker = () => {
     return;
   }
 
+  // Disable service worker in development mode to avoid HMR / caching conflicts
+  if (import.meta.env.DEV) {
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      if (registrations.length > 0) {
+        Promise.all(registrations.map(r => r.unregister())).then((results) => {
+          if (results.some(Boolean)) {
+            console.log('Successfully unregistered stale development service worker.');
+            if ('caches' in window) {
+              caches.keys().then((keys) => {
+                Promise.all(keys.map(key => caches.delete(key))).then(() => {
+                  window.location.reload();
+                });
+              });
+            } else {
+              window.location.reload();
+            }
+          }
+        });
+      }
+    });
+    return;
+  }
+
   const isHttps =
     window.location.protocol === 'https:' ||
     window.location.hostname === 'localhost' ||

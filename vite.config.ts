@@ -3,13 +3,14 @@ import react from "@vitejs/plugin-react-swc";
 import { fileURLToPath, URL } from "url";
 import { componentTagger } from "lovable-tagger";
 import compression from "vite-plugin-compression";
+import path from "path";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   base: '/',
   server: {
     host: "::",
-    port: 8080,
+    port: 8081,
     // Enable SPA fallback for development
     historyApiFallback: true,
   },
@@ -33,7 +34,9 @@ export default defineConfig(({ mode }) => ({
   ].filter(Boolean),
   resolve: {
     alias: {
-      "@": fileURLToPath(new URL('./src', import.meta.url)),
+      "@": path.resolve(__dirname, "./src"),
+      "react": path.resolve(__dirname, "./node_modules/react"),
+      "react-dom": path.resolve(__dirname, "./node_modules/react-dom"),
     },
     dedupe: ['react', 'react-dom'],
   },
@@ -142,7 +145,7 @@ export default defineConfig(({ mode }) => ({
   },
   // Preview server settings for production testing
   preview: {
-    port: 8080,
+    port: 8081,
     host: "::",
     // Enable SPA fallback for preview mode
     historyApiFallback: true,

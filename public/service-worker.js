@@ -1,3 +1,18 @@
+if (self.location.hostname === 'localhost' || self.location.hostname === '127.0.0.1') {
+  self.addEventListener('install', (event) => {
+    self.skipWaiting();
+  });
+  self.addEventListener('activate', (event) => {
+    event.waitUntil(
+      caches.keys().then((keys) => {
+        return Promise.all(keys.map((key) => caches.delete(key)));
+      }).then(() => {
+        return self.registration.unregister();
+      })
+    );
+  });
+}
+
 const CACHE_VERSION = "v1";
 const UI_CACHE = `sbf-ui-${CACHE_VERSION}`;
 const APP_CACHE = `sbf-app-${CACHE_VERSION}`;
