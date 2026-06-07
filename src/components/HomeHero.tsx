@@ -289,50 +289,6 @@ const HomeHero = () => {
           </div>
         )}
       </div>
-
-      {/* Categories Section */}
-      <div className="bg-gradient-to-br from-green-50 to-blue-50 py-6 sm:py-8 md:py-10 lg:py-12 xl:py-16">
-        <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
-          <div className="text-center mb-6 sm:mb-8 md:mb-10 lg:mb-12 xl:mb-16">
-            <div className="inline-block text-xs sm:text-sm uppercase tracking-wider text-primary font-bold mb-3 sm:mb-4 px-3 sm:px-4 py-1.5 sm:py-2 bg-primary/10 rounded-full">
-              Browse Categories
-            </div>
-            <h2 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black text-gray-800 mb-3 sm:mb-4 md:mb-5 lg:mb-6">
-              Explore Our Beautiful Collections
-            </h2>
-            <p className="text-gray-600 text-sm sm:text-base md:text-lg lg:text-xl max-w-4xl mx-auto leading-relaxed">
-              From elegant bouquets to thoughtful gifts, discover the perfect arrangement for every occasion and celebration.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 md:gap-5 lg:gap-6">
-            {[
-              { name: "Bouquets", emoji: "💐", color: "from-pink-400 to-rose-500", link: "/shop/bouquets" },
-              { name: "Plants", emoji: "🌱", color: "from-green-400 to-emerald-500", link: "/shop/plants" },
-              { name: "Combos", emoji: "🎁", color: "from-purple-400 to-violet-500", link: "/shop/combos" },
-              { name: "Baskets", emoji: "🧺", color: "from-amber-400 to-orange-500", link: "/shop/baskets" },
-              { name: "Birthday", emoji: "🎂", color: "from-blue-400 to-indigo-500", link: "/shop/birthday" },
-              { name: "Anniversary", emoji: "💕", color: "from-red-400 to-pink-500", link: "/shop/anniversary" },
-            ].map((category) => (
-              <Link
-                key={category.name}
-                to={category.link}
-                className="group relative bg-white rounded-xl sm:rounded-2xl lg:rounded-3xl p-3 sm:p-4 lg:p-6 text-center hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 hover:border-primary/20"
-              >
-                <div className={cn(
-                  "w-12 h-12 xs:w-14 xs:h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 bg-gradient-to-br rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3 lg:mb-4 text-white shadow-lg group-hover:scale-110 transition-transform duration-300",
-                  category.color
-                )}>
-                  <span className="text-lg xs:text-xl sm:text-2xl lg:text-3xl">{category.emoji}</span>
-                </div>
-                <h3 className="text-xs xs:text-sm sm:text-base lg:text-lg font-semibold text-gray-800 group-hover:text-primary transition-colors duration-200">
-                  {category.name}
-                </h3>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
