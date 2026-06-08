@@ -1706,79 +1706,62 @@ const AdminSettingsPage = () => {
                                                   <option value="reel">Reel</option>
                                                 </select>
                                               </div>
-                                              <div className="space-y-1">
+                                              
+                                              <div>
                                                 <Label className="text-[9px] text-slate-400">Instagram Post/Reel URL</Label>
-                                                <div className="flex gap-1">
-                                                  <Input
-                                                    value={item.postUrl || ''}
-                                                    onChange={(e) => {
-                                                      const itemsCopy = [...(sec.content?.items || defaultSocialItems)];
-                                                      itemsCopy[itemIdx] = { ...itemsCopy[itemIdx], postUrl: e.target.value };
-                                                      const copy = localSettings.homeSections.map((s: any) =>
-                                                        s.id === sec.id ? { ...s, content: { ...s.content, items: itemsCopy } } : s
-                                                      );
-                                                      updateSettingsState({ ...localSettings, homeSections: copy });
-                                                    }}
-                                                    placeholder="https://www.instagram.com/p/..."
-                                                    className="bg-slate-800 border-slate-700 text-[10px] h-7 text-slate-200 flex-1"
-                                                  />
-                                                  <Button
-                                                    size="sm"
-                                                    disabled={!item.postUrl || uploadingImage === `social-${sec.id}-${itemIdx}`}
-                                                    onClick={async () => {
-                                                      setUploadingImage(`social-${sec.id}-${itemIdx}`);
-                                                      try {
-                                                        const res = await api.post('/settings/resolve-instagram', { url: item.postUrl });
-                                                        if (res.data && res.data.success) {
-                                                          const itemsCopy = [...(sec.content?.items || defaultSocialItems)];
-                                                          itemsCopy[itemIdx] = {
-                                                            ...itemsCopy[itemIdx],
-                                                            image: res.data.imageUrl,
-                                                            likes: res.data.likes,
-                                                            comments: res.data.comments,
-                                                            views: res.data.views,
-                                                            type: res.data.type
-                                                          };
-                                                          const copy = localSettings.homeSections.map((s: any) =>
-                                                            s.id === sec.id ? { ...s, content: { ...s.content, items: itemsCopy } } : s
-                                                          );
-                                                          updateSettingsState({ ...localSettings, homeSections: copy });
-                                                          toast({
-                                                            title: "Fetched Successfully",
-                                                            description: "Post image and engagement details updated."
-                                                          });
-                                                        }
-                                                      } catch (err: any) {
-                                                        console.error("Failed to resolve Instagram post:", err);
-                                                        toast({
-                                                          title: "Fetch Failed",
-                                                          description: err?.response?.data?.message || "Verify the post is public and try again.",
-                                                          variant: "destructive"
-                                                        });
-                                                      } finally {
-                                                        setUploadingImage(null);
+                                                <Input
+                                                  value={item.postUrl || ''}
+                                                  onChange={(e) => {
+                                                    const url = e.target.value;
+                                                    const itemsCopy = [...(sec.content?.items || defaultSocialItems)];
+                                                    
+                                                    // Extract shortcode
+                                                    let shortcode = '';
+                                                    try {
+                                                      const cleanUrl = url.split('?')[0];
+                                                      const parts = cleanUrl.split('/');
+                                                      const pIndex = parts.findIndex(p => p === 'p' || p === 'reel' || p === 'tv' || p === 'reels');
+                                                      if (pIndex !== -1 && pIndex + 1 < parts.length) {
+                                                        shortcode = parts[pIndex + 1];
                                                       }
-                                                    }}
-                                                    className="h-7 text-[10px] bg-cyan-600 hover:bg-cyan-700 text-white px-2 rounded"
-                                                  >
-                                                    {uploadingImage === `social-${sec.id}-${itemIdx}` ? (
-                                                      <RefreshCw className="h-3 w-3 animate-spin" />
-                                                    ) : (
-                                                      "Fetch"
-                                                    )}
-                                                  </Button>
-                                                </div>
+                                                    } catch (err) {}
+                                                    
+                                                    const updatedImage = shortcode 
+                                                      ? `https://www.eeinstagram.com/images/${shortcode}/1` 
+                                                      : itemsCopy[itemIdx].image;
+                                                      
+                                                    itemsCopy[itemIdx] = { 
+                                                      ...itemsCopy[itemIdx], 
+                                                      postUrl: url,
+                                                      image: updatedImage
+                                                    };
+                                                    
+                                                    const copy = localSettings.homeSections.map((s: any) =>
+                                                      s.id === sec.id ? { ...s, content: { ...s.content, items: itemsCopy } } : s
+                                                    );
+                                                    updateSettingsState({ ...localSettings, homeSections: copy });
+                                                  }}
+                                                  placeholder="https://www.instagram.com/p/..."
+                                                  className="bg-slate-900 border-slate-750 text-[10px] h-7 text-slate-200 mt-1"
+                                                />
                                               </div>
-
-                                              {item.image && (
-                                                <div className="relative w-full aspect-square bg-slate-950 rounded-md overflow-hidden border border-slate-800">
-                                                  <img
-                                                    src={item.image}
-                                                    alt={`Post #${itemIdx + 1} preview`}
-                                                    className="w-full h-full object-cover"
-                                                  />
-                                                </div>
-                                              )}
+                                              
+                                              <ImageUpload
+                                                currentImage={item.image}
+                                                onImageUpload={async (file) => {
+                                                  await handleImageUpload(file, "category", `social-${sec.id}-${itemIdx}`, (url) => {
+                                                    const itemsCopy = [...(sec.content?.items || defaultSocialItems)];
+                                                    itemsCopy[itemIdx] = { ...itemsCopy[itemIdx], image: url };
+                                                    const copy = localSettings.homeSections.map((s: any) => 
+                                                      s.id === sec.id ? { ...s, content: { ...s.content, items: itemsCopy } } : s
+                                                    );
+                                                    updateSettingsState({ ...localSettings, homeSections: copy });
+                                                  });
+                                                }}
+                                                isUploading={uploadingImage === `social-${sec.id}-${itemIdx}`}
+                                                aspectRatio="square"
+                                                placeholder="Custom Cover Image"
+                                              />
                                               
                                               <div className="grid grid-cols-2 gap-2">
                                                 <div>
