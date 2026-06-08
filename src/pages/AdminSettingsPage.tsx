@@ -52,6 +52,7 @@ import { cn } from "@/lib/utils";
 
 const TABS = [
   { id: "hero-slides", label: "Hero Banners", icon: ImageIcon, desc: "Hero slideshow slides, CTA links, image overlays" },
+  { id: "bento-banners", label: "Curated Banners", icon: LayoutGrid, desc: "Add/edit/delete Curated Occasion Bento Banners" },
   { id: "sections", label: "Section Builder", icon: Layers, desc: "Order and customize homepage collections & banners" },
   { id: "categories", label: "Category Details", icon: LayoutGrid, desc: "Manage catalog hierarchy, slugs, priority themes" },
   { id: "shop-categories", label: "Shop Categories", icon: LayoutGrid, desc: "Manage categories displayed in the shop catalog" },
@@ -1045,6 +1046,252 @@ const AdminSettingsPage = () => {
                     </DndContext>
                   </div>
                 )}
+
+                {/* CURATED BANNERS BENTO GRID MANAGER */}
+                {activeTab === "bento-banners" && (() => {
+                  const offersSec = localSettings.homeSections?.find((s: any) => s.type === 'offers');
+                  
+                  if (!offersSec) {
+                    return (
+                      <div className="text-center p-8 bg-slate-900/40 rounded-xl border border-slate-800">
+                        <AlertCircle className="h-8 w-8 text-yellow-500 mx-auto mb-2" />
+                        <h3 className="font-bold text-slate-200">Offers Section Module Missing</h3>
+                        <p className="text-xs text-slate-400 mt-1">Please enable or create an 'offers' module in the Section Builder first.</p>
+                      </div>
+                    );
+                  }
+
+                  const bentoBanners = offersSec.content?.items || defaultBentoItems;
+
+                  const updateBentoItem = (itemIdx: number, updatedFields: any) => {
+                    const itemsCopy = [...bentoBanners];
+                    itemsCopy[itemIdx] = { ...itemsCopy[itemIdx], ...updatedFields };
+                    const copy = localSettings.homeSections.map((s: any) =>
+                      s.type === 'offers' ? { ...s, content: { ...s.content, items: itemsCopy } } : s
+                    );
+                    updateSettingsState({ ...localSettings, homeSections: copy });
+                  };
+
+                  return (
+                    <div className="space-y-6">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2">
+                            <LayoutGrid className="h-5 w-5 text-cyan-400" />
+                            Curated Occasion Bento Banners
+                          </h2>
+                          <p className="text-xs text-slate-400">Configure bento grid elements and occasion links displayed on the homepage</p>
+                        </div>
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            const itemsCopy = [...bentoBanners];
+                            const newId = `banner_${Date.now()}`;
+                            itemsCopy.push({
+                              id: newId,
+                              title: "New Curated Banner",
+                              subtitle: "Occasion banner description text",
+                              image: "https://images.unsplash.com/photo-1549465220-1a8b9238cd48?auto=format&fit=crop&q=80&w=800",
+                              link: "/shop",
+                              gridClass: "md:col-span-1 md:row-span-1",
+                              badge: "🎁 New",
+                              icon: "Gift"
+                            });
+                            const copy = localSettings.homeSections.map((s: any) =>
+                              s.type === 'offers' ? { ...s, content: { ...s.content, items: itemsCopy } } : s
+                            );
+                            updateSettingsState({ ...localSettings, homeSections: copy });
+                          }}
+                          className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold"
+                        >
+                          <Plus className="h-4 w-4 mr-1" /> Add Banner
+                        </Button>
+                      </div>
+
+                      {/* Section Global Settings */}
+                      <Card className="bg-slate-800/40 border-slate-800 overflow-hidden shadow-md">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-sm font-bold text-slate-200">Section Header Details</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex flex-col">
+                              <Label className="text-xs text-slate-300 font-bold">Show Bento Grid Section</Label>
+                              <span className="text-[10px] text-slate-400">Display this occasion bento banners section on the homepage</span>
+                            </div>
+                            <Switch
+                              checked={offersSec.enabled}
+                              onCheckedChange={(checked) => {
+                                const copy = localSettings.homeSections.map((s: any) =>
+                                  s.type === 'offers' ? { ...s, enabled: checked } : s
+                                );
+                                updateSettingsState({ ...localSettings, homeSections: copy });
+                              }}
+                            />
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                              <Label className="text-xs text-slate-300 font-bold">Section Heading Title</Label>
+                              <Input
+                                value={offersSec.title || ''}
+                                onChange={(e) => {
+                                  const copy = localSettings.homeSections.map((s: any) =>
+                                    s.type === 'offers' ? { ...s, title: e.target.value } : s
+                                  );
+                                  updateSettingsState({ ...localSettings, homeSections: copy });
+                                }}
+                                className="bg-slate-900 border-slate-700 text-slate-200 text-xs h-9"
+                                placeholder="e.g. Perfect Gifts for Cherished Moments"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs text-slate-300 font-bold">Section Subheading Description</Label>
+                              <Input
+                                value={offersSec.subtitle || ''}
+                                onChange={(e) => {
+                                  const copy = localSettings.homeSections.map((s: any) =>
+                                    s.type === 'offers' ? { ...s, subtitle: e.target.value } : s
+                                  );
+                                  updateSettingsState({ ...localSettings, homeSections: copy });
+                                }}
+                                className="bg-slate-900 border-slate-700 text-slate-200 text-xs h-9"
+                                placeholder="e.g. Discover handpicked floral collections designed..."
+                              />
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Individual Bento Banners */}
+                      <div className="space-y-4">
+                        {bentoBanners.map((item: any, itemIdx: number) => (
+                          <Card key={item.id || itemIdx} className="bg-slate-800/20 border-slate-800 shadow-md">
+                            <CardContent className="p-4 space-y-4">
+                              <div className="flex justify-between items-center pb-2 border-b border-slate-800">
+                                <Badge className="bg-slate-700 text-slate-300 font-bold">Banner #{itemIdx + 1} ({item.id || 'unnamed'})</Badge>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => {
+                                    const itemsCopy = bentoBanners.filter((_: any, idx: number) => idx !== itemIdx);
+                                    const copy = localSettings.homeSections.map((s: any) =>
+                                      s.type === 'offers' ? { ...s, content: { ...s.content, items: itemsCopy } } : s
+                                    );
+                                    updateSettingsState({ ...localSettings, homeSections: copy });
+                                    toast({
+                                      title: "Banner Removed",
+                                      description: "Curated banner has been removed from grid."
+                                    });
+                                  }}
+                                  className="text-red-400 hover:text-red-300 h-8 w-8 hover:bg-slate-800"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+
+                              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                {/* Column 1: Image & Layout */}
+                                <div className="space-y-3">
+                                  <div>
+                                    <Label className="text-xs text-slate-300 font-bold">Banner Image</Label>
+                                    <div className="mt-1">
+                                      <ImageUpload
+                                        currentImage={item.image}
+                                        onImageUpload={async (file) => {
+                                          await handleImageUpload(file, "category", `bento-${offersSec.id}-${itemIdx}`, (url) => {
+                                            updateBentoItem(itemIdx, { image: url });
+                                          });
+                                        }}
+                                        isUploading={uploadingImage === `bento-${offersSec.id}-${itemIdx}`}
+                                        aspectRatio="landscape"
+                                        placeholder="Upload Banner Image"
+                                      />
+                                    </div>
+                                  </div>
+
+                                  <div>
+                                    <Label className="text-xs text-slate-300 font-bold">Bento Layout Span</Label>
+                                    <select
+                                      value={item.gridClass || 'md:col-span-1 md:row-span-1'}
+                                      onChange={(e) => updateBentoItem(itemIdx, { gridClass: e.target.value })}
+                                      className="bg-slate-900 border border-slate-700 text-xs text-slate-200 rounded p-2.5 w-full mt-1 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                                    >
+                                      <option value="md:col-span-1 md:row-span-1">Standard (1x1)</option>
+                                      <option value="md:col-span-2 md:row-span-1">Wide Block (2x1)</option>
+                                      <option value="md:col-span-1 md:row-span-2">Double Height Tall (1x2)</option>
+                                      <option value="md:col-span-2 md:row-span-2">Large Block (2x2)</option>
+                                      <option value="md:col-span-3 md:row-span-1">Full Row Banner (3x1)</option>
+                                    </select>
+                                  </div>
+                                </div>
+
+                                {/* Column 2: Titles & Linking */}
+                                <div className="space-y-3 lg:col-span-2">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                      <Label className="text-xs text-slate-300 font-bold">Banner Main Title</Label>
+                                      <Input
+                                        value={item.title || ''}
+                                        onChange={(e) => updateBentoItem(itemIdx, { title: e.target.value })}
+                                        className="bg-slate-900 border-slate-700 text-slate-200 text-xs h-9 mt-1"
+                                        placeholder="e.g. Birthday Collection"
+                                      />
+                                    </div>
+                                    <div className="space-y-1">
+                                      <Label className="text-xs text-slate-300 font-bold">CTA Navigation Link</Label>
+                                      <Input
+                                        value={item.link || ''}
+                                        onChange={(e) => updateBentoItem(itemIdx, { link: e.target.value })}
+                                        className="bg-slate-900 border-slate-700 text-slate-200 text-xs h-9 mt-1"
+                                        placeholder="e.g. /shop?category=birthday"
+                                      />
+                                    </div>
+                                  </div>
+
+                                  <div className="space-y-1">
+                                    <Label className="text-xs text-slate-300 font-bold">Banner Subtitle Description</Label>
+                                    <Textarea
+                                      value={item.subtitle || ''}
+                                      onChange={(e) => updateBentoItem(itemIdx, { subtitle: e.target.value })}
+                                      className="bg-slate-900 border-slate-700 text-slate-200 text-xs resize-none"
+                                      rows={2}
+                                      placeholder="Occasion banner short descriptions..."
+                                    />
+                                  </div>
+
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                      <Label className="text-xs text-slate-300 font-bold">Badge Text</Label>
+                                      <Input
+                                        value={item.badge || ''}
+                                        onChange={(e) => updateBentoItem(itemIdx, { badge: e.target.value })}
+                                        className="bg-slate-900 border-slate-700 text-slate-200 text-xs h-9 mt-1"
+                                        placeholder="e.g. 🎉 Festive or 💖 Best Seller"
+                                      />
+                                    </div>
+                                    <div className="space-y-1">
+                                      <Label className="text-xs text-slate-300 font-bold">Icon Type</Label>
+                                      <select
+                                        value={item.icon || 'Gift'}
+                                        onChange={(e) => updateBentoItem(itemIdx, { icon: e.target.value })}
+                                        className="bg-slate-900 border border-slate-700 text-xs text-slate-200 rounded p-2.5 w-full mt-1 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                                      >
+                                        {['Sparkles', 'Heart', 'Clock', 'Star', 'Gift', 'PhoneCall', 'HelpCircle', 'ShieldCheck', 'Truck'].map(iconName => (
+                                          <option key={iconName} value={iconName}>{iconName}</option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* 2. SECTION BUILDER */}
                 {activeTab === "sections" && (
