@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -286,6 +286,63 @@ const AdminProducts: React.FC = () => {
     }
   };
 
+  const toggleProductSameDayStatus = async (productId: string) => {
+    const currentProduct = products.find((product) => product._id === productId);
+    if (!currentProduct) return;
+
+    const nextSameDay = currentProduct.sameDay === false;
+
+    try {
+      const updatePayload = {
+        title: currentProduct.title,
+        description: currentProduct.description,
+        price: currentProduct.price,
+        discount: currentProduct.discount || 0,
+        category: currentProduct.category,
+        categories: currentProduct.categories || [],
+        countInStock: currentProduct.countInStock,
+        images: currentProduct.images || [],
+        details: currentProduct.details || [],
+        careInstructions: currentProduct.careInstructions || [],
+        isFeatured: Boolean(currentProduct.isFeatured),
+        hidden: Boolean(currentProduct.hidden),
+        isCustomizable: Boolean(currentProduct.isCustomizable),
+        customizationOptions: currentProduct.customizationOptions || {},
+        hasPriceVariants: Boolean(currentProduct.hasPriceVariants),
+        priceVariants: currentProduct.priceVariants || [],
+        comboItems: currentProduct.comboItems || [],
+        comboName: currentProduct.comboName || '',
+        comboDescription: currentProduct.comboDescription || '',
+        comboSubcategory: currentProduct.comboSubcategory || '',
+        isNew: Boolean(currentProduct.isNew),
+        isNewArrival: Boolean(currentProduct.isNewArrival),
+        sameDay: nextSameDay,
+      };
+
+      await api.put(`/products/${productId}`, updatePayload);
+
+      setProducts(prev => prev.map(product =>
+        product._id === productId
+          ? { ...product, sameDay: nextSameDay }
+          : product
+      ));
+
+      await fetchProducts();
+
+      toast({
+        title: "Success",
+        description: `Product same-day delivery ${nextSameDay ? "enabled" : "disabled"}`,
+      });
+    } catch (error: any) {
+      console.error("Error toggling same day status:", error);
+      toast({
+        title: "Error",
+        description: "Failed to toggle same day status",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleDeleteProduct = async (id: string) => {
     try {
       await api.delete(`/products/${id}`);
@@ -563,6 +620,7 @@ const AdminProducts: React.FC = () => {
                   <TableHead>Stock</TableHead>
                   <TableHead>Featured</TableHead>
                   <TableHead>New</TableHead>
+                  <TableHead>Same Day</TableHead>
                   <TableHead>Visibility</TableHead>
                   <TableHead>Image</TableHead>
                   <TableHead>Actions</TableHead>
@@ -636,6 +694,18 @@ const AdminProducts: React.FC = () => {
                           />
                           <span className="text-xs text-muted-foreground">
                             {product.isNew ? "New" : "Regular"}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={product.sameDay !== false}
+                            onCheckedChange={() => toggleProductSameDayStatus(product._id)}
+                            className="data-[state=checked]:bg-emerald-600"
+                          />
+                          <span className="text-xs text-muted-foreground">
+                            {product.sameDay !== false ? "Yes" : "No"}
                           </span>
                         </div>
                       </TableCell>

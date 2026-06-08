@@ -6,18 +6,22 @@ type ProductFeaturesToggleProps = {
   isNewArrival: boolean;
   isFeatured: boolean;
   hidden?: boolean;
+  sameDay?: boolean;
   onNewArrivalChange: (value: boolean) => void;
   onFeaturedChange: (value: boolean) => void;
   onHiddenChange?: (value: boolean) => void;
+  onSameDayChange?: (value: boolean) => void;
 };
 
 export const ProductFeaturesToggle: React.FC<ProductFeaturesToggleProps> = ({
   isNewArrival,
   isFeatured,
   hidden = false,
+  sameDay = true,
   onNewArrivalChange,
   onFeaturedChange,
   onHiddenChange,
+  onSameDayChange,
 }) => {
   return (
     <div className="space-y-4 relative z-40 bg-white p-4 rounded-lg border shadow-sm">
@@ -38,6 +42,26 @@ export const ProductFeaturesToggle: React.FC<ProductFeaturesToggleProps> = ({
         />
         <Label htmlFor="isFeatured">Enable Featured Product</Label>
       </div>
+
+      {onSameDayChange && (
+        <div className="flex items-center space-x-2">
+          <Switch
+            id="sameDay"
+            checked={Boolean(sameDay)}
+            onCheckedChange={onSameDayChange}
+            className="data-[state=checked]:bg-emerald-600"
+          />
+          <Label htmlFor="sameDay" className="flex flex-col">
+            <span>Same Day Delivery</span>
+            <span className="text-xs text-gray-500 font-normal">
+              {sameDay 
+                ? "⚡ Same Day Delivery badge is visible to customers" 
+                : "📅 Same Day Delivery is disabled"
+              }
+            </span>
+          </Label>
+        </div>
+      )}
 
       {onHiddenChange && (
         <div className="flex items-center space-x-2">
@@ -61,4 +85,4 @@ export const ProductFeaturesToggle: React.FC<ProductFeaturesToggleProps> = ({
   );
 };
 
-export default ProductFeaturesToggle; 
+export default ProductFeaturesToggle;

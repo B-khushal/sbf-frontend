@@ -447,6 +447,11 @@ const ShopPage = () => {
       return productPriceInINR >= minPriceFilter && productPriceInINR <= maxPriceFilter;
     });
 
+    // Same Day Delivery filter
+    if (deliveryOption === "same-day") {
+      filtered = filtered.filter(product => product.sameDay !== false);
+    }
+
     // Enhanced sorting logic
     filtered.sort((a, b) => {
       switch (sortBy) {
@@ -462,7 +467,7 @@ const ShopPage = () => {
     });
 
     setFilteredProducts(filtered);
-  }, [products, selectedCategoryKey, isParentCategoryRoute, minPriceFilter, maxPriceFilter, sortBy, searchQuery]);
+  }, [products, selectedCategoryKey, isParentCategoryRoute, minPriceFilter, maxPriceFilter, sortBy, searchQuery, deliveryOption]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-bloom-blue-50 via-bloom-pink-50 to-bloom-green-50">
@@ -981,6 +986,23 @@ const ShopPage = () => {
                   onMinChange={setMinPriceFilter}
                   onMaxChange={setMaxPriceFilter}
                 />
+
+                <FilterSection title="Delivery">
+                  {[
+                    { label: 'All Delivery Options', value: '' },
+                    { label: 'Same Day Delivery ⚡', value: 'same-day' },
+                  ].map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => setDeliveryOption(option.value)}
+                      className={`w-full text-left px-3 py-1 rounded-md transition-colors text-xs hover:bg-gray-100 ${
+                        deliveryOption === option.value ? "bg-gradient-to-r from-sky-400 to-pink-500 text-white font-medium" : "text-gray-600"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </FilterSection>
 
                 <FilterSection title="Sort By">
                   {["newest", "price-asc", "price-desc"].map((sortOption) => (

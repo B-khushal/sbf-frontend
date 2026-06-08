@@ -111,6 +111,7 @@ const initialFormData: ProductData = {
   isNewArrival: false,
   isFeatured: false,
   hidden: false,
+  sameDay: true,
   isCustomizable: false,
   hasPriceVariants: false,
   priceVariants: [],
@@ -284,6 +285,7 @@ const ProductForm = () => {
         careInstructions: Array.isArray(data.careInstructions) ? data.careInstructions : [],
         images: Array.isArray(data.images) ? data.images : [],
         comboItems: Array.isArray(data.comboItems) ? data.comboItems : [],
+        sameDay: data.sameDay !== undefined ? Boolean(data.sameDay) : true,
         customizationOptions: data.customizationOptions || {
           allowPhotoUpload: false,
           allowNumberInput: false,
@@ -968,6 +970,13 @@ const ProductForm = () => {
     setFormData(prev => ({
       ...prev,
       hidden: checked
+    }));
+  };
+
+  const handleSameDayChange = (checked: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      sameDay: checked
     }));
   };
 
@@ -1826,9 +1835,11 @@ const ProductForm = () => {
                 isNewArrival={Boolean(formData.isNewArrival)}
                 isFeatured={Boolean(formData.isFeatured)}
                 hidden={Boolean(formData.hidden)}
+                sameDay={formData.sameDay !== false}
                 onNewArrivalChange={handleNewArrivalChange}
                 onFeaturedChange={handleFeaturedChange}
                 onHiddenChange={handleHiddenChange}
+                onSameDayChange={handleSameDayChange}
               />
             </div>
           </CardContent>
