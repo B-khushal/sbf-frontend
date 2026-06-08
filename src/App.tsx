@@ -64,6 +64,8 @@ const Analytics = lazy(() => import("./pages/Admin/Analytics"));
 const PromoCodes = lazy(() => import("./pages/Admin/PromoCodes"));
 const OffersManager = lazy(() => import("./pages/Admin/OffersManager"));
 const HolidayManagement = lazy(() => import("./pages/Admin/HolidayManagement"));
+const AdminAddonPage = lazy(() => import("./pages/Admin/AddonManagement"));
+const AddonFormPage = lazy(() => import("./pages/Admin/AddonForm"));
 const ProductForm = lazy(() => import('@/pages/Admin/ProductForm'));
 const ProductApproval = lazy(() => import('@/pages/Admin/ProductApproval'));
 const UserViewPage = lazy(() => import('./pages/Admin/UserViewPage'));
@@ -352,6 +354,21 @@ const App = () => {
                             <Route path="holidays" element={
                               <Suspense fallback={<LoadingFallback message="Loading holidays..." />}>
                                 <HolidayManagement />
+                              </Suspense>
+                            } />
+                            <Route path="addons" element={
+                              <Suspense fallback={<LoadingFallback message="Loading addons..." />}>
+                                <AdminAddonPage />
+                              </Suspense>
+                            } />
+                            <Route path="addons/new" element={
+                              <Suspense fallback={<LoadingFallback message="Loading form..." />}>
+                                <AddonFormPage />
+                              </Suspense>
+                            } />
+                            <Route path="addons/edit/:id" element={
+                              <Suspense fallback={<LoadingFallback message="Loading form..." />}>
+                                <AddonFormPage />
                               </Suspense>
                             } />
                             <Route path="settings" element={

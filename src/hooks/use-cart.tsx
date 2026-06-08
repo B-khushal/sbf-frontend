@@ -46,13 +46,15 @@ export const useCart = create<CartState>((set, get) => ({
           item.quantity,
           item.customizations,
           item.price, // customPrice
-          item.selectedVariant
+          item.selectedVariant,
+          item.productModel || 'Product'
         );
         // Update local state with backend response
         const transformedItems = response.cart.map(cartItem => ({
           _id: cartItem._id,
           id: cartItem._id,
           productId: cartItem.productId,
+          productModel: cartItem.productModel || 'Product',
           title: cartItem.title,
           price: cartItem.price,
           image: cartItem.images?.[0] || '',
@@ -79,10 +81,11 @@ export const useCart = create<CartState>((set, get) => ({
             const currentProductId = i.productId || i._id;
             const incomingProductId = item.productId || item._id;
             const sameProduct = currentProductId === incomingProductId;
+            const sameModel = (i.productModel || 'Product') === (item.productModel || 'Product');
             const sameVariant = JSON.stringify(i.selectedVariant ?? null) === JSON.stringify(item.selectedVariant ?? null);
             const sameCustomizations = JSON.stringify(i.customizations ?? null) === JSON.stringify(item.customizations ?? null);
 
-            return sameProduct && sameVariant && sameCustomizations;
+            return sameProduct && sameModel && sameVariant && sameCustomizations;
           }
         );
         let newItems;
@@ -119,6 +122,7 @@ export const useCart = create<CartState>((set, get) => ({
         _id: cartItem._id,
         id: cartItem._id,
         productId: cartItem.productId,
+        productModel: cartItem.productModel || 'Product',
         title: cartItem.title,
         price: cartItem.price,
         image: cartItem.images?.[0] || '',
@@ -169,6 +173,7 @@ export const useCart = create<CartState>((set, get) => ({
         _id: cartItem._id,
         id: cartItem._id,
         productId: cartItem.productId,
+        productModel: cartItem.productModel || 'Product',
         title: cartItem.title,
         price: cartItem.price,
         image: cartItem.images?.[0] || '',
@@ -285,6 +290,7 @@ export const useCart = create<CartState>((set, get) => ({
         _id: cartItem._id,
         id: cartItem._id,
         productId: cartItem.productId,
+        productModel: cartItem.productModel || 'Product',
         title: cartItem.title,
         price: cartItem.price,
         image: cartItem.images?.[0] || '',

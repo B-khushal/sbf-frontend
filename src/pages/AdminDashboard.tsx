@@ -170,6 +170,19 @@ const AdminDashboard: React.FC = () => {
           {!isCollapsed && <span className="sidebar-item-text">Products</span>}
         </Link>
         <Link 
+          to="/admin/addons" 
+          className={cn(
+            "sidebar-item",
+            isCollapsed ? "sidebar-item-collapsed" : "sidebar-item-expanded"
+          )}
+          title={isCollapsed ? 'Addon Products' : ''}
+        >
+          <div className="sidebar-item-icon">
+            <Gift className="h-4 w-4 text-muted-foreground" />
+          </div>
+          {!isCollapsed && <span className="sidebar-item-text">Addon Products</span>}
+        </Link>
+        <Link 
           to="/admin/product-approval" 
           className={cn(
             "sidebar-item",

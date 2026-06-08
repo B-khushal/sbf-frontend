@@ -349,6 +349,7 @@ const CheckoutPaymentPage = () => {
       const orderData = {
         items: items.map(item => ({
           product: item.productId || item._id,
+          productModel: item.productModel || 'Product',
           title: item.title,
           quantity: item.quantity,
           price: item.price,

@@ -15,6 +15,7 @@ export interface CartItem {
   isNewArrival?: boolean;
   isFeatured?: boolean;
   customizations?: any;
+  productModel?: string;
   selectedVariant?: {
     label: string;
     price: number;
@@ -50,10 +51,11 @@ export const addToCart = async (
     label: string;
     price: number;
     stock: number;
-  }
+  },
+  productModel?: string
 ): Promise<CartResponse> => {
   try {
-    const response = await api.post('/cart', { productId, quantity, customizations, customPrice, selectedVariant });
+    const response = await api.post('/cart', { productId, quantity, customizations, customPrice, selectedVariant, productModel });
     return response.data;
   } catch (error: any) {
     console.error('Error adding to cart:', error);

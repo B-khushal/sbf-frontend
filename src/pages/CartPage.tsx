@@ -6,6 +6,8 @@ import { Trash2, ShoppingCart, Plus, Minus, ArrowRight, Info, Sparkles, AlertTri
 import { Button } from '@/components/ui/button';
 import useCart from '@/hooks/use-cart';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import { getRecommendedAddons, AddonProduct } from '@/services/addonService';
+import { toast } from '@/hooks/use-toast';
 import ContactModal from '@/components/ui/ContactModal';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -41,8 +43,69 @@ const itemVariants = {
 
 const CartPage: React.FC = () => {
   const navigate = useNavigate();
-  const { items, updateItemQuantity, removeItem, showContactModal, contactModalProduct, closeContactModal } = useCart();
+  const { items, addToCart, updateItemQuantity, removeItem, showContactModal, contactModalProduct, closeContactModal } = useCart();
   const { formatPrice, convertPrice } = useCurrency();
+  
+  // States for Recommended Addons
+  const [recommendations, setRecommendations] = useState<AddonProduct[]>([]);
+  const [addonsLoading, setAddonsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchRecommendations = async () => {
+      if (items.length === 0) {
+        setRecommendations([]);
+        return;
+      }
+      setAddonsLoading(true);
+      try {
+        const res = await getRecommendedAddons(items);
+        if (res.success) {
+          setRecommendations(res.addons);
+        }
+      } catch (err) {
+        console.error('Error fetching recommended addons:', err);
+      } finally {
+        setAddonsLoading(false);
+      }
+    };
+
+    fetchRecommendations();
+  }, [items]);
+
+  const handleAddAddon = async (addon: AddonProduct) => {
+    try {
+      const displayPrice = addon.discountedPrice && addon.discountedPrice > 0 ? addon.discountedPrice : addon.price;
+      const discountVal = addon.discountedPrice && addon.discountedPrice > 0 ? Math.round(((addon.price - addon.discountedPrice) / addon.price) * 100) : 0;
+      
+      const cartItem = {
+        _id: addon._id,
+        id: addon._id,
+        productId: addon._id,
+        productModel: 'AddonProduct' as const,
+        title: addon.name,
+        price: displayPrice,
+        image: addon.image,
+        images: [addon.image, ...addon.galleryImages].filter(Boolean),
+        quantity: 1,
+        category: addon.category,
+        discount: discountVal,
+        description: addon.description
+      };
+      
+      await addToCart(cartItem);
+      toast({
+        title: "Added to cart",
+        description: `${addon.name} was successfully added to your gift!`,
+      });
+    } catch (error: any) {
+      console.error('Error adding addon:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add addon product.",
+        variant: "destructive",
+      });
+    }
+  };
   
   // State for promo code functionality
   const [appliedPromoCode, setAppliedPromoCode] = useState<{
@@ -350,6 +413,102 @@ const CartPage: React.FC = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* Recommended Addons Section */}
+                {recommendations.length > 0 && (
+                  <div className="mt-6 bg-white/70 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 shadow-lg border border-white/20">
+                    <h3 className="text-lg sm:text-xl lg:text-2xl font-black text-gray-800 mb-1">
+                      Make Your Gift More Special ✨
+                    </h3>
+                    <p className="text-xs sm:text-sm text-gray-600 mb-6 font-semibold">
+                      Add optional gifting addons directly from the cart
+                    </p>
+                    
+                    {addonsLoading ? (
+                      <div className="flex gap-4 overflow-x-auto pb-4 pt-2">
+                        {[1, 2, 3].map(i => (
+                          <div key={i} className="w-[180px] sm:w-[200px] shrink-0 bg-white/40 border border-white/20 rounded-2xl p-3 space-y-3 animate-pulse">
+                            <div className="aspect-square bg-gray-200 rounded-xl" />
+                            <div className="h-4 bg-gray-200 rounded w-3/4" />
+                            <div className="h-3 bg-gray-200 rounded w-1/2" />
+                            <div className="h-8 bg-gray-250 rounded w-full" />
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex gap-4 overflow-x-auto pb-4 pt-2 scrollbar-none snap-x snap-mandatory touch-pan-x">
+                        {recommendations.map(addon => {
+                          const inCart = items.find(item => (item.productId === addon._id || item._id === addon._id) && item.productModel === 'AddonProduct');
+                          const displayPrice = addon.discountedPrice && addon.discountedPrice > 0 ? addon.discountedPrice : addon.price;
+                          const originalPrice = addon.discountedPrice && addon.discountedPrice > 0 ? addon.price : null;
+                          
+                          return (
+                            <div 
+                              key={addon._id}
+                              className="w-[180px] sm:w-[200px] shrink-0 snap-start bg-white/80 backdrop-blur-sm border border-white/30 rounded-2xl p-3 shadow-sm hover:shadow-md transition-all duration-300 group flex flex-col justify-between"
+                            >
+                              <div>
+                                <div className="relative aspect-square rounded-xl overflow-hidden bg-gray-50 mb-3">
+                                  <img 
+                                    src={addon.image || '/api/placeholder/200/200'} 
+                                    alt={addon.name}
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                    loading="lazy"
+                                    onError={(e) => {
+                                      e.currentTarget.src = '/api/placeholder/200/200';
+                                    }}
+                                  />
+                                  {addon.badge && (
+                                    <span className="absolute top-2 left-2 text-[10px] uppercase font-black text-white bg-gradient-to-r from-pink-500 to-rose-500 px-2 py-0.5 rounded-full shadow-sm">
+                                      {addon.badge}
+                                    </span>
+                                  )}
+                                </div>
+                                <h4 className="text-xs sm:text-sm font-bold text-gray-800 line-clamp-1 mb-0.5">{addon.name}</h4>
+                                <p className="text-[10px] text-gray-500 mb-2 font-semibold">{addon.category}</p>
+                              </div>
+                              
+                              <div>
+                                <div className="flex items-center gap-1.5 mb-3">
+                                  <span className="text-xs sm:text-sm font-black text-primary">{formatPrice(convertPrice(displayPrice))}</span>
+                                  {originalPrice && (
+                                    <span className="text-[10px] text-gray-400 line-through font-medium">{formatPrice(convertPrice(originalPrice))}</span>
+                                  )}
+                                </div>
+                                
+                                {inCart ? (
+                                  <div className="flex items-center justify-between bg-primary/10 rounded-xl p-1 border border-primary/20">
+                                    <button 
+                                      onClick={() => handleQuantityChange(inCart._id, inCart.quantity - 1)}
+                                      className="w-6 h-6 bg-gradient-to-r from-primary to-secondary text-white rounded-lg flex items-center justify-center hover:shadow active:scale-95 transition-all text-xs font-bold"
+                                    >
+                                      -
+                                    </button>
+                                    <span className="text-xs font-bold text-primary">{inCart.quantity}</span>
+                                    <button 
+                                      onClick={() => handleQuantityChange(inCart._id, inCart.quantity + 1)}
+                                      className="w-6 h-6 bg-gradient-to-r from-primary to-secondary text-white rounded-lg flex items-center justify-center hover:shadow active:scale-95 transition-all text-xs font-bold disabled:opacity-50"
+                                      disabled={inCart.quantity >= 5}
+                                    >
+                                      +
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <button 
+                                    onClick={() => handleAddAddon(addon)}
+                                    className="w-full py-1.5 text-xs font-bold text-primary hover:text-white border border-primary hover:bg-gradient-to-r hover:from-primary hover:to-secondary rounded-xl active:scale-95 transition-all duration-300 flex items-center justify-center gap-1"
+                                  >
+                                    ADD
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
               </motion.div>
               
               {/* Order Summary */}

@@ -16,6 +16,7 @@ export interface CartItem {
   isNewArrival?: boolean;
   isFeatured?: boolean;
   customizations?: any;
+  productModel?: 'Product' | 'AddonProduct';
   selectedVariant?: {
     label: string;
     price: number;
