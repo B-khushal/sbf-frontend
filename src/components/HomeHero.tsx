@@ -119,7 +119,7 @@ const HomeHero = () => {
 
   if (loading && enabledSlides.length === 0) {
     return (
-      <div className="relative h-[220px] sm:h-[320px] lg:h-[450px] overflow-hidden bg-gray-200 rounded-3xl mx-3 sm:mx-4 md:mx-6 lg:mx-8 shadow-sm animate-pulse">
+      <div className="relative overflow-hidden bg-gray-200 shadow-sm animate-pulse mx-3 sm:mx-4 md:mx-6 lg:mx-8 rounded-2xl sm:rounded-3xl h-[140px] sm:h-[320px] lg:h-[450px]">
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-gray-400 text-sm font-semibold">Loading slideshow...</div>
         </div>
@@ -129,10 +129,10 @@ const HomeHero = () => {
 
   if (enabledSlides.length === 0) {
     return (
-      <div className="relative h-[220px] sm:h-[320px] lg:h-[450px] overflow-hidden bg-gradient-to-br from-primary/10 to-secondary/10 rounded-3xl mx-3 sm:mx-4 md:mx-6 lg:mx-8 shadow-sm">
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 to-secondary/10 shadow-sm mx-3 sm:mx-4 md:mx-6 lg:mx-8 rounded-2xl sm:rounded-3xl h-[140px] sm:h-[320px] lg:h-[450px]">
         <div className="absolute inset-0 flex items-center justify-center text-center text-gray-600 px-6">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold mb-2">Premium Flower Delivery in Hyderabad</h1>
+            <h1 className="text-lg sm:text-2xl font-bold mb-2">Premium Flower Delivery in Hyderabad</h1>
             <p className="mb-4 text-xs sm:text-sm text-gray-500">Send handcrafted bouquets online with Spring Blossoms Florist.</p>
             <Button onClick={() => navigate('/shop')} className="bg-primary hover:bg-primary/95 text-white font-semibold rounded-xl">
               Explore Our Collection
@@ -144,11 +144,16 @@ const HomeHero = () => {
   }
 
   return (
-    <div className="relative mx-3 sm:mx-4 md:mx-6 lg:mx-8 my-4">
+    <div className="relative mx-3 sm:mx-4 md:mx-6 lg:mx-8 my-2 sm:my-4">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
         
-        {/* Main featured banner slider (2/3 width on desktop) */}
-        <div className="lg:col-span-2 relative h-[180px] xs:h-[220px] sm:h-[300px] md:h-[380px] lg:h-[450px] overflow-hidden bg-gray-900 rounded-[28px] shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-gray-100">
+        {/* Main featured banner slider */}
+        <div className={cn(
+          "lg:col-span-2 relative overflow-hidden bg-gray-900 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-gray-100",
+          // Mobile: compact rounded card | Desktop: tall rounded card
+          "h-[140px] xs:h-[160px] sm:h-[300px] md:h-[380px] lg:h-[450px]",
+          "rounded-2xl sm:rounded-[28px]"
+        )}>
           {enabledSlides.map((slide, index) => {
             const slideImage = isMobile && slide.mobileImage ? slide.mobileImage : slide.image;
             const overlayOpacity = slide.overlayOpacity !== undefined ? slide.overlayOpacity : 0.35;
@@ -172,7 +177,7 @@ const HomeHero = () => {
                   src={slideImage}
                   alt={slide.title}
                   className={cn(
-                    "absolute inset-0 w-full h-full object-cover transition-all duration-700 rounded-[28px]",
+                    "absolute inset-0 w-full h-full object-cover transition-all duration-700",
                     imagesLoaded[index] ? "opacity-100 scale-100" : "opacity-0 scale-105"
                   )}
                   onLoad={() => handleImageLoad(index)}
@@ -182,33 +187,48 @@ const HomeHero = () => {
 
                 {/* Tint overlay */}
                 <div 
-                  className="absolute inset-0 bg-black/40 rounded-[28px] transition-opacity duration-300"
+                  className="absolute inset-0 bg-black/40 transition-opacity duration-300"
                   style={{ opacity: overlayOpacity }}
                 />
 
-                {/* Content overlay */}
-                <div className="absolute inset-0 flex items-center justify-center text-center px-6 sm:px-12 md:px-16 lg:px-20">
-                  <div className="w-full max-w-lg lg:max-w-xl xl:max-w-2xl text-center">
+                {/* Content overlay - Mobile: compact left-aligned | Desktop: centered */}
+                <div className={cn(
+                  "absolute inset-0 flex px-4 sm:px-12 md:px-16 lg:px-20",
+                  // Mobile: bottom-left aligned, compact
+                  "items-end pb-3 sm:items-center sm:pb-0 sm:justify-center sm:text-center"
+                )}>
+                  <div className="w-full max-w-lg lg:max-w-xl xl:max-w-2xl">
                     <h1 
-                      className="text-lg xs:text-xl sm:text-3xl md:text-4xl lg:text-4xl xl:text-5xl font-black mb-1 sm:mb-2 lg:mb-4 leading-tight tracking-tight transition-all drop-shadow-sm"
+                      className={cn(
+                        "font-black leading-tight tracking-tight transition-all drop-shadow-sm",
+                        // Mobile: small left-aligned | Desktop: large centered
+                        "text-sm xs:text-base sm:text-3xl md:text-4xl lg:text-4xl xl:text-5xl",
+                        "mb-0.5 sm:mb-2 lg:mb-4",
+                        "line-clamp-2 sm:line-clamp-none"
+                      )}
                       style={{ color: textCol }}
                     >
                       {slide.title}
                     </h1>
+                    {/* Subtitle: hidden on mobile for compactness */}
                     <p 
-                      className="text-[10px] xs:text-[11px] sm:text-sm md:text-base lg:text-lg mb-3 sm:mb-4 lg:mb-6 leading-relaxed opacity-90 transition-all font-medium"
+                      className="hidden sm:block text-sm md:text-base lg:text-lg mb-4 lg:mb-6 leading-relaxed opacity-90 transition-all font-medium"
                       style={{ color: textCol }}
                     >
                       {slide.subtitle}
                     </p>
-                    <div className="flex justify-center">
+                    <div className="flex sm:justify-center">
                       <Button
                         onClick={() => navigate(slide.ctaLink)}
                         size="default"
-                        className="bg-white text-gray-800 hover:bg-white/95 hover:scale-105 transition-all duration-300 text-xs sm:text-sm px-4 sm:px-6 py-2 sm:py-2.5 h-auto font-bold rounded-xl shadow-md hover:shadow-lg"
+                        className={cn(
+                          "bg-white text-gray-800 hover:bg-white/95 hover:scale-105 transition-all duration-300 font-bold rounded-xl shadow-md hover:shadow-lg",
+                          // Mobile: tiny pill button | Desktop: standard
+                          "text-[10px] px-3 py-1 h-7 sm:text-sm sm:px-6 sm:py-2.5 sm:h-auto"
+                        )}
                       >
                         {slide.ctaText}
-                        <ArrowRight className="ml-1.5 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        <ArrowRight className="ml-1 h-3 w-3 sm:h-4 sm:w-4" />
                       </Button>
                     </div>
                   </div>
@@ -217,19 +237,19 @@ const HomeHero = () => {
             );
           })}
 
-          {/* Carousel navigation buttons */}
+          {/* Carousel navigation buttons - hidden on mobile for cleaner look */}
           {totalSlides > 1 && (
             <>
               <button
                 onClick={goToPrevSlide}
-                className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 z-20 bg-white/25 hover:bg-white/40 backdrop-blur-md rounded-full p-1.5 sm:p-2.5 transition-all duration-200 hover:scale-115"
+                className="absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 z-20 bg-white/25 hover:bg-white/40 backdrop-blur-md rounded-full p-1 sm:p-2.5 transition-all duration-200 hover:scale-115 hidden sm:flex"
                 aria-label="Previous slide"
               >
                 <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
               </button>
               <button
                 onClick={goToNextSlide}
-                className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 z-20 bg-white/25 hover:bg-white/40 backdrop-blur-md rounded-full p-1.5 sm:p-2.5 transition-all duration-200 hover:scale-115"
+                className="absolute right-2 sm:right-4 top-1/2 transform -translate-y-1/2 z-20 bg-white/25 hover:bg-white/40 backdrop-blur-md rounded-full p-1 sm:p-2.5 transition-all duration-200 hover:scale-115 hidden sm:flex"
                 aria-label="Next slide"
               >
                 <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
@@ -239,15 +259,21 @@ const HomeHero = () => {
 
           {/* Slide progress indicators */}
           {totalSlides > 1 && (
-            <div className="absolute bottom-3 sm:bottom-4 left-1/2 transform -translate-x-1/2 z-20 flex space-x-1.5 sm:space-x-2">
+            <div className={cn(
+              "absolute left-1/2 transform -translate-x-1/2 z-20 flex",
+              // Mobile: bottom with tighter spacing | Desktop: standard
+              "bottom-1.5 sm:bottom-4 space-x-1 sm:space-x-2"
+            )}>
               {enabledSlides.map((_, index) => (
                 <button
                   key={index}
                   onClick={() => !isTransitioning && setCurrentSlide(index)}
                   className={cn(
-                    "w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full transition-all duration-300",
+                    "rounded-full transition-all duration-300",
+                    // Mobile: tiny dots | Desktop: standard dots
+                    "w-1 h-1 sm:w-2 sm:h-2",
                     index === currentSlide
-                      ? "bg-white w-4 sm:w-5"
+                      ? "bg-white w-3 sm:w-5"
                       : "bg-white/40 hover:bg-white/60 hover:scale-110"
                   )}
                   aria-label={`Go to slide ${index + 1}`}

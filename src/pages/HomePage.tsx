@@ -4,6 +4,7 @@ import { useInView } from "react-intersection-observer";
 import { useNavigate } from "react-router-dom";
 import { AlertTriangle } from "lucide-react";
 import HomeHero from "../components/HomeHero";
+import { useIsMobile } from "../hooks/use-mobile";
 import Categories from "../components/Categories";
 import ProductGrid from "../components/ProductGrid";
 import OffersSection from "../components/OffersSection";
@@ -58,6 +59,7 @@ const HomePage = () => {
   const { addToCart } = useCart();
   const { homeSections, loading: settingsLoading } = useSettings();
   const { currentOffer, isOpen: isOfferOpen, closeOffer } = useOfferPopup();
+  const isMobile = useIsMobile();
 
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [newProducts, setNewProducts] = useState([]);
@@ -160,8 +162,18 @@ const HomePage = () => {
       sections.push({ id: 'social', type: 'social', enabled: true, order: 99, title: '', subtitle: '' });
     }
 
+    // On mobile: move categories before hero for better above-the-fold UX
+    if (isMobile) {
+      const heroIdx = sections.findIndex(s => s.type === 'hero');
+      const catIdx = sections.findIndex(s => s.type === 'categories');
+      if (heroIdx !== -1 && catIdx !== -1 && catIdx > heroIdx) {
+        const [catSection] = sections.splice(catIdx, 1);
+        sections.splice(heroIdx, 0, catSection);
+      }
+    }
+
     return sections;
-  }, [homeSections]);
+  }, [homeSections, isMobile]);
 
   if (loading || settingsLoading) {
     return (

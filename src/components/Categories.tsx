@@ -66,7 +66,7 @@ const Categories = () => {
 
   if (loading) {
     return (
-      <section className="py-12 px-6">
+      <section className="py-8 sm:py-12 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto text-center">
           <div className="inline-block w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-3"></div>
           <p className="text-gray-500 text-sm">Loading categories...</p>
@@ -87,7 +87,7 @@ const Categories = () => {
   return (
     <section
       ref={sectionRef}
-      className="relative overflow-hidden py-12 md:py-20 px-4 sm:px-6 md:px-8 bg-gradient-to-b from-[#fffafc] via-white to-white"
+      className="relative overflow-hidden py-6 sm:py-12 md:py-20 px-4 sm:px-6 md:px-8 bg-gradient-to-b from-[#fffafc] via-white to-white"
       aria-label="Shop by category"
     >
       {/* Background soft blurs */}
@@ -99,47 +99,87 @@ const Categories = () => {
       <div className="relative max-w-7xl mx-auto">
         
         {/* Section Header */}
-        <div className="text-center mb-8 md:mb-12">
-          <p className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#f3d7e2]/60 px-3.5 py-1.5 text-[10px] font-bold tracking-[0.2em] text-[#b53d69] uppercase mb-4 shadow-sm">
+        <div className="text-center mb-5 sm:mb-8 md:mb-12">
+          <p className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-white border border-[#f3d7e2]/60 px-3.5 py-1.5 text-[10px] font-bold tracking-[0.2em] text-[#b53d69] uppercase mb-4 shadow-sm">
             <Flower2 className="h-3 w-3" />
             Curated Gifting Collections
           </p>
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-gray-800 leading-tight">
-            Shop by Best Categories
+          <h2 className="text-xl sm:text-3xl md:text-4xl font-black text-gray-800 leading-tight">
+            Shop Our Best Categories
           </h2>
-          <p className="mt-2 text-xs sm:text-sm text-gray-500 max-w-md mx-auto leading-relaxed">
+          <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-gray-500 max-w-md mx-auto leading-relaxed">
             Discover curated luxury arrangements hand-delivered for every occasion.
           </p>
         </div>
 
-        {/* Mobile View: 2-Row Grid of Circles (matches Reference Image) */}
-        <div className="md:hidden overflow-x-auto pb-4 no-scrollbar">
-          <div className="grid grid-flow-col grid-rows-2 gap-x-5 gap-y-4 w-max px-2">
-            {enabledCategories.map((category) => (
+        {/* ═══════════════════════════════════════════════════════════ */}
+        {/* MOBILE VIEW: 4-column grid like FlowerAura reference      */}
+        {/* ═══════════════════════════════════════════════════════════ */}
+        <div className="sm:hidden">
+          <div className="grid grid-cols-4 gap-x-2 gap-y-4 px-1">
+            {enabledCategories.map((category, index) => (
               <Link
                 key={category.id}
                 to={`/shop?category=${encodeURIComponent(toCategoryQueryValue(category.name))}`}
-                className="flex flex-col items-center justify-center w-[76px] select-none active:scale-95 transition-transform"
+                className="flex flex-col items-center justify-start select-none active:scale-95 transition-transform duration-150"
+                style={{
+                  opacity: isVisible ? 1 : 0,
+                  transform: isVisible ? 'translateY(0)' : 'translateY(8px)',
+                  transition: `opacity 0.4s ease ${index * 0.04}s, transform 0.4s ease ${index * 0.04}s`,
+                }}
               >
-                <div className="relative w-16 h-16 rounded-full overflow-hidden bg-white border-2 border-pink-50 shadow-sm flex items-center justify-center p-0.5 group">
+                {/* Square image card with subtle shadow */}
+                <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-white border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
                   <img
                     src={category.image}
                     alt={category.name}
                     loading="lazy"
-                    className="w-full h-full object-cover rounded-full transition-transform duration-300 group-hover:scale-105"
+                    className="w-full h-full object-cover"
                   />
-                  {/* Subtle border overlay */}
-                  <div className="absolute inset-0 rounded-full border border-black/5" />
                 </div>
-                <span className="text-[11px] font-bold text-gray-700 text-center mt-1.5 line-clamp-1 w-full tracking-wide">
-                  {category.name.replace(/Special|Delivery|Gifts/gi, '').trim()}
+                {/* Label */}
+                <span className="text-[10px] font-semibold text-gray-700 text-center mt-1.5 line-clamp-2 w-full leading-tight px-0.5">
+                  {category.name}
                 </span>
               </Link>
             ))}
           </div>
         </div>
 
-        {/* Desktop View: Premium Elegant Grid Cards */}
+        {/* ═══════════════════════════════════════════════════════════ */}
+        {/* TABLET VIEW: 3-col grid with rounded images               */}
+        {/* ═══════════════════════════════════════════════════════════ */}
+        <div className="hidden sm:grid md:hidden grid-cols-3 gap-4">
+          {enabledCategories.map((category, index) => (
+            <Link
+              key={category.id}
+              to={`/shop?category=${encodeURIComponent(toCategoryQueryValue(category.name))}`}
+              className="flex flex-col items-center select-none active:scale-95 transition-transform"
+              style={{
+                opacity: isVisible ? 1 : 0,
+                transform: isVisible ? 'translateY(0)' : 'translateY(10px)',
+                transition: `opacity 0.4s ease ${index * 0.05}s, transform 0.4s ease ${index * 0.05}s`,
+              }}
+            >
+              <div className="relative w-20 h-20 rounded-full overflow-hidden bg-white border-2 border-pink-50 shadow-sm">
+                <img
+                  src={category.image}
+                  alt={category.name}
+                  loading="lazy"
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 rounded-full border border-black/5" />
+              </div>
+              <span className="text-xs font-bold text-gray-700 text-center mt-2 line-clamp-1 w-full">
+                {category.name}
+              </span>
+            </Link>
+          ))}
+        </div>
+
+        {/* ═══════════════════════════════════════════════════════════ */}
+        {/* DESKTOP VIEW: Premium Elegant Grid Cards                   */}
+        {/* ═══════════════════════════════════════════════════════════ */}
         <div className="hidden md:grid grid-cols-3 lg:grid-cols-6 gap-5">
           {enabledCategories.map((category, index) => (
             <DesktopCategoryCard
