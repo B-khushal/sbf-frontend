@@ -130,27 +130,27 @@ const Footer = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-2">
-            <details className="rounded-xl border border-gray-200 bg-white px-3 py-2">
-              <summary className="cursor-pointer list-none text-sm font-medium text-gray-700 flex items-center justify-between">
+          <div className="grid grid-cols-1 gap-3">
+            <details className="group rounded-2xl border border-gray-100 bg-gray-50/60 p-4 transition-all duration-300 [&_summary::-webkit-details-marker]:hidden">
+              <summary className="cursor-pointer list-none text-sm font-bold text-gray-800 flex items-center justify-between">
                 <span>Customer Support</span>
-                <span className="text-gray-400">▼</span>
+                <span className="text-gray-400 group-open:rotate-180 transition-transform duration-300 text-xs">▼</span>
               </summary>
-              <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
-                <Link to="/contact" className="rounded-lg bg-sky-50 px-3 py-2 text-gray-700">Contact</Link>
-                <Link to="/profile" className="rounded-lg bg-sky-50 px-3 py-2 text-gray-700">Track Order</Link>
+              <div className="mt-3 grid grid-cols-2 gap-2 text-xs font-semibold">
+                <Link to="/contact" className="rounded-xl bg-white border border-gray-100/60 px-3 py-2.5 text-gray-700 text-center hover:bg-pink-50/40">Contact</Link>
+                <Link to="/profile" className="rounded-xl bg-white border border-gray-100/60 px-3 py-2.5 text-gray-700 text-center hover:bg-pink-50/40">Track Order</Link>
               </div>
             </details>
-            <details className="rounded-xl border border-gray-200 bg-white px-3 py-2">
-              <summary className="cursor-pointer list-none text-sm font-medium text-gray-700 flex items-center justify-between">
-                <span>Policies</span>
-                <span className="text-gray-400">▼</span>
+            <details className="group rounded-2xl border border-gray-100 bg-gray-50/60 p-4 transition-all duration-300 [&_summary::-webkit-details-marker]:hidden">
+              <summary className="cursor-pointer list-none text-sm font-bold text-gray-800 flex items-center justify-between">
+                <span>Company Policies</span>
+                <span className="text-gray-400 group-open:rotate-180 transition-transform duration-300 text-xs">▼</span>
               </summary>
-              <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
-                <Link to="/shipping" className="rounded-lg bg-sky-50 px-3 py-2 text-gray-700">Shipping</Link>
-                <Link to="/refund-policy" className="rounded-lg bg-sky-50 px-3 py-2 text-gray-700">Refund</Link>
-                <Link to="/cancellation-policy" className="rounded-lg bg-sky-50 px-3 py-2 text-gray-700">Cancellation</Link>
-                <Link to="/privacy" className="rounded-lg bg-sky-50 px-3 py-2 text-gray-700">Privacy</Link>
+              <div className="mt-3 grid grid-cols-2 gap-2 text-xs font-semibold">
+                <Link to="/shipping" className="rounded-xl bg-white border border-gray-100/60 px-3 py-2.5 text-gray-700 text-center hover:bg-pink-50/40">Shipping Policy</Link>
+                <Link to="/refund-policy" className="rounded-xl bg-white border border-gray-100/60 px-3 py-2.5 text-gray-700 text-center hover:bg-pink-50/40">Refund Policy</Link>
+                <Link to="/cancellation-policy" className="rounded-xl bg-white border border-gray-100/60 px-3 py-2.5 text-gray-700 text-center hover:bg-pink-50/40">Cancellation</Link>
+                <Link to="/privacy" className="rounded-xl bg-white border border-gray-100/60 px-3 py-2.5 text-gray-700 text-center hover:bg-pink-50/40">Privacy Policy</Link>
               </div>
             </details>
           </div>

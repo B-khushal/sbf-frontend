@@ -132,6 +132,7 @@ const CheckoutShippingPage = () => {
   }, [subtotal, selectedTimeSlot, formData.email, formData.phone]);
 
   const deliveryFee = deliveryCalculation?.deliveryCharge ?? (selectedTimeSlot === 'midnight' ? 300 : 150);
+  const hasMidnightFee = selectedTimeSlot === 'midnight';
 
   // Load promo code discount from localStorage if available
   const [appliedPromoCode, setAppliedPromoCode] = useState<{

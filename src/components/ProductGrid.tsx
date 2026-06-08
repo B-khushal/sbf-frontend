@@ -11,6 +11,7 @@ import useWishlist from "@/hooks/use-wishlist";
 import { useAuth } from "@/hooks/use-auth";
 import { getImageUrl } from "@/config";
 import { ComboItem } from "@/services/productService";
+import { QuickViewModal } from "./ui/QuickViewModal";
 
 export type Product = {
   _id: string;
@@ -260,6 +261,8 @@ const ProductCard = ({ product, onAddToCart }: {
   const { addItem: addToWishlist, removeItem: removeFromWishlist, items: wishlistItems } = useWishlist();
   const navigate = useNavigate();
   const [isImageLoaded, setIsImageLoaded] = useState(false);
+  const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
+  const [isHeartPounding, setIsHeartPounding] = useState(false);
   const { user } = useAuth();
 
   const isInWishlist = wishlistItems.some(item => item.id === product._id);
@@ -341,8 +344,6 @@ const ProductCard = ({ product, onAddToCart }: {
     e.preventDefault();
     e.stopPropagation();
     console.log("Customize and add to cart clicked:", product.title);
-
-    // Navigate to product detail page with customization modal open
     navigate(`/product/${product._id}?customize=true`);
   };
 
@@ -350,14 +351,12 @@ const ProductCard = ({ product, onAddToCart }: {
   const handleWishlistToggle = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log("Wishlist toggle clicked:", product._id);
 
     if (!user) {
       toast.error("Please login first to add items to your wishlist", {
         description: "You'll be redirected to the login page",
         duration: 3000,
       });
-      // Redirect to login page with current page as redirect path
       setTimeout(() => {
         navigate('/login', {
           state: {
@@ -369,14 +368,13 @@ const ProductCard = ({ product, onAddToCart }: {
       return;
     }
 
+    setIsHeartPounding(true);
+    setTimeout(() => setIsHeartPounding(false), 500);
+
     try {
-      // Validate product data
       if (!product._id || !product.title || typeof product.price !== 'number') {
         console.error('Invalid product data for wishlist:', product);
-        toast.error("Invalid product data", {
-          description: "Could not add to wishlist",
-          duration: 3000,
-        });
+        toast.error("Invalid product data");
         return;
       }
 
@@ -394,36 +392,11 @@ const ProductCard = ({ product, onAddToCart }: {
       }
     } catch (error) {
       console.error("Error updating wishlist:", error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to update wishlist';
-
-      if (errorMessage.includes('log in')) {
-        toast.error("Please login first to manage your wishlist", {
-          description: "You'll be redirected to the login page",
-          duration: 3000,
-        });
-        setTimeout(() => {
-          navigate('/login', {
-            state: {
-              redirect: window.location.pathname,
-              message: "Please login to manage your wishlist"
-            }
-          });
-        }, 1500);
-      } else if (errorMessage.includes('already in wishlist')) {
-        toast.error("Already in wishlist", {
-          description: "This item is already in your wishlist",
-          duration: 3000,
-        });
-      } else {
-        toast.error("Failed to update wishlist", {
-          description: errorMessage,
-          duration: 3000,
-        });
-      }
+      toast.error("Failed to update wishlist");
     }
   };
 
-  // Check if product is new (created within last 30 days)
+  // Check if product is new
   const isNewProduct = () => {
     if (!product.createdAt && !product.isNewArrival && !product.isNew) return false;
     if (product.isNewArrival || product.isNew) return true;
@@ -438,133 +411,186 @@ const ProductCard = ({ product, onAddToCart }: {
     return product.featured || product.isFeatured;
   };
 
-  // Calculate discounted price
-  const discountedPrice = product.discount > 0
-    ? product.price - (product.price * product.discount / 100)
-    : product.price;
-
   return (
-    <div
-      className={`group relative bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer ${product.hidden ? 'opacity-75 border-2 border-orange-200' : ''
-        }`}
-      onClick={handleCardClick}
-    >
-      {/* Product Image - Optimized for mobile */}
-      <div className="relative aspect-square overflow-hidden bg-gray-100">
-        {/* Badges Container */}
-        <div className="absolute top-1 left-1 z-10 flex flex-col gap-0.5">
-          {product.discount > 0 && (
-            <Badge variant="destructive" className="text-xs px-1.5 py-0.5">
-              -{product.discount}%
-            </Badge>
-          )}
-          {isFeaturedProduct() && (
-            <Badge variant="default" className="bg-yellow-400 text-white text-xs px-1.5 py-0.5">
-              ⭐
-            </Badge>
-          )}
-          {isNewProduct() && (
-            <Badge variant="default" className="bg-green-500 text-xs px-1.5 py-0.5">
-              NEW
-            </Badge>
-          )}
-          {product.isCustomizable && (
-            <Badge variant="secondary" className="text-xs px-1.5 py-0.5 flex items-center gap-0.5">
-              <Wand2 className="h-3 w-3" />
-            </Badge>
-          )}
-          {product.hidden && (
-            <Badge variant="outline" className="text-xs px-1.5 py-0.5 border-orange-500 text-orange-600">
-              Hidden
-            </Badge>
-          )}
-        </div>
-
-        {/* Wishlist Button */}
-        <button
-          onClick={handleWishlistToggle}
-          className="absolute top-1 right-1 z-10 p-1 rounded-full bg-white/80 hover:bg-white shadow-sm transition-colors duration-200"
-        >
-          <Heart
-            className={cn(
-              "h-3.5 w-3.5 transition-colors duration-200",
-              isInWishlist ? "fill-red-500 stroke-red-500" : "stroke-gray-600"
+    <>
+      <div
+        className={cn(
+          "group relative bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100 hover:border-[#f9a8d4]/30 overflow-hidden hover:shadow-[0_12px_30px_rgba(0,0,0,0.08)] transition-all duration-300 cursor-pointer flex flex-col h-full",
+          product.hidden ? 'opacity-75 border-2 border-orange-200' : ''
+        )}
+        onClick={handleCardClick}
+      >
+        {/* Product Image Section */}
+        <div className="relative aspect-square overflow-hidden bg-gray-50 flex-shrink-0">
+          
+          {/* Badges Container */}
+          <div className="absolute top-2 left-2 z-20 flex flex-col gap-1">
+            {product.discount > 0 && (
+              <Badge variant="destructive" className="text-[10px] font-bold px-2 py-0.5 rounded-md shadow-sm">
+                -{product.discount}% OFF
+              </Badge>
             )}
-          />
-        </button>
+            {isFeaturedProduct() && (
+              <Badge variant="default" className="bg-yellow-400 hover:bg-yellow-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-sm">
+                ⭐ Featured
+              </Badge>
+            )}
+            {isNewProduct() && (
+              <Badge variant="default" className="bg-green-500 hover:bg-green-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-sm">
+                NEW
+              </Badge>
+            )}
+            {product.hidden && (
+              <Badge variant="outline" className="text-[10px] px-2 py-0.5 border-orange-500 text-orange-600 bg-orange-50/80">
+                Hidden
+              </Badge>
+            )}
+          </div>
 
-        {/* Product Image */}
-        <img
-          src={getImageUrl(product.images[0]) || '/images/placeholder.svg'}
-          alt={`${product.title} - Flower Delivery in Hyderabad | Online Bouquet Shop India`}
-          className={cn(
-            "w-full h-full object-cover transition-opacity duration-300 group-hover:scale-110 group-hover:z-20",
-            isImageLoaded ? "opacity-100" : "opacity-0"
-          )}
-          onLoad={() => setIsImageLoaded(true)}
-          loading="lazy"
-        />
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
-      </div>
-
-      {/* Product Info - Optimized Padding for Mobile */}
-      <div className="p-2.5">
-        <h3 className="font-medium text-xs text-gray-900 mb-1 line-clamp-2 group-hover:text-primary transition-colors">
-          {product.title}
-        </h3>
-
-        {/* Price - Compact */}
-        <div className="flex items-center gap-0.5 mb-2">
-          {product.category === 'combos' && product.comboItems && product.comboItems.length > 0 ? (
-            <span className={cn(
-              "text-xs font-bold",
-              product.discount > 0 ? "text-red-600" : "text-black"
-            )}>
-              {formatPrice(convertPrice(getComboMaxPrice(product)))}
-            </span>
-          ) : (
-            <>
-              <span className={cn(
-                "text-xs font-bold",
-                product.discount > 0 ? "text-red-600" : "text-black"
-              )}>
-                {formatPrice(convertPrice(product.discount ? product.price * (1 - product.discount / 100) : product.price))}
-              </span>
-              {product.discount > 0 && (
-                <span className="text-xs text-gray-500 line-through">
-                  {formatPrice(convertPrice(product.price))}
-                </span>
+          {/* Wishlist Button */}
+          <button
+            onClick={handleWishlistToggle}
+            className={cn(
+              "absolute top-2 right-2 z-20 p-2 rounded-full bg-white/80 backdrop-blur-sm shadow-sm transition-all duration-300 hover:bg-white hover:scale-110",
+              isHeartPounding && "scale-125"
+            )}
+          >
+            <Heart
+              className={cn(
+                "h-4 w-4 transition-colors duration-200",
+                isInWishlist ? "fill-red-500 stroke-red-500" : "stroke-gray-600 hover:stroke-red-500"
               )}
-            </>
+            />
+          </button>
+
+          {/* Quick View Hover overlay (desktop only) */}
+          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-10 hidden md:flex">
+            <Button
+              size="sm"
+              variant="secondary"
+              className="bg-white text-gray-800 border-0 shadow-lg hover:bg-white/95 text-xs font-bold rounded-xl px-4 py-2 transition-transform duration-300 translate-y-2 group-hover:translate-y-0"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsQuickViewOpen(true);
+              }}
+            >
+              Quick View
+            </Button>
+          </div>
+
+          {/* Image 1 (Default) */}
+          <img
+            src={getImageUrl(product.images[0]) || '/images/placeholder.svg'}
+            alt={product.title}
+            className={cn(
+              "absolute inset-0 w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-105",
+              product.images.length > 1 && "group-hover:opacity-0"
+            )}
+            onLoad={() => setIsImageLoaded(true)}
+            loading="lazy"
+          />
+
+          {/* Image 2 (Hover) */}
+          {product.images.length > 1 && (
+            <img
+              src={getImageUrl(product.images[1])}
+              alt={product.title}
+              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700 opacity-0 group-hover:opacity-100 group-hover:scale-105"
+              loading="lazy"
+            />
+          )}
+
+          {/* Skeleton Load Placeholder */}
+          {!isImageLoaded && (
+            <div className="absolute inset-0 bg-gradient-to-br from-gray-100 via-gray-50 to-gray-100 animate-pulse" />
           )}
         </div>
 
-        {/* Action Buttons - Optimized for mobile */}
-        <div className="flex items-center gap-1">
-          {product.isCustomizable ? (
-            <Button
-              variant="outline"
-              size="sm"
-              className={`flex-1 px-2 py-1 h-8 text-xs bg-purple-600 text-white hover:bg-purple-700 hover:shadow-lg transition-all duration-200`}
-              onClick={handleCustomizeAndAddToCart}
-            >
-              <Wand2 className="h-3 w-3 mr-0.5" />
-              Customize
-            </Button>
-          ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              className={`flex-1 px-2 py-1 h-8 text-xs bg-primary text-white hover:bg-primary/90 hover:shadow-lg transition-all duration-200`}
-              onClick={handleAddToCart}
-            >
-              <ShoppingBag className="h-3 w-3 mr-0.5" />
-              Add
-            </Button>
-          )}
+        {/* Product Details Section */}
+        <div className="p-4 flex flex-col justify-between flex-grow">
+          <div>
+            <h3 className="font-bold text-xs sm:text-sm text-gray-900 mb-1 line-clamp-1 group-hover:text-primary transition-colors">
+              {product.title}
+            </h3>
+
+            {/* Rating & Delivery Info */}
+            <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center text-amber-400">
+                <Star size={11} className="fill-current" />
+                <span className="text-[10px] font-bold text-gray-700 ml-0.5">4.8</span>
+              </div>
+              <span className="text-[10px] text-gray-300 font-medium">|</span>
+              <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">
+                ⚡ Same Day
+              </span>
+            </div>
+          </div>
+
+          <div>
+            {/* Price section */}
+            <div className="flex items-baseline gap-1.5 mb-3.5">
+              {product.category === 'combos' && product.comboItems && product.comboItems.length > 0 ? (
+                <span className={cn(
+                  "text-sm sm:text-base font-black",
+                  product.discount > 0 ? "text-red-600" : "text-gray-900"
+                )}>
+                  {formatPrice(convertPrice(getComboMaxPrice(product)))}
+                </span>
+              ) : (
+                <>
+                  <span className={cn(
+                    "text-sm sm:text-base font-black",
+                    product.discount > 0 ? "text-red-600" : "text-gray-900"
+                  )}>
+                    {formatPrice(convertPrice(product.discount ? product.price * (1 - product.discount / 100) : product.price))}
+                  </span>
+                  {product.discount > 0 && (
+                    <span className="text-xs text-gray-450 line-through font-medium">
+                      {formatPrice(convertPrice(product.price))}
+                    </span>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-1.5 mt-auto">
+              {product.isCustomizable ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 py-2 h-9 text-xs bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl border-0 shadow-sm transition-all"
+                  onClick={handleCustomizeAndAddToCart}
+                >
+                  <Wand2 className="h-3 w-3 mr-1" />
+                  Customize
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 py-2 h-9 text-xs bg-primary hover:bg-primary/95 text-white font-bold rounded-xl border-0 shadow-sm transition-all flex items-center justify-center gap-1"
+                  onClick={handleAddToCart}
+                >
+                  <ShoppingBag className="h-3 w-3" />
+                  Add
+                </Button>
+              )}
+            </div>
+          </div>
+
         </div>
       </div>
-    </div>
+
+      {/* Quick View Modal */}
+      <QuickViewModal
+        product={product}
+        isOpen={isQuickViewOpen}
+        onClose={() => setIsQuickViewOpen(false)}
+        onAddToCart={onAddToCart}
+      />
+    </>
   );
 };
 

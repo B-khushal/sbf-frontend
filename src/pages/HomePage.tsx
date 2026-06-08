@@ -7,6 +7,9 @@ import HomeHero from "../components/HomeHero";
 import Categories from "../components/Categories";
 import ProductGrid from "../components/ProductGrid";
 import OffersSection from "../components/OffersSection";
+import { WhyChooseUs } from "../components/WhyChooseUs";
+import { PromotionalBanners } from "../components/PromotionalBanners";
+import { SocialGallery } from "../components/SocialGallery";
 import useCart from "../hooks/use-cart";
 import { useSettings } from "../contexts/SettingsContext";
 import { useOfferPopup } from "../hooks/use-offer-popup";
@@ -136,12 +139,29 @@ const HomePage = () => {
   }, []);
 
   // Memoize enabled sections to prevent unnecessary re-renders
-  const enabledSections = useMemo(() =>
-    homeSections
+  const enabledSections = useMemo(() => {
+    let sections = [...homeSections]
       .filter(section => section.enabled)
-      .sort((a, b) => a.order - b.order),
-    [homeSections]
-  );
+      .sort((a, b) => a.order - b.order);
+
+    // Inject WhyChooseUs if not already configured in homeSections
+    if (!sections.some(s => s.type === 'whychooseus')) {
+      const idx = sections.findIndex(s => s.type === 'categories');
+      const whyChooseUsSection = { id: 'whychooseus', type: 'whychooseus', enabled: true, order: 2.5, title: '', subtitle: '' };
+      if (idx !== -1) {
+        sections.splice(idx + 1, 0, whyChooseUsSection);
+      } else {
+        sections.push(whyChooseUsSection);
+      }
+    }
+
+    // Inject SocialGallery at the bottom if not already configured
+    if (!sections.some(s => s.type === 'social')) {
+      sections.push({ id: 'social', type: 'social', enabled: true, order: 99, title: '', subtitle: '' });
+    }
+
+    return sections;
+  }, [homeSections]);
 
   if (loading || settingsLoading) {
     return (
@@ -221,6 +241,17 @@ const HomePage = () => {
               </motion.section>
             );
 
+          case 'whychooseus':
+            return (
+              <motion.section
+                key={`whychooseus-${index}`}
+                variants={itemVariants}
+                className="relative"
+              >
+                <WhyChooseUs />
+              </motion.section>
+            );
+
           case 'featured':
             return (
               <motion.section
@@ -245,7 +276,7 @@ const HomePage = () => {
                 variants={itemVariants}
                 className="relative"
               >
-                <OffersSection />
+                <PromotionalBanners />
               </motion.section>
             );
 
@@ -310,6 +341,17 @@ const HomePage = () => {
                     </motion.div>
                   </motion.div>
                 </div>
+              </motion.section>
+            );
+
+          case 'social':
+            return (
+              <motion.section
+                key={`social-${index}`}
+                variants={itemVariants}
+                className="relative"
+              >
+                <SocialGallery />
               </motion.section>
             );
 

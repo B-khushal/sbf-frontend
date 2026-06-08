@@ -15,6 +15,7 @@ import useCart, { useCartSelectors } from '@/hooks/use-cart';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useAuth } from '@/hooks/use-auth';
 import { motion, AnimatePresence } from 'framer-motion';
+import { DeliveryLocationSelector } from './ui/DeliveryLocationSelector';
 
 interface NavItem {
   href: string;
@@ -300,47 +301,53 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
           {/* Main Navigation Row */}
           <div className="flex items-center justify-between h-16 sm:h-18 lg:h-20">
             
-            {/* Logo */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
-            >
-              <Link to="/" className="flex items-center group">
-                {/* Desktop Logo */}
-                <div className="hidden lg:block">
-                  <img
-                    src={headerSettings.logo || "/api/placeholder/200/60"}
-                    alt="Best Florist in Hyderabad - Flower Delivery in Hyderabad | Spring Blossoms Florist"
-                    className="h-12 w-auto xl:h-14 transition-all duration-300 ease-in-out group-hover:scale-105 drop-shadow-sm"
-                  />
-                </div>
-                
-                {/* Tablet Logo */}
-                <div className="hidden md:block lg:hidden">
-                  <img
-                    src={headerSettings.logo || "/api/placeholder/160/50"}
-                    alt="Best Florist in Hyderabad - Flower Delivery in Hyderabad | Spring Blossoms Florist"
-                    className="h-10 w-auto transition-all duration-300 ease-in-out group-hover:scale-105 drop-shadow-sm"
-                  />
-                </div>
-                
-                {/* Mobile Logo */}
-                <div className="md:hidden flex items-center">
-                  {headerSettings?.logo ? (
+            {/* Logo & Location Selector */}
+            <div className="flex items-center gap-4">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6 }}
+              >
+                <Link to="/" className="flex items-center group">
+                  {/* Desktop Logo */}
+                  <div className="hidden lg:block">
                     <img
-                      src={headerSettings.logo}
+                      src={headerSettings.logo || "/api/placeholder/200/60"}
                       alt="Best Florist in Hyderabad - Flower Delivery in Hyderabad | Spring Blossoms Florist"
-                      className="h-8 w-auto object-contain transition-all duration-300 ease-in-out group-hover:scale-105 drop-shadow-sm"
+                      className="h-12 w-auto xl:h-14 transition-all duration-300 ease-in-out group-hover:scale-105 drop-shadow-sm"
                     />
-                  ) : (
-                    <div className="text-xl sm:text-2xl font-black bg-gradient-to-r from-pink-500 via-purple-600 to-blue-600 bg-clip-text text-transparent tracking-wider transition-all duration-300 group-hover:from-blue-600 group-hover:via-pink-500 group-hover:to-purple-600">
-                      SBF
-                    </div>
-                  )}
-                </div>
-              </Link>
-            </motion.div>
+                  </div>
+                  
+                  {/* Tablet Logo */}
+                  <div className="hidden md:block lg:hidden">
+                    <img
+                      src={headerSettings.logo || "/api/placeholder/160/50"}
+                      alt="Best Florist in Hyderabad - Flower Delivery in Hyderabad | Spring Blossoms Florist"
+                      className="h-10 w-auto transition-all duration-300 ease-in-out group-hover:scale-105 drop-shadow-sm"
+                    />
+                  </div>
+                  
+                  {/* Mobile Logo */}
+                  <div className="md:hidden flex items-center">
+                    {headerSettings?.logo ? (
+                      <img
+                        src={headerSettings.logo}
+                        alt="Best Florist in Hyderabad - Flower Delivery in Hyderabad | Spring Blossoms Florist"
+                        className="h-8 w-auto object-contain transition-all duration-300 ease-in-out group-hover:scale-105 drop-shadow-sm"
+                      />
+                    ) : (
+                      <div className="text-xl sm:text-2xl font-black bg-gradient-to-r from-pink-500 via-purple-600 to-blue-600 bg-clip-text text-transparent tracking-wider transition-all duration-300 group-hover:from-blue-600 group-hover:via-pink-500 group-hover:to-purple-600">
+                        SBF
+                      </div>
+                    )}
+                  </div>
+                </Link>
+              </motion.div>
+              
+              <div className="hidden sm:block">
+                <DeliveryLocationSelector variant="desktop" />
+              </div>
+            </div>
             
             {/* Desktop Navigation */}
             <motion.nav 
@@ -727,6 +734,11 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                 </Button>
               </div>
             </motion.div>
+          </div>
+          
+          {/* Mobile Delivery Location Bar */}
+          <div className="md:hidden px-3 pb-3 border-t border-gray-50 pt-2 bg-white">
+            <DeliveryLocationSelector variant="mobile" />
           </div>
         </div>
       </header>

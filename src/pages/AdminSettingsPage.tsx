@@ -66,6 +66,137 @@ const TABS = [
 
 const TONES = ["Elegant & Soft", "Romantic & Warm", "Festive & Vibrant", "Modern & Sleek"];
 
+const defaultTrustItems = [
+  {
+    title: "Same-Day Hand Delivery",
+    description: "Freshness delivered directly to Hyderabad homes by our personal couriers.",
+    icon: "Truck",
+    bg: "from-sky-50 to-blue-50/30",
+    iconColor: "text-sky-500 bg-sky-100/50"
+  },
+  {
+    title: "7-Day Freshness Guarantee",
+    description: "We source directly from premium growers to ensure lasting floral vibrancy.",
+    icon: "Sparkles",
+    bg: "from-pink-50 to-rose-50/30",
+    iconColor: "text-pink-500 bg-pink-100/50"
+  },
+  {
+    title: "100% Safe Payments",
+    description: "We use enterprise bank-grade security to protect your transactions and details.",
+    icon: "ShieldCheck",
+    bg: "from-emerald-50 to-teal-50/30",
+    iconColor: "text-emerald-500 bg-emerald-100/50"
+  },
+  {
+    title: "Artisan Floral Designs",
+    description: "Each arrangement is uniquely crafted with artistic passion and care.",
+    icon: "Heart",
+    bg: "from-purple-50 to-indigo-50/30",
+    iconColor: "text-purple-500 bg-purple-100/50"
+  }
+];
+
+const defaultBentoItems = [
+  {
+    id: "birthday",
+    title: "The Birthday Collection",
+    subtitle: "Make their day unforgettable with vibrant colors and sweet combos.",
+    image: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&q=80&w=800",
+    link: "/shop?category=birthday",
+    gridClass: "md:col-span-2 md:row-span-1",
+    badge: "🎉 Festive",
+    icon: "Sparkles"
+  },
+  {
+    id: "anniversary",
+    title: "Romantic Anniversary Gifts",
+    subtitle: "Express everlasting love with classic roses and luxury hampers.",
+    image: "https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&q=80&w=800",
+    link: "/shop?category=anniversary",
+    gridClass: "md:col-span-1 md:row-span-2",
+    badge: "💖 Best Seller",
+    icon: "Heart"
+  },
+  {
+    id: "midnight",
+    title: "Midnight Delivery Specials",
+    subtitle: "Surprise them right at 12:00 AM with fresh bouquets.",
+    image: "https://images.unsplash.com/photo-1526047932273-341f2a7631f9?auto=format&fit=crop&q=80&w=800",
+    link: "/shop?category=roses",
+    gridClass: "md:col-span-1 md:row-span-1",
+    badge: "🌙 Midnight",
+    icon: "Clock"
+  },
+  {
+    id: "luxury",
+    title: "Luxury Floral Masterpieces",
+    subtitle: "Elite arrangements curated by master designers using exotic blossoms.",
+    image: "https://images.unsplash.com/photo-1561181286-d3fee7d55364?auto=format&fit=crop&q=80&w=800",
+    link: "/shop?category=premium-collections",
+    gridClass: "md:col-span-2 md:row-span-1",
+    badge: "✨ Luxury",
+    icon: "Star"
+  },
+  {
+    id: "personalized",
+    title: "Personalized Custom Gifts",
+    subtitle: "Custom photo cards, printed cushions, and floral gift sets.",
+    image: "https://images.unsplash.com/photo-1549465220-1a8b9238cd48?auto=format&fit=crop&q=80&w=800",
+    link: "/shop?category=hampers",
+    gridClass: "md:col-span-1 md:row-span-1",
+    badge: "🎁 Custom",
+    icon: "Gift"
+  }
+];
+
+const defaultSocialItems = [
+  {
+    id: 1,
+    type: "post",
+    image: "https://images.unsplash.com/photo-1596436889106-be35e843f974?auto=format&fit=crop&q=80&w=600",
+    likes: "412",
+    comments: "28"
+  },
+  {
+    id: 2,
+    type: "reel",
+    image: "https://images.unsplash.com/photo-1520763185298-1b434c919102?auto=format&fit=crop&q=80&w=600",
+    likes: "1.2k",
+    comments: "64",
+    views: "8.4k"
+  },
+  {
+    id: 3,
+    type: "post",
+    image: "https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&q=80&w=600",
+    likes: "350",
+    comments: "12"
+  },
+  {
+    id: 4,
+    type: "reel",
+    image: "https://images.unsplash.com/photo-1508784411316-02b8cd4d3a3a?auto=format&fit=crop&q=80&w=600",
+    likes: "890",
+    comments: "36",
+    views: "5.2k"
+  },
+  {
+    id: 5,
+    type: "post",
+    image: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=600",
+    likes: "512",
+    comments: "40"
+  },
+  {
+    id: 6,
+    type: "post",
+    image: "https://images.unsplash.com/photo-1582794543139-8ac9cb0f7b11?auto=format&fit=crop&q=80&w=600",
+    likes: "298",
+    comments: "18"
+  }
+];
+
 const AdminSettingsPage = () => {
   const { toast } = useToast();
   const { refetchSettings } = useSettings();
@@ -157,11 +288,61 @@ const AdminSettingsPage = () => {
         setLoading(true);
         const response = await api.get("/settings/all");
         const data = response.data;
-        
+
+        // Populate whychooseus and social sections if missing in existing database settings
+        const loadedSections = data.homeSections || [];
+        if (!loadedSections.some((s: any) => s.type === 'whychooseus')) {
+          loadedSections.push({
+            id: 'whychooseus',
+            type: 'whychooseus',
+            enabled: true,
+            order: 2,
+            title: 'Why Discerning Gift-Givers Choose Us',
+            subtitle: 'We elevate floral gifting into memorable luxury experiences, delivering beauty and joy with meticulous attention to detail.',
+            visibility: { desktop: true, tablet: true, mobile: true },
+            styling: { background: '', padding: 'py-16', spacing: 'mb-0', animation: 'fadeIn' },
+            content: { items: defaultTrustItems }
+          });
+        }
+        if (!loadedSections.some((s: any) => s.type === 'social')) {
+          loadedSections.push({
+            id: 'social',
+            type: 'social',
+            enabled: true,
+            order: 7,
+            title: 'Share Your Joy #SBFlorist',
+            subtitle: "See how our customers celebrate life's moments. Follow us on Instagram for daily bouquet inspiration.",
+            visibility: { desktop: true, tablet: true, mobile: true },
+            styling: { background: '', padding: 'py-16', spacing: 'mb-0', animation: 'fadeIn' },
+            content: {
+              instagramUrl: 'https://www.instagram.com/sbf_india',
+              items: defaultSocialItems
+            }
+          });
+        }
+
         // Clean default nested fields
         const cleaned = {
           heroSlides: data.heroSlides || [],
-          homeSections: data.homeSections || [],
+          homeSections: loadedSections.map((sec: any) => {
+            if (sec.type === 'offers' && (!sec.content || !sec.content.items || sec.content.items.length === 0)) {
+              return { ...sec, content: { ...sec.content, items: defaultBentoItems } };
+            }
+            if (sec.type === 'whychooseus' && (!sec.content || !sec.content.items || sec.content.items.length === 0)) {
+              return { ...sec, content: { ...sec.content, items: defaultTrustItems } };
+            }
+            if (sec.type === 'social' && (!sec.content || !sec.content.items || sec.content.items.length === 0)) {
+              return {
+                ...sec,
+                content: {
+                  ...sec.content,
+                  instagramUrl: sec.content?.instagramUrl || 'https://www.instagram.com/sbf_india',
+                  items: defaultSocialItems
+                }
+              };
+            }
+            return sec;
+          }).sort((a: any, b: any) => a.order - b.order),
           categories: data.categories || [],
           shopCategories: data.shopCategories || [],
           headerSettings: data.headerSettings || {},
@@ -1049,6 +1230,310 @@ const AdminSettingsPage = () => {
                                       />
                                     </div>
                                   </div>
+
+                                  {/* Section Specific Editors */}
+                                  {sec.type === 'whychooseus' && (
+                                    <div className="pt-4 border-t border-slate-800/80 space-y-4">
+                                      <h4 className="text-xs font-bold text-cyan-400 uppercase tracking-wide">
+                                        Edit SBF Promise Cards
+                                      </h4>
+                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {(sec.content?.items || defaultTrustItems).map((item: any, itemIdx: number) => (
+                                          <div key={itemIdx} className="bg-slate-900/60 p-3 rounded-lg border border-slate-800 space-y-2">
+                                            <div className="flex justify-between items-center">
+                                              <span className="text-[10px] font-bold text-slate-400">Card #{itemIdx + 1}</span>
+                                              {/* Icon picker dropdown */}
+                                              <div className="flex items-center gap-1.5">
+                                                <Label className="text-[10px] text-slate-400">Icon:</Label>
+                                                <select
+                                                  value={item.icon || 'Heart'}
+                                                  onChange={(e) => {
+                                                    const itemsCopy = [...(sec.content?.items || defaultTrustItems)];
+                                                    itemsCopy[itemIdx] = { ...itemsCopy[itemIdx], icon: e.target.value };
+                                                    const copy = localSettings.homeSections.map((s: any) =>
+                                                      s.id === sec.id ? { ...s, content: { ...s.content, items: itemsCopy } } : s
+                                                    );
+                                                    updateSettingsState({ ...localSettings, homeSections: copy });
+                                                  }}
+                                                  className="bg-slate-800 border border-slate-700 text-xs text-slate-200 rounded px-1 py-0.5"
+                                                >
+                                                  {['Truck', 'Sparkles', 'ShieldCheck', 'Heart', 'Star', 'Gift', 'PhoneCall', 'HelpCircle'].map(iconName => (
+                                                    <option key={iconName} value={iconName}>{iconName}</option>
+                                                  ))}
+                                                </select>
+                                              </div>
+                                            </div>
+                                            <Input
+                                              placeholder="Card Title"
+                                              value={item.title || ''}
+                                              onChange={(e) => {
+                                                const itemsCopy = [...(sec.content?.items || defaultTrustItems)];
+                                                itemsCopy[itemIdx] = { ...itemsCopy[itemIdx], title: e.target.value };
+                                                const copy = localSettings.homeSections.map((s: any) =>
+                                                  s.id === sec.id ? { ...s, content: { ...s.content, items: itemsCopy } } : s
+                                                );
+                                                updateSettingsState({ ...localSettings, homeSections: copy });
+                                              }}
+                                              className="bg-slate-800 border-slate-700 text-xs h-7 text-slate-200"
+                                            />
+                                            <Textarea
+                                              placeholder="Card Description"
+                                              value={item.description || ''}
+                                              onChange={(e) => {
+                                                const itemsCopy = [...(sec.content?.items || defaultTrustItems)];
+                                                itemsCopy[itemIdx] = { ...itemsCopy[itemIdx], description: e.target.value };
+                                                const copy = localSettings.homeSections.map((s: any) =>
+                                                  s.id === sec.id ? { ...s, content: { ...s.content, items: itemsCopy } } : s
+                                                );
+                                                updateSettingsState({ ...localSettings, homeSections: copy });
+                                              }}
+                                              rows={2}
+                                              className="bg-slate-800 border-slate-700 text-xs py-1 text-slate-200 resize-none"
+                                            />
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {sec.type === 'offers' && (
+                                    <div className="pt-4 border-t border-slate-800/80 space-y-4">
+                                      <h4 className="text-xs font-bold text-cyan-400 uppercase tracking-wide">
+                                        Edit Curated Occasion Banners (Bento Grid)
+                                      </h4>
+                                      <div className="space-y-4">
+                                        {(sec.content?.items || defaultBentoItems).map((item: any, itemIdx: number) => (
+                                          <div key={item.id || itemIdx} className="bg-slate-900/60 p-3 rounded-lg border border-slate-800 space-y-3">
+                                            <div className="flex justify-between items-center">
+                                              <span className="text-[10px] font-bold text-slate-400 capitalize">Banner: {item.id}</span>
+                                              <div className="flex items-center gap-2">
+                                                <Label className="text-[10px] text-slate-400">Badge:</Label>
+                                                <Input
+                                                  placeholder="e.g. 🎉 Festive"
+                                                  value={item.badge || ''}
+                                                  onChange={(e) => {
+                                                    const itemsCopy = [...(sec.content?.items || defaultBentoItems)];
+                                                    itemsCopy[itemIdx] = { ...itemsCopy[itemIdx], badge: e.target.value };
+                                                    const copy = localSettings.homeSections.map((s: any) =>
+                                                      s.id === sec.id ? { ...s, content: { ...s.content, items: itemsCopy } } : s
+                                                    );
+                                                    updateSettingsState({ ...localSettings, homeSections: copy });
+                                                  }}
+                                                  className="bg-slate-800 border-slate-700 text-[10px] h-6 w-28 text-slate-200"
+                                                />
+                                                <select
+                                                  value={item.icon || 'Gift'}
+                                                  onChange={(e) => {
+                                                    const itemsCopy = [...(sec.content?.items || defaultBentoItems)];
+                                                    itemsCopy[itemIdx] = { ...itemsCopy[itemIdx], icon: e.target.value };
+                                                    const copy = localSettings.homeSections.map((s: any) =>
+                                                      s.id === sec.id ? { ...s, content: { ...s.content, items: itemsCopy } } : s
+                                                    );
+                                                    updateSettingsState({ ...localSettings, homeSections: copy });
+                                                  }}
+                                                  className="bg-slate-800 border border-slate-700 text-[10px] text-slate-200 rounded px-1 py-0.5"
+                                                >
+                                                  {['Sparkles', 'Heart', 'Clock', 'Star', 'Gift', 'PhoneCall', 'HelpCircle', 'ShieldCheck', 'Truck'].map(iconName => (
+                                                    <option key={iconName} value={iconName}>{iconName}</option>
+                                                  ))}
+                                                </select>
+                                              </div>
+                                            </div>
+                                            
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                              {/* Left Column: Image Uploader */}
+                                              <div className="space-y-1.5">
+                                                <Label className="text-[10px] text-slate-400">Banner Image</Label>
+                                                <ImageUpload
+                                                  currentImage={item.image}
+                                                  onImageUpload={async (file) => {
+                                                    await handleImageUpload(file, "category", `bento-${sec.id}-${itemIdx}`, (url) => {
+                                                      const itemsCopy = [...(sec.content?.items || defaultBentoItems)];
+                                                      itemsCopy[itemIdx] = { ...itemsCopy[itemIdx], image: url };
+                                                      const copy = localSettings.homeSections.map((s: any) => 
+                                                        s.id === sec.id ? { ...s, content: { ...s.content, items: itemsCopy } } : s
+                                                      );
+                                                      updateSettingsState({ ...localSettings, homeSections: copy });
+                                                    });
+                                                  }}
+                                                  isUploading={uploadingImage === `bento-${sec.id}-${itemIdx}`}
+                                                  aspectRatio="landscape"
+                                                  placeholder="Upload Banner Image"
+                                                />
+                                              </div>
+                                              
+                                              {/* Right Column: Title, Subtitle, CTA Link */}
+                                              <div className="space-y-2">
+                                                <div>
+                                                  <Label className="text-[10px] text-slate-400">Banner Title</Label>
+                                                  <Input
+                                                    value={item.title || ''}
+                                                    onChange={(e) => {
+                                                      const itemsCopy = [...(sec.content?.items || defaultBentoItems)];
+                                                      itemsCopy[itemIdx] = { ...itemsCopy[itemIdx], title: e.target.value };
+                                                      const copy = localSettings.homeSections.map((s: any) =>
+                                                        s.id === sec.id ? { ...s, content: { ...s.content, items: itemsCopy } } : s
+                                                      );
+                                                      updateSettingsState({ ...localSettings, homeSections: copy });
+                                                    }}
+                                                    className="bg-slate-800 border-slate-700 text-xs h-7 text-slate-200 mt-0.5"
+                                                  />
+                                                </div>
+                                                <div>
+                                                  <Label className="text-[10px] text-slate-400">Subtitle</Label>
+                                                  <Input
+                                                    value={item.subtitle || ''}
+                                                    onChange={(e) => {
+                                                      const itemsCopy = [...(sec.content?.items || defaultBentoItems)];
+                                                      itemsCopy[itemIdx] = { ...itemsCopy[itemIdx], subtitle: e.target.value };
+                                                      const copy = localSettings.homeSections.map((s: any) =>
+                                                        s.id === sec.id ? { ...s, content: { ...s.content, items: itemsCopy } } : s
+                                                      );
+                                                      updateSettingsState({ ...localSettings, homeSections: copy });
+                                                    }}
+                                                    className="bg-slate-800 border-slate-700 text-xs h-7 text-slate-200 mt-0.5"
+                                                  />
+                                                </div>
+                                                <div>
+                                                  <Label className="text-[10px] text-slate-400">CTA Link</Label>
+                                                  <Input
+                                                    value={item.link || ''}
+                                                    onChange={(e) => {
+                                                      const itemsCopy = [...(sec.content?.items || defaultBentoItems)];
+                                                      itemsCopy[itemIdx] = { ...itemsCopy[itemIdx], link: e.target.value };
+                                                      const copy = localSettings.homeSections.map((s: any) =>
+                                                        s.id === sec.id ? { ...s, content: { ...s.content, items: itemsCopy } } : s
+                                                      );
+                                                      updateSettingsState({ ...localSettings, homeSections: copy });
+                                                    }}
+                                                    className="bg-slate-800 border-slate-700 text-xs h-7 text-slate-200 mt-0.5"
+                                                  />
+                                                </div>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {sec.type === 'social' && (
+                                    <div className="pt-4 border-t border-slate-800/80 space-y-4">
+                                      <h4 className="text-xs font-bold text-cyan-400 uppercase tracking-wide">
+                                        Edit Instagram UGC Feed Grid Settings
+                                      </h4>
+                                      <div className="space-y-3">
+                                        <div>
+                                          <Label className="text-xs text-slate-300">Instagram Profile URL</Label>
+                                          <Input
+                                            value={sec.content?.instagramUrl || 'https://www.instagram.com/sbf_india'}
+                                            onChange={(e) => {
+                                              const copy = localSettings.homeSections.map((s: any) =>
+                                                s.id === sec.id ? { ...s, content: { ...s.content, instagramUrl: e.target.value } } : s
+                                              );
+                                              updateSettingsState({ ...localSettings, homeSections: copy });
+                                            }}
+                                            placeholder="https://www.instagram.com/sbf_india"
+                                            className="bg-slate-900 border-slate-700 text-slate-200 mt-1"
+                                          />
+                                        </div>
+                                        
+                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                          {(sec.content?.items || defaultSocialItems).map((item: any, itemIdx: number) => (
+                                            <div key={item.id || itemIdx} className="bg-slate-900/60 p-3 rounded-lg border border-slate-800 space-y-2">
+                                              <div className="flex justify-between items-center">
+                                                <span className="text-[10px] font-bold text-slate-400">Post #{itemIdx + 1}</span>
+                                                <select
+                                                  value={item.type || 'post'}
+                                                  onChange={(e) => {
+                                                    const itemsCopy = [...(sec.content?.items || defaultSocialItems)];
+                                                    itemsCopy[itemIdx] = { ...itemsCopy[itemIdx], type: e.target.value };
+                                                    const copy = localSettings.homeSections.map((s: any) =>
+                                                      s.id === sec.id ? { ...s, content: { ...s.content, items: itemsCopy } } : s
+                                                    );
+                                                    updateSettingsState({ ...localSettings, homeSections: copy });
+                                                  }}
+                                                  className="bg-slate-800 border border-slate-700 text-[9px] text-slate-200 rounded px-1"
+                                                >
+                                                  <option value="post">Post</option>
+                                                  <option value="reel">Reel</option>
+                                                </select>
+                                              </div>
+                                              
+                                              <ImageUpload
+                                                currentImage={item.image}
+                                                onImageUpload={async (file) => {
+                                                  await handleImageUpload(file, "category", `social-${sec.id}-${itemIdx}`, (url) => {
+                                                    const itemsCopy = [...(sec.content?.items || defaultSocialItems)];
+                                                    itemsCopy[itemIdx] = { ...itemsCopy[itemIdx], image: url };
+                                                    const copy = localSettings.homeSections.map((s: any) => 
+                                                      s.id === sec.id ? { ...s, content: { ...s.content, items: itemsCopy } } : s
+                                                    );
+                                                    updateSettingsState({ ...localSettings, homeSections: copy });
+                                                  });
+                                                }}
+                                                isUploading={uploadingImage === `social-${sec.id}-${itemIdx}`}
+                                                aspectRatio="square"
+                                                placeholder="Upload UGC Image"
+                                              />
+                                              
+                                              <div className="grid grid-cols-2 gap-2">
+                                                <div>
+                                                  <Label className="text-[9px] text-slate-400">Likes</Label>
+                                                  <Input
+                                                    value={item.likes || ''}
+                                                    onChange={(e) => {
+                                                      const itemsCopy = [...(sec.content?.items || defaultSocialItems)];
+                                                      itemsCopy[itemIdx] = { ...itemsCopy[itemIdx], likes: e.target.value };
+                                                      const copy = localSettings.homeSections.map((s: any) =>
+                                                        s.id === sec.id ? { ...s, content: { ...s.content, items: itemsCopy } } : s
+                                                      );
+                                                      updateSettingsState({ ...localSettings, homeSections: copy });
+                                                    }}
+                                                    className="bg-slate-800 border-slate-700 text-[10px] h-6 text-slate-200"
+                                                  />
+                                                </div>
+                                                <div>
+                                                  <Label className="text-[9px] text-slate-400">Comments</Label>
+                                                  <Input
+                                                    value={item.comments || ''}
+                                                    onChange={(e) => {
+                                                      const itemsCopy = [...(sec.content?.items || defaultSocialItems)];
+                                                      itemsCopy[itemIdx] = { ...itemsCopy[itemIdx], comments: e.target.value };
+                                                      const copy = localSettings.homeSections.map((s: any) =>
+                                                        s.id === sec.id ? { ...s, content: { ...s.content, items: itemsCopy } } : s
+                                                      );
+                                                      updateSettingsState({ ...localSettings, homeSections: copy });
+                                                    }}
+                                                    className="bg-slate-800 border-slate-700 text-[10px] h-6 text-slate-200"
+                                                  />
+                                                </div>
+                                              </div>
+                                              
+                                              {item.type === 'reel' && (
+                                                <div>
+                                                  <Label className="text-[9px] text-slate-400">Views (Reel Only)</Label>
+                                                  <Input
+                                                    value={item.views || ''}
+                                                    onChange={(e) => {
+                                                      const itemsCopy = [...(sec.content?.items || defaultSocialItems)];
+                                                      itemsCopy[itemIdx] = { ...itemsCopy[itemIdx], views: e.target.value };
+                                                      const copy = localSettings.homeSections.map((s: any) =>
+                                                        s.id === sec.id ? { ...s, content: { ...s.content, items: itemsCopy } } : s
+                                                      );
+                                                      updateSettingsState({ ...localSettings, homeSections: copy });
+                                                    }}
+                                                    placeholder="e.g. 8.4k"
+                                                    className="bg-slate-800 border-slate-700 text-[10px] h-6 text-slate-200"
+                                                  />
+                                                </div>
+                                              )}
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
                                 </CardContent>
                               </Card>
                             </SortableItem>

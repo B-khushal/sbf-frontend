@@ -5,7 +5,7 @@ import { Input } from './input';
 import { Alert, AlertDescription } from './alert';
 import { cn } from '@/lib/utils';
 
-type ServiceablePinCode = {
+export type ServiceablePinCode = {
   code: string;
   area: string;
   city: string;
@@ -16,7 +16,7 @@ const DEFAULT_CITY = 'Hyderabad';
 const DEFAULT_STATE = 'Telangana';
 
 // Complete list of serviceable PIN codes based on provided data.
-const SERVICEABLE_PINCODES: ServiceablePinCode[] = [
+export const SERVICEABLE_PINCODES: ServiceablePinCode[] = [
   { code: '500001', area: 'Gandhi Bhavan / GPO / Moazzampura, etc.', city: DEFAULT_CITY, state: DEFAULT_STATE },
   { code: '500002', area: 'Moghalpura', city: DEFAULT_CITY, state: DEFAULT_STATE },
   { code: '500003', area: 'Begumpet Policelines / Secunderabad HO', city: DEFAULT_CITY, state: DEFAULT_STATE },
