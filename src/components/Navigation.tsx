@@ -735,11 +735,6 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
               </div>
             </motion.div>
           </div>
-          
-          {/* Mobile Delivery Location Bar */}
-          <div className="md:hidden px-3 pb-3 border-t border-gray-50 pt-2 bg-white">
-            <DeliveryLocationSelector variant="mobile" />
-          </div>
         </div>
       </header>
 
@@ -786,6 +781,13 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                       <Button asChild variant="outline"><Link to="/signup" onClick={() => setMobileMenuOpen(false)}>Sign Up</Link></Button>
                     </div>
                   )}
+
+                  <div className="space-y-1.5">
+                    <p className="px-3 text-xs font-semibold text-gray-400 uppercase">Delivery Location</p>
+                    <div className="px-1">
+                      <DeliveryLocationSelector variant="mobile" />
+                    </div>
+                  </div>
 
                   <nav className="space-y-1">
                     <p className="px-3 text-xs font-semibold text-gray-400 uppercase">Menu</p>

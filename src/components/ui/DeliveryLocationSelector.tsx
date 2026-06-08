@@ -32,18 +32,35 @@ export const DeliveryLocationSelector: React.FC<DeliveryLocationSelectorProps> =
   const [selectedLocation, setSelectedLocation] = useState<ServiceablePinCode | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Load initial location from localStorage
+  // Load initial location from localStorage and sync cross-component updates
   useEffect(() => {
-    const saved = localStorage.getItem('sbf_delivery_location');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved) as ServiceablePinCode;
-        setSelectedLocation(parsed);
-        setPincode(parsed.code);
-      } catch (e) {
-        console.error('Error parsing saved delivery location:', e);
+    const loadSaved = () => {
+      const saved = localStorage.getItem('sbf_delivery_location');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved) as ServiceablePinCode;
+          setSelectedLocation(parsed);
+          setPincode(parsed.code);
+        } catch (e) {
+          console.error('Error parsing saved delivery location:', e);
+        }
       }
-    }
+    };
+
+    loadSaved();
+
+    const handleLocationUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent<ServiceablePinCode>;
+      if (customEvent.detail) {
+        setSelectedLocation(customEvent.detail);
+        setPincode(customEvent.detail.code);
+      }
+    };
+
+    window.addEventListener('sbf-location-updated', handleLocationUpdate);
+    return () => {
+      window.removeEventListener('sbf-location-updated', handleLocationUpdate);
+    };
   }, []);
 
   const handlePincodeSubmit = (e?: React.FormEvent) => {
