@@ -34,12 +34,14 @@ import { uploadToCloudinary } from '@/lib/cloudinaryUpload';
 import { ComboItem } from '@/services/productService';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { getImageUrl } from '@/config';
 
 type AddonOption = {
   name: string;
   price: number;
   type: 'flower' | 'chocolate';
   quantity?: number;
+  image?: string;
 };
 
 type CustomizationOptions = {
@@ -53,6 +55,10 @@ type CustomizationOptions = {
     chocolates: AddonOption[];
   };
   previewImage: string;
+  useSameFlowerImage?: boolean;
+  flowerGroupImage?: string;
+  useSameChocolateImage?: boolean;
+  chocolateGroupImage?: string;
 };
 
 type ComboItemCustomization = {
@@ -841,7 +847,7 @@ export function CustomizeProductModal({
                               const isSelected = !!selectedFlower;
                               const quantity = selectedFlower?.quantity || 0;
                               const tag = getAddonTag(idx);
-                              const addonImage = getAddonImage(flower.name, 'flower');
+                              const addonImage = flower.image ? getImageUrl(flower.image) : getAddonImage(flower.name, 'flower');
                               const addonDesc = getAddonDescription(flower.name, 'flower');
 
                               return (
@@ -942,7 +948,7 @@ export function CustomizeProductModal({
                               const isSelected = !!selectedChocolate;
                               const quantity = selectedChocolate?.quantity || 0;
                               const tag = getAddonTag(idx + 1);
-                              const addonImage = getAddonImage(chocolate.name, 'chocolate');
+                              const addonImage = chocolate.image ? getImageUrl(chocolate.image) : getAddonImage(chocolate.name, 'chocolate');
                               const addonDesc = getAddonDescription(chocolate.name, 'chocolate');
 
                               return (

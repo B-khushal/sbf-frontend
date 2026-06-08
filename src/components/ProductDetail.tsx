@@ -23,6 +23,7 @@ type AddonOption = {
   name: string;
   price: number;
   type: 'flower' | 'chocolate';
+  image?: string;
 };
 
 type CustomizationOptions = {
@@ -39,6 +40,10 @@ type CustomizationOptions = {
   allowVariants?: boolean;
   variants?: { name: string; price: number }[];
   variantLabel?: string;
+  useSameFlowerImage?: boolean;
+  flowerGroupImage?: string;
+  useSameChocolateImage?: boolean;
+  chocolateGroupImage?: string;
 };
 
 type CustomizationData = {

@@ -125,7 +125,11 @@ const initialFormData: ProductData = {
       flowers: [],
       chocolates: []
     },
-    previewImage: ""
+    previewImage: "",
+    useSameFlowerImage: false,
+    flowerGroupImage: "",
+    useSameChocolateImage: false,
+    chocolateGroupImage: ""
   },
   comboItems: [],
   comboName: '',
@@ -155,8 +159,14 @@ const ProductForm = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number[]>([]);
-  const [newFlowerAddon, setNewFlowerAddon] = useState({ name: "", price: 0 });
-  const [newChocolateAddon, setNewChocolateAddon] = useState({ name: "", price: 0 });
+  const [newFlowerAddon, setNewFlowerAddon] = useState({ name: "", price: 0, image: "" });
+  const [newChocolateAddon, setNewChocolateAddon] = useState({ name: "", price: 0, image: "" });
+
+  const [isUploadingPreview, setIsUploadingPreview] = useState(false);
+  const [isUploadingFlowerGroup, setIsUploadingFlowerGroup] = useState(false);
+  const [isUploadingChocolateGroup, setIsUploadingChocolateGroup] = useState(false);
+  const [isUploadingNewFlower, setIsUploadingNewFlower] = useState(false);
+  const [isUploadingNewChocolate, setIsUploadingNewChocolate] = useState(false);
   
   // Combo form state
   const [newComboItem, setNewComboItem] = useState({
@@ -226,7 +236,11 @@ const ProductForm = () => {
             flowers: [],
             chocolates: []
           },
-          previewImage: ""
+          previewImage: "",
+          useSameFlowerImage: false,
+          flowerGroupImage: "",
+          useSameChocolateImage: false,
+          chocolateGroupImage: ""
         };
       }
       
@@ -280,7 +294,11 @@ const ProductForm = () => {
             flowers: [],
             chocolates: []
           },
-          previewImage: ""
+          previewImage: "",
+          useSameFlowerImage: false,
+          flowerGroupImage: "",
+          useSameChocolateImage: false,
+          chocolateGroupImage: ""
         }
       };
 
@@ -664,6 +682,132 @@ const ProductForm = () => {
     e.target.value = '';
   };
 
+  const handleUploadImage = async (file: File) => {
+    if (!file) return null;
+    if (file.size > MAX_FILE_SIZE) {
+      toast({
+        title: "File Too Large",
+        description: "Maximum image size is 5MB",
+        variant: "destructive",
+      });
+      return null;
+    }
+    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+      toast({
+        title: "Invalid File Type",
+        description: "Only JPEG, PNG, and WebP images are allowed",
+        variant: "destructive",
+      });
+      return null;
+    }
+
+    const uploadFormData = new FormData();
+    uploadFormData.append('image', file);
+
+    try {
+      const response = await api.post('/uploads', uploadFormData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        params: {
+          type: 'product'
+        }
+      });
+      return response.data.imageUrl;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast({
+        title: "Upload Failed",
+        description: "Failed to upload image. Please try again.",
+        variant: "destructive",
+      });
+      return null;
+    }
+  };
+
+  const handlePreviewImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploadingPreview(true);
+    const url = await handleUploadImage(file);
+    if (url) {
+      setFormData(prev => ({
+        ...prev,
+        customizationOptions: {
+          ...prev.customizationOptions,
+          previewImage: url
+        }
+      }));
+      toast({ title: "Success", description: "Preview image uploaded successfully" });
+    }
+    setIsUploadingPreview(false);
+    e.target.value = '';
+  };
+
+  const handleFlowerGroupImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploadingFlowerGroup(true);
+    const url = await handleUploadImage(file);
+    if (url) {
+      setFormData(prev => ({
+        ...prev,
+        customizationOptions: {
+          ...prev.customizationOptions,
+          flowerGroupImage: url
+        }
+      }));
+      toast({ title: "Success", description: "Flower group image uploaded successfully" });
+    }
+    setIsUploadingFlowerGroup(false);
+    e.target.value = '';
+  };
+
+  const handleChocolateGroupImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploadingChocolateGroup(true);
+    const url = await handleUploadImage(file);
+    if (url) {
+      setFormData(prev => ({
+        ...prev,
+        customizationOptions: {
+          ...prev.customizationOptions,
+          chocolateGroupImage: url
+        }
+      }));
+      toast({ title: "Success", description: "Chocolate group image uploaded successfully" });
+    }
+    setIsUploadingChocolateGroup(false);
+    e.target.value = '';
+  };
+
+  const handleNewFlowerImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploadingNewFlower(true);
+    const url = await handleUploadImage(file);
+    if (url) {
+      setNewFlowerAddon(prev => ({ ...prev, image: url }));
+      toast({ title: "Success", description: "Flower image uploaded successfully" });
+    }
+    setIsUploadingNewFlower(false);
+    e.target.value = '';
+  };
+
+  const handleNewChocolateImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploadingNewChocolate(true);
+    const url = await handleUploadImage(file);
+    if (url) {
+      setNewChocolateAddon(prev => ({ ...prev, image: url }));
+      toast({ title: "Success", description: "Chocolate image uploaded successfully" });
+    }
+    setIsUploadingNewChocolate(false);
+    e.target.value = '';
+  };
+
   const addImageField = () => {
     setFormData(prev => ({
       ...prev,
@@ -866,10 +1010,24 @@ const ProductForm = () => {
           allowMessageCard: Boolean(formData.customizationOptions?.allowMessageCard),
           messageCardPrice: Number(formData.customizationOptions?.messageCardPrice) || 0,
           addons: {
-            flowers: formData.customizationOptions?.addons?.flowers || [],
-            chocolates: formData.customizationOptions?.addons?.chocolates || []
+            flowers: (formData.customizationOptions?.addons?.flowers || []).map(f => ({
+              ...f,
+              image: formData.customizationOptions?.useSameFlowerImage 
+                ? (formData.customizationOptions?.flowerGroupImage || "") 
+                : (f.image || "")
+            })),
+            chocolates: (formData.customizationOptions?.addons?.chocolates || []).map(c => ({
+              ...c,
+              image: formData.customizationOptions?.useSameChocolateImage 
+                ? (formData.customizationOptions?.chocolateGroupImage || "") 
+                : (c.image || "")
+            }))
           },
-          previewImage: formData.customizationOptions?.previewImage || ""
+          previewImage: formData.customizationOptions?.previewImage || "",
+          useSameFlowerImage: Boolean(formData.customizationOptions?.useSameFlowerImage),
+          flowerGroupImage: formData.customizationOptions?.flowerGroupImage || "",
+          useSameChocolateImage: Boolean(formData.customizationOptions?.useSameChocolateImage),
+          chocolateGroupImage: formData.customizationOptions?.chocolateGroupImage || ""
         } : undefined
       };
       
@@ -934,7 +1092,7 @@ const ProductForm = () => {
           }
         }
       }));
-      setNewFlowerAddon({ name: "", price: 0 });
+      setNewFlowerAddon({ name: "", price: 0, image: "" });
     }
   };
 
@@ -950,7 +1108,7 @@ const ProductForm = () => {
           }
         }
       }));
-      setNewChocolateAddon({ name: "", price: 0 });
+      setNewChocolateAddon({ name: "", price: 0, image: "" });
     }
   };
 
@@ -2013,55 +2171,248 @@ const ProductForm = () => {
                   
                   {/* Flower Add-ons */}
                   <div className="space-y-3 rounded-lg border border-green-200 bg-green-50 p-4">
-                    <div className="flex items-center space-x-2">
-                      <Flower2 className="h-5 w-5 text-green-600" />
-                      <Label className="text-base font-medium text-green-800">Flower Add-ons</Label>
-                    </div>
-                    <div className="flex space-x-2">
-                      <Input
-                        placeholder="Flower name (e.g., 'Red Roses')"
-                        value={newFlowerAddon.name}
-                        onChange={(e) => setNewFlowerAddon(prev => ({ ...prev, name: e.target.value }))}
-                        className="flex-1"
-                      />
-                      <div className="flex items-center space-x-1">
-                        <IndianRupee className="h-4 w-4 text-gray-400" />
-                        <Input
-                          type="number"
-                          placeholder="Price"
-                          value={newFlowerAddon.price}
-                          onChange={(e) => setNewFlowerAddon(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
-                          className="w-24"
-                        />
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <div className="flex items-center space-x-2">
+                        <Flower2 className="h-5 w-5 text-green-600" />
+                        <Label className="text-base font-medium text-green-800">Flower Add-ons</Label>
                       </div>
+                      <div className="flex items-center space-x-2 bg-white/60 px-3 py-1.5 rounded-lg border border-green-205">
+                        <Switch
+                          id="useSameFlowerImage"
+                          checked={formData.customizationOptions?.useSameFlowerImage || false}
+                          onCheckedChange={(checked) => 
+                            setFormData(prev => ({
+                              ...prev,
+                              customizationOptions: {
+                                ...prev.customizationOptions,
+                                useSameFlowerImage: checked
+                              }
+                            }))
+                          }
+                        />
+                        <Label htmlFor="useSameFlowerImage" className="text-xs font-semibold text-green-800 cursor-pointer">Use same image for all flowers</Label>
+                      </div>
+                    </div>
+
+                    {formData.customizationOptions?.useSameFlowerImage && (
+                      <div className="space-y-1.5 p-3 bg-white rounded-lg border border-green-200 shadow-sm">
+                        <Label className="text-xs font-semibold text-green-850">Group Flower Image</Label>
+                        <div className="flex items-center gap-2">
+                          <div className="relative flex-1">
+                            <Input
+                              type="text"
+                              placeholder="Group image URL or upload file..."
+                              value={formData.customizationOptions?.flowerGroupImage || ""}
+                              onChange={(e) => 
+                                setFormData(prev => ({
+                                  ...prev,
+                                  customizationOptions: {
+                                    ...prev.customizationOptions,
+                                    flowerGroupImage: e.target.value
+                                  }
+                                }))
+                              }
+                              className="text-xs h-9 pr-10 bg-slate-50"
+                            />
+                            <label className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer p-1 rounded hover:bg-gray-150 text-gray-400">
+                              {isUploadingFlowerGroup ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin text-blue-500" />
+                              ) : (
+                                <Upload className="h-3.5 w-3.5" />
+                              )}
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={handleFlowerGroupImageUpload}
+                                disabled={isUploadingFlowerGroup}
+                                className="hidden"
+                              />
+                            </label>
+                          </div>
+                          {formData.customizationOptions?.flowerGroupImage && (
+                            <div className="relative">
+                              <img
+                                src={getImageUrl(formData.customizationOptions.flowerGroupImage)}
+                                alt="Group Flower"
+                                className="h-9 w-9 object-cover rounded-md border"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setFormData(prev => ({
+                                  ...prev,
+                                  customizationOptions: {
+                                    ...prev.customizationOptions,
+                                    flowerGroupImage: ""
+                                  }
+                                }))}
+                                className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full p-0.5"
+                              >
+                                <X className="h-2 w-2" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="space-y-2.5 bg-white/40 p-3 rounded-lg border border-green-200/50">
+                      <div className="flex space-x-2">
+                        <Input
+                          placeholder="Flower name (e.g., 'Red Roses')"
+                          value={newFlowerAddon.name}
+                          onChange={(e) => setNewFlowerAddon(prev => ({ ...prev, name: e.target.value }))}
+                          className="flex-1 text-sm h-10"
+                        />
+                        <div className="flex items-center space-x-1">
+                          <IndianRupee className="h-4 w-4 text-gray-400" />
+                          <Input
+                            type="number"
+                            placeholder="Price"
+                            value={newFlowerAddon.price || ""}
+                            onChange={(e) => setNewFlowerAddon(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
+                            className="w-24 text-sm h-10"
+                          />
+                        </div>
+                      </div>
+                      
+                      {!formData.customizationOptions?.useSameFlowerImage && (
+                        <div className="flex items-center gap-2">
+                          <div className="relative flex-1">
+                            <Input
+                              placeholder="Image URL or upload file..."
+                              value={newFlowerAddon.image || ""}
+                              onChange={(e) => setNewFlowerAddon(prev => ({ ...prev, image: e.target.value }))}
+                              className="text-xs h-9 pr-10"
+                            />
+                            <label className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer p-1 rounded hover:bg-gray-100 text-gray-500">
+                              {isUploadingNewFlower ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin text-blue-500" />
+                              ) : (
+                                <Upload className="h-3.5 w-3.5" />
+                              )}
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={handleNewFlowerImageUpload}
+                                disabled={isUploadingNewFlower}
+                                className="hidden"
+                              />
+                            </label>
+                          </div>
+                          {newFlowerAddon.image && (
+                            <div className="relative">
+                              <img
+                                src={getImageUrl(newFlowerAddon.image)}
+                                alt="Flower Preview"
+                                className="h-9 w-9 object-cover rounded-md border"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setNewFlowerAddon(prev => ({ ...prev, image: "" }))}
+                                className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5"
+                              >
+                                <X className="h-2.5 w-2.5" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
                       <Button 
                         type="button" 
                         onClick={addFlowerAddon} 
                         size="sm"
-                        className="bg-green-600 hover:bg-green-700"
+                        className="bg-green-600 hover:bg-green-700 w-full"
                       >
-                        <Plus className="h-4 w-4" />
+                        <Plus className="h-4 w-4 mr-2" /> Add Flower Option
                       </Button>
                     </div>
-                    <div className="space-y-2">
+
+                    <div className="space-y-2 mt-3">
                       {formData.customizationOptions?.addons?.flowers.map((flower, index) => (
-                        <div key={index} className="flex items-center justify-between bg-white p-3 rounded-lg border border-green-200">
-                          <div className="flex items-center space-x-2">
-                            <Flower2 className="h-4 w-4 text-green-600" />
-                            <span className="font-medium">{flower.name}</span>
-                            <Badge variant="outline" className="text-green-700 border-green-300">
-                              ₹{flower.price}
-                            </Badge>
+                        <div key={index} className="flex items-center justify-between bg-white p-3 rounded-lg border border-green-200 shadow-sm flex-wrap gap-2">
+                          <div className="flex items-center space-x-3 min-w-0 flex-1">
+                            {flower.image ? (
+                              <img
+                                src={getImageUrl(flower.image)}
+                                alt={flower.name}
+                                className="h-10 w-10 object-cover rounded-md border flex-shrink-0"
+                              />
+                            ) : (
+                              <Flower2 className="h-5 w-5 text-green-600 flex-shrink-0" />
+                            )}
+                            <div className="flex flex-col min-w-0">
+                              <span className="font-semibold text-sm text-gray-800 truncate">{flower.name}</span>
+                              <span className="text-xs text-gray-500 font-medium">₹{flower.price}</span>
+                            </div>
                           </div>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeAddon('flower', index)}
-                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          <div className="flex items-center space-x-2">
+                            {!formData.customizationOptions?.useSameFlowerImage && (
+                              <div className="relative w-36">
+                                <Input
+                                  placeholder="Edit image url..."
+                                  value={flower.image || ""}
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    setFormData(prev => {
+                                      const updatedFlowers = [...(prev.customizationOptions.addons?.flowers || [])];
+                                      updatedFlowers[index] = { ...updatedFlowers[index], image: val };
+                                      return {
+                                        ...prev,
+                                        customizationOptions: {
+                                          ...prev.customizationOptions,
+                                          addons: {
+                                            ...prev.customizationOptions.addons,
+                                            flowers: updatedFlowers
+                                          }
+                                        }
+                                      };
+                                    });
+                                  }}
+                                  className="text-[10px] h-7 pr-7"
+                                />
+                                <label className="absolute right-1.5 top-1/2 -translate-y-1/2 cursor-pointer p-0.5 rounded hover:bg-gray-150 text-gray-400">
+                                  <Upload className="h-3 w-3" />
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={async (e) => {
+                                      const file = e.target.files?.[0];
+                                      if (!file) return;
+                                      const url = await handleUploadImage(file);
+                                      if (url) {
+                                        setFormData(prev => {
+                                          const updatedFlowers = [...(prev.customizationOptions.addons?.flowers || [])];
+                                          updatedFlowers[index] = { ...updatedFlowers[index], image: url };
+                                          return {
+                                            ...prev,
+                                            customizationOptions: {
+                                              ...prev.customizationOptions,
+                                              addons: {
+                                                ...prev.customizationOptions.addons,
+                                                flowers: updatedFlowers
+                                              }
+                                            }
+                                          };
+                                        });
+                                        toast({ title: "Success", description: "Image uploaded" });
+                                      }
+                                    }}
+                                    className="hidden"
+                                  />
+                                </label>
+                              </div>
+                            )}
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeAddon('flower', index)}
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -2069,55 +2420,248 @@ const ProductForm = () => {
 
                   {/* Chocolate Add-ons */}
                   <div className="space-y-3 rounded-lg border border-orange-200 bg-orange-50 p-4">
-                    <div className="flex items-center space-x-2">
-                      <Gift className="h-5 w-5 text-orange-600" />
-                      <Label className="text-base font-medium text-orange-800">Chocolate Add-ons</Label>
-                    </div>
-                    <div className="flex space-x-2">
-                      <Input
-                        placeholder="Chocolate name (e.g., 'Dark Chocolate Truffles')"
-                        value={newChocolateAddon.name}
-                        onChange={(e) => setNewChocolateAddon(prev => ({ ...prev, name: e.target.value }))}
-                        className="flex-1"
-                      />
-                      <div className="flex items-center space-x-1">
-                        <IndianRupee className="h-4 w-4 text-gray-400" />
-                        <Input
-                          type="number"
-                          placeholder="Price"
-                          value={newChocolateAddon.price}
-                          onChange={(e) => setNewChocolateAddon(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
-                          className="w-24"
-                        />
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <div className="flex items-center space-x-2">
+                        <Gift className="h-5 w-5 text-orange-600" />
+                        <Label className="text-base font-medium text-orange-800">Chocolate Add-ons</Label>
                       </div>
+                      <div className="flex items-center space-x-2 bg-white/60 px-3 py-1.5 rounded-lg border border-orange-205">
+                        <Switch
+                          id="useSameChocolateImage"
+                          checked={formData.customizationOptions?.useSameChocolateImage || false}
+                          onCheckedChange={(checked) => 
+                            setFormData(prev => ({
+                              ...prev,
+                              customizationOptions: {
+                                ...prev.customizationOptions,
+                                useSameChocolateImage: checked
+                              }
+                            }))
+                          }
+                        />
+                        <Label htmlFor="useSameChocolateImage" className="text-xs font-semibold text-orange-800 cursor-pointer">Use same image for all chocolates</Label>
+                      </div>
+                    </div>
+
+                    {formData.customizationOptions?.useSameChocolateImage && (
+                      <div className="space-y-1.5 p-3 bg-white rounded-lg border border-orange-200 shadow-sm">
+                        <Label className="text-xs font-semibold text-orange-850">Group Chocolate Image</Label>
+                        <div className="flex items-center gap-2">
+                          <div className="relative flex-1">
+                            <Input
+                              type="text"
+                              placeholder="Group image URL or upload file..."
+                              value={formData.customizationOptions?.chocolateGroupImage || ""}
+                              onChange={(e) => 
+                                setFormData(prev => ({
+                                  ...prev,
+                                  customizationOptions: {
+                                    ...prev.customizationOptions,
+                                    chocolateGroupImage: e.target.value
+                                  }
+                                }))
+                              }
+                              className="text-xs h-9 pr-10 bg-slate-50"
+                            />
+                            <label className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer p-1 rounded hover:bg-gray-150 text-gray-400">
+                              {isUploadingChocolateGroup ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin text-blue-500" />
+                              ) : (
+                                <Upload className="h-3.5 w-3.5" />
+                              )}
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={handleChocolateGroupImageUpload}
+                                disabled={isUploadingChocolateGroup}
+                                className="hidden"
+                              />
+                            </label>
+                          </div>
+                          {formData.customizationOptions?.chocolateGroupImage && (
+                            <div className="relative">
+                              <img
+                                src={getImageUrl(formData.customizationOptions.chocolateGroupImage)}
+                                alt="Group Chocolate"
+                                className="h-9 w-9 object-cover rounded-md border"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setFormData(prev => ({
+                                  ...prev,
+                                  customizationOptions: {
+                                    ...prev.customizationOptions,
+                                    chocolateGroupImage: ""
+                                  }
+                                }))}
+                                className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full p-0.5"
+                              >
+                                <X className="h-2 w-2" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="space-y-2.5 bg-white/40 p-3 rounded-lg border border-orange-200/50">
+                      <div className="flex space-x-2">
+                        <Input
+                          placeholder="Chocolate name (e.g., 'Dark Chocolate Truffles')"
+                          value={newChocolateAddon.name}
+                          onChange={(e) => setNewChocolateAddon(prev => ({ ...prev, name: e.target.value }))}
+                          className="flex-1 text-sm h-10"
+                        />
+                        <div className="flex items-center space-x-1">
+                          <IndianRupee className="h-4 w-4 text-gray-400" />
+                          <Input
+                            type="number"
+                            placeholder="Price"
+                            value={newChocolateAddon.price || ""}
+                            onChange={(e) => setNewChocolateAddon(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
+                            className="w-24 text-sm h-10"
+                          />
+                        </div>
+                      </div>
+                      
+                      {!formData.customizationOptions?.useSameChocolateImage && (
+                        <div className="flex items-center gap-2">
+                          <div className="relative flex-1">
+                            <Input
+                              placeholder="Image URL or upload file..."
+                              value={newChocolateAddon.image || ""}
+                              onChange={(e) => setNewChocolateAddon(prev => ({ ...prev, image: e.target.value }))}
+                              className="text-xs h-9 pr-10"
+                            />
+                            <label className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer p-1 rounded hover:bg-gray-100 text-gray-500">
+                              {isUploadingNewChocolate ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin text-blue-500" />
+                              ) : (
+                                <Upload className="h-3.5 w-3.5" />
+                              )}
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={handleNewChocolateImageUpload}
+                                disabled={isUploadingNewChocolate}
+                                className="hidden"
+                              />
+                            </label>
+                          </div>
+                          {newChocolateAddon.image && (
+                            <div className="relative">
+                              <img
+                                src={getImageUrl(newChocolateAddon.image)}
+                                alt="Chocolate Preview"
+                                className="h-9 w-9 object-cover rounded-md border"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setNewChocolateAddon(prev => ({ ...prev, image: "" }))}
+                                className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5"
+                              >
+                                <X className="h-2.5 w-2.5" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
                       <Button 
                         type="button" 
                         onClick={addChocolateAddon} 
                         size="sm"
-                        className="bg-orange-600 hover:bg-orange-700"
+                        className="bg-orange-600 hover:bg-orange-700 w-full"
                       >
-                        <Plus className="h-4 w-4" />
+                        <Plus className="h-4 w-4 mr-2" /> Add Chocolate Option
                       </Button>
                     </div>
-                    <div className="space-y-2">
+
+                    <div className="space-y-2 mt-3">
                       {formData.customizationOptions?.addons?.chocolates.map((chocolate, index) => (
-                        <div key={index} className="flex items-center justify-between bg-white p-3 rounded-lg border border-orange-200">
-                          <div className="flex items-center space-x-2">
-                            <Gift className="h-4 w-4 text-orange-600" />
-                            <span className="font-medium">{chocolate.name}</span>
-                            <Badge variant="outline" className="text-orange-700 border-orange-300">
-                              ₹{chocolate.price}
-                            </Badge>
+                        <div key={index} className="flex items-center justify-between bg-white p-3 rounded-lg border border-orange-200 shadow-sm flex-wrap gap-2">
+                          <div className="flex items-center space-x-3 min-w-0 flex-1">
+                            {chocolate.image ? (
+                              <img
+                                src={getImageUrl(chocolate.image)}
+                                alt={chocolate.name}
+                                className="h-10 w-10 object-cover rounded-md border flex-shrink-0"
+                              />
+                            ) : (
+                              <Gift className="h-5 w-5 text-orange-600 flex-shrink-0" />
+                            )}
+                            <div className="flex flex-col min-w-0">
+                              <span className="font-semibold text-sm text-gray-800 truncate">{chocolate.name}</span>
+                              <span className="text-xs text-gray-500 font-medium">₹{chocolate.price}</span>
+                            </div>
                           </div>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeAddon('chocolate', index)}
-                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          <div className="flex items-center space-x-2">
+                            {!formData.customizationOptions?.useSameChocolateImage && (
+                              <div className="relative w-36">
+                                <Input
+                                  placeholder="Edit image url..."
+                                  value={chocolate.image || ""}
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    setFormData(prev => {
+                                      const updatedChocolates = [...(prev.customizationOptions.addons?.chocolates || [])];
+                                      updatedChocolates[index] = { ...updatedChocolates[index], image: val };
+                                      return {
+                                        ...prev,
+                                        customizationOptions: {
+                                          ...prev.customizationOptions,
+                                          addons: {
+                                            ...prev.customizationOptions.addons,
+                                            chocolates: updatedChocolates
+                                          }
+                                        }
+                                      };
+                                    });
+                                  }}
+                                  className="text-[10px] h-7 pr-7"
+                                />
+                                <label className="absolute right-1.5 top-1/2 -translate-y-1/2 cursor-pointer p-0.5 rounded hover:bg-gray-150 text-gray-400">
+                                  <Upload className="h-3 w-3" />
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={async (e) => {
+                                      const file = e.target.files?.[0];
+                                      if (!file) return;
+                                      const url = await handleUploadImage(file);
+                                      if (url) {
+                                        setFormData(prev => {
+                                          const updatedChocolates = [...(prev.customizationOptions.addons?.chocolates || [])];
+                                          updatedChocolates[index] = { ...updatedChocolates[index], image: url };
+                                          return {
+                                            ...prev,
+                                            customizationOptions: {
+                                              ...prev.customizationOptions,
+                                              addons: {
+                                                ...prev.customizationOptions.addons,
+                                                chocolates: updatedChocolates
+                                              }
+                                            }
+                                          };
+                                        });
+                                        toast({ title: "Success", description: "Image uploaded" });
+                                      }
+                                    }}
+                                    className="hidden"
+                                  />
+                                </label>
+                              </div>
+                            )}
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeAddon('chocolate', index)}
+                              className="text-red-500 hover:text-red-750 hover:bg-red-50 h-8 w-8 p-0"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -2129,21 +2673,64 @@ const ProductForm = () => {
                 {/* Preview Image */}
                 <div className="space-y-3">
                   <Label className="text-base font-medium">Preview Image</Label>
-                  <p className="text-sm text-gray-500">URL for the customization preview image</p>
-                  <Input
-                    type="text"
-                    placeholder="https://example.com/preview-image.jpg"
-                    value={formData.customizationOptions?.previewImage}
-                    onChange={(e) => 
-                      setFormData(prev => ({
-                        ...prev,
-                        customizationOptions: {
-                          ...prev.customizationOptions,
-                          previewImage: e.target.value
+                  <p className="text-sm text-gray-500">Image URL or upload for the customization preview</p>
+                  
+                  <div className="flex items-center space-x-2">
+                    <div className="relative flex-1">
+                      <Input
+                        type="text"
+                        placeholder="https://example.com/preview-image.jpg"
+                        value={formData.customizationOptions?.previewImage || ""}
+                        onChange={(e) => 
+                          setFormData(prev => ({
+                            ...prev,
+                            customizationOptions: {
+                              ...prev.customizationOptions,
+                              previewImage: e.target.value
+                            }
+                          }))
                         }
-                      }))
-                    }
-                  />
+                        className="pr-10"
+                      />
+                      <label className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer p-1.5 rounded-md hover:bg-gray-100 text-gray-500 flex items-center justify-center">
+                        {isUploadingPreview ? (
+                          <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+                        ) : (
+                          <Upload className="h-4 w-4" />
+                        )}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handlePreviewImageUpload}
+                          disabled={isUploadingPreview}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                  </div>
+                  
+                  {formData.customizationOptions?.previewImage && (
+                    <div className="mt-2 relative inline-block">
+                      <img
+                        src={getImageUrl(formData.customizationOptions.previewImage)}
+                        alt="Customization Preview"
+                        className="h-20 w-20 object-cover rounded-md border"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({
+                          ...prev,
+                          customizationOptions: {
+                            ...prev.customizationOptions,
+                            previewImage: ""
+                          }
+                        }))}
+                        className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600 transition-colors shadow-sm"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

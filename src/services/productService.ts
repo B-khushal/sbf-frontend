@@ -5,6 +5,7 @@ export interface AddonOption {
   name: string;
   price: number;
   type: 'flower' | 'chocolate';
+  image?: string;
 }
 
 export interface ComboItemVariant {
@@ -54,6 +55,10 @@ export interface CustomizationOptions {
     chocolates: AddonOption[];
   };
   previewImage: string;
+  useSameFlowerImage?: boolean;
+  flowerGroupImage?: string;
+  useSameChocolateImage?: boolean;
+  chocolateGroupImage?: string;
 }
 
 export interface PriceVariant {
@@ -218,7 +223,11 @@ const prepareProductData = (productData: ProductData): BackendProductData => {
           ? productData.customizationOptions.addons.chocolates 
           : []
       },
-      previewImage: productData.customizationOptions.previewImage || ""
+      previewImage: productData.customizationOptions.previewImage || "",
+      useSameFlowerImage: Boolean(productData.customizationOptions.useSameFlowerImage),
+      flowerGroupImage: productData.customizationOptions.flowerGroupImage || "",
+      useSameChocolateImage: Boolean(productData.customizationOptions.useSameChocolateImage),
+      chocolateGroupImage: productData.customizationOptions.chocolateGroupImage || ""
     };
   }
 
@@ -316,7 +325,11 @@ const mapBackendToFrontend = (data: BackendProductData): ProductData => {
           ? data.customizationOptions.addons.chocolates 
           : []
       },
-      previewImage: data.customizationOptions.previewImage || ""
+      previewImage: data.customizationOptions.previewImage || "",
+      useSameFlowerImage: Boolean(data.customizationOptions.useSameFlowerImage),
+      flowerGroupImage: data.customizationOptions.flowerGroupImage || "",
+      useSameChocolateImage: Boolean(data.customizationOptions.useSameChocolateImage),
+      chocolateGroupImage: data.customizationOptions.chocolateGroupImage || ""
     };
   } else {
     // Set default customization options if none exist
@@ -330,7 +343,11 @@ const mapBackendToFrontend = (data: BackendProductData): ProductData => {
         flowers: [],
         chocolates: []
       },
-      previewImage: ""
+      previewImage: "",
+      useSameFlowerImage: false,
+      flowerGroupImage: "",
+      useSameChocolateImage: false,
+      chocolateGroupImage: ""
     };
   }
 
