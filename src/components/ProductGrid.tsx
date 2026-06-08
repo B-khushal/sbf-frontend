@@ -29,6 +29,9 @@ export type Product = {
   isFeatured?: boolean;
   isCustomizable?: boolean;
   hidden?: boolean;
+  rating?: number;
+  numReviews?: number;
+  sameDay?: boolean;
   customizationOptions?: {
     allowPhotoUpload: boolean;
     allowNumberInput: boolean;
@@ -515,16 +518,26 @@ const ProductCard = ({ product, onAddToCart }: {
             </h3>
 
             {/* Rating & Delivery Info */}
-            <div className="flex items-center gap-2 mb-2">
-              <div className="flex items-center text-amber-400">
-                <Star size={11} className="fill-current" />
-                <span className="text-[10px] font-bold text-gray-700 ml-0.5">4.8</span>
+            {((product.numReviews && product.numReviews > 0) || product.sameDay !== false) && (
+              <div className="flex items-center gap-2 mb-2">
+                {product.numReviews && product.numReviews > 0 ? (
+                  <div className="flex items-center text-amber-400">
+                    <Star size={11} className="fill-current" />
+                    <span className="text-[10px] font-bold text-gray-700 ml-0.5">
+                      {(product.rating || 0).toFixed(1)}
+                    </span>
+                  </div>
+                ) : null}
+                {product.numReviews && product.numReviews > 0 && product.sameDay !== false && (
+                  <span className="text-[10px] text-gray-300 font-medium">|</span>
+                )}
+                {product.sameDay !== false && (
+                  <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">
+                    ⚡ Same Day
+                  </span>
+                )}
               </div>
-              <span className="text-[10px] text-gray-300 font-medium">|</span>
-              <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">
-                ⚡ Same Day
-              </span>
-            </div>
+            )}
           </div>
 
           <div>

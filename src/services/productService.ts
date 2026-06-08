@@ -83,6 +83,9 @@ export interface ProductData {
   isNewArrival: boolean;
   isFeatured: boolean;
   hidden: boolean;
+  sameDay?: boolean;
+  rating?: number;
+  numReviews?: number;
   isCustomizable: boolean;
   hasPriceVariants: boolean;
   priceVariants: PriceVariant[];
@@ -112,6 +115,9 @@ interface BackendProductData {
   isNewArrival?: boolean; // Backward compatibility for older backend variants
   isFeatured?: boolean;
   hidden?: boolean;
+  sameDay?: boolean;
+  rating?: number;
+  numReviews?: number;
   isCustomizable?: boolean;
   hasPriceVariants?: boolean;
   priceVariants?: PriceVariant[];
@@ -178,6 +184,7 @@ const prepareProductData = (productData: ProductData): BackendProductData => {
   // Force boolean fields to be actual booleans
   cleanData.isFeatured = Boolean(productData.isFeatured);
   cleanData.hidden = Boolean(productData.hidden);
+  cleanData.sameDay = productData.sameDay !== undefined ? Boolean(productData.sameDay) : true;
   cleanData.isCustomizable = Boolean(productData.isCustomizable);
   cleanData.hasPriceVariants = Boolean(productData.hasPriceVariants);
   
@@ -289,6 +296,8 @@ const mapBackendToFrontend = (data: BackendProductData): ProductData => {
   } else {
     mappedData.careInstructions = [];
   }
+
+  mappedData.sameDay = data.sameDay !== undefined ? Boolean(data.sameDay) : true;
 
   // ✅ Handle customization fields
   if (data.isCustomizable !== undefined) {
