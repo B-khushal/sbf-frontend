@@ -1019,7 +1019,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                 </div>
                 <div>
                   <h4 className="text-xs font-bold text-slate-800 dark:text-slate-250">Same Day</h4>
-                  <p className="text-[10px] text-slate-400 dark:text-slate-500">Order by 4 PM</p>
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500">Order by 1 PM</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900/60 shadow-sm hover:-translate-y-0.5 transition-transform duration-200">
