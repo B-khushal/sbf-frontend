@@ -58,9 +58,10 @@ type ProductGridProps = {
   loading?: boolean;
   onAddToCart?: (item: any, quantity: number) => boolean;
   horizontal?: boolean;
+  shopView?: boolean;
 };
 
-const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCart, horizontal }: ProductGridProps) => {
+const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCart, horizontal, shopView = false }: ProductGridProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
 
@@ -230,7 +231,13 @@ const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCar
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-3 sm:gap-4 md:gap-5 lg:gap-6 xl:gap-8">
+        <div className={cn(
+          "grid gap-3 sm:gap-4 md:gap-5 lg:gap-6 xl:gap-6 2xl:gap-7",
+          shopView 
+            ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-3" 
+            : "grid-cols-2 md:grid-cols-3 lg:grid-cols-4",
+          className
+        )}>
           {visibleProducts.map((product) => (
             <ProductCard key={product._id} product={product} onAddToCart={onAddToCart} />
           ))}
@@ -418,43 +425,19 @@ const ProductCard = ({ product, onAddToCart }: {
     <>
       <div
         className={cn(
-          "group relative bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100 hover:border-[#f9a8d4]/30 overflow-hidden hover:shadow-[0_12px_30px_rgba(0,0,0,0.08)] transition-all duration-300 cursor-pointer flex flex-col h-full",
+          "group relative bg-white rounded-2xl border border-gray-100/80 hover:border-bloom-pink-300/40 overflow-hidden shadow-[0_4px_16px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_24px_rgba(236,72,153,0.06)] transition-all duration-300 cursor-pointer flex flex-col h-[390px] xs:h-[420px] md:h-[620px] lg:h-[680px] xl:h-[720px]",
           product.hidden ? 'opacity-75 border-2 border-orange-200' : ''
         )}
         onClick={handleCardClick}
       >
         {/* Product Image Section */}
-        <div className="relative aspect-square overflow-hidden bg-gray-50 flex-shrink-0">
+        <div className="relative h-[58%] md:h-[62%] lg:h-[64%] xl:h-[65%] w-full overflow-hidden bg-gray-50 flex-shrink-0">
           
-          {/* Badges Container */}
-          <div className="absolute top-2 left-2 z-20 flex flex-col gap-1">
-            {product.discount > 0 && (
-              <Badge variant="destructive" className="text-[10px] font-bold px-2 py-0.5 rounded-md shadow-sm">
-                -{product.discount}% OFF
-              </Badge>
-            )}
-            {isFeaturedProduct() && (
-              <Badge variant="default" className="bg-yellow-400 hover:bg-yellow-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-sm">
-                ⭐ Featured
-              </Badge>
-            )}
-            {isNewProduct() && (
-              <Badge variant="default" className="bg-green-500 hover:bg-green-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-sm">
-                NEW
-              </Badge>
-            )}
-            {product.hidden && (
-              <Badge variant="outline" className="text-[10px] px-2 py-0.5 border-orange-500 text-orange-600 bg-orange-50/80">
-                Hidden
-              </Badge>
-            )}
-          </div>
-
           {/* Wishlist Button */}
           <button
             onClick={handleWishlistToggle}
             className={cn(
-              "absolute top-2 right-2 z-20 p-2 rounded-full bg-white/80 backdrop-blur-sm shadow-sm transition-all duration-300 hover:bg-white hover:scale-110",
+              "absolute top-3 right-3 z-20 p-2 rounded-full bg-white/90 backdrop-blur-sm shadow-sm transition-all duration-300 hover:bg-white hover:scale-110 active:scale-95 hover:shadow-md",
               isHeartPounding && "scale-125"
             )}
           >
@@ -467,11 +450,11 @@ const ProductCard = ({ product, onAddToCart }: {
           </button>
 
           {/* Quick View Hover overlay (desktop only) */}
-          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-10 hidden md:flex">
+          <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-10 hidden md:flex">
             <Button
               size="sm"
               variant="secondary"
-              className="bg-white text-gray-800 border-0 shadow-lg hover:bg-white/95 text-xs font-bold rounded-xl px-4 py-2 transition-transform duration-300 translate-y-2 group-hover:translate-y-0"
+              className="bg-white text-gray-800 border-0 shadow-md hover:bg-white/95 text-xs font-semibold rounded-xl px-4 py-2 transition-transform duration-300 translate-y-2 group-hover:translate-y-0"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -511,55 +494,89 @@ const ProductCard = ({ product, onAddToCart }: {
         </div>
 
         {/* Product Details Section */}
-        <div className="p-4 flex flex-col justify-between flex-grow">
-          <div>
-            <h3 className="font-bold text-xs sm:text-sm text-gray-900 mb-1 line-clamp-1 group-hover:text-primary transition-colors">
-              {product.title}
-            </h3>
+        <div className="h-[40%] md:h-[32%] p-3 xs:p-3.5 md:p-4 flex flex-col justify-between bg-white">
+          {/* Info Section (Title, Rating, Badges) */}
+          <div className="space-y-1.5 xs:space-y-2 md:space-y-2.5">
+            {/* Title container with exact height of 2 lines */}
+            <div className="h-9 md:h-10 flex items-start overflow-hidden">
+              <h3 className="font-semibold text-xs sm:text-sm text-gray-800 leading-tight line-clamp-2 group-hover:text-bloom-pink-600 transition-colors">
+                {product.title}
+              </h3>
+            </div>
 
-            {/* Rating & Delivery Info */}
-            {((product.numReviews && product.numReviews > 0) || product.sameDay !== false) && (
-              <div className="flex items-center gap-2 mb-2">
-                {product.numReviews && product.numReviews > 0 ? (
-                  <div className="flex items-center text-amber-400">
-                    <Star size={11} className="fill-current" />
-                    <span className="text-[10px] font-bold text-gray-700 ml-0.5">
-                      {(product.rating || 0).toFixed(1)}
+            {/* Rating & Delivery Row */}
+            <div className="h-4 md:h-5 flex items-center">
+              {((product.numReviews && product.numReviews > 0) || product.sameDay !== false) ? (
+                <div className="flex items-center gap-1.5 text-[10px] text-gray-500 font-medium">
+                  {product.numReviews && product.numReviews > 0 ? (
+                    <div className="flex items-center text-amber-500 bg-amber-50/40 px-1 py-0.5 rounded">
+                      <Star size={11} className="fill-current text-amber-500 mr-0.5" />
+                      <span className="font-bold text-gray-700">
+                        {(product.rating || 0).toFixed(1)}
+                      </span>
+                    </div>
+                  ) : null}
+                  {product.numReviews && product.numReviews > 0 && product.sameDay !== false && (
+                    <span className="text-gray-200">|</span>
+                  )}
+                  {product.sameDay !== false && (
+                    <span className="text-[9px] sm:text-[10px] font-bold text-emerald-600 bg-emerald-50/70 px-1.5 py-0.5 rounded-md flex items-center gap-0.5">
+                      ⚡ Same Day
                     </span>
-                  </div>
-                ) : null}
-                {product.numReviews && product.numReviews > 0 && product.sameDay !== false && (
-                  <span className="text-[10px] text-gray-300 font-medium">|</span>
-                )}
-                {product.sameDay !== false && (
-                  <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">
-                    ⚡ Same Day
-                  </span>
-                )}
-              </div>
-            )}
+                  )}
+                </div>
+              ) : (
+                <div className="h-4 md:h-5" />
+              )}
+            </div>
+
+            {/* Badges/Tags Row - Positioned perfectly below rating and above price */}
+            <div className="h-5 md:h-6 flex items-center gap-1.5 overflow-hidden">
+              {product.discount > 0 && (
+                <span className="text-[8px] sm:text-[9px] font-extrabold text-red-650 bg-red-50 border border-red-100 px-1.5 py-0.5 rounded-md uppercase tracking-wider">
+                  -{product.discount}% OFF
+                </span>
+              )}
+              {isFeaturedProduct() && (
+                <span className="text-[8px] sm:text-[9px] font-extrabold text-amber-600 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-0.5">
+                  ⭐ Featured
+                </span>
+              )}
+              {isNewProduct() && (
+                <span className="text-[8px] sm:text-[9px] font-extrabold text-[#0f766e] bg-[#f0fdfa] border border-[#ccfbf1] px-1.5 py-0.5 rounded-md uppercase tracking-wider">
+                  NEW
+                </span>
+              )}
+              {product.hidden && (
+                <span className="text-[8px] sm:text-[9px] font-bold text-orange-650 bg-orange-50 border border-orange-100 px-1.5 py-0.5 rounded-md uppercase tracking-wider">
+                  Hidden
+                </span>
+              )}
+              {/* Fallback space to keep alignment when no badges exist */}
+              {!(product.discount > 0 || isFeaturedProduct() || isNewProduct() || product.hidden) && (
+                <div className="h-5 md:h-6" />
+              )}
+            </div>
           </div>
 
-          <div>
-            {/* Price section */}
-            <div className="flex items-baseline gap-1.5 mb-3.5">
+          {/* Pricing & CTA Section */}
+          <div className="space-y-2 md:space-y-2.5">
+            {/* Price section with prominent styling */}
+            <div className="h-5 md:h-6 flex items-baseline gap-1.5">
               {product.category === 'combos' && product.comboItems && product.comboItems.length > 0 ? (
-                <span className={cn(
-                  "text-sm sm:text-base font-black",
-                  product.discount > 0 ? "text-red-600" : "text-gray-900"
-                )}>
+                <span className="text-sm sm:text-base font-bold text-gray-900">
                   {formatPrice(convertPrice(getComboMaxPrice(product)))}
                 </span>
               ) : (
                 <>
                   <span className={cn(
-                    "text-sm sm:text-base font-black",
-                    product.discount > 0 ? "text-red-600" : "text-gray-900"
+                    "text-sm sm:text-base font-bold",
+                    product.discount > 0 ? "text-red-600 font-extrabold" : "text-gray-900"
                   )}>
                     {formatPrice(convertPrice(product.discount ? product.price * (1 - product.discount / 100) : product.price))}
                   </span>
                   {product.discount > 0 && (
-                    <span className="text-xs text-gray-450 line-through font-medium">
+                    <span className="text-[10px] sm:text-xs text-gray-400 line-through font-normal">
                       {formatPrice(convertPrice(product.price))}
                     </span>
                   )}
@@ -567,32 +584,31 @@ const ProductCard = ({ product, onAddToCart }: {
               )}
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex items-center gap-1.5 mt-auto">
+            {/* Action Button */}
+            <div className="h-8 xs:h-9 md:h-10 flex items-center w-full">
               {product.isCustomizable ? (
                 <Button
                   variant="outline"
                   size="sm"
-                  className="flex-1 py-2 h-9 text-xs bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl border-0 shadow-sm transition-all"
+                  className="w-full h-full text-xs sm:text-sm bg-gradient-to-r from-[#a855f7] to-[#ec4899] hover:from-[#9333ea] hover:to-[#db2777] text-white font-bold rounded-xl border-0 shadow-sm transition-all duration-300 flex items-center justify-center gap-1.5 active:scale-95 hover:shadow-md"
                   onClick={handleCustomizeAndAddToCart}
                 >
-                  <Wand2 className="h-3 w-3 mr-1" />
+                  <Wand2 className="h-3.5 w-3.5" />
                   Customize
                 </Button>
               ) : (
                 <Button
                   variant="outline"
                   size="sm"
-                  className="flex-1 py-2 h-9 text-xs bg-primary hover:bg-primary/95 text-white font-bold rounded-xl border-0 shadow-sm transition-all flex items-center justify-center gap-1"
+                  className="w-full h-full text-xs sm:text-sm bg-gradient-to-r from-bloom-pink-500 to-rose-500 hover:from-bloom-pink-600 hover:to-rose-600 text-white font-bold rounded-xl border-0 shadow-sm transition-all duration-300 flex items-center justify-center gap-1.5 active:scale-95 hover:shadow-md"
                   onClick={handleAddToCart}
                 >
-                  <ShoppingBag className="h-3 w-3" />
+                  <ShoppingBag className="h-3.5 w-3.5" />
                   Add
                 </Button>
               )}
             </div>
           </div>
-
         </div>
       </div>
 

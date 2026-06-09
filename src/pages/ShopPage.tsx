@@ -1043,6 +1043,7 @@ const ShopPage = () => {
                   products={filteredProducts} 
                   loading={isLoading}
                   className={viewMode === "list" ? "grid-cols-1 gap-4" : ""}
+                  shopView={true}
                 />
               )}
             </div>
