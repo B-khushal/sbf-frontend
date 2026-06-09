@@ -279,22 +279,6 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
 
   return (
     <>
-      {/* Top Banner */}
-      <div className="bg-gradient-to-r from-primary via-secondary to-accent text-white text-center py-2 text-xs sm:text-sm font-medium z-50 relative">
-        <div className="container mx-auto px-4 flex items-center justify-center gap-4">
-          <motion.div 
-            className="flex items-center gap-2"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Sparkles size={14} />
-            <span>Use code SBF10 to get an exclusive discount — only on your first order! 🌸 </span>
-            <Truck size={14} />
-          </motion.div>
-        </div>
-      </div>
-
       {/* Main Navigation */}
       <header className="bg-white/95 backdrop-blur-xl border-b border-gray-100 sticky top-0 z-nav">
         <div className="container mx-auto px-3 sm:px-4 lg:px-6">

@@ -20,6 +20,7 @@ interface HeaderSettings {
   announcementBar?: {
     enabled: boolean;
     text: string;
+    texts?: string[];
     link: string;
     bgColor: string;
     textColor: string;
@@ -136,6 +137,7 @@ const defaultHeaderSettings: HeaderSettings = {
   announcementBar: {
     enabled: true,
     text: 'Use code SBF10 to get an exclusive discount — only on your first order! 🌸',
+    texts: ['Use code SBF10 to get an exclusive discount — only on your first order! 🌸'],
     link: '',
     bgColor: 'linear-gradient(to right, #7dd3fc, #f9a8d4, #86efac)',
     textColor: '#ffffff'

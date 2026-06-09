@@ -2327,17 +2327,95 @@ const AdminSettingsPage = () => {
                         </div>
                       </div>
 
-                      <div>
-                        <Label className="text-xs text-slate-300">Announcement Bar Text</Label>
-                        <Input
-                          value={localSettings.headerSettings?.announcementBar?.text || ""}
-                          onChange={(e) => {
-                            const bar = { ...(localSettings.headerSettings?.announcementBar || {}), text: e.target.value };
-                            const copy = { ...localSettings.headerSettings, announcementBar: bar };
-                            updateSettingsState({ ...localSettings, headerSettings: copy });
-                          }}
-                          className="bg-slate-900 border-slate-700 text-slate-200 mt-1"
-                        />
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <Label className="text-xs text-slate-300 font-medium">Announcement Items</Label>
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => {
+                              const bar = localSettings.headerSettings?.announcementBar || {};
+                              const texts = [...(bar.texts || [])];
+                              // Seed array if it's currently empty but single text was set
+                              if (texts.length === 0 && bar.text) {
+                                texts.push(bar.text);
+                              }
+                              texts.push("");
+                              const updatedBar = { ...bar, texts };
+                              const copy = { ...localSettings.headerSettings, announcementBar: updatedBar };
+                              updateSettingsState({ ...localSettings, headerSettings: copy });
+                            }}
+                            className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-xs h-7 px-3 flex items-center gap-1"
+                          >
+                            <Plus className="h-3.5 w-3.5" /> Add New Announcement
+                          </Button>
+                        </div>
+
+                        {/* List of active announcements */}
+                        <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                          {((localSettings.headerSettings?.announcementBar?.texts && localSettings.headerSettings?.announcementBar?.texts.length > 0)
+                            ? localSettings.headerSettings.announcementBar.texts
+                            : (localSettings.headerSettings?.announcementBar?.text 
+                               ? [localSettings.headerSettings.announcementBar.text] 
+                               : [""])
+                          ).map((announceText: string, index: number) => (
+                            <div key={index} className="flex items-center gap-2 bg-slate-900/40 p-2 rounded-lg border border-slate-800">
+                              <span className="text-xs text-slate-500 font-mono select-none px-1">#{index + 1}</span>
+                              <Input
+                                value={announceText}
+                                onChange={(e) => {
+                                  const bar = localSettings.headerSettings?.announcementBar || {};
+                                  const texts = [...(bar.texts || [])];
+                                  if (texts.length === 0 && bar.text) {
+                                    texts.push(bar.text);
+                                  }
+                                  if (texts.length === 0) {
+                                    texts.push(announceText);
+                                  }
+                                  texts[index] = e.target.value;
+                                  
+                                  const updatedBar = { 
+                                    ...bar, 
+                                    texts,
+                                    text: texts[0] || ""
+                                  };
+                                  const copy = { ...localSettings.headerSettings, announcementBar: updatedBar };
+                                  updateSettingsState({ ...localSettings, headerSettings: copy });
+                                }}
+                                placeholder="Enter announcement text..."
+                                className="bg-slate-950 border-slate-700 text-slate-200 text-xs flex-grow focus-visible:ring-cyan-500"
+                              />
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                type="button"
+                                onClick={() => {
+                                  const bar = localSettings.headerSettings?.announcementBar || {};
+                                  const texts = [...(bar.texts || [])];
+                                  if (texts.length === 0 && bar.text) {
+                                    texts.push(bar.text);
+                                  }
+                                  texts.splice(index, 1);
+                                  
+                                  const updatedBar = { 
+                                    ...bar, 
+                                    texts,
+                                    text: texts[0] || ""
+                                  };
+                                  const copy = { ...localSettings.headerSettings, announcementBar: updatedBar };
+                                  updateSettingsState({ ...localSettings, headerSettings: copy });
+                                }}
+                                className="text-red-400 hover:text-red-300 hover:bg-slate-800 h-8 w-8 shrink-0 rounded-md"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                          {(!localSettings.headerSettings?.announcementBar?.texts || localSettings.headerSettings.announcementBar.texts.length === 0) &&
+                           !localSettings.headerSettings?.announcementBar?.text && (
+                            <p className="text-xs text-slate-500 text-center py-4 italic">No announcements. Click the button above to add one.</p>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
