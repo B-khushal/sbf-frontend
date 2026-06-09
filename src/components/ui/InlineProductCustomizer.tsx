@@ -198,7 +198,7 @@ export function InlineProductCustomizer({
       else if (product.customizationOptions.allowMessageCard) setActiveTab('message');
       else if (product.comboItems && product.comboItems.length > 0) setActiveTab('combo');
       else if (product.customizationOptions.addons.flowers.length > 0) setActiveTab('flowers');
-      else setActiveTab('delivery');
+      else if (product.customizationOptions.addons.chocolates.length > 0) setActiveTab('chocolates');
     }
   }, [isOpen, activeTab, product]);
 
@@ -262,12 +262,6 @@ export function InlineProductCustomizer({
     if (product.customizationOptions.addons.chocolates.length > 0) {
       list.push({ id: 'chocolates', label: 'Treats & Gifts', completed: customizations.selectedChocolates.length > 0, icon: Gift });
     }
-    list.push({ 
-      id: 'delivery', 
-      label: 'Delivery Notes', 
-      completed: !!customizations.deliveryDate, 
-      icon: Calendar 
-    });
     return list;
   }, [product, customizations, uploadedPhoto]);
 
@@ -1217,94 +1211,7 @@ export function InlineProductCustomizer({
                   </div>
                 )}
 
-                {/* 7. Delivery Date & Instruction notes */}
-                <div 
-                  className={cn(
-                    "rounded-2xl border bg-white dark:bg-slate-950 transition-all duration-300 overflow-hidden shadow-sm",
-                    activeTab === 'delivery' 
-                      ? "border-primary ring-1 ring-primary/20 shadow-md" 
-                      : "border-slate-200/80 dark:border-slate-800"
-                  )}
-                >
-                  <div 
-                    onClick={() => setActiveTab(activeTab === 'delivery' ? null : 'delivery')}
-                    className="p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-900/30 select-none"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={cn(
-                        "h-9 w-9 rounded-xl flex items-center justify-center transition-colors",
-                        activeTab === 'delivery' ? "bg-primary/10 text-primary" : "bg-slate-100 dark:bg-slate-900 text-slate-500"
-                      )}>
-                        <Calendar className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-slate-800 dark:text-slate-200 text-sm sm:text-base flex items-center gap-2">
-                          Delivery Date & Special Notes
-                          {customizations.deliveryDate && <Check className="h-4 w-4 text-emerald-500" />}
-                        </h3>
-                        <p className="text-xs text-slate-400 mt-0.5">Specify when to deliver and specific guidelines</p>
-                      </div>
-                    </div>
-                    <ChevronDown className={cn("h-4 w-4 text-slate-400 transition-transform duration-300", activeTab === 'delivery' && "rotate-180")} />
-                  </div>
-
-                  <AnimatePresence initial={false}>
-                    {activeTab === 'delivery' && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.25 }}
-                        className="border-t border-slate-100 dark:border-slate-900 p-5 bg-slate-50/20 dark:bg-slate-950/20 space-y-4"
-                      >
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          {/* Date selection picker */}
-                          <div className="space-y-1.5">
-                            <Label htmlFor="deliv-date" className="text-xs font-bold text-slate-600 dark:text-slate-350">Delivery Date</Label>
-                            <div className="relative">
-                              <Input
-                                id="deliv-date"
-                                type="date"
-                                min={new Date().toISOString().split('T')[0]}
-                                value={customizations.deliveryDate || ''}
-                                onChange={(e) => setCustomizations(prev => ({ ...prev, deliveryDate: e.target.value }))}
-                                className="h-11 bg-slate-50/50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-xl pr-10 text-sm font-semibold text-slate-800 dark:text-slate-200"
-                              />
-                            </div>
-                          </div>
-
-                          {/* Delivery premium time slot */}
-                          <div className="space-y-1.5">
-                            <Label htmlFor="deliv-slot" className="text-xs font-bold text-slate-600 dark:text-slate-350">Delivery Time Window</Label>
-                            <select
-                              id="deliv-slot"
-                              value={customizations.deliveryTimeSlot || ''}
-                              onChange={(e) => setCustomizations(prev => ({ ...prev, deliveryTimeSlot: e.target.value }))}
-                              className="w-full h-11 border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 rounded-xl px-3 text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-primary text-slate-800 dark:text-slate-200"
-                            >
-                              <option value="">Standard Slot (9:00 AM - 7:00 PM)</option>
-                              <option value="morning">Morning Express (7:00 AM - 11:00 AM) [+₹150]</option>
-                              <option value="evening">Sunset Slots (5:00 PM - 8:00 PM) [+₹100]</option>
-                              <option value="midnight">Midnight Gifting Surprise (11:00 PM - 12:00 AM) [+₹250]</option>
-                            </select>
-                          </div>
-                        </div>
-
-                        {/* Special instructions */}
-                        <div className="space-y-1.5">
-                          <Label htmlFor="deliv-notes" className="text-xs font-bold text-slate-600 dark:text-slate-350">Delivery Instructions / Notes</Label>
-                          <Textarea
-                            id="deliv-notes"
-                            placeholder="e.g. Please leave bouquet with guard / ring bell twice / surprise recipient at office..."
-                            value={customizations.deliveryInstructions || ''}
-                            onChange={(e) => setCustomizations(prev => ({ ...prev, deliveryInstructions: e.target.value }))}
-                            className="min-h-[70px] bg-slate-50/50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-xl resize-none text-sm"
-                          />
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
+                {/* Delivery Date & Instruction notes removed */}
 
               </div>
 
@@ -1400,21 +1307,7 @@ export function InlineProductCustomizer({
                       </div>
                     )}
 
-                    {/* Delivery Date Details */}
-                    {customizations.deliveryDate && (
-                      <div className="border-t pt-2 mt-2 space-y-1 text-xs text-slate-600 dark:text-slate-300">
-                        <div className="flex justify-between items-center">
-                          <span className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5 text-primary" /> Delivery Date</span>
-                          <span className="font-bold">{customizations.deliveryDate}</span>
-                        </div>
-                        {customizations.deliveryTimeSlot && (
-                          <div className="flex justify-between items-center text-[10px] text-slate-400">
-                            <span>Time slot:</span>
-                            <span className="font-semibold">{customizations.deliveryTimeSlot === 'morning' ? 'Morning Express' : customizations.deliveryTimeSlot === 'evening' ? 'Sunset Slot' : 'Midnight Surpise'}</span>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                    {/* Delivery Date Details removed */}
 
                     {/* Default state: No configurations yet */}
                     {!uploadedPhoto && 

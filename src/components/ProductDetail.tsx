@@ -876,14 +876,35 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
 
             {/* Ratings & reviews summary inline */}
             <div className="flex items-center gap-3">
-              <div className="flex items-center text-amber-400 gap-0.5">
-                <Star size={16} className="fill-current" />
-                <Star size={16} className="fill-current" />
-                <Star size={16} className="fill-current" />
-                <Star size={16} className="fill-current" />
-                <Star size={16} className="fill-current" />
-              </div>
-              <span className="text-xs text-slate-400 font-medium">Verified by 20+ clients</span>
+              {product.numReviews && product.numReviews > 0 ? (
+                <>
+                  <div className="flex items-center text-amber-400 gap-0.5">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star
+                        key={i}
+                        size={16}
+                        className={cn(
+                          i < Math.round(product.rating || 0)
+                            ? "fill-current text-amber-400"
+                            : "text-slate-200 dark:text-slate-800"
+                        )}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-xs text-slate-400 font-medium">
+                    {Number(product.rating || 0).toFixed(1)} ({product.numReviews} review{product.numReviews > 1 ? 's' : ''})
+                  </span>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center text-slate-200 dark:text-slate-800 gap-0.5">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star key={i} size={16} />
+                    ))}
+                  </div>
+                  <span className="text-xs text-slate-400 font-medium">No reviews yet</span>
+                </>
+              )}
               <span className="h-3 w-px bg-slate-200" />
               <button 
                 onClick={() => document.getElementById('reviews-section')?.scrollIntoView({ behavior: 'smooth' })}
