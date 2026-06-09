@@ -7,6 +7,7 @@ import HomeHero from "../components/HomeHero";
 import { useIsMobile } from "../hooks/use-mobile";
 import Categories from "../components/Categories";
 import ProductGrid from "../components/ProductGrid";
+import { NewArrivals } from "../components/NewArrivals";
 import OffersSection from "../components/OffersSection";
 import { WhyChooseUs } from "../components/WhyChooseUs";
 import { PromotionalBanners } from "../components/PromotionalBanners";
@@ -297,15 +298,11 @@ const HomePage = () => {
               <motion.section
                 key={`new-${index}`}
                 variants={itemVariants}
-                className="bg-gradient-to-r from-primary/5 via-secondary/5 to-accent/5 py-16 md:py-24"
               >
-                <ProductGrid
+                <NewArrivals
                   products={newProducts}
-                  title={section.title || "🌸 New Arrivals"}
-                  subtitle={section.subtitle || "Discover our latest seasonal additions"}
                   loading={loading}
                   onAddToCart={handleAddToCart}
-                  horizontal={true}
                 />
               </motion.section>
             );
