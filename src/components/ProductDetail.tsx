@@ -7,7 +7,7 @@ import { useCurrency } from '@/contexts/CurrencyContext';
 import { useAuth } from '@/hooks/use-auth';
 import { getImageUrl, getProductImageUrl } from '@/config';
 import ContactModal from '@/components/ui/ContactModal';
-import { CustomizeProductModal } from '@/components/ui/CustomizeProductModal';
+import { InlineProductCustomizer } from '@/components/ui/InlineProductCustomizer';
 import useCart from '@/hooks/use-cart';
 import useWishlist from '@/hooks/use-wishlist';
 import { Button } from './ui/button';
@@ -223,19 +223,23 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
   const { addToCart } = useCart();
   const { addItem: addToWishlist, removeItem: removeFromWishlist, items: wishlistItems } = useWishlist();
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
-  const [isCustomizeModalOpen, setIsCustomizeModalOpen] = useState(false);
+  const [isCustomizerExpanded, setIsCustomizerExpanded] = useState(false);
   const [customizations, setCustomizations] = useState<CustomizationData | undefined>();
   const [selectedVariants, setSelectedVariants] = useState<string[]>([]);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // Check for customize parameter and open modal if present
+  // Check for customize parameter and expand inline customizer if present
   useEffect(() => {
     const shouldCustomize = searchParams.get('customize') === 'true';
     if (shouldCustomize && product.isCustomizable) {
       // Small delay to ensure the page is fully loaded
       setTimeout(() => {
-        setIsCustomizeModalOpen(true);
+        setIsCustomizerExpanded(true);
+        document.getElementById('customize-section')?.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start' 
+        });
       }, 500);
     }
   }, [searchParams, product.isCustomizable]);
@@ -319,10 +323,13 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
       return;
     }
 
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setIsCustomizerExpanded(true);
     setTimeout(() => {
-      setIsCustomizeModalOpen(true);
-    }, 200); // Open modal after scroll
+      document.getElementById('customize-section')?.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start' 
+      });
+    }, 100);
   };
 
   const handleVariantSelect = (variant: PriceVariant) => {
@@ -897,19 +904,11 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
           </div>
         </div>
 
-        {/* Product Reviews Section */}
-        <ProductReviews productId={product._id} onReviewSubmit={onReviewSubmit} />
-
-        {/* Recommended Products Section */}
-        <RecommendedProducts productId={product._id} category={product.category} />
-      </div>
-
-      {/* Customization Modal */}
-      {product.isCustomizable && product.customizationOptions && (
-        <div>
-          <CustomizeProductModal
-            open={isCustomizeModalOpen}
-            onClose={() => setIsCustomizeModalOpen(false)}
+        {/* Inline Product Customizer */}
+        {product.isCustomizable && product.customizationOptions && (
+          <InlineProductCustomizer
+            isOpen={isCustomizerExpanded}
+            onToggleOpen={() => setIsCustomizerExpanded(!isCustomizerExpanded)}
             product={{
               _id: product._id,
               title: product.title,
@@ -917,14 +916,14 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
               images: product.images,
               category: product.category,
               customizationOptions: product.customizationOptions,
-              // Combo-specific fields
               comboItems: product.comboItems,
               comboName: product.comboName,
-              comboDescription: product.comboDescription
+              comboDescription: product.comboDescription,
+              discount: product.discount
             }}
+            selectedVariant={selectedVariant}
             onAddToCart={(customizations, customTotalPrice) => {
               setCustomizations(customizations);
-              setIsCustomizeModalOpen(false);
               // Use the customTotalPrice as the unit price for the cart item
               const cartItem = {
                 _id: product._id,
@@ -960,8 +959,14 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
               }, 1000);
             }}
           />
-        </div>
-      )}
+        )}
+
+        {/* Product Reviews Section */}
+        <ProductReviews productId={product._id} onReviewSubmit={onReviewSubmit} />
+
+        {/* Recommended Products Section */}
+        <RecommendedProducts productId={product._id} category={product.category} />
+      </div>
 
       {/* Contact Modal */}
       <ContactModal
