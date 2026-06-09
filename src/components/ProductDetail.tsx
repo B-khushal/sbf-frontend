@@ -1050,7 +1050,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                 <AccordionTrigger className="w-full flex items-center justify-between py-3 px-4 font-bold text-sm text-slate-850 dark:text-slate-200 bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-slate-900/60 border border-slate-150/70 dark:border-slate-900 rounded-xl hover:no-underline transition-all">
                   <span className="flex items-center gap-2.5">
                     <ClipboardList className="h-4 w-4 text-slate-500 dark:text-slate-400" />
-                    Product Description & Contents
+                    Product Contents
                   </span>
                 </AccordionTrigger>
                 <AccordionContent className="p-4 bg-white dark:bg-slate-950 border border-t-0 border-slate-150/70 dark:border-slate-900 rounded-b-xl -mt-1 shadow-inner text-xs text-slate-600 dark:text-slate-400 space-y-3">
@@ -1077,7 +1077,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                   <AccordionTrigger className="w-full flex items-center justify-between py-3 px-4 font-bold text-sm text-slate-850 dark:text-slate-200 bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-slate-900/60 border border-slate-150/70 dark:border-slate-900 rounded-xl hover:no-underline transition-all">
                     <span className="flex items-center gap-2.5">
                       <Info className="h-4 w-4 text-slate-500 dark:text-slate-400" />
-                      Artisanal Care Story
+                      Product Description
                     </span>
                   </AccordionTrigger>
                   <AccordionContent className="p-4 bg-white dark:bg-slate-950 border border-t-0 border-slate-150/70 dark:border-slate-900 rounded-b-xl -mt-1 shadow-inner text-xs text-slate-600 dark:text-slate-400">
