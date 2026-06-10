@@ -425,13 +425,13 @@ const ProductCard = ({ product, onAddToCart }: {
     <>
       <div
         className={cn(
-          "group relative bg-white rounded-2xl border border-gray-100/80 hover:border-bloom-pink-300/40 overflow-hidden shadow-[0_4px_16px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_24px_rgba(236,72,153,0.06)] transition-all duration-300 cursor-pointer flex flex-col h-[390px] xs:h-[420px] md:h-[620px] lg:h-[680px] xl:h-[720px]",
+          "group relative bg-white rounded-2xl border border-gray-100/80 hover:border-bloom-pink-300/40 overflow-hidden shadow-[0_4px_16px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_24px_rgba(236,72,153,0.06)] transition-all duration-300 cursor-pointer flex flex-col h-[390px] xs:h-[420px] md:h-[620px] lg:h-[560px] xl:h-[560px]",
           product.hidden ? 'opacity-75 border-2 border-orange-200' : ''
         )}
         onClick={handleCardClick}
       >
         {/* Product Image Section */}
-        <div className="relative h-[58%] md:h-[62%] lg:h-[64%] xl:h-[65%] w-full overflow-hidden bg-gray-50 flex-shrink-0">
+        <div className="relative h-[58%] md:h-[62%] lg:h-[58%] xl:h-[58%] w-full overflow-hidden bg-gray-50 flex-shrink-0">
           
           {/* Wishlist Button */}
           <button
