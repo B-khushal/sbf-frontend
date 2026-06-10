@@ -18,6 +18,7 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/
 import { Card } from '@/components/ui/card';
 import { X } from 'lucide-react';
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { buildProductReviewUrl } from '@/utils/reviewUrls';
 
 type AddonOption = {
   name: string;
@@ -907,10 +908,10 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
               )}
               <span className="h-3 w-px bg-slate-200" />
               <button 
-                onClick={() => document.getElementById('reviews-section')?.scrollIntoView({ behavior: 'smooth' })}
+                onClick={() => navigate(buildProductReviewUrl(product._id, product.title))}
                 className="text-xs text-slate-500 hover:text-slate-800 font-semibold underline underline-offset-2"
               >
-                Go to reviews
+                View all reviews
               </button>
             </div>
 
@@ -1235,7 +1236,11 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
 
         {/* Product Reviews Section */}
         <div id="reviews-section">
-          <ProductReviews productId={product._id} onReviewSubmit={onReviewSubmit} />
+          <ProductReviews
+            productId={product._id}
+            productTitle={product.title}
+            onReviewSubmit={onReviewSubmit}
+          />
         </div>
 
         {/* Recommended Products Section */}

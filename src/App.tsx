@@ -28,6 +28,7 @@ import VendorConsentPage from "./pages/VendorConsentPage";
 // Lazy loaded pages with better organization
 const ShopPage = lazy(() => import('./pages/ShopPage'));
 const ProductPage = lazy(() => import('./pages/ProductPage'));
+const ProductReviewsPage = lazy(() => import('./pages/ProductReviewsPage'));
 const CartPage = lazy(() => import('./pages/CartPage'));
 const AboutPage = lazy(() => import('./pages/AboutPage'));
 const ContactPage = lazy(() => import('./pages/ContactPage'));
@@ -54,6 +55,7 @@ const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const AdminDashboardHome = lazy(() => import("./pages/Admin/Dashboard"));
 const AdminProducts = lazy(() => import("./pages/Admin/Products"));
 const AdminOrders = lazy(() => import("./pages/Admin/Orders"));
+const AdminReviews = lazy(() => import("./pages/Admin/Reviews"));
 const AdminTodayOrders = lazy(() => import("./pages/Admin/TodayOrders"));
 const AdminUsers = lazy(() => import("./pages/Admin/Users"));
 const AdminVendorManagement = lazy(() => import("./pages/Admin/VendorManagement"));
@@ -174,6 +176,16 @@ const App = () => {
                             <Route path="/products/:productId" element={
                               <Suspense fallback={<LoadingFallback message="Loading product..." />}>
                                 <ProductPage />
+                              </Suspense>
+                            } />
+                            <Route path="/products/:productId/reviews" element={
+                              <Suspense fallback={<LoadingFallback message="Loading reviews..." />}>
+                                <ProductReviewsPage />
+                              </Suspense>
+                            } />
+                            <Route path="/products/:productId/reviews/:slug" element={
+                              <Suspense fallback={<LoadingFallback message="Loading reviews..." />}>
+                                <ProductReviewsPage />
                               </Suspense>
                             } />
                             <Route path="/cart" element={
@@ -299,6 +311,11 @@ const App = () => {
                             <Route path="orders" element={
                               <Suspense fallback={<LoadingFallback message="Loading orders..." />}>
                                 <AdminOrders />
+                              </Suspense>
+                            } />
+                            <Route path="reviews" element={
+                              <Suspense fallback={<LoadingFallback message="Loading reviews..." />}>
+                                <AdminReviews />
                               </Suspense>
                             } />
                             <Route path="orders/today" element={

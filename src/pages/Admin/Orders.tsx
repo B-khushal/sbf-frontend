@@ -11,13 +11,14 @@ import {
   Search, Eye, Download, Calendar, Clock, AlertTriangle, Filter, X, 
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Copy, Check, 
   Phone, MessageSquare, List, Grid, ChevronDown, Sparkles, AlertCircle, 
-  ArrowUpDown, ExternalLink, Mail, ShieldAlert, Truck
+  ArrowUpDown, ExternalLink, Mail, ShieldAlert, Truck, Loader2
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import api from '@/services/api';
 import { Order } from '@/services/orderService';
+import { sendOrderReviewEmail } from '@/services/reviewService';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '@/components/ui/select';
@@ -207,6 +208,7 @@ const AdminOrders = () => {
 
   // Copied tracking
   const [copiedOrderId, setCopiedOrderId] = useState<string | null>(null);
+  const [emailSendingOrderId, setEmailSendingOrderId] = useState<string | null>(null);
 
   const { toast } = useToast();
   const {
@@ -369,6 +371,30 @@ const AdminOrders = () => {
 
   const handleViewDetails = (orderId: string) => {
     navigate(`/admin/orders/${orderId}`);
+  };
+
+  const handleSendReviewEmail = async (orderId: string, orderNumber: string) => {
+    try {
+      setEmailSendingOrderId(orderId);
+      const response = await sendOrderReviewEmail(orderId);
+
+      toast({
+        title: "Review Email Sent",
+        description:
+          response.summary?.productCount
+            ? `Sent review request for ${response.summary.productCount} product${response.summary.productCount > 1 ? 's' : ''} in order ${orderNumber}.`
+            : `Review request email sent for order ${orderNumber}.`,
+      });
+    } catch (error: any) {
+      console.error('Error sending review request email:', error);
+      toast({
+        title: "Email Failed",
+        description: error.response?.data?.message || "Could not send the review request email.",
+        variant: "destructive",
+      });
+    } finally {
+      setEmailSendingOrderId(null);
+    }
   };
 
   const handleStatusUpdate = async (orderId: string, newStatus: Order['status']) => {
@@ -1319,15 +1345,33 @@ const AdminOrders = () => {
 
                         {/* Actions */}
                         <TableCell className="align-middle text-right py-3.5">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleViewDetails(order._id)}
-                            className="h-8 gap-1.5 text-xs text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg border border-slate-200/50 dark:border-slate-800 bg-white dark:bg-slate-900 font-semibold"
-                          >
-                            <Eye className="h-3.5 w-3.5 text-slate-500" />
-                            View
-                          </Button>
+                          <div className="flex justify-end gap-2">
+                            {order.status === 'delivered' ? (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleSendReviewEmail(order._id, order.orderNumber)}
+                                disabled={emailSendingOrderId === order._id}
+                                className="h-8 gap-1.5 text-xs text-rose-700 hover:text-rose-800 dark:text-rose-300 dark:hover:text-rose-200 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg border border-rose-200/70 dark:border-rose-900/30 bg-white dark:bg-slate-900 font-semibold"
+                              >
+                                {emailSendingOrderId === order._id ? (
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                ) : (
+                                  <Mail className="h-3.5 w-3.5 text-rose-500" />
+                                )}
+                                Review Email
+                              </Button>
+                            ) : null}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleViewDetails(order._id)}
+                              className="h-8 gap-1.5 text-xs text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg border border-slate-200/50 dark:border-slate-800 bg-white dark:bg-slate-900 font-semibold"
+                            >
+                              <Eye className="h-3.5 w-3.5 text-slate-500" />
+                              View
+                            </Button>
+                          </div>
                         </TableCell>
                       </motion.tr>
                     ))}
@@ -1551,6 +1595,22 @@ const AdminOrders = () => {
                         </div>
 
                         <div className="flex items-center gap-1.5">
+                          {order.status === 'delivered' ? (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleSendReviewEmail(order._id, order.orderNumber)}
+                              disabled={emailSendingOrderId === order._id}
+                              className="h-8 gap-1.5 text-xs text-rose-700 dark:text-rose-300 hover:text-rose-800 dark:hover:text-rose-200 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg border border-rose-200/50 dark:border-rose-900/30 bg-white dark:bg-slate-900 font-bold px-3.5 shadow-sm"
+                            >
+                              {emailSendingOrderId === order._id ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <Mail className="h-3.5 w-3.5 text-rose-500" />
+                              )}
+                              Review Email
+                            </Button>
+                          ) : null}
                           <Button
                             variant="ghost"
                             size="sm"

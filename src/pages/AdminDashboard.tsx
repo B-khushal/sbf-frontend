@@ -3,7 +3,7 @@ import { useNavigate, Link, Outlet, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { BarChart, Users, ShoppingBag, Package, Settings, LogOut, Menu, TrendingUp, ChevronLeft, ChevronRight, Tag, Gift, Store, Calendar, CheckCircle, ClipboardList, Activity } from 'lucide-react';
+import { BarChart, Users, ShoppingBag, Package, Settings, LogOut, Menu, TrendingUp, ChevronLeft, ChevronRight, Tag, Gift, Store, Calendar, CheckCircle, ClipboardList, Activity, MessageSquareText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
@@ -207,6 +207,19 @@ const AdminDashboard: React.FC = () => {
             <ShoppingBag className="h-4 w-4 text-muted-foreground" />
           </div>
           {!isCollapsed && <span className="sidebar-item-text">Orders</span>}
+        </Link>
+        <Link 
+          to="/admin/reviews" 
+          className={cn(
+            "sidebar-item",
+            isCollapsed ? "sidebar-item-collapsed" : "sidebar-item-expanded"
+          )}
+          title={isCollapsed ? 'Reviews' : ''}
+        >
+          <div className="sidebar-item-icon">
+            <MessageSquareText className="h-4 w-4 text-muted-foreground" />
+          </div>
+          {!isCollapsed && <span className="sidebar-item-text">Reviews</span>}
         </Link>
         <Link 
           to="/admin/orders/today" 
