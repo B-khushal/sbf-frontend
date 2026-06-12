@@ -328,8 +328,8 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                 </Link>
               </motion.div>
               
-              <div className="hidden sm:block">
-                <DeliveryLocationSelector variant="desktop" />
+              <div className="flex items-center">
+                <DeliveryLocationSelector variant="navbar" />
               </div>
             </div>
             

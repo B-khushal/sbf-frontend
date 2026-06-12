@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -190,6 +191,36 @@ const ProductReviews = ({ productId, productTitle = 'This arrangement', onReview
         </div>
       </div>
 
+      {/* Expanded Inline Review Composer */}
+      <AnimatePresence>
+        {isComposerOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="overflow-hidden mt-6"
+          >
+            <ReviewComposer
+              isOpen={isComposerOpen}
+              onOpenChange={(open) => {
+                setIsComposerOpen(open);
+                if (!open) {
+                  setActiveReview(null);
+                }
+              }}
+              productId={productId}
+              productTitle={productTitle}
+              viewer={viewer}
+              defaultReview={activeReview}
+              source="product_page"
+              onSaved={handleReviewSaved}
+              isInline={true}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="mt-8 grid gap-6 lg:grid-cols-[1.05fr_1.95fr]">
         <div className="space-y-5 rounded-[32px] border border-slate-200/80 bg-[linear-gradient(180deg,_rgba(255,249,246,0.96),_rgba(255,255,255,0.92))] p-6 dark:border-slate-800/70 dark:bg-[linear-gradient(180deg,_rgba(30,17,16,0.96),_rgba(15,23,42,0.88))]">
           <div className="flex items-center gap-4">
@@ -322,22 +353,6 @@ const ProductReviews = ({ productId, productTitle = 'This arrangement', onReview
           )}
         </div>
       </div>
-
-      <ReviewComposer
-        isOpen={isComposerOpen}
-        onOpenChange={(open) => {
-          setIsComposerOpen(open);
-          if (!open) {
-            setActiveReview(null);
-          }
-        }}
-        productId={productId}
-        productTitle={productTitle}
-        viewer={viewer}
-        defaultReview={activeReview}
-        source="product_page"
-        onSaved={handleReviewSaved}
-      />
     </section>
   );
 };

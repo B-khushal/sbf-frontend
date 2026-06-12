@@ -16,9 +16,10 @@ import productService, { ProductData, ComboItem } from '@/services/productServic
 import ProductReviews from '@/components/ProductReviews';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { Card } from '@/components/ui/card';
-import { X } from 'lucide-react';
+import { X, MapPin } from 'lucide-react';
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { buildProductReviewUrl } from '@/utils/reviewUrls';
+import PinCodeInput from '@/components/ui/PinCodeInput';
 
 type AddonOption = {
   name: string;
@@ -302,6 +303,59 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
   const [selectedVariants, setSelectedVariants] = useState<string[]>([]);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+
+  // Pincode Availability Section States
+  const [pincodeCheckVal, setPincodeCheckVal] = useState('');
+  const [isPincodeExpanded, setIsPincodeExpanded] = useState(false);
+  const [pincodeLocation, setPincodeLocation] = useState<any>(null);
+  const [pincodeMessage, setPincodeMessage] = useState('');
+  const [isPincodeValid, setIsPincodeValid] = useState(false);
+
+  const productInfoRef = useRef<HTMLDivElement>(null);
+
+  // Sync pincode selection with localStorage / sessionStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('sbf_delivery_location');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setPincodeLocation(parsed);
+        setPincodeCheckVal(parsed.code);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }, []);
+
+  // Handle location update from external events (e.g. navbar change)
+  useEffect(() => {
+    const handleLocationUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail) {
+        setPincodeLocation(customEvent.detail);
+        setPincodeCheckVal(customEvent.detail.code);
+      }
+    };
+    window.addEventListener('sbf-location-updated', handleLocationUpdate);
+    return () => window.removeEventListener('sbf-location-updated', handleLocationUpdate);
+  }, []);
+
+  const handleTogglePincode = () => {
+    const nextState = !isPincodeExpanded;
+    setIsPincodeExpanded(nextState);
+    
+    if (nextState) {
+      // Smooth scroll to the top of the product info section
+      setTimeout(() => {
+        const yOffset = -90; // account for sticky header height
+        const element = productInfoRef.current;
+        if (element) {
+          const y = element.getBoundingClientRect().top + window.scrollY + yOffset;
+          window.scrollTo({ top: y, behavior: 'smooth' });
+        }
+      }, 150);
+    }
+  };
 
   // Redesign Luxury Interaction States
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -863,7 +917,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
           </div>
 
           {/* RIGHT SIDE: Redesigned Product Info (Span 5 on lg) */}
-          <div className="lg:col-span-5 flex flex-col space-y-6">
+          <div ref={productInfoRef} className="lg:col-span-5 flex flex-col space-y-6">
             
             {/* Category badge */}
             <div className="space-y-2">
@@ -951,6 +1005,95 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                   {product.countInStock > 0 ? 'In Stock • Handcrafted & Dispatched Today' : 'Out of Stock • Reserve by Contacting Us'}
                 </span>
               </div>
+            </div>
+
+            {/* Pincode Availability Section */}
+            <div className="py-2 border-b border-slate-100 dark:border-slate-900">
+              <button
+                type="button"
+                onClick={handleTogglePincode}
+                className="flex items-center justify-between w-full py-2.5 text-left text-sm font-semibold text-slate-700 dark:text-slate-350 hover:text-primary transition-colors group"
+              >
+                <span className="flex items-center gap-2">
+                  <MapPin size={16} className="text-primary group-hover:scale-110 transition-transform" />
+                  {pincodeLocation ? (
+                    <span className="text-emerald-605 dark:text-emerald-400 font-medium">
+                      Delivering to: <strong className="font-bold">{pincodeLocation.area.split('/')[0]} ({pincodeLocation.code})</strong>
+                    </span>
+                  ) : (
+                    <span className="text-slate-700 dark:text-slate-300">Check delivery availability in your area</span>
+                  )}
+                </span>
+                <span className="text-xs text-primary underline underline-offset-2 font-medium">
+                  {pincodeLocation ? 'Change' : 'Check Pincode'}
+                </span>
+              </button>
+
+              <AnimatePresence initial={false}>
+                {isPincodeExpanded && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                    className="overflow-hidden mt-2"
+                  >
+                    <div className="p-4 bg-slate-50/50 dark:bg-slate-900/30 border border-slate-100 dark:border-slate-800 rounded-2xl space-y-3">
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        Enter a Hyderabad pincode to see if this luxury arrangement can be dispatched to your location.
+                      </p>
+                      
+                      <div className="relative">
+                        <PinCodeInput
+                          value={pincodeCheckVal}
+                          onChange={(val) => {
+                            setPincodeCheckVal(val);
+                            if (!val) {
+                              setPincodeLocation(null);
+                              setPincodeMessage('');
+                            }
+                          }}
+                          placeholder="Enter 6-digit Pincode"
+                          onSelectPinCode={(selection) => {
+                            if (selection) {
+                              setPincodeLocation(selection);
+                              setIsPincodeValid(true);
+                              setPincodeMessage(`Deliverable: Dispatched via premium climate-controlled courier.`);
+                              // Save to session and local storage
+                              localStorage.setItem('sbf_delivery_location', JSON.stringify(selection));
+                              sessionStorage.setItem('sbf_entered_pincode', selection.code);
+                              // Sync other components
+                              window.dispatchEvent(new CustomEvent('sbf-location-updated', { detail: selection }));
+                            } else {
+                              setPincodeLocation(null);
+                              setIsPincodeValid(false);
+                            }
+                          }}
+                          onValidationChange={(isValid, msg) => {
+                            if (!isValid && msg) {
+                              setPincodeMessage(msg);
+                            }
+                          }}
+                          className="w-full"
+                          inputClassName="h-11 text-sm rounded-xl focus-visible:ring-1 focus-visible:ring-primary bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800"
+                        />
+                      </div>
+
+                      {pincodeMessage && (
+                        <div className={cn(
+                          "text-xs px-3 py-2 rounded-xl flex items-start gap-1.5 leading-relaxed font-medium animate-fade-in",
+                          isPincodeValid 
+                            ? "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border border-emerald-100/30" 
+                            : "bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400 border border-red-100/30"
+                        )}>
+                          <span className="text-[14px] leading-none">{isPincodeValid ? '✓' : '⚠'}</span>
+                          <span>{pincodeMessage}</span>
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Variant Select Grid (Inline render) */}

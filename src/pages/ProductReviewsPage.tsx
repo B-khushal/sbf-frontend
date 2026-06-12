@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useMemo, useState, useRef } from 'react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useInView } from 'react-intersection-observer';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -82,6 +83,27 @@ const ProductReviewsPage = () => {
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [isComposerOpen, setIsComposerOpen] = useState(false);
   const [editingReview, setEditingReview] = useState<Review | null>(null);
+  const [searchParams] = useSearchParams();
+  const composerRef = useRef<HTMLDivElement>(null);
+
+  // Automatically open the review composer and scroll to it if orderId or writeReview is in the URL
+  useEffect(() => {
+    const orderId = searchParams.get('orderId');
+    const writeReview = searchParams.get('writeReview') === 'true';
+    if (orderId || writeReview) {
+      setIsComposerOpen(true);
+      
+      // Smooth scroll to the composer container after a brief expansion delay
+      setTimeout(() => {
+        const element = composerRef.current;
+        if (element) {
+          const yOffset = -90; // offset for sticky header
+          const y = element.getBoundingClientRect().top + window.scrollY + yOffset;
+          window.scrollTo({ top: y, behavior: 'smooth' });
+        }
+      }, 300);
+    }
+  }, [searchParams]);
 
   const schemaMarkup = useMemo(() => {
     if (!product) {
@@ -445,6 +467,38 @@ const ProductReviewsPage = () => {
           </Card>
 
           <div className="space-y-6">
+            {/* Expanded Inline Review Composer */}
+            <div ref={composerRef}>
+              <AnimatePresence>
+                {isComposerOpen && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                    className="overflow-hidden mb-6"
+                  >
+                    <ReviewComposer
+                      isOpen={isComposerOpen}
+                      onOpenChange={(open) => {
+                        setIsComposerOpen(open);
+                        if (!open) {
+                          setEditingReview(null);
+                        }
+                      }}
+                      productId={productId}
+                      productTitle={product?.title || 'Product'}
+                      viewer={viewer}
+                      defaultReview={editingReview}
+                      source="product_reviews_page"
+                      onSaved={handleReviewSaved}
+                      isInline={true}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
             <Card className="rounded-[34px] border-0 bg-white/80 p-5 shadow-[0_24px_70px_rgba(15,23,42,0.06)] dark:bg-slate-950/70">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
@@ -601,22 +655,6 @@ const ProductReviewsPage = () => {
           </div>
         </div>
       </div>
-
-      <ReviewComposer
-        isOpen={isComposerOpen}
-        onOpenChange={(open) => {
-          setIsComposerOpen(open);
-          if (!open) {
-            setEditingReview(null);
-          }
-        }}
-        productId={productId}
-        productTitle={product?.title || 'Product'}
-        viewer={viewer}
-        defaultReview={editingReview}
-        source="product_reviews_page"
-        onSaved={handleReviewSaved}
-      />
     </main>
   );
 };
