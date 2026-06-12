@@ -3,6 +3,7 @@ import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import ProductGrid from "@/components/ProductGrid";
 import useCart from "@/hooks/use-cart";
 import api from "@/services/api";
+import categoryService, { Category } from "@/services/categoryService";
 import { Search, Filter, Grid3X3, List, Star, Heart, Eye, ExternalLink, Sparkles, Leaf, Gift, ShoppingBag, X, ChevronDown } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -269,7 +270,11 @@ const normalizeCategoryValue = (value?: string | null): string => {
   return normalizeCategoryLabel(trimmed) || trimmed;
 };
 
-const ShopPage = () => {
+interface ShopPageProps {
+  resolvedCategory?: any;
+}
+
+const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
   const { category: pathCategory } = useParams<{ category: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -281,11 +286,11 @@ const ShopPage = () => {
   const normalizedPathCategory = normalizeCategoryValue(pathCategory);
   const normalizedQueryCategory = normalizeCategoryValue(queryCategory);
   const normalizedCategory = normalizedPathCategory || normalizedQueryCategory;
-  const category = normalizedCategory || "";
+  const category = resolvedCategory ? resolvedCategory.name : (normalizedCategory || "");
   const normalizedPathCategoryKey = normalizeCategoryKey(pathCategory);
   const normalizedQueryCategoryKey = normalizeCategoryKey(queryCategory);
-  const selectedCategoryKey = normalizedPathCategoryKey || normalizedQueryCategoryKey;
-  const isParentCategoryRoute = PRIMARY_CATEGORIES.some((category) => category.value === selectedCategoryKey);
+  const selectedCategoryKey = resolvedCategory ? resolvedCategory.slug : (normalizedPathCategoryKey || normalizedQueryCategoryKey);
+  const isParentCategoryRoute = resolvedCategory ? !resolvedCategory.parentId : PRIMARY_CATEGORIES.some((category) => category.value === selectedCategoryKey);
   
   const [selectedCategory, setSelectedCategory] = useState(category);
   const [sortBy, setSortBy] = useState("newest");
@@ -299,6 +304,7 @@ const ShopPage = () => {
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [dbCategories, setDbCategories] = useState<Category[]>([]);
   const [wishlist, setWishlist] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -320,17 +326,24 @@ const ShopPage = () => {
   console.log('Shop Categories:', shopCategories);
   console.log('Settings Categories:', settingsCategories);
   
-  const flowerCategories = (shopCategories || settingsCategories).map(cat => ({
-    name: cat.name,
-    description: cat.description,
-    image: cat.image,
-    category: cat.name.toLowerCase().replace(/\s+/g, '-'),
-    featured: cat.order < 3, // First 3 categories are featured
-    count: filteredProducts.filter(p => 
-      p.category?.toLowerCase() === cat.name.toLowerCase() || 
-      p.categories?.some(productCat => productCat.toLowerCase() === cat.name.toLowerCase())
-    ).length
-  }));
+  const flowerCategories = (shopCategories || settingsCategories)
+    .filter(cat => {
+      const dbMatch = dbCategories.find(
+        c => c.name.toLowerCase() === cat.name.toLowerCase() || c.slug.toLowerCase() === cat.name.toLowerCase()
+      );
+      return dbMatch ? dbMatch.showInShop !== false : true;
+    })
+    .map(cat => ({
+      name: cat.name,
+      description: cat.description,
+      image: cat.image,
+      category: cat.name.toLowerCase().replace(/\s+/g, '-'),
+      featured: cat.order < 3, // First 3 categories are featured
+      count: filteredProducts.filter(p => 
+        p.category?.toLowerCase() === cat.name.toLowerCase() || 
+        p.categories?.some(productCat => productCat.toLowerCase() === cat.name.toLowerCase())
+      ).length
+    }));
 
   // Handle category click with same-tab navigation
   const handleCategoryClick = (categoryName: string) => {
@@ -364,14 +377,32 @@ const ShopPage = () => {
           }
         });
 
-        const uniqueCategories = Array.from(allCategories).filter(Boolean);
+        let dbCats: Category[] = [];
+        try {
+          dbCats = await categoryService.getCategories({ status: "active" });
+          setDbCategories(dbCats);
+        } catch (dbError) {
+          console.error("❌ Error fetching db categories:", dbError);
+        }
 
+        const uniqueCategories = Array.from(allCategories).filter(Boolean) as string[];
+
+        let finalCategories: string[] = [];
         try {
           const categoriesResponse = await api.get("/products/categories");
-          setCategories(categoriesResponse.data.categories || uniqueCategories);
+          finalCategories = categoriesResponse.data.categories || uniqueCategories;
         } catch (categoriesError) {
-          setCategories(uniqueCategories);
+          finalCategories = uniqueCategories;
         }
+
+        // Filter out categories that are toggled off in the database
+        const filteredShopCategories = finalCategories.filter((catName) => {
+          const dbMatch = dbCats.find(
+            (c) => c.name.toLowerCase() === catName.toLowerCase() || c.slug.toLowerCase() === catName.toLowerCase()
+          );
+          return dbMatch ? dbMatch.showInShop !== false : true;
+        });
+        setCategories(filteredShopCategories);
         
       } catch (error) {
         console.error("❌ Error fetching data:", error);
@@ -384,8 +415,12 @@ const ShopPage = () => {
   }, []);
 
   useEffect(() => {
-    setSelectedCategory(category);
-  }, [category, pathCategory, queryCategory]);
+    if (resolvedCategory) {
+      setSelectedCategory(resolvedCategory.name);
+    } else {
+      setSelectedCategory(category);
+    }
+  }, [category, pathCategory, queryCategory, resolvedCategory]);
 
   // Load wishlist from localStorage on component mount
   useEffect(() => {
@@ -809,7 +844,13 @@ const ShopPage = () => {
                             { label: 'Birthday', value: 'birthday' },
                             { label: 'Anniversary', value: 'anniversary' },
                           ];
-                          const predefinedValues = new Set(predefined.map(p => p.value));
+                          const filteredPredefined = predefined.filter(option => {
+                            const dbMatch = dbCategories.find(
+                              c => c.name.toLowerCase() === option.value.toLowerCase() || c.slug.toLowerCase() === option.value.toLowerCase()
+                            );
+                            return dbMatch ? dbMatch.showInShop !== false : true;
+                          });
+                          const predefinedValues = new Set(filteredPredefined.map(p => p.value));
                           const dynamicCategories = categories
                             .slice(0, 10)
                             .filter(cat => !predefinedValues.has(cat.toLowerCase()))
@@ -818,7 +859,7 @@ const ShopPage = () => {
                               value: cat.toLowerCase()
                             }));
 
-                          return [...predefined, ...dynamicCategories].map(option => (
+                          return [...filteredPredefined, ...dynamicCategories].map(option => (
                             <label key={option.value} className="flex items-center gap-3 cursor-pointer group">
                               <input
                                 type="radio"

@@ -19,6 +19,7 @@ import axios from 'axios'; // Keep for axios.isAxiosError
 import ProductFeaturesToggle from '@/components/ui/ProductFeaturesToggle';
 import { getImageUrl } from '@/config';
 import { PRIMARY_CATEGORIES, getAdditionalCategoryOptions, getSubcategoryOptions, normalizeCategoryKey } from '@/utils/categoryTaxonomy';
+import categoryService, { Category } from '@/services/categoryService';
 
 type FormErrors = {
   [key in keyof ProductData]?: string;
@@ -155,6 +156,19 @@ const ProductForm = () => {
   };
 
   const [formData, setFormData] = useState<ProductData>(initialFormData);
+  const [dbCategories, setDbCategories] = useState<Category[]>([]);
+
+  const getSubcategories = (parentSlug: string) => {
+    const parent = dbCategories.find(c => c.slug === parentSlug);
+    if (!parent) return [];
+    const parentIdStr = parent._id || parent.id;
+    return dbCategories.filter(c => {
+      if (!c.parentId) return false;
+      const childParentId = typeof c.parentId === 'object' ? (c.parentId._id || c.parentId.id) : c.parentId;
+      return childParentId === parentIdStr;
+    });
+  };
+
   const [errors, setErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -210,6 +224,11 @@ const ProductForm = () => {
   const fetchProductData = async () => {
     try {
       const token = getAuthToken();
+      
+      // Fetch dynamic categories first
+      const cats = await categoryService.getCategories({ status: 'active' });
+      setDbCategories(cats);
+
       const data = await productService.getProductById(id);
       
       // Ensure categories is an array
@@ -218,9 +237,18 @@ const ProductForm = () => {
       }
 
       if (!data.subcategory) {
-        const categorySubcategories = getSubcategoryOptions(data.category);
+        const parent = cats.find(c => c.slug === data.category);
+        let subcategories: Category[] = [];
+        if (parent) {
+          const parentIdStr = parent._id || parent.id;
+          subcategories = cats.filter(c => {
+            if (!c.parentId) return false;
+            const childParentId = typeof c.parentId === 'object' ? (c.parentId._id || c.parentId.id) : c.parentId;
+            return childParentId === parentIdStr;
+          });
+        }
         const existingMatch = (data.categories || []).find((item) =>
-          categorySubcategories.some((subcategory) => normalizeCategoryKey(subcategory.value) === normalizeCategoryKey(item))
+          subcategories.some((subcategory) => subcategory.slug === item)
         );
         data.subcategory = existingMatch || '';
       }
@@ -432,8 +460,11 @@ const ProductForm = () => {
         if (isEditMode) {
           fetchProductData();
         } else {
-          // For new products, mark data as loaded immediately
-          setIsDataLoaded(true);
+          // Fetch dynamic categories for new product creation too
+          categoryService.getCategories({ status: 'active' })
+            .then(cats => setDbCategories(cats))
+            .catch(err => console.error('Error fetching categories:', err))
+            .finally(() => setIsDataLoaded(true));
         }
       } catch (err) {
         console.error('Error checking auth role:', err);
@@ -477,7 +508,7 @@ const ProductForm = () => {
       newErrors.category = 'Primary category is required';
     }
 
-    if (formData.category && getSubcategoryOptions(formData.category).length > 0 && !formData.subcategory) {
+    if (formData.category && getSubcategories(formData.category).length > 0 && !formData.subcategory) {
       newErrors.subcategory = 'Subcategory is required';
     }
 
@@ -866,7 +897,7 @@ const ProductForm = () => {
     setFormData(prev => ({
       ...prev,
       category: value,
-      subcategory: getSubcategoryOptions(value).some((subcategory) => subcategory.value === prev.subcategory)
+      subcategory: getSubcategories(value).some((sub) => sub.slug === prev.subcategory)
         ? prev.subcategory
         : ''
     }));
@@ -897,9 +928,14 @@ const ProductForm = () => {
   };
 
   const getAvailableCategories = () => {
-    return getAdditionalCategoryOptions(formData.category, formData.subcategory).filter(
-      (category) => !(formData.categories || []).includes(category.value)
-    );
+    const excluded = new Set([formData.category, formData.subcategory]);
+    return dbCategories
+      .filter(cat => !excluded.has(cat.slug))
+      .filter(cat => !(formData.categories || []).includes(cat.slug))
+      .map(cat => ({
+        value: cat.slug,
+        label: cat.name
+      }));
   };
 
   const handleDetailChange = (index: number, value: string) => {
@@ -1715,10 +1751,10 @@ const ProductForm = () => {
                 <SelectTrigger>
                   <SelectValue placeholder="Select primary category" />
                 </SelectTrigger>
-                <SelectContent>
-                  {CATEGORIES.map((category) => (
-                    <SelectItem key={category.value} value={category.value}>
-                      {category.label}
+                <SelectContent disablePortal>
+                  {dbCategories.filter(c => !c.parentId).map((category) => (
+                    <SelectItem key={category.slug} value={category.slug}>
+                      {category.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -1729,7 +1765,7 @@ const ProductForm = () => {
             </div>
 
             {/* Subcategory */}
-            {formData.category && getSubcategoryOptions(formData.category).length > 0 && (
+            {formData.category && getSubcategories(formData.category).length > 0 && (
               <div className="space-y-2">
                 <Label htmlFor="subcategory">Subcategory *</Label>
                 <Select
@@ -1739,10 +1775,10 @@ const ProductForm = () => {
                   <SelectTrigger>
                     <SelectValue placeholder="Select subcategory" />
                   </SelectTrigger>
-                  <SelectContent>
-                    {getSubcategoryOptions(formData.category).map((subcategory) => (
-                      <SelectItem key={subcategory.value} value={subcategory.value}>
-                        {subcategory.label}
+                  <SelectContent disablePortal>
+                    {getSubcategories(formData.category).map((subcategory) => (
+                      <SelectItem key={subcategory.slug} value={subcategory.slug}>
+                        {subcategory.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -1764,7 +1800,7 @@ const ProductForm = () => {
                   <SelectTrigger>
                     <SelectValue placeholder="Select combo subcategory" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent disablePortal>
                     {COMBO_SUBCATEGORIES.map((subcategory) => (
                       <SelectItem key={subcategory.value} value={subcategory.value}>
                         {subcategory.label}
@@ -1782,19 +1818,22 @@ const ProductForm = () => {
                 {/* Current Categories */}
                 {formData.categories && formData.categories.length > 0 && (
                   <div className="flex flex-wrap gap-2">
-                    {formData.categories.filter((category) => normalizeCategoryKey(category) !== normalizeCategoryKey(formData.subcategory)).map((category, index) => (
-                      <Badge
-                        key={index}
-                        variant="secondary"
-                        className="flex items-center gap-1 px-3 py-1"
-                      >
-                        {category}
-                        <X
-                          className="h-3 w-3 cursor-pointer hover:text-red-500"
-                          onClick={() => handleRemoveCategory(category)}
-                        />
-                      </Badge>
-                    ))}
+                    {formData.categories.filter((category) => normalizeCategoryKey(category) !== normalizeCategoryKey(formData.subcategory)).map((category, index) => {
+                      const dbCat = dbCategories.find(c => c.slug === category);
+                      return (
+                        <Badge
+                          key={index}
+                          variant="secondary"
+                          className="flex items-center gap-1 px-3 py-1"
+                        >
+                          {dbCat ? dbCat.name : category}
+                          <X
+                            className="h-3 w-3 cursor-pointer hover:text-red-500"
+                            onClick={() => handleRemoveCategory(category)}
+                          />
+                        </Badge>
+                      );
+                    })}
                   </div>
                 )}
 
@@ -1807,7 +1846,7 @@ const ProductForm = () => {
                     <SelectTrigger className="flex-1">
                       <SelectValue placeholder="Add additional category" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent disablePortal>
                       {getAvailableCategories().map((category) => (
                         <SelectItem key={category.value} value={category.value}>
                           {category.label}
@@ -1939,7 +1978,7 @@ const ProductForm = () => {
                   <SelectTrigger className="flex-1">
                     <SelectValue placeholder="Select a product detail" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent disablePortal>
                     {PRODUCT_DETAILS_OPTIONS.map((option) => (
                       <SelectItem key={option} value={option}>
                         {option}
@@ -1982,7 +2021,7 @@ const ProductForm = () => {
                   <SelectTrigger className="flex-1">
                     <SelectValue placeholder="Select a care instruction" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent disablePortal>
                     {CARE_INSTRUCTIONS_OPTIONS.map((option) => (
                       <SelectItem key={option} value={option}>
                         {option}

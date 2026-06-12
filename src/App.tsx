@@ -71,6 +71,9 @@ const AddonFormPage = lazy(() => import("./pages/Admin/AddonForm"));
 const ProductForm = lazy(() => import('@/pages/Admin/ProductForm'));
 const ProductApproval = lazy(() => import('@/pages/Admin/ProductApproval'));
 const UserViewPage = lazy(() => import('./pages/Admin/UserViewPage'));
+const AdminCategories = lazy(() => import('./pages/Admin/Categories'));
+const CategoryForm = lazy(() => import('./pages/Admin/CategoryForm'));
+const CategoryResolver = lazy(() => import('./pages/CategoryResolver'));
 const UserEditPage = lazy(() => import('./pages/Admin/UserEditPage'));
 const UserActivityLogs = lazy(() => import('./pages/Admin/UserActivityLogs'));
 
@@ -208,6 +211,16 @@ const App = () => {
                                 <ContactPage />
                               </Suspense>
                             } />
+                            <Route path="/:categorySlug" element={
+                              <Suspense fallback={<LoadingFallback message="Loading category..." />}>
+                                <CategoryResolver />
+                              </Suspense>
+                            } />
+                            <Route path="/:parentCategory/:categorySlug" element={
+                              <Suspense fallback={<LoadingFallback message="Loading category..." />}>
+                                <CategoryResolver />
+                              </Suspense>
+                            } />
                           </Route>
 
                           {/* Legal Pages */}
@@ -291,6 +304,21 @@ const App = () => {
                             <Route path="products" element={
                               <Suspense fallback={<LoadingFallback message="Loading products..." />}>
                                 <AdminProducts />
+                              </Suspense>
+                            } />
+                            <Route path="categories" element={
+                              <Suspense fallback={<LoadingFallback message="Loading categories..." />}>
+                                <AdminCategories />
+                              </Suspense>
+                            } />
+                            <Route path="categories/new" element={
+                              <Suspense fallback={<LoadingFallback message="Loading form..." />}>
+                                <CategoryForm />
+                              </Suspense>
+                            } />
+                            <Route path="categories/edit/:id" element={
+                              <Suspense fallback={<LoadingFallback message="Loading form..." />}>
+                                <CategoryForm />
                               </Suspense>
                             } />
                             <Route path="products/new" element={

@@ -1,17 +1,32 @@
-import React, { useState, useRef, useLayoutEffect, useEffect } from 'react';
+import React, { useState, useRef, useLayoutEffect, useEffect, useMemo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronRight, Sparkles } from 'lucide-react';
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { useSettings } from '@/contexts/SettingsContext';
 import productService from '@/services/productService';
-import { CATEGORY_NAV_ITEMS, normalizeCategoryKey } from '@/utils/categoryTaxonomy';
+import { normalizeCategoryKey } from '@/utils/categoryTaxonomy';
+
+const EMOJI_MAPPING: { [key: string]: string } = {
+  flowers: '🌹',
+  chocolate: '🍫',
+  birthday: '🎂',
+  anniversary: '💕',
+  baskets: '🧺',
+  combos: '🎁',
+  plants: '🌿',
+  sympathy: '💙',
+  occasions: '🎉',
+};
+const DEFAULT_EMOJI = '🌸';
 
 const CategoryMenu = () => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
   const [dropdownPosition, setDropdownPosition] = useState({ left: 0 });
+  const { shopCategories, loading: settingsLoading } = useSettings();
   const [categoryCounts, setCategoryCounts] = useState<{ [key: string]: number }>({});
   const [isLoadingCounts, setIsLoadingCounts] = useState(true);
   const navRef = useRef<HTMLDivElement>(null);
@@ -32,7 +47,7 @@ const CategoryMenu = () => {
     }, 200);
   };
 
-  // Fetch category counts on component mount
+  // Fetch dynamic category product counts on mount
   useEffect(() => {
     const fetchCategoryCounts = async () => {
       try {
@@ -45,7 +60,7 @@ const CategoryMenu = () => {
         });
         setCategoryCounts(countsMap);
       } catch (error) {
-        console.error('Error fetching category counts:', error);
+        console.error('Error fetching category counts in CategoryMenu:', error);
       } finally {
         setIsLoadingCounts(false);
       }
@@ -53,6 +68,42 @@ const CategoryMenu = () => {
 
     fetchCategoryCounts();
   }, []);
+
+  const getEmoji = (slug: string) => EMOJI_MAPPING[slug.toLowerCase()] || DEFAULT_EMOJI;
+  const getCategoryCount = (categoryName: string): number => {
+    const key = normalizeCategoryKey(categoryName);
+    return categoryCounts[key] || 0;
+  };
+
+  const categories = useMemo(() => {
+    return (shopCategories || [])
+      .filter(cat => cat.enabled && !cat.parentId)
+      .sort((a, b) => (a.priority ?? a.sortOrder ?? 0) - (b.priority ?? b.sortOrder ?? 0))
+      .map(parent => {
+        const parentIdStr = parent._id || parent.id;
+        const subcats = (shopCategories || [])
+          .filter(c => {
+            if (!c.enabled || !c.parentId) return false;
+            const childParentId = typeof c.parentId === 'object' ? (c.parentId._id || c.parentId.id) : c.parentId;
+            return childParentId === parentIdStr;
+          })
+          .sort((a, b) => (a.priority ?? a.sortOrder ?? 0) - (b.priority ?? b.sortOrder ?? 0))
+          .map(sub => ({
+            name: sub.name,
+            path: sub.link || sub.categoryUrl,
+            count: getCategoryCount(sub.name)
+          }));
+
+        return {
+          name: parent.name,
+          path: parent.link || parent.categoryUrl,
+          emoji: getEmoji(parent.slug || parent.name),
+          description: parent.description || '',
+          popular: parent.featured || false,
+          subcategories: subcats
+        };
+      });
+  }, [shopCategories, categoryCounts]);
 
   useLayoutEffect(() => {
     if (hoveredCategory && navRef.current) {
@@ -75,22 +126,7 @@ const CategoryMenu = () => {
         }
       }
     }
-  }, [hoveredCategory]);
-
-  // Helper function to get count for a category
-  const getCategoryCount = (categoryName: string): number => {
-    const key = normalizeCategoryKey(categoryName);
-    return categoryCounts[key] || 0;
-  };
-  
-  const categories = CATEGORY_NAV_ITEMS.map((category) => ({
-    ...category,
-    subcategories: category.subcategories.map((subcategory) => ({
-      name: subcategory.label,
-      path: subcategory.path,
-      count: getCategoryCount(subcategory.value),
-    })),
-  }));
+  }, [hoveredCategory, categories]);
 
   const activeCategory = categories.find(c => c.name === hoveredCategory);
 
@@ -189,7 +225,7 @@ const CategoryMenu = () => {
                       {category.emoji}
                     </span>
                     <span className="font-semibold">
-                      {category.name.split(' ').slice(1).join(' ')}
+                      {category.name}
                     </span>
                     <ChevronDown 
                       size={14} 
@@ -235,7 +271,7 @@ const CategoryMenu = () => {
                   <span className="text-3xl">{activeCategory.emoji}</span>
                   <div>
                     <h3 className="font-bold text-gray-800">
-                      {activeCategory.name.split(' ').slice(1).join(' ')}
+                      {activeCategory.name}
                     </h3>
                     <p className="text-sm text-gray-500">{activeCategory.description}</p>
                   </div>
@@ -290,7 +326,7 @@ const CategoryMenu = () => {
                   className="block p-4 text-center text-sm font-medium text-primary hover:text-secondary bg-gradient-to-r from-primary/5 to-secondary/5 hover:from-primary/10 hover:to-secondary/10 transition-all duration-300"
                   onClick={() => setHoveredCategory(null)}
                 >
-                  View All {activeCategory.name.split(' ').slice(1).join(' ')}
+                  View All {activeCategory.name}
                 </Link>
               </div>
             </motion.div>
