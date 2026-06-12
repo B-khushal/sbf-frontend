@@ -50,7 +50,7 @@ const MainLayout: React.FC = () => {
         } 
         aria-hidden="true" 
       />
-      <main className="flex-grow">
+      <main className="flex-grow pb-24 md:pb-0">
         <Outlet />
       </main>
       {showFooter && <Footer />}

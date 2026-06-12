@@ -4,7 +4,8 @@ import {
   Menu, Search, ShoppingCart, User, X, Heart, Sparkles, 
   TrendingUp, DollarSign, Store, LogIn, ChevronDown, 
   MapPin, Phone, Mail, Globe, ArrowRight, Star, Zap,
-  Shield, Truck, RefreshCw, Gift, Home, Info, MessageCircle, Package
+  Shield, Truck, RefreshCw, Gift, Home, Info, MessageCircle, Package,
+  ShoppingBag
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -16,6 +17,7 @@ import { useSettings } from '@/contexts/SettingsContext';
 import { useAuth } from '@/hooks/use-auth';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DeliveryLocationSelector } from './ui/DeliveryLocationSelector';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface NavItem {
   href: string;
@@ -99,7 +101,7 @@ const getNavIcon = (href: string, label: string) => {
 
 const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [showMobileSearch, setShowMobileSearch] = useState(false);
+  const isMobile = useIsMobile();
   const { pathname } = useLocation();
   const [wishlistCount, setWishlistCount] = useState(0);
   const cartHook = useCart();
@@ -285,8 +287,8 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
           {/* Main Navigation Row */}
           <div className="flex items-center justify-between h-16 sm:h-18 lg:h-20">
             
-            {/* Logo & Location Selector */}
-            <div className="flex items-center gap-4">
+            {/* Logo */}
+            <div className="flex items-center flex-shrink-0">
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -327,15 +329,16 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                   </div>
                 </Link>
               </motion.div>
-              
-              <div className="flex items-center">
-                <DeliveryLocationSelector variant="navbar" />
-              </div>
+            </div>
+            
+            {/* Location Selector - Desktop/Tablet Only */}
+            <div className="hidden md:flex items-center ml-4 flex-shrink-0">
+              <DeliveryLocationSelector variant="navbar" />
             </div>
             
             {/* Desktop Navigation */}
             <motion.nav 
-              className="hidden lg:flex items-center space-x-1 xl:space-x-2"
+              className="hidden lg:flex items-center space-x-1 xl:space-x-2 flex-shrink-0 mx-4"
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
@@ -350,9 +353,9 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
               ))}
             </motion.nav>
             
-            {/* Search Bar - Desktop/Tablet */}
+            {/* Search Bar - Responsive */}
             <motion.div 
-              className="hidden md:flex relative flex-1 max-w-md lg:max-w-lg xl:max-w-xl mx-6"
+              className="flex relative flex-1 max-w-full md:max-w-md lg:max-w-lg xl:max-w-xl mx-2 sm:mx-4 md:mx-6"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.4, delay: 0.2, ease: "easeOut" }}
@@ -368,7 +371,7 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                   />
                   <Input
                     type="text"
-                    placeholder="Search for flowers, bouquets, gifts..."
+                    placeholder={isMobile ? "Search..." : "Search for flowers, bouquets, gifts..."}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onFocus={handleSearchFocus}
@@ -544,167 +547,167 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
             
             {/* Right Side Actions */}
             <motion.div 
-              className="flex items-center space-x-1 sm:space-x-2"
+              className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.6 }}
             >
-              <div className="hidden sm:block dropdown-container">
+              <div className="hidden md:block dropdown-container">
                 <CurrencyConverter />
               </div>
               
-              <div className="md:hidden">
-                <Button variant="ghost" size="icon" onClick={() => setShowMobileSearch(true)}>
-                  <Search size={18} />
+              {user && (
+                <div className="hidden md:block">
+                  <Button variant="ghost" size="icon" asChild>
+                    <Link to="/wishlist" className="relative">
+                      <Heart size={18} />
+                      {wishlistCount > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                          {wishlistCount}
+                        </span>
+                      )}
+                    </Link>
+                  </Button>
+                </div>
+              )}
+              
+              <div className="hidden md:block">
+                <Button variant="ghost" size="icon" onClick={handleCartClick} className="relative">
+                  <ShoppingCart size={18} />
+                  {(actualCartCount > 0) && (
+                    <span className="absolute -top-1 -right-1 bg-primary text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                      {actualCartCount}
+                    </span>
+                  )}
                 </Button>
               </div>
 
-              {user && (
-                <Button variant="ghost" size="icon" asChild>
-                  <Link to="/wishlist" className="relative">
-                    <Heart size={18} />
-                    {wishlistCount > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                        {wishlistCount}
-                      </span>
-                    )}
-                  </Link>
-                </Button>
-              )}
-              
-              <Button variant="ghost" size="icon" onClick={handleCartClick} className="relative">
-                <ShoppingCart size={18} />
-                {(actualCartCount > 0) && (
-                  <span className="absolute -top-1 -right-1 bg-primary text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                    {actualCartCount}
-                  </span>
-                )}
-              </Button>
-
-              {user ? (
-                <div ref={userMenuRef} className="relative dropdown-container">
-                  <Button variant="ghost" size="icon" onClick={handleDropdownToggle}>
-                    <User size={18} />
-                  </Button>
-                  <AnimatePresence>
-                    {showUserMenu && (
-                      <>
-                        {/* Backdrop for mobile */}
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          transition={{ duration: 0.2 }}
-                          className="fixed inset-0 bg-black/40 z-[1000] sm:hidden backdrop-blur-sm"
-                          onClick={() => setShowUserMenu(false)}
-                        />
-                        <motion.div
-                          initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                          transition={{ duration: 0.15, ease: "easeOut" }}
-                          className={`absolute right-0 w-56 bg-white rounded-xl shadow-xl border border-gray-100 p-2 z-dropdown will-change-transform ${
-                            dropdownPosition === 'top' ? 'bottom-full mb-2' : 'top-full mt-2'
-                          }`}
-                          style={{ 
-                            transform: 'translateZ(0)',
-                            contain: 'layout style paint'
-                          }}
-                          onMouseLeave={() => setShowUserMenu(false)}
-                          onTouchStart={(e) => e.stopPropagation()}
-                        >
-                          {/* Mobile close button */}
-                          <div className="flex justify-between items-center p-2 border-b sm:hidden">
-                            <div className="flex-1 min-w-0">
-                              <p className="font-semibold text-sm truncate">{user.name}</p>
+              <div className="hidden md:block">
+                {user ? (
+                  <div ref={userMenuRef} className="relative dropdown-container">
+                    <Button variant="ghost" size="icon" onClick={handleDropdownToggle}>
+                      <User size={18} />
+                    </Button>
+                    <AnimatePresence>
+                      {showUserMenu && (
+                        <>
+                          {/* Backdrop for mobile */}
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="fixed inset-0 bg-black/40 z-[1000] sm:hidden backdrop-blur-sm"
+                            onClick={() => setShowUserMenu(false)}
+                          />
+                          <motion.div
+                            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                            transition={{ duration: 0.15, ease: "easeOut" }}
+                            className={`absolute right-0 w-56 bg-white rounded-xl shadow-xl border border-gray-100 p-2 z-dropdown will-change-transform ${
+                              dropdownPosition === 'top' ? 'bottom-full mb-2' : 'top-full mt-2'
+                            }`}
+                            style={{ 
+                              transform: 'translateZ(0)',
+                              contain: 'layout style paint'
+                            }}
+                            onMouseLeave={() => setShowUserMenu(false)}
+                            onTouchStart={(e) => e.stopPropagation()}
+                          >
+                            {/* Mobile close button */}
+                            <div className="flex justify-between items-center p-2 border-b sm:hidden">
+                              <div className="flex-1 min-w-0">
+                                <p className="font-semibold text-sm truncate">{user.name}</p>
+                                <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 ml-2 flex-shrink-0"
+                                onClick={() => setShowUserMenu(false)}
+                              >
+                                <X size={14} />
+                              </Button>
+                            </div>
+                            
+                            {/* Desktop header */}
+                            <div className="p-2 border-b hidden sm:block">
+                              <p className="font-semibold text-sm">{user.name}</p>
                               <p className="text-xs text-gray-500 truncate">{user.email}</p>
                             </div>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6 ml-2 flex-shrink-0"
-                              onClick={() => setShowUserMenu(false)}
-                            >
-                              <X size={14} />
-                            </Button>
-                          </div>
-                          
-                          {/* Desktop header */}
-                          <div className="p-2 border-b hidden sm:block">
-                            <p className="font-semibold text-sm">{user.name}</p>
-                            <p className="text-xs text-gray-500 truncate">{user.email}</p>
-                          </div>
-                          
-                          <div className="py-1 max-h-64 overflow-y-auto">
-                            <Link 
-                              to="/profile" 
-                              className="flex items-center w-full px-3 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-all duration-200"
-                              onClick={() => setShowUserMenu(false)}
-                            >
-                              <div className="flex items-center justify-center w-5 h-5 mr-3 flex-shrink-0">
-                                <User className="w-4 h-4" />
-                              </div>
-                              <span className="truncate">My Account</span>
-                            </Link>
-                            <Link 
-                              to="/profile#orders" 
-                              className="flex items-center w-full px-3 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-all duration-200"
-                              onClick={() => setShowUserMenu(false)}
-                            >
-                              <div className="flex items-center justify-center w-5 h-5 mr-3 flex-shrink-0">
-                                <ShoppingCart className="w-4 h-4" />
-                              </div>
-                              <span className="truncate">My Orders</span>
-                            </Link>
-                            {user.role === 'admin' && (
+                            
+                            <div className="py-1 max-h-64 overflow-y-auto">
                               <Link 
-                                to="/admin" 
+                                to="/profile" 
                                 className="flex items-center w-full px-3 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-all duration-200"
                                 onClick={() => setShowUserMenu(false)}
                               >
                                 <div className="flex items-center justify-center w-5 h-5 mr-3 flex-shrink-0">
-                                  <Store className="w-4 h-4" />
+                                  <User className="w-4 h-4" />
                                 </div>
-                                <span className="truncate">Admin Dashboard</span>
+                                <span className="truncate">My Account</span>
                               </Link>
-                            )}
-                            {user.role === 'vendor' && (
                               <Link 
-                                to="/vendor/dashboard" 
+                                to="/profile#orders" 
                                 className="flex items-center w-full px-3 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-all duration-200"
                                 onClick={() => setShowUserMenu(false)}
                               >
                                 <div className="flex items-center justify-center w-5 h-5 mr-3 flex-shrink-0">
-                                  <Store className="w-4 h-4" />
+                                  <ShoppingCart className="w-4 h-4" />
                                 </div>
-                                <span className="truncate">Vendor Dashboard</span>
+                                <span className="truncate">My Orders</span>
                               </Link>
-                            )}
-                            <button
-                              onClick={() => {
-                                logout();
-                                setShowUserMenu(false);
-                              }}
-                              className="flex items-center w-full px-3 py-3 text-sm text-red-600 hover:bg-red-50 rounded-md transition-all duration-200"
-                            >
-                              <div className="flex items-center justify-center w-5 h-5 mr-3 flex-shrink-0">
-                                <LogIn className="w-4 h-4" />
-                              </div>
-                              <span className="truncate">Sign Out</span>
-                            </button>
-                          </div>
-                        </motion.div>
-                      </>
-                    )}
-                  </AnimatePresence>
-                </div>
-              ) : (
-                <Button variant="ghost" size="icon" asChild>
-                  <Link to="/login">
-                    <LogIn size={18} />
-                  </Link>
-                </Button>
-              )}
+                              {user.role === 'admin' && (
+                                <Link 
+                                  to="/admin" 
+                                  className="flex items-center w-full px-3 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-all duration-200"
+                                  onClick={() => setShowUserMenu(false)}
+                                >
+                                  <div className="flex items-center justify-center w-5 h-5 mr-3 flex-shrink-0">
+                                    <Store className="w-4 h-4" />
+                                  </div>
+                                  <span className="truncate">Admin Dashboard</span>
+                                </Link>
+                              )}
+                              {user.role === 'vendor' && (
+                                <Link 
+                                  to="/vendor/dashboard" 
+                                  className="flex items-center w-full px-3 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-all duration-200"
+                                  onClick={() => setShowUserMenu(false)}
+                                >
+                                  <div className="flex items-center justify-center w-5 h-5 mr-3 flex-shrink-0">
+                                    <Store className="w-4 h-4" />
+                                  </div>
+                                  <span className="truncate">Vendor Dashboard</span>
+                                </Link>
+                              )}
+                              <button
+                                onClick={() => {
+                                  logout();
+                                  setShowUserMenu(false);
+                                }}
+                                className="flex items-center w-full px-3 py-3 text-sm text-red-600 hover:bg-red-50 rounded-md transition-all duration-200"
+                              >
+                                <div className="flex items-center justify-center w-5 h-5 mr-3 flex-shrink-0">
+                                  <LogIn className="w-4 h-4" />
+                                </div>
+                                <span className="truncate">Sign Out</span>
+                              </button>
+                            </div>
+                          </motion.div>
+                        </>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                ) : (
+                  <Button variant="ghost" size="icon" asChild>
+                    <Link to="/login">
+                      <LogIn size={18} />
+                    </Link>
+                  </Button>
+                )}
+              </div>
 
               <div className="lg:hidden">
                 <Button
@@ -847,77 +850,6 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                   </div>
                 )}
               </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Mobile Search Modal */}
-      <AnimatePresence>
-        {showMobileSearch && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-            className="fixed inset-0 bg-white z-modal p-4 flex flex-col"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">Search</h2>
-              <Button variant="ghost" size="icon" onClick={() => setShowMobileSearch(false)}>
-                <X size={20} />
-              </Button>
-            </div>
-            <form onSubmit={handleSearchSubmit} className="relative">
-              <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <Input
-                type="text"
-                placeholder="Search for flowers, bouquets, gifts..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:border-primary transition-all duration-200"
-                autoFocus
-              />
-            </form>
-            <div className="mt-4 overflow-y-auto">
-              {searchQuery.length > 0 && searchSuggestions.length > 0 ? (
-                <div className="space-y-2">
-                  {searchSuggestions.map((suggestion) => (
-                    <button
-                      key={suggestion.id}
-                      onClick={() => {
-                        handleSuggestionClick(suggestion);
-                        setShowMobileSearch(false);
-                      }}
-                      className="w-full text-left p-3 hover:bg-gray-100 rounded-lg flex items-center gap-3"
-                    >
-                      <img src={suggestion.image} alt={suggestion.title} className="w-12 h-12 rounded-md object-cover" />
-                      <div>
-                        <p className="font-semibold">{suggestion.title}</p>
-                        <p className="text-sm text-gray-500">₹{suggestion.price}</p>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-600 mb-2">Popular Searches</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {popularSearches.map((item) => (
-                      <button
-                        key={item.term}
-                        onClick={() => {
-                          handlePopularSearchClick(item.term);
-                          setShowMobileSearch(false);
-                        }}
-                        className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-full text-sm"
-                      >
-                        {item.term}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           </motion.div>
         )}

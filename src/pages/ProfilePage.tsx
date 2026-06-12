@@ -565,7 +565,7 @@ const ProfilePage: React.FC = () => {
       <Navigation cartItemCount={0} />
       
       <motion.main 
-        className="relative flex-1 pt-20 z-10"
+        className="relative flex-1 pt-20 pb-24 md:pb-0 z-10"
         initial="hidden"
         animate="visible"
         variants={containerVariants}

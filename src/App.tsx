@@ -11,6 +11,7 @@ import { NotificationProvider } from '@/contexts/NotificationContext';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import MainLayout from './components/MainLayout';
+import MobileBottomNav from '@/components/MobileBottomNav';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import useCart from '@/hooks/use-cart';
 import CartLoader from '@/components/CartLoader';
@@ -500,6 +501,7 @@ const App = () => {
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </Suspense>
+                      <MobileBottomNav />
                     </BrowserRouter>
                   </TooltipProvider>
                 </NotificationProvider>
