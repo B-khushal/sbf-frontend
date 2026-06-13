@@ -60,7 +60,7 @@ const VendorLayout: React.FC = () => {
       <div className={cn("px-4 py-6 flex items-center justify-center", collapsed && "px-2 py-4")}>
         <Link to="/vendor/dashboard" className="flex items-center">
           <img
-            src="https://res.cloudinary.com/djtrhfqan/image/upload/v1771963278/sbf-branding/image-1771963277711-752501958.png"
+            src="https://res.cloudinary.com/djtrhfqan/image/upload/v1771960430/sbf-products/image-1771960425724-93003075.png"
             alt="Spring Blossoms Florist Logo"
             className={cn(
               "transition-all duration-300 ease-in-out hover:scale-105",
