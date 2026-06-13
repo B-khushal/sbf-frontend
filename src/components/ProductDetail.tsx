@@ -1465,16 +1465,10 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
             className="fixed inset-0 bg-black/95 backdrop-blur-md z-modal flex flex-col justify-between p-6 select-none"
           >
             {/* Lightbox header */}
-            <div className="flex justify-between items-center text-white/80">
+            <div className="flex justify-center items-center text-white/80">
               <span className="text-xs font-bold tracking-[0.1em] uppercase">
                 {selectedImage + 1} / {product.images.length} • {product.title}
               </span>
-              <button
-                onClick={() => setIsLightboxOpen(false)}
-                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white hover:scale-105 active:scale-95 transition-all"
-              >
-                <X size={20} />
-              </button>
             </div>
 
             {/* Lightbox Main Image */}
@@ -1489,16 +1483,25 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                 <ChevronLeft size={24} />
               </button>
 
-              <motion.img
-                key={selectedImage}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.3 }}
-                src={getImageUrl(product.images[selectedImage], { bustCache: false })}
-                alt={product.title}
-                className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-2xl"
-              />
+              <div className="relative max-w-fit mx-auto">
+                <motion.img
+                  key={selectedImage}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.3 }}
+                  src={getImageUrl(product.images[selectedImage], { bustCache: false })}
+                  alt={product.title}
+                  className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-2xl"
+                />
+                
+                <button
+                  onClick={() => setIsLightboxOpen(false)}
+                  className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-black/85 hover:bg-black text-white flex items-center justify-center border border-white/40 shadow-xl hover:scale-110 active:scale-95 transition-all z-20"
+                >
+                  <X size={16} />
+                </button>
+              </div>
 
               <button
                 onClick={(e) => {
