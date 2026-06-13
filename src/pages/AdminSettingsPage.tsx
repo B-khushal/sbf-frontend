@@ -52,6 +52,7 @@ import { cn } from "@/lib/utils";
 
 const TABS = [
   { id: "hero-slides", label: "Hero Banners", icon: ImageIcon, desc: "Hero slideshow slides, CTA links, image overlays" },
+  { id: "mobile-banners", label: "Mobile Banner", icon: Smartphone, desc: "Upload and schedule mobile-only delivery / offer banners" },
   { id: "bento-banners", label: "Curated Banners", icon: LayoutGrid, desc: "Add/edit/delete Curated Occasion Bento Banners" },
   { id: "sections", label: "Section Builder", icon: Layers, desc: "Order and customize homepage collections & banners" },
   { id: "categories", label: "Category Details", icon: LayoutGrid, desc: "Manage catalog hierarchy, slugs, priority themes" },
@@ -325,6 +326,7 @@ const AdminSettingsPage = () => {
         // Clean default nested fields
         const cleaned = {
           heroSlides: data.heroSlides || [],
+          mobileBanners: data.mobileBanners || [],
           homeSections: loadedSections.map((sec: any) => {
             if (sec.type === 'offers' && (!sec.content || !sec.content.items || sec.content.items.length === 0)) {
               return { ...sec, content: { ...sec.content, items: defaultBentoItems } };
@@ -1032,6 +1034,196 @@ const AdminSettingsPage = () => {
                                             s.id === slide.id ? { ...s, overlayOpacity: parseFloat(e.target.value) } : s
                                           );
                                           updateSettingsState({ ...localSettings, heroSlides: copy });
+                                        }}
+                                        className="bg-slate-900 border-slate-700 text-slate-200 text-xs mt-1"
+                                      />
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            </SortableItem>
+                          ))}
+                        </div>
+                      </SortableContext>
+                    </DndContext>
+                  </div>
+                )}
+
+                {activeTab === "mobile-banners" && (
+                  <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2">
+                          <Smartphone className="h-5 w-5 text-cyan-400" />
+                          Mobile Homepage Banner Configuration
+                        </h2>
+                        <p className="text-xs text-slate-400">Manage, sort, and schedule mobile-only delivery or offer promo banners</p>
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          const list = [...(localSettings.mobileBanners || [])];
+                          const maxId = list.reduce((max, s) => {
+                            const numId = parseInt(s.id?.replace("mb-", "")) || 0;
+                            return Math.max(max, numId);
+                          }, 0);
+                          list.push({
+                            id: `mb-${maxId + 1}`,
+                            title: "NEW DELIVERY OFFER",
+                            subtitle: "Free Delivery on orders above ₹999",
+                            image: "https://placehold.co/800x200?text=Mobile+Promo+Banner",
+                            link: "/shop",
+                            enabled: true,
+                            order: list.length,
+                            schedulePublishStart: null,
+                            schedulePublishEnd: null
+                          });
+                          updateSettingsState({ ...localSettings, mobileBanners: list });
+                        }}
+                        className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold"
+                      >
+                        <Plus className="h-4 w-4 mr-1" /> Add Banner
+                      </Button>
+                    </div>
+
+                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => {
+                      const { active, over } = e;
+                      if (active.id !== over?.id) {
+                        const items = [...(localSettings.mobileBanners || [])];
+                        const oldIdx = items.findIndex(s => String(s.id) === active.id);
+                        const newIdx = items.findIndex(s => String(s.id) === over?.id);
+                        const reordered = arrayMove(items, oldIdx, newIdx).map((item, idx) => ({ ...item, order: idx }));
+                        updateSettingsState({ ...localSettings, mobileBanners: reordered });
+                      }
+                    }}>
+                      <SortableContext items={(localSettings.mobileBanners || []).map((s: any) => String(s.id))} strategy={verticalListSortingStrategy}>
+                        <div className="space-y-4">
+                          {(localSettings.mobileBanners || []).map((banner: any) => (
+                            <SortableItem key={banner.id} id={String(banner.id)}>
+                              <Card className="bg-slate-800/40 border-slate-800 overflow-hidden shadow-md">
+                                <CardContent className="p-4 space-y-4">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <SortableHandle>
+                                        <GripVertical className="h-5 w-5 text-slate-500 cursor-grab active:cursor-grabbing" />
+                                      </SortableHandle>
+                                      <Badge className="bg-slate-700 text-slate-300 font-bold">Banner #{banner.id}</Badge>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                      <Switch
+                                        checked={banner.enabled}
+                                        onCheckedChange={(checked) => {
+                                          const copy = localSettings.mobileBanners.map((s: any) => 
+                                            s.id === banner.id ? { ...s, enabled: checked } : s
+                                          );
+                                          updateSettingsState({ ...localSettings, mobileBanners: copy });
+                                        }}
+                                      />
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => {
+                                          const copy = localSettings.mobileBanners.filter((s: any) => s.id !== banner.id);
+                                          updateSettingsState({ ...localSettings, mobileBanners: copy });
+                                        }}
+                                        className="text-red-400 hover:text-red-300 h-8 w-8"
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  </div>
+
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {/* Image upload */}
+                                    <div className="space-y-1.5">
+                                      <Label className="text-xs text-slate-300 font-bold">Banner Image (80px - 100px recommended height)</Label>
+                                      <ImageUpload
+                                        currentImage={banner.image}
+                                        onImageUpload={async (file) => {
+                                          await handleImageUpload(file, "hero", `mobile-banner-${banner.id}`, (url) => {
+                                            const copy = localSettings.mobileBanners.map((s: any) => 
+                                              s.id === banner.id ? { ...s, image: url } : s
+                                            );
+                                            updateSettingsState({ ...localSettings, mobileBanners: copy });
+                                          });
+                                        }}
+                                        isUploading={uploadingImage === `mobile-banner-${banner.id}`}
+                                        aspectRatio="landscape"
+                                        placeholder="Upload Banner Image"
+                                      />
+                                    </div>
+
+                                    {/* Text Fields */}
+                                    <div className="space-y-3">
+                                      <div>
+                                        <Label className="text-xs text-slate-300 font-bold">Title (e.g. FREE DELIVERY!!)</Label>
+                                        <Input
+                                          value={banner.title}
+                                          onChange={(e) => {
+                                            const copy = localSettings.mobileBanners.map((s: any) => 
+                                              s.id === banner.id ? { ...s, title: e.target.value } : s
+                                            );
+                                            updateSettingsState({ ...localSettings, mobileBanners: copy });
+                                          }}
+                                          className="bg-slate-900 border-slate-700 text-slate-200 mt-1"
+                                        />
+                                      </div>
+                                      <div>
+                                        <Label className="text-xs text-slate-300 font-bold">Subtitle / Description</Label>
+                                        <Input
+                                          value={banner.subtitle}
+                                          onChange={(e) => {
+                                            const copy = localSettings.mobileBanners.map((s: any) => 
+                                              s.id === banner.id ? { ...s, subtitle: e.target.value } : s
+                                            );
+                                            updateSettingsState({ ...localSettings, mobileBanners: copy });
+                                          }}
+                                          className="bg-slate-900 border-slate-700 text-slate-200 mt-1"
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* URL & Scheduling Grid */}
+                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2 border-t border-slate-800/50">
+                                    <div>
+                                      <Label className="text-[11px] text-slate-400 font-bold">Destination URL Link</Label>
+                                      <Input
+                                        value={banner.link}
+                                        onChange={(e) => {
+                                          const copy = localSettings.mobileBanners.map((s: any) => 
+                                            s.id === banner.id ? { ...s, link: e.target.value } : s
+                                          );
+                                          updateSettingsState({ ...localSettings, mobileBanners: copy });
+                                        }}
+                                        className="bg-slate-900 border-slate-700 text-slate-200 text-xs mt-1"
+                                        placeholder="/shop or custom URL"
+                                      />
+                                    </div>
+                                    <div>
+                                      <Label className="text-[11px] text-slate-400 font-bold">Publish Start Date/Time (Optional)</Label>
+                                      <Input
+                                        type="datetime-local"
+                                        value={banner.schedulePublishStart ? new Date(banner.schedulePublishStart).toISOString().slice(0, 16) : ""}
+                                        onChange={(e) => {
+                                          const copy = localSettings.mobileBanners.map((s: any) => 
+                                            s.id === banner.id ? { ...s, schedulePublishStart: e.target.value ? new Date(e.target.value) : null } : s
+                                          );
+                                          updateSettingsState({ ...localSettings, mobileBanners: copy });
+                                        }}
+                                        className="bg-slate-900 border-slate-700 text-slate-200 text-xs mt-1"
+                                      />
+                                    </div>
+                                    <div>
+                                      <Label className="text-[11px] text-slate-400 font-bold">Publish End Date/Time (Optional)</Label>
+                                      <Input
+                                        type="datetime-local"
+                                        value={banner.schedulePublishEnd ? new Date(banner.schedulePublishEnd).toISOString().slice(0, 16) : ""}
+                                        onChange={(e) => {
+                                          const copy = localSettings.mobileBanners.map((s: any) => 
+                                            s.id === banner.id ? { ...s, schedulePublishEnd: e.target.value ? new Date(e.target.value) : null } : s
+                                          );
+                                          updateSettingsState({ ...localSettings, mobileBanners: copy });
                                         }}
                                         className="bg-slate-900 border-slate-700 text-slate-200 text-xs mt-1"
                                       />

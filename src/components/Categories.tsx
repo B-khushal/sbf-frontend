@@ -1,8 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useSettings } from '@/contexts/SettingsContext';
 import { ArrowUpRight, Flower2, Gift, Heart, Leaf, Sparkles } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 const CATEGORY_QUERY_ALIASES: Record<string, string> = {
   anivarsery: 'anniversary',
@@ -42,8 +41,39 @@ const pickCategoryIcon = (name: string) => {
   return Flower2;
 };
 
+const CategoryCircleItem = ({ category, index, isVisible }: { category: any; index: number; isVisible: boolean }) => {
+  const [imageLoaded, setImageLoaded] = useState(false);
+  return (
+    <Link
+      to={`/shop?category=${encodeURIComponent(toCategoryQueryValue(category.name))}`}
+      className="flex flex-col items-center justify-start flex-shrink-0 snap-center select-none group"
+      style={{
+        opacity: isVisible ? 1 : 0,
+        transform: isVisible ? 'translateY(0)' : 'translateY(20px)',
+        transition: `opacity 0.5s ease ${index * 0.05}s, transform 0.5s ease ${index * 0.05}s`,
+      }}
+    >
+      <div className="relative w-[68px] h-[68px] sm:w-[72px] sm:h-[72px] rounded-full overflow-hidden border-2 border-white shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-transform duration-[250ms] ease group-hover:scale-105 group-active:scale-105 group-hover:shadow-[0_8px_24px_rgba(236,72,153,0.15)]">
+        {!imageLoaded && (
+          <div className="absolute inset-0 bg-slate-100 animate-pulse rounded-full" />
+        )}
+        <img
+          src={category.image}
+          alt={category.name}
+          loading="lazy"
+          onLoad={() => setImageLoaded(true)}
+          className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+        />
+      </div>
+      <span className="text-[11px] font-bold text-gray-700 text-center mt-2 w-[84px] leading-tight truncate">
+        {category.name}
+      </span>
+    </Link>
+  );
+};
+
 const Categories = () => {
-  const { categories, loading } = useSettings();
+  const { categories, mobileBanners, loading } = useSettings();
   const sectionRef = useRef<HTMLElement | null>(null);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -63,6 +93,17 @@ const Categories = () => {
     observer.observe(target);
     return () => observer.disconnect();
   }, []);
+
+  const activeBanners = useMemo(() => {
+    if (!mobileBanners || !Array.isArray(mobileBanners)) return [];
+    const now = new Date();
+    return mobileBanners.filter(banner => {
+      if (!banner.enabled) return false;
+      if (banner.schedulePublishStart && new Date(banner.schedulePublishStart) > now) return false;
+      if (banner.schedulePublishEnd && new Date(banner.schedulePublishEnd) < now) return false;
+      return true;
+    }).sort((a, b) => a.order - b.order);
+  }, [mobileBanners]);
 
   if (loading) {
     return (
@@ -87,9 +128,20 @@ const Categories = () => {
   return (
     <section
       ref={sectionRef}
-      className="relative overflow-hidden py-6 sm:py-12 md:py-20 px-4 sm:px-6 md:px-8 bg-gradient-to-b from-[#fffafc] via-white to-white"
+      className="relative overflow-hidden py-6 sm:py-12 md:py-16 px-4 sm:px-6 md:px-8 bg-gradient-to-b from-[#fffafc] via-white to-white"
       aria-label="Shop by category"
     >
+      {/* Scrollbar style injection */}
+      <style>{`
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .no-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
+
       {/* Background soft blurs */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -top-24 -left-24 h-56 w-56 rounded-full bg-[#FFB6C1]/10 blur-3xl" />
@@ -97,90 +149,79 @@ const Categories = () => {
       </div>
 
       <div className="relative max-w-7xl mx-auto">
-        
-        {/* Section Header */}
-        <div className="text-center mb-5 sm:mb-8 md:mb-12">
-          <p className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-white border border-[#f3d7e2]/60 px-3.5 py-1.5 text-[10px] font-bold tracking-[0.2em] text-[#b53d69] uppercase mb-4 shadow-sm">
-            <Flower2 className="h-3 w-3" />
-            Curated Gifting Collections
-          </p>
-          <h2 className="text-xl sm:text-3xl md:text-4xl font-black text-gray-800 leading-tight">
-            Shop Our Best Categories
-          </h2>
-          <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-gray-500 max-w-md mx-auto leading-relaxed">
-            Discover curated luxury arrangements hand-delivered for every occasion.
-          </p>
-        </div>
-
-        {/* ═══════════════════════════════════════════════════════════ */}
-        {/* MOBILE VIEW: 4-column grid like FlowerAura reference      */}
-        {/* ═══════════════════════════════════════════════════════════ */}
-        <div className="sm:hidden">
-          <div className="grid grid-cols-4 gap-x-2 gap-y-4 px-1">
-            {enabledCategories.map((category, index) => (
+        {/* Mobile Banner (Show on mobile/max-width 768px, hide on tablet/desktop) */}
+        {activeBanners.length > 0 && (
+          <div className="block md:hidden mb-6 px-1">
+            {activeBanners.map((banner) => (
               <Link
-                key={category.id}
-                to={`/shop?category=${encodeURIComponent(toCategoryQueryValue(category.name))}`}
-                className="flex flex-col items-center justify-start select-none active:scale-95 transition-transform duration-150"
-                style={{
-                  opacity: isVisible ? 1 : 0,
-                  transform: isVisible ? 'translateY(0)' : 'translateY(8px)',
-                  transition: `opacity 0.4s ease ${index * 0.04}s, transform 0.4s ease ${index * 0.04}s`,
-                }}
+                key={banner.id}
+                to={banner.link || "#"}
+                className="relative block w-full h-[90px] rounded-2xl overflow-hidden shadow-[0_10px_25px_rgba(0,0,0,0.08)] bg-gradient-to-r from-pink-100 to-rose-200 border border-white/40 mb-3 last:mb-0 transition-transform active:scale-[0.98] duration-200"
               >
-                {/* Square image card with subtle shadow */}
-                <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-white border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
+                {banner.image && (
                   <img
-                    src={category.image}
-                    alt={category.name}
-                    loading="lazy"
-                    className="w-full h-full object-cover"
+                    src={banner.image}
+                    alt={banner.title}
+                    className="absolute inset-0 w-full h-full object-cover"
                   />
+                )}
+                {/* Semi-transparent dark overlay to ensure text readability */}
+                <div className="absolute inset-0 bg-gradient-to-r from-black/45 via-black/20 to-transparent p-4 flex flex-col justify-center text-white">
+                  <h4 className="text-sm font-extrabold tracking-wide uppercase leading-tight drop-shadow-sm">
+                    {banner.title}
+                  </h4>
+                  <p className="text-xs text-white/95 mt-0.5 font-medium leading-tight drop-shadow-xs">
+                    {banner.subtitle}
+                  </p>
                 </div>
-                {/* Label */}
-                <span className="text-[10px] font-semibold text-gray-700 text-center mt-1.5 line-clamp-2 w-full leading-tight px-0.5">
-                  {category.name}
-                </span>
               </Link>
             ))}
           </div>
+        )}
+
+        {/* Section Header */}
+        <div className="text-center mb-6 sm:mb-8 md:mb-12">
+          {/* Pill Badge */}
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-[#FFF0F5] border border-[#f3d7e2]/80 px-3.5 py-1 text-[10px] font-bold tracking-[0.18em] text-[#b53d69] uppercase mb-3.5 shadow-sm">
+            <Sparkles className="h-3 w-3 animate-pulse text-[#b53d69]" />
+            Curated Gifting Collections
+          </div>
+          {/* Heading */}
+          <h2 className="text-[24px] md:text-[30px] font-extrabold text-gray-900 tracking-[-0.03em] leading-tight font-sans uppercase">
+            Shop By Category
+          </h2>
+          {/* Subtitle */}
+          <p className="mt-2 text-xs sm:text-sm text-gray-500 max-w-lg mx-auto leading-relaxed px-2">
+            Discover curated luxury floral arrangements, cakes and gifts for every occasion.
+          </p>
         </div>
 
-        {/* ═══════════════════════════════════════════════════════════ */}
-        {/* TABLET VIEW: 3-col grid with rounded images               */}
-        {/* ═══════════════════════════════════════════════════════════ */}
-        <div className="hidden sm:grid md:hidden grid-cols-3 gap-4">
+        {/* MOBILE VIEW: Horizontal scroll of circular category items */}
+        <div className="md:hidden w-full overflow-x-auto snap-x snap-mandatory no-scrollbar flex gap-4 py-2 px-1">
           {enabledCategories.map((category, index) => (
-            <Link
+            <CategoryCircleItem
               key={category.id}
-              to={`/shop?category=${encodeURIComponent(toCategoryQueryValue(category.name))}`}
-              className="flex flex-col items-center select-none active:scale-95 transition-transform"
-              style={{
-                opacity: isVisible ? 1 : 0,
-                transform: isVisible ? 'translateY(0)' : 'translateY(10px)',
-                transition: `opacity 0.4s ease ${index * 0.05}s, transform 0.4s ease ${index * 0.05}s`,
-              }}
-            >
-              <div className="relative w-20 h-20 rounded-full overflow-hidden bg-white border-2 border-pink-50 shadow-sm">
-                <img
-                  src={category.image}
-                  alt={category.name}
-                  loading="lazy"
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 rounded-full border border-black/5" />
-              </div>
-              <span className="text-xs font-bold text-gray-700 text-center mt-2 line-clamp-1 w-full">
-                {category.name}
-              </span>
-            </Link>
+              category={category}
+              index={index}
+              isVisible={isVisible}
+            />
           ))}
         </div>
 
-        {/* ═══════════════════════════════════════════════════════════ */}
-        {/* DESKTOP VIEW: Premium Elegant Grid Cards                   */}
-        {/* ═══════════════════════════════════════════════════════════ */}
-        <div className="hidden md:grid grid-cols-3 lg:grid-cols-6 gap-5">
+        {/* TABLET VIEW: 4-column grid with circular images for 768px - 1024px */}
+        <div className="hidden md:grid lg:hidden grid-cols-4 gap-6 py-2">
+          {enabledCategories.map((category, index) => (
+            <CategoryCircleItem
+              key={category.id}
+              category={category}
+              index={index}
+              isVisible={isVisible}
+            />
+          ))}
+        </div>
+
+        {/* DESKTOP VIEW: Premium Elegant Grid Cards (1024px and above) */}
+        <div className="hidden lg:grid grid-cols-6 gap-5">
           {enabledCategories.map((category, index) => (
             <DesktopCategoryCard
               key={category.id}
@@ -190,7 +231,6 @@ const Categories = () => {
             />
           ))}
         </div>
-
       </div>
     </section>
   );

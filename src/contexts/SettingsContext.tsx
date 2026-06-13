@@ -112,6 +112,7 @@ interface HomeSection {
 
 interface SettingsContextType {
   heroSlides: any[];
+  mobileBanners: any[];
   homeSections: HomeSection[];
   categories: Category[];
   shopCategories: Category[];
@@ -248,6 +249,7 @@ interface SettingsProviderProps {
 
 export const SettingsProvider = ({ children }: SettingsProviderProps) => {
   const [heroSlides, setHeroSlides] = useState<any[]>([]);
+  const [mobileBanners, setMobileBanners] = useState<any[]>([]);
   const [homeSections, setHomeSections] = useState<HomeSection[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [shopCategories, setShopCategories] = useState<Category[]>([]);
@@ -300,6 +302,7 @@ export const SettingsProvider = ({ children }: SettingsProviderProps) => {
       console.log('Settings Context loaded:', data);
 
       if (data.heroSlides) setHeroSlides(data.heroSlides);
+      if (data.mobileBanners) setMobileBanners(data.mobileBanners);
       if (data.homeSections) setHomeSections(data.homeSections);
       if (data.categories) setCategories(data.categories);
       if (data.shopCategories) setShopCategories(data.shopCategories);
@@ -339,6 +342,7 @@ export const SettingsProvider = ({ children }: SettingsProviderProps) => {
         console.log('Preview overriding settings:', preview);
         
         if (preview.heroSlides) setHeroSlides(preview.heroSlides);
+        if (preview.mobileBanners) setMobileBanners(preview.mobileBanners);
         if (preview.homeSections) setHomeSections(preview.homeSections);
         if (preview.categories) setCategories(preview.categories);
         if (preview.shopCategories) setShopCategories(preview.shopCategories);
@@ -363,6 +367,7 @@ export const SettingsProvider = ({ children }: SettingsProviderProps) => {
 
   const contextValue = useMemo((): SettingsContextType => ({
     heroSlides,
+    mobileBanners,
     homeSections,
     categories,
     shopCategories,
@@ -381,6 +386,7 @@ export const SettingsProvider = ({ children }: SettingsProviderProps) => {
     applyTheme
   }), [
     heroSlides,
+    mobileBanners,
     homeSections,
     categories,
     shopCategories,
