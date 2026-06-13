@@ -1820,6 +1820,92 @@ const AdminSettingsPage = () => {
                                       </div>
                                     </div>
                                   )}
+
+                                  {sec.type === 'philosophy' && (
+                                    <div className="pt-4 border-t border-slate-800/80 space-y-4">
+                                      <h4 className="text-xs font-bold text-cyan-400 uppercase tracking-wide flex items-center gap-2">
+                                        <Sparkles className="h-3.5 w-3.5" />
+                                        Edit Philosophy Section Content
+                                      </h4>
+                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {/* Image Upload/URL Settings */}
+                                        <div className="space-y-3 bg-slate-900/60 p-4 rounded-xl border border-slate-800">
+                                          <Label className="text-xs text-slate-300 font-bold">Philosophy Section Image</Label>
+                                          
+                                          {/* Image Upload Option */}
+                                          <div className="space-y-1.5">
+                                            <Label className="text-[11px] text-slate-400">Option 1: Upload File</Label>
+                                            <ImageUpload
+                                              currentImage={sec.content?.image}
+                                              onImageUpload={async (file) => {
+                                                await handleImageUpload(file, "category", `philosophy-${sec.id}`, (url) => {
+                                                  const copy = localSettings.homeSections.map((s: any) => 
+                                                    s.id === sec.id ? { ...s, content: { ...s.content, image: url } } : s
+                                                  );
+                                                  updateSettingsState({ ...localSettings, homeSections: copy });
+                                                });
+                                              }}
+                                              isUploading={uploadingImage === `philosophy-${sec.id}`}
+                                              aspectRatio="square"
+                                              placeholder="Upload Image"
+                                            />
+                                          </div>
+                                          
+                                          {/* Image URL Option */}
+                                          <div className="space-y-1.5 pt-2 border-t border-slate-800/40">
+                                            <Label className="text-[11px] text-slate-400">Option 2: Image URL</Label>
+                                            <Input
+                                              value={sec.content?.image || ""}
+                                              onChange={(e) => {
+                                                const copy = localSettings.homeSections.map((s: any) => 
+                                                  s.id === sec.id ? { ...s, content: { ...s.content, image: e.target.value } } : s
+                                                );
+                                                updateSettingsState({ ...localSettings, homeSections: copy });
+                                              }}
+                                              placeholder="Enter custom image URL..."
+                                              className="bg-slate-900 border-slate-700 text-slate-200 text-xs h-9 mt-1"
+                                            />
+                                          </div>
+                                        </div>
+                                        
+                                        {/* Text customization */}
+                                        <div className="space-y-4 bg-slate-900/60 p-4 rounded-xl border border-slate-800">
+                                          <Label className="text-xs text-slate-300 font-bold">Philosophy Text Details</Label>
+                                          <div className="space-y-3">
+                                            <div>
+                                              <Label className="text-[11px] text-slate-400">Heading Title</Label>
+                                              <Input
+                                                value={sec.title || ""}
+                                                onChange={(e) => {
+                                                  const copy = localSettings.homeSections.map((s: any) => 
+                                                    s.id === sec.id ? { ...s, title: e.target.value } : s
+                                                  );
+                                                  updateSettingsState({ ...localSettings, homeSections: copy });
+                                                }}
+                                                placeholder="Our Philosophy"
+                                                className="bg-slate-900 border-slate-700 text-slate-200 text-xs h-9"
+                                              />
+                                            </div>
+                                            <div>
+                                              <Label className="text-[11px] text-slate-400">Subheading Description</Label>
+                                              <Textarea
+                                                value={sec.subtitle || ""}
+                                                onChange={(e) => {
+                                                  const copy = localSettings.homeSections.map((s: any) => 
+                                                    s.id === sec.id ? { ...s, subtitle: e.target.value } : s
+                                                  );
+                                                  updateSettingsState({ ...localSettings, homeSections: copy });
+                                                }}
+                                                placeholder="Enter philosophy details..."
+                                                rows={3}
+                                                className="bg-slate-900 border-slate-700 text-slate-200 text-xs resize-none"
+                                              />
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
                                 </CardContent>
                               </Card>
                             </SortableItem>

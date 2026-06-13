@@ -503,12 +503,6 @@ export const optimizeLayoutPerformance = () => {
       will-change: transform, opacity;
     }
     
-    /* Reduce paint complexity */
-    * {
-      backface-visibility: hidden;
-      perspective: 1000px;
-    }
-    
     /* Optimize scrolling */
     .scroll-smooth {
       scroll-behavior: smooth;

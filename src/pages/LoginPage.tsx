@@ -74,7 +74,7 @@ const LoginPage = () => {
       toast({
         title: "Login Required",
         description: redirectMessage,
-        variant: "default",
+        type: "info",
         duration: 4000,
       });
     }
@@ -87,7 +87,7 @@ const LoginPage = () => {
       toast({
         title: "Error",
         description: "Please enter both email and password",
-        variant: "destructive"
+        type: "error"
       });
       return;
     }
@@ -100,14 +100,15 @@ const LoginPage = () => {
       if (result.success) {
         toast({
           title: "Welcome back! 🌸",
-          description: "You have successfully logged in."
+          description: "You have successfully logged in.",
+          type: "login"
         });
         navigate(result.redirectTo || redirectPath);
       } else {
         toast({
           title: "Login failed",
           description: "Please check your credentials and try again",
-          variant: "destructive"
+          type: "error"
         });
       }
     } catch (error) {
@@ -115,7 +116,7 @@ const LoginPage = () => {
       toast({
         title: "Login failed",
         description: "An error occurred during login",
-        variant: "destructive"
+        type: "error"
       });
     } finally {
       setIsLoading(false);
@@ -129,7 +130,7 @@ const LoginPage = () => {
       toast({
         title: "Missing Information",
         description: "Please fill in all fields",
-        variant: "destructive",
+        type: "warning",
       });
       return;
     }
@@ -138,7 +139,7 @@ const LoginPage = () => {
       toast({
         title: "Password Too Short",
         description: "Password must be at least 6 characters long",
-        variant: "destructive",
+        type: "warning",
       });
       return;
     }
@@ -147,7 +148,7 @@ const LoginPage = () => {
       toast({
         title: "Password Mismatch",
         description: "Passwords do not match",
-        variant: "destructive",
+        type: "warning",
       });
       return;
     }
@@ -156,7 +157,7 @@ const LoginPage = () => {
       toast({
         title: "Agreement Required",
         description: "Please agree to the Terms of Service and Privacy Policy",
-        variant: "destructive",
+        type: "warning",
       });
       return;
     }
@@ -174,13 +175,14 @@ const LoginPage = () => {
         toast({
           title: "Welcome to Spring Blossoms! 🎉",
           description: "Your account has been created successfully!",
+          type: "login"
         });
         navigate(signupResult.redirectTo || redirectPath);
       } else {
         toast({
           title: "Registration failed",
           description: signupResult.message || "Failed to create your account. Please try again.",
-          variant: "destructive"
+          type: "error"
         });
       }
     } catch (error: any) {
@@ -188,7 +190,7 @@ const LoginPage = () => {
       toast({
         title: "Registration failed",
         description: error?.response?.data?.message || error.message || "An error occurred while creating your account",
-        variant: "destructive"
+        type: "error"
       });
     } finally {
       setIsLoading(false);
@@ -211,14 +213,15 @@ const LoginPage = () => {
       if (result.success) {
         toast({
           title: "Welcome back! 🌸",
-          description: "You have successfully logged in with Google."
+          description: "You have successfully logged in with Google.",
+          type: "login"
         });
         navigate(result.redirectTo || redirectPath);
       } else {
         toast({
           title: "Login failed",
           description: "Google login failed. Please try again.",
-          variant: "destructive"
+          type: "error"
         });
       }
     } catch (error) {
@@ -226,7 +229,7 @@ const LoginPage = () => {
       toast({
         title: "Login failed",
         description: "An error occurred during Google login",
-        variant: "destructive"
+        type: "error"
       });
     } finally {
       setIsLoading(false);
@@ -237,7 +240,7 @@ const LoginPage = () => {
     toast({
       title: "Login failed",
       description: "Google login was cancelled or failed",
-      variant: "destructive"
+      type: "error"
     });
   };
 
@@ -246,7 +249,7 @@ const LoginPage = () => {
       toast({
         title: "Terms Required",
         description: "Please accept the terms and conditions to continue.",
-        variant: "destructive"
+        type: "warning"
       });
       return;
     }
@@ -259,14 +262,15 @@ const LoginPage = () => {
         setShowTermsDialog(false);
         toast({
           title: "Welcome to Spring Blossoms! 🌸",
-          description: "Your account has been created successfully!"
+          description: "Your account has been created successfully!",
+          type: "login"
         });
         navigate(result.redirectTo || redirectPath);
       } else {
         toast({
           title: "Registration failed",
           description: "Failed to create your account. Please try again.",
-          variant: "destructive"
+          type: "error"
         });
       }
     } catch (error) {
@@ -274,7 +278,7 @@ const LoginPage = () => {
       toast({
         title: "Registration failed",
         description: "An error occurred while creating your account",
-        variant: "destructive"
+        type: "error"
       });
     } finally {
       setIsLoading(false);

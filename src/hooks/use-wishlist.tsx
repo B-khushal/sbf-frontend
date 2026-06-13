@@ -179,7 +179,7 @@ const useWishlist = () => {
       toast({
         title: "Error",
         description: "Could not add item to wishlist - invalid format",
-        variant: "destructive"
+        type: "error"
       });
       return;
     }
@@ -189,7 +189,7 @@ const useWishlist = () => {
       toast({
         title: "Please log in",
         description: "You need to be logged in to add items to wishlist",
-        variant: "destructive",
+        type: "login",
         duration: 4000,
       });
       return;
@@ -218,6 +218,8 @@ const useWishlist = () => {
           toast({
             title: "Added to wishlist",
             description: "Item has been added to your wishlist",
+            type: "wishlist",
+            image: item.image,
           });
         } else {
           throw new Error('Invalid response from server');
@@ -231,6 +233,7 @@ const useWishlist = () => {
             toast({
               title: "Already in wishlist",
               description: "This item is already in your wishlist",
+              type: "info",
             });
             return prevItems;
           }
@@ -241,6 +244,8 @@ const useWishlist = () => {
           toast({
             title: "Added to wishlist",
             description: "Item has been added to your wishlist",
+            type: "wishlist",
+            image: item.image,
           });
 
           return newItems;
@@ -253,19 +258,20 @@ const useWishlist = () => {
         toast({
           title: "Already in wishlist",
           description: "This item is already in your wishlist",
+          type: "info",
         });
       } else if (error.message.includes('log in')) {
         toast({
           title: "Please log in",
           description: "You need to be logged in to add items to wishlist",
-          variant: "destructive",
+          type: "login",
           duration: 4000,
         });
       } else {
         toast({
           title: "Error",
           description: error.message || "Failed to add to wishlist",
-          variant: "destructive"
+          type: "error"
         });
       }
     } finally {
@@ -278,7 +284,7 @@ const useWishlist = () => {
       toast({
         title: "Please log in",
         description: "You need to be logged in to manage your wishlist",
-        variant: "destructive",
+        type: "login",
         duration: 4000,
       });
       return;
@@ -307,6 +313,7 @@ const useWishlist = () => {
           toast({
             title: "Removed from wishlist",
             description: "Item has been removed from your wishlist",
+            type: "info",
           });
         } else {
           throw new Error('Invalid response from server');
@@ -320,6 +327,7 @@ const useWishlist = () => {
           toast({
             title: "Removed from wishlist",
             description: "Item has been removed from your wishlist",
+            type: "info",
           });
 
           return newItems;
@@ -330,7 +338,7 @@ const useWishlist = () => {
       toast({
         title: "Error",
         description: error.message || "Failed to remove from wishlist",
-        variant: "destructive"
+        type: "error"
       });
     } finally {
       setIsLoading(false);
@@ -342,7 +350,7 @@ const useWishlist = () => {
       toast({
         title: "Please log in",
         description: "You need to be logged in to manage your wishlist",
-        variant: "destructive",
+        type: "login",
         duration: 4000,
       });
       return;
@@ -360,6 +368,7 @@ const useWishlist = () => {
         toast({
           title: "Wishlist cleared",
           description: "Your wishlist has been cleared",
+          type: "info",
         });
       } else {
         // Fallback to localStorage for non-authenticated users
@@ -369,6 +378,7 @@ const useWishlist = () => {
         toast({
           title: "Wishlist cleared",
           description: "Your wishlist has been cleared",
+          type: "info",
         });
       }
     } catch (error: any) {
@@ -376,7 +386,7 @@ const useWishlist = () => {
       toast({
         title: "Error",
         description: error.message || "Failed to clear wishlist",
-        variant: "destructive"
+        type: "error"
       });
     } finally {
       setIsLoading(false);

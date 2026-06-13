@@ -466,7 +466,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
       toast({
         title: "Quantity Limit Reached",
         description: "Maximum 5 items allowed per product. Contact us for bulk orders.",
-        variant: "destructive",
+        type: "warning",
         duration: 4000,
       });
       return;
@@ -484,7 +484,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
       toast({
         title: "Please select a variant",
         description: "You need to select a size/quantity variant before customizing",
-        variant: "destructive",
+        type: "warning",
       });
       return;
     }
@@ -508,7 +508,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
         toast({
           title: "Please select a variant",
           description: "You need to select a size/quantity variant before adding to cart",
-          variant: "destructive",
+          type: "warning",
         });
         return;
       }
@@ -519,7 +519,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
         toast({
           title: "Not enough stock",
           description: "The selected quantity is not available",
-          variant: "destructive",
+          type: "error",
         });
         return;
       }
@@ -543,6 +543,8 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
       toast({
         title: "Added to Cart",
         description: `${product.title} ${selectedVariant ? `(${selectedVariant.label})` : ''} has been added to your cart successfully`,
+        type: "cart",
+        image: getImageUrl(product.images[0]),
       });
 
       // Redirect to cart page after successful addition
@@ -554,7 +556,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
       toast({
         title: "Error",
         description: "Failed to add product to cart",
-        variant: "destructive",
+        type: "error",
       });
     }
   };
@@ -567,7 +569,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
         toast({
           title: "Error",
           description: "Invalid product data",
-          variant: "destructive",
+          type: "error",
           duration: 3000,
         });
         return;
@@ -597,20 +599,21 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
         toast({
           title: "Please log in",
           description: "You need to be logged in to add items to wishlist",
-          variant: "destructive",
+          type: "login",
           duration: 4000,
         });
       } else if (errorMessage.includes('already in wishlist')) {
         toast({
           title: "Already in wishlist",
           description: "This item is already in your wishlist",
+          type: "info",
           duration: 3000,
         });
       } else {
         toast({
           title: "Error",
           description: errorMessage,
-          variant: "destructive",
+          type: "error",
           duration: 3000,
         });
       }
@@ -631,6 +634,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
         toast({
           title: "Shared successfully",
           description: "Product shared successfully!",
+          type: "success",
           duration: 3000,
         });
       } else {
@@ -639,6 +643,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
         toast({
           title: "Link copied",
           description: "Product link copied to clipboard!",
+          type: "success",
           duration: 3000,
         });
       }
@@ -657,7 +662,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
         toast({
           title: "Error",
           description: "Failed to share or copy link",
-          variant: "destructive",
+          type: "error",
           duration: 3000,
         });
       }

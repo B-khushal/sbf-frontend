@@ -72,7 +72,7 @@ const WishlistPage = () => {
       toast({
         title: "Refresh Failed",
         description: "Failed to refresh wishlist",
-        variant: "destructive",
+        type: "error",
         duration: 3000,
       });
     }
@@ -87,7 +87,7 @@ const WishlistPage = () => {
         toast({
           title: "Error",
           description: "Invalid item data",
-          variant: "destructive",
+          type: "error",
           duration: 3000,
         });
         return;
@@ -116,8 +116,10 @@ const WishlistPage = () => {
       
       await removeFromWishlist(item.id);
       toast({
-        title: "Added to Cart! 🛒",
+        title: "Added to Cart",
         description: `${item.title} has been moved to your cart`,
+        type: "cart",
+        image: item.image,
         duration: 3000,
       });
       
@@ -130,7 +132,7 @@ const WishlistPage = () => {
       toast({
         title: "Error",
         description: "Failed to move item to cart",
-        variant: "destructive",
+        type: "error",
         duration: 3000,
       });
     }
@@ -144,7 +146,7 @@ const WishlistPage = () => {
         toast({
           title: "Error",
           description: "Invalid item ID",
-          variant: "destructive",
+          type: "error",
           duration: 3000,
         });
         return;
@@ -156,7 +158,7 @@ const WishlistPage = () => {
       toast({
         title: "Error",
         description: "Failed to remove item from wishlist",
-        variant: "destructive",
+        type: "error",
         duration: 3000,
       });
     }
