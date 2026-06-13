@@ -157,7 +157,7 @@ const AboutPage: React.FC = () => {
               <motion.div variants={itemVariants} className="w-full lg:w-1/2">
                 <div className="relative aspect-square overflow-hidden rounded-3xl shadow-2xl">
                   <img 
-                    src="/images/s1.png" 
+                    src="https://res.cloudinary.com/djtrhfqan/image/upload/v1781358906/ChatGPT_Image_Jun_13_2026_07_14_02_PM_yfimlo.png" 
                     alt="Our Story" 
                     className="object-cover w-full h-full transition-transform duration-700 hover:scale-105"
                     loading="lazy"
