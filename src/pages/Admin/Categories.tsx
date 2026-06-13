@@ -167,6 +167,24 @@ const AdminCategories: React.FC = () => {
     }
   };
 
+  const handleBulkShowInShop = async (visible: boolean) => {
+    if (selectedIds.length === 0) return;
+
+    try {
+      await categoryService.bulkUpdateShowInShop(selectedIds, visible);
+      toast({ title: 'Success', description: 'Selected categories shop display updated' });
+      setSelectedIds([]);
+      fetchCategories();
+    } catch (err) {
+      console.error('Bulk shop visibility update failed:', err);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to update shop display',
+      });
+    }
+  };
+
   const handleDragEnd = async (result: DropResult) => {
     if (!result.destination) return;
 
@@ -315,6 +333,22 @@ const AdminCategories: React.FC = () => {
                     className="h-8 text-xs border-amber-200 text-amber-700 hover:bg-amber-50"
                   >
                     Deactivate
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleBulkShowInShop(true)}
+                    className="h-8 text-xs border-sky-200 text-sky-700 hover:bg-sky-50"
+                  >
+                    Show in Shop
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleBulkShowInShop(false)}
+                    className="h-8 text-xs border-gray-250 text-gray-750 hover:bg-gray-50"
+                  >
+                    Hide in Shop
                   </Button>
                   <Button
                     variant="destructive"

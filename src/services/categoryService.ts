@@ -55,6 +55,11 @@ const categoryService = {
   bulkUpdateStatus: async (ids: string[], status: 'active' | 'inactive') => {
     const response = await api.post('/categories/bulk-status-update', { ids, status });
     return response.data;
+  },
+
+  bulkUpdateShowInShop: async (ids: string[], showInShop: boolean) => {
+    const response = await api.post('/categories/bulk-show-in-shop', { ids, showInShop });
+    return response.data;
   }
 };
 
