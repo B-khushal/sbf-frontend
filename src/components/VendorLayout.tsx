@@ -57,10 +57,17 @@ const VendorLayout: React.FC = () => {
 
   const sidebarContent = (collapsed: boolean = false) => (
     <>
-      <div className={cn("px-4 py-6", collapsed && "px-2")}>
-        <h2 className={cn("text-2xl font-bold text-gray-800 transition-all duration-200", collapsed ? "text-center text-lg" : "")}>
-          {collapsed ? 'VP' : 'Vendor Panel'}
-        </h2>
+      <div className={cn("px-4 py-6 flex items-center justify-center", collapsed && "px-2 py-4")}>
+        <Link to="/vendor/dashboard" className="flex items-center">
+          <img
+            src="https://res.cloudinary.com/djtrhfqan/image/upload/v1771963278/sbf-branding/image-1771963277711-752501958.png"
+            alt="Spring Blossoms Florist Logo"
+            className={cn(
+              "transition-all duration-300 ease-in-out hover:scale-105",
+              collapsed ? "h-10 w-10" : "h-16 w-auto max-w-full"
+            )}
+          />
+        </Link>
       </div>
       <nav className="flex-1 px-2 space-y-2">
         {navLinks.map((link) => (
