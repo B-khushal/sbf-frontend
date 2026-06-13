@@ -45,7 +45,9 @@ const MainLayout: React.FC = () => {
       <div 
         className={
           isHomePage 
-            ? (isAnnouncementVisible ? "h-[180px] sm:h-[188px] lg:h-[196px]" : "h-[140px] sm:h-[148px] lg:h-[156px]") 
+            ? (isAnnouncementVisible 
+                ? "h-[108px] md:h-[188px] lg:h-[196px]" 
+                : "h-[68px] md:h-[140px] lg:h-[156px]") 
             : "h-[68px] sm:h-[76px] lg:h-[84px]"
         } 
         aria-hidden="true" 

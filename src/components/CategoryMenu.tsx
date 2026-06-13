@@ -198,7 +198,7 @@ const CategoryMenu = () => {
 
   return (
     <nav 
-      className="bg-white/98 backdrop-blur-xl border-b border-gray-100/80 sticky top-0 z-nav-sub shadow-sm" 
+      className="hidden md:block bg-white/98 backdrop-blur-xl border-b border-gray-100/80 sticky top-0 z-nav-sub shadow-sm" 
       ref={navRef}
       onMouseLeave={handleMouseLeave}
     >
