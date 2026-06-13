@@ -55,6 +55,7 @@ import { cn } from "@/lib/utils";
 const TABS = [
   { id: "hero-slides", label: "Hero Banners", icon: ImageIcon, desc: "Hero slideshow slides, CTA links, image overlays" },
   { id: "mobile-banners", label: "Mobile Banner", icon: Smartphone, desc: "Upload and schedule mobile-only delivery / offer banners" },
+  { id: "promo-banners", label: "Promo Banners", icon: Layers, desc: "Add/edit/delete twin promotional banners displayed alongside hero slider" },
   { id: "bento-banners", label: "Curated Banners", icon: LayoutGrid, desc: "Add/edit/delete Curated Occasion Bento Banners" },
   { id: "sections", label: "Section Builder", icon: Layers, desc: "Order and customize homepage collections & banners" },
   { id: "categories", label: "Category Details", icon: LayoutGrid, desc: "Manage catalog hierarchy, slugs, priority themes" },
@@ -493,6 +494,7 @@ const AdminSettingsPage = () => {
         const cleaned = {
           heroSlides: data.heroSlides || [],
           mobileBanners: data.mobileBanners || [],
+          promoBanners: data.promoBanners || [],
           homeSections: loadedSections.map((sec: any) => {
             if (sec.type === 'offers' && (!sec.content || !sec.content.items || sec.content.items.length === 0)) {
               return { ...sec, content: { ...sec.content, items: defaultBentoItems } };
@@ -1392,6 +1394,197 @@ const AdminSettingsPage = () => {
                                           updateSettingsState({ ...localSettings, mobileBanners: copy });
                                         }}
                                         className="bg-slate-900 border-slate-700 text-slate-200 text-xs mt-1"
+                                      />
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            </SortableItem>
+                          ))}
+                        </div>
+                      </SortableContext>
+                    </DndContext>
+                  </div>
+                )}
+
+                {activeTab === "promo-banners" && (
+                  <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2">
+                          <Layers className="h-5 w-5 text-cyan-400" />
+                          Promo Banners Configuration
+                        </h2>
+                        <p className="text-xs text-slate-400">Manage, sort, and edit promo banners displayed alongside the home slider</p>
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          const list = [...(localSettings.promoBanners || [])];
+                          const maxId = list.reduce((max, s) => {
+                            const numId = parseInt(s.id?.replace("pb-", "")) || 0;
+                            return Math.max(max, numId);
+                          }, 0);
+                          list.push({
+                            id: `pb-${maxId + 1}`,
+                            title: "New Promo Banner",
+                            subtitle: "Banner description text here",
+                            image: "https://placehold.co/600x300?text=Promo+Banner",
+                            link: "/shop",
+                            badge: "🎁 New",
+                            ctaText: "Shop Now",
+                            enabled: true,
+                            order: list.length
+                          });
+                          updateSettingsState({ ...localSettings, promoBanners: list });
+                        }}
+                        className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold"
+                      >
+                        <Plus className="h-4 w-4 mr-1" /> Add Banner
+                      </Button>
+                    </div>
+
+                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => {
+                      const { active, over } = e;
+                      if (active.id !== over?.id) {
+                        const items = [...(localSettings.promoBanners || [])];
+                        const oldIdx = items.findIndex(s => String(s.id) === active.id);
+                        const newIdx = items.findIndex(s => String(s.id) === over?.id);
+                        const reordered = arrayMove(items, oldIdx, newIdx).map((item, idx) => ({ ...item, order: idx }));
+                        updateSettingsState({ ...localSettings, promoBanners: reordered });
+                      }
+                    }}>
+                      <SortableContext items={(localSettings.promoBanners || []).map((s: any) => String(s.id))} strategy={verticalListSortingStrategy}>
+                        <div className="space-y-4">
+                          {(localSettings.promoBanners || []).map((banner: any) => (
+                            <SortableItem key={banner.id} id={String(banner.id)}>
+                              <Card className="bg-slate-800/40 border-slate-800 overflow-hidden shadow-md">
+                                <CardContent className="p-4 space-y-4">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <SortableHandle>
+                                        <GripVertical className="h-5 w-5 text-slate-500 cursor-grab active:cursor-grabbing" />
+                                      </SortableHandle>
+                                      <Badge className="bg-slate-700 text-slate-300 font-bold">Banner #{banner.id}</Badge>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                      <Switch
+                                        checked={banner.enabled}
+                                        onCheckedChange={(checked) => {
+                                          const copy = localSettings.promoBanners.map((s: any) => 
+                                            s.id === banner.id ? { ...s, enabled: checked } : s
+                                          );
+                                          updateSettingsState({ ...localSettings, promoBanners: copy });
+                                        }}
+                                      />
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => {
+                                          const copy = localSettings.promoBanners.filter((s: any) => s.id !== banner.id);
+                                          updateSettingsState({ ...localSettings, promoBanners: copy });
+                                        }}
+                                        className="text-red-400 hover:text-red-300 h-8 w-8"
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  </div>
+
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {/* Image upload */}
+                                    <div className="space-y-1.5">
+                                      <Label className="text-xs text-slate-300 font-bold">Banner Background Image</Label>
+                                      <ImageUpload
+                                        currentImage={banner.image}
+                                        onImageUpload={async (file) => {
+                                          await handleImageUpload(file, "hero", `promo-banner-${banner.id}`, (url) => {
+                                            const copy = localSettings.promoBanners.map((s: any) => 
+                                              s.id === banner.id ? { ...s, image: url } : s
+                                            );
+                                            updateSettingsState({ ...localSettings, promoBanners: copy });
+                                          });
+                                        }}
+                                        isUploading={uploadingImage === `promo-banner-${banner.id}`}
+                                        aspectRatio="landscape"
+                                        placeholder="Upload Promo Image"
+                                      />
+                                    </div>
+
+                                    {/* Text Fields */}
+                                    <div className="space-y-3">
+                                      <div className="grid grid-cols-2 gap-2">
+                                        <div>
+                                          <Label className="text-xs text-slate-300 font-bold">Title</Label>
+                                          <Input
+                                            value={banner.title}
+                                            onChange={(e) => {
+                                              const copy = localSettings.promoBanners.map((s: any) => 
+                                                s.id === banner.id ? { ...s, title: e.target.value } : s
+                                              );
+                                              updateSettingsState({ ...localSettings, promoBanners: copy });
+                                            }}
+                                            className="bg-slate-900 border-slate-700 text-slate-200 mt-1"
+                                          />
+                                        </div>
+                                        <div>
+                                          <Label className="text-xs text-slate-300 font-bold">Badge (e.g. Same-day Delivery)</Label>
+                                          <Input
+                                            value={banner.badge || ""}
+                                            onChange={(e) => {
+                                              const copy = localSettings.promoBanners.map((s: any) => 
+                                                s.id === banner.id ? { ...s, badge: e.target.value } : s
+                                              );
+                                              updateSettingsState({ ...localSettings, promoBanners: copy });
+                                            }}
+                                            className="bg-slate-900 border-slate-700 text-slate-200 mt-1"
+                                          />
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <Label className="text-xs text-slate-300 font-bold">Subtitle / Description</Label>
+                                        <Input
+                                          value={banner.subtitle}
+                                          onChange={(e) => {
+                                            const copy = localSettings.promoBanners.map((s: any) => 
+                                              s.id === banner.id ? { ...s, subtitle: e.target.value } : s
+                                            );
+                                            updateSettingsState({ ...localSettings, promoBanners: copy });
+                                          }}
+                                          className="bg-slate-900 border-slate-700 text-slate-200 mt-1"
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* URL & Button CTA Grid */}
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 border-t border-slate-800/50">
+                                    <div>
+                                      <Label className="text-[11px] text-slate-400 font-bold">Destination URL Link</Label>
+                                      <Input
+                                        value={banner.link}
+                                        onChange={(e) => {
+                                          const copy = localSettings.promoBanners.map((s: any) => 
+                                            s.id === banner.id ? { ...s, link: e.target.value } : s
+                                          );
+                                          updateSettingsState({ ...localSettings, promoBanners: copy });
+                                        }}
+                                        className="bg-slate-900 border-slate-700 text-slate-200 text-xs mt-1"
+                                        placeholder="/shop or custom URL"
+                                      />
+                                    </div>
+                                    <div>
+                                      <Label className="text-[11px] text-slate-400 font-bold">CTA Button Text (e.g. Shop Now)</Label>
+                                      <Input
+                                        value={banner.ctaText || "Shop Now"}
+                                        onChange={(e) => {
+                                          const copy = localSettings.promoBanners.map((s: any) => 
+                                            s.id === banner.id ? { ...s, ctaText: e.target.value } : s
+                                          );
+                                          updateSettingsState({ ...localSettings, promoBanners: copy });
+                                        }}
+                                        className="bg-slate-900 border-slate-700 text-slate-200 text-xs mt-1"
+                                        placeholder="Send Romance Gifts"
                                       />
                                     </div>
                                   </div>
