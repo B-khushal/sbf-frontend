@@ -41,7 +41,9 @@ import {
   Download,
   UploadCloud,
   Layers,
-  ChevronDown
+  ChevronDown,
+  Instagram,
+  ArrowRight
 } from "lucide-react";
 import api from "../services/api";
 import { uploadImage } from "../services/uploadService";
@@ -63,7 +65,8 @@ const TABS = [
   { id: "delivery", label: "Delivery Rules", icon: ShoppingBag, desc: "Shipping zones, free conditions, time slots" },
   { id: "global", label: "Global SEO", icon: FileText, desc: "Meta descriptions, GA, Pixel, Sitemap editor" },
   { id: "theme", label: "Theme Customizer", icon: Wand2, desc: "Brand primary & secondary colors, border radius" },
-  { id: "product-display", label: "Products Card", icon: Edit, desc: "Hover animations, wishlist controls, grid columns" }
+  { id: "product-display", label: "Products Card", icon: Edit, desc: "Hover animations, wishlist controls, grid columns" },
+  { id: "social-feed", label: "Social Feed", icon: Instagram, desc: "Manage Instagram embed posts shown on the homepage feed" }
 ];
 
 const TONES = ["Elegant & Soft", "Romantic & Warm", "Festive & Vibrant", "Modern & Sleek"];
@@ -266,6 +269,169 @@ const AdminSettingsPage = () => {
   const [aiResult, setAiResult] = useState<string[]>([]);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiTargetField, setAiTargetField] = useState<{ type: string; id?: any; field: string } | null>(null);
+
+  // Instagram Social Feed States
+  const [socialFeedPosts, setSocialFeedPosts] = useState<any[]>([]);
+  const [fetchingSocialFeed, setFetchingSocialFeed] = useState(false);
+  const [showAddFeedModal, setShowAddFeedModal] = useState(false);
+  const [showEditFeedModal, setShowEditFeedModal] = useState(false);
+  const [newFeedUrl, setNewFeedUrl] = useState("");
+  const [newFeedActive, setNewFeedActive] = useState(true);
+  const [editingFeedPost, setEditingFeedPost] = useState<any>(null);
+  const [feedSaving, setFeedSaving] = useState(false);
+
+  // Validate Instagram URLs
+  const validateInstagramUrl = (url: string): boolean => {
+    if (!url) return false;
+    try {
+      const cleanUrl = url.trim().toLowerCase();
+      const parsed = new URL(cleanUrl.startsWith('http') ? cleanUrl : `https://${cleanUrl}`);
+      if (!parsed.hostname.includes('instagram.com')) return false;
+      const pathParts = parsed.pathname.split('/').filter(Boolean);
+      const validTypes = ['p', 'reel', 'tv', 'reels'];
+      const typeIndex = pathParts.findIndex(part => validTypes.includes(part));
+      return typeIndex !== -1 && typeIndex + 1 < pathParts.length;
+    } catch (e) {
+      return false;
+    }
+  };
+
+  // Fetch all social feed posts
+  const fetchSocialFeedPosts = async () => {
+    try {
+      setFetchingSocialFeed(true);
+      const res = await api.get('/social-feed');
+      const sorted = (res.data || []).sort((a: any, b: any) => a.displayOrder - b.displayOrder);
+      setSocialFeedPosts(sorted);
+    } catch (err) {
+      console.error("Failed to fetch social posts", err);
+      toast({
+        title: "Error fetching posts",
+        description: "Could not fetch social feed database posts.",
+        variant: "destructive"
+      });
+    } finally {
+      setFetchingSocialFeed(false);
+    }
+  };
+
+  // Create new social feed post
+  const handleCreateFeedPost = async () => {
+    if (!newFeedUrl) {
+      toast({ title: "Validation Error", description: "Please enter an Instagram URL.", variant: "destructive" });
+      return;
+    }
+    if (!validateInstagramUrl(newFeedUrl)) {
+      toast({ 
+        title: "Validation Error", 
+        description: "Invalid Instagram URL. Accepted patterns include instagram.com/p/*, instagram.com/reel/*, and instagram.com/tv/*", 
+        variant: "destructive" 
+      });
+      return;
+    }
+
+    try {
+      setFeedSaving(true);
+      await api.post('/social-feed', {
+        embedUrl: newFeedUrl.trim(),
+        isActive: newFeedActive
+      });
+      toast({ title: "Success", description: "Instagram post added successfully." });
+      setNewFeedUrl("");
+      setNewFeedActive(true);
+      setShowAddFeedModal(false);
+      fetchSocialFeedPosts();
+    } catch (err: any) {
+      console.error("Failed to create post", err);
+      toast({
+        title: "Save failed",
+        description: err?.response?.data?.message || "An error occurred.",
+        variant: "destructive"
+      });
+    } finally {
+      setFeedSaving(false);
+    }
+  };
+
+  // Update existing social feed post
+  const handleUpdateFeedPost = async () => {
+    if (!editingFeedPost) return;
+    if (!editingFeedPost.embedUrl) {
+      toast({ title: "Validation Error", description: "Please enter an Instagram URL.", variant: "destructive" });
+      return;
+    }
+    if (!validateInstagramUrl(editingFeedPost.embedUrl)) {
+      toast({ 
+        title: "Validation Error", 
+        description: "Invalid Instagram URL. Accepted patterns include instagram.com/p/*, instagram.com/reel/*, and instagram.com/tv/*", 
+        variant: "destructive" 
+      });
+      return;
+    }
+
+    try {
+      setFeedSaving(true);
+      await api.put(`/social-feed/${editingFeedPost._id}`, {
+        embedUrl: editingFeedPost.embedUrl.trim(),
+        isActive: editingFeedPost.isActive
+      });
+      toast({ title: "Success", description: "Instagram post updated successfully." });
+      setEditingFeedPost(null);
+      setShowEditFeedModal(false);
+      fetchSocialFeedPosts();
+    } catch (err: any) {
+      console.error("Failed to update post", err);
+      toast({
+        title: "Update failed",
+        description: err?.response?.data?.message || "An error occurred.",
+        variant: "destructive"
+      });
+    } finally {
+      setFeedSaving(false);
+    }
+  };
+
+  // Delete social feed post
+  const handleDeleteFeedPost = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this Instagram post from the social feed?")) return;
+    try {
+      await api.delete(`/social-feed/${id}`);
+      toast({ title: "Success", description: "Post deleted successfully." });
+      fetchSocialFeedPosts();
+    } catch (err: any) {
+      console.error("Failed to delete post", err);
+      toast({
+        title: "Delete failed",
+        description: "An error occurred while deleting the post.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Toggle active status directly
+  const handleToggleFeedActive = async (id: string, currentStatus: boolean) => {
+    try {
+      await api.put(`/social-feed/${id}`, {
+        isActive: !currentStatus
+      });
+      toast({ title: "Success", description: "Post status updated successfully." });
+      fetchSocialFeedPosts();
+    } catch (err: any) {
+      console.error("Failed to toggle status", err);
+      toast({
+        title: "Update failed",
+        description: "An error occurred while updating status.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Fetch on activeTab transition
+  useEffect(() => {
+    if (activeTab === "social-feed") {
+      fetchSocialFeedPosts();
+    }
+  }, [activeTab]);
 
   // Debounced autosave reference
   const autosaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -1858,12 +2024,16 @@ const AdminSettingsPage = () => {
 
                                   {sec.type === 'social' && (
                                     <div className="pt-4 border-t border-slate-800/80 space-y-4">
-                                      <h4 className="text-xs font-bold text-cyan-400 uppercase tracking-wide">
-                                        Edit Instagram UGC Feed Grid Settings
-                                      </h4>
-                                      <div className="space-y-3">
+                                      <div className="flex items-center justify-between">
+                                        <h4 className="text-xs font-bold text-cyan-400 uppercase tracking-wide flex items-center gap-1.5">
+                                          <Instagram className="h-3.5 w-3.5 text-pink-400" />
+                                          Instagram UGC Feed Settings
+                                        </h4>
+                                      </div>
+                                      
+                                      <div className="space-y-4">
                                         <div>
-                                          <Label className="text-xs text-slate-300">Instagram Profile URL</Label>
+                                          <Label className="text-xs text-slate-300 font-bold">Instagram Profile URL</Label>
                                           <Input
                                             value={sec.content?.instagramUrl || 'https://www.instagram.com/sbf_india'}
                                             onChange={(e) => {
@@ -1876,138 +2046,40 @@ const AdminSettingsPage = () => {
                                             className="bg-slate-900 border-slate-700 text-slate-200 mt-1"
                                           />
                                         </div>
-                                        
-                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                          {(sec.content?.items || defaultSocialItems).map((item: any, itemIdx: number) => (
-                                            <div key={item.id || itemIdx} className="bg-slate-900/60 p-3 rounded-lg border border-slate-800 space-y-2">
-                                              <div className="flex justify-between items-center">
-                                                <span className="text-[10px] font-bold text-slate-400">Post #{itemIdx + 1}</span>
-                                                <select
-                                                  value={item.type || 'post'}
-                                                  onChange={(e) => {
-                                                    const itemsCopy = [...(sec.content?.items || defaultSocialItems)];
-                                                    itemsCopy[itemIdx] = { ...itemsCopy[itemIdx], type: e.target.value };
-                                                    const copy = localSettings.homeSections.map((s: any) =>
-                                                      s.id === sec.id ? { ...s, content: { ...s.content, items: itemsCopy } } : s
-                                                    );
-                                                    updateSettingsState({ ...localSettings, homeSections: copy });
-                                                  }}
-                                                  className="bg-slate-800 border border-slate-700 text-[9px] text-slate-200 rounded px-1"
-                                                >
-                                                  <option value="post">Post</option>
-                                                  <option value="reel">Reel</option>
-                                                </select>
-                                              </div>
-                                              
-                                              <div>
-                                                <Label className="text-[9px] text-slate-400">Instagram Post/Reel URL</Label>
-                                                <Input
-                                                  value={item.postUrl || ''}
-                                                  onChange={(e) => {
-                                                    const url = e.target.value;
-                                                    const itemsCopy = [...(sec.content?.items || defaultSocialItems)];
-                                                    
-                                                    // Extract shortcode
-                                                    let shortcode = '';
-                                                    try {
-                                                      const cleanUrl = url.split('?')[0];
-                                                      const parts = cleanUrl.split('/');
-                                                      const pIndex = parts.findIndex(p => p === 'p' || p === 'reel' || p === 'tv' || p === 'reels');
-                                                      if (pIndex !== -1 && pIndex + 1 < parts.length) {
-                                                        shortcode = parts[pIndex + 1];
-                                                      }
-                                                    } catch (err) {}
-                                                    
-                                                    const updatedImage = shortcode 
-                                                      ? `https://www.eeinstagram.com/images/${shortcode}/1` 
-                                                      : itemsCopy[itemIdx].image;
-                                                      
-                                                    itemsCopy[itemIdx] = { 
-                                                      ...itemsCopy[itemIdx], 
-                                                      postUrl: url,
-                                                      image: updatedImage
-                                                    };
-                                                    
-                                                    const copy = localSettings.homeSections.map((s: any) =>
-                                                      s.id === sec.id ? { ...s, content: { ...s.content, items: itemsCopy } } : s
-                                                    );
-                                                    updateSettingsState({ ...localSettings, homeSections: copy });
-                                                  }}
-                                                  placeholder="https://www.instagram.com/p/..."
-                                                  className="bg-slate-900 border-slate-750 text-[10px] h-7 text-slate-200 mt-1"
-                                                />
-                                              </div>
-                                              
-                                              <ImageUpload
-                                                currentImage={item.image}
-                                                onImageUpload={async (file) => {
-                                                  await handleImageUpload(file, "category", `social-${sec.id}-${itemIdx}`, (url) => {
-                                                    const itemsCopy = [...(sec.content?.items || defaultSocialItems)];
-                                                    itemsCopy[itemIdx] = { ...itemsCopy[itemIdx], image: url };
-                                                    const copy = localSettings.homeSections.map((s: any) => 
-                                                      s.id === sec.id ? { ...s, content: { ...s.content, items: itemsCopy } } : s
-                                                    );
-                                                    updateSettingsState({ ...localSettings, homeSections: copy });
-                                                  });
-                                                }}
-                                                isUploading={uploadingImage === `social-${sec.id}-${itemIdx}`}
-                                                aspectRatio="square"
-                                                placeholder="Custom Cover Image"
-                                              />
-                                              
-                                              <div className="grid grid-cols-2 gap-2">
-                                                <div>
-                                                  <Label className="text-[9px] text-slate-400">Likes</Label>
-                                                  <Input
-                                                    value={item.likes || ''}
-                                                    onChange={(e) => {
-                                                      const itemsCopy = [...(sec.content?.items || defaultSocialItems)];
-                                                      itemsCopy[itemIdx] = { ...itemsCopy[itemIdx], likes: e.target.value };
-                                                      const copy = localSettings.homeSections.map((s: any) =>
-                                                        s.id === sec.id ? { ...s, content: { ...s.content, items: itemsCopy } } : s
-                                                      );
-                                                      updateSettingsState({ ...localSettings, homeSections: copy });
-                                                    }}
-                                                    className="bg-slate-800 border-slate-700 text-[10px] h-6 text-slate-200"
-                                                  />
-                                                </div>
-                                                <div>
-                                                  <Label className="text-[9px] text-slate-400">Comments</Label>
-                                                  <Input
-                                                    value={item.comments || ''}
-                                                    onChange={(e) => {
-                                                      const itemsCopy = [...(sec.content?.items || defaultSocialItems)];
-                                                      itemsCopy[itemIdx] = { ...itemsCopy[itemIdx], comments: e.target.value };
-                                                      const copy = localSettings.homeSections.map((s: any) =>
-                                                        s.id === sec.id ? { ...s, content: { ...s.content, items: itemsCopy } } : s
-                                                      );
-                                                      updateSettingsState({ ...localSettings, homeSections: copy });
-                                                    }}
-                                                    className="bg-slate-800 border-slate-700 text-[10px] h-6 text-slate-200"
-                                                  />
-                                                </div>
-                                              </div>
-                                              
-                                              {item.type === 'reel' && (
-                                                <div>
-                                                  <Label className="text-[9px] text-slate-400">Views (Reel Only)</Label>
-                                                  <Input
-                                                    value={item.views || ''}
-                                                    onChange={(e) => {
-                                                      const itemsCopy = [...(sec.content?.items || defaultSocialItems)];
-                                                      itemsCopy[itemIdx] = { ...itemsCopy[itemIdx], views: e.target.value };
-                                                      const copy = localSettings.homeSections.map((s: any) =>
-                                                        s.id === sec.id ? { ...s, content: { ...s.content, items: itemsCopy } } : s
-                                                      );
-                                                      updateSettingsState({ ...localSettings, homeSections: copy });
-                                                    }}
-                                                    placeholder="e.g. 8.4k"
-                                                    className="bg-slate-800 border-slate-700 text-[10px] h-6 text-slate-200"
-                                                  />
-                                                </div>
-                                              )}
+
+                                        {/* Dynamic Feed Info Alert Card */}
+                                        <div className="relative overflow-hidden p-4 rounded-xl border border-[#FBCFE8]/25 bg-gradient-to-br from-slate-900/90 via-slate-950/95 to-[#db2777]/5 shadow-lg group">
+                                          <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-pink-500/10 to-transparent rounded-bl-full blur-sm pointer-events-none" />
+                                          
+                                          <div className="flex gap-3 items-start relative z-10">
+                                            <div className="p-2.5 rounded-lg bg-pink-500/10 border border-pink-500/20 text-pink-400 shrink-0 mt-0.5">
+                                              <Instagram className="h-5 w-5" />
                                             </div>
-                                          ))}
+                                            
+                                            <div className="space-y-1.5 flex-1">
+                                              <h5 className="text-xs font-bold text-slate-100 flex items-center gap-1.5">
+                                                Dynamic Feed Management Active
+                                                <span className="flex h-2 w-2 relative">
+                                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                                </span>
+                                              </h5>
+                                              <p className="text-[11px] leading-relaxed text-slate-400">
+                                                Individual Instagram posts, reels, and display sequence are managed dynamically from the **Social Feed** tab. Custom image grids are replaced with official live embeds.
+                                              </p>
+                                              <div className="pt-1.5">
+                                                <Button
+                                                  type="button"
+                                                  size="sm"
+                                                  onClick={() => setActiveTab("social-feed")}
+                                                  className="bg-pink-600/20 hover:bg-pink-600/35 border border-pink-500/30 hover:border-pink-500/50 text-pink-300 hover:text-white font-bold text-[10px] h-7 px-3 flex items-center gap-1.5 transition-all rounded-md shadow-sm"
+                                                >
+                                                  Manage Dynamic Feed Posts
+                                                  <ArrowRight className="h-3.5 w-3.5" />
+                                                </Button>
+                                              </div>
+                                            </div>
+                                          </div>
                                         </div>
                                       </div>
                                     </div>
@@ -3008,6 +3080,141 @@ const AdminSettingsPage = () => {
                     </div>
                   </div>
                 )}
+
+                {/* 11. INSTAGRAM SOCIAL FEED MANAGEMENT */}
+                {activeTab === "social-feed" && (
+                  <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2">
+                          <Instagram className="h-5 w-5 text-cyan-400" />
+                          Instagram Social Feed Management
+                        </h2>
+                        <p className="text-xs text-slate-400">Manage Instagram embeds displayed on the homepage social gallery</p>
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          setNewFeedUrl("");
+                          setNewFeedActive(true);
+                          setShowAddFeedModal(true);
+                        }}
+                        className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold"
+                      >
+                        <Plus className="h-4 w-4 mr-1" /> Add Instagram Embed
+                      </Button>
+                    </div>
+
+                    <Card className="bg-slate-800/40 border-slate-800 overflow-hidden shadow-md">
+                      <CardContent className="p-0">
+                        {fetchingSocialFeed ? (
+                          <div className="flex flex-col items-center justify-center py-12 gap-2 text-slate-400 text-sm">
+                            <RefreshCw className="h-6 w-6 animate-spin text-cyan-400" />
+                            Loading social feed...
+                          </div>
+                        ) : socialFeedPosts.length === 0 ? (
+                          <div className="text-center py-12 text-slate-400 text-sm italic">
+                            No Instagram posts configured in feed. Click "Add Instagram Embed" to start.
+                          </div>
+                        ) : (
+                          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={async (e) => {
+                            const { active, over } = e;
+                            if (active && over && active.id !== over.id) {
+                              const oldIdx = socialFeedPosts.findIndex(s => String(s._id) === active.id);
+                              const newIdx = socialFeedPosts.findIndex(s => String(s._id) === over.id);
+                              const reordered = arrayMove(socialFeedPosts, oldIdx, newIdx);
+                              setSocialFeedPosts(reordered);
+                              
+                              try {
+                                const ids = reordered.map(p => p._id);
+                                await api.patch('/social-feed/reorder', { ids });
+                                toast({ title: "Order saved", description: "Feed sequence updated." });
+                              } catch (err) {
+                                toast({
+                                  title: "Reorder failed",
+                                  description: "Could not save new order to database.",
+                                  variant: "destructive"
+                                });
+                                fetchSocialFeedPosts(); // rollback
+                              }
+                            }
+                          }}>
+                            <SortableContext items={socialFeedPosts.map(s => String(s._id))} strategy={verticalListSortingStrategy}>
+                              <div className="divide-y divide-slate-850">
+                                {socialFeedPosts.map((post) => (
+                                  <SortableItem key={post._id} id={String(post._id)}>
+                                    <div className="p-4 flex items-center justify-between gap-4 bg-slate-900/10 hover:bg-slate-800/20 transition-colors">
+                                      <div className="flex items-center gap-3 min-w-0">
+                                        <SortableHandle>
+                                          <GripVertical className="h-5 w-5 text-slate-500 cursor-grab active:cursor-grabbing shrink-0" />
+                                        </SortableHandle>
+                                        
+                                        {/* Mini Preview */}
+                                        <div className="w-12 h-12 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-center overflow-hidden shrink-0">
+                                          <Instagram className="w-5 h-5 text-pink-400" />
+                                        </div>
+
+                                        <div className="min-w-0">
+                                          <p className="text-xs font-bold text-slate-200 truncate select-all">
+                                            {post.embedUrl}
+                                          </p>
+                                          <p className="text-[10px] text-slate-400 mt-0.5">
+                                            Added: {new Date(post.createdAt).toLocaleDateString()}
+                                          </p>
+                                        </div>
+                                      </div>
+
+                                      <div className="flex items-center gap-4 shrink-0">
+                                        {/* Status badge and toggle */}
+                                        <div className="flex items-center gap-2">
+                                          <span className={cn(
+                                            "text-[10px] font-bold px-2 py-0.5 rounded-full uppercase",
+                                            post.isActive ? "bg-emerald-950/80 text-emerald-400 border border-emerald-800/50" : "bg-slate-950/80 text-slate-500 border border-slate-800"
+                                          )}>
+                                            {post.isActive ? "Active" : "Inactive"}
+                                          </span>
+                                          <Switch
+                                            checked={post.isActive}
+                                            onCheckedChange={() => handleToggleFeedActive(post._id, post.isActive)}
+                                          />
+                                        </div>
+
+                                        {/* Actions */}
+                                        <div className="flex items-center gap-1">
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => {
+                                              setEditingFeedPost(post);
+                                              setShowEditFeedModal(true);
+                                            }}
+                                            className="h-8 w-8 text-slate-400 hover:text-slate-200 hover:bg-slate-800"
+                                            title="Edit post"
+                                          >
+                                            <Edit className="h-4 w-4" />
+                                          </Button>
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => handleDeleteFeedPost(post._id)}
+                                            className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-950/20"
+                                            title="Delete post"
+                                          >
+                                            <Trash2 className="h-4 w-4" />
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </SortableItem>
+                                ))}
+                              </div>
+                            </SortableContext>
+                          </DndContext>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -3242,6 +3449,116 @@ const AdminSettingsPage = () => {
                   ))}
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ADD NEW SOCIAL FEED ITEM MODAL */}
+      {showAddFeedModal && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[100] flex justify-center items-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 space-y-6 shadow-2xl">
+            <div className="flex justify-between items-start">
+              <div>
+                <h3 className="text-lg font-bold text-slate-100 flex items-center gap-2">
+                  <Instagram className="h-5 w-5 text-pink-500" />
+                  Add Instagram Embed
+                </h3>
+                <p className="text-xs text-slate-400">Pasted Instagram link will render natively on the homepage feed</p>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => setShowAddFeedModal(false)} className="text-slate-400 hover:text-white hover:bg-slate-800">
+                <Plus className="h-4 w-4 rotate-45" />
+              </Button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="add-embed-url" className="text-xs text-slate-300 font-bold">Instagram Embed URL</Label>
+                <Input
+                  id="add-embed-url"
+                  placeholder="https://www.instagram.com/p/DP9hBT_Ew-4/"
+                  value={newFeedUrl}
+                  onChange={(e) => setNewFeedUrl(e.target.value)}
+                  className="bg-slate-950 border-slate-700 text-slate-200"
+                />
+                <p className="text-[10px] text-slate-400">Supports: instagram.com/p/*, instagram.com/reel/*, instagram.com/tv/*</p>
+              </div>
+
+              <div className="flex items-center justify-between p-3 bg-slate-950/40 rounded-xl border border-slate-800">
+                <div className="flex flex-col">
+                  <Label htmlFor="add-active-toggle" className="text-xs font-bold text-slate-300 cursor-pointer">Active Status</Label>
+                  <span className="text-[10px] text-slate-400">Immediately render this post on the homepage gallery</span>
+                </div>
+                <Switch
+                  id="add-active-toggle"
+                  checked={newFeedActive}
+                  onCheckedChange={setNewFeedActive}
+                />
+              </div>
+
+              <Button
+                onClick={handleCreateFeedPost}
+                disabled={feedSaving}
+                className="w-full bg-[#db2777] hover:bg-[#be185d] text-white font-bold h-10 transition-all shadow-md"
+              >
+                {feedSaving ? <RefreshCw className="h-4 w-4 animate-spin mr-1.5" /> : <Plus className="h-4 w-4 mr-1.5" />}
+                Add Feed Embed
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT SOCIAL FEED ITEM MODAL */}
+      {showEditFeedModal && editingFeedPost && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[100] flex justify-center items-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 space-y-6 shadow-2xl">
+            <div className="flex justify-between items-start">
+              <div>
+                <h3 className="text-lg font-bold text-slate-100 flex items-center gap-2">
+                  <Instagram className="h-5 w-5 text-pink-500" />
+                  Edit Instagram Embed
+                </h3>
+                <p className="text-xs text-slate-400">Update Instagram embed link and visibility status</p>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => setShowEditFeedModal(false)} className="text-slate-400 hover:text-white hover:bg-slate-800">
+                <Plus className="h-4 w-4 rotate-45" />
+              </Button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="edit-embed-url" className="text-xs text-slate-300 font-bold">Instagram Embed URL</Label>
+                <Input
+                  id="edit-embed-url"
+                  placeholder="https://www.instagram.com/p/DP9hBT_Ew-4/"
+                  value={editingFeedPost.embedUrl}
+                  onChange={(e) => setEditingFeedPost({ ...editingFeedPost, embedUrl: e.target.value })}
+                  className="bg-slate-950 border-slate-700 text-slate-200"
+                />
+                <p className="text-[10px] text-slate-400">Supports: instagram.com/p/*, instagram.com/reel/*, instagram.com/tv/*</p>
+              </div>
+
+              <div className="flex items-center justify-between p-3 bg-slate-950/40 rounded-xl border border-slate-800">
+                <div className="flex flex-col">
+                  <Label htmlFor="edit-active-toggle" className="text-xs font-bold text-slate-300 cursor-pointer">Active Status</Label>
+                  <span className="text-[10px] text-slate-400">Render this post on the homepage gallery</span>
+                </div>
+                <Switch
+                  id="edit-active-toggle"
+                  checked={editingFeedPost.isActive}
+                  onCheckedChange={(checked) => setEditingFeedPost({ ...editingFeedPost, isActive: checked })}
+                />
+              </div>
+
+              <Button
+                onClick={handleUpdateFeedPost}
+                disabled={feedSaving}
+                className="w-full bg-[#db2777] hover:bg-[#be185d] text-white font-bold h-10 transition-all shadow-md"
+              >
+                {feedSaving ? <RefreshCw className="h-4 w-4 animate-spin mr-1.5" /> : <Save className="h-4 w-4 mr-1.5" />}
+                Save Changes
+              </Button>
             </div>
           </div>
         </div>

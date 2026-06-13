@@ -11,7 +11,7 @@ import { NewArrivals } from "../components/NewArrivals";
 import OffersSection from "../components/OffersSection";
 import { WhyChooseUs } from "../components/WhyChooseUs";
 import { PromotionalBanners } from "../components/PromotionalBanners";
-import { SocialGallery } from "../components/SocialGallery";
+import { SocialFeed } from "../components/SocialFeed";
 import useCart from "../hooks/use-cart";
 import { useSettings } from "../contexts/SettingsContext";
 import { useOfferPopup } from "../hooks/use-offer-popup";
@@ -360,7 +360,7 @@ const HomePage = () => {
                 variants={itemVariants}
                 className="relative"
               >
-                <SocialGallery />
+                <SocialFeed />
               </motion.section>
             );
 
