@@ -138,6 +138,32 @@ interface HomeSection {
   };
 }
 
+export interface WhatsAppWidgetSettings {
+  enabled: boolean;
+  phoneNumber: string;
+  position: 'right' | 'left';
+  message: string;
+  showHoverCard: boolean;
+  showFloatingAnimation: boolean;
+  businessName: string;
+  widgetTitle: string;
+  widgetSubtitle: string;
+  widgetSize: 'small' | 'medium' | 'large';
+  iconStyle: 'circle' | 'pill';
+  borderRadius: number;
+  shadowIntensity: 'low' | 'medium' | 'high';
+  welcomeText: string;
+  ctaButtonText: string;
+  onlineStatusText: string;
+  businessHoursMessage: string;
+}
+
+export interface NotificationsSettings {
+  whatsappFloating?: WhatsAppWidgetSettings;
+  popupCreator?: any;
+  exitIntentPopup?: any;
+}
+
 interface SettingsContextType {
   heroSlides: any[];
   mobileBanners: any[];
@@ -147,7 +173,7 @@ interface SettingsContextType {
   shopCategories: Category[];
   headerSettings: HeaderSettings;
   footerSettings: FooterSettings;
-  notificationsSettings: any;
+  notificationsSettings: NotificationsSettings;
   globalSettings: any;
   deliverySettings: any;
   themeSettings: any;
@@ -260,6 +286,44 @@ const defaultFooterSettings: FooterSettings = {
   paymentMethodEmiUrl: ""
 };
 
+export const defaultWhatsAppWidgetSettings: WhatsAppWidgetSettings = {
+  enabled: true,
+  phoneNumber: '9949683222',
+  position: 'right',
+  message: "Hello! I'm interested in your flower arrangements.",
+  showHoverCard: true,
+  showFloatingAnimation: true,
+  businessName: 'Spring Blossoms Florist',
+  widgetTitle: 'WhatsApp Us',
+  widgetSubtitle: 'Need help choosing flowers?',
+  widgetSize: 'medium',
+  iconStyle: 'circle',
+  borderRadius: 12,
+  shadowIntensity: 'medium',
+  welcomeText: 'Chat with our floral experts.',
+  ctaButtonText: 'Chat Now',
+  onlineStatusText: 'Online',
+  businessHoursMessage: 'Typically replies within minutes'
+};
+
+export const defaultNotificationsSettings: NotificationsSettings = {
+  whatsappFloating: defaultWhatsAppWidgetSettings,
+  popupCreator: {
+    enabled: false,
+    image: '',
+    title: 'Special Offer!',
+    subtitle: 'Get 10% off your first purchase',
+    ctaText: 'Shop Now',
+    ctaLink: '/shop'
+  },
+  exitIntentPopup: {
+    enabled: false,
+    title: "Wait! Don't Go Empty Handed",
+    subtitle: "Use code EXIT10 for 10% off!",
+    discountCode: "EXIT10"
+  }
+};
+
 const hexToHsl = (hex: string): string => {
   hex = hex.replace(/^#/, '');
   let r = parseInt(hex.substring(0, 2), 16) / 255;
@@ -313,7 +377,7 @@ export const SettingsProvider = ({ children }: SettingsProviderProps) => {
   const [shopCategories, setShopCategories] = useState<Category[]>([]);
   const [headerSettings, setHeaderSettings] = useState<HeaderSettings>(defaultHeaderSettings);
   const [footerSettings, setFooterSettings] = useState<FooterSettings>(defaultFooterSettings);
-  const [notificationsSettings, setNotificationsSettings] = useState<any>({});
+  const [notificationsSettings, setNotificationsSettings] = useState<NotificationsSettings>(defaultNotificationsSettings);
   const [globalSettings, setGlobalSettings] = useState<any>({});
   const [deliverySettings, setDeliverySettings] = useState<any>({});
   const [themeSettings, setThemeSettings] = useState<any>({});
@@ -367,7 +431,16 @@ export const SettingsProvider = ({ children }: SettingsProviderProps) => {
       if (data.shopCategories) setShopCategories(data.shopCategories);
       if (data.headerSettings) setHeaderSettings(prev => ({ ...prev, ...data.headerSettings }));
       if (data.footerSettings) setFooterSettings(prev => ({ ...prev, ...data.footerSettings }));
-      if (data.notificationsSettings) setNotificationsSettings(data.notificationsSettings);
+      if (data.notificationsSettings) {
+        setNotificationsSettings(prev => ({
+          ...prev,
+          ...data.notificationsSettings,
+          whatsappFloating: {
+            ...prev.whatsappFloating,
+            ...(data.notificationsSettings.whatsappFloating || {})
+          }
+        }));
+      }
       if (data.globalSettings) setGlobalSettings(data.globalSettings);
       if (data.deliverySettings) setDeliverySettings(data.deliverySettings);
       if (data.themeSettings) {
@@ -408,7 +481,16 @@ export const SettingsProvider = ({ children }: SettingsProviderProps) => {
         if (preview.shopCategories) setShopCategories(preview.shopCategories);
         if (preview.headerSettings) setHeaderSettings(prev => ({ ...prev, ...preview.headerSettings }));
         if (preview.footerSettings) setFooterSettings(prev => ({ ...prev, ...preview.footerSettings }));
-        if (preview.notificationsSettings) setNotificationsSettings(preview.notificationsSettings);
+        if (preview.notificationsSettings) {
+          setNotificationsSettings(prev => ({
+            ...prev,
+            ...preview.notificationsSettings,
+            whatsappFloating: {
+              ...prev.whatsappFloating,
+              ...(preview.notificationsSettings.whatsappFloating || {})
+            }
+          }));
+        }
         if (preview.globalSettings) setGlobalSettings(preview.globalSettings);
         if (preview.deliverySettings) setDeliverySettings(preview.deliverySettings);
         if (preview.themeSettings) {

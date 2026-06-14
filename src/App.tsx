@@ -12,6 +12,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import MainLayout from './components/MainLayout';
 import MobileBottomNav from '@/components/MobileBottomNav';
+import WhatsAppWidget from '@/components/WhatsAppWidget';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import useCart from '@/hooks/use-cart';
 import CartLoader from '@/components/CartLoader';
@@ -502,6 +503,7 @@ const App = () => {
                         </Routes>
                       </Suspense>
                       <MobileBottomNav />
+                      <WhatsAppWidget />
                     </BrowserRouter>
                   </TooltipProvider>
                 </NotificationProvider>
