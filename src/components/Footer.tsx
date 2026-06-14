@@ -16,7 +16,8 @@ import {
   CreditCard,
   Truck,
   ShieldCheck,
-  Store
+  Store,
+  Lock
 } from 'lucide-react';
 import { useSettings } from '@/contexts/SettingsContext';
 import { Button } from './ui/button';
@@ -31,6 +32,60 @@ const Footer = () => {
   // WhatsApp contact number - using just the number without +91
   const whatsappNumber = "9949683222";
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=Hello! I'm interested in your flower arrangements.`;
+
+  // Unpack settings for Razorpay Secure Payments
+  const securePaymentEnabled = footerSettings.securePaymentEnabled ?? true;
+  const securePaymentHeaderText = footerSettings.securePaymentHeaderText || "Secure Payments by";
+  const securePaymentHighlightText = footerSettings.securePaymentHighlightText || "100% Safe & Encrypted Transactions";
+  const securePaymentGatewayText = footerSettings.securePaymentGatewayText || "Trusted Payment Gateway";
+  const securePaymentTrustText = footerSettings.securePaymentTrustText || "Trusted by Millions of Businesses";
+
+  const renderRazorpayLogo = (isMobile = false) => {
+    if (footerSettings.securePaymentLogoType === 'custom' && footerSettings.securePaymentCustomLogo) {
+      return (
+        <img
+          src={footerSettings.securePaymentCustomLogo}
+          alt="Razorpay Logo"
+          className={`${isMobile ? 'h-5' : 'h-6'} w-auto object-contain`}
+        />
+      );
+    }
+    return (
+      <div className={`flex items-center gap-1.5 ${isMobile ? 'px-2 py-0.5' : 'px-2.5 py-1'} bg-sky-50 rounded-full border border-sky-100 shadow-sm`}>
+        <svg className={`${isMobile ? 'h-3' : 'h-3.5'} w-auto fill-[#0F3F94]`} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-label="Razorpay Logo">
+          <path d="M22.436 0l-11.91 7.773-1.174 4.276 6.625-4.297L11.65 24h4.391l6.395-24zM14.26 10.098L3.389 17.166 1.564 24h9.008l3.688-13.902Z"/>
+        </svg>
+        <span className={`${isMobile ? 'text-[10px]' : 'text-xs'} font-bold text-[#0F3F94] tracking-tight`}>Razorpay</span>
+      </div>
+    );
+  };
+
+  const renderPaymentBadge = (id: string, defaultSvgFn: (isMobile: boolean) => React.ReactNode, titleText: string, isMobile = false) => {
+    const enabled = (footerSettings as any)[`paymentMethod${id}Enabled`] ?? true;
+    const type = (footerSettings as any)[`paymentMethod${id}Type`] || 'default';
+    const url = (footerSettings as any)[`paymentMethod${id}Url`] || '';
+
+    if (!enabled) return null;
+
+    return (
+      <div
+        className={`${isMobile ? 'h-7 px-2' : 'h-8 px-2.5'} rounded bg-white border border-gray-200 flex items-center justify-center shadow-[0_1px_2px_rgba(0,0,0,0.02)] hover:border-gray-300 hover:shadow-sm transition-all duration-200 group`}
+        title={titleText}
+      >
+        {type === 'custom' && url ? (
+          <img
+            src={url}
+            alt={titleText}
+            className={`${isMobile ? 'h-4' : 'h-5'} w-auto object-contain group-hover:scale-105 transition-transform`}
+          />
+        ) : (
+          <div className="group-hover:scale-105 transition-transform flex items-center justify-center">
+            {defaultSvgFn(isMobile)}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -154,6 +209,37 @@ const Footer = () => {
               </div>
             </details>
           </div>
+
+          {/* Mobile Secure Payments Section */}
+          {securePaymentEnabled && (
+            <div className="border-t border-sky-100 pt-4 pb-2 space-y-3 text-center">
+              <div className="flex items-center justify-center gap-2">
+                <ShieldCheck className="w-5 h-5 text-blue-600" />
+                <span className="text-xs font-semibold text-gray-800">{securePaymentHeaderText}</span>
+                {renderRazorpayLogo(true)}
+              </div>
+              
+              <div className="space-y-1">
+                <p className="text-[11px] text-emerald-600 font-bold flex items-center justify-center gap-1">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  {securePaymentHighlightText}
+                </p>
+                <p className="text-[10px] text-gray-500">
+                  {securePaymentGatewayText} • {securePaymentTrustText}
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-center gap-1.5 pt-1">
+                {renderPaymentBadge("Upi", (isMobile) => <svg className={`${isMobile ? 'h-2.5' : 'h-3'} w-auto`} viewBox="0 0 38 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.5 10.5L13.8 4H12L11 7H8.8L9.5 4H7.5L6.1 10.5H7.8L8.5 7.5H10.5L9.8 10.5H12.5ZM17.8 4H14L12.5 10.5H14.2L15 7H16.8C17.8 7 18.5 6.3 18.8 5.3C19.1 4.3 18.5 4 17.8 4ZM16.8 5.8H15.2L15.6 4.8H16.8C17.1 4.8 17.3 4.9 17.2 5.2C17.1 5.5 16.9 5.8 16.8 5.8ZM21.8 4L20.4 10.5H22.1L23.5 4H21.8Z" fill="#0F3F94"/><path d="M25 4L24 8.5L23 7.5L22.2 8.2L24 10.5L25.8 4H25Z" fill="#0F8F49"/></svg>, "UPI", true)}
+                {renderPaymentBadge("Visa", (isMobile) => <svg viewBox="0 0 36 12" className={`${isMobile ? 'h-2.5' : 'h-3'} w-auto`} fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13.6 0.2H9.8L6.1 9.6L5.3 1.8C5.2 0.7 4.2 0.2 3.1 0.2H0L0.1 0.5C1.9 1 3.5 1.7 4.7 2.4C5.4 2.8 5.6 3.2 5.8 4.1L8.3 11.8H12.2L18.1 0.2H13.6ZM24.6 8C24.6 5.1 20.6 4.9 20.6 3.5C20.6 3.1 21.0 2.6 22.0 2.5C22.5 2.4 23.9 2.4 25.4 3L26.1 0.5C24.8 0.1 23.3 0 21.6 0C19.0 0 17.1 1.4 17.1 3.4C17.1 6.3 21.1 6.4 21.1 7.9C21.1 8.3 20.7 8.8 19.7 8.9C19.1 9 17.7 8.9 16.1 8.2L15.4 10.8C16.9 11.4 18.7 11.8 20.5 11.8C23.2 11.8 24.6 10.4 24.6 8ZM32.3 0.2H29.3C28.4 0.2 27.7 0.7 27.3 1.6L22.8 11.8H26.7L27.5 9.6H32.3L32.8 11.8H36.2L32.3 0.2ZM28.4 7.2L30.5 2L31.7 7.2H28.4ZM18.2 0.2L14.4 11.8H18.2L22.0 0.2H18.2Z" fill="#1A1F71"/></svg>, "Visa", true)}
+                {renderPaymentBadge("Mastercard", (isMobile) => <svg viewBox="0 0 24 16" className={`${isMobile ? 'h-3' : 'h-4'} w-auto`} fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="8" r="8" fill="#EB001B"/><circle cx="16" cy="8" r="8" fill="#F79E1B" fillOpacity="0.8"/><path d="M12 2.1C10.7 3.5 9.9 5.3 9.9 7.3C9.9 9.3 10.7 11.1 12 12.5C13.3 11.1 14.1 9.3 14.1 7.3C14.1 5.3 13.3 3.5 12 2.1Z" fill="#FF5F00"/></svg>, "Mastercard", true)}
+                {renderPaymentBadge("RuPay", (isMobile) => <svg viewBox="0 0 45 12" className={`${isMobile ? 'h-2.5' : 'h-3'} w-auto`} fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.6 2.3C4.6 1 3.5 0 2.2 0H0V11.8H2.3V7.2H3.5L6.6 11.8H9.3L5.9 6.8C6.9 6.3 7.6 5.2 7.6 3.9C7.6 3.3 7.4 2.8 7.1 2.3H4.6ZM2.3 5.0H2.2V2.2H2.3C3.2 2.2 3.9 2.8 3.9 3.6C3.9 4.4 3.2 5.0 2.3 5.0Z" fill="#0B4D97"/><path d="M12.4 3.6C12.4 1.6 10.8 0 8.8 0H5.8V11.8H8.8C10.8 11.8 12.4 10.2 12.4 8.2V3.6ZM10.1 8.2C10.1 8.9 9.5 9.5 8.8 9.5H8.1V2.3H8.8C9.5 2.3 10.1 2.9 10.1 3.6V8.2Z" fill="#0B4D97"/><path d="M17.1 0.2H14.1L12.5 11.8H14.9L15.3 8.7H17.8L18.1 11.8H20.6L19 0.2ZM15.5 6.4L15.9 2.5L17.5 6.4H15.5Z" fill="#0B4D97"/><path d="M21.5 0L19.5 11.8H21.5L23.5 0H21.5Z" fill="#EA7623"/><path d="M24 0L22 11.8H24L26 0H24Z" fill="#A4C639"/><path d="M27.5 3.5V0.2H29.5V3.5C29.5 4.5 30.2 5.2 31.2 5.2C32.2 5.2 32.9 4.5 32.9 3.5V0.2H34.9V3.5C34.9 5.6 33.2 7.2 31.2 7.2C29.2 7.2 27.5 5.6 27.5 3.5Z" fill="#A4C639"/><path d="M36.5 0.2H38.5C39.8 0.2 40.8 1.2 40.8 2.5C40.8 3.8 39.8 4.8 38.5 4.8H38.2V7.2H36.5V0.2ZM38.5 3.1C38.9 3.1 39.1 2.8 39.1 2.5C39.1 2.2 38.9 1.9 38.5 1.9H38.2V3.1H38.5Z" fill="#A4C639"/></svg>, "RuPay", true)}
+                {renderPaymentBadge("NetBanking", (isMobile) => <div className="flex items-center gap-1 text-gray-700"><svg viewBox="0 0 24 24" className="h-3 w-auto text-gray-650" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="22" width="20" height="2" /><path d="M12 2L2 7h20L12 2z" fill="currentColor" fillOpacity="0.1" /><path d="M4 22V11M20 22V11M8 22V11M16 22V11M12 22V11" /></svg><span className="text-[8px] font-bold text-gray-500">NB</span></div>, "Net Banking", true)}
+                {renderPaymentBadge("Wallets", (isMobile) => <div className="flex items-center gap-1 text-gray-700"><svg viewBox="0 0 24 24" className="h-3 w-auto text-gray-650" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" /><path d="M3 5v14a2 2 0 0 0 2 2h16v-5" fill="currentColor" fillOpacity="0.1" /><path d="M18 12a2 2 0 0 0 0 4h4v-4Z" /></svg><span className="text-[8px] font-bold text-gray-500">WALLETS</span></div>, "Wallets", true)}
+                {renderPaymentBadge("Emi", (isMobile) => <div className="flex items-center gap-1 text-gray-700"><svg viewBox="0 0 24 24" className="h-3 w-auto text-gray-650" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="16" rx="2" fill="currentColor" fillOpacity="0.1" /><line x1="3" y1="10" x2="21" y2="10" /><path d="M7 15h2M12 15h4" /></svg><span className="text-[8px] font-bold text-gray-500">EMI</span></div>, "EMI Available", true)}
+              </div>
+            </div>
+          )}
 
           <p className="pt-1 text-center text-[12px] text-[#777]">
             © 2026 SB Florist. All rights reserved.
@@ -357,6 +443,50 @@ const Footer = () => {
             </div>
           </div>
         </div>
+
+        {/* Secure Payments by Razorpay Trust Section */}
+        {securePaymentEnabled && (
+          <div className="py-8 border-t border-gray-200">
+            <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
+              {/* Trust Badges & Info */}
+              <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
+                <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 flex-shrink-0 border border-blue-100 shadow-inner">
+                  <ShieldCheck className="w-6 h-6 text-blue-600" />
+                </div>
+                <div className="space-y-1">
+                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                    <span className="text-sm font-semibold text-gray-800 tracking-wide">{securePaymentHeaderText}</span>
+                    {renderRazorpayLogo()}
+                  </div>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3 text-xs text-gray-500">
+                    <span className="flex items-center gap-1 justify-center sm:justify-start text-emerald-600 font-medium">
+                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      {securePaymentHighlightText}
+                    </span>
+                    <span className="hidden sm:inline text-gray-300">|</span>
+                    <span className="font-medium">{securePaymentGatewayText}</span>
+                    <span className="hidden sm:inline text-gray-300">|</span>
+                    <span className="text-gray-500">{securePaymentTrustText}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Payment Method Badges */}
+              <div className="flex flex-col items-center lg:items-end gap-2">
+                <span className="text-xs text-gray-400 font-semibold tracking-wider uppercase">Multiple Payment Options Available</span>
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  {renderPaymentBadge("Upi", (isMobile) => <svg className={`${isMobile ? 'h-2.5' : 'h-3'} w-auto`} viewBox="0 0 38 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.5 10.5L13.8 4H12L11 7H8.8L9.5 4H7.5L6.1 10.5H7.8L8.5 7.5H10.5L9.8 10.5H12.5ZM17.8 4H14L12.5 10.5H14.2L15 7H16.8C17.8 7 18.5 6.3 18.8 5.3C19.1 4.3 18.5 4 17.8 4ZM16.8 5.8H15.2L15.6 4.8H16.8C17.1 4.8 17.3 4.9 17.2 5.2C17.1 5.5 16.9 5.8 16.8 5.8ZM21.8 4L20.4 10.5H22.1L23.5 4H21.8Z" fill="#0F3F94"/><path d="M25 4L24 8.5L23 7.5L22.2 8.2L24 10.5L25.8 4H25Z" fill="#0F8F49"/></svg>, "UPI (GPay, PhonePe, Paytm)", false)}
+                  {renderPaymentBadge("Visa", (isMobile) => <svg viewBox="0 0 36 12" className={`${isMobile ? 'h-2.5' : 'h-3'} w-auto`} fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13.6 0.2H9.8L6.1 9.6L5.3 1.8C5.2 0.7 4.2 0.2 3.1 0.2H0L0.1 0.5C1.9 1 3.5 1.7 4.7 2.4C5.4 2.8 5.6 3.2 5.8 4.1L8.3 11.8H12.2L18.1 0.2H13.6ZM24.6 8C24.6 5.1 20.6 4.9 20.6 3.5C20.6 3.1 21.0 2.6 22.0 2.5C22.5 2.4 23.9 2.4 25.4 3L26.1 0.5C24.8 0.1 23.3 0 21.6 0C19.0 0 17.1 1.4 17.1 3.4C17.1 6.3 21.1 6.4 21.1 7.9C21.1 8.3 20.7 8.8 19.7 8.9C19.1 9 17.7 8.9 16.1 8.2L15.4 10.8C16.9 11.4 18.7 11.8 20.5 11.8C23.2 11.8 24.6 10.4 24.6 8ZM32.3 0.2H29.3C28.4 0.2 27.7 0.7 27.3 1.6L22.8 11.8H26.7L27.5 9.6H32.3L32.8 11.8H36.2L32.3 0.2ZM28.4 7.2L30.5 2L31.7 7.2H28.4ZM18.2 0.2L14.4 11.8H18.2L22.0 0.2H18.2Z" fill="#1A1F71"/></svg>, "Visa Credit/Debit Card", false)}
+                  {renderPaymentBadge("Mastercard", (isMobile) => <svg viewBox="0 0 24 16" className={`${isMobile ? 'h-3' : 'h-4'} w-auto`} fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="8" r="8" fill="#EB001B"/><circle cx="16" cy="8" r="8" fill="#F79E1B" fillOpacity="0.8"/><path d="M12 2.1C10.7 3.5 9.9 5.3 9.9 7.3C9.9 9.3 10.7 11.1 12 12.5C13.3 11.1 14.1 9.3 14.1 7.3C14.1 5.3 13.3 3.5 12 2.1Z" fill="#FF5F00"/></svg>, "Mastercard Credit/Debit Card", false)}
+                  {renderPaymentBadge("RuPay", (isMobile) => <svg viewBox="0 0 45 12" className={`${isMobile ? 'h-2.5' : 'h-3'} w-auto`} fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.6 2.3C4.6 1 3.5 0 2.2 0H0V11.8H2.3V7.2H3.5L6.6 11.8H9.3L5.9 6.8C6.9 6.3 7.6 5.2 7.6 3.9C7.6 3.3 7.4 2.8 7.1 2.3H4.6ZM2.3 5.0H2.2V2.2H2.3C3.2 2.2 3.9 2.8 3.9 3.6C3.9 4.4 3.2 5.0 2.3 5.0Z" fill="#0B4D97"/><path d="M12.4 3.6C12.4 1.6 10.8 0 8.8 0H5.8V11.8H8.8C10.8 11.8 12.4 10.2 12.4 8.2V3.6ZM10.1 8.2C10.1 8.9 9.5 9.5 8.8 9.5H8.1V2.3H8.8C9.5 2.3 10.1 2.9 10.1 3.6V8.2Z" fill="#0B4D97"/><path d="M17.1 0.2H14.1L12.5 11.8H14.9L15.3 8.7H17.8L18.1 11.8H20.6L19 0.2ZM15.5 6.4L15.9 2.5L17.5 6.4H15.5Z" fill="#0B4D97"/><path d="M21.5 0L19.5 11.8H21.5L23.5 0H21.5Z" fill="#EA7623"/><path d="M24 0L22 11.8H24L26 0H24Z" fill="#A4C639"/><path d="M27.5 3.5V0.2H29.5V3.5C29.5 4.5 30.2 5.2 31.2 5.2C32.2 5.2 32.9 4.5 32.9 3.5V0.2H34.9V3.5C34.9 5.6 33.2 7.2 31.2 7.2C29.2 7.2 27.5 5.6 27.5 3.5Z" fill="#A4C639"/><path d="M36.5 0.2H38.5C39.8 0.2 40.8 1.2 40.8 2.5C40.8 3.8 39.8 4.8 38.5 4.8H38.2V7.2H36.5V0.2ZM38.5 3.1C38.9 3.1 39.1 2.8 39.1 2.5C39.1 2.2 38.9 1.9 38.5 1.9H38.2V3.1H38.5Z" fill="#A4C639"/></svg>, "RuPay Card", false)}
+                  {renderPaymentBadge("NetBanking", (isMobile) => <div className="flex items-center gap-1.5 text-gray-700"><svg viewBox="0 0 24 24" className="h-3.5 w-auto text-gray-600" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="22" width="20" height="2" /><path d="M12 2L2 7h20L12 2z" fill="currentColor" fillOpacity="0.1" /><path d="M4 22V11M20 22V11M8 22V11M16 22V11M12 22V11" /></svg><span className="text-[10px] font-bold tracking-tight text-gray-500">NET BANKING</span></div>, "Net Banking", false)}
+                  {renderPaymentBadge("Wallets", (isMobile) => <div className="flex items-center gap-1.5 text-gray-700"><svg viewBox="0 0 24 24" className="h-3.5 w-auto text-gray-600" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" /><path d="M3 5v14a2 2 0 0 0 2 2h16v-5" fill="currentColor" fillOpacity="0.1" /><path d="M18 12a2 2 0 0 0 0 4h4v-4Z" /></svg><span className="text-[10px] font-bold tracking-tight text-gray-500">WALLETS</span></div>, "Wallets", false)}
+                  {renderPaymentBadge("Emi", (isMobile) => <div className="flex items-center gap-1.5 text-gray-700"><svg viewBox="0 0 24 24" className="h-3.5 w-auto text-gray-600" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="16" rx="2" fill="currentColor" fillOpacity="0.1" /><line x1="3" y1="10" x2="21" y2="10" /><path d="M7 15h2M12 15h4" /></svg><span className="text-[10px] font-bold tracking-tight text-gray-500">EMI AVAILABLE</span></div>, "EMI Options Available", false)}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Bottom Bar */}
         <div className="pt-8 sm:pt-10 space-y-6 sm:space-y-0 sm:flex sm:flex-row sm:items-center sm:justify-between border-t border-gray-200">

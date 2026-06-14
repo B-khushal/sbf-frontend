@@ -93,6 +93,34 @@ interface FooterSettings {
   seoFooterText?: string;
   appDownloadButtons?: { enabled: boolean; androidLink: string; iosLink: string };
   backgroundStyle?: string;
+  securePaymentEnabled?: boolean;
+  securePaymentHeaderText?: string;
+  securePaymentHighlightText?: string;
+  securePaymentGatewayText?: string;
+  securePaymentTrustText?: string;
+  securePaymentLogoType?: 'default' | 'custom';
+  securePaymentCustomLogo?: string;
+  paymentMethodUpiEnabled?: boolean;
+  paymentMethodUpiType?: 'default' | 'custom';
+  paymentMethodUpiUrl?: string;
+  paymentMethodVisaEnabled?: boolean;
+  paymentMethodVisaType?: 'default' | 'custom';
+  paymentMethodVisaUrl?: string;
+  paymentMethodMastercardEnabled?: boolean;
+  paymentMethodMastercardType?: 'default' | 'custom';
+  paymentMethodMastercardUrl?: string;
+  paymentMethodRuPayEnabled?: boolean;
+  paymentMethodRuPayType?: 'default' | 'custom';
+  paymentMethodRuPayUrl?: string;
+  paymentMethodNetBankingEnabled?: boolean;
+  paymentMethodNetBankingType?: 'default' | 'custom';
+  paymentMethodNetBankingUrl?: string;
+  paymentMethodWalletsEnabled?: boolean;
+  paymentMethodWalletsType?: 'default' | 'custom';
+  paymentMethodWalletsUrl?: string;
+  paymentMethodEmiEnabled?: boolean;
+  paymentMethodEmiType?: 'default' | 'custom';
+  paymentMethodEmiUrl?: string;
 }
 
 interface HomeSection {
@@ -189,7 +217,7 @@ const defaultFooterSettings: FooterSettings = {
         { label: "Contact", href: "/contact", enabled: true },
         { label: "Become a Vendor", href: "/vendor/register", enabled: true },
       ]
-    }
+    },
   ],
   copyright: `© ${new Date().getFullYear()} Spring Blossoms Florist. All rights reserved.`,
   showMap: true,
@@ -201,7 +229,35 @@ const defaultFooterSettings: FooterSettings = {
     { icon: 'ShieldCheck', text: 'Secure Payment' },
     { icon: 'Gift', text: 'Special Offers' },
     { icon: 'Heart', text: 'Made with Love' }
-  ]
+  ],
+  securePaymentEnabled: true,
+  securePaymentHeaderText: "Secure Payments by",
+  securePaymentHighlightText: "100% Safe & Encrypted Transactions",
+  securePaymentGatewayText: "Trusted Payment Gateway",
+  securePaymentTrustText: "Trusted by Millions of Businesses",
+  securePaymentLogoType: "default",
+  securePaymentCustomLogo: "",
+  paymentMethodUpiEnabled: true,
+  paymentMethodUpiType: "default",
+  paymentMethodUpiUrl: "",
+  paymentMethodVisaEnabled: true,
+  paymentMethodVisaType: "default",
+  paymentMethodVisaUrl: "",
+  paymentMethodMastercardEnabled: true,
+  paymentMethodMastercardType: "default",
+  paymentMethodMastercardUrl: "",
+  paymentMethodRuPayEnabled: true,
+  paymentMethodRuPayType: "default",
+  paymentMethodRuPayUrl: "",
+  paymentMethodNetBankingEnabled: true,
+  paymentMethodNetBankingType: "default",
+  paymentMethodNetBankingUrl: "",
+  paymentMethodWalletsEnabled: true,
+  paymentMethodWalletsType: "default",
+  paymentMethodWalletsUrl: "",
+  paymentMethodEmiEnabled: true,
+  paymentMethodEmiType: "default",
+  paymentMethodEmiUrl: ""
 };
 
 const hexToHsl = (hex: string): string => {

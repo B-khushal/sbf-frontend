@@ -2996,6 +2996,228 @@ const AdminSettingsPage = () => {
                         />
                       </div>
                     </div>
+
+                    <Card className="bg-slate-800/40 border-slate-800 mt-6">
+                      <CardContent className="p-4 space-y-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="text-sm font-bold text-slate-200">Secure Payment Trust Section</h3>
+                            <p className="text-xs text-slate-400 mt-1">Display trust logos, customized security message copy, and payment method icons in your site footer.</p>
+                          </div>
+                          <Switch
+                            id="secure-payment-toggle"
+                            checked={localSettings.footerSettings?.securePaymentEnabled ?? true}
+                            onCheckedChange={(checked) => {
+                              const copy = { ...localSettings.footerSettings, securePaymentEnabled: checked };
+                              updateSettingsState({ ...localSettings, footerSettings: copy });
+                            }}
+                          />
+                        </div>
+
+                        {localSettings.footerSettings?.securePaymentEnabled !== false && (
+                          <div className="space-y-6 pt-4 border-t border-slate-800">
+                            {/* Section 1: Trust Copy Customization */}
+                            <div className="space-y-3">
+                              <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">Trust Copy Customization</h4>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <Label className="text-xs text-slate-450">Header Text</Label>
+                                  <Input
+                                    value={localSettings.footerSettings?.securePaymentHeaderText ?? "Secure Payments by"}
+                                    onChange={(e) => {
+                                      const copy = { ...localSettings.footerSettings, securePaymentHeaderText: e.target.value };
+                                      updateSettingsState({ ...localSettings, footerSettings: copy });
+                                    }}
+                                    className="bg-slate-900 border-slate-700 text-slate-200 text-xs mt-1"
+                                    placeholder="e.g. Secure Payments by"
+                                  />
+                                </div>
+                                <div>
+                                  <Label className="text-xs text-slate-450">Security Highlight Message</Label>
+                                  <Input
+                                    value={localSettings.footerSettings?.securePaymentHighlightText ?? "100% Safe & Encrypted Transactions"}
+                                    onChange={(e) => {
+                                      const copy = { ...localSettings.footerSettings, securePaymentHighlightText: e.target.value };
+                                      updateSettingsState({ ...localSettings, footerSettings: copy });
+                                    }}
+                                    className="bg-slate-900 border-slate-700 text-slate-200 text-xs mt-1"
+                                    placeholder="e.g. 100% Safe & Encrypted Transactions"
+                                  />
+                                </div>
+                                <div>
+                                  <Label className="text-xs text-slate-450">Trust Line 1</Label>
+                                  <Input
+                                    value={localSettings.footerSettings?.securePaymentGatewayText ?? "Trusted Payment Gateway"}
+                                    onChange={(e) => {
+                                      const copy = { ...localSettings.footerSettings, securePaymentGatewayText: e.target.value };
+                                      updateSettingsState({ ...localSettings, footerSettings: copy });
+                                    }}
+                                    className="bg-slate-900 border-slate-700 text-slate-200 text-xs mt-1"
+                                    placeholder="e.g. Trusted Payment Gateway"
+                                  />
+                                </div>
+                                <div>
+                                  <Label className="text-xs text-slate-450">Trust Line 2</Label>
+                                  <Input
+                                    value={localSettings.footerSettings?.securePaymentTrustText ?? "Trusted by Millions of Businesses"}
+                                    onChange={(e) => {
+                                      const copy = { ...localSettings.footerSettings, securePaymentTrustText: e.target.value };
+                                      updateSettingsState({ ...localSettings, footerSettings: copy });
+                                    }}
+                                    className="bg-slate-900 border-slate-700 text-slate-200 text-xs mt-1"
+                                    placeholder="e.g. Trusted by Millions of Businesses"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+
+                            <Separator className="bg-slate-800" />
+
+                            {/* Section 2: Logo customizer */}
+                            <div className="space-y-4">
+                              <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">Razorpay Branding Logo</h4>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start bg-slate-900/40 p-3 rounded-lg border border-slate-800">
+                                <div>
+                                  <Label className="text-xs text-slate-450">Logo Mode</Label>
+                                  <select
+                                    value={localSettings.footerSettings?.securePaymentLogoType || "default"}
+                                    onChange={(e) => {
+                                      const copy = { ...localSettings.footerSettings, securePaymentLogoType: e.target.value };
+                                      updateSettingsState({ ...localSettings, footerSettings: copy });
+                                    }}
+                                    className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-md p-2 mt-1 text-xs focus:outline-none"
+                                  >
+                                    <option value="default">Default Razorpay Vector Logo</option>
+                                    <option value="custom">Custom Upload / URL</option>
+                                  </select>
+                                </div>
+                                {localSettings.footerSettings?.securePaymentLogoType === "custom" && (
+                                  <div className="space-y-2">
+                                    <Label className="text-xs text-slate-450">Custom Logo (File Upload / Image URL)</Label>
+                                    <Input
+                                      value={localSettings.footerSettings?.securePaymentCustomLogo || ""}
+                                      onChange={(e) => {
+                                        const copy = { ...localSettings.footerSettings, securePaymentCustomLogo: e.target.value };
+                                        updateSettingsState({ ...localSettings, footerSettings: copy });
+                                      }}
+                                      className="bg-slate-900 border-slate-700 text-slate-200 text-xs mt-1"
+                                      placeholder="Paste custom logo URL here..."
+                                    />
+                                    <div className="pt-1">
+                                      <ImageUpload
+                                        currentImage={localSettings.footerSettings?.securePaymentCustomLogo || ""}
+                                        onImageUpload={async (file) => {
+                                          await handleImageUpload(file, "logo", "securePaymentCustomLogo", (url) => {
+                                            const copy = { ...localSettings.footerSettings, securePaymentCustomLogo: url };
+                                            updateSettingsState({ ...localSettings, footerSettings: copy });
+                                          });
+                                        }}
+                                        isUploading={uploadingImage === "securePaymentCustomLogo"}
+                                        aspectRatio="landscape"
+                                        placeholder="Upload Custom Logo"
+                                      />
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            <Separator className="bg-slate-800" />
+
+                            {/* Section 3: Accepted Payment Methods and Custom Badges */}
+                            <div className="space-y-4">
+                              <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">Payment Method Badges</h4>
+                              <p className="text-xs text-slate-500">Configure which payment badges are visible in the footer, and optionally upload custom icons.</p>
+                              
+                              <div className="space-y-4">
+                                {[
+                                  { id: 'Upi', label: 'UPI (Unified Payments Interface)' },
+                                  { id: 'Visa', label: 'Visa Credit/Debit Card' },
+                                  { id: 'Mastercard', label: 'Mastercard Credit/Debit' },
+                                  { id: 'RuPay', label: 'RuPay Indian Card Scheme' },
+                                  { id: 'NetBanking', label: 'Net Banking Option' },
+                                  { id: 'Wallets', label: 'E-Wallets (Paytm, AmazonPay etc.)' },
+                                  { id: 'Emi', label: 'EMI (Easy Installments)' }
+                                ].map((pm) => {
+                                  const enabledKey = `paymentMethod${pm.id}Enabled`;
+                                  const typeKey = `paymentMethod${pm.id}Type`;
+                                  const urlKey = `paymentMethod${pm.id}Url`;
+
+                                  const enabled = (localSettings.footerSettings as any)[enabledKey] ?? true;
+                                  const type = (localSettings.footerSettings as any)[typeKey] || 'default';
+                                  const url = (localSettings.footerSettings as any)[urlKey] || '';
+
+                                  return (
+                                    <div key={pm.id} className="p-3 bg-slate-900/20 border border-slate-800 rounded-lg space-y-3">
+                                      <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                          <div className={`w-2.5 h-2.5 rounded-full ${enabled ? 'bg-cyan-500' : 'bg-slate-700'}`}></div>
+                                          <span className="text-xs font-semibold text-slate-200">{pm.label}</span>
+                                        </div>
+                                        <Switch
+                                          checked={enabled}
+                                          onCheckedChange={(checked) => {
+                                            const copy = { ...localSettings.footerSettings, [enabledKey]: checked };
+                                            updateSettingsState({ ...localSettings, footerSettings: copy });
+                                          }}
+                                        />
+                                      </div>
+
+                                      {enabled && (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-4 border-l-2 border-slate-800 pt-1">
+                                          <div>
+                                            <Label className="text-[10px] text-slate-400 uppercase tracking-wider">Icon Type</Label>
+                                            <select
+                                              value={type}
+                                              onChange={(e) => {
+                                                const copy = { ...localSettings.footerSettings, [typeKey]: e.target.value };
+                                                updateSettingsState({ ...localSettings, footerSettings: copy });
+                                              }}
+                                              className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-md p-1.5 mt-1 text-[11px] focus:outline-none"
+                                            >
+                                              <option value="default">Default SVG Vector Badge</option>
+                                              <option value="custom">Custom Upload / URL</option>
+                                            </select>
+                                          </div>
+                                          {type === 'custom' && (
+                                            <div className="space-y-1.5">
+                                              <Label className="text-[10px] text-slate-400 uppercase tracking-wider">Custom Badge URL / Upload</Label>
+                                              <Input
+                                                value={url}
+                                                onChange={(e) => {
+                                                  const copy = { ...localSettings.footerSettings, [urlKey]: e.target.value };
+                                                  updateSettingsState({ ...localSettings, footerSettings: copy });
+                                                }}
+                                                className="bg-slate-900 border-slate-700 text-slate-200 text-xs mt-1"
+                                                placeholder="Custom icon image URL..."
+                                              />
+                                              <div className="pt-1">
+                                                <ImageUpload
+                                                  currentImage={url}
+                                                  onImageUpload={async (file) => {
+                                                    await handleImageUpload(file, "logo", `paymentMethod${pm.id}Url`, (uploadedUrl) => {
+                                                      const copy = { ...localSettings.footerSettings, [urlKey]: uploadedUrl };
+                                                      updateSettingsState({ ...localSettings, footerSettings: copy });
+                                                    });
+                                                  }}
+                                                  isUploading={uploadingImage === `paymentMethod${pm.id}Url`}
+                                                  aspectRatio="square"
+                                                  placeholder={`Upload custom ${pm.id} icon`}
+                                                />
+                                              </div>
+                                            </div>
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
                   </div>
                 )}
 
