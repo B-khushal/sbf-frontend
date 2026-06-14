@@ -262,7 +262,7 @@ const getComboMaxPrice = (product: Product) => {
   return total;
 };
 
-const ProductCard = ({ product, onAddToCart }: {
+export const ProductCard = ({ product, onAddToCart }: {
   product: Product;
   onAddToCart?: (item: any, quantity: number) => boolean;
 }) => {

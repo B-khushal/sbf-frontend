@@ -13,6 +13,7 @@ import useWishlist from '@/hooks/use-wishlist';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import productService, { ProductData, ComboItem } from '@/services/productService';
+import { ProductCard } from './ProductGrid';
 import ProductReviews from '@/components/ProductReviews';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { Card } from '@/components/ui/card';
@@ -146,9 +147,6 @@ const RecommendedProducts: React.FC<{ productId: string; category: string }> = (
     }
   };
 
-  const handleProductClick = (product: ProductData) => {
-    window.open(`/product/${product._id}`, '_blank', 'noopener,noreferrer');
-  };
 
   if (loading) {
     return (
@@ -202,67 +200,15 @@ const RecommendedProducts: React.FC<{ productId: string; category: string }> = (
         ref={scrollRef}
         onMouseEnter={() => setIsAutoScrolling(false)}
         onMouseLeave={() => setIsAutoScrolling(true)}
-        className="flex gap-6 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory px-4 py-8 -mx-4"
+        className="flex gap-6 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory px-4 py-4 pb-12 md:pb-16 -mx-4"
       >
-        {recommendedProducts.map((recProd, index) => {
-          const discountedPrice = recProd.discount
-            ? recProd.price * (1 - recProd.discount / 100)
-            : recProd.price;
-
-          // Asymmetric Staggered layout offsets
-          const staggerClass = index % 2 === 0 ? "translate-y-0" : "translate-y-3 md:translate-y-6";
-
+        {recommendedProducts.map((recProd) => {
           return (
             <div
               key={recProd._id}
-              onClick={() => handleProductClick(recProd)}
-              className={cn(
-                "w-[230px] flex-shrink-0 snap-start group bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900 rounded-3xl overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.015)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.06)] hover:-translate-y-1.5 transition-all duration-500 cursor-pointer select-none",
-                staggerClass
-              )}
+              className="w-[200px] xs:w-[220px] md:w-[320px] lg:w-[300px] flex-shrink-0 snap-start"
             >
-              {/* Product Image Frame */}
-              <div className="relative aspect-[4/5] overflow-hidden bg-slate-50 dark:bg-slate-900">
-                {recProd.discount > 0 && (
-                  <div className="absolute top-3 left-3 z-10 bg-rose-600 text-white text-[9px] font-bold tracking-[0.1em] px-2.5 py-1 rounded-md shadow-sm">
-                    -{recProd.discount}%
-                  </div>
-                )}
-                {(recProd.isNewArrival || (recProd as { isNew?: boolean }).isNew) && (
-                  <div className="absolute top-3 right-3 z-10 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[9px] font-bold tracking-[0.1em] px-2.5 py-1 rounded-md shadow-sm">
-                    NEW
-                  </div>
-                )}
-                <img
-                  src={getImageUrl(recProd.images[0]) || '/images/placeholder.svg'}
-                  alt={recProd.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                  loading="lazy"
-                />
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 dark:group-hover:bg-black/10 transition-colors duration-500" />
-              </div>
-
-              {/* Product Info */}
-              <div className="p-4 space-y-1.5">
-                <span className="text-[9px] font-bold tracking-wider text-slate-400 uppercase">
-                  {recProd.category || 'bouquet'}
-                </span>
-                <h3 className="font-extrabold text-xs text-slate-850 dark:text-slate-200 line-clamp-2 group-hover:text-primary transition-colors leading-relaxed">
-                  {recProd.title}
-                </h3>
-
-                {/* Price layout */}
-                <div className="flex items-center gap-2 pt-1">
-                  <span className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                    {formatPrice(convertPrice(discountedPrice))}
-                  </span>
-                  {recProd.discount > 0 && (
-                    <span className="text-xs text-slate-400 line-through">
-                      {formatPrice(convertPrice(recProd.price))}
-                    </span>
-                  )}
-                </div>
-              </div>
+              <ProductCard product={recProd as any} />
             </div>
           );
         })}
