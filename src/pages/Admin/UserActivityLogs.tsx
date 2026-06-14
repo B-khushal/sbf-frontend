@@ -25,6 +25,7 @@ import {
   ChevronsRight,
   Download,
   FileSpreadsheet,
+  RefreshCw,
   Search,
 } from 'lucide-react';
 import api from '@/services/api';
@@ -59,7 +60,7 @@ type SortOrder = 'asc' | 'desc';
 
 const METHOD_OPTIONS = ['all', 'GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
 const STATUS_OPTIONS = ['all', 'Success', 'Failed'];
-const PAGE_SIZE_OPTIONS = ['10', '25', '50'];
+const PAGE_SIZE_OPTIONS = ['10', '25', '50', '100', '250', '500', '1000'];
 
 const UserActivityLogs: React.FC = () => {
   const { toast } = useToast();
@@ -345,6 +346,10 @@ const UserActivityLogs: React.FC = () => {
           <div className="responsive-toolbar">
             <CardTitle className="text-xl sm:text-2xl font-bold">User Activity Logs</CardTitle>
             <div className="flex w-full md:w-auto flex-wrap items-center gap-2">
+              <Button variant="outline" onClick={() => void fetchLogs()} disabled={isLoading} className="gap-2">
+                <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
               <Button variant="outline" onClick={exportToCSV} className="gap-2">
                 <Download className="h-4 w-4" />
                 Export CSV
