@@ -593,6 +593,23 @@ const CheckoutConfirmationPage = () => {
                                     </span>
                                   </div>
                                 )}
+                                {item.customizations.isGiftBundle && item.customizations.giftComponents && (
+                                  <div className="text-xs text-rose-600 bg-rose-50/50 border border-rose-100 rounded-lg p-2 space-y-1 mt-1">
+                                    <div className="font-semibold">🎁 Selected items:</div>
+                                    {item.customizations.giftComponents.map((comp: any, idx: number) => (
+                                      <div key={idx} className="text-[11px] text-gray-600 pl-1.5 flex items-center gap-1">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-rose-400 shrink-0" />
+                                        <span className="capitalize font-semibold text-rose-500">{comp.category.replace('_', ' ')}:</span>
+                                        <span className="truncate">{comp.name}</span>
+                                      </div>
+                                    ))}
+                                    {item.customizations.customMessage && (
+                                      <div className="text-[11px] text-gray-500 italic pl-1.5 pt-0.5 border-t border-rose-100/50">
+                                        Card Message: "{item.customizations.customMessage}"
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
                               </div>
                             ) : (
                               <div className="text-xs text-gray-400 mt-1">No customization applied for this order.</div>

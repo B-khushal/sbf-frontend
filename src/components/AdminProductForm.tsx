@@ -116,6 +116,13 @@ type Product = {
   isNew: boolean;
   isCustomizable: boolean;
   customizationOptions: CustomizationOptions;
+  productType?: 'regular' | 'valentine';
+  isValentineProduct?: boolean;
+  availableDates?: string[];
+  dateWiseStock?: Record<string, number>;
+  dateWisePricing?: Record<string, number>;
+  dateWiseOffers?: Record<string, string>;
+  dateWiseDeliveryCharges?: Record<string, number>;
 };
 
 type Props = {
@@ -161,7 +168,14 @@ const AdminProductForm: React.FC<Props> = ({
         chocolates: []
       },
       previewImage: ""
-    }
+    },
+    productType: productData?.productType || 'regular',
+    isValentineProduct: productData?.isValentineProduct || false,
+    availableDates: productData?.availableDates || [],
+    dateWiseStock: productData?.dateWiseStock || {},
+    dateWisePricing: productData?.dateWisePricing || {},
+    dateWiseOffers: productData?.dateWiseOffers || {},
+    dateWiseDeliveryCharges: productData?.dateWiseDeliveryCharges || {}
   });
 
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -702,6 +716,126 @@ const AdminProductForm: React.FC<Props> = ({
                     }
                   />
                 </div>
+              </div>
+            )}
+          </div>
+
+          {/* Valentine Product Configuration */}
+          <div className="space-y-4 border-t pt-4">
+            <h3 className="text-lg font-semibold text-rose-700">Valentine Campaign Settings</h3>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Product Ecosystem Type</label>
+              <Select
+                value={formData.productType || 'regular'}
+                onValueChange={(val) => 
+                  setFormData(prev => ({ 
+                    ...prev, 
+                    productType: val as 'regular' | 'valentine',
+                    isValentineProduct: val === 'valentine' ? true : prev.isValentineProduct 
+                  }))
+                }
+              >
+                <SelectTrigger className="w-full border-rose-200 focus:ring-rose-500">
+                  <SelectValue placeholder="Select Product Type" />
+                </SelectTrigger>
+                <SelectContent disablePortal>
+                  <SelectItem value="regular">Regular Shop Product</SelectItem>
+                  <SelectItem value="valentine">Valentine Special Campaign Product</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="isValentineProduct"
+                checked={formData.isValentineProduct || false}
+                onCheckedChange={(checked) => 
+                  setFormData(prev => ({ ...prev, isValentineProduct: checked as boolean }))
+                }
+              />
+              <label htmlFor="isValentineProduct" className="text-sm font-medium">
+                Appear in Valentine Shop (isValentineProduct = true)
+              </label>
+            </div>
+
+            {(formData.productType === 'valentine' || formData.isValentineProduct) && (
+              <div className="space-y-4 pl-4 border-l-2 border-rose-300 bg-rose-50/10 p-3 rounded-r-xl">
+                {/* Available Dates Checkboxes */}
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold uppercase text-rose-700 block">Available Delivery Dates</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {['8 Feb', '9 Feb', '10 Feb', '11 Feb', '12 Feb', '13 Feb', '14 Feb', '15 Feb'].map(date => {
+                      const isChecked = (formData.availableDates || []).includes(date);
+                      return (
+                        <label key={date} className="flex items-center space-x-2 p-2 rounded border border-rose-100 bg-white/70 cursor-pointer hover:bg-rose-50 transition-colors">
+                          <Checkbox
+                            checked={isChecked}
+                            onCheckedChange={(checked) => {
+                              const currentDates = formData.availableDates || [];
+                              const newDates = checked
+                                ? [...currentDates, date]
+                                : currentDates.filter(d => d !== date);
+                              setFormData(prev => ({ ...prev, availableDates: newDates }));
+                            }}
+                          />
+                          <span className="text-xs text-rose-950 font-medium">{date}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Overrides Table */}
+                {(formData.availableDates || []).length > 0 && (
+                  <div className="space-y-3">
+                    <label className="text-xs font-bold uppercase tracking-wider text-rose-800 block">
+                      Date-wise Stock & Pricing Overrides
+                    </label>
+                    <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1">
+                      {(formData.availableDates || []).map(date => {
+                        const pricingObj = (formData.dateWisePricing || {}) as Record<string, number>;
+                        const stockObj = (formData.dateWiseStock || {}) as Record<string, number>;
+                        const priceVal = pricingObj[date] ?? formData.price;
+                        const stockVal = stockObj[date] ?? formData.countInStock;
+                        
+                        return (
+                          <div key={date} className="p-3 border border-rose-100 rounded-xl bg-white flex flex-col sm:flex-row gap-3 items-center justify-between shadow-sm">
+                            <span className="text-xs font-bold text-rose-950">{date}</span>
+                            <div className="flex gap-2 w-full sm:w-auto">
+                              <div className="w-1/2 sm:w-28">
+                                <label className="text-[9px] font-bold text-rose-700/60 uppercase block mb-1">Price (₹)</label>
+                                <Input
+                                  type="number"
+                                  className="h-8 text-xs border-rose-100 focus-visible:ring-rose-500"
+                                  value={priceVal}
+                                  onChange={(e) => {
+                                    const nextPricing = { ...pricingObj };
+                                    nextPricing[date] = Number(e.target.value);
+                                    setFormData(prev => ({ ...prev, dateWisePricing: nextPricing }));
+                                  }}
+                                />
+                              </div>
+                              <div className="w-1/2 sm:w-28">
+                                <label className="text-[9px] font-bold text-rose-700/60 uppercase block mb-1">Stock</label>
+                                <Input
+                                  type="number"
+                                  className="h-8 text-xs border-rose-100 focus-visible:ring-rose-500"
+                                  value={stockVal}
+                                  onChange={(e) => {
+                                    const nextStock = { ...stockObj };
+                                    nextStock[date] = Number(e.target.value);
+                                    setFormData(prev => ({ ...prev, dateWiseStock: nextStock }));
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

@@ -21,6 +21,10 @@ interface CartState {
   showContactModal: boolean;
   contactModalProduct: string;
   closeContactModal: () => void;
+  showMixedCartModal: boolean;
+  conflictingProduct: CartItem | null;
+  closeMixedCartModal: () => void;
+  clearAndAddConflictingProduct: () => Promise<void>;
 }
 
 export const useCart = create<CartState>((set, get) => ({
@@ -28,8 +32,22 @@ export const useCart = create<CartState>((set, get) => ({
   isLoading: false,
   showContactModal: false,
   contactModalProduct: '',
+  showMixedCartModal: false,
+  conflictingProduct: null,
 
   addToCart: async (item) => {
+    const currentItems = get().items;
+    
+    // Check mixed cart conflicts
+    const isIncomingValentine = item.productType === 'valentine' || item.isValentineProduct;
+    const hasValentine = currentItems.some(i => i.productType === 'valentine' || i.isValentineProduct);
+    const hasRegular = currentItems.some(i => !(i.productType === 'valentine' || i.isValentineProduct));
+    
+    if ((isIncomingValentine && hasRegular) || (!isIncomingValentine && hasValentine)) {
+      set({ showMixedCartModal: true, conflictingProduct: item });
+      return;
+    }
+
     // Check if user is authenticated
     const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
     const resolvedProductId = item.productId || item._id;
@@ -68,13 +86,19 @@ export const useCart = create<CartState>((set, get) => ({
           isFeatured: cartItem.isFeatured ?? false,
           customizations: cartItem.customizations ?? undefined,
           selectedVariant: cartItem.selectedVariant ?? undefined,
+          productType: cartItem.productType,
+          isValentineProduct: cartItem.isValentineProduct,
+          availableDates: cartItem.availableDates,
+          dateWiseStock: cartItem.dateWiseStock,
+          dateWisePricing: cartItem.dateWisePricing,
+          dateWiseOffers: cartItem.dateWiseOffers,
+          dateWiseDeliveryCharges: cartItem.dateWiseDeliveryCharges,
         }));
         set({ items: transformedItems });
         const userId = getCurrentUserId();
         saveUserCart(transformedItems, userId);
       } else {
         // Guest: Add to local cart
-        const currentItems = get().items;
         // If same product + variant + customizations exists, increase quantity.
         const matchIndex = currentItems.findIndex(
           i => {
@@ -131,9 +155,16 @@ export const useCart = create<CartState>((set, get) => ({
         category: cartItem.category,
         discount: cartItem.discount,
         description: cartItem.description,
-        careInstructions: [],
-        isNewArrival: false,
-        isFeatured: false
+        careInstructions: cartItem.careInstructions ?? [],
+        isNewArrival: cartItem.isNewArrival ?? false,
+        isFeatured: cartItem.isFeatured ?? false,
+        productType: cartItem.productType,
+        isValentineProduct: cartItem.isValentineProduct,
+        availableDates: cartItem.availableDates,
+        dateWiseStock: cartItem.dateWiseStock,
+        dateWisePricing: cartItem.dateWisePricing,
+        dateWiseOffers: cartItem.dateWiseOffers,
+        dateWiseDeliveryCharges: cartItem.dateWiseDeliveryCharges,
       }));
       
       set({ items: transformedItems });
@@ -182,9 +213,16 @@ export const useCart = create<CartState>((set, get) => ({
         category: cartItem.category,
         discount: cartItem.discount,
         description: cartItem.description,
-        careInstructions: [],
-        isNewArrival: false,
-        isFeatured: false
+        careInstructions: cartItem.careInstructions ?? [],
+        isNewArrival: cartItem.isNewArrival ?? false,
+        isFeatured: cartItem.isFeatured ?? false,
+        productType: cartItem.productType,
+        isValentineProduct: cartItem.isValentineProduct,
+        availableDates: cartItem.availableDates,
+        dateWiseStock: cartItem.dateWiseStock,
+        dateWisePricing: cartItem.dateWisePricing,
+        dateWiseOffers: cartItem.dateWiseOffers,
+        dateWiseDeliveryCharges: cartItem.dateWiseDeliveryCharges,
       }));
       
       set({ items: transformedItems });
@@ -224,6 +262,71 @@ export const useCart = create<CartState>((set, get) => ({
   },
 
   closeContactModal: () => set({ showContactModal: false, contactModalProduct: '' }),
+  closeMixedCartModal: () => set({ showMixedCartModal: false, conflictingProduct: null }),
+  clearAndAddConflictingProduct: async () => {
+    const product = get().conflictingProduct;
+    if (!product) return;
+    set({ isLoading: true, showMixedCartModal: false, conflictingProduct: null });
+    try {
+      const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+      if (isAuthenticated) {
+        await cartService.clearCart();
+      }
+      set({ items: [] });
+      const userId = getCurrentUserId();
+      saveUserCart([], userId);
+      
+      set({ isLoading: true });
+      if (isAuthenticated) {
+        const resolvedProductId = product.productId || product._id;
+        const response = await cartService.addToCart(
+          resolvedProductId,
+          product.quantity,
+          product.customizations,
+          product.price,
+          product.selectedVariant,
+          product.productModel || 'Product'
+        );
+        const transformedItems = response.cart.map(cartItem => ({
+          _id: cartItem._id,
+          id: cartItem._id,
+          productId: cartItem.productId,
+          productModel: cartItem.productModel || 'Product',
+          title: cartItem.title,
+          price: cartItem.price,
+          image: cartItem.images?.[0] || '',
+          images: cartItem.images,
+          quantity: cartItem.quantity,
+          category: cartItem.category,
+          discount: cartItem.discount,
+          description: cartItem.description,
+          careInstructions: cartItem.careInstructions ?? [],
+          isNewArrival: cartItem.isNewArrival ?? false,
+          isFeatured: cartItem.isFeatured ?? false,
+          customizations: cartItem.customizations ?? undefined,
+          selectedVariant: cartItem.selectedVariant ?? undefined,
+          productType: cartItem.productType,
+          isValentineProduct: cartItem.isValentineProduct,
+          availableDates: cartItem.availableDates,
+          dateWiseStock: cartItem.dateWiseStock,
+          dateWisePricing: cartItem.dateWisePricing,
+          dateWiseOffers: cartItem.dateWiseOffers,
+          dateWiseDeliveryCharges: cartItem.dateWiseDeliveryCharges,
+        }));
+        set({ items: transformedItems });
+        saveUserCart(transformedItems, userId);
+      } else {
+        const newItems = [product];
+        set({ items: newItems });
+        saveUserCart(newItems, userId);
+      }
+    } catch (error) {
+      console.error('Error in clearAndAddConflictingProduct:', error);
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
 
   loadCart: async (userId) => {
     const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
@@ -304,6 +407,13 @@ export const useCart = create<CartState>((set, get) => ({
         isFeatured: cartItem.isFeatured ?? false,
         customizations: cartItem.customizations ?? undefined,
         selectedVariant: cartItem.selectedVariant ?? undefined,
+        productType: cartItem.productType,
+        isValentineProduct: cartItem.isValentineProduct,
+        availableDates: cartItem.availableDates,
+        dateWiseStock: cartItem.dateWiseStock,
+        dateWisePricing: cartItem.dateWisePricing,
+        dateWiseOffers: cartItem.dateWiseOffers,
+        dateWiseDeliveryCharges: cartItem.dateWiseDeliveryCharges,
       }));
       
       set({ items: transformedItems });

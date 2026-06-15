@@ -8,6 +8,8 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { CurrencyProvider } from '@/contexts/CurrencyContext';
 import { SettingsProvider } from '@/contexts/SettingsContext';
 import { NotificationProvider } from '@/contexts/NotificationContext';
+import { ValentineProvider } from '@/contexts/ValentineContext';
+import { HelmetProvider } from 'react-helmet-async';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import MainLayout from './components/MainLayout';
@@ -78,6 +80,13 @@ const CategoryForm = lazy(() => import('./pages/Admin/CategoryForm'));
 const CategoryResolver = lazy(() => import('./pages/CategoryResolver'));
 const UserEditPage = lazy(() => import('./pages/Admin/UserEditPage'));
 const UserActivityLogs = lazy(() => import('./pages/Admin/UserActivityLogs'));
+const ValentineManagement = lazy(() => import('./pages/Admin/ValentineManagement'));
+const ValentineAnalyticsDashboard = lazy(() => import('./pages/Admin/ValentineAnalytics'));
+
+// Valentine Pages
+const ValentineSpecialPage = lazy(() => import('./pages/ValentineSpecialPage'));
+const ValentineShopPage = lazy(() => import('./pages/ValentineShopPage'));
+const ValentineProductDetailsPage = lazy(() => import('./pages/ValentineProductDetailsPage'));
 
 // Vendor Pages (lazy loaded as they're vendor-only)
 const VendorPage = lazy(() => import("./pages/VendorPage"));
@@ -139,7 +148,8 @@ const App = () => {
 
   return (
     <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
+      <HelmetProvider>
+        <QueryClientProvider client={queryClient}>
         <GoogleOAuthProvider
           clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || "246004709667-1a33cbkt2b2hq2m1foav1b3j4fsvilef.apps.googleusercontent.com"}
           onScriptLoadError={() => {
@@ -150,6 +160,7 @@ const App = () => {
             <CartLoader />
             <CurrencyProvider>
               <SettingsProvider>
+                <ValentineProvider>
                 <NotificationProvider>
                   <TooltipProvider>
                     <Toaster />
@@ -221,6 +232,27 @@ const App = () => {
                             <Route path="/:parentCategory/:categorySlug" element={
                               <Suspense fallback={<LoadingFallback message="Loading category..." />}>
                                 <CategoryResolver />
+                              </Suspense>
+                            } />
+                            {/* Valentine Special Page */}
+                            <Route path="/valentine-special" element={
+                              <Suspense fallback={<LoadingFallback message="Loading Valentine's experience..." />}>
+                                <ValentineSpecialPage />
+                              </Suspense>
+                            } />
+                            <Route path="/valentine-shop" element={
+                              <Suspense fallback={<LoadingFallback message="Loading Valentine shop..." />}>
+                                <ValentineShopPage />
+                              </Suspense>
+                            } />
+                            <Route path="/valentine-product/:id" element={
+                              <Suspense fallback={<LoadingFallback message="Loading product..." />}>
+                                <ValentineProductDetailsPage />
+                              </Suspense>
+                            } />
+                            <Route path="/valentine-product/:id/:slug" element={
+                              <Suspense fallback={<LoadingFallback message="Loading product..." />}>
+                                <ValentineProductDetailsPage />
                               </Suspense>
                             } />
                           </Route>
@@ -423,6 +455,16 @@ const App = () => {
                                 <AdminSettingsPage />
                               </Suspense>
                             } />
+                            <Route path="valentine" element={
+                              <Suspense fallback={<LoadingFallback message="Loading Valentine's management..." />}>
+                                <ValentineManagement />
+                              </Suspense>
+                            } />
+                            <Route path="valentine/analytics" element={
+                              <Suspense fallback={<LoadingFallback message="Loading Valentine's analytics..." />}>
+                                <ValentineAnalyticsDashboard />
+                              </Suspense>
+                            } />
                             <Route path="/admin/orders/:orderId" element={
                               <Suspense fallback={<LoadingFallback message="Loading order details..." />}>
                                 <OrderDetailsPage />
@@ -507,11 +549,13 @@ const App = () => {
                     </BrowserRouter>
                   </TooltipProvider>
                 </NotificationProvider>
+                </ValentineProvider>
               </SettingsProvider>
             </CurrencyProvider>
           </AuthProvider>
         </GoogleOAuthProvider>
       </QueryClientProvider>
+      </HelmetProvider>
     </ErrorBoundary>
   );
 };

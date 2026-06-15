@@ -195,6 +195,24 @@ const Invoice: React.FC<InvoiceProps> = ({ order, isAdmin = false }) => {
                     <div className="font-bold text-slate-900">{title}</div>
                     <div className="text-[10px] text-slate-500 mt-0.5">{variantText}</div>
                     {customText && <div className="text-[9px] text-amber-700 font-semibold mt-0.5">✨ {customText}</div>}
+                    
+                    {item.customizations?.isGiftBundle && item.customizations?.giftComponents && (
+                      <div className="text-[10px] text-rose-700 bg-rose-50/40 border border-rose-100 rounded-lg p-2 mt-1.5 space-y-0.5">
+                        <div className="font-semibold">🎁 Included components:</div>
+                        {item.customizations.giftComponents.map((comp: any, cIdx: number) => (
+                          <div key={cIdx} className="pl-1.5 text-slate-600 flex items-center gap-1">
+                            <span className="w-1 h-1 rounded-full bg-rose-400 shrink-0" />
+                            <span className="capitalize font-semibold text-rose-600">{comp.category.replace('_', ' ')}:</span>
+                            <span className="truncate">{comp.name}</span>
+                          </div>
+                        ))}
+                        {item.customizations.customMessage && (
+                          <div className="text-[10px] italic text-slate-500 border-t border-rose-100/30 pt-1 mt-1 pl-1.5">
+                            Card Message: "{item.customizations.customMessage}"
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </td>
                   <td className="px-5 py-3.5 text-center text-slate-600">{item.quantity}</td>
                   <td className="px-5 py-3.5 text-right text-slate-600">{formatCurrency(item.finalPrice || item.price)}</td>

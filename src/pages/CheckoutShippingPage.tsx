@@ -18,6 +18,7 @@ import Footer from '@/components/Footer';
 import useCart, { useCartSelectors } from '@/hooks/use-cart';
 import { useToast } from '@/hooks/use-toast';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import { useValentine } from '@/contexts/ValentineContext';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import PinCodeInput, { type PinCodeSelection } from '@/components/ui/PinCodeInput';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -58,9 +59,74 @@ const CheckoutShippingPage = () => {
   const { items } = useCart();
   const { subtotal } = useCartSelectors();
   const { toast } = useToast();
+  const { isValentineEnabled } = useValentine();
+  const hasValentine = items.some(item => item.productType === 'valentine' || item.isValentineProduct);
+
+  const [greetingCard, setGreetingCard] = useState<string>(() => {
+    try {
+      const info = localStorage.getItem('shippingInfo');
+      if (info) {
+        const parsed = JSON.parse(info);
+        if (parsed.greetingCard) return parsed.greetingCard;
+      }
+      const firstValItem = items.find(item => item.customizations?.greetingCard);
+      return firstValItem?.customizations?.greetingCard || 'none';
+    } catch {
+      return 'none';
+    }
+  });
+  const [surpriseDelivery, setSurpriseDelivery] = useState<boolean>(() => {
+    try {
+      const info = localStorage.getItem('shippingInfo');
+      if (info) {
+        const parsed = JSON.parse(info);
+        if (parsed.surpriseDelivery !== undefined) return !!parsed.surpriseDelivery;
+      }
+      const firstValItem = items.find(item => item.customizations?.surpriseDelivery !== undefined);
+      return !!firstValItem?.customizations?.surpriseDelivery;
+    } catch {
+      return false;
+    }
+  });
+  const [anonymousGift, setAnonymousGift] = useState<boolean>(() => {
+    try {
+      const info = localStorage.getItem('shippingInfo');
+      if (info) {
+        const parsed = JSON.parse(info);
+        if (parsed.anonymousGift !== undefined) return !!parsed.anonymousGift;
+      }
+      const firstValItem = items.find(item => item.customizations?.anonymousGift !== undefined);
+      return !!firstValItem?.customizations?.anonymousGift;
+    } catch {
+      return false;
+    }
+  });
   
-  const [deliveryOption, setDeliveryOption] = useState<'self' | 'gift'>('self');
-  const [giftMessage, setGiftMessage] = useState('');
+  const [deliveryOption, setDeliveryOption] = useState<'self' | 'gift'>(() => {
+    try {
+      const info = localStorage.getItem('shippingInfo');
+      if (info) {
+        const parsed = JSON.parse(info);
+        if (parsed.deliveryOption) return parsed.deliveryOption;
+      }
+      return hasValentine ? 'gift' : 'self';
+    } catch {
+      return 'self';
+    }
+  });
+  const [giftMessage, setGiftMessage] = useState(() => {
+    try {
+      const info = localStorage.getItem('shippingInfo');
+      if (info) {
+        const parsed = JSON.parse(info);
+        if (parsed.giftMessage) return parsed.giftMessage;
+      }
+      const firstValItem = items.find(item => item.customizations?.loveNote);
+      return firstValItem?.customizations?.loveNote || '';
+    } catch {
+      return '';
+    }
+  });
   const { formatPrice, convertPrice } = useCurrency();
   const isMobile = useIsMobile();
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
@@ -347,6 +413,9 @@ const CheckoutShippingPage = () => {
       isFirstOrderFreeDelivery: deliveryCalculation?.isFirstOrderFreeDelivery ?? false,
       selectedDate: selectedDate.toISOString(),
       giftMessage: deliveryOption === 'gift' ? giftMessage : undefined,
+      greetingCard: hasValentine ? greetingCard : 'none',
+      surpriseDelivery: hasValentine ? surpriseDelivery : false,
+      anonymousGift: hasValentine ? anonymousGift : false,
     };
 
     localStorage.setItem('shippingInfo', JSON.stringify(shippingInfo));
@@ -446,7 +515,12 @@ const CheckoutShippingPage = () => {
   const isContinueDisabled = !selectedDeliveryPin?.code || !activePinValidation.isValid;
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-gradient-to-br from-green-50 via-blue-50 to-purple-50">
+    <div className={cn(
+      "min-h-screen overflow-x-hidden transition-colors duration-500",
+      hasValentine 
+        ? "bg-gradient-to-br from-rose-50 via-pink-50 to-amber-50" 
+        : "bg-gradient-to-br from-green-50 via-blue-50 to-purple-50"
+    )}>
       <Navigation />
       
       <motion.div 
@@ -459,10 +533,13 @@ const CheckoutShippingPage = () => {
         <motion.div variants={itemVariants} className="mb-8">
           <div className="flex items-center justify-center space-x-4 mb-6">
             <div className="flex items-center">
-              <div className="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center text-sm font-semibold">
+              <div className={cn(
+                "w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold text-white",
+                hasValentine ? "bg-rose-500" : "bg-primary"
+              )}>
                 1
               </div>
-              <span className="ml-2 text-sm font-medium text-primary">Shipping</span>
+              <span className={cn("ml-2 text-sm font-medium", hasValentine ? "text-rose-600 font-bold" : "text-primary")}>Shipping</span>
             </div>
             <div className="w-12 h-0.5 bg-gray-300"></div>
             <div className="flex items-center">
@@ -489,9 +566,12 @@ const CheckoutShippingPage = () => {
             <motion.div variants={itemVariants}>
               <Card className="overflow-visible border-0 bg-white/85 shadow-lg backdrop-blur-sm">
                 <CardHeader className="space-y-2 px-4 pb-0 pt-5 sm:px-6">
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Truck className="w-5 h-5 text-primary" />
-                    Shipping Information
+                  <CardTitle className={cn(
+                    "flex items-center gap-2 text-lg font-bold font-['Playfair_Display']",
+                    hasValentine ? "text-rose-800" : ""
+                  )}>
+                    <Truck className={cn("w-5 h-5", hasValentine ? "text-rose-500 animate-bounce" : "text-primary")} />
+                    Shipping Information {hasValentine && "❤️"}
                   </CardTitle>
                   <p className="text-sm text-slate-600">
                     Fill in the delivery details below. On mobile, your pincode search opens in a full-width picker for easier selection.
@@ -509,7 +589,7 @@ const CheckoutShippingPage = () => {
                     {savedAddresses.length > 0 && (
                       <div className={sectionCardClassName}>
                         <div className="flex items-center gap-2">
-                          <Home className="h-4 w-4 text-primary" />
+                          <Home className={cn("h-4 w-4", hasValentine ? "text-rose-500" : "text-primary")} />
                           <span className="text-sm font-medium">Saved Addresses</span>
                           <Badge variant="secondary" className="text-xs">
                             {savedAddresses.length} saved
@@ -589,11 +669,11 @@ const CheckoutShippingPage = () => {
                     {/* Delivery Options */}
                     <div className={sectionCardClassName}>
                       <div className="flex items-center gap-2">
-                        <Gift className="h-4 w-4 text-primary" />
+                        <Gift className={cn("h-4 w-4", hasValentine ? "text-rose-500" : "text-primary")} />
                         <span className="text-sm font-medium">Delivery Type</span>
                       </div>
                       
-                      <Tabs defaultValue="self" onValueChange={(value) => setDeliveryOption(value as 'self' | 'gift')}>
+                      <Tabs value={deliveryOption} onValueChange={(value) => setDeliveryOption(value as 'self' | 'gift')}>
                         <TabsList className="grid h-auto w-full grid-cols-2 rounded-xl bg-slate-100 p-1">
                           <TabsTrigger value="self" className="flex min-h-[44px] items-center gap-2 rounded-lg text-sm">
                             <User className="h-4 w-4" />
@@ -626,7 +706,7 @@ const CheckoutShippingPage = () => {
                     {/* Sender Information */}
                     <div className={sectionCardClassName}>
                       <div className="flex items-center gap-2">
-                        <User size={18} className="text-primary" />
+                        <User size={18} className={hasValentine ? "text-rose-500" : "text-primary"} />
                         <h2 className="text-lg font-medium">
                           {deliveryOption === 'self' ? 'Your Information' : 'Sender Information'}
                         </h2>
@@ -819,7 +899,7 @@ const CheckoutShippingPage = () => {
                     {deliveryOption === 'gift' && (
                       <div className={sectionCardClassName}>
                         <div className="flex items-center gap-2">
-                          <User size={18} className="text-primary" />
+                          <User size={18} className={hasValentine ? "text-rose-500" : "text-primary"} />
                           <h2 className="text-lg font-medium">Receiver Information</h2>
                         </div>
                         
@@ -999,6 +1079,88 @@ const CheckoutShippingPage = () => {
                       </div>
                     )}
                     
+                    {/* Valentine Upgrades Section */}
+                    {hasValentine && (
+                      <div className={cn(
+                        sectionCardClassName,
+                        "border-rose-200 bg-rose-50/50 shadow-sm relative overflow-hidden"
+                      )}>
+                        {/* Ambient glow inside card */}
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-rose-400/10 rounded-full blur-xl pointer-events-none" />
+                        
+                        <div className="flex items-center gap-2">
+                          <Gift className="h-4 w-4 text-rose-500 animate-pulse" />
+                          <span className="text-sm font-semibold text-rose-800">❤️ Premium Valentine Gifting Upgrades</span>
+                        </div>
+                        
+                        <div className="space-y-4 mt-2 relative z-10">
+                          {/* Greeting Card Selector */}
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-medium text-rose-700">Greeting Card Upgrade</label>
+                            <select
+                              value={greetingCard}
+                              onChange={(e) => setGreetingCard(e.target.value)}
+                              className="w-full h-12 bg-white/90 border border-rose-200 rounded-xl px-3 text-sm text-slate-800 focus-visible:ring-2 focus-visible:ring-rose-500 focus:outline-none"
+                            >
+                              <option value="none">No Card</option>
+                              <option value="classic-love">Classic Red Love Card (₹49)</option>
+                              <option value="floral-romance">Luxury Floral Greeting Card (₹79)</option>
+                              <option value="heart-popout">3D Pop-Up Heart Card (₹129)</option>
+                            </select>
+                          </div>
+
+                          {/* Options Checkboxes */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                            <label className={cn(
+                              "p-3 rounded-xl border cursor-pointer flex items-center justify-between text-xs select-none transition-all duration-200 bg-white shadow-sm",
+                              surpriseDelivery 
+                                ? 'border-rose-400 bg-rose-50/70 text-rose-800 font-semibold' 
+                                : 'border-slate-200 hover:bg-slate-50 text-slate-600'
+                            )}>
+                              <span className="flex items-center gap-1.5">
+                                🎁 Surprise Delivery
+                              </span>
+                              <input
+                                type="checkbox"
+                                checked={surpriseDelivery}
+                                onChange={(e) => setSurpriseDelivery(e.target.checked)}
+                                className="hidden"
+                              />
+                              <div className={cn(
+                                "w-4 h-4 rounded-md border flex items-center justify-center transition-all",
+                                surpriseDelivery ? 'bg-rose-500 border-rose-500 text-white' : 'border-slate-300 bg-white'
+                              )}>
+                                {surpriseDelivery && <Check className="w-2.5 h-2.5" />}
+                              </div>
+                            </label>
+
+                            <label className={cn(
+                              "p-3 rounded-xl border cursor-pointer flex items-center justify-between text-xs select-none transition-all duration-200 bg-white shadow-sm",
+                              anonymousGift 
+                                ? 'border-rose-400 bg-rose-50/70 text-rose-800 font-semibold' 
+                                : 'border-slate-200 hover:bg-slate-50 text-slate-600'
+                            )}>
+                              <span className="flex items-center gap-1.5">
+                                🕵️ Anonymous Sender
+                              </span>
+                              <input
+                                type="checkbox"
+                                checked={anonymousGift}
+                                onChange={(e) => setAnonymousGift(e.target.checked)}
+                                className="hidden"
+                              />
+                              <div className={cn(
+                                "w-4 h-4 rounded-md border flex items-center justify-center transition-all",
+                                anonymousGift ? 'bg-rose-500 border-rose-500 text-white' : 'border-slate-300 bg-white'
+                              )}>
+                                {anonymousGift && <Check className="w-2.5 h-2.5" />}
+                              </div>
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Time Slot Selector */}
                     <div className={cn(sectionCardClassName, 'scroll-mb-44')}>
                       <div className="flex items-center gap-2">
@@ -1048,7 +1210,12 @@ const CheckoutShippingPage = () => {
                       <Button
                         type="submit"
                         disabled={isContinueDisabled}
-                        className="h-12 gap-2 rounded-xl bg-gradient-to-r from-green-600 to-blue-600 px-6 hover:from-green-700 hover:to-blue-700"
+                        className={cn(
+                          "h-12 gap-2 rounded-xl px-6",
+                          hasValentine 
+                            ? "bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white shadow-md shadow-rose-200" 
+                            : "bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
+                        )}
                       >
                         Continue to Payment
                         <ArrowRight size={16} />
@@ -1142,6 +1309,23 @@ const CheckoutShippingPage = () => {
                                 {item.customizations.selectedChocolates && item.customizations.selectedChocolates.length > 0 && (
                                   <div className="text-xs text-orange-600">
                                     🍫 {item.customizations.selectedChocolates.map((c: any) => `${c.name}${(c.quantity || 1) > 1 ? `×${c.quantity || 1}` : ''}`).join(', ')}
+                                  </div>
+                                )}
+                                {item.customizations.isGiftBundle && item.customizations.giftComponents && (
+                                  <div className="text-xs text-rose-600 bg-rose-50/50 border border-rose-100 rounded-lg p-2 space-y-1">
+                                    <div className="font-semibold">🎁 Selected items:</div>
+                                    {item.customizations.giftComponents.map((comp: any, idx: number) => (
+                                      <div key={idx} className="text-[11px] text-gray-600 pl-1.5 flex items-center gap-1">
+                                        <span className="w-1 h-1 rounded-full bg-rose-400 shrink-0" />
+                                        <span className="capitalize font-semibold text-rose-500">{comp.category.replace('_', ' ')}:</span>
+                                        <span className="truncate">{comp.name}</span>
+                                      </div>
+                                    ))}
+                                    {item.customizations.customMessage && (
+                                      <div className="text-[11px] text-gray-500 italic pl-1.5 pt-0.5 border-t border-rose-100/50">
+                                        Card Message: "{item.customizations.customMessage}"
+                                      </div>
+                                    )}
                                   </div>
                                 )}
                               </div>
@@ -1248,7 +1432,10 @@ const CheckoutShippingPage = () => {
               disabled={isContinueDisabled}
               className={cn(
                 mobileActionButtonClassName,
-                'bg-gradient-to-r from-green-600 to-blue-600 px-3 text-white hover:from-green-700 hover:to-blue-700'
+                'px-3 text-white',
+                hasValentine 
+                  ? 'bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 shadow-md shadow-rose-200' 
+                  : 'bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700'
               )}
             >
               Continue to Payment

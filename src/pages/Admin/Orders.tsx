@@ -1561,6 +1561,11 @@ const AdminOrders = () => {
                                             🌸 Includes floral/chocolate add-ons
                                           </div>
                                         )}
+                                        {item.customizations.isGiftBundle && (
+                                          <div className="text-[9px] text-rose-700 dark:text-rose-400 font-medium bg-rose-50/50 dark:bg-rose-950/20 p-1 rounded">
+                                            🎁 Custom Valentine Gift Box ({item.customizations.giftComponents?.length || 0} items)
+                                          </div>
+                                        )}
                                       </div>
                                     )}
                                   </div>

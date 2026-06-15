@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useSettings } from '../contexts/SettingsContext';
+import { useValentine } from '../contexts/ValentineContext';
 
 export const AnnouncementBar: React.FC = () => {
   const { headerSettings } = useSettings();
+  const { isValentineEnabled } = useValentine();
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
@@ -22,13 +24,23 @@ export const AnnouncementBar: React.FC = () => {
   if (!isVisible) return null;
 
   const announcement = headerSettings?.announcementBar;
-  const bgColor = announcement?.bgColor || 'linear-gradient(to right, #7dd3fc, #f9a8d4, #86efac)';
-  const textColor = announcement?.textColor || '#ffffff';
+  let bgColor = announcement?.bgColor || 'linear-gradient(to right, #7dd3fc, #f9a8d4, #86efac)';
+  let textColor = announcement?.textColor || '#ffffff';
 
   // Support list of announcements, falling back to single text, then default message
-  const announcementsList = announcement?.texts && announcement.texts.length > 0
+  let announcementsList = announcement?.texts && announcement.texts.length > 0
     ? announcement.texts
     : [announcement?.text || 'FREE DELIVERY on your First Order at Spring Blossoms Florist 🌸'];
+
+  if (isValentineEnabled) {
+    bgColor = 'linear-gradient(to right, #881337, #be123c, #fda4af)';
+    textColor = '#ffffff';
+    announcementsList = [
+      '💝 Valentine Special Campaign is Live! Send romantic roses & premium gifts now 🌹',
+      '✨ Use code VALENTINE20 for 20% off on all Valentine exclusive bouquets! 💐',
+      '🚚 Guaranteed Same-Day & Midnight Surprise Delivery available for Valentine\'s Week! 💖'
+    ];
+  }
 
   return (
     <div 

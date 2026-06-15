@@ -16,6 +16,9 @@ import useCart from "../hooks/use-cart";
 import { useSettings } from "../contexts/SettingsContext";
 import { useOfferPopup } from "../hooks/use-offer-popup";
 import OfferPopup from "../components/ui/OfferPopup";
+import { useValentine } from "../contexts/ValentineContext";
+import { ValentineHomeSections } from "../components/valentine/ValentineHomeSections";
+import { ExitIntentPopup, RecentPurchases } from "../components/valentine/ValentineMarketingWidgets";
 
 import api from "../services/api";
 
@@ -61,6 +64,7 @@ const HomePage = () => {
   const { homeSections, loading: settingsLoading } = useSettings();
   const { currentOffer, isOpen: isOfferOpen, closeOffer } = useOfferPopup();
   const isMobile = useIsMobile();
+  const { isValentineEnabled, settings: valentineSettings, offers: valentineOffers } = useValentine();
 
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [newProducts, setNewProducts] = useState([]);
@@ -234,13 +238,17 @@ const HomePage = () => {
         switch (section.type) {
           case 'hero':
             return (
-              <motion.div
-                key={`hero-${index}`}
-                variants={itemVariants}
-                className="relative w-full overflow-hidden"
-              >
-                <HomeHero />
-              </motion.div>
+              <React.Fragment key={`hero-${index}`}>
+                <motion.div
+                  variants={itemVariants}
+                  className="relative w-full overflow-hidden"
+                >
+                  <HomeHero />
+                </motion.div>
+                {isValentineEnabled && valentineSettings && (
+                  <ValentineHomeSections settings={valentineSettings} offers={valentineOffers} />
+                )}
+              </React.Fragment>
             );
 
           case 'categories':
@@ -369,6 +377,18 @@ const HomePage = () => {
         }
       })}
 
+      {/* Valentine marketing overlays */}
+      {isValentineEnabled && valentineSettings && (
+        <>
+          <ExitIntentPopup 
+            enabled={valentineSettings.marketing?.exitIntentPopup || false} 
+            title={valentineSettings.marketing?.exitIntentTitle}
+            subtitle={valentineSettings.marketing?.exitIntentSubtitle}
+            code={valentineSettings.marketing?.exitIntentCode}
+          />
+          <RecentPurchases enabled={valentineSettings.marketing?.recentPurchaseNotifications || false} />
+        </>
+      )}
 
     </motion.div>
   );

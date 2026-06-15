@@ -1,0 +1,409 @@
+/* ============================================================
+   Valentine's Week Premium Theme CSS
+   ============================================================ */
+
+/* Color Variables */
+:root {
+  --valentine-primary: #be123c;
+  --valentine-primary-light: #e11d48;
+  --valentine-secondary: #fda4af;
+  --valentine-accent: #d4a574;
+  --valentine-dark: #1a0011;
+  --valentine-darker: #0d0015;
+  --valentine-burgundy: #881337;
+  --valentine-rose: #fb7185;
+  --valentine-blush: #fff1f2;
+  --valentine-gold: #f59e0b;
+}
+
+/* ============================================================
+   Floating Petals Animation
+   ============================================================ */
+@keyframes float-petal {
+  0% {
+    transform: translateY(-10vh) translateX(0) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+  25% {
+    transform: translateY(25vh) translateX(30px) rotate(90deg) scale(0.9);
+  }
+  50% {
+    transform: translateY(50vh) translateX(-20px) rotate(180deg) scale(0.8);
+  }
+  75% {
+    transform: translateY(75vh) translateX(40px) rotate(270deg) scale(0.7);
+  }
+  100% {
+    transform: translateY(110vh) translateX(10px) rotate(360deg) scale(0.6);
+    opacity: 0;
+  }
+}
+
+@keyframes float-petal-alt {
+  0% {
+    transform: translateY(-10vh) translateX(0) rotate(45deg) scale(0.8);
+    opacity: 0.8;
+  }
+  30% {
+    transform: translateY(30vh) translateX(-40px) rotate(135deg) scale(0.9);
+  }
+  60% {
+    transform: translateY(60vh) translateX(25px) rotate(225deg) scale(0.7);
+  }
+  100% {
+    transform: translateY(110vh) translateX(-15px) rotate(405deg) scale(0.5);
+    opacity: 0;
+  }
+}
+
+.valentine-petal {
+  position: fixed;
+  pointer-events: none;
+  z-index: 50;
+  opacity: 0.7;
+  filter: drop-shadow(0 2px 4px rgba(190, 18, 60, 0.2));
+}
+
+.valentine-petal--rose {
+  width: 20px;
+  height: 18px;
+  background: radial-gradient(ellipse at 30% 30%, #fb7185 0%, #e11d48 50%, #be123c 100%);
+  border-radius: 50% 0 50% 50%;
+  animation: float-petal var(--petal-duration, 8s) linear infinite;
+  animation-delay: var(--petal-delay, 0s);
+}
+
+.valentine-petal--heart {
+  width: 16px;
+  height: 14px;
+  background: #fb7185;
+  transform: rotate(45deg);
+  animation: float-petal-alt var(--petal-duration, 10s) linear infinite;
+  animation-delay: var(--petal-delay, 0s);
+}
+
+.valentine-petal--heart::before,
+.valentine-petal--heart::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 14px;
+  background: #fb7185;
+  border-radius: 50%;
+}
+
+.valentine-petal--heart::before {
+  top: -7px;
+  left: 0;
+}
+
+.valentine-petal--heart::after {
+  top: 0;
+  left: -8px;
+}
+
+/* ============================================================
+   Heart Pulse Animation
+   ============================================================ */
+@keyframes heart-pulse {
+  0%, 100% { transform: scale(1); }
+  15% { transform: scale(1.15); }
+  30% { transform: scale(1); }
+  45% { transform: scale(1.1); }
+  60% { transform: scale(1); }
+}
+
+.valentine-heart-pulse {
+  animation: heart-pulse 1.5s ease-in-out infinite;
+}
+
+/* ============================================================
+   Glassmorphism Cards
+   ============================================================ */
+.valentine-glass {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.valentine-glass-light {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 8px 32px rgba(190, 18, 60, 0.08);
+}
+
+.valentine-glass-dark {
+  background: rgba(26, 0, 17, 0.6);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(251, 113, 133, 0.15);
+  box-shadow: 0 8px 40px rgba(190, 18, 60, 0.15);
+}
+
+/* ============================================================
+   Premium Gradients
+   ============================================================ */
+.valentine-gradient-hero {
+  background: linear-gradient(135deg, #1a0011 0%, #2d0a1f 30%, #1a0011 60%, #0d0015 100%);
+}
+
+.valentine-gradient-warm {
+  background: linear-gradient(135deg, #be123c 0%, #e11d48 50%, #fb7185 100%);
+}
+
+.valentine-gradient-gold {
+  background: linear-gradient(135deg, #d4a574 0%, #f59e0b 50%, #fbbf24 100%);
+}
+
+.valentine-gradient-text {
+  background: linear-gradient(135deg, #fb7185 0%, #fda4af 50%, #d4a574 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.valentine-gradient-border {
+  border-image: linear-gradient(135deg, #be123c 0%, #fb7185 50%, #d4a574 100%) 1;
+}
+
+/* ============================================================
+   Countdown Timer Styles
+   ============================================================ */
+.valentine-countdown-digit {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(251, 113, 133, 0.2);
+  border-radius: 16px;
+  padding: 12px 16px;
+  min-width: 72px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.valentine-countdown-digit::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(251, 113, 133, 0.15);
+}
+
+.valentine-countdown-digit .digit {
+  font-size: 2.5rem;
+  font-weight: 800;
+  line-height: 1;
+  background: linear-gradient(180deg, #fff 0%, #fda4af 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.valentine-countdown-digit .label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: rgba(253, 164, 175, 0.7);
+  margin-top: 4px;
+}
+
+/* ============================================================
+   Timeline Card Styles
+   ============================================================ */
+.valentine-timeline-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.valentine-timeline-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 60px rgba(190, 18, 60, 0.25);
+}
+
+.valentine-timeline-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(190, 18, 60, 0.05) 0%, transparent 50%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.valentine-timeline-card:hover::after {
+  opacity: 1;
+}
+
+/* ============================================================
+   Shimmer / Glow Effects
+   ============================================================ */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.valentine-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(251, 113, 133, 0.1) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 3s infinite;
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(190, 18, 60, 0.3); }
+  50% { box-shadow: 0 0 40px rgba(190, 18, 60, 0.5), 0 0 80px rgba(190, 18, 60, 0.2); }
+}
+
+.valentine-glow {
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+/* ============================================================
+   Button Styles
+   ============================================================ */
+.valentine-btn-primary {
+  background: linear-gradient(135deg, #be123c 0%, #e11d48 100%);
+  color: white;
+  border: none;
+  padding: 14px 32px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.valentine-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(190, 18, 60, 0.4);
+}
+
+.valentine-btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.valentine-btn-primary:hover::before {
+  left: 100%;
+}
+
+.valentine-btn-outline {
+  background: transparent;
+  color: #fb7185;
+  border: 2px solid rgba(251, 113, 133, 0.4);
+  padding: 12px 30px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(8px);
+}
+
+.valentine-btn-outline:hover {
+  background: rgba(251, 113, 133, 0.1);
+  border-color: #fb7185;
+  transform: translateY(-2px);
+}
+
+/* ============================================================
+   Product Card Valentine Override
+   ============================================================ */
+.valentine-product-card {
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.valentine-product-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 48px rgba(190, 18, 60, 0.18);
+}
+
+/* ============================================================
+   Responsive Adjustments
+   ============================================================ */
+@media (max-width: 768px) {
+  .valentine-countdown-digit {
+    min-width: 56px;
+    padding: 8px 10px;
+    border-radius: 12px;
+  }
+
+  .valentine-countdown-digit .digit {
+    font-size: 1.75rem;
+  }
+
+  .valentine-countdown-digit .label {
+    font-size: 0.6rem;
+    letter-spacing: 1px;
+  }
+}
+
+@media (max-width: 480px) {
+  .valentine-countdown-digit {
+    min-width: 48px;
+    padding: 6px 8px;
+  }
+
+  .valentine-countdown-digit .digit {
+    font-size: 1.5rem;
+  }
+}
+
+/* ============================================================
+   Confetti Burst Animation
+   ============================================================ */
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-100vh) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+.valentine-confetti {
+  position: fixed;
+  pointer-events: none;
+  z-index: 100;
+  animation: confetti-fall var(--confetti-duration, 4s) linear forwards;
+  animation-delay: var(--confetti-delay, 0s);
+}
+
+/* ============================================================
+   Scroll Reveal Overrides
+   ============================================================ */
+.valentine-reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.valentine-reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}

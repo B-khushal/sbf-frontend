@@ -22,6 +22,13 @@ export interface CartItem {
     price: number;
     stock: number;
   };
+  productType?: 'regular' | 'valentine';
+  isValentineProduct?: boolean;
+  availableDates?: string[];
+  dateWiseStock?: Record<string, number>;
+  dateWisePricing?: Record<string, number>;
+  dateWiseOffers?: Record<string, string>;
+  dateWiseDeliveryCharges?: Record<string, number>;
 }
 
 // Get current user ID from localStorage

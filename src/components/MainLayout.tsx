@@ -6,6 +6,7 @@ import useCart, { useCartSelectors } from '../hooks/use-cart';
 import { useSettings } from '../contexts/SettingsContext';
 import CategoryMenu from './CategoryMenu';
 import { AnnouncementBar } from './AnnouncementBar';
+import MixedCartModal from './MixedCartModal';
 
 const MainLayout: React.FC = () => {
   const cartHook = useCart();
@@ -37,6 +38,7 @@ const MainLayout: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
+      <MixedCartModal />
       <div className="fixed top-0 inset-x-0 z-50">
         {isAnnouncementVisible && <AnnouncementBar />}
         <Navigation />

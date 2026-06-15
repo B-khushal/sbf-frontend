@@ -618,6 +618,33 @@ const OrderDetailsPage: React.FC = () => {
                                 </div>
                               </div>
                             )}
+
+                            {/* Gift Builder Bundle */}
+                            {item.customizations.isGiftBundle && item.customizations.giftComponents && (
+                              <div className="bg-rose-50/50 dark:bg-rose-950/10 border border-rose-200/40 dark:border-rose-900/20 p-2.5 rounded-xl">
+                                <div className="flex items-center gap-1.5 text-rose-700 dark:text-rose-400 font-bold text-[10px] uppercase tracking-wider mb-1.5">
+                                  <span>🎁</span>
+                                  <span>Gift Box Components ({item.customizations.giftComponents.length})</span>
+                                </div>
+                                <div className="space-y-1">
+                                  {item.customizations.giftComponents.map((comp: any, idx: number) => (
+                                    <div key={idx} className="text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5 pl-1.5">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-rose-400 shrink-0" />
+                                      <span className="capitalize font-semibold text-rose-500/90">{comp.category.replace('_', ' ')}:</span>
+                                      <span>{comp.name}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                                {item.customizations.customMessage && (
+                                  <div className="mt-2 pt-2 border-t border-rose-200/40">
+                                    <span className="text-[9px] font-bold text-rose-400 uppercase tracking-wider block mb-0.5">Greeting Card Message</span>
+                                    <p className="text-xs text-slate-700 dark:text-slate-300 italic font-medium">
+                                      "{item.customizations.customMessage}"
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
                         ) : (
                           <div className="text-[10px] text-slate-400 italic font-semibold mt-1">No customizations configured.</div>

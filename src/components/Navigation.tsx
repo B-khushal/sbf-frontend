@@ -15,6 +15,7 @@ import api from '@/services/api';
 import useCart, { useCartSelectors } from '@/hooks/use-cart';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useAuth } from '@/hooks/use-auth';
+import { useValentine } from '@/contexts/ValentineContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DeliveryLocationSelector } from './ui/DeliveryLocationSelector';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -100,6 +101,7 @@ const getNavIcon = (href: string, label: string) => {
 };
 
 const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
+  const { isValentineEnabled } = useValentine();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isMobile = useIsMobile();
   const { pathname } = useLocation();
@@ -351,6 +353,11 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                   {item.label}
                 </NavLink>
               ))}
+              {isValentineEnabled && (
+                <NavLink to="/valentine-special" active={pathname === '/valentine-special'} className="text-rose-600 hover:text-rose-700 font-bold flex items-center gap-1">
+                  Valentine's <Heart size={14} className="text-rose-500 fill-rose-500 animate-pulse inline" />
+                </NavLink>
+              )}
             </motion.nav>
             
             {/* Search Bar - Responsive */}
@@ -778,6 +785,21 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
 
                   <nav className="space-y-1">
                     <p className="px-3 text-xs font-semibold text-gray-400 uppercase">Menu</p>
+                    {isValentineEnabled && (
+                      <Link
+                        to="/valentine-special"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={cn(
+                          'flex items-center gap-3 px-3 py-3 text-sm font-semibold rounded-lg transition-all duration-200 bg-rose-50 text-rose-600',
+                          pathname === '/valentine-special' && 'bg-rose-100'
+                        )}
+                      >
+                        <div className="flex items-center justify-center w-5 h-5">
+                          <Heart size={16} className="text-rose-500 fill-rose-500 animate-pulse" />
+                        </div>
+                        <span>Valentine's ❤️</span>
+                      </Link>
+                    )}
                     {headerSettings?.navigationItems
                       ?.filter(item => item.enabled)
                       ?.sort((a,b) => a.order - b.order)

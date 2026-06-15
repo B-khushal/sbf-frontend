@@ -13,7 +13,7 @@ import productService from '@/services/productService';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, Trash2, ArrowLeft, Upload, Image as ImageIcon, Plus, X, Wand2, Flower2, Gift, Camera, Hash, MessageSquare, IndianRupee, AlertCircle } from 'lucide-react';
+import { Loader2, Trash2, ArrowLeft, Upload, Image as ImageIcon, Plus, X, Wand2, Flower2, Gift, Camera, Hash, MessageSquare, IndianRupee, AlertCircle, ChevronDown, ChevronUp, Heart } from 'lucide-react';
 import api from '../../services/api';
 import axios from 'axios'; // Keep for axios.isAxiosError
 import ProductFeaturesToggle from '@/components/ui/ProductFeaturesToggle';
@@ -33,6 +33,60 @@ const COMBO_SUBCATEGORIES = [
   { value: "chocolate-combo", label: "Chocolate Combo" },
   { value: "plant-combo", label: "Plant Combo" },
   { value: "custom-combo", label: "Custom Combo" },
+];
+
+const VALENTINE_CATEGORIES = [
+  "Rose Day Specials",
+  "Propose Day Specials",
+  "Chocolate Day Specials",
+  "Teddy Day Specials",
+  "Promise Day Specials",
+  "Hug Day Specials",
+  "Valentine's Day Specials",
+  "Celebration Day Specials",
+  "Premium Rose Bouquets",
+  "Luxury Flower Boxes",
+  "Romantic Gift Hampers",
+  "Chocolates & Flowers",
+  "Teddy Combos",
+  "Proposal Packages",
+  "Couple Gift Combos",
+  "Same Day Surprise Gifts",
+  "Midnight Delivery Gifts"
+];
+
+const VALENTINE_SECTIONS = [
+  "Featured Valentine's Products",
+  "Trending Valentine's Products",
+  "Best Sellers",
+  "Recommended Gifts",
+  "Limited Edition Collection",
+  "Romantic Combos",
+  "Premium Luxury Collection",
+  "Staff Picks",
+  "New Arrivals"
+];
+
+const VALENTINE_DATES = [
+  { value: "rose-day", label: "8 Feb – Rose Day" },
+  { value: "propose-day", label: "9 Feb – Propose Day" },
+  { value: "chocolate-day", label: "10 Feb – Chocolate Day" },
+  { value: "teddy-day", label: "11 Feb – Teddy Day" },
+  { value: "promise-day", label: "12 Feb – Promise Day" },
+  { value: "hug-day", label: "13 Feb – Hug Day" },
+  { value: "valentines-day", label: "14 Feb – Valentine's Day" },
+  { value: "celebration-day", label: "15 Feb – Celebration Day" }
+];
+
+const VALENTINE_BADGES = [
+  "Valentine's Special",
+  "Bestseller",
+  "Trending",
+  "Limited Edition",
+  "Premium Choice",
+  "Most Loved",
+  "Romantic Pick",
+  "Staff Favourite"
 ];
 
 const PRODUCT_DETAILS_OPTIONS = [
@@ -137,6 +191,19 @@ const initialFormData: ProductData = {
   comboName: '',
   comboDescription: '',
   comboSubcategory: '',
+  isValentineProduct: false,
+  showInValentineShop: false,
+  valentineCategories: [],
+  valentineSections: [],
+  availableDates: [],
+  valentineBadge: '',
+  featureInValentineHero: false,
+  enableValentinePricing: false,
+  dateWiseStock: {},
+  dateWisePricing: {},
+  valentineSeoTitle: '',
+  valentineSeoDescription: '',
+  valentineSlug: '',
 };
 
 const ProductForm = () => {
@@ -145,6 +212,7 @@ const ProductForm = () => {
   const { id } = useParams();
   const { toast } = useToast();
   const isEditMode = Boolean(id);
+  const [isValentineSectionOpen, setIsValentineSectionOpen] = useState(true);
   
   // Determine if user is admin or vendor based on current path
   const isVendorPath = location.pathname.includes('/vendor/');
@@ -329,7 +397,20 @@ const ProductForm = () => {
           flowerGroupImage: "",
           useSameChocolateImage: false,
           chocolateGroupImage: ""
-        }
+        },
+        isValentineProduct: Boolean(data.isValentineProduct),
+        showInValentineShop: Boolean(data.showInValentineShop),
+        valentineCategories: Array.isArray(data.valentineCategories) ? data.valentineCategories : [],
+        valentineSections: Array.isArray(data.valentineSections) ? data.valentineSections : [],
+        availableDates: Array.isArray(data.availableDates) ? data.availableDates : [],
+        valentineBadge: data.valentineBadge || '',
+        featureInValentineHero: Boolean(data.featureInValentineHero),
+        enableValentinePricing: Boolean(data.enableValentinePricing),
+        dateWiseStock: data.dateWiseStock || {},
+        dateWisePricing: data.dateWisePricing || {},
+        valentineSeoTitle: data.valentineSeoTitle || '',
+        valentineSeoDescription: data.valentineSeoDescription || '',
+        valentineSlug: data.valentineSlug || '',
       };
 
       setFormData(processedData);
@@ -536,6 +617,19 @@ const ProductForm = () => {
           newErrors.priceVariants = `Variant ${i + 1} cannot have negative stock`;
           break;
         }
+      }
+    }
+
+    // Validate Valentine's settings if enabled
+    if (formData.isValentineProduct) {
+      if (!formData.valentineCategories || formData.valentineCategories.length === 0) {
+        newErrors.valentineCategories = "At least one Valentine's category is required";
+      }
+      if (!formData.availableDates || formData.availableDates.length === 0) {
+        newErrors.availableDates = "At least one Valentine's date is required";
+      }
+      if (formData.showInValentineShop === undefined) {
+        newErrors.showInValentineShop = "Valentine's visibility setting is required";
       }
     }
 
@@ -1882,6 +1976,364 @@ const ProductForm = () => {
               />
             </div>
           </CardContent>
+        </Card>
+
+        {/* ❤️ Valentine's Settings */}
+        <Card className={`transition-all duration-300 border-2 ${formData.isValentineProduct ? 'border-pink-200 bg-gradient-to-br from-pink-50/50 to-rose-50/50 shadow-md shadow-pink-100/55' : 'border-gray-200'}`}>
+          <CardHeader className="cursor-pointer select-none" onClick={() => setIsValentineSectionOpen(!isValentineSectionOpen)}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className={`flex h-10 w-10 items-center justify-center rounded-full transition-colors ${formData.isValentineProduct ? 'bg-pink-100 text-pink-600' : 'bg-gray-100 text-gray-500'}`}>
+                  <Heart className={`h-5 w-5 ${formData.isValentineProduct ? 'fill-pink-500 stroke-pink-600 animate-pulse' : ''}`} />
+                </div>
+                <div>
+                  <CardTitle className={`flex items-center gap-2 ${formData.isValentineProduct ? 'text-pink-800' : ''}`}>
+                    ❤️ Valentine's Settings
+                  </CardTitle>
+                  <CardDescription className={formData.isValentineProduct ? 'text-pink-600' : ''}>
+                    Configure Valentine's collections, visibility, date-wise pricing, inventory, and banner promotion
+                  </CardDescription>
+                </div>
+              </div>
+              <div className="text-muted-foreground">
+                {isValentineSectionOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+              </div>
+            </div>
+          </CardHeader>
+          
+          {isValentineSectionOpen && (
+            <CardContent className="space-y-6">
+              {/* Enable Valentine's Product Toggle */}
+              <div className={`flex items-center justify-between rounded-lg border p-4 transition-colors ${formData.isValentineProduct ? 'border-pink-200 bg-white shadow-sm' : 'border-gray-200 bg-gray-50'}`}>
+                <div className="space-y-1">
+                  <Label htmlFor="isValentineProductToggle" className="text-base font-semibold">Enable for Valentine's Collection</Label>
+                  <p className="text-sm text-muted-foreground">Activate this product in the Valentine's campaign ecosystem</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={`text-sm font-medium ${formData.isValentineProduct ? 'text-pink-600' : 'text-muted-foreground'}`}>
+                    {formData.isValentineProduct ? 'ON' : 'OFF'}
+                  </span>
+                  <Switch
+                    id="isValentineProductToggle"
+                    type="button"
+                    checked={formData.isValentineProduct}
+                    onCheckedChange={(checked) => {
+                      setFormData(prev => ({
+                        ...prev,
+                        isValentineProduct: checked,
+                        productType: checked ? 'valentine' : 'regular'
+                      }));
+                      // Reset errors for Valentine settings if toggled OFF
+                      if (!checked) {
+                        setErrors(prev => {
+                          const newErrors = { ...prev };
+                          delete newErrors.valentineCategories;
+                          delete newErrors.availableDates;
+                          delete newErrors.showInValentineShop;
+                          return newErrors;
+                        });
+                      }
+                    }}
+                    className="data-[state=checked]:bg-pink-600"
+                  />
+                </div>
+              </div>
+
+              {formData.isValentineProduct && (
+                <div className="space-y-6 pt-4 border-t border-pink-100">
+                  {/* 2. Valentine's Shop Visibility */}
+                  <div className="flex items-center justify-between rounded-lg border border-pink-200 bg-white p-4">
+                    <div className="space-y-1">
+                      <Label htmlFor="showInValentineShop" className="text-base font-medium">Show in Valentine's Shop</Label>
+                      <p className="text-sm text-muted-foreground">Automatically display this product on /valentine-shop</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-sm font-medium ${formData.showInValentineShop ? 'text-pink-600 font-bold' : 'text-muted-foreground'}`}>
+                        {formData.showInValentineShop ? 'ON' : 'OFF'}
+                      </span>
+                      <Switch
+                        id="showInValentineShop"
+                        type="button"
+                        checked={formData.showInValentineShop}
+                        onCheckedChange={(checked) => setFormData(prev => ({ ...prev, showInValentineShop: checked }))}
+                        className="data-[state=checked]:bg-pink-600"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 3. Valentine's Collection Assignment */}
+                  <div className="space-y-3">
+                    <Label className="text-sm font-semibold text-gray-900">Assign Valentine's Categories *</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 bg-white p-4 rounded-lg border border-pink-200">
+                      {VALENTINE_CATEGORIES.map((category) => {
+                        const isChecked = (formData.valentineCategories || []).includes(category);
+                        return (
+                          <div key={category} className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id={`val-cat-${category}`}
+                              checked={isChecked}
+                              onChange={() => {
+                                setFormData(prev => {
+                                  const list = prev.valentineCategories || [];
+                                  const updated = list.includes(category)
+                                    ? list.filter(c => c !== category)
+                                    : [...list, category];
+                                  return { ...prev, valentineCategories: updated };
+                                });
+                              }}
+                              className="h-4 w-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500"
+                            />
+                            <Label htmlFor={`val-cat-${category}`} className="text-sm text-gray-700 cursor-pointer">
+                              {category}
+                            </Label>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {errors.valentineCategories && (
+                      <p className="text-sm text-red-500 font-medium">{errors.valentineCategories}</p>
+                    )}
+                  </div>
+
+                  {/* 4. Valentine's Landing Page Placement */}
+                  <div className="space-y-3">
+                    <Label className="text-sm font-semibold text-gray-900">Display In Valentine's Sections</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 bg-white p-4 rounded-lg border border-pink-200">
+                      {VALENTINE_SECTIONS.map((section) => {
+                        const isChecked = (formData.valentineSections || []).includes(section);
+                        return (
+                          <div key={section} className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id={`val-sec-${section}`}
+                              checked={isChecked}
+                              onChange={() => {
+                                setFormData(prev => {
+                                  const list = prev.valentineSections || [];
+                                  const updated = list.includes(section)
+                                    ? list.filter(s => s !== section)
+                                    : [...list, section];
+                                  return { ...prev, valentineSections: updated };
+                                });
+                              }}
+                              className="h-4 w-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500"
+                            />
+                            <Label htmlFor={`val-sec-${section}`} className="text-sm text-gray-700 cursor-pointer">
+                              {section}
+                            </Label>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* 5. Valentine's Date Assignment */}
+                  <div className="space-y-3">
+                    <Label className="text-sm font-semibold text-gray-900">Available For Dates *</Label>
+                    <p className="text-xs text-muted-foreground">Only selected dates will be available during checkout for this product</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 bg-white p-4 rounded-lg border border-pink-200">
+                      {VALENTINE_DATES.map((dateObj) => {
+                        const isChecked = (formData.availableDates || []).includes(dateObj.value);
+                        return (
+                          <div key={dateObj.value} className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id={`val-date-${dateObj.value}`}
+                              checked={isChecked}
+                              onChange={() => {
+                                setFormData(prev => {
+                                  const list = prev.availableDates || [];
+                                  const updated = list.includes(dateObj.value)
+                                    ? list.filter(d => d !== dateObj.value)
+                                    : [...list, dateObj.value];
+                                  return { ...prev, availableDates: updated };
+                                });
+                              }}
+                              className="h-4 w-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500"
+                            />
+                            <Label htmlFor={`val-date-${dateObj.value}`} className="text-sm text-gray-700 cursor-pointer">
+                              {dateObj.label}
+                            </Label>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {errors.availableDates && (
+                      <p className="text-sm text-red-500 font-medium">{errors.availableDates}</p>
+                    )}
+                  </div>
+
+                  {/* 6. Valentine's Product Badge System */}
+                  <div className="space-y-2">
+                    <Label htmlFor="valentineBadge" className="text-sm font-semibold text-gray-900">Valentine Badge</Label>
+                    <Select
+                      value={formData.valentineBadge || 'none'}
+                      onValueChange={(val) => setFormData(prev => ({ ...prev, valentineBadge: val === 'none' ? '' : val }))}
+                    >
+                      <SelectTrigger className="w-full md:max-w-md bg-white border-pink-200">
+                        <SelectValue placeholder="Select Valentine Badge" />
+                      </SelectTrigger>
+                      <SelectContent disablePortal>
+                        <SelectItem value="none">None</SelectItem>
+                        {VALENTINE_BADGES.map((badge) => (
+                          <SelectItem key={badge} value={badge}>
+                            {badge}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* 7. Valentine's Banner Product Toggle */}
+                  <div className="flex items-center justify-between rounded-lg border border-pink-200 bg-white p-4">
+                    <div className="space-y-1">
+                      <Label htmlFor="featureInValentineHero" className="text-base font-medium">Feature In Valentine's Hero Banner</Label>
+                      <p className="text-sm text-muted-foreground">Make this product available for selection in Valentine's Hero Banners</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-sm font-medium ${formData.featureInValentineHero ? 'text-pink-600 font-bold' : 'text-muted-foreground'}`}>
+                        {formData.featureInValentineHero ? 'ON' : 'OFF'}
+                      </span>
+                      <Switch
+                        id="featureInValentineHero"
+                        type="button"
+                        checked={formData.featureInValentineHero}
+                        onCheckedChange={(checked) => setFormData(prev => ({ ...prev, featureInValentineHero: checked }))}
+                        className="data-[state=checked]:bg-pink-600"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 8. Valentine's Pricing Controls */}
+                  <div className="space-y-4 rounded-lg border border-pink-200 bg-white p-4">
+                    <div className="flex items-center justify-between border-b border-pink-100 pb-3">
+                      <div className="space-y-1">
+                        <Label htmlFor="enableValentinePricing" className="text-base font-medium">Enable Valentine's Pricing</Label>
+                        <p className="text-sm text-muted-foreground">Define different prices based on the delivery date</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-sm font-medium ${formData.enableValentinePricing ? 'text-pink-600 font-bold' : 'text-muted-foreground'}`}>
+                          {formData.enableValentinePricing ? 'ON' : 'OFF'}
+                        </span>
+                        <Switch
+                          id="enableValentinePricing"
+                          type="button"
+                          checked={formData.enableValentinePricing}
+                          onCheckedChange={(checked) => setFormData(prev => ({ ...prev, enableValentinePricing: checked }))}
+                          className="data-[state=checked]:bg-pink-600"
+                        />
+                      </div>
+                    </div>
+
+                    {formData.enableValentinePricing && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+                        {VALENTINE_DATES.map((dateObj) => {
+                          const currentVal = formData.dateWisePricing?.[dateObj.value] ?? '';
+                          return (
+                            <div key={dateObj.value} className="space-y-2">
+                              <Label className="text-xs font-semibold text-gray-700">{dateObj.label.split(' – ')[1]} Price (₹)</Label>
+                              <Input
+                                type="number"
+                                placeholder={`Price for ${dateObj.label.split(' – ')[0]}`}
+                                value={currentVal}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    dateWisePricing: {
+                                      ...(prev.dateWisePricing || {}),
+                                      [dateObj.value]: val === '' ? 0 : parseFloat(val)
+                                    }
+                                  }));
+                                }}
+                                className="border-pink-200 focus:border-pink-500 focus:ring-pink-500"
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 9. Valentine's Inventory Controls */}
+                  <div className="space-y-4 rounded-lg border border-pink-200 bg-white p-4">
+                    <div>
+                      <Label className="text-base font-semibold text-gray-900">Valentine Inventory</Label>
+                      <p className="text-sm text-muted-foreground">Manage date-wise stock limits. Product shows "Sold Out For Selected Date" when stock is zero.</p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+                      {VALENTINE_DATES.map((dateObj) => {
+                        const currentVal = formData.dateWiseStock?.[dateObj.value] ?? '';
+                        return (
+                          <div key={dateObj.value} className="space-y-2">
+                            <Label className="text-xs font-semibold text-gray-700">{dateObj.label.split(' – ')[1]} Stock</Label>
+                            <Input
+                              type="number"
+                              placeholder={`Stock for ${dateObj.label.split(' – ')[0]}`}
+                              value={currentVal}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setFormData(prev => ({
+                                  ...prev,
+                                  dateWiseStock: {
+                                    ...(prev.dateWiseStock || {}),
+                                    [dateObj.value]: val === '' ? 0 : parseInt(val, 10)
+                                  }
+                                }));
+                              }}
+                              className="border-pink-200 focus:border-pink-500 focus:ring-pink-500"
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* 10. Valentine's SEO Controls */}
+                  <div className="space-y-4 rounded-lg border border-pink-200 bg-white p-4">
+                    <div>
+                      <Label className="text-base font-semibold text-gray-900">Valentine's SEO Controls</Label>
+                      <p className="text-sm text-muted-foreground">Customize meta data and URL route for campaign SEO purposes (/valentine-product/product-name)</p>
+                    </div>
+                    <div className="space-y-3 pt-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="valentineSeoTitle">Valentine SEO Title</Label>
+                        <Input
+                          id="valentineSeoTitle"
+                          placeholder="e.g. Premium White Roses - Valentine Specials"
+                          value={formData.valentineSeoTitle || ''}
+                          onChange={(e) => setFormData(prev => ({ ...prev, valentineSeoTitle: e.target.value }))}
+                          className="border-pink-200"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="valentineSeoDescription">Valentine SEO Description</Label>
+                        <Textarea
+                          id="valentineSeoDescription"
+                          placeholder="Detailed SEO description highlighting Valentine's Day features, pricing and delivery details..."
+                          value={formData.valentineSeoDescription || ''}
+                          onChange={(e) => setFormData(prev => ({ ...prev, valentineSeoDescription: e.target.value }))}
+                          rows={3}
+                          className="border-pink-200"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="valentineSlug">Valentine Product URL Slug</Label>
+                        <Input
+                          id="valentineSlug"
+                          placeholder="e.g. pure-elegance-white-rose-valentine"
+                          value={formData.valentineSlug || ''}
+                          onChange={(e) => setFormData(prev => ({ ...prev, valentineSlug: e.target.value }))}
+                          className="border-pink-200"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          )}
         </Card>
 
         {/* Product Images */}

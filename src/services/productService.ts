@@ -94,6 +94,25 @@ export interface ProductData {
   comboName: string;
   comboDescription: string;
   comboSubcategory: string;
+  productType?: 'regular' | 'valentine';
+  isValentineProduct?: boolean;
+  availableDates?: string[];
+  dateWiseStock?: Record<string, number>;
+  dateWisePricing?: Record<string, number>;
+  dateWiseOffers?: Record<string, string>;
+  dateWiseDeliveryCharges?: Record<string, number>;
+  valentineDate?: string | null;
+  isValentineExclusive?: boolean;
+  valentineCategory?: string;
+  showInValentineShop?: boolean;
+  valentineCategories?: string[];
+  valentineSections?: string[];
+  valentineBadge?: string;
+  featureInValentineHero?: boolean;
+  enableValentinePricing?: boolean;
+  valentineSeoTitle?: string;
+  valentineSeoDescription?: string;
+  valentineSlug?: string;
 }
 
 // Define backend product type to match backend schema
@@ -126,6 +145,16 @@ interface BackendProductData {
   comboItems?: ComboItem[];
   comboName?: string;
   comboDescription?: string;
+  productType?: 'regular' | 'valentine';
+  isValentineProduct?: boolean;
+  availableDates?: string[];
+  dateWiseStock?: Record<string, number>;
+  dateWisePricing?: Record<string, number>;
+  dateWiseOffers?: Record<string, string>;
+  dateWiseDeliveryCharges?: Record<string, number>;
+  valentineDate?: string | null;
+  isValentineExclusive?: boolean;
+  valentineCategory?: string;
   createdAt?: string;
   updatedAt?: string;
   [key: string]: unknown; // Allow other properties with unknown type
@@ -187,6 +216,27 @@ const prepareProductData = (productData: ProductData): BackendProductData => {
   cleanData.sameDay = productData.sameDay !== undefined ? Boolean(productData.sameDay) : true;
   cleanData.isCustomizable = Boolean(productData.isCustomizable);
   cleanData.hasPriceVariants = Boolean(productData.hasPriceVariants);
+  
+  // Valentine properties
+  cleanData.productType = productData.productType || 'regular';
+  cleanData.isValentineProduct = Boolean(productData.isValentineProduct);
+  cleanData.availableDates = productData.availableDates || [];
+  cleanData.dateWiseStock = productData.dateWiseStock || {};
+  cleanData.dateWisePricing = productData.dateWisePricing || {};
+  cleanData.dateWiseOffers = productData.dateWiseOffers || {};
+  cleanData.dateWiseDeliveryCharges = productData.dateWiseDeliveryCharges || {};
+  cleanData.valentineDate = productData.valentineDate || null;
+  cleanData.isValentineExclusive = Boolean(productData.isValentineExclusive);
+  cleanData.valentineCategory = productData.valentineCategory || '';
+  cleanData.showInValentineShop = Boolean(productData.showInValentineShop);
+  cleanData.valentineCategories = productData.valentineCategories || [];
+  cleanData.valentineSections = productData.valentineSections || [];
+  cleanData.valentineBadge = productData.valentineBadge || '';
+  cleanData.featureInValentineHero = Boolean(productData.featureInValentineHero);
+  cleanData.enableValentinePricing = Boolean(productData.enableValentinePricing);
+  cleanData.valentineSeoTitle = productData.valentineSeoTitle || '';
+  cleanData.valentineSeoDescription = productData.valentineSeoDescription || '';
+  cleanData.valentineSlug = productData.valentineSlug || '';
   
   // Process price variants for backend
   if (productData.hasPriceVariants && Array.isArray(productData.priceVariants)) {
@@ -263,6 +313,27 @@ const mapBackendToFrontend = (data: BackendProductData): ProductData => {
       typeof data.isNew === 'boolean' ? data.isNew : data.isNewArrival
     );
   }
+
+  // Map Valentine properties
+  mappedData.productType = data.productType || 'regular';
+  mappedData.isValentineProduct = Boolean(data.isValentineProduct);
+  mappedData.availableDates = data.availableDates || [];
+  mappedData.dateWiseStock = (data.dateWiseStock as Record<string, number>) || {};
+  mappedData.dateWisePricing = (data.dateWisePricing as Record<string, number>) || {};
+  mappedData.dateWiseOffers = (data.dateWiseOffers as Record<string, string>) || {};
+  mappedData.dateWiseDeliveryCharges = (data.dateWiseDeliveryCharges as Record<string, number>) || {};
+  mappedData.valentineDate = data.valentineDate || null;
+  mappedData.isValentineExclusive = Boolean(data.isValentineExclusive);
+  mappedData.valentineCategory = data.valentineCategory || '';
+  mappedData.showInValentineShop = Boolean(data.showInValentineShop);
+  mappedData.valentineCategories = data.valentineCategories || [];
+  mappedData.valentineSections = data.valentineSections || [];
+  mappedData.valentineBadge = data.valentineBadge || '';
+  mappedData.featureInValentineHero = Boolean(data.featureInValentineHero);
+  mappedData.enableValentinePricing = Boolean(data.enableValentinePricing);
+  mappedData.valentineSeoTitle = data.valentineSeoTitle || '';
+  mappedData.valentineSeoDescription = data.valentineSeoDescription || '';
+  mappedData.valentineSlug = data.valentineSlug || '';
 
   // Map combo fields
   if (data.comboItems) {
@@ -485,6 +556,12 @@ class ProductService {
         return [];
       }
     }
+  }
+
+  async bulkUpdateValentineSettings(productIds: string[], action: string, value?: any): Promise<any> {
+    const config = createAuthConfig();
+    const response = await axios.post(`${API_URL}/products/admin/bulk-valentine`, { productIds, action, value }, config);
+    return response.data;
   }
 }
 

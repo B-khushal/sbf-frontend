@@ -19,6 +19,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import useCart from '@/hooks/use-cart';
+import { useValentine } from '@/contexts/ValentineContext';
 
 export type TimeSlot = {
   id: string;
@@ -219,6 +221,21 @@ const TimeSlotSelector = ({
   const normalizeDate = (value: Date) => startOfDay(value);
   const toDateInputValue = (value: Date) => format(value, 'yyyy-MM-dd');
 
+  const { items } = useCart();
+  const { isValentineEnabled } = useValentine();
+  const hasValentine = items.some(item => item.productType === 'valentine' || item.isValentineProduct);
+  const valentineItems = items.filter(item => item.productType === 'valentine' || item.isValentineProduct);
+
+  const commonAvailableDates = useMemo(() => {
+    if (valentineItems.length === 0) return null;
+    let common = [...(valentineItems[0].availableDates || [])];
+    for (let i = 1; i < valentineItems.length; i++) {
+      const itemDates = valentineItems[i].availableDates || [];
+      common = common.filter(d => itemDates.includes(d));
+    }
+    return common.map(d => d.trim().toLowerCase());
+  }, [valentineItems]);
+
   // Set default date to today or provided selectedDate
   const [date, setDate] = useState<Date | null>(
     selectedDate && isValid(selectedDate) ? normalizeDate(selectedDate) : normalizeDate(new Date())
@@ -285,6 +302,34 @@ const TimeSlotSelector = ({
     // Check if date is beyond delivery window
     if (normalizedDate > maxDeliveryDate) {
       return true;
+    }
+    
+    // Check Valentine Week constraints
+    const isValWeek = (normalizedDate.getMonth() === 1 && normalizedDate.getDate() >= 8 && normalizedDate.getDate() <= 15);
+    
+    if (isValentineEnabled) {
+      if (hasValentine) {
+        if (!isValWeek) {
+          return true; // Valentine products ONLY on Feb 8-15
+        }
+        if (commonAvailableDates) {
+          const dayStr = `${normalizedDate.getDate()} Feb`;
+          const fullDayStr = `${normalizedDate.getDate()} February`;
+          const allowed = commonAvailableDates.some(d => 
+            d === dayStr.toLowerCase() || 
+            d === fullDayStr.toLowerCase() ||
+            d.includes(String(normalizedDate.getDate()))
+          );
+          if (!allowed && commonAvailableDates.length > 0) {
+            return true; // Not allowed for this product
+          }
+        }
+      } else {
+        // Regular products: block Valentine Week (Feb 8-15)
+        if (isValWeek) {
+          return true;
+        }
+      }
     }
     
     // Check if date is a holiday
@@ -445,6 +490,28 @@ const TimeSlotSelector = ({
             Next 90 days
           </div>
         </div>
+
+        {isValentineEnabled && (hasValentine ? (
+          <div className="mb-4 rounded-2xl bg-rose-50 border border-rose-100 p-3 flex items-start gap-2.5">
+            <span className="text-base mt-0.5">❤️</span>
+            <div>
+              <p className="text-xs font-bold text-rose-800">Valentine Special Delivery</p>
+              <p className="text-[11px] text-rose-600 leading-snug">
+                Available dates are restricted exclusively to allowed Valentine Week delivery dates (8 Feb - 15 Feb).
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="mb-4 rounded-2xl bg-amber-50 border border-amber-100 p-3 flex items-start gap-2.5">
+            <span className="text-base mt-0.5">🚫</span>
+            <div>
+              <p className="text-xs font-bold text-amber-800">Valentine Week Reserved</p>
+              <p className="text-[11px] text-amber-600 leading-snug">
+                Valentine Week delivery dates are reserved exclusively for Valentine's Special products.
+              </p>
+            </div>
+          </div>
+        ))}
 
         {isMobile && quickDateOptions.length > 0 && (
           <div className="mb-4 flex flex-wrap gap-2">

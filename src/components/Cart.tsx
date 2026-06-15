@@ -27,8 +27,13 @@ type CustomizationData = {
   photo?: string;
   number?: string;
   messageCard?: string;
-  selectedFlowers: AddonOption[];
-  selectedChocolates: AddonOption[];
+  selectedFlowers?: AddonOption[];
+  selectedChocolates?: AddonOption[];
+  isGiftBundle?: boolean;
+  title?: string;
+  images?: string[];
+  giftComponents?: Array<{ category: string; name: string; price: number }>;
+  customMessage?: string;
 };
 
 type CartItem = {
@@ -341,7 +346,7 @@ const CartItem = ({
               </div>
             )}
             
-            {item.customizations.selectedFlowers.length > 0 && (
+            {item.customizations.selectedFlowers && item.customizations.selectedFlowers.length > 0 && (
               <div className="flex flex-wrap gap-1">
                 {item.customizations.selectedFlowers.map((flower, index) => (
                   <Badge key={index} variant="outline" className="text-xs">
@@ -351,13 +356,35 @@ const CartItem = ({
               </div>
             )}
             
-            {item.customizations.selectedChocolates.length > 0 && (
+            {item.customizations.selectedChocolates && item.customizations.selectedChocolates.length > 0 && (
               <div className="flex flex-wrap gap-1">
                 {item.customizations.selectedChocolates.map((chocolate, index) => (
                   <Badge key={index} variant="outline" className="text-xs">
                     {chocolate.name} (+{formatPrice(convertPrice(chocolate.price))})
                   </Badge>
                 ))}
+              </div>
+            )}
+
+            {/* Gift Bundle Render */}
+            {item.customizations.isGiftBundle && item.customizations.giftComponents && (
+              <div className="text-xs text-rose-600 bg-rose-50 border border-rose-100 rounded-lg p-2 mt-1">
+                <p className="font-semibold mb-1">🎁 Included Items:</p>
+                <ul className="space-y-0.5 text-gray-600 list-none pl-0">
+                  {item.customizations.giftComponents.map((comp: any, idx: number) => (
+                    <li key={idx} className="flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-rose-400 shrink-0" />
+                      <span className="capitalize font-semibold text-rose-500">{comp.category.replace('_', ' ')}:</span>
+                      <span className="truncate">{comp.name}</span>
+                    </li>
+                  ))}
+                </ul>
+                {item.customizations.customMessage && (
+                  <div className="mt-1.5 pt-1 border-t border-rose-100/50">
+                    <span className="font-semibold">💌 Message:</span>
+                    <p className="italic text-gray-500">"{item.customizations.customMessage}"</p>
+                  </div>
+                )}
               </div>
             )}
           </div>

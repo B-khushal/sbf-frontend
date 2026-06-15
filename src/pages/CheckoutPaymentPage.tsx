@@ -383,8 +383,8 @@ const CheckoutPaymentPage = () => {
          originalCurrency: 'INR'
        };
        
-               // Add gift details if present
-        if (shippingInfo.giftMessage || shippingInfo.receiverFirstName) {
+        // Add gift details if present or if there are Valentine upgrades
+        if (shippingInfo.giftMessage || shippingInfo.receiverFirstName || shippingInfo.greetingCard || shippingInfo.surpriseDelivery || shippingInfo.anonymousGift) {
           (orderData as any).giftDetails = {
             message: shippingInfo.giftMessage || '',
             recipientName: shippingInfo.receiverFirstName && shippingInfo.receiverLastName 
@@ -396,7 +396,10 @@ const CheckoutPaymentPage = () => {
             recipientApartment: shippingInfo.receiverApartment || '',
             recipientCity: shippingInfo.receiverCity || '',
             recipientState: shippingInfo.receiverState || '',
-            recipientZipCode: shippingInfo.receiverZipCode || ''
+            recipientZipCode: shippingInfo.receiverZipCode || '',
+            greetingCard: shippingInfo.greetingCard || 'none',
+            surpriseDelivery: !!shippingInfo.surpriseDelivery,
+            anonymousGift: !!shippingInfo.anonymousGift
           };
         }
 
@@ -1170,6 +1173,23 @@ const CheckoutPaymentPage = () => {
                                  {item.customizations.selectedChocolates && item.customizations.selectedChocolates.length > 0 && (
                                    <div className="text-xs text-orange-600">
                                      🍫 {item.customizations.selectedChocolates.map((c: any) => `${c.name}${(c.quantity || 1) > 1 ? `×${c.quantity || 1}` : ''}`).join(', ')}
+                                   </div>
+                                 )}
+                                 {item.customizations.isGiftBundle && item.customizations.giftComponents && (
+                                   <div className="text-xs text-rose-600 bg-rose-50/50 border border-rose-100 rounded-lg p-2 space-y-1">
+                                     <div className="font-semibold">🎁 Selected items:</div>
+                                     {item.customizations.giftComponents.map((comp: any, idx: number) => (
+                                       <div key={idx} className="text-[11px] text-gray-600 pl-1.5 flex items-center gap-1">
+                                         <span className="w-1 h-1 rounded-full bg-rose-400 shrink-0" />
+                                         <span className="capitalize font-semibold text-rose-500">{comp.category.replace('_', ' ')}:</span>
+                                         <span className="truncate">{comp.name}</span>
+                                       </div>
+                                     ))}
+                                     {item.customizations.customMessage && (
+                                       <div className="text-[11px] text-gray-500 italic pl-1.5 pt-0.5 border-t border-rose-100/50">
+                                         Card Message: "{item.customizations.customMessage}"
+                                       </div>
+                                     )}
                                    </div>
                                  )}
                                </div>

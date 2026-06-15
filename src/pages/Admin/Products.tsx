@@ -7,18 +7,49 @@ import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Edit, Trash2, Eye, EyeOff, AlertTriangle, Package, Search, Filter, X } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, EyeOff, AlertTriangle, Package, Search, Filter, X, Heart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import api from "@/services/api";
 import { useNavigate } from "react-router-dom";
-import { ProductData } from "@/services/productService";
+import productService, { ProductData } from "@/services/productService";
 import { getImageUrl } from "@/config";
 
 type Product = ProductData & {
   _id: string;
   hidden?: boolean;
 };
+
+const VALENTINE_CATEGORIES = [
+  "Rose Day Specials",
+  "Propose Day Specials",
+  "Chocolate Day Specials",
+  "Teddy Day Specials",
+  "Promise Day Specials",
+  "Hug Day Specials",
+  "Valentine's Day Specials",
+  "Celebration Day Specials",
+  "Premium Rose Bouquets",
+  "Luxury Flower Boxes",
+  "Romantic Gift Hampers",
+  "Chocolates & Flowers",
+  "Teddy Combos",
+  "Proposal Packages",
+  "Couple Gift Combos",
+  "Same Day Surprise Gifts",
+  "Midnight Delivery Gifts"
+];
+
+const VALENTINE_DATES = [
+  { value: "rose-day", label: "8 Feb – Rose Day" },
+  { value: "propose-day", label: "9 Feb – Propose Day" },
+  { value: "chocolate-day", label: "10 Feb – Chocolate Day" },
+  { value: "teddy-day", label: "11 Feb – Teddy Day" },
+  { value: "promise-day", label: "12 Feb – Promise Day" },
+  { value: "hug-day", label: "13 Feb – Hug Day" },
+  { value: "valentines-day", label: "14 Feb – Valentine's Day" },
+  { value: "celebration-day", label: "15 Feb – Celebration Day" }
+];
 
 const AdminProducts: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -34,6 +65,52 @@ const AdminProducts: React.FC = () => {
   const [featuredFilter, setFeaturedFilter] = useState("all");
   const [newFilter, setNewFilter] = useState("all");
   const [visibilityFilter, setVisibilityFilter] = useState("all");
+
+  // Valentine's Selection and Dialog states
+  const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
+  const [showCategoryDialog, setShowCategoryDialog] = useState(false);
+  const [showDateDialog, setShowDateDialog] = useState(false);
+  const [bulkCategories, setBulkCategories] = useState<string[]>([]);
+  const [bulkDates, setBulkDates] = useState<string[]>([]);
+
+  const toggleSelectProduct = (productId: string) => {
+    setSelectedProductIds(prev =>
+      prev.includes(productId) ? prev.filter(id => id !== productId) : [...prev, productId]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedProductIds.length === filteredProducts.length) {
+      setSelectedProductIds([]);
+    } else {
+      setSelectedProductIds(filteredProducts.map(p => p._id));
+    }
+  };
+
+  const handleBulkAction = async (action: string, value?: any) => {
+    try {
+      await productService.bulkUpdateValentineSettings(selectedProductIds, action, value);
+      toast({
+        title: "Success",
+        description: "Bulk action applied successfully",
+      });
+      // Clear selection and dialogs
+      setSelectedProductIds([]);
+      setShowCategoryDialog(false);
+      setShowDateDialog(false);
+      setBulkCategories([]);
+      setBulkDates([]);
+      // Reload products list
+      fetchProducts();
+    } catch (error) {
+      console.error("Error applying bulk action:", error);
+      toast({
+        title: "Error",
+        description: "Failed to apply bulk action",
+        variant: "destructive",
+      });
+    }
+  };
   
   const { toast } = useToast();
   const { formatPrice, convertPrice } = useCurrency();
@@ -395,6 +472,126 @@ const AdminProducts: React.FC = () => {
         </Button>
       </div>
 
+      {/* Bulk actions bar */}
+      {selectedProductIds.length > 0 && (
+        <Card className="border-pink-200 bg-pink-50/50 shadow-sm">
+          <CardContent className="py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="text-sm text-pink-800 font-medium">
+              Selected <span className="font-bold text-pink-900">{selectedProductIds.length}</span> {selectedProductIds.length === 1 ? 'product' : 'products'} for bulk updates
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button size="sm" variant="outline" className="border-pink-200 bg-white hover:bg-pink-100 text-pink-700 hover:text-pink-800" onClick={() => handleBulkAction('addToShop')}>
+                Add to Valentine Shop
+              </Button>
+              <Button size="sm" variant="outline" className="border-pink-200 bg-white hover:bg-pink-100 text-pink-700 hover:text-pink-800" onClick={() => handleBulkAction('removeFromShop')}>
+                Remove from Shop
+              </Button>
+              <Button size="sm" variant="outline" className="border-pink-200 bg-white hover:bg-pink-100 text-pink-700 hover:text-pink-800" onClick={() => setShowCategoryDialog(true)}>
+                Assign Categories
+              </Button>
+              <Button size="sm" variant="outline" className="border-pink-200 bg-white hover:bg-pink-100 text-pink-700 hover:text-pink-800" onClick={() => setShowDateDialog(true)}>
+                Assign Dates
+              </Button>
+              <Button size="sm" variant="outline" className="border-pink-200 bg-white hover:bg-pink-100 text-pink-700 hover:text-pink-800" onClick={() => handleBulkAction('enableOffers')}>
+                Enable Pricing/Offers
+              </Button>
+              <Button size="sm" variant="destructive" onClick={() => handleBulkAction('disableProducts')}>
+                Disable Valentine Status
+              </Button>
+              <Button size="sm" variant="ghost" className="text-gray-500 hover:text-gray-700" onClick={() => setSelectedProductIds([])}>
+                Cancel
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Categories Assignment Modal */}
+      {showCategoryDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 backdrop-blur-sm p-4">
+          <Card className="w-full max-w-lg border-2 border-pink-200 shadow-2xl">
+            <CardHeader className="bg-pink-50/50 border-b border-pink-100">
+              <CardTitle className="text-pink-800 flex items-center gap-2">❤️ Bulk Assign Valentine Categories</CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 space-y-4">
+              <p className="text-sm text-gray-600">Select Valentine's categories to apply to all {selectedProductIds.length} selected products:</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[300px] overflow-y-auto p-2 border border-pink-100 rounded-lg">
+                {VALENTINE_CATEGORIES.map((category) => {
+                  const isChecked = bulkCategories.includes(category);
+                  return (
+                    <div key={category} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id={`bulk-cat-${category}`}
+                        checked={isChecked}
+                        onChange={() => {
+                          setBulkCategories(prev =>
+                            prev.includes(category) ? prev.filter(c => c !== category) : [...prev, category]
+                          );
+                        }}
+                        className="h-4 w-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500"
+                      />
+                      <label htmlFor={`bulk-cat-${category}`} className="text-sm text-gray-700 cursor-pointer">{category}</label>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="flex justify-end gap-2 border-t pt-4">
+                <Button variant="outline" onClick={() => { setShowCategoryDialog(false); setBulkCategories([]); }}>
+                  Cancel
+                </Button>
+                <Button className="bg-pink-600 hover:bg-pink-700" onClick={() => handleBulkAction('assignCategories', bulkCategories)}>
+                  Apply Categories
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Dates Assignment Modal */}
+      {showDateDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 backdrop-blur-sm p-4">
+          <Card className="w-full max-w-lg border-2 border-pink-200 shadow-2xl">
+            <CardHeader className="bg-pink-50/50 border-b border-pink-100">
+              <CardTitle className="text-pink-800 flex items-center gap-2">❤️ Bulk Assign Valentine Dates</CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 space-y-4">
+              <p className="text-sm text-gray-600">Select delivery dates to make available for all {selectedProductIds.length} selected products:</p>
+              <div className="space-y-2 max-h-[300px] overflow-y-auto p-2 border border-pink-100 rounded-lg">
+                {VALENTINE_DATES.map((dateObj) => {
+                  const isChecked = bulkDates.includes(dateObj.value);
+                  return (
+                    <div key={dateObj.value} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id={`bulk-date-${dateObj.value}`}
+                        checked={isChecked}
+                        onChange={() => {
+                          setBulkDates(prev =>
+                            prev.includes(dateObj.value) ? prev.filter(d => d !== dateObj.value) : [...prev, dateObj.value]
+                          );
+                        }}
+                        className="h-4 w-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500"
+                      />
+                      <label htmlFor={`bulk-date-${dateObj.value}`} className="text-sm text-gray-700 cursor-pointer">{dateObj.label}</label>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="flex justify-end gap-2 border-t pt-4">
+                <Button variant="outline" onClick={() => { setShowDateDialog(false); setBulkDates([]); }}>
+                  Cancel
+                </Button>
+                <Button className="bg-pink-600 hover:bg-pink-700" onClick={() => handleBulkAction('assignDates', bulkDates)}>
+                  Apply Dates
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* Low Stock Alert */}
       {showLowStockAlert && (
         <Alert className="mb-6 border-yellow-500 bg-yellow-50">
@@ -612,6 +809,14 @@ const AdminProducts: React.FC = () => {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-[50px]">
+                    <input
+                      type="checkbox"
+                      checked={selectedProductIds.length === filteredProducts.length && filteredProducts.length > 0}
+                      onChange={toggleSelectAll}
+                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                    />
+                  </TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Price</TableHead>
@@ -622,6 +827,10 @@ const AdminProducts: React.FC = () => {
                   <TableHead>New</TableHead>
                   <TableHead>Same Day</TableHead>
                   <TableHead>Visibility</TableHead>
+                  <TableHead>❤️ Valentine Product</TableHead>
+                  <TableHead>Valentine Categories</TableHead>
+                  <TableHead>Valentine Dates</TableHead>
+                  <TableHead>Valentine Status</TableHead>
                   <TableHead>Image</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -638,9 +847,17 @@ const AdminProducts: React.FC = () => {
                   return (
                     <TableRow 
                       key={product._id} 
-                      className={product.hidden ? "opacity-60 bg-muted/30" : ""}
+                      className={`${product.hidden ? "opacity-60 bg-muted/30" : ""} ${selectedProductIds.includes(product._id) ? "bg-pink-50/20" : ""}`}
                       data-product-id={product._id}
                     >
+                      <TableCell>
+                        <input
+                          type="checkbox"
+                          checked={selectedProductIds.includes(product._id)}
+                          onChange={() => toggleSelectProduct(product._id)}
+                          className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                        />
+                      </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           {product.title}
@@ -722,6 +939,48 @@ const AdminProducts: React.FC = () => {
                             <Eye className="h-4 w-4 text-green-600" />
                           )}
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        {product.isValentineProduct ? (
+                          <Badge variant="secondary" className="bg-pink-100 text-pink-700 font-semibold border-pink-200 animate-pulse">
+                            ❤️ Yes
+                          </Badge>
+                        ) : (
+                          <span className="text-gray-400">No</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="max-w-[200px] truncate" title={product.valentineCategories?.join(', ')}>
+                          {product.valentineCategories && product.valentineCategories.length > 0 ? (
+                            product.valentineCategories.join(', ')
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="max-w-[150px] truncate" title={product.availableDates?.join(', ')}>
+                          {product.availableDates && product.availableDates.length > 0 ? (
+                            product.availableDates.map(d => d.replace('-day', ' Day')).join(', ')
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {product.isValentineProduct ? (
+                          product.showInValentineShop ? (
+                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                              ✓ Active
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                              ✕ Disabled
+                            </Badge>
+                          )
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <div className="relative w-16 h-16 rounded overflow-hidden border bg-muted">

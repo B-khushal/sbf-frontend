@@ -343,6 +343,34 @@ const CartPage: React.FC = () => {
                               {/* Product Details */}
                               <div className="flex-1 min-w-0 text-center sm:text-left">
                                 <h4 className="text-base sm:text-lg font-bold text-gray-800 mb-2 line-clamp-2">{item.title}</h4>
+                                
+                                {item.customizations?.isGiftBundle && item.customizations?.giftComponents && (
+                                  <div className="text-xs text-rose-600 bg-rose-50/70 border border-rose-100/50 rounded-xl p-3 mt-2 mb-3 text-left">
+                                    <p className="font-bold mb-1.5 flex items-center gap-1">
+                                      <span>💝 Included Items:</span>
+                                    </p>
+                                    <ul className="space-y-1 text-gray-600 list-none pl-0">
+                                      {item.customizations.giftComponents.map((comp: any, idx: number) => (
+                                        <li key={idx} className="flex items-center gap-1.5">
+                                          <span className="w-1.5 h-1.5 rounded-full bg-rose-400 shrink-0" />
+                                          <span className="capitalize font-semibold text-rose-500/90">{comp.category.replace('_', ' ')}:</span>
+                                          <span className="truncate">{comp.name}</span>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                    {item.customizations.customMessage && (
+                                      <div className="mt-2.5 pt-2.5 border-t border-rose-200/40">
+                                        <span className="font-bold flex items-center gap-1 mb-1">
+                                          <span>💌 Card Message:</span>
+                                        </span>
+                                        <p className="italic text-gray-600 bg-white/50 rounded-lg p-2 border border-rose-100/30">
+                                          "{item.customizations.customMessage}"
+                                        </p>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+
                                 <div className="flex items-center justify-center sm:justify-start gap-2 mb-3">
                                   {originalPrice && (
                                     <span className="text-xs sm:text-sm text-gray-500 line-through">
