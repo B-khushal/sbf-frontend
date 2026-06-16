@@ -535,6 +535,35 @@ const Footer = () => {
         </div>
       </div>
 
+      {/* Local SEO Keywords Section */}
+      <div className="border-t border-gray-200 mt-8 pt-8">
+        <details className="group border border-gray-200 bg-white/60 backdrop-blur-sm rounded-2xl p-5 transition-all duration-300 [&_summary::-webkit-details-marker]:hidden">
+          <summary className="cursor-pointer list-none flex items-center justify-between text-base font-bold text-gray-800">
+            <span className="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+              🌸 Flower Delivery Services & Florist Locations in Hyderabad
+            </span>
+            <span className="text-primary group-open:rotate-180 transition-transform duration-300 text-sm">▼</span>
+          </summary>
+          <div className="mt-4 text-xs sm:text-sm text-gray-600 space-y-4 leading-relaxed font-medium">
+            <p>
+              Looking for the best <strong>florist Hyderabad</strong> has to offer? SB Florist is the <strong>best florist in Hyderabad</strong> and your premier choice for <strong>flower delivery Hyderabad</strong>. We provide <strong>fresh flowers delivery Hyderabad</strong> for every occasion with <strong>online flower delivery Hyderabad</strong>. We specialize in <strong>same day flower delivery Hyderabad</strong> and <strong>midnight flower delivery Hyderabad</strong> to make your celebrations extra special.
+            </p>
+            <p>
+              As a leading <strong>flower shop Hyderabad</strong>, we are the <strong>online florist Hyderabad</strong> that customers trust. From <strong>bouquet delivery Hyderabad</strong> and <strong>rose bouquet delivery Hyderabad</strong> to <strong>birthday flower delivery Hyderabad</strong>, <strong>anniversary flower delivery Hyderabad</strong>, and <strong>wedding flowers Hyderabad</strong>, our expert team designs breathtaking <strong>flower arrangements Hyderabad</strong>. Whether you need <strong>luxury flower delivery Hyderabad</strong> for a grand occasion or <strong>affordable flower delivery Hyderabad</strong> and <strong>cheap flower delivery Hyderabad</strong>, our <strong>premium flowers Hyderabad</strong> collection has something for everyone.
+            </p>
+            <p>
+              We offer convenient options like <strong>flower bouquet online Hyderabad</strong>, <strong>send flowers to Hyderabad</strong>, <strong>Hyderabad flower delivery service</strong>, <strong>flowers home delivery Hyderabad</strong>, <strong>express flower delivery Hyderabad</strong>, and <strong>24 hour flower delivery Hyderabad</strong>. Find <strong>flowers near me Hyderabad</strong> easily and order <strong>red roses delivery Hyderabad</strong>, <strong>orchid delivery Hyderabad</strong>, <strong>lily flower delivery Hyderabad</strong>, a lovely <strong>carnation bouquet Hyderabad</strong>, or a <strong>mixed flower bouquet Hyderabad</strong>.
+            </p>
+            <p>
+              Celebrate special milestones with <strong>romantic flower delivery Hyderabad</strong>, <strong>Valentine's Day flowers Hyderabad</strong>, <strong>Mother's Day flower delivery Hyderabad</strong>, <strong>congratulations flowers Hyderabad</strong>, <strong>get well soon flowers Hyderabad</strong>, and <strong>sympathy flowers Hyderabad</strong>. We also offer <strong>flower and cake delivery Hyderabad</strong>, <strong>flowers and gifts Hyderabad</strong>, and <strong>flower basket delivery Hyderabad</strong>. Customize your order with a <strong>customized bouquet Hyderabad</strong> or complete an <strong>online bouquet order Hyderabad</strong> easily.
+            </p>
+            <p>
+              We deliver to all key areas including finding a <strong>florist near Hyderabad airport</strong> or ordering a prompt <strong>flower delivery in Gachibowli</strong>, <strong>flower delivery in Hitech City</strong>, <strong>flower delivery in Banjara Hills</strong>, <strong>flower delivery in Jubilee Hills</strong>, <strong>flower delivery in Kondapur</strong>, <strong>flower delivery in Kukatpally</strong>, and <strong>flower delivery in Secunderabad</strong>.
+            </p>
+          </div>
+        </details>
+      </div>
+
       {/* Map Section */}
       {footerSettings.showMap && (
         <div className="mt-10 sm:mt-12">
