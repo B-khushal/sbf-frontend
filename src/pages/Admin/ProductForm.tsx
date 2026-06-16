@@ -702,6 +702,7 @@ const ProductForm = () => {
         params: {
           type: 'product'  // Specify product type for 50MB limit
         },
+        timeout: 30000, // 1.5 minutes timeout for slow uploads
         onUploadProgress: (progressEvent) => {
           if (progressEvent.total) {
             const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
@@ -838,7 +839,8 @@ const ProductForm = () => {
         },
         params: {
           type: 'product'
-        }
+        },
+        timeout: 120000 // 2 minutes timeout for slow uploads
       });
       return response.data.imageUrl;
     } catch (error) {

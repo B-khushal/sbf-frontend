@@ -5,7 +5,7 @@ import { API_URL } from '../config';
 // Create an axios instance with base URL and default headers
 const api = axios.create({
   baseURL: API_URL,
-  timeout: 15000, // Reduced from 30s to 15s for better UX
+  timeout: 30000, // Increased to 60s to accommodate slower connections
   maxRedirects: 0, // Prevent redirect issues
   maxContentLength: 50000000, // 50MB - allow large payloads like base64 images
   maxBodyLength: 50000000, // 50MB - allow large request bodies

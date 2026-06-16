@@ -206,7 +206,9 @@ const AdminProductForm: React.FC<Props> = ({
         setUploadProgress(`Uploading image ${i + 1} of ${selectedFiles.length}: ${file.name}`);
         console.log('📸 Uploading image:', file.name, 'Size:', file.size);
         
-        const { data } = await api.post("/uploads", fileData);
+        const { data } = await api.post("/uploads", fileData, {
+          timeout: 30000 // 1.5 minutes timeout for slow uploads
+        });
         
         if (data && data.imageUrl) {
           console.log('✅ Image uploaded successfully:', data.imageUrl);
@@ -873,7 +875,9 @@ const AdminProductForm: React.FC<Props> = ({
                     fileData.append("image", testFile);
                     
                     console.log('🧪 Testing upload with file:', testFile.name);
-                    const response = await api.post("/uploads", fileData);
+                    const response = await api.post("/uploads", fileData, {
+                      timeout: 120000 // 2 minutes timeout for slow uploads
+                    });
                     console.log('✅ Test upload successful:', response.data);
                     toast({ title: "Test Upload Success", description: "Upload is working correctly!" });
                   } catch (error: any) {
