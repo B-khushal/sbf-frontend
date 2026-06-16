@@ -110,6 +110,10 @@ export interface MobileNavigationSettings {
   enableFloatingAnimation: boolean;
   enableHeartParticles: boolean;
   enableSeasonalTheme: boolean;
+  showWishlistDuringValentine: boolean;
+  valentineLabel: string;
+  valentineButtonSize: number;
+  valentineGlowEnabled: boolean;
 }
 
 export interface ValentineSettings {

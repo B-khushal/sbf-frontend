@@ -203,6 +203,210 @@ const defaultSocialItems = [
   }
 ];
 
+// Helper Component for Mobile Navbar settings to adhere to React Rules of Hooks
+const MobileNavbarSettingsCard: React.FC = () => {
+  const { toast } = useToast();
+  const [navConfig, setNavConfig] = useState<any>({
+    showWishlistDuringValentine: false,
+    enableValentineButton: true,
+    valentineLabel: 'LOVE',
+    valentineIcon: 'heart',
+    valentineGlowEnabled: true,
+    valentineButtonSize: 48,
+    valentineButtonColor: '#FF2E78',
+    glowIntensity: 'medium',
+    enableFloatingAnimation: true,
+    enableHeartParticles: true
+  });
+  const [navLoading, setNavLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchNavConfig = async () => {
+      try {
+        const res = await api.get('/valentine/settings');
+        if (res.data?.mobileNavigation) {
+          setNavConfig((prev: any) => ({ ...prev, ...res.data.mobileNavigation }));
+        }
+      } catch (err) {
+        console.warn('Failed to load valentine nav settings:', err);
+      } finally {
+        setNavLoading(false);
+      }
+    };
+    fetchNavConfig();
+  }, []);
+
+  const updateNavConfig = async (field: string, value: any) => {
+    const updated = { ...navConfig, [field]: value };
+    setNavConfig(updated);
+    try {
+      await api.put('/valentine/settings', { mobileNavigation: updated });
+    } catch (err) {
+      console.error('Failed to save nav config:', err);
+      toast({ title: 'Save Failed', description: 'Could not save mobile nav setting.', variant: 'destructive' });
+    }
+  };
+
+  return (
+    <Card className="bg-slate-800/40 border-slate-800 mt-6">
+      <CardContent className="p-4 space-y-6">
+        <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+          <div>
+            <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2">
+              <Smartphone className="h-4 w-4 text-pink-400" />
+              Mobile Navbar Settings
+            </h3>
+            <p className="text-xs text-slate-400 mt-1">Control the mobile bottom navigation bar behavior during Valentine Mode.</p>
+          </div>
+        </div>
+
+        {navLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <RefreshCw className="h-5 w-5 animate-spin text-pink-400" />
+            <span className="ml-2 text-xs text-slate-400">Loading navbar settings...</span>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {/* Wishlist Visibility */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">Navigation Items</h4>
+              <div className="flex items-center justify-between p-3 bg-slate-900/40 border border-slate-800 rounded-lg">
+                <div>
+                  <Label htmlFor="nav-wishlist-toggle" className="text-xs text-slate-300 cursor-pointer font-semibold">Show Wishlist During Valentine Mode</Label>
+                  <p className="text-[10px] text-slate-500 mt-0.5">When OFF, Wishlist is removed from mobile navbar during Valentine mode for a cleaner layout</p>
+                </div>
+                <Switch
+                  id="nav-wishlist-toggle"
+                  checked={navConfig.showWishlistDuringValentine}
+                  onCheckedChange={(checked) => updateNavConfig('showWishlistDuringValentine', checked)}
+                />
+              </div>
+            </div>
+
+            <Separator className="bg-slate-800" />
+
+            {/* Valentine Button Controls */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">Valentine's Floating Button</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center justify-between p-3 bg-slate-900/40 border border-slate-800 rounded-lg">
+                  <Label htmlFor="nav-valentine-btn" className="text-xs text-slate-400 cursor-pointer">Show Valentine's Button</Label>
+                  <Switch
+                    id="nav-valentine-btn"
+                    checked={navConfig.enableValentineButton}
+                    onCheckedChange={(checked) => updateNavConfig('enableValentineButton', checked)}
+                  />
+                </div>
+                <div className="flex items-center justify-between p-3 bg-slate-900/40 border border-slate-800 rounded-lg">
+                  <Label htmlFor="nav-glow-toggle" className="text-xs text-slate-400 cursor-pointer">Valentine's Glow Effect</Label>
+                  <Switch
+                    id="nav-glow-toggle"
+                    checked={navConfig.valentineGlowEnabled}
+                    onCheckedChange={(checked) => updateNavConfig('valentineGlowEnabled', checked)}
+                  />
+                </div>
+                <div className="flex items-center justify-between p-3 bg-slate-900/40 border border-slate-800 rounded-lg">
+                  <Label htmlFor="nav-float-anim" className="text-xs text-slate-400 cursor-pointer">Floating Animation</Label>
+                  <Switch
+                    id="nav-float-anim"
+                    checked={navConfig.enableFloatingAnimation}
+                    onCheckedChange={(checked) => updateNavConfig('enableFloatingAnimation', checked)}
+                  />
+                </div>
+                <div className="flex items-center justify-between p-3 bg-slate-900/40 border border-slate-800 rounded-lg">
+                  <Label htmlFor="nav-particles" className="text-xs text-slate-400 cursor-pointer">Heart Particles</Label>
+                  <Switch
+                    id="nav-particles"
+                    checked={navConfig.enableHeartParticles}
+                    onCheckedChange={(checked) => updateNavConfig('enableHeartParticles', checked)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <Separator className="bg-slate-800" />
+
+            {/* Valentine Label & Appearance */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">Valentine Button Appearance</h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label className="text-xs text-slate-400 font-semibold">Valentine's Label</Label>
+                  <select
+                    value={navConfig.valentineLabel}
+                    onChange={(e) => updateNavConfig('valentineLabel', e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-md p-1.5 mt-1 text-xs focus:outline-none"
+                  >
+                    <option value="LOVE">❤️ LOVE</option>
+                    <option value="VALENTINE">❤️ VALENTINE</option>
+                    <option value="SPECIAL">❤️ SPECIAL</option>
+                  </select>
+                </div>
+                <div>
+                  <Label className="text-xs text-slate-400 font-semibold">Valentine's Icon</Label>
+                  <select
+                    value={navConfig.valentineIcon}
+                    onChange={(e) => updateNavConfig('valentineIcon', e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-md p-1.5 mt-1 text-xs focus:outline-none"
+                  >
+                    <option value="heart">❤️ Heart</option>
+                    <option value="rose">🌹 Rose</option>
+                    <option value="gift">🎁 Gift</option>
+                  </select>
+                </div>
+                <div>
+                  <Label className="text-xs text-slate-400 font-semibold">Glow Intensity</Label>
+                  <select
+                    value={navConfig.glowIntensity}
+                    onChange={(e) => updateNavConfig('glowIntensity', e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-md p-1.5 mt-1 text-xs focus:outline-none"
+                  >
+                    <option value="low">Subtle Low</option>
+                    <option value="medium">Medium Soft</option>
+                    <option value="high">Deep Luxurious</option>
+                  </select>
+                </div>
+                <div>
+                  <Label className="text-xs text-slate-400 font-semibold">Button Color</Label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <input
+                      type="color"
+                      value={navConfig.valentineButtonColor}
+                      onChange={(e) => updateNavConfig('valentineButtonColor', e.target.value)}
+                      className="w-8 h-8 rounded-md border border-slate-700 cursor-pointer bg-transparent"
+                    />
+                    <Input
+                      value={navConfig.valentineButtonColor}
+                      onChange={(e) => updateNavConfig('valentineButtonColor', e.target.value)}
+                      className="bg-slate-900 border-slate-700 text-slate-200 text-xs flex-1"
+                      placeholder="#FF2E78"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs text-slate-400 font-semibold">Button Size ({navConfig.valentineButtonSize}px)</Label>
+                  <input
+                    type="range"
+                    min={36}
+                    max={64}
+                    value={navConfig.valentineButtonSize}
+                    onChange={(e) => updateNavConfig('valentineButtonSize', parseInt(e.target.value))}
+                    className="w-full mt-2 accent-pink-500"
+                  />
+                  <div className="flex justify-between text-[9px] text-slate-600 mt-0.5">
+                    <span>36px</span>
+                    <span>64px</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
 const AdminSettingsPage = () => {
   const { toast } = useToast();
   const { refetchSettings } = useSettings();
@@ -3240,7 +3444,9 @@ const AdminSettingsPage = () => {
                     welcomeText: 'Chat with our floral experts.',
                     ctaButtonText: 'Chat Now',
                     onlineStatusText: 'Online',
-                    businessHoursMessage: 'Typically replies within minutes'
+                    businessHoursMessage: 'Typically replies within minutes',
+                    showOnlyOnHomepage: false,
+                    showOnValentineLanding: false
                   };
 
                   const updateWaSetting = (field: string, value: any) => {
@@ -3372,6 +3578,30 @@ const AdminSettingsPage = () => {
                                       onCheckedChange={(checked) => updateWaSetting('showFloatingAnimation', checked)}
                                     />
                                   </div>
+                                  <div className="flex items-center justify-between p-2.5 bg-slate-900/40 border border-slate-800 rounded-lg">
+                                    <div>
+                                      <Label htmlFor="wa-homepage-only" className="text-xs text-slate-400 cursor-pointer">Show Only On Homepage</Label>
+                                      <p className="text-[10px] text-slate-600 mt-0.5">Hides widget on shop, product, cart, checkout, profile pages</p>
+                                    </div>
+                                    <Switch
+                                      id="wa-homepage-only"
+                                      checked={waConfig.showOnlyOnHomepage ?? false}
+                                      onCheckedChange={(checked) => updateWaSetting('showOnlyOnHomepage', checked)}
+                                    />
+                                  </div>
+                                  {(waConfig.showOnlyOnHomepage) && (
+                                    <div className="flex items-center justify-between p-2.5 bg-slate-900/40 border border-slate-800 rounded-lg">
+                                      <div>
+                                        <Label htmlFor="wa-valentine-landing" className="text-xs text-slate-400 cursor-pointer">Also Show On Valentine's Landing</Label>
+                                        <p className="text-[10px] text-slate-600 mt-0.5">Shows widget on /valentine-special page</p>
+                                      </div>
+                                      <Switch
+                                        id="wa-valentine-landing"
+                                        checked={waConfig.showOnValentineLanding ?? false}
+                                        onCheckedChange={(checked) => updateWaSetting('showOnValentineLanding', checked)}
+                                      />
+                                    </div>
+                                  )}
                                 </div>
                               </div>
 
@@ -3578,6 +3808,11 @@ const AdminSettingsPage = () => {
                   </div>
                 );
               })()}
+
+              {/* Mobile Navbar Settings — shown within the notifications/floating widgets tab */}
+              {activeTab === "notifications" && (
+                <MobileNavbarSettingsCard />
+              )}
 
                 {/* 7. DELIVERY RULES */}
                 {activeTab === "delivery" && (

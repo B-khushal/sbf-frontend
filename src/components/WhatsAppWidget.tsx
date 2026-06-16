@@ -19,6 +19,18 @@ export const WhatsAppWidget: React.FC = () => {
     return null;
   }
 
+  // Page-based visibility: restrict to homepage (and optionally Valentine landing)
+  const showOnlyOnHomepage = config.showOnlyOnHomepage ?? false;
+  const showOnValentineLanding = config.showOnValentineLanding ?? false;
+
+  if (showOnlyOnHomepage) {
+    const isHomepage = pathname === '/';
+    const isValentineLanding = pathname === '/valentine-special';
+    if (!isHomepage && !(showOnValentineLanding && isValentineLanding)) {
+      return null;
+    }
+  }
+
   const {
     phoneNumber = '9949683222',
     position = 'right',

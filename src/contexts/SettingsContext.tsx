@@ -156,6 +156,8 @@ export interface WhatsAppWidgetSettings {
   ctaButtonText: string;
   onlineStatusText: string;
   businessHoursMessage: string;
+  showOnlyOnHomepage: boolean;
+  showOnValentineLanding: boolean;
 }
 
 export interface NotificationsSettings {
@@ -303,7 +305,9 @@ export const defaultWhatsAppWidgetSettings: WhatsAppWidgetSettings = {
   welcomeText: 'Chat with our floral experts.',
   ctaButtonText: 'Chat Now',
   onlineStatusText: 'Online',
-  businessHoursMessage: 'Typically replies within minutes'
+  businessHoursMessage: 'Typically replies within minutes',
+  showOnlyOnHomepage: false,
+  showOnValentineLanding: false
 };
 
 export const defaultNotificationsSettings: NotificationsSettings = {

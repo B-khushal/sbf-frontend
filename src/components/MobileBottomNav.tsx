@@ -48,13 +48,13 @@ const SbfMonogram = ({ isActive, glowColor }: { isActive?: boolean; glowColor?: 
 };
 
 const HeartIcon = () => (
-  <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" className="w-6 h-6">
+  <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" className="w-5 h-5">
     <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
   </svg>
 );
 
 const RoseIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
     <path d="M12 2c1.5 1.5 3 2.5 3 4.5 0 2-1.5 3.5-3 3.5s-3-1.5-3-3.5c0-2 1.5-3 3-4.5z" fill="currentColor" />
     <path d="M12 10v9" />
     <path d="M12 13c-2 0-4-1-4-3 0 2 2 3 4 3z" fill="currentColor" />
@@ -64,7 +64,7 @@ const RoseIcon = () => (
 );
 
 const GiftIcon = () => (
-  <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" className="w-6 h-6">
+  <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" className="w-5 h-5">
     <path d="M20 6h-2.18c.11-.31.18-.65.18-1 0-1.66-1.34-3-3-3-1.62 0-2.98 1.28-3 2.9C11.98 3.28 10.62 2 9 2c-1.66 0-3 1.34-3 3 0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm11 15H4V8h16v11z" />
   </svg>
 );
@@ -137,7 +137,11 @@ export const MobileBottomNav = () => {
     navbarBackgroundStyle: 'glassmorphism' as const,
     enableFloatingAnimation: true,
     enableHeartParticles: true,
-    enableSeasonalTheme: true
+    enableSeasonalTheme: true,
+    showWishlistDuringValentine: false,
+    valentineLabel: 'LOVE',
+    valentineButtonSize: 48,
+    valentineGlowEnabled: true
   };
 
   const config = {
@@ -148,8 +152,21 @@ export const MobileBottomNav = () => {
   const showValentine = isValentineEnabled && config.enableValentineButton;
   const isSeasonal = isValentineEnabled && config.enableSeasonalTheme;
 
+  // Determine if wishlist should be shown
+  // When Valentine mode is ON: hide wishlist unless admin explicitly enables it
+  // When Valentine mode is OFF: always show wishlist
+  const showWishlist = showValentine ? config.showWishlistDuringValentine : true;
+
   // Build tabs dynamically
-  const tabs = [];
+  const tabs: Array<{
+    id: string;
+    label: string;
+    href: string;
+    icon?: React.ReactNode;
+    badge?: number;
+    isActive: boolean;
+    isSpacer?: boolean;
+  }> = [];
 
   if (config.showSbfButton) {
     tabs.push({
@@ -165,7 +182,7 @@ export const MobileBottomNav = () => {
     id: 'shop',
     label: 'Shop',
     href: '/shop',
-    icon: <ShoppingBag size={22} strokeWidth={1.5} />,
+    icon: <ShoppingBag size={20} strokeWidth={1.5} />,
     isActive: pathname.startsWith('/shop') || pathname.startsWith('/product') || pathname.startsWith('/products')
   });
 
@@ -173,27 +190,30 @@ export const MobileBottomNav = () => {
     // Spacer for floating Valentine button in center
     tabs.push({
       id: 'valentine-spacer',
-      label: "Valentine's",
+      label: config.valentineLabel || 'LOVE',
       href: '/valentine-special',
       isSpacer: true,
       isActive: pathname.startsWith('/valentine-special') || pathname.startsWith('/valentine-shop')
     });
   }
 
-  tabs.push({
-    id: 'wishlist',
-    label: 'Wishlist',
-    href: '/wishlist',
-    icon: <Heart size={22} strokeWidth={1.5} />,
-    badge: wishlistCount > 0 ? wishlistCount : undefined,
-    isActive: pathname.startsWith('/wishlist')
-  });
+  // Only show wishlist when appropriate
+  if (showWishlist) {
+    tabs.push({
+      id: 'wishlist',
+      label: 'Wishlist',
+      href: '/wishlist',
+      icon: <Heart size={20} strokeWidth={1.5} />,
+      badge: wishlistCount > 0 ? wishlistCount : undefined,
+      isActive: pathname.startsWith('/wishlist')
+    });
+  }
 
   tabs.push({
     id: 'cart',
     label: 'Cart',
     href: '/cart',
-    icon: <ShoppingCart size={22} strokeWidth={1.5} />,
+    icon: <ShoppingCart size={20} strokeWidth={1.5} />,
     badge: actualCartCount > 0 ? actualCartCount : undefined,
     isActive: pathname.startsWith('/cart')
   });
@@ -202,15 +222,21 @@ export const MobileBottomNav = () => {
     id: 'account',
     label: 'Account',
     href: user ? '/profile' : '/login',
-    icon: <User size={22} strokeWidth={1.5} />,
+    icon: <User size={20} strokeWidth={1.5} />,
     isActive: pathname.startsWith('/profile') || pathname.startsWith('/login')
   });
 
   // Dynamic glow style based on color and intensity
-  const glowShadows = {
-    low: `0 4px 10px -2px ${config.valentineButtonColor}33`,
-    medium: `0 8px 20px -2px ${config.valentineButtonColor}66`,
-    high: `0 12px 30px -2px ${config.valentineButtonColor}aa`
+  const buttonSize = config.valentineButtonSize || 48;
+  const glowEnabled = config.valentineGlowEnabled !== false;
+  const glowShadows = glowEnabled ? {
+    low: `0 4px 12px -3px ${config.valentineButtonColor}30, 0 2px 6px -2px ${config.valentineButtonColor}20`,
+    medium: `0 6px 18px -3px ${config.valentineButtonColor}50, 0 3px 8px -2px ${config.valentineButtonColor}30`,
+    high: `0 8px 24px -3px ${config.valentineButtonColor}70, 0 4px 12px -2px ${config.valentineButtonColor}40`
+  } : {
+    low: `0 2px 8px -2px rgba(0,0,0,0.1)`,
+    medium: `0 4px 12px -2px rgba(0,0,0,0.15)`,
+    high: `0 6px 16px -2px rgba(0,0,0,0.2)`
   };
   const glowStyle = glowShadows[config.glowIntensity] || glowShadows.medium;
 
@@ -221,42 +247,42 @@ export const MobileBottomNav = () => {
       className={cn(
         "absolute left-1/2 flex items-center justify-center rounded-full text-white z-50",
         config.enableFloatingAnimation ? "animate-float" : "",
-        "transition-all duration-300 ease-out active:scale-95 border-3"
+        "transition-all duration-300 ease-out active:scale-95"
       )}
       style={{
-        width: '56px',
-        height: '56px',
-        top: '-24px',
-        background: `linear-gradient(135deg, ${config.valentineButtonColor} 0%, #FF5C93 100%)`,
+        width: `${buttonSize}px`,
+        height: `${buttonSize}px`,
+        top: `-${Math.round(buttonSize * 0.42)}px`,
+        background: `linear-gradient(135deg, ${config.valentineButtonColor} 0%, #FF5C93 50%, ${config.valentineButtonColor}dd 100%)`,
         boxShadow: glowStyle,
-        borderColor: '#FFD6E5',
-        '--glow-color': `${config.valentineButtonColor}66`
+        border: `1.5px solid rgba(255,255,255,0.35)`,
+        '--glow-color': `${config.valentineButtonColor}50`
       } as React.CSSProperties}
     >
       {/* Frosted shine overlay */}
-      <div className="absolute inset-0.5 rounded-full bg-white/10 backdrop-blur-[1px] pointer-events-none" />
+      <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/20 to-transparent pointer-events-none" />
       
       {/* Selected Icon */}
-      <span className="relative z-10 drop-shadow-md">
+      <span className="relative z-10 drop-shadow-sm">
         {config.valentineIcon === 'rose' ? <RoseIcon /> : config.valentineIcon === 'gift' ? <GiftIcon /> : <HeartIcon />}
       </span>
       
-      {/* Floating Particles */}
+      {/* Floating Particles — reduced to 3 for subtlety */}
       {config.enableHeartParticles && (
         <div className="absolute inset-0 pointer-events-none overflow-visible">
-          {[...Array(5)].map((_, i) => (
+          {[...Array(3)].map((_, i) => (
             <span
               key={i}
-              className="absolute text-rose-400 text-[10px] select-none pointer-events-none"
+              className="absolute text-rose-300 text-[8px] select-none pointer-events-none"
               style={{
                 left: '50%',
                 top: '50%',
-                marginLeft: '-5px',
-                marginTop: '-5px',
-                '--x': `${(i % 2 === 0 ? 1 : -1) * (14 + Math.random() * 18)}px`,
-                '--y': `-${30 + Math.random() * 25}px`,
-                animation: 'particleRise 2.5s ease-out infinite',
-                animationDelay: `${i * 0.5}s`
+                marginLeft: '-4px',
+                marginTop: '-4px',
+                '--x': `${(i % 2 === 0 ? 1 : -1) * (10 + Math.random() * 14)}px`,
+                '--y': `-${22 + Math.random() * 18}px`,
+                animation: 'particleRise 3s ease-out infinite',
+                animationDelay: `${i * 0.8}s`
               } as React.CSSProperties}
             >
               ❤️
@@ -276,51 +302,53 @@ export const MobileBottomNav = () => {
     right: 0,
     width: '100%',
     zIndex: 9999,
-    paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.6rem)',
+    paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.5rem)',
     ...(isSeasonal ? {
-      boxShadow: `0 -10px 35px -10px ${config.valentineButtonColor}20`,
-      borderTop: `1px solid ${config.valentineButtonColor}30`
+      boxShadow: `0 -8px 30px -8px ${config.valentineButtonColor}15`,
+      borderTop: `1px solid ${config.valentineButtonColor}20`
     } : {
-      boxShadow: '0 -8px 30px rgba(0,0,0,0.06)'
+      boxShadow: '0 -4px 24px rgba(0,0,0,0.04)'
     })
   };
 
   const content = (
     <div 
       className={cn(
-        "mobile-bottom-nav lg:hidden border-t px-3 pt-2 pb-2 transition-all duration-300 rounded-t-[1.8rem]",
+        "mobile-bottom-nav lg:hidden border-t px-2 pt-2 pb-1.5 transition-all duration-300 rounded-t-[1.5rem]",
         isGlass
-          ? "bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-white/20 dark:border-slate-800/50"
+          ? "bg-white/70 dark:bg-slate-900/75 backdrop-blur-2xl border-white/30 dark:border-slate-800/40"
           : "bg-white dark:bg-slate-900 border-gray-100 dark:border-slate-800"
       )}
       style={containerStyle}
     >
-      {/* CSS Animations */}
+      {/* CSS Animations — optimized for 60fps */}
       <style>{`
         @keyframes floatUp {
-          0% { transform: translate(-50%, -20px); }
-          50% { transform: translate(-50%, -26px); }
-          100% { transform: translate(-50%, -20px); }
+          0% { transform: translate(-50%, -${Math.round(buttonSize * 0.42)}px); }
+          50% { transform: translate(-50%, -${Math.round(buttonSize * 0.42) + 3}px); }
+          100% { transform: translate(-50%, -${Math.round(buttonSize * 0.42)}px); }
         }
         @keyframes floatPulse {
-          0% { box-shadow: 0 4px 10px -2px var(--glow-color); }
-          50% { box-shadow: 0 12px 25px 2px var(--glow-color); }
-          100% { box-shadow: 0 4px 10px -2px var(--glow-color); }
+          0% { box-shadow: 0 4px 12px -3px var(--glow-color); }
+          50% { box-shadow: 0 8px 20px 0px var(--glow-color); }
+          100% { box-shadow: 0 4px 12px -3px var(--glow-color); }
         }
         @keyframes particleRise {
-          0% { transform: translate(0, 0) scale(1); opacity: 0.8; }
+          0% { transform: translate(0, 0) scale(1); opacity: 0.6; }
           100% { transform: translate(var(--x), var(--y)) scale(0); opacity: 0; }
         }
         .animate-float {
-          animation: floatUp 3.2s ease-in-out infinite;
+          animation: floatUp 4s ease-in-out infinite;
+          will-change: transform;
         }
         .animate-glow-pulse {
-          animation: floatPulse 2s ease-in-out infinite;
+          animation: floatPulse 2.5s ease-in-out infinite;
+          will-change: box-shadow;
         }
       `}</style>
 
       {/* Floating Center Button wrapper */}
-      <div className="relative w-full h-full flex items-center justify-around">
+      <div className="relative w-full h-full flex items-center justify-evenly">
         {floatingValentineButton}
 
         {tabs.map((item) => {
@@ -329,12 +357,12 @@ export const MobileBottomNav = () => {
             return (
               <div 
                 key={item.id} 
-                className="relative flex flex-col items-center justify-end flex-1 py-1 text-[10px] select-none pointer-events-none"
+                className="relative flex flex-col items-center justify-end flex-1 min-w-[52px] py-1 select-none pointer-events-none"
               >
-                <div className="w-14 h-11" />
+                <div style={{ width: `${buttonSize}px`, height: `${Math.round(buttonSize * 0.55)}px` }} />
                 <span 
                   className={cn(
-                    "text-[10px] font-bold tracking-wider z-10 transition-all duration-300 mt-1 uppercase",
+                    "text-[9px] font-semibold tracking-widest z-10 transition-all duration-300 mt-0.5 uppercase",
                     item.isActive 
                       ? "font-bold" 
                       : "text-gray-400 dark:text-gray-500"
@@ -354,7 +382,7 @@ export const MobileBottomNav = () => {
               key={item.id}
               to={item.href}
               className={cn(
-                "relative flex flex-col items-center justify-center flex-1 py-1 text-[10px] font-semibold transition-all duration-300 rounded-xl z-10",
+                "relative flex flex-col items-center justify-center flex-1 min-w-[52px] min-h-[44px] py-1 text-[10px] font-semibold transition-all duration-300 rounded-xl z-10",
                 item.isActive 
                   ? (isSeasonal ? "" : "text-primary font-bold")
                   : "text-gray-500 hover:text-primary dark:text-gray-400"
@@ -372,7 +400,7 @@ export const MobileBottomNav = () => {
                     isSeasonal ? "" : "bg-primary/10"
                   )}
                   style={isSeasonal ? {
-                    backgroundColor: `${config.valentineButtonColor}18`
+                    backgroundColor: `${config.valentineButtonColor}15`
                   } : {}}
                   transition={{ type: "spring", stiffness: 380, damping: 30 }}
                 />
