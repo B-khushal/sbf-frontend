@@ -563,6 +563,30 @@ class ProductService {
     const response = await axios.post(`${API_URL}/products/admin/bulk-valentine`, { productIds, action, value }, config);
     return response.data;
   }
+
+  async getSectionProductsForSorting(section: string): Promise<any> {
+    const config = createAuthConfig();
+    const response = await axios.get(`${API_URL}/products/order/${section}`, config);
+    return response.data;
+  }
+
+  async updateSectionProductsOrder(section: string, displayOrders: Record<string, number>, sortBy?: string, sortDirection?: string): Promise<any> {
+    const config = createAuthConfig();
+    const response = await axios.put(`${API_URL}/products/order/update`, { section, displayOrders, sortBy, sortDirection }, config);
+    return response.data;
+  }
+
+  async bulkUpdateSectionProducts(productIds: string[], action: string, value?: any, section?: string): Promise<any> {
+    const config = createAuthConfig();
+    const response = await axios.put(`${API_URL}/products/order/bulk-update`, { productIds, action, value, section }, config);
+    return response.data;
+  }
+
+  async resetSectionProductsOrder(section: string): Promise<any> {
+    const config = createAuthConfig();
+    const response = await axios.post(`${API_URL}/products/order/reset`, { section }, config);
+    return response.data;
+  }
 }
 
 export default new ProductService();

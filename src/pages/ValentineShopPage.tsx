@@ -138,7 +138,26 @@ const ValentineShopPage: React.FC = () => {
     filtered = filtered.filter(p => p.price <= priceRange);
 
     // Sort products
-    if (sortBy === 'price-low') {
+    if (sortBy === 'featured') {
+      filtered.sort((a, b) => {
+        const orderA = a.displayOrders?.occasions?.valentine || 0;
+        const orderB = b.displayOrders?.occasions?.valentine || 0;
+        
+        const hasOrderA = orderA > 0;
+        const hasOrderB = orderB > 0;
+        
+        if (hasOrderA && hasOrderB) {
+          if (orderA !== orderB) return orderA - orderB;
+        } else if (hasOrderA) {
+          return -1;
+        } else if (hasOrderB) {
+          return 1;
+        }
+        
+        // Fallback to newest first
+        return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+      });
+    } else if (sortBy === 'price-low') {
       filtered.sort((a, b) => a.price - b.price);
     } else if (sortBy === 'price-high') {
       filtered.sort((a, b) => b.price - a.price);

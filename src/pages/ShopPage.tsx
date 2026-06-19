@@ -294,7 +294,7 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
   const isParentCategoryRoute = resolvedCategory ? !resolvedCategory.parentId : PRIMARY_CATEGORIES.some((category) => category.value === selectedCategoryKey);
   
   const [selectedCategory, setSelectedCategory] = useState(category);
-  const [sortBy, setSortBy] = useState("newest");
+  const [sortBy, setSortBy] = useState("custom");
   const [viewMode, setViewMode] = useState("grid");
   const [minPriceFilter, setMinPriceFilter] = useState(PRICE_FILTER_MIN);
   const [maxPriceFilter, setMaxPriceFilter] = useState(PRICE_FILTER_MAX);
@@ -488,6 +488,46 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
       filtered = filtered.filter(product => product.sameDay !== false);
     }
 
+    // Helper to get product display order for custom sorting
+    const getProductDisplayOrder = (product: any): number => {
+      if (!product || !product.displayOrders) return 0;
+      const dobj = product.displayOrders;
+
+      if (selectedCategoryKey) {
+        const catKey = selectedCategoryKey.toLowerCase();
+        // 1. Try directly with selectedCategoryKey
+        if (dobj.categories?.[catKey]) {
+          return dobj.categories[catKey];
+        }
+        // 2. Try with selectedCategory (lowercase)
+        if (selectedCategory) {
+          const catName = selectedCategory.toLowerCase();
+          if (dobj.categories?.[catName]) {
+            return dobj.categories[catName];
+          }
+        }
+        // 3. Try with product's own primary category
+        if (product.category) {
+          const prodCat = product.category.toLowerCase();
+          if (dobj.categories?.[prodCat]) {
+            return dobj.categories[prodCat];
+          }
+        }
+        // 4. Try with product's other categories
+        if (product.categories && Array.isArray(product.categories)) {
+          for (const cat of product.categories) {
+            const lowerCat = cat.toLowerCase();
+            if (dobj.categories?.[lowerCat]) {
+              return dobj.categories[lowerCat];
+            }
+          }
+        }
+      }
+
+      // Default to shop display order if no category is selected or category-specific order is not found
+      return dobj.shop || 0;
+    };
+
     // Enhanced sorting logic
     filtered.sort((a, b) => {
       switch (sortBy) {
@@ -497,8 +537,24 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
           return b.price - a.price;
         case "newest":
           return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+        case "custom":
         default:
-          return 0;
+          const orderA = getProductDisplayOrder(a);
+          const orderB = getProductDisplayOrder(b);
+          
+          const hasOrderA = orderA > 0;
+          const hasOrderB = orderB > 0;
+          
+          if (hasOrderA && hasOrderB) {
+            if (orderA !== orderB) return orderA - orderB;
+          } else if (hasOrderA) {
+            return -1;
+          } else if (hasOrderB) {
+            return 1;
+          }
+          
+          // Fallback to newest first
+          return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
       }
     });
 
@@ -654,12 +710,12 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
                   className={cn(
                     'flex items-center gap-1 px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap',
                     'bg-white border-2 transition-all duration-200 flex-shrink-0',
-                    sortBy && sortBy !== "newest" 
+                    sortBy && sortBy !== "custom" 
                       ? 'border-sky-300 bg-gradient-to-r from-sky-50 to-pink-50 text-pink-700' 
                       : 'border-sky-200 text-sky-700 hover:border-pink-300'
                   )}
                 >
-                  {sortBy === "newest" ? "Sort" : sortBy === "price-asc" ? "Low to High" : "High to Low"}
+                  {sortBy === "custom" ? "Sort: Recommended" : sortBy === "newest" ? "Sort: Newest" : sortBy === "price-asc" ? "Low to High" : "High to Low"}
                   <ChevronDown size={14} />
                 </button>
 
@@ -743,7 +799,7 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
                     setSelectedCategory("");
                     setMinPriceFilter(PRICE_FILTER_MIN);
                     setMaxPriceFilter(PRICE_FILTER_MAX);
-                    setSortBy("newest");
+                    setSortBy("custom");
                     setDeliveryOption("");
                     setOccasionFilter("");
                     navigate("/shop");
@@ -797,6 +853,7 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
                     {activeFilterSection === "sort" && (
                       <div className="mt-3 space-y-2">
                         {[
+                          { label: 'Recommended', value: 'custom' },
                           { label: 'Newest', value: 'newest' },
                           { label: 'Price: Low to High', value: 'price-asc' },
                           { label: 'Price: High to Low', value: 'price-desc' },
@@ -1002,7 +1059,7 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
                       setSelectedCategory("");
                       setMinPriceFilter(PRICE_FILTER_MIN);
                       setMaxPriceFilter(PRICE_FILTER_MAX);
-                      setSortBy("newest");
+                      setSortBy("custom");
                       navigate("/shop");
                     }}
                     className="text-xs font-medium text-sky-600 hover:text-pink-600"
@@ -1052,7 +1109,7 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
                 </FilterSection>
 
                 <FilterSection title="Sort By">
-                  {["newest", "price-asc", "price-desc"].map((sortOption) => (
+                  {["custom", "newest", "price-asc", "price-desc"].map((sortOption) => (
                     <button
                       key={sortOption}
                       onClick={() => setSortBy(sortOption)}
@@ -1060,7 +1117,7 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
                         sortBy === sortOption ? "bg-gradient-to-r from-sky-400 to-pink-500 text-white font-medium" : "text-gray-600"
                       }`}
                     >
-                      {sortOption.replace("-", " ").replace(/\b\w/g, l => l.toUpperCase())}
+                      {sortOption === "custom" ? "Recommended" : sortOption.replace("-", " ").replace(/\b\w/g, l => l.toUpperCase())}
                     </button>
                   ))}
                 </FilterSection>
