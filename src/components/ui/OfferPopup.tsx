@@ -12,11 +12,11 @@ interface OfferPopupProps {
     title: string;
     description: string;
     imageUrl?: string;
-    backgroundColor: string;
-    textColor: string;
-    buttonText: string;
-    buttonLink: string;
-    theme: 'festive' | 'sale' | 'holiday' | 'general';
+    backgroundColor?: string;
+    textColor?: string;
+    buttonText?: string;
+    buttonLink?: string;
+    theme?: 'festive' | 'sale' | 'holiday' | 'general';
     expiryDate?: string;
     code?: string;
   } | null;
@@ -56,8 +56,9 @@ const OfferPopup: React.FC<OfferPopupProps> = ({
 }) => {
   console.log('🎭 OfferPopup render:', { isOpen, offer });
   const navigate = useNavigate();
-  const ThemeIcon = offer && themeConfig[offer.theme] ? themeConfig[offer.theme].icon : Gift;
-  console.log('🎨 Theme config:', { theme: offer?.theme, hasConfig: !!themeConfig[offer?.theme] });
+  const offerTheme = offer?.theme ?? 'general';
+  const ThemeIcon = themeConfig[offerTheme].icon;
+  console.log('🎨 Theme config:', { theme: offerTheme, hasConfig: !!themeConfig[offerTheme] });
 
   const handleButtonClick = () => {
     onClose();
@@ -90,7 +91,7 @@ const OfferPopup: React.FC<OfferPopupProps> = ({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className={`relative bg-gradient-to-br ${themeConfig[offer.theme].gradient} rounded-xl overflow-hidden shadow-2xl`}
+            className={`relative bg-gradient-to-br ${themeConfig[offerTheme].gradient} rounded-xl overflow-hidden shadow-2xl`}
                 style={{
                   backgroundColor: offer.backgroundColor,
                   color: offer.textColor
@@ -99,7 +100,7 @@ const OfferPopup: React.FC<OfferPopupProps> = ({
             {/* Background Pattern */}
             <div 
               className="absolute inset-0 opacity-20"
-              style={{ backgroundImage: themeConfig[offer.theme].pattern }}
+              style={{ backgroundImage: themeConfig[offerTheme].pattern }}
             />
 
                 {/* Close Button */}
@@ -116,7 +117,7 @@ const OfferPopup: React.FC<OfferPopupProps> = ({
             <div className="relative z-10 p-6 sm:p-8">
               {/* Icon and Title Section */}
               <div className="flex items-center gap-4 mb-6">
-                <div className={`p-3 rounded-full bg-white/20 ${themeConfig[offer.theme].animation}`}>
+                <div className={`p-3 rounded-full bg-white/20 ${themeConfig[offerTheme].animation}`}>
                   <ThemeIcon className="h-6 w-6" />
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-bold leading-tight">

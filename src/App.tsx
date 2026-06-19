@@ -9,6 +9,7 @@ import { CurrencyProvider } from '@/contexts/CurrencyContext';
 import { SettingsProvider } from '@/contexts/SettingsContext';
 import { NotificationProvider } from '@/contexts/NotificationContext';
 import { ValentineProvider } from '@/contexts/ValentineContext';
+import { SeasonalCampaignProvider } from '@/contexts/SeasonalCampaignContext';
 import { HelmetProvider } from 'react-helmet-async';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import ErrorBoundary from '@/components/ErrorBoundary';
@@ -82,6 +83,8 @@ const UserEditPage = lazy(() => import('./pages/Admin/UserEditPage'));
 const UserActivityLogs = lazy(() => import('./pages/Admin/UserActivityLogs'));
 const ValentineManagement = lazy(() => import('./pages/Admin/ValentineManagement'));
 const ValentineAnalyticsDashboard = lazy(() => import('./pages/Admin/ValentineAnalytics'));
+const SeasonalCampaigns = lazy(() => import('./pages/Admin/SeasonalCampaigns'));
+const SeasonalCampaignForm = lazy(() => import('./pages/Admin/SeasonalCampaignForm'));
 
 // Valentine Pages
 const ValentineSpecialPage = lazy(() => import('./pages/ValentineSpecialPage'));
@@ -161,6 +164,7 @@ const App = () => {
             <CurrencyProvider>
               <SettingsProvider>
                 <ValentineProvider>
+                <SeasonalCampaignProvider>
                 <NotificationProvider>
                   <TooltipProvider>
                     <Toaster />
@@ -465,6 +469,16 @@ const App = () => {
                                 <ValentineAnalyticsDashboard />
                               </Suspense>
                             } />
+                            <Route path="seasonal-campaigns" element={
+                              <Suspense fallback={<LoadingFallback message="Loading seasonal campaigns..." />}>
+                                <SeasonalCampaigns />
+                              </Suspense>
+                            } />
+                            <Route path="seasonal-campaigns/edit/:id" element={
+                              <Suspense fallback={<LoadingFallback message="Loading campaign form..." />}>
+                                <SeasonalCampaignForm />
+                              </Suspense>
+                            } />
                             <Route path="/admin/orders/:orderId" element={
                               <Suspense fallback={<LoadingFallback message="Loading order details..." />}>
                                 <OrderDetailsPage />
@@ -549,6 +563,7 @@ const App = () => {
                     </BrowserRouter>
                   </TooltipProvider>
                 </NotificationProvider>
+                </SeasonalCampaignProvider>
                 </ValentineProvider>
               </SettingsProvider>
             </CurrencyProvider>

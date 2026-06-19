@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { useCartSelectors } from '@/hooks/use-cart';
 import { useAuth } from '@/hooks/use-auth';
 import { useValentine } from '@/contexts/ValentineContext';
+import { useSeasonalCampaign } from '@/contexts/SeasonalCampaignContext';
 import { createPortal } from 'react-dom';
 
 const SbfMonogram = ({ isActive, glowColor }: { isActive?: boolean; glowColor?: string }) => {
@@ -69,10 +70,28 @@ const GiftIcon = () => (
   </svg>
 );
 
+const CalendarIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+    <line x1="16" y1="2" x2="16" y2="6" />
+    <line x1="8" y1="2" x2="8" y2="6" />
+    <line x1="3" y1="10" x2="21" y2="10" />
+  </svg>
+);
+
+const getCampaignMobileIcon = (icon?: string) => {
+  if (icon?.toLowerCase() === 'calendar') {
+    return <CalendarIcon />;
+  }
+
+  return <GiftIcon />;
+};
+
 export const MobileBottomNav = () => {
   const { pathname } = useLocation();
   const { user } = useAuth();
   const { isValentineEnabled, settings } = useValentine();
+  const { activeCampaigns } = useSeasonalCampaign();
   const { itemCount: actualCartCount } = useCartSelectors();
   const [wishlistCount, setWishlistCount] = useState(0);
   const [mounted, setMounted] = useState(false);
@@ -152,10 +171,25 @@ export const MobileBottomNav = () => {
   const showValentine = isValentineEnabled && config.enableValentineButton;
   const isSeasonal = isValentineEnabled && config.enableSeasonalTheme;
 
+  const navbarCampaigns = (activeCampaigns || []).filter(
+    (campaign) => campaign.enabled && campaign.navigation?.showInMobileNavbar === true
+  );
+  const floatingNavbarCampaign = showValentine ? null : (navbarCampaigns[0] || null);
+  const inlineNavbarCampaigns = showValentine ? navbarCampaigns : navbarCampaigns.slice(1);
+
   // Determine if wishlist should be shown
   // When Valentine mode is ON: hide wishlist unless admin explicitly enables it
-  // When Valentine mode is OFF: always show wishlist
-  const showWishlist = showValentine ? config.showWishlistDuringValentine : true;
+  // When Valentine mode is OFF: always show wishlist (unless a seasonal campaign is active)
+  const isSeasonalCampaignActive = activeCampaigns && activeCampaigns.some(
+    (c) => c.enabled && c.slug !== 'valentine' && c.slug !== 'valentines-week'
+  );
+  const showWishlist = showValentine 
+    ? config.showWishlistDuringValentine 
+    : (isSeasonalCampaignActive ? false : true);
+
+  const activeColor = showValentine 
+    ? (isSeasonal ? config.valentineButtonColor : undefined)
+    : (floatingNavbarCampaign ? floatingNavbarCampaign.theme.primaryColor : undefined);
 
   // Build tabs dynamically
   const tabs: Array<{
@@ -173,7 +207,7 @@ export const MobileBottomNav = () => {
       id: 'sbf',
       label: config.sbfLabel || 'SBF',
       href: '/',
-      icon: <SbfMonogram isActive={pathname === '/'} glowColor={isSeasonal ? config.valentineButtonColor : undefined} />,
+      icon: <SbfMonogram isActive={pathname === '/'} glowColor={activeColor} />,
       isActive: pathname === '/'
     });
   }
@@ -194,6 +228,35 @@ export const MobileBottomNav = () => {
       href: '/valentine-special',
       isSpacer: true,
       isActive: pathname.startsWith('/valentine-special') || pathname.startsWith('/valentine-shop')
+    });
+
+    inlineNavbarCampaigns.forEach((campaign) => {
+      tabs.push({
+        id: campaign.slug,
+        label: campaign.name,
+        href: `/occasions/${campaign.slug}`,
+        icon: getCampaignMobileIcon(campaign.theme.icon),
+        isActive: pathname.startsWith(`/occasions/${campaign.slug}`)
+      });
+    });
+  } else if (floatingNavbarCampaign) {
+    // Spacer for floating campaign button in center
+    tabs.push({
+      id: `campaign-spacer-${floatingNavbarCampaign.slug}`,
+      label: floatingNavbarCampaign.name,
+      href: `/occasions/${floatingNavbarCampaign.slug}`,
+      isSpacer: true,
+      isActive: pathname.startsWith(`/occasions/${floatingNavbarCampaign.slug}`)
+    });
+
+    inlineNavbarCampaigns.forEach((campaign) => {
+      tabs.push({
+        id: campaign.slug,
+        label: campaign.name,
+        href: `/occasions/${campaign.slug}`,
+        icon: getCampaignMobileIcon(campaign.theme.icon),
+        isActive: pathname.startsWith(`/occasions/${campaign.slug}`)
+      });
     });
   }
 
@@ -293,6 +356,67 @@ export const MobileBottomNav = () => {
     </Link>
   );
 
+  // Floating Seasonal Campaign Button element (mutually exclusive with Valentine's center slot)
+  const floatingCampaignButton = !showValentine && floatingNavbarCampaign && (
+    <Link
+      to={`/occasions/${floatingNavbarCampaign.slug}`}
+      className={cn(
+        "absolute left-1/2 flex items-center justify-center rounded-full text-white z-50",
+        config.enableFloatingAnimation ? "animate-float" : "",
+        "transition-all duration-300 ease-out active:scale-95"
+      )}
+      style={{
+        width: `${buttonSize}px`,
+        height: `${buttonSize}px`,
+        top: `-${Math.round(buttonSize * 0.42)}px`,
+        background: `linear-gradient(135deg, ${floatingNavbarCampaign.theme.primaryColor} 0%, ${floatingNavbarCampaign.theme.secondaryColor || floatingNavbarCampaign.theme.primaryColor} 50%, ${floatingNavbarCampaign.theme.primaryColor}dd 100%)`,
+        boxShadow: activeColor ? `0 6px 18px -3px ${activeColor}50, 0 3px 8px -2px ${activeColor}30` : undefined,
+        border: `1.5px solid rgba(255,255,255,0.35)`,
+        '--glow-color': `${floatingNavbarCampaign.theme.primaryColor}50`
+      } as React.CSSProperties}
+    >
+      {/* Frosted shine overlay */}
+      <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/20 to-transparent pointer-events-none" />
+      
+      {/* Selected Icon */}
+      <span className="relative z-10 drop-shadow-sm">
+        {getCampaignMobileIcon(floatingNavbarCampaign.theme.icon)}
+      </span>
+      
+      {/* Floating Particles — reduced to 3 for subtlety */}
+      {config.enableHeartParticles && floatingNavbarCampaign.theme.animationStyle !== 'none' && (
+        <div className="absolute inset-0 pointer-events-none overflow-visible">
+          {[...Array(3)].map((_, i) => {
+            let particleChar = '🎁';
+            if (floatingNavbarCampaign.theme.animationStyle === 'hearts') particleChar = '❤️';
+            else if (floatingNavbarCampaign.theme.animationStyle === 'petals') particleChar = '🌸';
+            else if (floatingNavbarCampaign.theme.animationStyle === 'leaves') particleChar = '🍃';
+            else if (floatingNavbarCampaign.theme.animationStyle === 'confetti') particleChar = '🎉';
+            
+            return (
+              <span
+                key={i}
+                className="absolute text-[8px] select-none pointer-events-none"
+                style={{
+                  left: '50%',
+                  top: '50%',
+                  marginLeft: '-4px',
+                  marginTop: '-4px',
+                  '--x': `${(i % 2 === 0 ? 1 : -1) * (10 + Math.random() * 14)}px`,
+                  '--y': `-${22 + Math.random() * 18}px`,
+                  animation: 'particleRise 3s ease-out infinite',
+                  animationDelay: `${i * 0.8}s`
+                } as React.CSSProperties}
+              >
+                {particleChar}
+              </span>
+            );
+          })}
+        </div>
+      )}
+    </Link>
+  );
+
   const isGlass = config.navbarBackgroundStyle === 'glassmorphism';
 
   const containerStyle: React.CSSProperties = {
@@ -303,9 +427,9 @@ export const MobileBottomNav = () => {
     width: '100%',
     zIndex: 9999,
     paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.5rem)',
-    ...(isSeasonal ? {
-      boxShadow: `0 -8px 30px -8px ${config.valentineButtonColor}15`,
-      borderTop: `1px solid ${config.valentineButtonColor}20`
+    ...(activeColor ? {
+      boxShadow: `0 -8px 30px -8px ${activeColor}15`,
+      borderTop: `1px solid ${activeColor}20`
     } : {
       boxShadow: '0 -4px 24px rgba(0,0,0,0.04)'
     })
@@ -350,6 +474,7 @@ export const MobileBottomNav = () => {
       {/* Floating Center Button wrapper */}
       <div className="relative w-full h-full flex items-center justify-evenly">
         {floatingValentineButton}
+        {floatingCampaignButton}
 
         {tabs.map((item) => {
           if (item.isSpacer) {
@@ -367,8 +492,8 @@ export const MobileBottomNav = () => {
                       ? "font-bold" 
                       : "text-gray-400 dark:text-gray-500"
                   )}
-                  style={item.isActive && isSeasonal ? {
-                    color: config.valentineButtonColor
+                  style={item.isActive && activeColor ? {
+                    color: activeColor
                   } : {}}
                 >
                   {item.label}
@@ -384,11 +509,11 @@ export const MobileBottomNav = () => {
               className={cn(
                 "relative flex flex-col items-center justify-center flex-1 min-w-[52px] min-h-[44px] py-1 text-[10px] font-semibold transition-all duration-300 rounded-xl z-10",
                 item.isActive 
-                  ? (isSeasonal ? "" : "text-primary font-bold")
+                  ? (activeColor ? "" : "text-primary font-bold")
                   : "text-gray-500 hover:text-primary dark:text-gray-400"
               )}
-              style={item.isActive && isSeasonal ? {
-                color: config.valentineButtonColor
+              style={item.isActive && activeColor ? {
+                color: activeColor
               } : {}}
             >
               {/* Active Highlight Capsule */}
@@ -397,10 +522,10 @@ export const MobileBottomNav = () => {
                   layoutId="activeBottomTab"
                   className={cn(
                     "absolute inset-x-1 inset-y-0.5 rounded-xl z-0",
-                    isSeasonal ? "" : "bg-primary/10"
+                    activeColor ? "" : "bg-primary/10"
                   )}
-                  style={isSeasonal ? {
-                    backgroundColor: `${config.valentineButtonColor}15`
+                  style={activeColor ? {
+                    backgroundColor: `${activeColor}15`
                   } : {}}
                   transition={{ type: "spring", stiffness: 380, damping: 30 }}
                 />
@@ -416,7 +541,7 @@ export const MobileBottomNav = () => {
                   <span 
                     className="absolute -top-1.5 -right-1.5 text-white text-[9px] font-bold rounded-full min-w-[15px] h-[15px] flex items-center justify-center px-1 z-20 shadow-sm"
                     style={{
-                      background: isSeasonal ? `linear-gradient(135deg, ${config.valentineButtonColor} 0%, #FF5C93 100%)` : 'hsl(var(--primary))'
+                      background: activeColor ? `linear-gradient(135deg, ${activeColor} 0%, ${showValentine ? '#FF5C93' : (floatingNavbarCampaign?.theme.secondaryColor || activeColor)} 100%)` : 'hsl(var(--primary))'
                     }}
                   >
                     {item.badge}

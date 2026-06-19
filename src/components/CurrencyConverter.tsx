@@ -43,8 +43,9 @@ const CurrencyConverter: React.FC<{ className?: string }> = ({ className }) => {
         aria-expanded={isOpen}
         aria-haspopup="menu"
       >
-        <span className="md:hidden">
-          <DollarSign size={16} className="text-pink-600" />
+        <span className="md:hidden flex items-center gap-1 text-xs font-semibold">
+          <span>{currency}</span>
+          <ChevronDown size={10} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
         </span>
 
         <span className="hidden md:flex items-center gap-1">

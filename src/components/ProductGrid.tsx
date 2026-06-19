@@ -12,6 +12,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { getImageUrl } from "@/config";
 import { ComboItem } from "@/services/productService";
 import { QuickViewModal } from "./ui/QuickViewModal";
+import ProtectedImage from "./ui/ProtectedImage";
+
 
 export type Product = {
   _id: string;
@@ -466,7 +468,7 @@ export const ProductCard = ({ product, onAddToCart }: {
           </div>
 
           {/* Image 1 (Default) */}
-          <img
+          <ProtectedImage
             src={getImageUrl(product.images[0]) || '/images/placeholder.svg'}
             alt={product.title}
             className={cn(
@@ -479,7 +481,7 @@ export const ProductCard = ({ product, onAddToCart }: {
 
           {/* Image 2 (Hover) */}
           {product.images.length > 1 && (
-            <img
+            <ProtectedImage
               src={getImageUrl(product.images[1])}
               alt={product.title}
               className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700 opacity-0 group-hover:opacity-100 group-hover:scale-105"

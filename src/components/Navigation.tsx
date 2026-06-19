@@ -16,6 +16,7 @@ import useCart, { useCartSelectors } from '@/hooks/use-cart';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useAuth } from '@/hooks/use-auth';
 import { useValentine } from '@/contexts/ValentineContext';
+import { useSeasonalCampaign } from '@/contexts/SeasonalCampaignContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DeliveryLocationSelector } from './ui/DeliveryLocationSelector';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -102,6 +103,7 @@ const getNavIcon = (href: string, label: string) => {
 
 const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
   const { isValentineEnabled } = useValentine();
+  const { activeCampaigns } = useSeasonalCampaign();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isMobile = useIsMobile();
   const { pathname } = useLocation();
@@ -358,16 +360,29 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                   Valentine's <Heart size={14} className="text-rose-500 fill-rose-500 animate-pulse inline" />
                 </NavLink>
               )}
+              {activeCampaigns && activeCampaigns
+                .filter(c => c.enabled && c.navigation?.showInNavigationMenu && c.slug !== 'valentine' && c.slug !== 'valentines-week')
+                .map((campaign) => (
+                  <NavLink 
+                    key={campaign.slug} 
+                    to={`/occasions/${campaign.slug}`} 
+                    active={pathname === `/occasions/${campaign.slug}`}
+                    className="text-purple-700 hover:text-purple-900 font-semibold"
+                  >
+                    {campaign.name}
+                  </NavLink>
+                ))
+              }
             </motion.nav>
             
             {/* Search Bar - Responsive */}
             <motion.div 
-              className="flex relative flex-1 max-w-full md:max-w-md lg:max-w-lg xl:max-w-xl mx-2 sm:mx-4 md:mx-6"
+              className="flex items-center gap-1.5 relative flex-1 max-w-full md:max-w-md lg:max-w-lg xl:max-w-xl mx-2 sm:mx-4 md:mx-6"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.4, delay: 0.2, ease: "easeOut" }}
             >
-              <form onSubmit={handleSearchSubmit} className="w-full relative">
+              <form onSubmit={handleSearchSubmit} className="flex-1 w-full relative">
                 <div className="relative group isolate">
                   <Search 
                     size={18} 
@@ -550,6 +565,11 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                   </AnimatePresence>
                 </div>
               </form>
+
+              {/* Mobile Currency Converter */}
+              <div className="md:hidden flex-shrink-0 z-20">
+                <CurrencyConverter />
+              </div>
             </motion.div>
             
             {/* Right Side Actions */}
@@ -800,6 +820,25 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                         <span>Valentine's ❤️</span>
                       </Link>
                     )}
+                    {activeCampaigns && activeCampaigns
+                      .filter(c => c.enabled && c.navigation?.showInNavigationMenu && c.slug !== 'valentine' && c.slug !== 'valentines-week')
+                      .map((campaign) => (
+                        <Link
+                          key={campaign.slug}
+                          to={`/occasions/${campaign.slug}`}
+                          onClick={() => setMobileMenuOpen(false)}
+                          className={cn(
+                            'flex items-center gap-3 px-3 py-3 text-sm font-semibold rounded-lg transition-all duration-200 bg-purple-50 text-purple-700',
+                            pathname === `/occasions/${campaign.slug}` && 'bg-purple-100'
+                          )}
+                        >
+                          <div className="flex items-center justify-center w-5 h-5">
+                            <Gift size={16} className="text-purple-500" />
+                          </div>
+                          <span>{campaign.name} 🎉</span>
+                        </Link>
+                      ))
+                    }
                     {headerSettings?.navigationItems
                       ?.filter(item => item.enabled)
                       ?.sort((a,b) => a.order - b.order)

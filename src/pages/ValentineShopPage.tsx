@@ -12,6 +12,8 @@ import api from '@/services/api';
 import FloatingPetals from '@/components/valentine/FloatingPetals';
 import ValentineCountdown from '@/components/valentine/ValentineCountdown';
 import '@/components/valentine/valentine.css';
+import ProtectedImage from '@/components/ui/ProtectedImage';
+
 
 import type { ValentineProduct } from '@/types/valentine';
 
@@ -493,7 +495,7 @@ const ValentineShopPage: React.FC = () => {
                             className="aspect-square overflow-hidden bg-rose-950/40 relative cursor-pointer"
                             onClick={() => navigate(`/valentine-product/${product._id}`)}
                           >
-                            <img
+                            <ProtectedImage
                               src={product.images?.[0] || product.image || '/images/placeholder.jpg'}
                               alt={product.title}
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"

@@ -10,6 +10,8 @@ import { getImageUrl } from '@/config';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import ProtectedImage from './ProtectedImage';
+
 import { Product } from '../ProductGrid';
 
 interface QuickViewModalProps {
@@ -113,7 +115,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
           {/* Images Section */}
           <div className="w-full md:w-1/2 bg-gray-50 flex flex-col justify-between p-4 md:p-6 border-r border-gray-100">
             <div className="relative aspect-square rounded-2xl overflow-hidden bg-white shadow-sm flex-1 flex items-center justify-center">
-              <img
+              <ProtectedImage
                 src={getImageUrl(product.images?.[activeImageIndex]) || '/images/placeholder.svg'}
                 alt={product.title}
                 className="w-full h-full object-cover"
@@ -137,7 +139,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
                       activeImageIndex === idx ? "border-primary scale-105" : "border-transparent opacity-70 hover:opacity-100"
                     )}
                   >
-                    <img src={getImageUrl(img)} alt="" className="w-full h-full object-cover" />
+                    <ProtectedImage src={getImageUrl(img)} alt="" className="w-full h-full object-cover" />
                   </button>
                 ))}
               </div>

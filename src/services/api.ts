@@ -79,8 +79,8 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
     
-    // Handle authentication errors (401, 403)
-    if (error.response?.status === 401 || error.response?.status === 403) {
+    // Only clear auth on true authentication failures.
+    if (error.response?.status === 401) {
       console.error('API Response: Authentication error:', {
         status: error.response?.status,
         message: error.response?.data?.message,

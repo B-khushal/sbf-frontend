@@ -21,6 +21,10 @@ import { X, MapPin } from 'lucide-react';
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { buildProductReviewUrl } from '@/utils/reviewUrls';
 import PinCodeInput from '@/components/ui/PinCodeInput';
+import ProtectedImage from './ui/ProtectedImage';
+
+const MotionProtectedImage = motion(ProtectedImage);
+
 
 type AddonOption = {
   name: string;
@@ -717,7 +721,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                         : "border-slate-200/60 opacity-60 hover:opacity-100"
                     )}
                   >
-                    <img
+                    <ProtectedImage
                       src={getImageUrl(image, { bustCache: false })}
                       alt={`${product.title} thumbnail ${index + 1}`}
                       className="w-full h-full object-cover"
@@ -761,11 +765,11 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                   transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
                   className="absolute inset-0 w-full h-full"
                 >
-                  <motion.img
+                  <MotionProtectedImage
                     src={imageUrl}
                     alt={product.title}
                     onLoad={() => setIsImageLoading(false)}
-                    className="absolute inset-0 w-full h-full object-cover select-none pointer-events-none"
+                    className="absolute inset-0 w-full h-full object-cover"
                     style={{
                       transform: isHovered 
                         ? `scale(1.08) translate(${mousePos.x * 15}px, ${mousePos.y * 15}px)` 
@@ -856,7 +860,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                         : "border-slate-200/80 opacity-60"
                     )}
                   >
-                    <img
+                    <ProtectedImage
                       src={getImageUrl(image, { bustCache: false })}
                       alt={`${product.title} visual ${index + 1}`}
                       className="w-full h-full object-cover"
@@ -1360,7 +1364,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
           >
             <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <img
+                <ProtectedImage
                   src={getImageUrl(product.images[0]) || '/images/placeholder.svg'}
                   alt={product.title}
                   className="w-11 h-11 object-cover rounded-xl border border-slate-100 dark:border-slate-800"
@@ -1430,7 +1434,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
               </button>
 
               <div className="relative max-w-fit mx-auto">
-                <motion.img
+                <MotionProtectedImage
                   key={selectedImage}
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -1474,7 +1478,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                         : "border-transparent opacity-40 hover:opacity-100"
                     )}
                   >
-                    <img
+                    <ProtectedImage
                       src={getImageUrl(image, { bustCache: false })}
                       alt="preview thumb"
                       className="w-full h-full object-cover"

@@ -43,7 +43,8 @@ import {
   Layers,
   ChevronDown,
   Instagram,
-  ArrowRight
+  ArrowRight,
+  ShieldAlert
 } from "lucide-react";
 import api from "../services/api";
 import { uploadImage } from "../services/uploadService";
@@ -67,6 +68,7 @@ const TABS = [
   { id: "global", label: "Global SEO", icon: FileText, desc: "Meta descriptions, GA, Pixel, Sitemap editor" },
   { id: "theme", label: "Theme Customizer", icon: Wand2, desc: "Brand primary & secondary colors, border radius" },
   { id: "product-display", label: "Products Card", icon: Edit, desc: "Hover animations, wishlist controls, grid columns" },
+  { id: "image-protection", label: "Image Protection", icon: ShieldAlert, desc: "Configure brand watermark text, size, opacity, and angle" },
   { id: "social-feed", label: "Social Feed", icon: Instagram, desc: "Manage Instagram embed posts shown on the homepage feed" }
 ];
 
@@ -755,6 +757,15 @@ const AdminSettingsPage = () => {
             gridColumnsMobile: 2,
             wishlistToggle: true,
             quickViewToggle: true
+          },
+          imageProtectionSettings: data.imageProtectionSettings || {
+            enableWatermark: true,
+            watermarkText: "sbflorist.in",
+            watermarkOpacity: 20,
+            watermarkPosition: "Center + Bottom Right",
+            watermarkSize: 30,
+            watermarkRotation: -45,
+            repeatingPattern: false
           }
         };
 
@@ -4000,6 +4011,160 @@ const AdminSettingsPage = () => {
                         <Label htmlFor="wishlist-toggle" className="text-xs text-slate-300 cursor-pointer">Enable Wishlist Icon</Label>
                       </div>
                     </div>
+                  </div>
+                )}
+
+                {/* 11. IMAGE PROTECTION SETTINGS */}
+                {activeTab === "image-protection" && (
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2">
+                          <ShieldAlert className="h-5 w-5 text-cyan-400" />
+                          Image Protection Settings
+                        </h2>
+                        <p className="text-xs text-slate-400">Configure brand watermarks and deterrence layers to safeguard product assets.</p>
+                      </div>
+                    </div>
+
+                    <Card className="bg-slate-800/40 border-slate-800 overflow-hidden shadow-md">
+                      <CardContent className="p-6 space-y-6">
+                        {/* Enable/Disable Watermark */}
+                        <div className="flex items-center justify-between p-4 bg-slate-900/40 border border-slate-850 rounded-xl">
+                          <div className="space-y-0.5">
+                            <Label htmlFor="enable-watermark" className="text-xs font-bold text-slate-200 cursor-pointer">Enable Visible Brand Watermarks</Label>
+                            <p className="text-[10px] text-slate-400">Burn a responsive watermark containing your domain onto all product images on upload.</p>
+                          </div>
+                          <Switch
+                            id="enable-watermark"
+                            checked={localSettings.imageProtectionSettings?.enableWatermark ?? true}
+                            onCheckedChange={(checked) => {
+                              const copy = { ...localSettings.imageProtectionSettings, enableWatermark: checked };
+                              updateSettingsState({ ...localSettings, imageProtectionSettings: copy });
+                            }}
+                          />
+                        </div>
+
+                        {localSettings.imageProtectionSettings?.enableWatermark && (
+                          <div className="space-y-6 pt-2">
+                            {/* Watermark Text */}
+                            <div className="space-y-2">
+                              <Label htmlFor="watermark-text" className="text-xs text-slate-300 font-bold">Watermark Text</Label>
+                              <Input
+                                id="watermark-text"
+                                value={localSettings.imageProtectionSettings?.watermarkText ?? "sbflorist.in"}
+                                onChange={(e) => {
+                                  const copy = { ...localSettings.imageProtectionSettings, watermarkText: e.target.value };
+                                  updateSettingsState({ ...localSettings, imageProtectionSettings: copy });
+                                }}
+                                placeholder="sbflorist.in"
+                                className="bg-slate-900 border-slate-700 text-slate-200"
+                              />
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              {/* Watermark Opacity */}
+                              <div className="space-y-2">
+                                <div className="flex justify-between">
+                                  <Label className="text-xs text-slate-300 font-bold">Watermark Opacity ({localSettings.imageProtectionSettings?.watermarkOpacity ?? 20}%)</Label>
+                                  <span className="text-[10px] text-slate-500 font-medium">Recommended: 15% - 25%</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  min={10}
+                                  max={50}
+                                  value={localSettings.imageProtectionSettings?.watermarkOpacity ?? 20}
+                                  onChange={(e) => {
+                                    const copy = { ...localSettings.imageProtectionSettings, watermarkOpacity: parseInt(e.target.value) };
+                                    updateSettingsState({ ...localSettings, imageProtectionSettings: copy });
+                                  }}
+                                  className="w-full h-1.5 bg-slate-950 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                                />
+                                <div className="flex justify-between text-[8px] text-slate-600 font-mono">
+                                  <span>10%</span>
+                                  <span>50%</span>
+                                </div>
+                              </div>
+
+                              {/* Watermark Size */}
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-300 font-bold">Watermark Size ({localSettings.imageProtectionSettings?.watermarkSize ?? 30}%)</Label>
+                                <input
+                                  type="range"
+                                  min={15}
+                                  max={60}
+                                  value={localSettings.imageProtectionSettings?.watermarkSize ?? 30}
+                                  onChange={(e) => {
+                                    const copy = { ...localSettings.imageProtectionSettings, watermarkSize: parseInt(e.target.value) };
+                                    updateSettingsState({ ...localSettings, imageProtectionSettings: copy });
+                                  }}
+                                  className="w-full h-1.5 bg-slate-950 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                                />
+                                <div className="flex justify-between text-[8px] text-slate-600 font-mono">
+                                  <span>15%</span>
+                                  <span>60%</span>
+                                </div>
+                              </div>
+
+                              {/* Watermark Rotation */}
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-300 font-bold">Watermark Rotation Angle ({localSettings.imageProtectionSettings?.watermarkRotation ?? -45}°)</Label>
+                                <input
+                                  type="range"
+                                  min={-90}
+                                  max={90}
+                                  value={localSettings.imageProtectionSettings?.watermarkRotation ?? -45}
+                                  onChange={(e) => {
+                                    const copy = { ...localSettings.imageProtectionSettings, watermarkRotation: parseInt(e.target.value) };
+                                    updateSettingsState({ ...localSettings, imageProtectionSettings: copy });
+                                  }}
+                                  className="w-full h-1.5 bg-slate-950 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                                />
+                                <div className="flex justify-between text-[8px] text-slate-600 font-mono">
+                                  <span>-90°</span>
+                                  <span>90°</span>
+                                </div>
+                              </div>
+
+                              {/* Watermark Position */}
+                              <div className="space-y-2">
+                                <Label className="text-xs text-slate-300 font-bold">Placement Mode</Label>
+                                <select
+                                  value={localSettings.imageProtectionSettings?.watermarkPosition || "Center + Bottom Right"}
+                                  onChange={(e) => {
+                                    const copy = { ...localSettings.imageProtectionSettings, watermarkPosition: e.target.value };
+                                    updateSettingsState({ ...localSettings, imageProtectionSettings: copy });
+                                  }}
+                                  className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-lg p-2 mt-1 text-xs focus:border-cyan-500 focus:outline-none"
+                                >
+                                  <option value="Center">Center Only (Large Diagonal)</option>
+                                  <option value="Bottom Right">Bottom Right Only (Small Corner)</option>
+                                  <option value="Center + Bottom Right">Center + Bottom Right (Both)</option>
+                                </select>
+                              </div>
+                            </div>
+
+                            <Separator className="bg-slate-800" />
+
+                            {/* Repeating Pattern Grid */}
+                            <div className="flex items-center justify-between p-4 bg-slate-900/40 border border-slate-850 rounded-xl">
+                              <div className="space-y-0.5">
+                                <Label htmlFor="repeating-pattern" className="text-xs font-bold text-slate-200 cursor-pointer">Enable Repeating Grid Pattern</Label>
+                                <p className="text-[10px] text-slate-400">Renders multiple low-opacity watermark instances across the image to prevent crops and removal.</p>
+                              </div>
+                              <Switch
+                                id="repeating-pattern"
+                                  checked={localSettings.imageProtectionSettings?.repeatingPattern ?? false}
+                                onCheckedChange={(checked) => {
+                                  const copy = { ...localSettings.imageProtectionSettings, repeatingPattern: checked };
+                                  updateSettingsState({ ...localSettings, imageProtectionSettings: copy });
+                                }}
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
                   </div>
                 )}
 

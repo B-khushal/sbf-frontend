@@ -16,6 +16,8 @@ import { useState, useEffect } from 'react';
 import type { PromoCodeValidationResult } from '@/services/promoCodeService';
 import { cn } from '@/lib/utils';
 import { calculateDeliveryFee } from '@/services/orderService';
+import ProtectedImage from '@/components/ui/ProtectedImage';
+
 
 // Animation variants
 const containerVariants = {
@@ -330,7 +332,7 @@ const CartPage: React.FC = () => {
                             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 lg:gap-6">
                               {/* Product Image */}
                               <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gray-100 rounded-xl sm:rounded-2xl overflow-hidden flex-shrink-0 mx-auto sm:mx-0">
-                                <img 
+                                <ProtectedImage 
                                   src={imageUrl} 
                                   alt={item.title}
                                   className="w-full h-full object-cover"
@@ -477,7 +479,7 @@ const CartPage: React.FC = () => {
                             >
                               <div>
                                 <div className="relative aspect-square rounded-xl overflow-hidden bg-gray-50 mb-3">
-                                  <img 
+                                  <ProtectedImage 
                                     src={addon.image || '/api/placeholder/200/200'} 
                                     alt={addon.name}
                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"

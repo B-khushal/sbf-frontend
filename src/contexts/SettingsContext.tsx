@@ -180,6 +180,7 @@ interface SettingsContextType {
   deliverySettings: any;
   themeSettings: any;
   productDisplaySettings: any;
+  imageProtectionSettings: any;
   draftSettings: any;
   history: any[];
   loading: boolean;
@@ -386,6 +387,15 @@ export const SettingsProvider = ({ children }: SettingsProviderProps) => {
   const [deliverySettings, setDeliverySettings] = useState<any>({});
   const [themeSettings, setThemeSettings] = useState<any>({});
   const [productDisplaySettings, setProductDisplaySettings] = useState<any>({});
+  const [imageProtectionSettings, setImageProtectionSettings] = useState<any>({
+    enableWatermark: true,
+    watermarkText: "sbflorist.in",
+    watermarkOpacity: 20,
+    watermarkPosition: "Center + Bottom Right",
+    watermarkSize: 30,
+    watermarkRotation: -45,
+    repeatingPattern: false
+  });
   const [draftSettings, setDraftSettings] = useState<any>(null);
   const [history, setHistory] = useState<any[]>([]);
 
@@ -452,6 +462,7 @@ export const SettingsProvider = ({ children }: SettingsProviderProps) => {
         applyTheme(data.themeSettings);
       }
       if (data.productDisplaySettings) setProductDisplaySettings(data.productDisplaySettings);
+      if (data.imageProtectionSettings) setImageProtectionSettings(data.imageProtectionSettings);
       if (data.draftSettings) setDraftSettings(data.draftSettings);
       if (data.history) setHistory(data.history);
 
@@ -502,6 +513,7 @@ export const SettingsProvider = ({ children }: SettingsProviderProps) => {
           applyTheme(preview.themeSettings);
         }
         if (preview.productDisplaySettings) setProductDisplaySettings(preview.productDisplaySettings);
+        if (preview.imageProtectionSettings) setImageProtectionSettings(preview.imageProtectionSettings);
       }
     };
 
@@ -525,6 +537,7 @@ export const SettingsProvider = ({ children }: SettingsProviderProps) => {
     deliverySettings,
     themeSettings,
     productDisplaySettings,
+    imageProtectionSettings,
     draftSettings,
     history,
     loading,
@@ -545,6 +558,7 @@ export const SettingsProvider = ({ children }: SettingsProviderProps) => {
     deliverySettings,
     themeSettings,
     productDisplaySettings,
+    imageProtectionSettings,
     draftSettings,
     history,
     loading,

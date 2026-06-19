@@ -14,6 +14,7 @@ import api from "@/services/api";
 import { useNavigate } from "react-router-dom";
 import productService, { ProductData } from "@/services/productService";
 import { getImageUrl } from "@/config";
+import { useSeasonalCampaign } from "@/contexts/SeasonalCampaignContext";
 
 type Product = ProductData & {
   _id: string;
@@ -52,6 +53,7 @@ const VALENTINE_DATES = [
 ];
 
 const AdminProducts: React.FC = () => {
+  const { activeCampaigns } = useSeasonalCampaign();
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [lowStockProducts, setLowStockProducts] = useState<Product[]>([]);
@@ -948,15 +950,6 @@ const AdminProducts: React.FC = () => {
     return total;
   };
 
-  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    const target = e.target as HTMLImageElement;
-    if (product.images && product.images.length > 0) {
-      target.src = `https://www.sbflorist.in${product.images[0]}`;
-    } else {
-      target.src = `https://www.sbflorist.in/uploads/${product.images[0]}`;
-    }
-  };
-
   return (
     <div className="space-y-6">
       <div className="responsive-toolbar">
@@ -1709,6 +1702,12 @@ const AdminProducts: React.FC = () => {
                   <TableHead>Valentine Categories</TableHead>
                   <TableHead>Valentine Dates</TableHead>
                   <TableHead>Valentine Status</TableHead>
+                  {activeCampaigns && activeCampaigns.filter(c => c.slug !== 'valentine' && c.slug !== 'valentines-week').map((campaign) => (
+                    <React.Fragment key={campaign.slug}>
+                      <TableHead>{campaign.name} Product</TableHead>
+                      <TableHead>{campaign.name} Categories</TableHead>
+                    </React.Fragment>
+                  ))}
                   <TableHead>Image</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -1737,11 +1736,22 @@ const AdminProducts: React.FC = () => {
                         />
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2">
-                          {product.title}
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-medium text-gray-900">{product.title}</span>
                           {product.hidden && <Badge variant="secondary">Hidden</Badge>}
                           {product.countInStock === 0 && <Badge variant="destructive">Out of Stock</Badge>}
                           {product.countInStock > 0 && product.countInStock <= 5 && <Badge variant="outline" className="border-red-500 text-red-600">Critical Stock</Badge>}
+                          {activeCampaigns && activeCampaigns.filter(c => c.slug !== 'valentine' && c.slug !== 'valentines-week').map(campaign => {
+                            const isAssigned = (product.seasonalCampaigns || []).includes(campaign.slug);
+                            if (!isAssigned) return null;
+                            const campSettings = product.campaignSettings?.[campaign.slug] || {};
+                            const badgeText = campSettings.badge || campaign.name;
+                            return (
+                              <Badge key={campaign.slug} className="bg-purple-100 text-purple-700 hover:bg-purple-100 border border-purple-200 text-xs">
+                                🎀 {badgeText}
+                              </Badge>
+                            );
+                          })}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -1860,6 +1870,29 @@ const AdminProducts: React.FC = () => {
                           <span className="text-gray-400">-</span>
                         )}
                       </TableCell>
+                      {activeCampaigns && activeCampaigns.filter(c => c.slug !== 'valentine' && c.slug !== 'valentines-week').map((campaign) => {
+                        const isAssigned = (product.seasonalCampaigns || []).includes(campaign.slug);
+                        const campSettings = product.campaignSettings?.[campaign.slug] || {};
+                        const assignedCats = campSettings.categories || [];
+                        return (
+                          <React.Fragment key={campaign.slug}>
+                            <TableCell>
+                              {isAssigned ? (
+                                <Badge variant="secondary" className="bg-purple-100 text-purple-700 font-semibold border-purple-200">
+                                  ✓ Yes
+                                </Badge>
+                              ) : (
+                                <span className="text-gray-400">No</span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <div className="max-w-[150px] truncate" title={assignedCats.join(', ')}>
+                                {assignedCats.length > 0 ? assignedCats.join(', ') : <span className="text-gray-400">-</span>}
+                              </div>
+                            </TableCell>
+                          </React.Fragment>
+                        );
+                      })}
                       <TableCell>
                         <div className="relative w-16 h-16 rounded overflow-hidden border bg-muted">
                           {product.images?.[0] ? (

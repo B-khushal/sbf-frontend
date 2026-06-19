@@ -1,23 +1,39 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, lazy, Suspense } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import api from '@/services/api';
 import ShopPage from './ShopPage';
 import NotFound from './NotFound';
 import { Loader2 } from 'lucide-react';
+import { useSeasonalCampaign } from '@/contexts/SeasonalCampaignContext';
+
+const SeasonalCampaignPage = lazy(() => import('./SeasonalCampaignPage'));
 
 const CategoryResolver: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { activeCampaigns } = useSeasonalCampaign();
   const [loading, setLoading] = useState(true);
   const [resolvedCategory, setResolvedCategory] = useState<any>(null);
   const [shouldRedirect, setShouldRedirect] = useState<string | null>(null);
   const [error, setError] = useState(false);
+  const normalizedPath = location.pathname.replace(/^\/+|\/+$/g, '').toLowerCase();
+  
+  let campaignSlug = normalizedPath;
+  if (normalizedPath.startsWith('occasions/')) {
+    campaignSlug = normalizedPath.substring('occasions/'.length);
+  }
+
+  const activeCampaign = activeCampaigns.find(
+    (campaign) => campaign.slug.toLowerCase() === campaignSlug
+  );
 
   useEffect(() => {
     const resolveUrl = async () => {
       try {
         setLoading(true);
         setError(false);
+        setResolvedCategory(null);
+        setShouldRedirect(null);
         const currentPath = location.pathname;
 
         // Skip static page routes if caught here by mistake (defensive check)
@@ -29,6 +45,12 @@ const CategoryResolver: React.FC = () => {
         
         if (staticRoutes.some(route => currentPath.startsWith(route))) {
           setError(true);
+          setLoading(false);
+          return;
+        }
+
+        // Seasonal campaign slugs take precedence over category resolution.
+        if (activeCampaign) {
           setLoading(false);
           return;
         }
@@ -49,7 +71,7 @@ const CategoryResolver: React.FC = () => {
     };
 
     resolveUrl();
-  }, [location.pathname]);
+  }, [activeCampaign, location.pathname]);
 
   if (loading) {
     return (
@@ -66,6 +88,18 @@ const CategoryResolver: React.FC = () => {
     // Perform browser redirect
     navigate(shouldRedirect, { replace: true });
     return null;
+  }
+
+  if (activeCampaign) {
+    return (
+      <Suspense fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <Loader2 className="animate-spin rounded-full h-12 w-12 border-2 border-primary mx-auto" />
+        </div>
+      }>
+        <SeasonalCampaignPage slug={activeCampaign.slug} />
+      </Suspense>
+    );
   }
 
   if (error || !resolvedCategory) {

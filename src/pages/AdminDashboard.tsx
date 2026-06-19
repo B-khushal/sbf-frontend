@@ -352,6 +352,19 @@ const AdminDashboard: React.FC = () => {
           {!isCollapsed && <span className="sidebar-item-text">Valentine's</span>}
         </Link>
         <Link 
+          to="/admin/seasonal-campaigns" 
+          className={cn(
+            "sidebar-item",
+            isCollapsed ? "sidebar-item-collapsed" : "sidebar-item-expanded"
+          )}
+          title={isCollapsed ? "Seasonal Campaigns" : ''}
+        >
+          <div className="sidebar-item-icon">
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+          </div>
+          {!isCollapsed && <span className="sidebar-item-text">Seasonal Campaigns</span>}
+        </Link>
+        <Link 
           to="/admin/settings" 
           className={cn(
             "sidebar-item",

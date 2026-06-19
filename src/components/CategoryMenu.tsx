@@ -7,6 +7,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useSettings } from '@/contexts/SettingsContext';
 import productService from '@/services/productService';
 import { normalizeCategoryKey } from '@/utils/categoryTaxonomy';
+import { useSeasonalCampaign } from '@/contexts/SeasonalCampaignContext';
 
 const EMOJI_MAPPING: { [key: string]: string } = {
   flowers: '🌹',
@@ -27,12 +28,12 @@ const CategoryMenu = () => {
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
   const [dropdownPosition, setDropdownPosition] = useState({ left: 0 });
   const { shopCategories, loading: settingsLoading } = useSettings();
+  const { activeCampaigns } = useSeasonalCampaign();
   const [categoryCounts, setCategoryCounts] = useState<{ [key: string]: number }>({});
   const [isLoadingCounts, setIsLoadingCounts] = useState(true);
   const navRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
   const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [dropdownAlignRight, setDropdownAlignRight] = useState(false);
 
   const handleMouseEnter = (categoryName: string) => {
     if (hideTimeoutRef.current) {
@@ -81,7 +82,7 @@ const CategoryMenu = () => {
       .sort((a, b) => (a.priority ?? a.sortOrder ?? 0) - (b.priority ?? b.sortOrder ?? 0))
       .map(parent => {
         const parentIdStr = parent._id || parent.id;
-        const subcats = (shopCategories || [])
+        let subcats = (shopCategories || [])
           .filter(c => {
             if (!c.enabled || !c.parentId) return false;
             const childParentId = typeof c.parentId === 'object' ? (c.parentId._id || c.parentId.id) : c.parentId;
@@ -94,6 +95,17 @@ const CategoryMenu = () => {
             count: getCategoryCount(sub.name)
           }));
 
+        // Dynamically append created seasonal campaigns to "Occasions" parent category
+        const isOccasions = parent.name.toLowerCase().includes('occasions') || parent.slug?.toLowerCase().includes('occasions');
+        if (isOccasions && activeCampaigns) {
+          const campaignSubcats = activeCampaigns.map(campaign => ({
+            name: campaign.name,
+            path: `/occasions/${campaign.slug}`,
+            count: campaign.productCount || 0
+          }));
+          subcats = [...subcats, ...campaignSubcats];
+        }
+
         return {
           name: parent.name,
           path: parent.link || parent.categoryUrl,
@@ -103,7 +115,7 @@ const CategoryMenu = () => {
           subcategories: subcats
         };
       });
-  }, [shopCategories, categoryCounts]);
+  }, [shopCategories, categoryCounts, activeCampaigns]);
 
   useLayoutEffect(() => {
     if (hoveredCategory && navRef.current) {
@@ -113,17 +125,19 @@ const CategoryMenu = () => {
       
       if (itemRef) {
         const itemRect = itemRef.getBoundingClientRect();
-        const left = itemRect.left - navRect.left + itemRect.width / 2;
-        setDropdownPosition({ left });
-        // Check for overflow
-        const dropdownWidth = 288; // w-72 = 18rem = 288px
-        const dropdownLeft = itemRect.left + itemRect.width / 2 - dropdownWidth / 2;
-        const dropdownRight = dropdownLeft + dropdownWidth;
-        if (dropdownRight > window.innerWidth - 16) { // 16px margin
-          setDropdownAlignRight(true);
-        } else {
-          setDropdownAlignRight(false);
-        }
+        const dropdownWidth = window.innerWidth < 640 ? 288 : 320;
+        
+        // Preferred left edge of the dropdown relative to the container
+        const preferredLeftEdge = (itemRect.left + itemRect.width / 2 - navRect.left) - dropdownWidth / 2;
+        
+        // Minimum and maximum allowed left edge to stay within viewport with 16px padding
+        const minLeftEdge = 16 - navRect.left;
+        const maxLeftEdge = window.innerWidth - 16 - navRect.left - dropdownWidth;
+        
+        // Clamp the left edge
+        const clampedLeftEdge = Math.max(minLeftEdge, Math.min(preferredLeftEdge, maxLeftEdge));
+        
+        setDropdownPosition({ left: clampedLeftEdge });
       }
     }
   }, [hoveredCategory, categories]);
@@ -256,14 +270,10 @@ const CategoryMenu = () => {
               animate="visible"
               exit="exit"
               className="absolute top-full mt-2 dropdown-content w-72 sm:w-80 overflow-hidden dropdown-responsive"
-              style={dropdownAlignRight
-                ? { right: 0 }
-                : { 
-                    left: `${dropdownPosition.left}px`, 
-                    transform: 'translateX(-50%)',
-                    maxWidth: 'calc(100vw - 2rem)' // Prevent overflow on small screens
-                  }
-              }
+              style={{ 
+                left: `${dropdownPosition.left}px`, 
+                maxWidth: 'calc(100vw - 2rem)' // Prevent overflow on small screens
+              }}
               onMouseEnter={() => handleMouseEnter(activeCategory.name)}
             >
               <div className="p-4 border-b">

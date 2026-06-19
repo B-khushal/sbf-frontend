@@ -34,7 +34,7 @@ const MainLayout: React.FC = () => {
     };
   }, []);
 
-  const isAnnouncementVisible = isHomePage && isAnnouncementEnabled && showAnnouncement;
+  const isAnnouncementVisible = isAnnouncementEnabled && showAnnouncement;
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -50,7 +50,9 @@ const MainLayout: React.FC = () => {
             ? (isAnnouncementVisible 
                 ? "h-[108px] md:h-[188px] lg:h-[196px]" 
                 : "h-[68px] md:h-[140px] lg:h-[156px]") 
-            : "h-[68px] sm:h-[76px] lg:h-[84px]"
+            : (isAnnouncementVisible
+                ? "h-[108px] sm:h-[116px] lg:h-[124px]"
+                : "h-[68px] sm:h-[76px] lg:h-[84px]")
         } 
         aria-hidden="true" 
       />

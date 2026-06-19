@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSettings } from '../contexts/SettingsContext';
 import { useValentine } from '../contexts/ValentineContext';
+import { useSeasonalCampaign } from '../contexts/SeasonalCampaignContext';
 
 export const AnnouncementBar: React.FC = () => {
   const { headerSettings } = useSettings();
@@ -32,6 +33,11 @@ export const AnnouncementBar: React.FC = () => {
     ? announcement.texts
     : [announcement?.text || 'FREE DELIVERY on your First Order at Spring Blossoms Florist 🌸'];
 
+  const { activeCampaigns } = useSeasonalCampaign();
+  const activeAnnounceCampaign = activeCampaigns.find(
+    c => c.enabled && c.navigation?.showInAnnouncementBar && c.slug !== 'valentine' && c.slug !== 'valentines-week'
+  );
+
   if (isValentineEnabled) {
     bgColor = 'linear-gradient(to right, #881337, #be123c, #fda4af)';
     textColor = '#ffffff';
@@ -39,6 +45,24 @@ export const AnnouncementBar: React.FC = () => {
       '💝 Valentine Special Campaign is Live! Send romantic roses & premium gifts now 🌹',
       '✨ Use code VALENTINE20 for 20% off on all Valentine exclusive bouquets! 💐',
       '🚚 Guaranteed Same-Day & Midnight Surprise Delivery available for Valentine\'s Week! 💖'
+    ];
+  } else if (activeAnnounceCampaign) {
+    bgColor = activeAnnounceCampaign.theme?.backgroundGradient || `linear-gradient(to right, ${activeAnnounceCampaign.theme?.primaryColor || '#6d28d9'}, ${activeAnnounceCampaign.theme?.secondaryColor || '#4f46e5'})`;
+    textColor = '#ffffff';
+    const activeOffers = activeAnnounceCampaign.offers?.filter(o => o.enabled) || [];
+    
+    // Find active announcement banner
+    const announceBanner = activeAnnounceCampaign.banners?.find(
+      b => b.enabled && b.position === 'announcement'
+    );
+    const mainAnnouncementText = announceBanner
+      ? (announceBanner.subtitle ? `${announceBanner.title} - ${announceBanner.subtitle}` : announceBanner.title)
+      : `🎉 ${activeAnnounceCampaign.general?.campaignName || activeAnnounceCampaign.name} Specials are Live! Shop our exclusive arrangements! 🌸`;
+
+    announcementsList = [
+      mainAnnouncementText,
+      ...activeOffers.map(o => `✨ Special Offer: ${o.title}${o.code ? ` - Use code ${o.code}` : ''}! 🎁`),
+      `🚚 Express Same-Day delivery available for ${activeAnnounceCampaign.name}! 🚀`
     ];
   }
 

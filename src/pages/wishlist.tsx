@@ -8,6 +8,8 @@ import useCart from "@/hooks/use-cart";
 import useWishlist from "@/hooks/use-wishlist";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import ProtectedImage from "@/components/ui/ProtectedImage";
+
 
 interface WishlistItem {
   id: string;
@@ -297,7 +299,7 @@ const WishlistPage = () => {
                     <div className="space-y-4 sm:space-y-0 sm:flex sm:items-center sm:gap-6">
                       {/* Product Image - Larger on Mobile */}
                       <div className="w-24 h-24 sm:w-20 sm:h-20 md:w-24 md:h-24 bg-gray-100 rounded-xl sm:rounded-2xl overflow-hidden flex-shrink-0 mx-auto sm:mx-0 shadow-sm">
-                        <img
+                        <ProtectedImage
                           src={item.image || "/images/placeholder.jpg"}
                           alt={item.title}
                           className="w-full h-full object-cover"

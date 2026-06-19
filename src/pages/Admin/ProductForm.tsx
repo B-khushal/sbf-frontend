@@ -20,6 +20,7 @@ import ProductFeaturesToggle from '@/components/ui/ProductFeaturesToggle';
 import { getImageUrl } from '@/config';
 import { PRIMARY_CATEGORIES, getAdditionalCategoryOptions, getSubcategoryOptions, normalizeCategoryKey } from '@/utils/categoryTaxonomy';
 import categoryService, { Category } from '@/services/categoryService';
+import { useSeasonalCampaign } from '@/contexts/SeasonalCampaignContext';
 
 type FormErrors = {
   [key in keyof ProductData]?: string;
@@ -204,6 +205,8 @@ const initialFormData: ProductData = {
   valentineSeoTitle: '',
   valentineSeoDescription: '',
   valentineSlug: '',
+  seasonalCampaigns: [],
+  campaignSettings: {},
 };
 
 const ProductForm = () => {
@@ -213,6 +216,8 @@ const ProductForm = () => {
   const { toast } = useToast();
   const isEditMode = Boolean(id);
   const [isValentineSectionOpen, setIsValentineSectionOpen] = useState(true);
+  const [isSeasonalSectionOpen, setIsSeasonalSectionOpen] = useState(true);
+  const { campaigns } = useSeasonalCampaign();
   
   // Determine if user is admin or vendor based on current path
   const isVendorPath = location.pathname.includes('/vendor/');
@@ -231,8 +236,9 @@ const ProductForm = () => {
     if (!parent) return [];
     const parentIdStr = parent._id || parent.id;
     return dbCategories.filter(c => {
-      if (!c.parentId) return false;
-      const childParentId = typeof c.parentId === 'object' ? (c.parentId._id || c.parentId.id) : c.parentId;
+      const parentId = c.parentId as string | { _id?: string; id?: string } | null | undefined;
+      if (!parentId) return false;
+      const childParentId = typeof parentId === 'object' ? (parentId._id || parentId.id) : parentId;
       return childParentId === parentIdStr;
     });
   };
@@ -310,8 +316,9 @@ const ProductForm = () => {
         if (parent) {
           const parentIdStr = parent._id || parent.id;
           subcategories = cats.filter(c => {
-            if (!c.parentId) return false;
-            const childParentId = typeof c.parentId === 'object' ? (c.parentId._id || c.parentId.id) : c.parentId;
+            const parentId = c.parentId as string | { _id?: string; id?: string } | null | undefined;
+            if (!parentId) return false;
+            const childParentId = typeof parentId === 'object' ? (parentId._id || parentId.id) : parentId;
             return childParentId === parentIdStr;
           });
         }
@@ -411,6 +418,8 @@ const ProductForm = () => {
         valentineSeoTitle: data.valentineSeoTitle || '',
         valentineSeoDescription: data.valentineSeoDescription || '',
         valentineSlug: data.valentineSlug || '',
+        seasonalCampaigns: Array.isArray(data.seasonalCampaigns) ? data.seasonalCampaigns : [],
+        campaignSettings: data.campaignSettings || {},
       };
 
       setFormData(processedData);
@@ -1169,7 +1178,9 @@ const ProductForm = () => {
           flowerGroupImage: formData.customizationOptions?.flowerGroupImage || "",
           useSameChocolateImage: Boolean(formData.customizationOptions?.useSameChocolateImage),
           chocolateGroupImage: formData.customizationOptions?.chocolateGroupImage || ""
-        } : undefined
+        } : undefined,
+        seasonalCampaigns: formData.seasonalCampaigns || [],
+        campaignSettings: formData.campaignSettings || {}
       };
       
       if (isEditMode) {
@@ -2332,6 +2343,181 @@ const ProductForm = () => {
                       </div>
                     </div>
                   </div>
+                </div>
+              )}
+            </CardContent>
+          )}
+        </Card>
+
+        {/* 🎉 Seasonal Campaign Settings */}
+        <Card className={`transition-all duration-300 border-2 ${formData.seasonalCampaigns && formData.seasonalCampaigns.length > 0 ? 'border-purple-200 bg-gradient-to-br from-purple-50/50 to-indigo-50/50 shadow-md shadow-purple-100/55' : 'border-gray-200'}`}>
+          <CardHeader className="cursor-pointer select-none" onClick={() => setIsSeasonalSectionOpen(!isSeasonalSectionOpen)}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className={`flex h-10 w-10 items-center justify-center rounded-full transition-colors ${formData.seasonalCampaigns && formData.seasonalCampaigns.length > 0 ? 'bg-purple-100 text-purple-600' : 'bg-gray-100 text-gray-500'}`}>
+                  <Gift className={`h-5 w-5 ${formData.seasonalCampaigns && formData.seasonalCampaigns.length > 0 ? 'text-purple-600 animate-bounce' : ''}`} />
+                </div>
+                <div>
+                  <CardTitle className={`flex items-center gap-2 ${formData.seasonalCampaigns && formData.seasonalCampaigns.length > 0 ? 'text-purple-800' : ''}`}>
+                    🎉 Seasonal Campaigns
+                  </CardTitle>
+                  <CardDescription className={formData.seasonalCampaigns && formData.seasonalCampaigns.length > 0 ? 'text-purple-600' : ''}>
+                    Assign this product to seasonal marketing campaigns (Mother's Day, Diwali, New Year, etc.)
+                  </CardDescription>
+                </div>
+              </div>
+              <div className="text-muted-foreground">
+                {isSeasonalSectionOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+              </div>
+            </div>
+          </CardHeader>
+          
+          {isSeasonalSectionOpen && (
+            <CardContent className="space-y-6">
+              {!campaigns || campaigns.length === 0 ? (
+                <div className="text-center py-6 text-muted-foreground bg-white rounded-lg border border-dashed border-gray-200">
+                  No seasonal campaigns created yet. Build them in the <span className="font-semibold">Seasonal Campaigns Dashboard</span>.
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {campaigns.filter(c => c.slug !== 'valentine' && c.slug !== 'valentines-week').map((campaign) => {
+                    const isAssigned = (formData.seasonalCampaigns || []).includes(campaign.slug);
+                    const campaignSettings = formData.campaignSettings?.[campaign.slug] || { categories: [], badge: '' };
+                    const assignedCategories = campaignSettings.categories || [];
+                    const campaignBadge = campaignSettings.badge || '';
+
+                    return (
+                      <div key={campaign.slug} className={`rounded-xl border p-5 transition-all bg-white ${isAssigned ? 'border-purple-300 shadow-sm' : 'border-gray-200 opacity-80'}`}>
+                        {/* Header & Toggle */}
+                        <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+                          <div className="space-y-0.5">
+                            <h4 className="text-base font-semibold text-gray-900 flex items-center gap-2">
+                              {campaign.name}
+                              {isAssigned && (
+                                <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-100 border border-purple-200 text-xs">
+                                  Assigned
+                                </Badge>
+                              )}
+                            </h4>
+                            <p className="text-xs text-muted-foreground">
+                              {campaign.enabled ? '🟢 Campaign Status: ON' : '🔴 Campaign Status: OFF'}
+                            </p>
+                          </div>
+                          <Switch
+                            id={`campaign-toggle-${campaign.slug}`}
+                            type="button"
+                            checked={isAssigned}
+                            onCheckedChange={(checked) => {
+                              setFormData(prev => {
+                                const seasonalList = prev.seasonalCampaigns || [];
+                                const updatedList = checked 
+                                  ? [...seasonalList, campaign.slug] 
+                                  : seasonalList.filter(slug => slug !== campaign.slug);
+                                
+                                const settingsMap = { ...(prev.campaignSettings || {}) };
+                                if (checked) {
+                                  settingsMap[campaign.slug] = {
+                                    categories: [],
+                                    badge: ''
+                                  };
+                                } else {
+                                  delete settingsMap[campaign.slug];
+                                }
+
+                                return {
+                                  ...prev,
+                                  seasonalCampaigns: updatedList,
+                                  campaignSettings: settingsMap
+                                };
+                              });
+                            }}
+                            className="data-[state=checked]:bg-purple-600"
+                          />
+                        </div>
+
+                        {/* Settings if toggled on */}
+                        {isAssigned && (
+                          <div className="pt-4 space-y-4">
+                            {/* Campaign Category Assignment */}
+                            <div className="space-y-2">
+                              <Label className="text-sm font-semibold text-gray-900">
+                                Assigned Campaign Categories ({assignedCategories.length})
+                              </Label>
+                              {(!campaign.categories || campaign.categories.length === 0) ? (
+                                <p className="text-xs text-muted-foreground bg-gray-50 p-3 rounded-lg border border-dashed">
+                                  No specific categories configured for this campaign.
+                                </p>
+                              ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 bg-gray-50/50 p-3 rounded-lg border border-gray-200">
+                                  {campaign.categories.map((cat) => {
+                                    const isCatChecked = assignedCategories.includes(cat.slug);
+                                    return (
+                                      <div key={cat.slug} className="flex items-center space-x-2">
+                                        <input
+                                          type="checkbox"
+                                          id={`camp-${campaign.slug}-cat-${cat.slug}`}
+                                          checked={isCatChecked}
+                                          onChange={() => {
+                                            setFormData(prev => {
+                                              const settingsMap = { ...(prev.campaignSettings || {}) };
+                                              const currentSettings = settingsMap[campaign.slug] || { categories: [], badge: '' };
+                                              const list = currentSettings.categories || [];
+                                              const updatedCats = list.includes(cat.slug)
+                                                ? list.filter(s => s !== cat.slug)
+                                                : [...list, cat.slug];
+                                              
+                                              settingsMap[campaign.slug] = {
+                                                ...currentSettings,
+                                                categories: updatedCats
+                                              };
+                                              return { ...prev, campaignSettings: settingsMap };
+                                            });
+                                          }}
+                                          className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                                        />
+                                        <Label 
+                                          htmlFor={`camp-${campaign.slug}-cat-${cat.slug}`} 
+                                          className="text-xs text-gray-700 cursor-pointer font-medium"
+                                        >
+                                          {cat.name}
+                                        </Label>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Campaign Badge Input */}
+                            <div className="space-y-2">
+                              <Label htmlFor={`camp-badge-${campaign.slug}`} className="text-sm font-semibold text-gray-900">
+                                Custom Campaign Badge
+                              </Label>
+                              <Input
+                                id={`camp-badge-${campaign.slug}`}
+                                placeholder="e.g. Best Seller, Festival Offer, Special Gift"
+                                value={campaignBadge}
+                                onChange={(e) => {
+                                  const badgeVal = e.target.value;
+                                  setFormData(prev => {
+                                    const settingsMap = { ...(prev.campaignSettings || {}) };
+                                    const currentSettings = settingsMap[campaign.slug] || { categories: [], badge: '' };
+                                    
+                                    settingsMap[campaign.slug] = {
+                                      ...currentSettings,
+                                      badge: badgeVal
+                                    };
+                                    return { ...prev, campaignSettings: settingsMap };
+                                  });
+                                }}
+                                className="border-gray-200 focus:border-purple-500 focus:ring-purple-500"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </CardContent>

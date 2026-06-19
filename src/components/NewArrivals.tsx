@@ -12,6 +12,8 @@ import useWishlist from "@/hooks/use-wishlist";
 import { useAuth } from "@/hooks/use-auth";
 import { getImageUrl } from "@/config";
 import { QuickViewModal } from "./ui/QuickViewModal";
+import ProtectedImage from "./ui/ProtectedImage";
+
 import { Product } from "./ProductGrid";
 
 type NewArrivalsProps = {
@@ -590,7 +592,7 @@ const LuxuryProductCard = ({
         </div>
 
         {/* Default Product Image */}
-        <img
+        <ProtectedImage
           src={getImageUrl(product.images[0]) || "/images/placeholder.svg"}
           alt={product.title}
           className={cn(
@@ -603,7 +605,7 @@ const LuxuryProductCard = ({
 
         {/* Hover Product Image */}
         {product.images.length > 1 && (
-          <img
+          <ProtectedImage
             src={getImageUrl(product.images[1])}
             alt={product.title}
             className="absolute inset-0 w-full h-full object-cover transition-all duration-[1000ms] ease-out-expo opacity-0 group-hover:opacity-100 group-hover:scale-105"

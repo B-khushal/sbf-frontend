@@ -80,12 +80,16 @@ export interface ProductData {
   images: string[];
   details: string[];
   careInstructions: string[];
+  isNew?: boolean;
   isNewArrival: boolean;
+  isRecommended?: boolean;
   isFeatured: boolean;
   hidden: boolean;
   sameDay?: boolean;
   rating?: number;
   numReviews?: number;
+  createdAt?: string;
+  updatedAt?: string;
   isCustomizable: boolean;
   hasPriceVariants: boolean;
   priceVariants: PriceVariant[];
@@ -113,6 +117,8 @@ export interface ProductData {
   valentineSeoTitle?: string;
   valentineSeoDescription?: string;
   valentineSlug?: string;
+  seasonalCampaigns?: string[];
+  campaignSettings?: Record<string, any>;
 }
 
 // Define backend product type to match backend schema
@@ -128,10 +134,11 @@ interface BackendProductData {
   brand?: string;
   countInStock: number;
   images: string[];
-  details?: string[];
-  careInstructions?: string[];
+  details?: string[] | string;
+  careInstructions?: string[] | string;
   isNew?: boolean; // Backend uses isNew
   isNewArrival?: boolean; // Backward compatibility for older backend variants
+  isRecommended?: boolean;
   isFeatured?: boolean;
   hidden?: boolean;
   sameDay?: boolean;
@@ -155,6 +162,17 @@ interface BackendProductData {
   valentineDate?: string | null;
   isValentineExclusive?: boolean;
   valentineCategory?: string;
+  showInValentineShop?: boolean;
+  valentineCategories?: string[];
+  valentineSections?: string[];
+  valentineBadge?: string;
+  featureInValentineHero?: boolean;
+  enableValentinePricing?: boolean;
+  valentineSeoTitle?: string;
+  valentineSeoDescription?: string;
+  valentineSlug?: string;
+  seasonalCampaigns?: string[];
+  campaignSettings?: Record<string, any>;
   createdAt?: string;
   updatedAt?: string;
   [key: string]: unknown; // Allow other properties with unknown type
@@ -312,7 +330,11 @@ const mapBackendToFrontend = (data: BackendProductData): ProductData => {
     mappedData.isNewArrival = Boolean(
       typeof data.isNew === 'boolean' ? data.isNew : data.isNewArrival
     );
+    mappedData.isNew = mappedData.isNewArrival;
   }
+  mappedData.isRecommended = Boolean(data.isRecommended);
+  mappedData.createdAt = data.createdAt;
+  mappedData.updatedAt = data.updatedAt;
 
   // Map Valentine properties
   mappedData.productType = data.productType || 'regular';
@@ -326,14 +348,14 @@ const mapBackendToFrontend = (data: BackendProductData): ProductData => {
   mappedData.isValentineExclusive = Boolean(data.isValentineExclusive);
   mappedData.valentineCategory = data.valentineCategory || '';
   mappedData.showInValentineShop = Boolean(data.showInValentineShop);
-  mappedData.valentineCategories = data.valentineCategories || [];
-  mappedData.valentineSections = data.valentineSections || [];
-  mappedData.valentineBadge = data.valentineBadge || '';
+  mappedData.valentineCategories = Array.isArray(data.valentineCategories) ? data.valentineCategories : [];
+  mappedData.valentineSections = Array.isArray(data.valentineSections) ? data.valentineSections : [];
+  mappedData.valentineBadge = typeof data.valentineBadge === 'string' ? data.valentineBadge : '';
   mappedData.featureInValentineHero = Boolean(data.featureInValentineHero);
   mappedData.enableValentinePricing = Boolean(data.enableValentinePricing);
-  mappedData.valentineSeoTitle = data.valentineSeoTitle || '';
-  mappedData.valentineSeoDescription = data.valentineSeoDescription || '';
-  mappedData.valentineSlug = data.valentineSlug || '';
+  mappedData.valentineSeoTitle = typeof data.valentineSeoTitle === 'string' ? data.valentineSeoTitle : '';
+  mappedData.valentineSeoDescription = typeof data.valentineSeoDescription === 'string' ? data.valentineSeoDescription : '';
+  mappedData.valentineSlug = typeof data.valentineSlug === 'string' ? data.valentineSlug : '';
 
   // Map combo fields
   if (data.comboItems) {
@@ -347,14 +369,15 @@ const mapBackendToFrontend = (data: BackendProductData): ProductData => {
   }
 
   // ✅ Handle details properly (flatten nested arrays from backend)
-  if (Array.isArray(data.details)) {
+  const details = data.details;
+  if (Array.isArray(details)) {
     // Backend sends details as array of arrays, flatten it for frontend
-    mappedData.details = data.details.flat().filter(detail => 
+    mappedData.details = details.flat().filter(detail =>
       detail && typeof detail === 'string' && detail.trim().length > 0
     );
-  } else if (typeof data.details === 'string') {
+  } else if (typeof details === 'string') {
     // Split by comma or any separator if it's a string
-    mappedData.details = data.details.split(/[,•]/).map(str => str.trim()).filter(str => str.length > 0);
+    mappedData.details = details.split(/[,•]/).map(str => str.trim()).filter(str => str.length > 0);
   } else {
     mappedData.details = [];
   }

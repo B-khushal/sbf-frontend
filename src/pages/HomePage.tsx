@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 import { useNavigate } from "react-router-dom";
 import { AlertTriangle } from "lucide-react";
@@ -20,11 +20,12 @@ import OfferPopup from "../components/ui/OfferPopup";
 import { useValentine } from "../contexts/ValentineContext";
 import { ValentineHomeSections } from "../components/valentine/ValentineHomeSections";
 import { ExitIntentPopup, RecentPurchases } from "../components/valentine/ValentineMarketingWidgets";
+import { SeasonalCampaignHomeSection } from "../components/SeasonalCampaignHomeSection";
 
 import api from "../services/api";
 
 // Animation variants
-const containerVariants = {
+const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
@@ -35,26 +36,26 @@ const containerVariants = {
   }
 };
 
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { y: 20, opacity: 0 },
   visible: {
     y: 0,
     opacity: 1,
     transition: {
       duration: 0.6,
-      ease: [0.25, 0.46, 0.45, 0.94]
+      ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number]
     }
   }
 };
 
-const fadeInVariants = {
+const fadeInVariants: Variants = {
   hidden: { opacity: 0, scale: 0.98 },
   visible: {
     opacity: 1,
     scale: 1,
     transition: {
       duration: 0.8,
-      ease: [0.25, 0.46, 0.45, 0.94]
+      ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number]
     }
   }
 };
@@ -66,6 +67,16 @@ const HomePage = () => {
   const { currentOffer, isOpen: isOfferOpen, closeOffer } = useOfferPopup();
   const isMobile = useIsMobile();
   const { isValentineEnabled, settings: valentineSettings, offers: valentineOffers } = useValentine();
+  const normalizedOffer = currentOffer
+    ? {
+        ...currentOffer,
+        backgroundColor: currentOffer.backgroundColor || currentOffer.background || "#ffffff",
+        textColor: currentOffer.textColor || "#111827",
+        buttonText: currentOffer.buttonText || "Shop Now",
+        buttonLink: currentOffer.buttonLink || "/shop",
+        theme: currentOffer.theme || "general",
+      }
+    : null;
 
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [newProducts, setNewProducts] = useState([]);
@@ -221,7 +232,7 @@ const HomePage = () => {
       <OfferPopup
         isOpen={isOfferOpen && currentOffer !== null}
         onClose={closeOffer}
-        offer={currentOffer}
+        offer={normalizedOffer}
       />
 
       {/* Debug button - remove this after testing */}
@@ -244,6 +255,7 @@ const HomePage = () => {
           case 'hero':
             return (
               <React.Fragment key={`hero-${index}`}>
+                <SeasonalCampaignHomeSection />
                 <motion.div
                   variants={itemVariants}
                   className="relative w-full overflow-hidden"

@@ -13,6 +13,8 @@ import { trackProductView } from '@/services/activityService';
 
 import FloatingPetals from '@/components/valentine/FloatingPetals';
 import '@/components/valentine/valentine.css';
+import ProtectedImage from '@/components/ui/ProtectedImage';
+
 
 import type { ValentineProduct } from '@/types/valentine';
 
@@ -257,7 +259,7 @@ const ValentineProductDetailsPage: React.FC = () => {
               layoutId={`product-img-${product._id}`}
               className="aspect-square rounded-3xl overflow-hidden border border-rose-950 bg-rose-950/20 shadow-2xl relative"
             >
-              <img
+              <ProtectedImage
                 src={activeImage || '/images/placeholder.jpg'}
                 alt={product.title}
                 className="w-full h-full object-cover"
@@ -278,7 +280,7 @@ const ValentineProductDetailsPage: React.FC = () => {
                       activeImage === img ? 'border-rose-500 scale-95 shadow-md shadow-rose-950/50' : 'border-rose-950 hover:border-rose-800'
                     }`}
                   >
-                    <img src={img} alt="" className="w-full h-full object-cover" />
+                    <ProtectedImage src={img} alt="" className="w-full h-full object-cover" />
                   </button>
                 ))}
               </div>
