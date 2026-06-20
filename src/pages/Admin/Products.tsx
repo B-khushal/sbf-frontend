@@ -7,7 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Edit, Trash2, Eye, EyeOff, AlertTriangle, Package, Search, Filter, X, Heart, GripVertical, ChevronUp, ChevronDown } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, EyeOff, AlertTriangle, Package, Search, Filter, X, Heart, GripVertical, ChevronUp, ChevronDown, LayoutGrid, List } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import api from "@/services/api";
@@ -15,6 +15,7 @@ import { useNavigate } from "react-router-dom";
 import productService, { ProductData } from "@/services/productService";
 import { getImageUrl } from "@/config";
 import { useSeasonalCampaign } from "@/contexts/SeasonalCampaignContext";
+import { useValentine } from "@/contexts/ValentineContext";
 
 type Product = ProductData & {
   _id: string;
@@ -54,6 +55,8 @@ const VALENTINE_DATES = [
 
 const AdminProducts: React.FC = () => {
   const { activeCampaigns } = useSeasonalCampaign();
+  const { isValentineEnabled } = useValentine();
+  const [viewMode, setViewMode] = useState<'table' | 'grid'>('grid');
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [lowStockProducts, setLowStockProducts] = useState<Product[]>([]);
@@ -1650,8 +1653,28 @@ const AdminProducts: React.FC = () => {
         </Card>
       ) : (
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <CardTitle>Products ({filteredProducts.length})</CardTitle>
+          <div className="flex items-center gap-2">
+            <Button
+              variant={viewMode === 'table' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('table')}
+              className="h-8 w-8 p-0"
+              title="Table View"
+            >
+              <List className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'grid' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('grid')}
+              className="h-8 w-8 p-0"
+              title="Grid View"
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {filteredProducts.length === 0 ? (
@@ -1675,7 +1698,7 @@ const AdminProducts: React.FC = () => {
                 </Button>
               )}
             </div>
-          ) : (
+          ) : viewMode === 'table' ? (
             <div className="responsive-table-wrap border-0 rounded-none">
             <Table>
               <TableHeader>
@@ -1698,11 +1721,15 @@ const AdminProducts: React.FC = () => {
                   <TableHead>New</TableHead>
                   <TableHead>Same Day</TableHead>
                   <TableHead>Visibility</TableHead>
-                  <TableHead>❤️ Valentine Product</TableHead>
-                  <TableHead>Valentine Categories</TableHead>
-                  <TableHead>Valentine Dates</TableHead>
-                  <TableHead>Valentine Status</TableHead>
-                  {activeCampaigns && activeCampaigns.filter(c => c.slug !== 'valentine' && c.slug !== 'valentines-week').map((campaign) => (
+                  {isValentineEnabled && (
+                    <>
+                      <TableHead>❤️ Valentine Product</TableHead>
+                      <TableHead>Valentine Categories</TableHead>
+                      <TableHead>Valentine Dates</TableHead>
+                      <TableHead>Valentine Status</TableHead>
+                    </>
+                  )}
+                  {activeCampaigns && activeCampaigns.filter(c => c.enabled && c.slug !== 'valentine' && c.slug !== 'valentines-week').map((campaign) => (
                     <React.Fragment key={campaign.slug}>
                       <TableHead>{campaign.name} Product</TableHead>
                       <TableHead>{campaign.name} Categories</TableHead>
@@ -1741,7 +1768,7 @@ const AdminProducts: React.FC = () => {
                           {product.hidden && <Badge variant="secondary">Hidden</Badge>}
                           {product.countInStock === 0 && <Badge variant="destructive">Out of Stock</Badge>}
                           {product.countInStock > 0 && product.countInStock <= 5 && <Badge variant="outline" className="border-red-500 text-red-600">Critical Stock</Badge>}
-                          {activeCampaigns && activeCampaigns.filter(c => c.slug !== 'valentine' && c.slug !== 'valentines-week').map(campaign => {
+                          {activeCampaigns && activeCampaigns.filter(c => c.enabled && c.slug !== 'valentine' && c.slug !== 'valentines-week').map(campaign => {
                             const isAssigned = (product.seasonalCampaigns || []).includes(campaign.slug);
                             if (!isAssigned) return null;
                             const campSettings = product.campaignSettings?.[campaign.slug] || {};
@@ -1828,49 +1855,53 @@ const AdminProducts: React.FC = () => {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell>
-                        {product.isValentineProduct ? (
-                          <Badge variant="secondary" className="bg-pink-100 text-pink-700 font-semibold border-pink-200 animate-pulse">
-                            ❤️ Yes
-                          </Badge>
-                        ) : (
-                          <span className="text-gray-400">No</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="max-w-[200px] truncate" title={product.valentineCategories?.join(', ')}>
-                          {product.valentineCategories && product.valentineCategories.length > 0 ? (
-                            product.valentineCategories.join(', ')
-                          ) : (
-                            <span className="text-gray-400">-</span>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="max-w-[150px] truncate" title={product.availableDates?.join(', ')}>
-                          {product.availableDates && product.availableDates.length > 0 ? (
-                            product.availableDates.map(d => d.replace('-day', ' Day')).join(', ')
-                          ) : (
-                            <span className="text-gray-400">-</span>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {product.isValentineProduct ? (
-                          product.showInValentineShop ? (
-                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                              ✓ Active
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-                              ✕ Disabled
-                            </Badge>
-                          )
-                        ) : (
-                          <span className="text-gray-400">-</span>
-                        )}
-                      </TableCell>
-                      {activeCampaigns && activeCampaigns.filter(c => c.slug !== 'valentine' && c.slug !== 'valentines-week').map((campaign) => {
+                      {isValentineEnabled && (
+                        <>
+                          <TableCell>
+                            {product.isValentineProduct ? (
+                              <Badge variant="secondary" className="bg-pink-100 text-pink-700 font-semibold border-pink-200 animate-pulse">
+                                ❤️ Yes
+                              </Badge>
+                            ) : (
+                              <span className="text-gray-400">No</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <div className="max-w-[200px] truncate" title={product.valentineCategories?.join(', ')}>
+                              {product.valentineCategories && product.valentineCategories.length > 0 ? (
+                                product.valentineCategories.join(', ')
+                              ) : (
+                                <span className="text-gray-400">-</span>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="max-w-[150px] truncate" title={product.availableDates?.join(', ')}>
+                              {product.availableDates && product.availableDates.length > 0 ? (
+                                product.availableDates.map(d => d.replace('-day', ' Day')).join(', ')
+                              ) : (
+                                <span className="text-gray-400">-</span>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {product.isValentineProduct ? (
+                              product.showInValentineShop ? (
+                                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                  ✓ Active
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                                  ✕ Disabled
+                                </Badge>
+                              )
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
+                          </TableCell>
+                        </>
+                      )}
+                      {activeCampaigns && activeCampaigns.filter(c => c.enabled && c.slug !== 'valentine' && c.slug !== 'valentines-week').map((campaign) => {
                         const isAssigned = (product.seasonalCampaigns || []).includes(campaign.slug);
                         const campSettings = product.campaignSettings?.[campaign.slug] || {};
                         const assignedCats = campSettings.categories || [];
@@ -1946,6 +1977,191 @@ const AdminProducts: React.FC = () => {
                 })}
               </TableBody>
             </Table>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {filteredProducts.map((product) => {
+                const finalPrice = product.discount
+                  ? convertPrice(product.price * (1 - product.discount / 100))
+                  : convertPrice(product.price);
+
+                // Construct the proper image URL using utility function with minimal cache busting
+                const imageUrl = getImageUrl(product.images?.[0], { bustCache: false });
+
+                return (
+                  <Card 
+                    key={product._id} 
+                    className={`overflow-hidden flex flex-col justify-between hover:shadow-md transition-all duration-200 border-slate-100 ${
+                      product.hidden ? "opacity-60 bg-muted/30" : ""
+                    } ${selectedProductIds.includes(product._id) ? "border-pink-300 bg-pink-50/10" : ""}`}
+                  >
+                    {/* Top Image area */}
+                    <div className="relative aspect-square w-full bg-slate-50 border-b">
+                      {product.images?.[0] ? (
+                        <img 
+                          src={imageUrl} 
+                          alt={product.title} 
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            if (!target.src.includes('placeholder')) {
+                              if (product.images?.[0]?.startsWith('/uploads/')) {
+                                target.src = `https://www.sbflorist.in${product.images[0]}`;
+                              } else if (product.images?.[0] && !product.images[0].startsWith('http')) {
+                                target.src = `https://www.sbflorist.in/uploads/${product.images[0]}`;
+                              } else {
+                                target.src = "/images/placeholder.jpg";
+                              }
+                            } else {
+                              target.style.display = 'none';
+                              const parent = target.parentElement;
+                              if (parent && !parent.querySelector('.fallback-icon')) {
+                                const fallback = document.createElement('div');
+                                fallback.className = 'fallback-icon absolute inset-0 flex items-center justify-center bg-gray-100';
+                                fallback.innerHTML = '<svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>';
+                                parent.appendChild(fallback);
+                              }
+                            }
+                          }}
+                        />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                          <Package className="h-8 w-8 text-gray-400" />
+                        </div>
+                      )}
+
+                      {/* Floating Badges */}
+                      <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
+                        {product.isFeatured && (
+                          <Badge className="bg-yellow-500 hover:bg-yellow-600 text-white border-0 text-[10px] py-0.5 px-1.5 shadow-sm">
+                            ★ Featured
+                          </Badge>
+                        )}
+                        {product.isNew && (
+                          <Badge className="bg-blue-500 hover:bg-blue-600 text-white border-0 text-[10px] py-0.5 px-1.5 shadow-sm">
+                            NEW
+                          </Badge>
+                        )}
+                      </div>
+
+                      {/* Checkbox */}
+                      <div className="absolute top-2 right-2 z-10 flex items-center gap-1.5 bg-white/90 backdrop-blur-sm p-1 rounded-lg border shadow-sm">
+                        <input
+                          type="checkbox"
+                          checked={selectedProductIds.includes(product._id)}
+                          onChange={() => toggleSelectProduct(product._id)}
+                          className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Middle Details area */}
+                    <CardContent className="p-3 flex-1 flex flex-col justify-between">
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex flex-wrap gap-1 max-w-[70%]">
+                            <Badge variant="default" className="bg-primary text-[9px] py-0 px-1 truncate max-w-full">
+                              {product.category}
+                            </Badge>
+                          </div>
+                          {getStockBadge(product.countInStock)}
+                        </div>
+                        <h4 className="font-semibold text-xs sm:text-sm text-slate-800 line-clamp-2 min-h-[40px] leading-tight" title={product.title}>
+                          {product.title}
+                        </h4>
+                      </div>
+
+                      <div className="pt-2 border-t mt-2 flex flex-col gap-2">
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="text-sm font-bold text-primary">
+                            {formatPrice(finalPrice)}
+                          </span>
+                          {product.discount > 0 && (
+                            <>
+                              <span className="text-xs text-muted-foreground line-through">
+                                {formatPrice(convertPrice(product.price))}
+                              </span>
+                              <span className="text-[10px] font-bold text-red-500 bg-red-50 px-1 rounded">
+                                -{product.discount}%
+                              </span>
+                            </>
+                          )}
+                        </div>
+
+                        {/* Status Toggles */}
+                        <div className="grid grid-cols-1 gap-1.5 pt-1.5 border-t border-slate-50 text-[11px] text-slate-600">
+                          <div className="flex items-center gap-1 justify-between">
+                            <span>New Status:</span>
+                            <Switch
+                              checked={Boolean(product.isNew)}
+                              onCheckedChange={() => toggleProductNewStatus(product._id)}
+                              className="scale-75 origin-right data-[state=checked]:bg-blue-600"
+                            />
+                          </div>
+                          <div className="flex items-center gap-1 justify-between">
+                            <span>Same Day:</span>
+                            <Switch
+                              checked={product.sameDay !== false}
+                              onCheckedChange={() => toggleProductSameDayStatus(product._id)}
+                              className="scale-75 origin-right data-[state=checked]:bg-emerald-600"
+                            />
+                          </div>
+                          <div className="flex items-center gap-1 justify-between">
+                            <span>Visibility:</span>
+                            <Switch
+                              checked={!product.hidden}
+                              onCheckedChange={() => toggleProductVisibility(product._id)}
+                              className="scale-75 origin-right data-[state=checked]:bg-green-600"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Seasonal campaign status badges */}
+                        {((isValentineEnabled && product.isValentineProduct) || (activeCampaigns && activeCampaigns.some(c => c.enabled && (product.seasonalCampaigns || []).includes(c.slug)))) && (
+                          <div className="mt-1 pt-1.5 border-t border-slate-50 flex flex-wrap gap-1">
+                            {isValentineEnabled && product.isValentineProduct && (
+                              <Badge className="bg-rose-50 text-rose-700 hover:bg-rose-50 border border-rose-100 text-[9px] py-0 px-1 max-w-full truncate" title={product.valentineCategories?.join(', ')}>
+                                🌹 Valentine's Product
+                              </Badge>
+                            )}
+                            {activeCampaigns && activeCampaigns.filter(c => c.enabled && c.slug !== 'valentine' && c.slug !== 'valentines-week').map(campaign => {
+                              const isAssigned = (product.seasonalCampaigns || []).includes(campaign.slug);
+                              if (!isAssigned) return null;
+                              const campSettings = product.campaignSettings?.[campaign.slug] || {};
+                              const badgeText = campSettings.badge || campaign.name;
+                              return (
+                                <Badge key={campaign.slug} className="bg-purple-50 text-purple-700 hover:bg-purple-50 border border-purple-100 text-[9px] py-0 px-1 truncate max-w-[120px]" title={badgeText}>
+                                  🎀 {badgeText}
+                                </Badge>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+
+                    {/* Bottom Actions area */}
+                    <div className="bg-slate-50 border-t px-2 py-1.5 flex items-center justify-between gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigate(`/admin/products/edit/${product._id}`)}
+                        className="flex-1 h-8 text-xs flex items-center justify-center gap-1"
+                      >
+                        <Edit className="h-3 w-3" /> Edit
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteProduct(product._id)}
+                        className="flex-1 h-8 text-xs text-red-600 hover:text-red-700 hover:bg-red-50 flex items-center justify-center gap-1"
+                      >
+                        <Trash2 className="h-3 w-3" /> Delete
+                      </Button>
+                    </div>
+                  </Card>
+                );
+              })}
             </div>
           )}
         </CardContent>
