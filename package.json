@@ -72,6 +72,7 @@
     "embla-carousel-react": "^8.3.0",
     "firebase": "^11.6.0",
     "framer-motion": "^12.23.3",
+    "fuse.js": "^7.4.2",
     "html2pdf.js": "^0.10.3",
     "input-otp": "^1.2.4",
     "lottie-react": "^2.4.1",

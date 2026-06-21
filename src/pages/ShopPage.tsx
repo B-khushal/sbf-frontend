@@ -13,6 +13,7 @@ import { getImageUrl, getSquareImageUrl } from "@/config";
 import { cn } from "@/lib/utils";
 import ContactModal from "@/components/ui/ContactModal";
 import { PRIMARY_CATEGORIES, matchesCategoryGroup, normalizeCategoryKey, normalizeCategoryLabel } from "@/utils/categoryTaxonomy";
+import { preprocessProductForSearch, createSearchIndex, rankSearchResults } from "@/utils/searchHelper";
 
 const CATEGORY_SLUG_MAP: Record<string, string> = {
   "chocolate-baskets": "Chocolate Baskets",
@@ -365,7 +366,9 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
       try {
         setIsLoading(true);
         const productsResponse = await api.get("/products");
-        setProducts(productsResponse.data.products || []);
+        const rawProducts = productsResponse.data.products || [];
+        const processed = rawProducts.map((p: any) => preprocessProductForSearch(p));
+        setProducts(processed);
 
         // Collect both primary categories and additional categories
         const allCategories = new Set();
@@ -445,17 +448,24 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
 
     // Search filter - search in title, description, category, and additional categories
     if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim();
-      filtered = filtered.filter(product => {
-        const titleMatch = product.title?.toLowerCase().includes(query);
-        const descriptionMatch = product.description?.toLowerCase().includes(query);
-        const primaryCategoryMatch = product.category?.toLowerCase().includes(query);
-        const additionalCategoriesMatch = product.categories?.some(cat => 
-          cat.toLowerCase().includes(query)
-        );
-        
-        return titleMatch || descriptionMatch || primaryCategoryMatch || additionalCategoriesMatch;
-      });
+      try {
+        const index = createSearchIndex(products);
+        const fuseResults = index.search(searchQuery);
+        filtered = rankSearchResults(fuseResults, searchQuery);
+      } catch (err) {
+        console.error("Fuzzy search error on ShopPage:", err);
+        const query = searchQuery.toLowerCase().trim();
+        filtered = filtered.filter(product => {
+          const titleMatch = product.title?.toLowerCase().includes(query);
+          const descriptionMatch = product.description?.toLowerCase().includes(query);
+          const primaryCategoryMatch = product.category?.toLowerCase().includes(query);
+          const additionalCategoriesMatch = product.categories?.some(cat => 
+            cat.toLowerCase().includes(query)
+          );
+          
+          return titleMatch || descriptionMatch || primaryCategoryMatch || additionalCategoriesMatch;
+        });
+      }
     }
 
     // Filter by category - support slug/space variants and parent category groups.

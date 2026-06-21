@@ -10,25 +10,70 @@ export type WishlistItem = {
   price: number;
 };
 
+// Global state for sharing wishlist data across components
+let globalItems: WishlistItem[] = [];
+let globalIsLoading = false;
+let globalIsLoaded = false;
+let globalLastAuthStatus: boolean | null = null;
+const listeners = new Set<() => void>();
+
+const emitChange = () => {
+  listeners.forEach(listener => listener());
+};
+
+const setGlobalItems = (newItems: WishlistItem[]) => {
+  globalItems = newItems;
+  emitChange();
+};
+
+const setGlobalIsLoading = (loading: boolean) => {
+  globalIsLoading = loading;
+  emitChange();
+};
+
+const setGlobalIsLoaded = (loaded: boolean) => {
+  globalIsLoaded = loaded;
+  emitChange();
+};
+
 const useWishlist = () => {
   const { toast } = useToast();
   const { user } = useAuth();
-  const [items, setItems] = useState<WishlistItem[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [items, setItems] = useState<WishlistItem[]>(globalItems);
+  const [isLoading, setIsLoading] = useState(globalIsLoading);
 
   // Check if user is authenticated using auth context
   const isAuthenticated = !!user;
 
+  // Subscribe to global store updates
+  useEffect(() => {
+    const handleUpdate = () => {
+      setItems(globalItems);
+      setIsLoading(globalIsLoading);
+    };
+    listeners.add(handleUpdate);
+    // Initial sync
+    handleUpdate();
+    return () => {
+      listeners.delete(handleUpdate);
+    };
+  }, []);
+
   // Load wishlist from backend or localStorage
-  const loadWishlist = useCallback(async () => {
-    // Don't block the app if wishlist loading fails
+  const loadWishlist = useCallback(async (force = false) => {
+    // Prevent duplicate calls if already loading
+    if (globalIsLoading) return;
+    
+    // Prevent reload if already loaded and not forced
+    if (globalIsLoaded && !force) return;
+
     console.log('loadWishlist called, isAuthenticated:', isAuthenticated);
-    setIsLoading(true);
+    setGlobalIsLoading(true);
 
     // Add a timeout to ensure loading state is cleared
     const timeoutId = setTimeout(() => {
       console.log('Loading timeout reached, clearing loading state');
-      setIsLoading(false);
+      setGlobalIsLoading(false);
     }, 10000); // 10 second timeout
 
     try {
@@ -45,7 +90,8 @@ const useWishlist = () => {
             price: item.price
           }));
           console.log('Transformed items:', transformedItems);
-          setItems(transformedItems);
+          setGlobalItems(transformedItems);
+          setGlobalIsLoaded(true);
 
           // Also save to localStorage as backup
           localStorage.setItem('wishlist', JSON.stringify(transformedItems));
@@ -64,13 +110,14 @@ const useWishlist = () => {
                   item.title &&
                   typeof item.price === 'number'
                 );
-                setItems(validItems);
+                setGlobalItems(validItems);
+                setGlobalIsLoaded(true);
               }
             } catch (e) {
-              setItems([]);
+              setGlobalItems([]);
             }
           } else {
-            setItems([]);
+            setGlobalItems([]);
           }
         }
       } else {
@@ -100,10 +147,11 @@ const useWishlist = () => {
           }
 
           console.log('LocalStorage items:', wishlist);
-          setItems(wishlist);
+          setGlobalItems(wishlist);
+          setGlobalIsLoaded(true);
         } catch (error) {
           console.error("Error loading wishlist:", error);
-          setItems([]);
+          setGlobalItems([]);
         }
       }
     } catch (error) {
@@ -123,33 +171,49 @@ const useWishlist = () => {
               typeof item.price === 'number'
             );
             console.log('Fallback items from localStorage:', validItems);
-            setItems(validItems);
+            setGlobalItems(validItems);
+            setGlobalIsLoaded(true);
           }
         } else {
           console.log('No localStorage data available');
-          setItems([]);
+          setGlobalItems([]);
         }
       } catch (fallbackError) {
         console.error('Error in fallback wishlist loading:', fallbackError);
-        setItems([]);
+        setGlobalItems([]);
       }
     } finally {
       clearTimeout(timeoutId);
       console.log('Setting isLoading to false');
-      setIsLoading(false);
+      setGlobalIsLoading(false);
     }
   }, [isAuthenticated]);
 
-  // Load wishlist on mount and when authentication status changes
+  // Load wishlist on auth status change and mount
   useEffect(() => {
-    loadWishlist();
-  }, [isAuthenticated]);
+    // Only fetch if auth status actually changed or has not been checked yet
+    if (globalLastAuthStatus !== isAuthenticated) {
+      globalLastAuthStatus = isAuthenticated;
+      setGlobalIsLoaded(false);
+      
+      // Defer execution slightly to avoid React batch rendering state updates
+      const timer = setTimeout(() => {
+        loadWishlist(true);
+      }, 50);
+      return () => clearTimeout(timer);
+    } else if (!globalIsLoaded && !globalIsLoading) {
+      // If it hasn't loaded yet at all
+      const timer = setTimeout(() => {
+        loadWishlist(false);
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [isAuthenticated, loadWishlist]);
 
-  // Also load cached data on mount for better UX
+  // Load cached data on mount for immediate UI update
   useEffect(() => {
-    // Load cached data immediately for better UX
     const cachedData = localStorage.getItem("wishlist");
-    if (cachedData && items.length === 0) {
+    if (cachedData && globalItems.length === 0 && !globalIsLoaded) {
       try {
         const parsed = JSON.parse(cachedData);
         if (Array.isArray(parsed) && parsed.length > 0) {
@@ -161,15 +225,15 @@ const useWishlist = () => {
             typeof item.price === 'number'
           );
           if (validItems.length > 0) {
-            console.log('Loading cached wishlist data for immediate display:', validItems);
-            setItems(validItems);
+            console.log('Immediate UI cache update:', validItems);
+            setGlobalItems(validItems);
           }
         }
       } catch (error) {
         console.error('Error loading cached wishlist data:', error);
       }
     }
-  }, []); // Only run once on mount
+  }, []);
 
   const addItem = async (item: WishlistItem) => {
     console.log('Adding item to wishlist:', item);
@@ -195,7 +259,7 @@ const useWishlist = () => {
       return;
     }
 
-    setIsLoading(true);
+    setGlobalIsLoading(true);
 
     try {
       if (isAuthenticated) {
@@ -210,7 +274,7 @@ const useWishlist = () => {
             image: wishlistItem.image,
             price: wishlistItem.price
           }));
-          setItems(transformedItems);
+          setGlobalItems(transformedItems);
 
           // Also save to localStorage as backup
           localStorage.setItem('wishlist', JSON.stringify(transformedItems));
@@ -226,29 +290,26 @@ const useWishlist = () => {
         }
       } else {
         // Fallback to localStorage for non-authenticated users
-        setItems(prevItems => {
-          const exists = prevItems.some(existingItem => existingItem.id === item.id);
+        const exists = globalItems.some(existingItem => existingItem.id === item.id);
 
-          if (exists) {
-            toast({
-              title: "Already in wishlist",
-              description: "This item is already in your wishlist",
-              type: "info",
-            });
-            return prevItems;
-          }
-
-          const newItems = [...prevItems, item];
-          localStorage.setItem('wishlist', JSON.stringify(newItems));
-
+        if (exists) {
           toast({
-            title: "Added to wishlist",
-            description: "Item has been added to your wishlist",
-            type: "wishlist",
-            image: item.image,
+            title: "Already in wishlist",
+            description: "This item is already in your wishlist",
+            type: "info",
           });
+          return;
+        }
 
-          return newItems;
+        const newItems = [...globalItems, item];
+        setGlobalItems(newItems);
+        localStorage.setItem('wishlist', JSON.stringify(newItems));
+
+        toast({
+          title: "Added to wishlist",
+          description: "Item has been added to your wishlist",
+          type: "wishlist",
+          image: item.image,
         });
       }
     } catch (error: any) {
@@ -275,7 +336,7 @@ const useWishlist = () => {
         });
       }
     } finally {
-      setIsLoading(false);
+      setGlobalIsLoading(false);
     }
   };
 
@@ -290,7 +351,7 @@ const useWishlist = () => {
       return;
     }
 
-    setIsLoading(true);
+    setGlobalIsLoading(true);
 
     try {
       if (isAuthenticated) {
@@ -305,7 +366,7 @@ const useWishlist = () => {
             image: wishlistItem.image,
             price: wishlistItem.price
           }));
-          setItems(transformedItems);
+          setGlobalItems(transformedItems);
 
           // Also save to localStorage as backup
           localStorage.setItem('wishlist', JSON.stringify(transformedItems));
@@ -320,17 +381,14 @@ const useWishlist = () => {
         }
       } else {
         // Fallback to localStorage for non-authenticated users
-        setItems(prevItems => {
-          const newItems = prevItems.filter(item => item.id !== id);
-          localStorage.setItem('wishlist', JSON.stringify(newItems));
+        const newItems = globalItems.filter(item => item.id !== id);
+        setGlobalItems(newItems);
+        localStorage.setItem('wishlist', JSON.stringify(newItems));
 
-          toast({
-            title: "Removed from wishlist",
-            description: "Item has been removed from your wishlist",
-            type: "info",
-          });
-
-          return newItems;
+        toast({
+          title: "Removed from wishlist",
+          description: "Item has been removed from your wishlist",
+          type: "info",
         });
       }
     } catch (error: any) {
@@ -341,7 +399,7 @@ const useWishlist = () => {
         type: "error"
       });
     } finally {
-      setIsLoading(false);
+      setGlobalIsLoading(false);
     }
   };
 
@@ -356,13 +414,13 @@ const useWishlist = () => {
       return;
     }
 
-    setIsLoading(true);
+    setGlobalIsLoading(true);
 
     try {
       if (isAuthenticated) {
         // Clear from backend
         await wishlistService.clearWishlist();
-        setItems([]);
+        setGlobalItems([]);
         localStorage.setItem('wishlist', JSON.stringify([]));
 
         toast({
@@ -372,7 +430,7 @@ const useWishlist = () => {
         });
       } else {
         // Fallback to localStorage for non-authenticated users
-        setItems([]);
+        setGlobalItems([]);
         localStorage.setItem('wishlist', JSON.stringify([]));
 
         toast({
@@ -389,7 +447,7 @@ const useWishlist = () => {
         type: "error"
       });
     } finally {
-      setIsLoading(false);
+      setGlobalIsLoading(false);
     }
   };
 

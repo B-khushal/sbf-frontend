@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   Menu, Search, ShoppingCart, User, X, Heart, Sparkles, 
@@ -20,6 +21,8 @@ import { useSeasonalCampaign } from '@/contexts/SeasonalCampaignContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DeliveryLocationSelector } from './ui/DeliveryLocationSelector';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useFloating, offset, flip, shift, autoUpdate } from '@floating-ui/react';
+import { preprocessProductForSearch, createSearchIndex, rankSearchResults, SearchItem } from '@/utils/searchHelper';
 
 interface NavItem {
   href: string;
@@ -32,13 +35,27 @@ interface NavigationProps {
   cartItemCount?: number;
 }
 
-interface SearchSuggestion {
-  id: string;
-  title: string;
-  category: string;
-  image?: string;
-  price: number;
-}
+const HighlightMatch = ({ text, query }: { text: string; query: string }) => {
+  if (!query || !text) return <span>{text}</span>;
+  
+  const escapedQuery = query.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+  const regex = new RegExp(`(${escapedQuery})`, 'gi');
+  const parts = text.split(regex);
+  
+  return (
+    <span>
+      {parts.map((part, index) => 
+        regex.test(part) ? (
+          <mark key={index} className="bg-primary/20 text-primary font-semibold px-0.5 rounded">
+            {part}
+          </mark>
+        ) : (
+          part
+        )
+      )}
+    </span>
+  );
+};
 
 const popularSearches = [
   { term: "Roses", icon: "🌹", count: "1.2k+" },
@@ -122,7 +139,6 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
   }, [actualCartCount, items]);
   const { headerSettings, loading: settingsLoading } = useSettings();
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchSuggestions, setSearchSuggestions] = useState<SearchSuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
@@ -131,6 +147,14 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
   const userMenuRef = useRef<HTMLDivElement | null>(null);
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+
+  const [allProducts, setAllProducts] = useState<SearchItem[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
+  const [hasLoadedProducts, setHasLoadedProducts] = useState(false);
+  const [searchResults, setSearchResults] = useState<SearchItem[]>([]);
+  const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const fuseRef = useRef<any>(null);
 
   // Add outside-click + Esc handlers only while menu is open.
   useEffect(() => {
@@ -216,43 +240,143 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
     };
   }, []);
 
-  // Search suggestions API call
-  useEffect(() => {
-    const fetchSuggestions = async () => {
-      if (searchQuery.length < 2) {
-        setSearchSuggestions([]);
-        return;
-      }
+  const shouldShowDropdown =
+    isSearchFocused &&
+    (
+      searchQuery.length > 0 ||
+      recentSearches.length > 0 ||
+      popularSearches.length > 0
+    );
 
+  // Floating UI Setup
+  const { refs, floatingStyles, x, y, strategy } = useFloating({
+    placement: 'bottom-start',
+    open: shouldShowDropdown,
+    middleware: [
+      offset(8),
+      flip({ fallbackPlacements: ['top'] }),
+      shift({ padding: 12 })
+    ],
+    whileElementsMounted: autoUpdate,
+  });
+
+  // Debug logging
+  console.log("NAV_SEARCH_DEBUG:", JSON.stringify({
+    isSearchFocused,
+    searchQuery,
+    shouldShowDropdown,
+    recentSearchesCount: recentSearches.length,
+    floatingStyles,
+    x,
+    y,
+    strategy,
+    hasReference: !!refs.reference.current,
+    hasFloating: !!refs.floating.current
+  }));
+
+  // Load recent searches from localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('recentSearches');
+      if (saved) {
+        setRecentSearches(JSON.parse(saved));
+      }
+    } catch (e) {
+      console.error('Error loading recent searches', e);
+    }
+  }, []);
+
+  const saveSearchTerm = (term: string) => {
+    if (!term.trim()) return;
+    const cleanTerm = term.trim();
+    const updated = [
+      cleanTerm,
+      ...recentSearches.filter(s => s.toLowerCase() !== cleanTerm.toLowerCase())
+    ].slice(0, 10);
+    setRecentSearches(updated);
+    try {
+      localStorage.setItem('recentSearches', JSON.stringify(updated));
+    } catch (e) {
+      console.error('Error saving recent searches', e);
+    }
+  };
+
+  const removeRecentSearch = (e: React.MouseEvent, term: string) => {
+    e.stopPropagation();
+    const updated = recentSearches.filter(s => s !== term);
+    setRecentSearches(updated);
+    try {
+      localStorage.setItem('recentSearches', JSON.stringify(updated));
+    } catch (e) {
+      console.error('Error saving recent searches', e);
+    }
+  };
+
+  const clearAllRecentSearches = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setRecentSearches([]);
+    try {
+      localStorage.removeItem('recentSearches');
+    } catch (e) {
+      console.error('Error clearing recent searches', e);
+    }
+  };
+
+  // Pre-load products on focus
+  const handleSearchFocus = async () => {
+    setIsSearchFocused(true);
+    setShowSuggestions(true);
+    
+    if (hasLoadedProducts || isLoadingProducts) return;
+    
+    setIsLoadingProducts(true);
+    try {
+      const response = await api.get('/products');
+      const products = response.data.products || response.data || [];
+      const processed = products
+        .filter((p: any) => !p.hidden && (p.approvalStatus === 'approved' || !p.approvalStatus))
+        .map((p: any) => preprocessProductForSearch(p));
+        
+      setAllProducts(processed);
+      fuseRef.current = createSearchIndex(processed);
+      setHasLoadedProducts(true);
+    } catch (error) {
+      console.error('Error loading search index:', error);
+    } finally {
+      setIsLoadingProducts(false);
+    }
+  };
+
+  // Debounced search effect
+  useEffect(() => {
+    if (searchQuery.length < 2) {
+      setSearchResults([]);
+      setActiveSuggestionIndex(-1);
+      return;
+    }
+
+    const performLocalSearch = () => {
+      if (!fuseRef.current) return;
       setIsSearching(true);
       try {
-        const response = await api.get(`/products?search=${encodeURIComponent(searchQuery)}&limit=6`);
-        const products = response.data.products || response.data || [];
-        
-        const suggestions: SearchSuggestion[] = products.slice(0, 6).map((product: any) => ({
-          id: product._id,
-          title: product.title,
-          category: product.category,
-          image: product.images?.[0],
-          price: product.price
-        }));
-        
-        setSearchSuggestions(suggestions);
-      } catch (error) {
-        console.error('Error fetching search suggestions:', error);
-        setSearchSuggestions([]);
+        const fuseResults = fuseRef.current.search(searchQuery);
+        const ranked = rankSearchResults(fuseResults, searchQuery);
+        setSearchResults(ranked);
+      } catch (err) {
+        console.error('Fuzzy search error:', err);
       } finally {
         setIsSearching(false);
       }
     };
 
-    const debounceTimer = setTimeout(fetchSuggestions, 300);
+    const debounceTimer = setTimeout(performLocalSearch, 250);
     return () => clearTimeout(debounceTimer);
-  }, [searchQuery]);
+  }, [searchQuery, allProducts]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
+      saveSearchTerm(searchQuery);
       navigate(`/shop?search=${encodeURIComponent(searchQuery.trim())}`);
       setSearchQuery('');
       setShowSuggestions(false);
@@ -260,27 +384,123 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
     }
   };
 
-  const handleSuggestionClick = (suggestion: SearchSuggestion) => {
-    navigate(`/product/${suggestion.id}`);
+  const handleProductClick = (product: SearchItem) => {
+    saveSearchTerm(product.title);
+    navigate(`/product/${product._id}`);
     setSearchQuery('');
     setShowSuggestions(false);
     setIsSearchFocused(false);
   };
 
-  const handlePopularSearchClick = (term: string) => {
+  const handleQueryClick = (term: string) => {
+    saveSearchTerm(term);
     navigate(`/shop?search=${encodeURIComponent(term)}`);
     setSearchQuery('');
     setShowSuggestions(false);
     setIsSearchFocused(false);
   };
 
-  const handleSearchFocus = () => {
-    setIsSearchFocused(true);
-    setShowSuggestions(true);
-  };
-
   const handleCartClick = () => {
     navigate('/cart');
+  };
+
+  // Generate dynamic matching categories
+  const matchingCategories = headerSettings?.navigationItems
+    ?.filter(item => item.enabled && item.label.toLowerCase().includes(searchQuery.toLowerCase()))
+    .map(item => item.label)
+    .concat(
+      allProducts
+        .map(p => p.category)
+        .filter((cat, index, self) => cat && self.indexOf(cat) === index)
+        .filter(cat => cat.toLowerCase().includes(searchQuery.toLowerCase()))
+    )
+    .filter((cat, index, self) => cat && self.indexOf(cat) === index)
+    .slice(0, 4) || [];
+
+  // Generate dynamic search term suggestions
+  const dynamicSuggestions = (() => {
+    if (searchQuery.length < 2) return [];
+    const list: string[] = [];
+    const lowerQuery = searchQuery.toLowerCase().trim();
+    
+    popularSearches.forEach(item => {
+      if (item.term.toLowerCase().includes(lowerQuery) && item.term.toLowerCase() !== lowerQuery) {
+        list.push(item.term);
+      }
+    });
+
+    allProducts.forEach(product => {
+      if (product.category.toLowerCase().includes(lowerQuery) && !list.includes(product.category)) {
+        list.push(product.category);
+      }
+      (product.categories || []).forEach(cat => {
+        if (cat.toLowerCase().includes(lowerQuery) && !list.includes(cat)) {
+          list.push(cat);
+        }
+      });
+    });
+
+    allProducts.forEach(product => {
+      if (product.title.toLowerCase().startsWith(lowerQuery) && product.title.length < 30) {
+        if (!list.includes(product.title)) {
+          list.push(product.title);
+        }
+      }
+    });
+    
+    return list.slice(0, 5);
+  })();
+
+  // Handle keyboard navigation inside search dropdown
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!shouldShowDropdown) return;
+
+    const selectableItems: { type: 'query' | 'product'; value: string; id?: string; rawItem?: any }[] = [];
+
+    if (searchQuery.length < 2) {
+      recentSearches.forEach(term => {
+        selectableItems.push({ type: 'query', value: term });
+      });
+      popularSearches.forEach(item => {
+        selectableItems.push({ type: 'query', value: item.term });
+      });
+    } else {
+      matchingCategories.forEach(cat => {
+        selectableItems.push({ type: 'query', value: cat });
+      });
+      dynamicSuggestions.forEach(term => {
+        selectableItems.push({ type: 'query', value: term });
+      });
+      searchResults.slice(0, 5).forEach(product => {
+        selectableItems.push({ type: 'product', value: product.title, id: product._id, rawItem: product });
+      });
+    }
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setActiveSuggestionIndex(prev => 
+        prev < selectableItems.length - 1 ? prev + 1 : 0
+      );
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setActiveSuggestionIndex(prev => 
+        prev > 0 ? prev - 1 : selectableItems.length - 1
+      );
+    } else if (e.key === 'Enter') {
+      if (activeSuggestionIndex >= 0 && activeSuggestionIndex < selectableItems.length) {
+        e.preventDefault();
+        const selected = selectableItems[activeSuggestionIndex];
+        if (selected.type === 'query') {
+          handleQueryClick(selected.value);
+        } else if (selected.type === 'product' && selected.id) {
+          handleProductClick(selected.rawItem);
+        }
+      }
+    } else if (e.key === 'Escape') {
+      setShowSuggestions(false);
+      const input = e.currentTarget.querySelector('input');
+      if (input) input.blur();
+    }
   };
 
   return (
@@ -382,7 +602,11 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.4, delay: 0.2, ease: "easeOut" }}
             >
-              <form onSubmit={handleSearchSubmit} className="flex-1 w-full relative">
+              <form 
+                onSubmit={handleSearchSubmit} 
+                className="flex-1 w-full relative"
+                onKeyDown={handleKeyDown}
+              >
                 <div className="relative group isolate">
                   <Search 
                     size={18} 
@@ -392,19 +616,21 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                     )} 
                   />
                   <Input
+                    ref={refs.setReference}
                     type="text"
+                    role="combobox"
+                    aria-expanded={shouldShowDropdown}
+                    aria-autocomplete="list"
+                    aria-controls="search-results-listbox"
+                    aria-haspopup="listbox"
                     placeholder={isMobile ? "Search..." : "Search for flowers, bouquets, gifts..."}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onFocus={handleSearchFocus}
-                    onBlur={(e) => {
-                      // Only hide if not clicking on dropdown
-                      if (!e.relatedTarget?.closest('[data-search-dropdown]')) {
-                        setTimeout(() => {
-                          setIsSearchFocused(false);
-                          setShowSuggestions(false);
-                        }, 150);
-                      }
+                    onBlur={() => {
+                      setTimeout(() => {
+                        setIsSearchFocused(false);
+                      }, 150);
                     }}
                     className={cn(
                       "w-full pl-12 pr-12 py-3 text-sm border-2 rounded-2xl transition-all duration-200 placeholder:text-gray-400",
@@ -432,11 +658,21 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                     )}
                   </div>
                   
-                  {/* Enhanced Search Suggestions Dropdown */}
-                  <AnimatePresence mode="wait">
-                    {(showSuggestions && isSearchFocused) && (
-                      <motion.div
+                  {/* Enhanced Search Suggestions Dropdown using Portal */}
+                  {createPortal(
+                    <AnimatePresence>
+                      {shouldShowDropdown && (
+                        <motion.div
+                        ref={refs.setFloating}
+                        style={{
+                          position: strategy,
+                          left: x ?? 0,
+                          top: y ?? 0,
+                          zIndex: 10000,
+                        }}
                         data-search-dropdown
+                        id="search-results-listbox"
+                        role="listbox"
                         initial={{ opacity: 0, y: 8, scale: 0.96 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 8, scale: 0.96 }}
@@ -444,125 +680,274 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                           duration: 0.15, 
                           ease: "easeOut"
                         }}
-                        className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-100 rounded-2xl shadow-xl z-dropdown max-h-96 overflow-hidden will-change-transform dropdown-responsive"
-                        style={{ 
-                          transform: 'translateZ(0)', // Force hardware acceleration
-                          contain: 'layout style paint' // Optimize rendering
-                        }}
+                        className="bg-white border border-gray-100 rounded-2xl shadow-2xl overflow-hidden dropdown-responsive flex flex-col max-h-[70vh] w-[min(90vw,380px)] sm:w-[460px] md:w-[600px] select-none"
                       >
-                        {searchQuery.length >= 2 && searchSuggestions.length > 0 && (
-                          <div className="p-3">
-                            <div className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                              <Search size={14} />
-                              <span>Search Results</span>
-                            </div>
-                            <div className="space-y-1">
-                              {searchSuggestions.map((suggestion, index) => (
-                                <motion.button
-                                  key={suggestion.id}
-                                  onClick={() => handleSuggestionClick(suggestion)}
-                                  className="w-full text-left px-3 py-3 hover:bg-gradient-to-r hover:from-primary/5 hover:to-secondary/5 rounded-xl transition-all duration-150 flex items-center gap-3 group"
-                                  initial={{ opacity: 0, x: -10 }}
-                                  animate={{ opacity: 1, x: 0 }}
-                                  transition={{ 
-                                    duration: 0.2, 
-                                    delay: index * 0.05,
-                                    ease: "easeOut"
-                                  }}
-                                  whileHover={{ 
-                                    x: 2,
-                                    transition: { duration: 0.1 }
-                                  }}
-                                  whileTap={{ scale: 0.98 }}
-                                >
-                                  <div className="w-10 h-10 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex-shrink-0 overflow-hidden">
-                                    {suggestion.image && (
-                                      <img 
-                                        src={suggestion.image} 
-                                        alt={suggestion.title}
-                                        className="w-full h-full object-cover"
-                                        loading="lazy"
-                                      />
+                        <div className="flex flex-col h-full max-h-[70vh]">
+                          <div className="overflow-y-auto p-4 space-y-4 max-h-[70vh] scrollbar-thin" style={{ scrollbarWidth: 'thin' }}>
+                            {isLoadingProducts && searchQuery.length >= 2 && (
+                              <div className="flex items-center justify-center py-8 gap-2 text-sm text-gray-500">
+                                <RefreshCw size={16} className="animate-spin text-primary" />
+                                <span>Initializing search index...</span>
+                              </div>
+                            )}
+
+                            {searchQuery.length < 2 && (
+                              <>
+                                {/* Recent Searches */}
+                                {recentSearches.length > 0 && (
+                                  <div className="space-y-2">
+                                    <div className="flex items-center justify-between px-2">
+                                      <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Recent Searches</span>
+                                      <button 
+                                        type="button"
+                                        onClick={clearAllRecentSearches}
+                                        className="text-xs text-primary hover:underline font-semibold"
+                                      >
+                                        Clear All
+                                      </button>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2 px-2">
+                                      {recentSearches.map((term, index) => (
+                                        <div 
+                                          key={term}
+                                          role="option"
+                                          aria-selected={index === activeSuggestionIndex}
+                                          onClick={() => handleQueryClick(term)}
+                                          className={cn(
+                                            "flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 hover:bg-primary/5 hover:text-primary rounded-xl cursor-pointer text-sm transition-colors group",
+                                            index === activeSuggestionIndex && "bg-primary/10 text-primary ring-1 ring-primary/20"
+                                          )}
+                                          onMouseEnter={() => setActiveSuggestionIndex(-1)}
+                                        >
+                                          <span>{term}</span>
+                                          <X 
+                                            size={12} 
+                                            onClick={(e) => removeRecentSearch(e, term)}
+                                            className="text-gray-400 hover:text-red-500 cursor-pointer transition-colors" 
+                                          />
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Popular Searches */}
+                                <div className="space-y-2">
+                                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider px-2 block">Popular Searches</span>
+                                  <div className="grid grid-cols-2 gap-2 px-1">
+                                    {popularSearches.map((item, index) => {
+                                      const globalIndex = recentSearches.length + index;
+                                      return (
+                                        <button
+                                          key={item.term}
+                                          type="button"
+                                          role="option"
+                                          aria-selected={globalIndex === activeSuggestionIndex}
+                                          onClick={() => handleQueryClick(item.term)}
+                                          className={cn(
+                                            "text-left px-3 py-2 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-primary/5 hover:to-secondary/5 rounded-xl transition-all duration-150 flex items-center gap-2 group",
+                                            globalIndex === activeSuggestionIndex && "bg-gradient-to-r from-primary/5 to-secondary/5 text-primary"
+                                          )}
+                                          onMouseEnter={() => setActiveSuggestionIndex(-1)}
+                                        >
+                                          <span className="text-lg">{item.icon}</span>
+                                          <div className="flex-1 min-w-0">
+                                            <span className="group-hover:text-primary transition-colors duration-150 truncate block font-medium">{item.term}</span>
+                                            <span className="text-xs text-gray-400 block">{item.count} searches</span>
+                                          </div>
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+
+                                {/* Quick Actions */}
+                                <div className="pt-2 border-t border-gray-100 space-y-2">
+                                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider px-2 block">Quick Actions</span>
+                                  <div className="grid grid-cols-2 gap-2 px-1">
+                                    {quickActions.map((action) => (
+                                      <Link
+                                        key={action.href}
+                                        to={action.href}
+                                        className="flex items-center gap-2 px-3 py-2.5 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-primary/5 hover:to-secondary/5 rounded-xl transition-all duration-200 group"
+                                        onClick={() => {
+                                          setShowSuggestions(false);
+                                          setIsSearchFocused(false);
+                                        }}
+                                      >
+                                        <div className="text-gray-400 group-hover:text-primary transition-colors">
+                                          {action.icon}
+                                        </div>
+                                        <span className="group-hover:text-primary transition-colors truncate font-medium">{action.label}</span>
+                                      </Link>
+                                    ))}
+                                  </div>
+                                </div>
+                              </>
+                            )}
+
+                            {!isLoadingProducts && searchQuery.length >= 2 && (
+                              <>
+                                {/* Categories and Suggestions suggestions */}
+                                {(matchingCategories.length > 0 || dynamicSuggestions.length > 0) && (
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    {/* Matching Categories */}
+                                    {matchingCategories.length > 0 && (
+                                      <div className="space-y-1.5">
+                                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider px-2 block">Categories</span>
+                                        <div className="space-y-0.5">
+                                          {matchingCategories.map((cat, index) => {
+                                            const globalIndex = index;
+                                            return (
+                                              <button
+                                                key={cat}
+                                                type="button"
+                                                role="option"
+                                                aria-selected={globalIndex === activeSuggestionIndex}
+                                                onClick={() => handleQueryClick(cat)}
+                                                className={cn(
+                                                  "w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-primary/5 hover:text-primary rounded-xl transition-colors flex items-center gap-2 font-medium",
+                                                  globalIndex === activeSuggestionIndex && "bg-primary/5 text-primary"
+                                                )}
+                                                onMouseEnter={() => setActiveSuggestionIndex(-1)}
+                                              >
+                                                <Package size={14} className="text-gray-400 group-hover:text-primary" />
+                                                <span className="truncate">
+                                                  <HighlightMatch text={cat} query={searchQuery} />
+                                                </span>
+                                              </button>
+                                            );
+                                          })}
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    {/* Dynamic Suggestions */}
+                                    {dynamicSuggestions.length > 0 && (
+                                      <div className="space-y-1.5">
+                                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider px-2 block">Suggestions</span>
+                                        <div className="space-y-0.5">
+                                          {dynamicSuggestions.map((term, index) => {
+                                            const globalIndex = matchingCategories.length + index;
+                                            return (
+                                              <button
+                                                key={term}
+                                                type="button"
+                                                role="option"
+                                                aria-selected={globalIndex === activeSuggestionIndex}
+                                                onClick={() => handleQueryClick(term)}
+                                                className={cn(
+                                                  "w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-primary/5 hover:text-primary rounded-xl transition-colors flex items-center gap-2 font-medium",
+                                                  globalIndex === activeSuggestionIndex && "bg-primary/5 text-primary"
+                                                )}
+                                                onMouseEnter={() => setActiveSuggestionIndex(-1)}
+                                              >
+                                                <Search size={14} className="text-gray-400 group-hover:text-primary" />
+                                                <span className="truncate">
+                                                  <HighlightMatch text={term} query={searchQuery} />
+                                                </span>
+                                              </button>
+                                            );
+                                          })}
+                                        </div>
+                                      </div>
                                     )}
                                   </div>
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium text-gray-900 truncate group-hover:text-primary transition-colors duration-150">
-                                      {suggestion.title}
-                                    </p>
-                                    <p className="text-xs text-gray-500 capitalize">{suggestion.category}</p>
+                                )}
+
+                                {/* Product Results */}
+                                {searchResults.length > 0 && (
+                                  <div className="space-y-2 pt-2 border-t border-gray-100">
+                                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider px-2 block">Products</span>
+                                    <div className="space-y-1">
+                                      {searchResults.slice(0, 5).map((product, index) => {
+                                        const globalIndex = matchingCategories.length + dynamicSuggestions.length + index;
+                                        return (
+                                          <button
+                                            key={product._id}
+                                            type="button"
+                                            role="option"
+                                            aria-selected={globalIndex === activeSuggestionIndex}
+                                            onClick={() => handleProductClick(product)}
+                                            className={cn(
+                                              "w-full text-left p-2 hover:bg-gradient-to-r hover:from-primary/5 hover:to-secondary/5 rounded-2xl transition-all flex items-start gap-3 group border border-transparent hover:border-gray-100",
+                                              globalIndex === activeSuggestionIndex && "bg-gradient-to-r from-primary/5 to-secondary/5 border-gray-100 text-primary"
+                                            )}
+                                            onMouseEnter={() => setActiveSuggestionIndex(-1)}
+                                          >
+                                            <div className="w-14 h-14 bg-gray-50 rounded-xl overflow-hidden flex-shrink-0 border border-gray-100">
+                                              {product.images?.[0] ? (
+                                                <img 
+                                                  src={product.images[0]} 
+                                                  alt={product.title}
+                                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                                  loading="lazy"
+                                                />
+                                              ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-gray-300">
+                                                  <Package size={20} />
+                                                </div>
+                                              )}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                              <div className="flex items-start justify-between gap-2">
+                                                <p className="text-sm font-bold text-gray-900 group-hover:text-primary truncate">
+                                                  <HighlightMatch text={product.title} query={searchQuery} />
+                                                </p>
+                                                <p className="text-sm font-black text-primary whitespace-nowrap">
+                                                  ₹{product.price}
+                                                </p>
+                                              </div>
+                                              <p className="text-xs font-semibold text-gray-400 capitalize mb-1">
+                                                <HighlightMatch text={product.category} query={searchQuery} />
+                                              </p>
+                                              <p className="text-xs text-gray-500 line-clamp-1">
+                                                <HighlightMatch text={product.shortDescription} query={searchQuery} />
+                                              </p>
+                                            </div>
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
                                   </div>
-                                  <div className="text-right flex flex-col items-end gap-1">
-                                    <p className="text-sm font-bold text-primary">₹{suggestion.price}</p>
-                                    <ArrowRight size={12} className="text-gray-400 group-hover:text-primary transition-colors duration-150" />
+                                )}
+
+                                {/* Empty State */}
+                                {searchResults.length === 0 && matchingCategories.length === 0 && dynamicSuggestions.length === 0 && !isSearching && (
+                                  <div className="py-8 text-center space-y-4">
+                                    <div className="text-4xl text-gray-300">🔍</div>
+                                    <div className="space-y-1">
+                                      <h3 className="text-base font-bold text-gray-700">No products found</h3>
+                                      <p className="text-xs text-gray-400 max-w-xs mx-auto">
+                                        No results match "{searchQuery}". Please check your spelling or search another keyword.
+                                      </p>
+                                    </div>
+                                    <div className="pt-4 border-t border-gray-100 max-w-sm mx-auto">
+                                      <span className="text-xs font-semibold text-gray-400 block mb-2 text-left px-2">Popular Categories</span>
+                                      <div className="flex flex-wrap gap-2 justify-center">
+                                        {popularSearches.slice(0, 5).map(item => (
+                                          <button
+                                            key={item.term}
+                                            type="button"
+                                            onClick={() => handleQueryClick(item.term)}
+                                            className="text-xs px-2.5 py-1.5 bg-gray-50 hover:bg-primary/5 hover:text-primary font-semibold rounded-lg transition-colors border border-gray-100"
+                                          >
+                                            {item.icon} {item.term}
+                                          </button>
+                                        ))}
+                                      </div>
+                                    </div>
                                   </div>
-                                </motion.button>
-                              ))}
-                            </div>
+                                )}
+                              </>
+                            )}
                           </div>
-                        )}
-                        
-                        {searchQuery.length < 2 && (
-                          <div className="p-3">
-                            <div className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                              <TrendingUp size={14} />
-                              <span>Popular Searches</span>
-                            </div>
-                            <div className="grid grid-cols-2 gap-2">
-                              {popularSearches.slice(0, 6).map((item, index) => (
-                                <motion.button
-                                  key={item.term}
-                                  onClick={() => handlePopularSearchClick(item.term)}
-                                  className="text-left px-3 py-2 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-primary/5 hover:to-secondary/5 rounded-xl transition-all duration-150 flex items-center gap-2 group"
-                                  initial={{ opacity: 0, y: 10 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  transition={{ 
-                                    duration: 0.2, 
-                                    delay: index * 0.05,
-                                    ease: "easeOut"
-                                  }}
-                                  whileHover={{ 
-                                    x: 2,
-                                    transition: { duration: 0.1 }
-                                  }}
-                                  whileTap={{ scale: 0.98 }}
-                                >
-                                  <span className="text-lg">{item.icon}</span>
-                                  <div className="flex-1">
-                                    <span className="group-hover:text-primary transition-colors duration-150">{item.term}</span>
-                                    <span className="text-xs text-gray-400 ml-1">({item.count})</span>
-                                  </div>
-                                </motion.button>
-                              ))}
-                            </div>
-                            
-                            {/* Quick Actions */}
-                            <div className="mt-4 pt-3 border-t border-gray-100">
-                              <div className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                <Zap size={14} />
-                                <span>Quick Actions</span>
-                              </div>
-                              <div className="grid grid-cols-2 gap-2">
-                                {quickActions.map((action) => (
-                                  <Link
-                                    key={action.href}
-                                    to={action.href}
-                                    className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-primary/5 hover:to-secondary/5 rounded-xl transition-all duration-200 group"
-                                    onClick={() => {
-                                      setShowSuggestions(false);
-                                      setIsSearchFocused(false);
-                                    }}
-                                  >
-                                    {action.icon}
-                                    <span className="group-hover:text-primary transition-colors">{action.label}</span>
-                                  </Link>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                        )}
+                        </div>
                       </motion.div>
                     )}
-                  </AnimatePresence>
+                  </AnimatePresence>,
+                  document.body
+                )}
                 </div>
               </form>
 
