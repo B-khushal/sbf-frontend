@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, Truck, ArrowRight, User, MapPin, Package, ChevronDown, ChevronUp, Info, Clock, Gift, Home } from 'lucide-react';
+import { Check, Truck, ArrowRight, User, MapPin, Package, ChevronDown, ChevronUp, Info, Clock, Gift, Home, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -114,11 +114,13 @@ const CheckoutShippingPage = () => {
       return 'self';
     }
   });
-  const [giftMessage, setGiftMessage] = useState(() => {
+
+  const [cardMessage, setCardMessage] = useState<string>(() => {
     try {
       const info = localStorage.getItem('shippingInfo');
       if (info) {
         const parsed = JSON.parse(info);
+        if (parsed.cardMessage) return parsed.cardMessage;
         if (parsed.giftMessage) return parsed.giftMessage;
       }
       const firstValItem = items.find(item => item.customizations?.loveNote);
@@ -127,6 +129,21 @@ const CheckoutShippingPage = () => {
       return '';
     }
   });
+
+  const [deliverySpecialInstructions, setDeliverySpecialInstructions] = useState<string>(() => {
+    try {
+      const info = localStorage.getItem('shippingInfo');
+      if (info) {
+        const parsed = JSON.parse(info);
+        if (parsed.deliverySpecialInstructions) return parsed.deliverySpecialInstructions;
+        if (parsed.notes) return parsed.notes;
+      }
+      return '';
+    } catch {
+      return '';
+    }
+  });
+  
   const { formatPrice, convertPrice } = useCurrency();
   const isMobile = useIsMobile();
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
@@ -340,13 +357,12 @@ const CheckoutShippingPage = () => {
       });
       setReceiverPinValidation({ isValid: true, message: '' });
       
-      if (address.giftMessage) {
-        setGiftMessage(address.giftMessage);
-      }
     }
     
     // Switch to the correct delivery option if needed
     setDeliveryOption(address.deliveryOption);
+    setCardMessage(address.cardMessage || address.giftMessage || '');
+    setDeliverySpecialInstructions(address.deliverySpecialInstructions || address.notes || '');
     setIsSavedAddressesOpen(false);
     
     toast({
@@ -412,7 +428,10 @@ const CheckoutShippingPage = () => {
       deliveryFee,
       isFirstOrderFreeDelivery: deliveryCalculation?.isFirstOrderFreeDelivery ?? false,
       selectedDate: selectedDate.toISOString(),
-      giftMessage: deliveryOption === 'gift' ? giftMessage : undefined,
+      cardMessage: cardMessage,
+      deliverySpecialInstructions: deliverySpecialInstructions,
+      giftMessage: cardMessage, // legacy compatibility
+      notes: deliverySpecialInstructions, // legacy compatibility
       greetingCard: hasValentine ? greetingCard : 'none',
       surpriseDelivery: hasValentine ? surpriseDelivery : false,
       anonymousGift: hasValentine ? anonymousGift : false,
@@ -434,10 +453,12 @@ const CheckoutShippingPage = () => {
           zipCode: deliveryOption === 'self' ? formData.zipCode : formData.receiverZipCode,
           phone: deliveryOption === 'self' ? formData.phone : formData.receiverPhone,
           email: deliveryOption === 'self' ? formData.email : formData.receiverEmail,
-          notes: formData.notes,
+          notes: deliverySpecialInstructions,
+          cardMessage: cardMessage,
+          deliverySpecialInstructions: deliverySpecialInstructions,
           deliveryOption,
           isDefault: savedAddresses.length === 0,
-          giftMessage: deliveryOption === 'gift' ? giftMessage : '',
+          giftMessage: cardMessage,
           receiverFirstName: formData.receiverFirstName,
           receiverLastName: formData.receiverLastName,
           receiverEmail: formData.receiverEmail,
@@ -876,21 +897,6 @@ const CheckoutShippingPage = () => {
                               </AlertDescription>
                             </Alert>
                           )}
-
-                          <div className="space-y-2">
-                            <label htmlFor="notes" className="block text-sm font-medium">
-                              Delivery Notes (optional)
-                            </label>
-                            <Textarea
-                              id="notes"
-                              name="notes"
-                              value={formData.notes}
-                              onChange={handleInputChange}
-                              placeholder="Any special instructions for delivery..."
-                              rows={3}
-                              className="min-h-[112px] rounded-xl border-slate-300 text-base shadow-sm focus-visible:ring-2 focus-visible:ring-emerald-500"
-                            />
-                          </div>
                         </div>
                       )}
                     </div>
@@ -1065,17 +1071,6 @@ const CheckoutShippingPage = () => {
                             />
                           </div>
                         </div>
-                        
-                        {/* Gift Message Card */}
-                        <div className="space-y-2">
-                          <label className="block text-sm font-medium">
-                            Gift Message (optional)
-                          </label>
-                          <MessageCard 
-                            message={giftMessage}
-                            onChange={setGiftMessage}
-                          />
-                        </div>
                       </div>
                     )}
                     
@@ -1160,6 +1155,62 @@ const CheckoutShippingPage = () => {
                         </div>
                       </div>
                     )}
+
+                    {/* Gifting & Delivery Special Options Card */}
+                    <div className={sectionCardClassName}>
+                      <div className="flex items-center gap-2">
+                        <MessageSquare size={18} className={hasValentine ? "text-rose-500" : "text-primary"} />
+                        <h2 className="text-lg font-medium">Gifting & Delivery Options</h2>
+                      </div>
+                      
+                      {/* Card Message Textarea */}
+                      <div className="space-y-2 mt-4">
+                        <div className="flex items-center justify-between">
+                          <label htmlFor="cardMessage" className="block text-sm font-medium">
+                            Card Message (optional)
+                          </label>
+                          <span className={cn("text-xs", cardMessage.length > 150 ? "text-red-500 font-bold animate-pulse" : "text-slate-500")}>
+                            {cardMessage.length}/150
+                          </span>
+                        </div>
+                        <Textarea
+                          id="cardMessage"
+                          name="cardMessage"
+                          value={cardMessage}
+                          onChange={(e) => setCardMessage(e.target.value.slice(0, 150))}
+                          placeholder="Write a message to be written on the greeting card (e.g., Happy Birthday! Wishing you a great year ahead...)"
+                          rows={3}
+                          className="min-h-[100px] rounded-xl border-slate-300 text-base shadow-sm focus-visible:ring-2 focus-visible:ring-emerald-500"
+                        />
+                        <p className="text-xs text-slate-500">
+                          This message will be printed and included with your order. (Max 150 characters)
+                        </p>
+                      </div>
+
+                      {/* Delivery Special Instructions Textarea */}
+                      <div className="space-y-2 mt-4">
+                        <div className="flex items-center justify-between">
+                          <label htmlFor="deliverySpecialInstructions" className="block text-sm font-medium">
+                            Delivery Special Instructions (optional)
+                          </label>
+                          <span className={cn("text-xs", deliverySpecialInstructions.length > 250 ? "text-red-500 font-bold animate-pulse" : "text-slate-500")}>
+                            {deliverySpecialInstructions.length}/250
+                          </span>
+                        </div>
+                        <Textarea
+                          id="deliverySpecialInstructions"
+                          name="deliverySpecialInstructions"
+                          value={deliverySpecialInstructions}
+                          onChange={(e) => setDeliverySpecialInstructions(e.target.value.slice(0, 250))}
+                          placeholder="e.g. Ring bell, leave at reception, landmark, contact receiver before delivery..."
+                          rows={3}
+                          className="min-h-[100px] rounded-xl border-slate-300 text-base shadow-sm focus-visible:ring-2 focus-visible:ring-emerald-500"
+                        />
+                        <p className="text-xs text-slate-500">
+                          Specific instructions for our delivery partner. (Max 250 characters)
+                        </p>
+                      </div>
+                    </div>
 
                     {/* Time Slot Selector */}
                     <div className={cn(sectionCardClassName, 'scroll-mb-44')}>

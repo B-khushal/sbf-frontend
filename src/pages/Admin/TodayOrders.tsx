@@ -22,6 +22,8 @@ type BoardItem = {
   paymentMethod: string;
   item: Order['items'][number];
   column: BoardColumn;
+  cardMessage?: string;
+  deliverySpecialInstructions?: string;
 };
 
 const REFRESH_INTERVAL_MS = 25000;
@@ -131,7 +133,9 @@ const toBoardItems = (orders: Order[]): BoardItem[] => {
       deliveryAddress,
       paymentMethod: order.paymentDetails?.method || 'N/A',
       item,
-      column: getColumnFromStatus(order.status)
+      column: getColumnFromStatus(order.status),
+      cardMessage: order.shippingDetails.cardMessage || order.shippingDetails.giftMessage || '',
+      deliverySpecialInstructions: order.shippingDetails.deliverySpecialInstructions || order.shippingDetails.notes || ''
     }));
   });
 };
@@ -482,6 +486,24 @@ const TodayOrders: React.FC = () => {
                   <p className="text-sm text-slate-700">Phone: {selectedCard.customerPhone}</p>
                   <p className="text-sm text-slate-700">Address: {selectedCard.deliveryAddress || 'N/A'}</p>
                   <p className="text-sm text-slate-700">Payment: {selectedCard.paymentMethod}</p>
+
+                  {selectedCard.cardMessage && (
+                    <div className="rounded-md border border-rose-200 bg-rose-50/50 p-3 mt-2">
+                      <p className="mb-1.5 text-xs font-black uppercase tracking-wider text-rose-700">💌 Card Message</p>
+                      <p className="text-sm italic font-bold text-slate-800">
+                        "{selectedCard.cardMessage}"
+                      </p>
+                    </div>
+                  )}
+
+                  {selectedCard.deliverySpecialInstructions && (
+                    <div className="rounded-md border border-blue-200 bg-blue-50/50 p-3 mt-2">
+                      <p className="mb-1.5 text-xs font-black uppercase tracking-wider text-blue-700">🚚 Delivery Special Instructions</p>
+                      <p className="text-sm text-slate-700 italic">
+                        "{selectedCard.deliverySpecialInstructions}"
+                      </p>
+                    </div>
+                  )}
 
                   {hasCustomizations(selectedCard.item.customizations) && (
                     <div className="rounded-md border border-orange-300 bg-orange-100 p-3">

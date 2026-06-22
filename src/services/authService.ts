@@ -25,6 +25,8 @@ export interface SavedAddress {
   phone: string;
   email?: string;
   notes?: string;
+  cardMessage?: string;
+  deliverySpecialInstructions?: string;
   deliveryOption: 'self' | 'gift';
   isDefault?: boolean;
   giftMessage?: string;

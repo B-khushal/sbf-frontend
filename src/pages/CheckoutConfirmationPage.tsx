@@ -57,6 +57,12 @@ const successVariants = {
 };
 
 const DEFAULT_TIME_SLOTS: { [key: string]: TimeSlot } = {
+  'same_day': {
+    id: 'same_day',
+    label: 'Same-Day Standard',
+    time: '9:00 AM - 9:00 PM',
+    available: true
+  },
   'morning': {
     id: 'morning',
     label: 'Morning',
@@ -66,19 +72,19 @@ const DEFAULT_TIME_SLOTS: { [key: string]: TimeSlot } = {
   'afternoon': {
     id: 'afternoon',
     label: 'Afternoon',
-    time: '1:00 PM - 4:00 PM',
+    time: '12:00 PM - 3:00 PM',
+    available: true
+  },
+  'late_afternoon': {
+    id: 'late_afternoon',
+    label: 'Late Afternoon',
+    time: '3:00 PM - 6:00 PM',
     available: true
   },
   'evening': {
     id: 'evening',
     label: 'Evening',
-    time: '5:00 PM - 8:00 PM',
-    available: true
-  },
-  'midnight': {
-    id: 'midnight',
-    label: 'Midnight',
-    time: '12:00 AM - 3:00 AM',
+    time: '6:00 PM - 9:00 PM',
     available: true
   }
 };
@@ -708,13 +714,30 @@ const CheckoutConfirmationPage = () => {
                     </div>
                   </div>
 
+                  {/* Card Message */}
+                  {(order.shipping?.cardMessage || order.shipping?.giftMessage || order.giftDetails?.message) && (
+                    <>
+                      <Separator />
+                      <div>
+                        <span className="font-medium text-sm text-rose-700 flex items-center gap-1.5">
+                          💌 Card Message:
+                        </span>
+                        <p className="text-sm text-gray-600 mt-1 italic">
+                          "{order.shipping.cardMessage || order.shipping.giftMessage || order.giftDetails.message}"
+                        </p>
+                      </div>
+                    </>
+                  )}
+
                   {/* Special Instructions */}
-                  {order.shipping?.notes && (
+                  {(order.shipping?.deliverySpecialInstructions || order.shipping?.notes) && (
                     <>
                       <Separator />
                       <div>
                         <span className="font-medium text-sm">Special Instructions:</span>
-                        <p className="text-sm text-gray-600 mt-1 italic">"{order.shipping.notes}"</p>
+                        <p className="text-sm text-gray-600 mt-1 italic">
+                          "{order.shipping.deliverySpecialInstructions || order.shipping.notes}"
+                        </p>
                       </div>
                     </>
                   )}

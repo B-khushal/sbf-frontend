@@ -16,6 +16,8 @@ const orderSchema = new mongoose.Schema({
     state: String,
     zipCode: String,
     notes: String,
+    cardMessage: String,
+    deliverySpecialInstructions: String,
     deliveryDate: Date,
     timeSlot: String
   },

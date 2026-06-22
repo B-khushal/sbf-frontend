@@ -13,6 +13,8 @@ export interface Order {
     state: string;
     zipCode: string;
     notes?: string;
+    cardMessage?: string;
+    deliverySpecialInstructions?: string;
     deliveryDate: string;
     timeSlot: string;
   };

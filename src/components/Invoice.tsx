@@ -247,17 +247,22 @@ const Invoice: React.FC<InvoiceProps> = ({ order, isAdmin = false }) => {
               <div className="text-[11px] text-slate-700 space-y-0.5">
                 <p><strong>Date:</strong> {formatDate(shipping.deliveryDate)}</p>
                 <p><strong>Slot:</strong> {shipping.timeSlot || 'Standard Delivery'}</p>
+                {(shipping.deliverySpecialInstructions || shipping.notes) && (
+                  <p className="mt-1 text-[10px] text-slate-500 italic">
+                    <strong>Instructions:</strong> {shipping.deliverySpecialInstructions || shipping.notes}
+                  </p>
+                )}
               </div>
             </div>
           </div>
 
-          {shipping.giftMessage && (
+          {(shipping.cardMessage || shipping.giftMessage) && (
             <div className="border border-dashed border-amber-300 bg-amber-50/30 rounded-xl p-3.5">
               <h4 className="text-[10px] font-bold text-amber-600 uppercase tracking-wider border-b border-amber-200/50 pb-1 mb-1.5">
-                🎁 Gift Card Message
+                💌 Card Message
               </h4>
               <p className="text-xs font-medium text-slate-700 italic leading-relaxed">
-                "{shipping.giftMessage}"
+                "{shipping.cardMessage || shipping.giftMessage}"
               </p>
             </div>
           )}

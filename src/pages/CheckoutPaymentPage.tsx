@@ -127,6 +127,8 @@ declare global {
     state: string;
     zipCode: string;
     notes?: string;
+    cardMessage?: string;
+    deliverySpecialInstructions?: string;
     timeSlot: string;
     deliveryOption?: string;
     deliveryFee?: number;
@@ -368,7 +370,9 @@ const CheckoutPaymentPage = () => {
            city: shippingInfo.city,
            state: shippingInfo.state,
            zipCode: shippingInfo.zipCode,
-           notes: shippingInfo.notes || '',
+           notes: shippingInfo.deliverySpecialInstructions || shippingInfo.notes || '',
+           cardMessage: shippingInfo.cardMessage || shippingInfo.giftMessage || '',
+           deliverySpecialInstructions: shippingInfo.deliverySpecialInstructions || shippingInfo.notes || '',
            deliveryDate: shippingInfo.selectedDate ? new Date(shippingInfo.selectedDate) : new Date(),
            timeSlot: shippingInfo.timeSlot
          },
@@ -384,9 +388,9 @@ const CheckoutPaymentPage = () => {
        };
        
         // Add gift details if present or if there are Valentine upgrades
-        if (shippingInfo.giftMessage || shippingInfo.receiverFirstName || shippingInfo.greetingCard || shippingInfo.surpriseDelivery || shippingInfo.anonymousGift) {
+        if (shippingInfo.giftMessage || shippingInfo.cardMessage || shippingInfo.receiverFirstName || shippingInfo.greetingCard || shippingInfo.surpriseDelivery || shippingInfo.anonymousGift) {
           (orderData as any).giftDetails = {
-            message: shippingInfo.giftMessage || '',
+            message: shippingInfo.cardMessage || shippingInfo.giftMessage || '',
             recipientName: shippingInfo.receiverFirstName && shippingInfo.receiverLastName 
               ? `${shippingInfo.receiverFirstName} ${shippingInfo.receiverLastName}`.trim()
               : '',
@@ -817,10 +821,11 @@ const CheckoutPaymentPage = () => {
 
   const formatTimeSlot = (timeSlot: string) => {
     const timeSlots: { [key: string]: string } = {
+      'same_day': '9:00 AM - 9:00 PM',
       'morning': '9:00 AM - 12:00 PM',
-      'afternoon': '1:00 PM - 4:00 PM',
-      'evening': '5:00 PM - 8:00 PM',
-      'midnight': '12:00 AM - 3:00 AM'
+      'afternoon': '12:00 PM - 3:00 PM',
+      'late_afternoon': '3:00 PM - 6:00 PM',
+      'evening': '6:00 PM - 9:00 PM'
     };
     return timeSlots[timeSlot] || timeSlot;
   };

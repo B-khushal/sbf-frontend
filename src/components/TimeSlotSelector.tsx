@@ -40,21 +40,20 @@ const DEFAULT_TIME_SLOTS: TimeSlot[] = [
   {
     id: 'afternoon',
     label: 'Afternoon',
-    time: '1:00 PM - 4:00 PM',
+    time: '12:00 PM - 3:00 PM',
+    available: true
+  },
+  {
+    id: 'late_afternoon',
+    label: 'Late Afternoon',
+    time: '3:00 PM - 6:00 PM',
     available: true
   },
   {
     id: 'evening',
     label: 'Evening',
-    time: '5:00 PM - 8:00 PM',
+    time: '6:00 PM - 9:00 PM',
     available: true
-  },
-  {
-    id: 'midnight',
-    label: 'Midnight Express',
-    time: '10:00 PM - 12:00 AM',
-    available: true,
-    price: 300.00
   }
 ];
 
@@ -248,6 +247,37 @@ const TimeSlotSelector = ({
   const [holidays, setHolidays] = useState<Holiday[]>([]);
   const [isLoadingHolidays, setIsLoadingHolidays] = useState(true);
   const { formatPrice, convertPrice } = useCurrency();
+
+  const isToday = useMemo(() => {
+    if (!date) return false;
+    const now = new Date();
+    return (
+      date.getDate() === now.getDate() &&
+      date.getMonth() === now.getMonth() &&
+      date.getFullYear() === now.getFullYear()
+    );
+  }, [date]);
+
+  const activeTimeSlots = useMemo(() => {
+    if (isToday) {
+      return [
+        {
+          id: 'same_day',
+          label: 'Same-Day Standard',
+          time: '9:00 AM - 9:00 PM',
+          available: true
+        }
+      ];
+    }
+    return timeSlots;
+  }, [isToday, timeSlots]);
+
+  // Auto-select slot if there is only one option (like same-day standard)
+  useEffect(() => {
+    if (activeTimeSlots.length === 1 && selectedSlot !== activeTimeSlots[0].id) {
+      onSelectSlot(activeTimeSlots[0].id);
+    }
+  }, [activeTimeSlots, selectedSlot, onSelectSlot]);
   
   // Keep the delivery window stable for this component instance.
   const today = useMemo(() => startOfDay(new Date()), []);
@@ -297,6 +327,16 @@ const TimeSlotSelector = ({
     // Check if date is before today
     if (isBefore(normalizedDate, today)) {
       return true;
+    }
+
+    // Check same-day delivery cutoff (6:00 PM IST)
+    if (isSameDay(normalizedDate, today)) {
+      const now = new Date();
+      const utcTime = now.getTime() + now.getTimezoneOffset() * 60000;
+      const istTime = new Date(utcTime + 5.5 * 3600000);
+      if (istTime.getHours() >= 18) {
+        return true; // Disable today's date
+      }
     }
     
     // Check if date is beyond delivery window
@@ -623,6 +663,9 @@ const TimeSlotSelector = ({
 
     // If it's today, apply time restrictions based on slot
     if (isToday) {
+      if (slot.id === 'same_day') {
+        return true;
+      }
       const currentHour = now.getHours();
       
       // Parse the start time from the slot.time string
@@ -644,9 +687,6 @@ const TimeSlotSelector = ({
       if (slot.id === 'morning') {
         // Morning slot needs 5 hours notice
         return (hour - currentHour) >= 5;
-      } else if (slot.id === 'midnight') {
-        // Midnight slot needs 2 hours notice
-        return (hour - currentHour) >= 2;
       } else {
         // Other slots need only 30 minutes notice
         return (hour - currentHour) >= 0.5;
@@ -677,6 +717,9 @@ const TimeSlotSelector = ({
     );
 
     if (isToday) {
+      if (slot.id === 'same_day') {
+        return null;
+      }
       const currentHour = now.getHours();
       
       // Parse the start time
@@ -697,10 +740,6 @@ const TimeSlotSelector = ({
         if ((hour - currentHour) < 5) {
           return 'Need 5+ hours notice';
         }
-      } else if (slot.id === 'midnight') {
-        if ((hour - currentHour) < 2) {
-          return 'Need 2+ hours notice';
-        }
       } else {
         if ((hour - currentHour) < 0.5) {
           return 'Need 30+ minutes notice';
@@ -711,8 +750,27 @@ const TimeSlotSelector = ({
     return null;
   };
   
+  // Check if same-day delivery cutoff is active
+  const isAfterCutoff = () => {
+    const now = new Date();
+    const utcTime = now.getTime() + now.getTimezoneOffset() * 60000;
+    const istTime = new Date(utcTime + 5.5 * 3600000);
+    return istTime.getHours() >= 18;
+  };
+
   return (
     <div className={cn('w-full space-y-4 overflow-x-hidden', className)}>
+      {isAfterCutoff() && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 flex items-start gap-2.5 shadow-sm">
+          <span className="text-lg mt-0.5">⚠️</span>
+          <div>
+            <p className="text-sm font-bold text-amber-800">Same-Day Delivery Cutoff Warning</p>
+            <p className="text-xs text-amber-700 leading-snug">
+              Same-day delivery is available only for orders placed before 6:00 PM. Please select the next available delivery date.
+            </p>
+          </div>
+        </div>
+      )}
       <div>
         <div className="flex items-center gap-2 mb-2">
           <CalendarIcon className="h-5 w-5 text-primary" />
@@ -814,7 +872,7 @@ const TimeSlotSelector = ({
           
           return (
             <div className="space-y-2">
-              {isToday && (
+              {isToday && activeTimeSlots.length > 1 && (
                 <p className="text-sm text-amber-500">
                   Notice required: Morning (5+ hrs), Midnight (2+ hrs), Others (30+ min). Current time: {now.getHours()}:{now.getMinutes().toString().padStart(2, '0')}
                 </p>
@@ -833,7 +891,7 @@ const TimeSlotSelector = ({
         })()}
         
         <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4">
-          {timeSlots.map((slot) => {
+          {activeTimeSlots.map((slot) => {
             const available = isSlotAvailable(slot);
             const unavailableReason = !available ? getUnavailableReason(slot) : null;
             
@@ -880,11 +938,7 @@ const TimeSlotSelector = ({
           })}
         </div>
         
-        {selectedSlot === 'midnight' && (
-          <p className="text-sm text-muted-foreground">
-            Midnight Express delivery has an additional fee of {formatPrice(convertPrice(300.00))}
-          </p>
-        )}
+
         
         {!date && (
           <p className="text-sm text-amber-500 font-medium">

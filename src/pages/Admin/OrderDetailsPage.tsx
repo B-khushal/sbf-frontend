@@ -101,14 +101,15 @@ const getStatusConfig = (status: string) => {
   return STATUS_CONFIG[status] || STATUS_CONFIG.pending;
 };
 
-// Formats messy raw database slot strings beautifully
 const formatTimeSlot = (slot: string) => {
   if (!slot) return 'N/A';
   
   const lower = slot.toLowerCase().trim();
+  if (lower === 'same_day') return '9:00 AM – 9:00 PM';
   if (lower === 'morning') return '9:00 AM – 12:00 PM';
-  if (lower === 'afternoon') return '12:00 PM – 4:00 PM';
-  if (lower === 'evening') return '4:00 PM – 8:00 PM';
+  if (lower === 'afternoon') return '12:00 PM – 3:00 PM';
+  if (lower === 'late_afternoon') return '3:00 PM – 6:00 PM';
+  if (lower === 'evening') return '6:00 PM – 9:00 PM';
   if (lower === 'midnight') return '12:00 AM – 6:00 AM';
   
   // slot_H_H patterns e.g., slot_16_18
@@ -747,7 +748,7 @@ const OrderDetailsPage: React.FC = () => {
                 <div className="flex justify-between items-center">
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Recipient Details</span>
                   <Badge variant="outline" className="text-[9px] bg-slate-50/50 border-slate-200 dark:border-slate-800 uppercase tracking-wider px-1.5">
-                    {order.shippingDetails.notes?.toLowerCase().includes('gift') ? '🎁 Gift Delivery' : '📦 Self Delivery'}
+                    {order.shippingDetails.deliveryOption === 'gift' || order.shippingDetails.notes?.toLowerCase().includes('gift') ? '🎁 Gift Delivery' : '📦 Self Delivery'}
                   </Badge>
                 </div>
                 
@@ -792,12 +793,22 @@ const OrderDetailsPage: React.FC = () => {
                 </p>
               </div>
 
-              {/* Special Notes / Card Instructions */}
-              {order.shippingDetails.notes && (
-                <div className="bg-amber-50/50 dark:bg-amber-950/10 border border-amber-200/30 p-3 rounded-xl space-y-1">
-                  <span className="text-[9px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider block">Instructions & Notes</span>
-                  <p className="text-xs text-slate-700 dark:text-slate-300 italic font-medium leading-relaxed">
-                    "{order.shippingDetails.notes}"
+              {/* Card Message Section */}
+              {(order.shippingDetails.cardMessage || order.shippingDetails.giftMessage) && (
+                <div className="bg-rose-50/50 dark:bg-rose-950/10 border border-rose-250 bg-rose-50/20 dark:border-rose-800/30 p-3 rounded-xl space-y-1">
+                  <span className="text-[9px] font-bold text-rose-700 dark:text-rose-450 uppercase tracking-wider block flex items-center gap-1">💌 Greeting Card Message</span>
+                  <p className="text-xs text-slate-700 dark:text-slate-350 italic font-bold leading-relaxed">
+                    "{order.shippingDetails.cardMessage || order.shippingDetails.giftMessage}"
+                  </p>
+                </div>
+              )}
+
+              {/* Special Instructions */}
+              {(order.shippingDetails.deliverySpecialInstructions || order.shippingDetails.notes) && (
+                <div className="bg-blue-50/50 dark:bg-blue-950/10 border border-blue-250 bg-blue-50/20 dark:border-blue-800/30 p-3 rounded-xl space-y-1">
+                  <span className="text-[9px] font-bold text-blue-700 dark:text-blue-450 uppercase tracking-wider block">🚚 Delivery Special Instructions</span>
+                  <p className="text-xs text-slate-700 dark:text-slate-350 italic font-medium leading-relaxed">
+                    "{order.shippingDetails.deliverySpecialInstructions || order.shippingDetails.notes}"
                   </p>
                 </div>
               )}

@@ -12,6 +12,8 @@ export interface InvoiceOrder {
     state: string;
     zipCode: string;
     notes?: string;
+    cardMessage?: string;
+    deliverySpecialInstructions?: string;
     deliveryOption: 'self' | 'gift';
     giftMessage?: string;
     receiverFirstName?: string;
@@ -63,6 +65,8 @@ export interface Order {
     state: string;
     zipCode: string;
     notes?: string;
+    cardMessage?: string;
+    deliverySpecialInstructions?: string;
     deliveryOption: 'self' | 'gift';
     giftMessage?: string;
     receiverFirstName?: string;
