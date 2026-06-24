@@ -44,7 +44,8 @@ import {
   ChevronDown,
   Instagram,
   ArrowRight,
-  ShieldAlert
+  ShieldAlert,
+  Video
 } from "lucide-react";
 import api from "../services/api";
 import { uploadImage } from "../services/uploadService";
@@ -52,6 +53,7 @@ import { useToast } from "../hooks/use-toast";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { useSettings } from "../contexts/SettingsContext";
 import { cn } from "@/lib/utils";
+import { HomepageVideoSettings } from "@/components/HomepageVideoSettings";
 
 const TABS = [
   { id: "hero-slides", label: "Hero Banners", icon: ImageIcon, desc: "Hero slideshow slides, CTA links, image overlays" },
@@ -69,7 +71,8 @@ const TABS = [
   { id: "theme", label: "Theme Customizer", icon: Wand2, desc: "Brand primary & secondary colors, border radius" },
   { id: "product-display", label: "Products Card", icon: Edit, desc: "Hover animations, wishlist controls, grid columns" },
   { id: "image-protection", label: "Image Protection", icon: ShieldAlert, desc: "Configure brand watermark text, size, opacity, and angle" },
-  { id: "social-feed", label: "Social Feed", icon: Instagram, desc: "Manage Instagram embed posts shown on the homepage feed" }
+  { id: "social-feed", label: "Social Feed", icon: Instagram, desc: "Manage Instagram embed posts shown on the homepage feed" },
+  { id: "homepage-videos", label: "Homepage Videos", icon: Video, desc: "Manage 9:16 vertical videos, thumbnails, CTAs, and reordering" }
 ];
 
 const TONES = ["Elegant & Soft", "Romantic & Warm", "Festive & Vibrant", "Modern & Sleek"];
@@ -4301,6 +4304,13 @@ const AdminSettingsPage = () => {
                       </CardContent>
                     </Card>
                   </div>
+                )}
+
+                {activeTab === "homepage-videos" && (
+                  <HomepageVideoSettings
+                    localSettings={localSettings}
+                    updateSettingsState={updateSettingsState}
+                  />
                 )}
               </>
             )}

@@ -13,6 +13,7 @@ import OffersSection from "../components/OffersSection";
 import { WhyChooseUs } from "../components/WhyChooseUs";
 import { PromotionalBanners } from "../components/PromotionalBanners";
 import { SocialFeed } from "../components/SocialFeed";
+import { VideoShowcase } from "../components/VideoShowcase";
 import useCart from "../hooks/use-cart";
 import { useSettings } from "../contexts/SettingsContext";
 import { useOfferPopup } from "../hooks/use-offer-popup";
@@ -315,6 +316,17 @@ const HomePage = () => {
                 className="relative"
               >
                 <PromotionalBanners />
+              </motion.section>
+            );
+
+          case 'video_section':
+            return (
+              <motion.section
+                key={`video_section-${index}`}
+                variants={itemVariants}
+                className="relative"
+              >
+                <VideoShowcase />
               </motion.section>
             );
 
