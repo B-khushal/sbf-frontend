@@ -33,7 +33,7 @@ const MessageCard = ({ message, onChange, className }: MessageCardProps) => {
         />
         
         <p className="mt-2 text-xs text-muted-foreground">
-          This message will be printed on a card and included with your gift.
+          This message will be handwritten on a card and included with your gift.
         </p>
       </CardContent>
     </Card>

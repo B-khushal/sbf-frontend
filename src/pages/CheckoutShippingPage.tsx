@@ -1183,7 +1183,7 @@ const CheckoutShippingPage = () => {
                           className="min-h-[100px] rounded-xl border-slate-300 text-base shadow-sm focus-visible:ring-2 focus-visible:ring-emerald-500"
                         />
                         <p className="text-xs text-slate-500">
-                          This message will be printed and included with your order. (Max 150 characters)
+                          This message will be handwritten and included with your order. (Max 150 characters)
                         </p>
                       </div>
 
