@@ -45,7 +45,11 @@ import {
   Instagram,
   ArrowRight,
   ShieldAlert,
-  Video
+  Video,
+  Mail,
+  Terminal,
+  Server,
+  ShieldCheck
 } from "lucide-react";
 import api from "../services/api";
 import { uploadImage } from "../services/uploadService";
@@ -72,7 +76,8 @@ const TABS = [
   { id: "product-display", label: "Products Card", icon: Edit, desc: "Hover animations, wishlist controls, grid columns" },
   { id: "image-protection", label: "Image Protection", icon: ShieldAlert, desc: "Configure brand watermark text, size, opacity, and angle" },
   { id: "social-feed", label: "Social Feed", icon: Instagram, desc: "Manage Instagram embed posts shown on the homepage feed" },
-  { id: "homepage-videos", label: "Homepage Videos", icon: Video, desc: "Manage 9:16 vertical videos, thumbnails, CTAs, and reordering" }
+  { id: "homepage-videos", label: "Homepage Videos", icon: Video, desc: "Manage 9:16 vertical videos, thumbnails, CTAs, and reordering" },
+  { id: "email-config", label: "Email Routing", icon: Mail, desc: "Verify SMTP status, check sender routing, and run delivery diagnostics" }
 ];
 
 const TONES = ["Elegant & Soft", "Romantic & Warm", "Festive & Vibrant", "Modern & Sleek"];
@@ -405,6 +410,349 @@ const MobileNavbarSettingsCard: React.FC = () => {
                 </div>
               </div>
             </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+const EmailConfigSettingsCard: React.FC = () => {
+  const { toast } = useToast();
+  const [config, setConfig] = useState<any>({
+    smtpHost: "",
+    smtpPort: 587,
+    smtpUser: "",
+    senderAddresses: {
+      orders: "",
+      delivery: "",
+      reviews: "",
+      contact: ""
+    }
+  });
+  const [loadingConfig, setLoadingConfig] = useState(true);
+  const [testRecipient, setTestRecipient] = useState("contact@sbflorist.in");
+  const [testLoading, setTestLoading] = useState<string | null>(null);
+  const [smtpStatus, setSmtpStatus] = useState<'unknown' | 'loading' | 'success' | 'failed'>('unknown');
+  const [smtpError, setSmtpError] = useState<string | null>(null);
+  const [logs, setLogs] = useState<string>('Diagnostic Console Initialized.\n');
+
+  const appendLog = (msg: string) => {
+    setLogs(prev => prev + `[${new Date().toLocaleTimeString()}] ${msg}\n`);
+  };
+
+  const fetchConfig = async () => {
+    try {
+      setLoadingConfig(true);
+      const res = await api.get('/notifications/email-config');
+      setConfig(res.data);
+      appendLog('✅ Loaded current email routing configuration.');
+    } catch (err: any) {
+      console.error('Failed to load email config:', err);
+      appendLog('❌ Failed to load email routing configuration from server.');
+      toast({ title: 'Error', description: 'Failed to load email routing configuration.', variant: 'destructive' });
+    } finally {
+      setLoadingConfig(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchConfig();
+  }, []);
+
+  const verifySmtp = async () => {
+    setSmtpStatus('loading');
+    setSmtpError(null);
+    appendLog('Starting SMTP connection verification check...');
+    try {
+      const res = await api.get('/notifications/test-email');
+      if (res.data.success) {
+        setSmtpStatus('success');
+        appendLog('✅ SMTP Connection verified successfully! Server responded: ' + res.data.message);
+        toast({ title: 'SMTP Verified', description: 'SMTP connection is active and ready.' });
+      } else {
+        throw new Error(res.data.error || 'SMTP check returned success: false');
+      }
+    } catch (err: any) {
+      const errMsg = err.response?.data?.error || err.message || 'Verification failed';
+      setSmtpStatus('failed');
+      setSmtpError(errMsg);
+      appendLog('❌ SMTP Connection failed: ' + errMsg);
+      toast({ title: 'SMTP Verification Failed', description: errMsg, variant: 'destructive' });
+    }
+  };
+
+  const handleSendTest = async (type: 'order' | 'delivery' | 'review' | 'contact') => {
+    if (!testRecipient) {
+      toast({ title: 'Recipient Required', description: 'Please enter a recipient email address.', variant: 'destructive' });
+      return;
+    }
+    setTestLoading(type);
+    appendLog(`Triggering [${type.toUpperCase()}] test email dispatch to <${testRecipient}>...`);
+    try {
+      const res = await api.post('/notifications/send-test-email', {
+        email: testRecipient,
+        type
+      });
+      if (res.data.success) {
+        appendLog(`✅ [${type.toUpperCase()}] test email sent successfully!`);
+        appendLog(`   - MessageId: ${res.data.messageId || 'N/A'}`);
+        appendLog(`   - SMTP Response: ${res.data.response || 'Success'}`);
+        toast({ title: 'Test Email Sent', description: `Test email of type ${type} sent successfully.` });
+      } else {
+        throw new Error(res.data.error || 'Server returned success: false');
+      }
+    } catch (err: any) {
+      const errMsg = err.response?.data?.error || err.message || 'Failed to send test email';
+      appendLog(`❌ [${type.toUpperCase()}] test email failed: ${errMsg}`);
+      toast({ title: 'Dispatch Failed', description: errMsg, variant: 'destructive' });
+    } finally {
+      setTestLoading(null);
+    }
+  };
+
+  const clearConsole = () => {
+    setLogs('Console cleared.\n');
+  };
+
+  return (
+    <Card className="bg-slate-800/40 border-slate-800 mt-6">
+      <CardContent className="p-6 space-y-6">
+        <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+          <div>
+            <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2">
+              <Mail className="h-4.5 w-4.5 text-emerald-405" />
+              Email Routing Configuration
+            </h3>
+            <p className="text-xs text-slate-400 mt-1">
+              Verify SMTP setup, view professional domain sender routing, and dispatch delivery diagnostics.
+            </p>
+          </div>
+          <Badge className="bg-slate-900 border-slate-700 text-slate-300 font-mono text-[9px] tracking-wider py-1 px-2.5">
+            Cloudflare Routing + Gmail SMTP
+          </Badge>
+        </div>
+
+        {loadingConfig ? (
+          <div className="flex items-center justify-center py-12">
+            <RefreshCw className="h-5 w-5 animate-spin text-emerald-400" />
+            <span className="ml-2 text-xs text-slate-400">Fetching configuration...</span>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            
+            {/* SMTP Settings & Connection Checker */}
+            <div className="bg-slate-900/30 border border-slate-800 rounded-xl p-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Server className="h-4 w-4 text-slate-400" />
+                  <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wider">Gmail SMTP Authentication</h4>
+                </div>
+                <div className="flex items-center gap-2">
+                  {smtpStatus === 'loading' && (
+                    <Badge className="bg-amber-950/40 text-amber-400 border border-amber-805/50 flex items-center gap-1 text-[10px]">
+                      <RefreshCw className="h-3 w-3 animate-spin" /> Verifying...
+                    </Badge>
+                  )}
+                  {smtpStatus === 'success' && (
+                    <Badge className="bg-emerald-950/40 text-emerald-400 border border-emerald-805/50 flex items-center gap-1 text-[10px]">
+                      <ShieldCheck className="h-3.5 w-3.5" /> SMTP Active
+                    </Badge>
+                  )}
+                  {smtpStatus === 'failed' && (
+                    <Badge className="bg-red-950/40 text-red-400 border border-red-805/50 flex items-center gap-1 text-[10px]" title={smtpError || ""}>
+                      <AlertCircle className="h-3.5 w-3.5" /> Verification Failed
+                    </Badge>
+                  )}
+                  {smtpStatus === 'unknown' && (
+                    <Badge className="bg-slate-800 text-slate-400 border border-slate-700 text-[10px]">
+                      Not Checked
+                    </Badge>
+                  )}
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="h-7 text-[10px] font-bold border-slate-700 hover:bg-slate-800/50 text-slate-300 hover:text-white"
+                    onClick={verifySmtp}
+                    disabled={smtpStatus === 'loading'}
+                  >
+                    Check Connection
+                  </Button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="p-3 bg-slate-900/60 rounded-lg border border-slate-800">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase">SMTP Host</span>
+                  <div className="text-xs font-semibold text-slate-300 mt-1 font-mono">{config.smtpHost}</div>
+                </div>
+                <div className="p-3 bg-slate-900/60 rounded-lg border border-slate-800">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase">Port / SSL</span>
+                  <div className="text-xs font-semibold text-slate-300 mt-1 font-mono">{config.smtpPort} (STARTTLS)</div>
+                </div>
+                <div className="p-3 bg-slate-900/60 rounded-lg border border-slate-800">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase">Authentication Username</span>
+                  <div className="text-xs font-semibold text-slate-300 mt-1 font-mono truncate" title={config.smtpUser}>
+                    {config.smtpUser}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Custom Sender Addresses Grid */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                <ShieldCheck className="h-4 w-4 text-emerald-500" />
+                Sender Routing Domain Emails
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-3 bg-slate-900/40 rounded-lg border border-slate-800 flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-500 uppercase block">Order Confirmation & Billing</span>
+                    <span className="text-xs font-semibold text-slate-300 font-mono block mt-1">{config.senderAddresses?.orders}</span>
+                  </div>
+                  <Badge className="bg-emerald-950/20 text-emerald-400 border border-emerald-900/30 text-[9px] font-mono">From header override</Badge>
+                </div>
+
+                <div className="p-3 bg-slate-900/40 rounded-lg border border-slate-800 flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-500 uppercase block">Delivery Assignments & Status</span>
+                    <span className="text-xs font-semibold text-slate-300 font-mono block mt-1">{config.senderAddresses?.delivery}</span>
+                  </div>
+                  <Badge className="bg-emerald-950/20 text-emerald-400 border border-emerald-900/30 text-[9px] font-mono">From header override</Badge>
+                </div>
+
+                <div className="p-3 bg-slate-900/40 rounded-lg border border-slate-800 flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-500 uppercase block">Review Requests & Reminders</span>
+                    <span className="text-xs font-semibold text-slate-300 font-mono block mt-1">{config.senderAddresses?.reviews}</span>
+                  </div>
+                  <Badge className="bg-emerald-950/20 text-emerald-400 border border-emerald-900/30 text-[9px] font-mono">From header override</Badge>
+                </div>
+
+                <div className="p-3 bg-slate-900/40 rounded-lg border border-slate-800 flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-500 uppercase block">Contact Form & Support</span>
+                    <span className="text-xs font-semibold text-slate-300 font-mono block mt-1">{config.senderAddresses?.contact}</span>
+                  </div>
+                  <Badge className="bg-emerald-950/20 text-emerald-400 border border-emerald-900/30 text-[9px] font-mono">From header override</Badge>
+                </div>
+              </div>
+            </div>
+
+            <Separator className="bg-slate-800" />
+
+            {/* Test Email Trigger Controls */}
+            <div className="bg-slate-900/20 border border-slate-800 rounded-xl p-5 space-y-4">
+              <div>
+                <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wider">SMTP Diagnostic Dispatcher</h4>
+                <p className="text-[10px] text-slate-500 mt-1">Send isolated test emails to check deliverability and view full routing logs.</p>
+              </div>
+
+              <div className="space-y-3">
+                <div className="max-w-md">
+                  <Label htmlFor="test-recipient" className="text-xs text-slate-400 font-semibold block mb-1.5">Destination Recipient Email Address</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="test-recipient"
+                      type="email"
+                      value={testRecipient}
+                      onChange={(e) => setTestRecipient(e.target.value)}
+                      placeholder="e.g. diagnostic-receiver@gmail.com"
+                      className="bg-slate-950 border-slate-700 text-slate-200 text-xs h-9"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <Label className="text-xs text-slate-400 font-semibold block mb-2">Select Diagnostic Email Template to Dispatch</Label>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-9 text-[11px] font-bold border-slate-700 hover:bg-slate-800/60 text-slate-300 hover:text-white"
+                      onClick={() => handleSendTest('order')}
+                      disabled={testLoading !== null}
+                    >
+                      {testLoading === 'order' ? (
+                        <>
+                          <RefreshCw className="h-3 w-3 animate-spin mr-1.5" /> Order
+                        </>
+                      ) : (
+                        '🛍️ Order Confirmation'
+                      )}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-9 text-[11px] font-bold border-slate-700 hover:bg-slate-800/60 text-slate-300 hover:text-white"
+                      onClick={() => handleSendTest('delivery')}
+                      disabled={testLoading !== null}
+                    >
+                      {testLoading === 'delivery' ? (
+                        <>
+                          <RefreshCw className="h-3 w-3 animate-spin mr-1.5" /> Delivery
+                        </>
+                      ) : (
+                        '🚚 Out for Delivery'
+                      )}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-9 text-[11px] font-bold border-slate-700 hover:bg-slate-800/60 text-slate-300 hover:text-white"
+                      onClick={() => handleSendTest('review')}
+                      disabled={testLoading !== null}
+                    >
+                      {testLoading === 'review' ? (
+                        <>
+                          <RefreshCw className="h-3 w-3 animate-spin mr-1.5" /> Review
+                        </>
+                      ) : (
+                        '⭐ Review Request'
+                      )}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-9 text-[11px] font-bold border-slate-700 hover:bg-slate-800/60 text-slate-300 hover:text-white"
+                      onClick={() => handleSendTest('contact')}
+                      disabled={testLoading !== null}
+                    >
+                      {testLoading === 'contact' ? (
+                        <>
+                          <RefreshCw className="h-3 w-3 animate-spin mr-1.5" /> Contact
+                        </>
+                      ) : (
+                        '✉️ Customer Reply'
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Diagnostic Logs console */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <Terminal className="h-4 w-4 text-emerald-400" />
+                  SMTP Diagnostics Console Logs
+                </Label>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={clearConsole}
+                  className="h-6 px-2 text-[10px] font-semibold text-slate-500 hover:text-slate-300"
+                >
+                  Clear Console
+                </Button>
+              </div>
+              <div className="bg-slate-950 border border-slate-900 rounded-lg p-4 font-mono text-[11px] leading-relaxed text-emerald-400/90 h-44 overflow-y-auto whitespace-pre-wrap select-text shadow-inner">
+                {logs}
+              </div>
+            </div>
+
           </div>
         )}
       </CardContent>
@@ -4339,6 +4687,10 @@ const AdminSettingsPage = () => {
                     localSettings={localSettings}
                     updateSettingsState={updateSettingsState}
                   />
+                )}
+
+                {activeTab === "email-config" && (
+                  <EmailConfigSettingsCard />
                 )}
               </>
             )}

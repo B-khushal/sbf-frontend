@@ -329,7 +329,7 @@ const Invoice: React.FC<InvoiceProps> = ({ order, isAdmin = false }) => {
         <h4 className="text-xs font-bold text-emerald-850">Thank you for choosing Spring Blossoms Florist.</h4>
         <p className="text-[10px] text-slate-400 mt-1.5">
           We design premium floral arrangements and curated gift solutions to make your moments unforgettable.<br />
-          For any queries or modifications to your delivery, please contact +91 9949683222 or email 2006sbf@gmail.com.<br />
+          For any queries or modifications to your delivery, please contact +91 9949683222 or email contact@sbflorist.in.<br />
           This is a computer-generated tax invoice and requires no signature.
         </p>
       </div>

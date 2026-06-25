@@ -88,16 +88,16 @@ const DeliveryCalendar: React.FC<DeliveryCalendarProps> = ({ className }) => {
     startDate.setDate(startDate.getDate() - firstDay.getDay());
     
     const days: CalendarDay[] = [];
-    const currentDate = new Date(startDate);
+    const loopDate = new Date(startDate);
     
     // Generate 42 days (6 weeks)
     for (let i = 0; i < 42; i++) {
-      const dateKey = currentDate.toISOString().split('T')[0];
+      const dateKey = loopDate.toISOString().split('T')[0];
       const dayData = calendarData[dateKey];
       
       days.push({
-        date: new Date(currentDate),
-        isCurrentMonth: currentDate.getMonth() === month,
+        date: new Date(loopDate),
+        isCurrentMonth: loopDate.getMonth() === month,
         orders: dayData?.orders || [],
         count: dayData?.count || 0,
         totalAmount: dayData?.totalAmount || 0,
@@ -110,7 +110,7 @@ const DeliveryCalendar: React.FC<DeliveryCalendarProps> = ({ className }) => {
         }
       });
       
-      currentDate.setDate(currentDate.getDate() + 1);
+      loopDate.setDate(loopDate.getDate() + 1);
     }
     
     return days;

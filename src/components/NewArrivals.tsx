@@ -180,7 +180,7 @@ export const NewArrivals = ({ products, loading, onAddToCart }: NewArrivalsProps
       y: 0,
       transition: {
         duration: 0.8,
-        ease: [0.25, 0.46, 0.45, 0.94],
+        ease: [0.25, 0.46, 0.45, 0.94] as const,
       },
     },
   };

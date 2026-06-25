@@ -37,7 +37,7 @@ Thank you for your assistance.
 
 Best regards`;
     
-    const emailUrl = `mailto:2006sbf@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    const emailUrl = `mailto:contact@sbflorist.in?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     window.location.href = emailUrl;
   };
 
@@ -89,7 +89,7 @@ Best regards`;
               <Mail size={24} />
               <div className="text-left">
                 <div>Email Us</div>
-                <div className="text-sm opacity-90">2006sbf@gmail.com</div>
+                <div className="text-sm opacity-90 font-mono">contact@sbflorist.in</div>
               </div>
             </Button>
 

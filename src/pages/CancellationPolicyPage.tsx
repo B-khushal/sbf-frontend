@@ -23,7 +23,7 @@ const itemVariants = {
     opacity: 1,
     transition: {
       duration: 0.8,
-      ease: [0.25, 0.46, 0.45, 0.94]
+      ease: [0.25, 0.46, 0.45, 0.94] as const
     }
   }
 };
@@ -199,7 +199,7 @@ const CancellationPolicyPage: React.FC = () => {
                           <Mail className="w-5 h-5 text-gray-600" />
                           <div>
                             <p className="font-semibold text-gray-800">Email Support</p>
-                            <p className="text-gray-700">2006sbf@gmail.com</p>
+                            <p className="text-gray-700 font-mono">contact@sbflorist.in</p>
                             <p className="text-sm text-gray-600">Include order number</p>
                           </div>
                         </div>

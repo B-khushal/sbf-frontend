@@ -56,8 +56,18 @@ const NotificationHistoryModal: React.FC<NotificationHistoryModalProps> = ({
       
       console.log('Notification history response:', notificationsResponse);
       
-      // Fix: getNotifications returns the notifications array directly, not wrapped
-      setNotifications(Array.isArray(notificationsResponse) ? notificationsResponse : []);
+      // Map backend fields to the frontend NotificationItem interface
+      const rawList = Array.isArray(notificationsResponse) ? notificationsResponse : [];
+      const mappedList: NotificationItem[] = rawList.map((n: any) => ({
+        id: n.id || n._id,
+        type: n.type || 'system',
+        title: n.title || '',
+        message: n.message || '',
+        createdAt: n.createdAt ? new Date(n.createdAt).toISOString() : new Date().toISOString(),
+        isRead: n.isRead !== undefined ? n.isRead : (n.read ?? false),
+        isHidden: n.isHidden ?? false
+      }));
+      setNotifications(mappedList);
       setStats(statsResponse);
     } catch (error) {
       console.error('Error fetching notification history:', error);

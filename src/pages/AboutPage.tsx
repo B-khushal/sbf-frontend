@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 import { Heart, Award, Users, Leaf, Sparkles, Star, X, Book } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -24,7 +24,7 @@ const itemVariants = {
     opacity: 1,
     transition: {
       duration: 0.8,
-      ease: [0.25, 0.46, 0.45, 0.94]
+      ease: [0.25, 0.46, 0.45, 0.94] as const
     }
   }
 };
@@ -36,7 +36,7 @@ const fadeInVariants = {
     scale: 1,
     transition: { 
       duration: 1.2,
-      ease: [0.25, 0.46, 0.45, 0.94]
+      ease: [0.25, 0.46, 0.45, 0.94] as const
     }
   }
 };
@@ -383,6 +383,107 @@ const AboutPage: React.FC = () => {
       
       {showJourneyModal && <JourneyModal onClose={closeJourneyModal} />}
     </div>
+  );
+};
+
+interface JourneyModalProps {
+  onClose: () => void;
+}
+
+const JourneyModal: React.FC<JourneyModalProps> = ({ onClose }) => {
+  return (
+    <AnimatePresence>
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+        onClick={onClose}
+      >
+        <motion.div 
+          initial={{ y: 50, opacity: 0, scale: 0.95 }}
+          animate={{ y: 0, opacity: 1, scale: 1 }}
+          exit={{ y: 50, opacity: 0, scale: 0.95 }}
+          transition={{ type: "spring", duration: 0.5 }}
+          className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-white/20"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="relative p-6 sm:p-8 bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10 border-b border-gray-150">
+            <h3 className="text-2xl sm:text-3xl font-black text-gray-800 flex items-center gap-2">
+              🌸 Our Journey
+            </h3>
+            <p className="text-gray-600 mt-1">From small dreams to blooming reality since 2006</p>
+            <button 
+              onClick={onClose}
+              className="absolute top-6 right-6 p-2 rounded-full hover:bg-black/5 text-gray-500 hover:text-gray-800 transition-all"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+
+          {/* Timeline Content */}
+          <div className="max-h-[60vh] p-6 sm:p-8 overflow-y-auto">
+            <div className="relative border-l-2 border-primary/20 ml-4 pl-6 space-y-8 py-2">
+              {/* 2006 */}
+              <div className="relative">
+                <div className="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full bg-primary border-4 border-white shadow-md" />
+                <h4 className="font-extrabold text-primary text-lg mb-1">2006 — The First Seed</h4>
+                <p className="text-gray-600 leading-relaxed">
+                  Opened a small, cozy local flower boutique in the heart of Hyderabad. Our vision was simple yet profound: to deliver the freshest flowers with exceptional customer service and introduce Hyderabad to a new level of floral styling.
+                </p>
+              </div>
+
+              {/* 2012 */}
+              <div className="relative">
+                <div className="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full bg-secondary border-4 border-white shadow-md" />
+                <h4 className="font-extrabold text-secondary text-lg mb-1">2012 — Branching Out</h4>
+                <p className="text-gray-600 leading-relaxed">
+                  Expanded our network to partner directly with local flower farmers across India and exotic growers worldwide. This direct sourcing model guaranteed unmatched freshness and allowed us to introduce exotic orchids and lilies to our collections.
+                </p>
+              </div>
+
+              {/* 2018 */}
+              <div className="relative">
+                <div className="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full bg-accent border-4 border-white shadow-md" />
+                <h4 className="font-extrabold text-accent text-lg mb-1">2018 — Going Digital</h4>
+                <p className="text-gray-600 leading-relaxed">
+                  Launched our first digital platform, allowing customers to send roses for anniversary events, birthday flowers, and custom bouquets from anywhere in the world, with guaranteed same-day and midnight delivery services.
+                </p>
+              </div>
+
+              {/* 2023 */}
+              <div className="relative">
+                <div className="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full bg-primary border-4 border-white shadow-md" />
+                <h4 className="font-extrabold text-primary text-lg mb-1">2023 — A Reason to Express</h4>
+                <p className="text-gray-600 leading-relaxed">
+                  Rebranded to SBF (Spring Blossoms Florist) with a state-of-the-art customizable bundle system, custom greeting cards, and real-time delivery notification updates, helping our community find a true reason to express their emotions.
+                </p>
+              </div>
+
+              {/* Today */}
+              <div className="relative">
+                <div className="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full bg-emerald-500 border-4 border-white shadow-md animate-pulse" />
+                <h4 className="font-extrabold text-emerald-600 text-lg mb-1">Today — Blooming Strong</h4>
+                <p className="text-gray-600 leading-relaxed">
+                  Now recognized as the best florist in Hyderabad, we remain dedicated to green packaging, sustainable operations, and creating unforgettable memories for our customers through premium floral creations.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="p-6 bg-gray-50 border-t flex justify-end">
+            <Button 
+              onClick={onClose}
+              className="px-6 py-2.5 bg-gradient-to-r from-primary to-secondary text-white font-bold rounded-xl"
+            >
+              Close
+            </Button>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
   );
 };
 

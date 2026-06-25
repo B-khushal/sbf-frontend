@@ -23,7 +23,7 @@ const itemVariants = {
     opacity: 1,
     transition: {
       duration: 0.8,
-      ease: [0.25, 0.46, 0.45, 0.94]
+      ease: [0.25, 0.46, 0.45, 0.94] as const
     }
   }
 };
@@ -362,7 +362,7 @@ const PrivacyPage: React.FC = () => {
                         <p className="font-bold text-gray-800 mb-2"><strong>Name:</strong> B Deepak Kumar</p>
                         <p className="text-gray-700 mb-2"><strong>Address:</strong> Door No. 12-2-786/A & B, Najam Centre,
                         Pillar No. 32,Rethi Bowli, Mehdipatnam, Hyderabad, Telangana 500028</p>
-                        <p className="text-gray-700 mb-2"><strong>Email:</strong> 2006sbf@gmail.com</p>
+                        <p className="text-gray-700 mb-2"><strong>Email:</strong> contact@sbflorist.in</p>
                         <p className="text-gray-700"><strong>Phone:</strong> +91 9949683222</p>
                       </div>
                     </motion.div>

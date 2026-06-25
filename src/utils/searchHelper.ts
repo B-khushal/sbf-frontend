@@ -1,4 +1,5 @@
 import Fuse from 'fuse.js';
+import type { FuseResult } from 'fuse.js';
 
 export interface SearchProduct {
   _id?: string;
@@ -102,7 +103,7 @@ export function createSearchIndex(items: SearchItem[]): Fuse<SearchItem> {
  * 6. Fuzzy match via Fuse.js
  */
 export function rankSearchResults(
-  fuseResults: Fuse.FuseResult<SearchItem>[],
+  fuseResults: FuseResult<SearchItem>[],
   query: string
 ): SearchItem[] {
   const cleanQuery = query.toLowerCase().trim();

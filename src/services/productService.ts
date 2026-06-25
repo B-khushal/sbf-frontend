@@ -323,7 +323,7 @@ const prepareProductData = (productData: ProductData): BackendProductData => {
 // Helper function to map backend data to frontend model
 const mapBackendToFrontend = (data: BackendProductData): ProductData => {
   // Create a copy to avoid modifying the original
-  const mappedData: Partial<ProductData> = { ...data };
+  const mappedData: Partial<ProductData> = { ...data } as any;
 
   // Map either backend field (isNew or isNewArrival) to frontend isNewArrival
   if ('isNew' in data || 'isNewArrival' in data) {

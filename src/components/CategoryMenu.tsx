@@ -77,12 +77,12 @@ const CategoryMenu = () => {
   };
 
   const categories = useMemo(() => {
-    return (shopCategories || [])
+    return ((shopCategories || []) as any[])
       .filter(cat => cat.enabled && !cat.parentId)
       .sort((a, b) => (a.priority ?? a.sortOrder ?? 0) - (b.priority ?? b.sortOrder ?? 0))
       .map(parent => {
         const parentIdStr = parent._id || parent.id;
-        let subcats = (shopCategories || [])
+        let subcats = ((shopCategories || []) as any[])
           .filter(c => {
             if (!c.enabled || !c.parentId) return false;
             const childParentId = typeof c.parentId === 'object' ? (c.parentId._id || c.parentId.id) : c.parentId;
@@ -173,7 +173,7 @@ const CategoryMenu = () => {
         ease: "easeIn"
       }
     }
-  };
+  } as const;
 
   const subcategoryVariants = {
     hidden: { 
@@ -192,7 +192,7 @@ const CategoryMenu = () => {
         mass: 0.8
       }
     }
-  };
+  } as const;
 
   const subcategoryContainerVariants = {
     hidden: {},

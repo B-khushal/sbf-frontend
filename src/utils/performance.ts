@@ -82,7 +82,7 @@ class PerformanceMonitor {
 
     window.addEventListener('load', () => {
       setTimeout(() => {
-        const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
+        const navigation = performance.getEntriesByType('navigation')[0] as any;
         
         if (navigation) {
           this.metrics.pageLoadTime = navigation.loadEventEnd - navigation.navigationStart;
@@ -406,7 +406,7 @@ export const measurePerformance = () => {
   // Wait for page load
   window.addEventListener('load', () => {
     setTimeout(() => {
-      const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
+      const navigation = performance.getEntriesByType('navigation')[0] as any;
       const paint = performance.getEntriesByType('paint');
       
       const metrics = {
@@ -554,14 +554,17 @@ export const registerServiceWorker = () => {
         Promise.all(registrations.map(r => r.unregister())).then((results) => {
           if (results.some(Boolean)) {
             console.log('Successfully unregistered stale development service worker.');
+            const reload = () => {
+              if (typeof window !== 'undefined') window.location.reload();
+            };
             if ('caches' in window) {
               caches.keys().then((keys) => {
                 Promise.all(keys.map(key => caches.delete(key))).then(() => {
-                  window.location.reload();
+                  reload();
                 });
               });
             } else {
-              window.location.reload();
+              reload();
             }
           }
         });

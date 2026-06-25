@@ -6,6 +6,7 @@ export interface CartItem {
   productId?: string;
   title: string;
   price: number;
+  originalPrice?: number;
   image?: string;
   images: string[];
   quantity: number;

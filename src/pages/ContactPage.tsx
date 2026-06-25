@@ -28,7 +28,7 @@ const itemVariants = {
     opacity: 1,
     transition: {
       duration: 0.8,
-      ease: [0.25, 0.46, 0.45, 0.94]
+      ease: [0.25, 0.46, 0.45, 0.94] as const
     }
   }
 };
@@ -40,7 +40,7 @@ const fadeInVariants = {
     scale: 1,
     transition: { 
       duration: 1.2,
-      ease: [0.25, 0.46, 0.45, 0.94]
+      ease: [0.25, 0.46, 0.45, 0.94] as const
     }
   }
 };
@@ -446,7 +446,7 @@ Sent from Spring Blossoms Florist Website`;
                       </div>
                       <div className="flex-1">
                         <h3 className="text-xl font-bold text-gray-800 mb-2">✉️ Email</h3>
-                        <p className="text-gray-600 text-lg mb-1">2006sbf@gmail.com</p>
+                        <p className="text-gray-600 text-lg mb-1">contact@sbflorist.in</p>
                         <p className="text-sm text-gray-500 mb-3">We reply within 24 hours</p>
                         <Button
                           onClick={() => openEmail("Inquiry - Spring Blossoms Florist")}

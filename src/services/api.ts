@@ -1,6 +1,11 @@
-import axios from 'axios';
+import axios, { AxiosInstance } from 'axios';
 import { toast } from '../hooks/use-toast';
 import { API_URL } from '../config';
+
+export interface CustomAxiosInstance extends AxiosInstance {
+  getCached: (url: string, options?: { cache?: boolean, cacheTime?: number, params?: any }) => Promise<any>;
+  batch: (requests: Array<{ method: string, url: string, params?: any }>) => Promise<Array<PromiseSettledResult<any>>>;
+}
 
 // Create an axios instance with base URL and default headers
 const api = axios.create({
@@ -13,7 +18,7 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
   withCredentials: true, // Enable sending cookies with requests
-});
+}) as CustomAxiosInstance;
 
 if (import.meta.env.DEV && typeof window !== 'undefined') {
   console.log('API URL:', API_URL);

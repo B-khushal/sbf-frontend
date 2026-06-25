@@ -83,7 +83,7 @@ export const getContactInfo = async (): Promise<ContactInfo> => {
         primary: '+91 9949683222',
         whatsapp: '9949683222'
       },
-      email: '2006sbf@gmail.com',
+      email: 'contact@sbflorist.in',
       businessHours: {
         monday: '9:00 AM - 8:00 PM',
         tuesday: '9:00 AM - 8:00 PM',
@@ -118,7 +118,7 @@ export const openEmail = (subject?: string, body?: string) => {
   
   const encodedSubject = encodeURIComponent(subject || defaultSubject);
   const encodedBody = encodeURIComponent(body || defaultBody);
-  const emailUrl = `mailto:2006sbf@gmail.com?subject=${encodedSubject}&body=${encodedBody}`;
+  const emailUrl = `mailto:contact@sbflorist.in?subject=${encodedSubject}&body=${encodedBody}`;
   
   window.location.href = emailUrl;
 };
