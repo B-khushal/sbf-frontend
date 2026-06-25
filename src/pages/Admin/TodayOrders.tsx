@@ -24,6 +24,17 @@ type BoardItem = {
   column: BoardColumn;
   cardMessage?: string;
   deliverySpecialInstructions?: string;
+  isGift: boolean;
+  purchaserName: string;
+  purchaserPhone: string;
+  purchaserEmail: string;
+  recipientName?: string;
+  recipientPhone?: string;
+  recipientEmail?: string;
+  recipientAddress?: string;
+  greetingCard?: string;
+  surpriseDelivery?: boolean;
+  anonymousGift?: boolean;
 };
 
 const REFRESH_INTERVAL_MS = 25000;
@@ -114,13 +125,36 @@ const formatPrice = (amount: number, currencyCode = 'INR') => {
 
 const toBoardItems = (orders: Order[]): BoardItem[] => {
   return orders.flatMap((order) => {
-    const deliveryAddress = [
-      order.shippingDetails.address,
-      order.shippingDetails.apartment,
-      order.shippingDetails.city,
-      order.shippingDetails.state,
-      order.shippingDetails.zipCode
-    ].filter(Boolean).join(', ');
+    const isGift = !!(order.giftDetails && order.giftDetails.recipientName && order.giftDetails.recipientName.trim() !== '');
+
+    let deliveryAddress = '';
+    let customerName = 'Customer';
+    let customerPhone = 'N/A';
+    let cardMessage = '';
+
+    if (isGift && order.giftDetails) {
+      customerName = order.giftDetails.recipientName;
+      customerPhone = order.giftDetails.recipientPhone;
+      deliveryAddress = [
+        order.giftDetails.recipientAddress,
+        order.giftDetails.recipientApartment,
+        order.giftDetails.recipientCity,
+        order.giftDetails.recipientState,
+        order.giftDetails.recipientZipCode
+      ].filter(Boolean).join(', ');
+      cardMessage = order.giftDetails.message || '';
+    } else {
+      customerName = order.shippingDetails.fullName || 'Customer';
+      customerPhone = order.shippingDetails.phone || 'N/A';
+      deliveryAddress = [
+        order.shippingDetails.address,
+        order.shippingDetails.apartment,
+        order.shippingDetails.city,
+        order.shippingDetails.state,
+        order.shippingDetails.zipCode
+      ].filter(Boolean).join(', ');
+      cardMessage = order.shippingDetails.cardMessage || order.shippingDetails.giftMessage || '';
+    }
 
     return order.items.map((item, itemIndex) => ({
       key: `${order._id}-${itemIndex}`,
@@ -128,14 +162,31 @@ const toBoardItems = (orders: Order[]): BoardItem[] => {
       orderNumber: order.orderNumber,
       orderStatus: order.status,
       createdAt: order.createdAt,
-      customerName: order.shippingDetails.fullName || 'Customer',
-      customerPhone: order.shippingDetails.phone || 'N/A',
+      customerName,
+      customerPhone,
       deliveryAddress,
       paymentMethod: order.paymentDetails?.method || 'N/A',
       item,
       column: getColumnFromStatus(order.status),
-      cardMessage: order.shippingDetails.cardMessage || order.shippingDetails.giftMessage || '',
-      deliverySpecialInstructions: order.shippingDetails.deliverySpecialInstructions || order.shippingDetails.notes || ''
+      cardMessage,
+      deliverySpecialInstructions: order.shippingDetails.deliverySpecialInstructions || order.shippingDetails.notes || '',
+      isGift,
+      purchaserName: order.shippingDetails.fullName || 'Customer',
+      purchaserPhone: order.shippingDetails.phone || 'N/A',
+      purchaserEmail: order.shippingDetails.email || 'N/A',
+      recipientName: order.giftDetails?.recipientName || '',
+      recipientPhone: order.giftDetails?.recipientPhone || '',
+      recipientEmail: order.giftDetails?.recipientEmail || '',
+      recipientAddress: order.giftDetails ? [
+        order.giftDetails.recipientAddress,
+        order.giftDetails.recipientApartment,
+        order.giftDetails.recipientCity,
+        order.giftDetails.recipientState,
+        order.giftDetails.recipientZipCode
+      ].filter(Boolean).join(', ') : '',
+      greetingCard: order.giftDetails?.greetingCard || 'none',
+      surpriseDelivery: !!order.giftDetails?.surpriseDelivery,
+      anonymousGift: !!order.giftDetails?.anonymousGift
     }));
   });
 };
@@ -400,6 +451,16 @@ const TodayOrders: React.FC = () => {
                           </div>
 
                           <div className={`space-y-2 ${isFullScreenMode ? 'p-4' : 'p-3'}`}>
+                            <div className="flex justify-between items-center flex-wrap gap-1">
+                              <Badge variant="outline" className={card.isGift ? "text-[9px] font-bold text-emerald-700 bg-emerald-50 border-emerald-250 select-none py-0.5 h-4.5" : "text-[9px] font-bold text-slate-650 bg-slate-50 border-slate-200 select-none py-0.5 h-4.5"}>
+                                {card.isGift ? "🎁 Gift Delivery" : "Not a Gift"}
+                              </Badge>
+                              {card.isGift && (
+                                <span className="text-[10px] text-slate-500 font-semibold truncate max-w-[12rem]">
+                                  From: {card.purchaserName}
+                                </span>
+                              )}
+                            </div>
                             <p className={`line-clamp-2 font-extrabold text-slate-900 ${isFullScreenMode ? 'text-2xl' : 'text-lg'}`}>{getItemName(card.item)}</p>
                             <div className={`flex items-center justify-between font-semibold text-slate-700 ${isFullScreenMode ? 'text-xl' : 'text-base'}`}>
                               <span>Qty: {card.item.quantity}</span>
@@ -483,16 +544,73 @@ const TodayOrders: React.FC = () => {
                   <p className="text-base font-semibold text-slate-900">
                     Price: {formatPrice(selectedCard.item.finalPrice ?? selectedCard.item.price, 'INR')}
                   </p>
-                  <p className="text-sm text-slate-700">Phone: {selectedCard.customerPhone}</p>
-                  <p className="text-sm text-slate-700">Address: {selectedCard.deliveryAddress || 'N/A'}</p>
                   <p className="text-sm text-slate-700">Payment: {selectedCard.paymentMethod}</p>
 
-                  {selectedCard.cardMessage && (
-                    <div className="rounded-md border border-rose-200 bg-rose-50/50 p-3 mt-2">
-                      <p className="mb-1.5 text-xs font-black uppercase tracking-wider text-rose-700">💌 Card Message</p>
-                      <p className="text-sm italic font-bold text-slate-800">
-                        "{selectedCard.cardMessage}"
-                      </p>
+                  {/* Customer Details */}
+                  <div className="border-t border-slate-100 pt-2.5">
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Customer Details</p>
+                    <p className="text-sm text-slate-800 font-semibold">{selectedCard.purchaserName}</p>
+                    <p className="text-xs text-slate-500">Phone: {selectedCard.purchaserPhone} • Email: {selectedCard.purchaserEmail}</p>
+                  </div>
+
+                  {/* Delivery / Gift Details */}
+                  {selectedCard.isGift ? (
+                    <div className="border-t border-slate-100 pt-2.5 space-y-2">
+                      <div className="flex justify-between items-center">
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Gift Delivery Details</p>
+                        <Badge className="bg-emerald-500 text-white border-transparent text-[9px] font-bold py-0 h-4">Gift</Badge>
+                      </div>
+                      <p className="text-sm text-slate-800 font-semibold">{selectedCard.recipientName}</p>
+                      <p className="text-xs text-slate-650"><strong>Phone:</strong> {selectedCard.recipientPhone}</p>
+                      {selectedCard.recipientEmail && <p className="text-xs text-slate-650"><strong>Email:</strong> {selectedCard.recipientEmail}</p>}
+                      <p className="text-xs text-slate-650"><strong>Address:</strong> {selectedCard.deliveryAddress}</p>
+                      
+                      {selectedCard.cardMessage && (
+                        <div className="rounded-md border border-rose-250 bg-rose-50/50 p-2.5 mt-2">
+                          <p className="mb-1 text-[9px] font-black uppercase tracking-wider text-rose-700">💌 Gift Message</p>
+                          <p className="text-xs italic font-bold text-slate-800">
+                            "{selectedCard.cardMessage}"
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="bg-amber-50/50 border border-amber-250 p-2 rounded-md text-xs flex justify-between items-center">
+                        <span className="font-bold text-amber-700 text-[9px] uppercase tracking-wider">Greeting Card</span>
+                        <span className="font-semibold text-slate-700">{selectedCard.greetingCard && selectedCard.greetingCard !== 'none' ? selectedCard.greetingCard : 'None'}</span>
+                      </div>
+
+                      <div className="bg-slate-50 border border-slate-150 p-2 rounded-md space-y-1 text-xs">
+                        <div className="flex justify-between items-center">
+                          <span className="text-slate-500 font-semibold">Surprise Delivery:</span>
+                          <Badge className={selectedCard.surpriseDelivery ? "bg-indigo-650 text-white font-bold" : "bg-slate-200 text-slate-700"}>
+                            {selectedCard.surpriseDelivery ? 'Yes' : 'No'}
+                          </Badge>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-slate-500 font-semibold">Anonymous Gift:</span>
+                          <Badge className={selectedCard.anonymousGift ? "bg-indigo-650 text-white font-bold" : "bg-slate-200 text-slate-700"}>
+                            {selectedCard.anonymousGift ? 'Yes' : 'No'}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="border-t border-slate-100 pt-2.5 space-y-2">
+                      <div className="flex justify-between items-center">
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Delivery Details</p>
+                        <Badge variant="outline" className="text-[9px] bg-slate-50 border-slate-200 font-bold py-0 h-4">Not a Gift</Badge>
+                      </div>
+                      <p className="text-xs text-slate-500 italic">This order will be delivered to the customer.</p>
+                      <p className="text-xs text-slate-650"><strong>Address:</strong> {selectedCard.deliveryAddress}</p>
+                      
+                      {selectedCard.cardMessage && (
+                        <div className="rounded-md border border-rose-250 bg-rose-50/50 p-2.5 mt-2">
+                          <p className="mb-1 text-[9px] font-black uppercase tracking-wider text-rose-700">💌 Greeting Card Message</p>
+                          <p className="text-xs italic font-bold text-slate-800">
+                            "{selectedCard.cardMessage}"
+                          </p>
+                        </div>
+                      )}
                     </div>
                   )}
 

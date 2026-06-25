@@ -1252,28 +1252,64 @@ const AdminOrders = () => {
                         {/* Customer */}
                         <TableCell className="align-middle py-3.5">
                           <div className="flex flex-col">
-                            <span className="font-bold text-slate-800 dark:text-slate-200 text-sm">{order.shippingDetails.fullName}</span>
-                            <span className="text-xs text-slate-400 dark:text-slate-500 font-medium truncate max-w-[13.5rem] mt-0.5">{order.shippingDetails.email}</span>
-                            <div className="flex items-center gap-1.5 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <a 
-                                href={`tel:${order.shippingDetails.phone}`}
-                                onClick={(e) => e.stopPropagation()}
-                                className="inline-flex items-center justify-center h-6 w-6 rounded-md border border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-900 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-850"
-                                title="Call Customer"
-                              >
-                                <Phone className="h-3 w-3" />
-                              </a>
-                              <a 
-                                href={getWhatsAppLink(order.shippingDetails.phone, order.shippingDetails.fullName, order.orderNumber)}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={(e) => e.stopPropagation()}
-                                className="inline-flex items-center justify-center h-6 w-6 rounded-md border border-green-200 dark:border-green-900/30 bg-green-50/50 dark:bg-green-950/20 text-green-600 hover:text-green-700 dark:hover:text-green-400 hover:bg-green-100/40 dark:hover:bg-green-900/30"
-                                title="WhatsApp Customer"
-                              >
-                                <MessageSquare className="h-3 w-3" />
-                              </a>
-                            </div>
+                            {order.giftDetails && order.giftDetails.recipientName && order.giftDetails.recipientName.trim() !== '' ? (
+                              <>
+                                <Badge variant="outline" className="text-[9px] py-0 px-1.5 font-bold text-emerald-700 bg-emerald-50 border-emerald-250 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-900 w-max mb-1 select-none leading-normal h-4.5">
+                                  🎁 Gift Delivery
+                                </Badge>
+                                <span className="font-bold text-slate-800 dark:text-slate-200 text-sm">{order.giftDetails.recipientName}</span>
+                                <span className="text-xs text-slate-400 dark:text-slate-500 font-medium truncate max-w-[13.5rem] mt-0.5">{order.giftDetails.recipientEmail || 'No Email'}</span>
+                                <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold mt-1">Sender: {order.shippingDetails.fullName}</span>
+                                <div className="flex items-center gap-1.5 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <a 
+                                    href={`tel:${order.giftDetails.recipientPhone}`}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="inline-flex items-center justify-center h-6 w-6 rounded-md border border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-900 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-850"
+                                    title="Call Recipient"
+                                  >
+                                    <Phone className="h-3 w-3" />
+                                  </a>
+                                  <a 
+                                    href={getWhatsAppLink(order.giftDetails.recipientPhone, order.giftDetails.recipientName, order.orderNumber)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="inline-flex items-center justify-center h-6 w-6 rounded-md border border-green-200 dark:border-green-900/30 bg-green-50/50 dark:bg-green-950/20 text-green-600 hover:text-green-700 dark:hover:text-green-400 hover:bg-green-100/40 dark:hover:bg-green-900/30"
+                                    title="WhatsApp Recipient"
+                                  >
+                                    <MessageSquare className="h-3 w-3" />
+                                  </a>
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <Badge variant="outline" className="text-[9px] py-0 px-1.5 font-bold text-slate-600 bg-slate-50 border-slate-200 dark:bg-slate-950/30 dark:text-slate-400 dark:border-slate-800 w-max mb-1 select-none leading-normal h-4.5">
+                                  Not a Gift
+                                </Badge>
+                                <span className="font-bold text-slate-800 dark:text-slate-200 text-sm">{order.shippingDetails.fullName}</span>
+                                <span className="text-xs text-slate-400 dark:text-slate-500 font-medium truncate max-w-[13.5rem] mt-0.5">{order.shippingDetails.email}</span>
+                                <div className="flex items-center gap-1.5 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <a 
+                                    href={`tel:${order.shippingDetails.phone}`}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="inline-flex items-center justify-center h-6 w-6 rounded-md border border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-900 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-850"
+                                    title="Call Customer"
+                                  >
+                                    <Phone className="h-3 w-3" />
+                                  </a>
+                                  <a 
+                                    href={getWhatsAppLink(order.shippingDetails.phone, order.shippingDetails.fullName, order.orderNumber)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="inline-flex items-center justify-center h-6 w-6 rounded-md border border-green-200 dark:border-green-900/30 bg-green-50/50 dark:bg-green-950/20 text-green-600 hover:text-green-700 dark:hover:text-green-400 hover:bg-green-100/40 dark:hover:bg-green-900/30"
+                                    title="WhatsApp Customer"
+                                  >
+                                    <MessageSquare className="h-3 w-3" />
+                                  </a>
+                                </div>
+                              </>
+                            )}
                           </div>
                         </TableCell>
 
@@ -1450,29 +1486,70 @@ const AdminOrders = () => {
                       <div className="grid grid-cols-2 gap-4 pb-4 border-b border-slate-100 dark:border-slate-800/50">
                         {/* Customer */}
                         <div className="space-y-1">
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Customer</span>
-                          <p className="text-xs font-bold text-slate-800 dark:text-slate-200 line-clamp-1">{order.shippingDetails.fullName}</p>
-                          <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium truncate">{order.shippingDetails.email}</p>
-                          
-                          {/* Quick call/WhatsApp */}
-                          <div className="flex items-center gap-1.5 pt-1">
-                            <a 
-                              href={`tel:${order.shippingDetails.phone}`}
-                              className="inline-flex items-center justify-center h-6 w-6 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-500 hover:text-slate-800 dark:hover:text-slate-250 hover:bg-slate-50 dark:hover:bg-slate-800"
-                              title="Call customer"
-                            >
-                              <Phone className="h-3 w-3" />
-                            </a>
-                            <a 
-                              href={getWhatsAppLink(order.shippingDetails.phone, order.shippingDetails.fullName, order.orderNumber)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center justify-center h-6 w-6 rounded-md border border-green-200 dark:border-green-900/20 bg-green-50/50 dark:bg-green-950/10 text-green-600 hover:text-green-700 dark:hover:text-green-400 hover:bg-green-100/40 dark:hover:bg-green-900/20"
-                              title="WhatsApp message"
-                            >
-                              <MessageSquare className="h-3 w-3" />
-                            </a>
-                          </div>
+                          {order.giftDetails && order.giftDetails.recipientName && order.giftDetails.recipientName.trim() !== '' ? (
+                            <>
+                              <div className="flex justify-between items-center">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Recipient (Gift)</span>
+                                <Badge variant="outline" className="text-[9px] py-0 px-1 font-bold text-emerald-700 bg-emerald-50 border-emerald-250 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-900 leading-normal h-4">
+                                  Gift
+                                </Badge>
+                              </div>
+                              <p className="text-xs font-bold text-slate-800 dark:text-slate-200 line-clamp-1">{order.giftDetails.recipientName}</p>
+                              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium truncate">{order.giftDetails.recipientEmail || 'No Email'}</p>
+                              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold italic">Sender: {order.shippingDetails.fullName}</p>
+                              
+                              {/* Quick call/WhatsApp */}
+                              <div className="flex items-center gap-1.5 pt-1">
+                                <a 
+                                  href={`tel:${order.giftDetails.recipientPhone}`}
+                                  className="inline-flex items-center justify-center h-6 w-6 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-500 hover:text-slate-800 dark:hover:text-slate-250 hover:bg-slate-50 dark:hover:bg-slate-800"
+                                  title="Call recipient"
+                                >
+                                  <Phone className="h-3 w-3" />
+                                </a>
+                                <a 
+                                  href={getWhatsAppLink(order.giftDetails.recipientPhone, order.giftDetails.recipientName, order.orderNumber)}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center justify-center h-6 w-6 rounded-md border border-green-200 dark:border-green-900/20 bg-green-50/50 dark:bg-green-950/10 text-green-600 hover:text-green-700 dark:hover:text-green-400 hover:bg-green-100/40 dark:hover:bg-green-900/20"
+                                  title="WhatsApp recipient"
+                                >
+                                  <MessageSquare className="h-3 w-3" />
+                                </a>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="flex justify-between items-center">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Customer</span>
+                                <Badge variant="outline" className="text-[9px] py-0 px-1 font-bold text-slate-600 bg-slate-50 border-slate-200 dark:bg-slate-950/30 dark:text-slate-400 dark:border-slate-800 leading-normal h-4">
+                                  Not a Gift
+                                </Badge>
+                              </div>
+                              <p className="text-xs font-bold text-slate-800 dark:text-slate-200 line-clamp-1">{order.shippingDetails.fullName}</p>
+                              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium truncate">{order.shippingDetails.email}</p>
+                              
+                              {/* Quick call/WhatsApp */}
+                              <div className="flex items-center gap-1.5 pt-1">
+                                <a 
+                                  href={`tel:${order.shippingDetails.phone}`}
+                                  className="inline-flex items-center justify-center h-6 w-6 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-500 hover:text-slate-800 dark:hover:text-slate-250 hover:bg-slate-50 dark:hover:bg-slate-800"
+                                  title="Call customer"
+                                >
+                                  <Phone className="h-3 w-3" />
+                                </a>
+                                <a 
+                                  href={getWhatsAppLink(order.shippingDetails.phone, order.shippingDetails.fullName, order.orderNumber)}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center justify-center h-6 w-6 rounded-md border border-green-200 dark:border-green-900/20 bg-green-50/50 dark:bg-green-950/10 text-green-600 hover:text-green-700 dark:hover:text-green-400 hover:bg-green-100/40 dark:hover:bg-green-900/20"
+                                  title="WhatsApp message"
+                                >
+                                  <MessageSquare className="h-3 w-3" />
+                                </a>
+                              </div>
+                            </>
+                          )}
                         </div>
 
                         {/* Delivery date & slot */}

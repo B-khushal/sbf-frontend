@@ -245,7 +245,7 @@ const OrderDetailsPage: React.FC = () => {
         description: `Generating high-quality invoice for order #${order?.orderNumber}`,
       });
       html2pdf().from(element).set({
-        margin: [0.3, 0.4, 0.3, 0.4],
+        margin: [0.3, 0.4, 0.3, 0.4] as any,
         filename: `invoice-order-${order?.orderNumber}.pdf`,
         html2canvas: { scale: 2, useCORS: true },
         jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
@@ -375,6 +375,7 @@ const OrderDetailsPage: React.FC = () => {
   }
 
   const statusCfg = getStatusConfig(order.status);
+  const isGift = !!(order.giftDetails && order.giftDetails.recipientName && order.giftDetails.recipientName.trim() !== '');
 
   return (
     <div className="max-w-6xl mx-auto p-4 sm:p-6 space-y-6">
@@ -743,12 +744,14 @@ const OrderDetailsPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Recipient Profile */}
+              {/* Sender / Customer Profile */}
               <div className="space-y-2 border-t border-slate-50 dark:border-slate-850/50 pt-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Recipient Details</span>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    {isGift ? 'Sender Details' : 'Customer Details'}
+                  </span>
                   <Badge variant="outline" className="text-[9px] bg-slate-50/50 border-slate-200 dark:border-slate-800 uppercase tracking-wider px-1.5">
-                    {order.shippingDetails.deliveryOption === 'gift' || order.shippingDetails.notes?.toLowerCase().includes('gift') ? '🎁 Gift Delivery' : '📦 Self Delivery'}
+                    {isGift ? '🎁 Gift Delivery' : '📦 Self Delivery'}
                   </Badge>
                 </div>
                 
@@ -770,7 +773,7 @@ const OrderDetailsPage: React.FC = () => {
                     href={`tel:${order.shippingDetails.phone}`}
                     className="flex items-center justify-center gap-2 h-9 text-xs font-bold rounded-xl border border-slate-250 bg-white hover:bg-slate-50 text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-850 shadow-sm"
                   >
-                    <Phone className="h-3.5 w-3.5" /> Call Customer
+                    <Phone className="h-3.5 w-3.5" /> {isGift ? 'Call Sender' : 'Call Customer'}
                   </a>
                   <a 
                     href={getWhatsAppLink(order.shippingDetails.phone, order.shippingDetails.fullName, order.orderNumber)}
@@ -778,28 +781,128 @@ const OrderDetailsPage: React.FC = () => {
                     rel="noopener noreferrer"
                     className="flex items-center justify-center gap-2 h-9 text-xs font-bold rounded-xl bg-green-500 hover:bg-green-600 text-white shadow-sm transition-all duration-200 hover:scale-[1.01]"
                   >
-                    <MessageSquare className="h-3.5 w-3.5" /> WhatsApp
+                    <MessageSquare className="h-3.5 w-3.5" /> {isGift ? 'WhatsApp Sender' : 'WhatsApp'}
                   </a>
                 </div>
               </div>
 
-              {/* Delivery Address */}
-              <div className="space-y-1.5 border-t border-slate-50 dark:border-slate-850/50 pt-3">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Address</span>
-                <p className="text-xs text-slate-800 dark:text-slate-200 leading-relaxed font-semibold">
-                  {order.shippingDetails.address}
-                  {order.shippingDetails.apartment && <span className="block mt-0.5 text-slate-500 dark:text-slate-400">Apt: {order.shippingDetails.apartment}</span>}
-                  <span className="block mt-0.5 text-slate-600 dark:text-slate-400 font-bold">{order.shippingDetails.city}, {order.shippingDetails.state} {order.shippingDetails.zipCode}</span>
-                </p>
-              </div>
+              {/* Delivery / Gift Details */}
+              {isGift ? (
+                <div className="space-y-3 border-t border-slate-50 dark:border-slate-850/50 pt-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Gift Delivery Details</span>
+                    <Badge className="text-[9px] font-bold bg-emerald-500 text-white border-transparent">
+                      🎁 Gift Delivery
+                    </Badge>
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{order.giftDetails?.recipientName}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1.5">
+                      <Phone className="h-3.5 w-3.5 text-slate-400" />
+                      {order.giftDetails?.recipientPhone}
+                    </p>
+                    {order.giftDetails?.recipientEmail && (
+                      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1.5">
+                        <Mail className="h-3.5 w-3.5 text-slate-400" />
+                        {order.giftDetails.recipientEmail}
+                      </p>
+                    )}
+                  </div>
 
-              {/* Card Message Section */}
-              {(order.shippingDetails.cardMessage || order.shippingDetails.giftMessage) && (
-                <div className="bg-rose-50/50 dark:bg-rose-950/10 border border-rose-250 bg-rose-50/20 dark:border-rose-800/30 p-3 rounded-xl space-y-1">
-                  <span className="text-[9px] font-bold text-rose-700 dark:text-rose-450 uppercase tracking-wider block flex items-center gap-1">💌 Greeting Card Message</span>
-                  <p className="text-xs text-slate-700 dark:text-slate-350 italic font-bold leading-relaxed">
-                    "{order.shippingDetails.cardMessage || order.shippingDetails.giftMessage}"
+                  {/* Direct Call / WhatsApp Quick Actions for Recipient */}
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <a 
+                      href={`tel:${order.giftDetails?.recipientPhone}`}
+                      className="flex items-center justify-center gap-2 h-9 text-xs font-bold rounded-xl border border-slate-250 bg-white hover:bg-slate-50 text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-850 shadow-sm"
+                    >
+                      <Phone className="h-3.5 w-3.5" /> Call Recipient
+                    </a>
+                    <a 
+                      href={getWhatsAppLink(order.giftDetails?.recipientPhone || '', order.giftDetails?.recipientName || '', order.orderNumber)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 h-9 text-xs font-bold rounded-xl bg-green-500 hover:bg-green-600 text-white shadow-sm transition-all duration-200 hover:scale-[1.01]"
+                    >
+                      <MessageSquare className="h-3.5 w-3.5" /> WhatsApp Recipient
+                    </a>
+                  </div>
+
+                  {/* Delivery Address */}
+                  <div className="space-y-1 mt-2">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Recipient Address</span>
+                    <p className="text-xs text-slate-800 dark:text-slate-200 leading-relaxed font-semibold">
+                      {order.giftDetails?.recipientAddress}
+                      {order.giftDetails?.recipientApartment && <span className="block mt-0.5 text-slate-500 dark:text-slate-400">Apt: {order.giftDetails.recipientApartment}</span>}
+                      <span className="block mt-0.5 text-slate-600 dark:text-slate-400 font-bold">{order.giftDetails?.recipientCity}, {order.giftDetails?.recipientState} {order.giftDetails?.recipientZipCode}</span>
+                    </p>
+                  </div>
+
+                  {/* Gift Message */}
+                  {order.giftDetails?.message && (
+                    <div className="bg-rose-50/50 dark:bg-rose-950/10 border border-rose-250 bg-rose-50/20 dark:border-rose-800/30 p-3 rounded-xl space-y-1">
+                      <span className="text-[9px] font-bold text-rose-700 dark:text-rose-450 uppercase tracking-wider block flex items-center gap-1">💌 Gift Message</span>
+                      <p className="text-xs text-slate-700 dark:text-slate-350 italic font-bold leading-relaxed">
+                        "{order.giftDetails.message}"
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Greeting Card */}
+                  <div className="bg-amber-50/50 dark:bg-amber-950/10 border border-amber-250 p-2.5 rounded-xl text-xs flex justify-between items-center">
+                    <span className="font-bold text-amber-700 dark:text-amber-400 text-[10px] uppercase tracking-wider">🎴 Greeting Card</span>
+                    <span className="font-semibold text-slate-700 dark:text-slate-300">
+                      {order.giftDetails?.greetingCard && order.giftDetails.greetingCard !== 'none' ? order.giftDetails.greetingCard : 'None'}
+                    </span>
+                  </div>
+
+                  {/* Options */}
+                  <div className="bg-slate-50 dark:bg-slate-950 border border-slate-150/40 p-2.5 rounded-xl space-y-1 text-xs">
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-500 font-semibold">Surprise Delivery:</span>
+                      <Badge className={order.giftDetails?.surpriseDelivery ? "bg-indigo-650 text-white font-bold" : "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300"}>
+                        {order.giftDetails?.surpriseDelivery ? 'Yes' : 'No'}
+                      </Badge>
+                    </div>
+                    <div className="flex justify-between items-center mt-1.5">
+                      <span className="text-slate-500 font-semibold">Anonymous Gift:</span>
+                      <Badge className={order.giftDetails?.anonymousGift ? "bg-indigo-650 text-white font-bold" : "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300"}>
+                        {order.giftDetails?.anonymousGift ? 'Yes' : 'No'}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3 border-t border-slate-50 dark:border-slate-850/50 pt-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Delivery Details</span>
+                    <Badge variant="outline" className="text-[9px] bg-slate-50 border-slate-200 dark:bg-slate-950 dark:border-slate-850 uppercase tracking-wider px-1.5 font-bold">
+                      Not a Gift
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 italic">
+                    This order will be delivered to the customer.
                   </p>
+
+                  {/* Customer Shipping Address */}
+                  <div className="space-y-1.5">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Delivery Address</span>
+                    <p className="text-xs text-slate-800 dark:text-slate-200 leading-relaxed font-semibold">
+                      {order.shippingDetails.address}
+                      {order.shippingDetails.apartment && <span className="block mt-0.5 text-slate-500 dark:text-slate-400">Apt: {order.shippingDetails.apartment}</span>}
+                      <span className="block mt-0.5 text-slate-600 dark:text-slate-400 font-bold">{order.shippingDetails.city}, {order.shippingDetails.state} {order.shippingDetails.zipCode}</span>
+                    </p>
+                  </div>
+
+                  {/* Card Message Section for guest checkout or fallback */}
+                  {(order.shippingDetails.cardMessage || order.shippingDetails.giftMessage) && (
+                    <div className="bg-rose-50/50 dark:bg-rose-950/10 border border-rose-250 bg-rose-50/20 dark:border-rose-800/30 p-3 rounded-xl space-y-1">
+                      <span className="text-[9px] font-bold text-rose-700 dark:text-rose-450 uppercase tracking-wider block flex items-center gap-1">💌 Greeting Card Message</span>
+                      <p className="text-xs text-slate-700 dark:text-slate-355 italic font-bold leading-relaxed">
+                        "{order.shippingDetails.cardMessage || order.shippingDetails.giftMessage}"
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
 

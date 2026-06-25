@@ -57,7 +57,10 @@ const orderSchema = new mongoose.Schema({
     recipientApartment: String,
     recipientCity: String,
     recipientState: String,
-    recipientZipCode: String
+    recipientZipCode: String,
+    greetingCard: String,
+    surpriseDelivery: Boolean,
+    anonymousGift: Boolean
   },
   status: {
     type: String,

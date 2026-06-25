@@ -21,7 +21,7 @@ const Invoice: React.FC<InvoiceProps> = ({ order, isAdmin = false }) => {
   const customerPhone = shipping.phone || order.user?.phone || 'N/A';
 
   // Resolve gift vs standard delivery details
-  const isGift = shipping.deliveryOption === 'gift' || (order.giftDetails && order.giftDetails.message);
+  const isGift = !!(order.giftDetails && order.giftDetails.recipientName && order.giftDetails.recipientName.trim() !== '');
   
   const recipientName = isGift
     ? (order.giftDetails?.recipientName || `${shipping.receiverFirstName || ''} ${shipping.receiverLastName || ''}`.trim() || customerName)
@@ -145,7 +145,7 @@ const Invoice: React.FC<InvoiceProps> = ({ order, isAdmin = false }) => {
         {/* Bill To */}
         <div className="border border-slate-200 bg-slate-50/50 rounded-xl p-5 border-l-4 border-l-emerald-850">
           <h3 className="text-xs font-bold text-emerald-850 uppercase tracking-wider border-b border-slate-200 pb-2 mb-3">
-            Billing Details
+            Customer / Billing Details
           </h3>
           <p className="text-sm font-bold text-slate-800">
             {order.shippingDetails?.fullName || order.shipping?.fullName || customerName}
@@ -160,14 +160,20 @@ const Invoice: React.FC<InvoiceProps> = ({ order, isAdmin = false }) => {
         {/* Ship To */}
         <div className="border border-slate-200 bg-slate-50/50 rounded-xl p-5 border-l-4 border-l-amber-500">
           <h3 className="text-xs font-bold text-amber-600 uppercase tracking-wider border-b border-slate-200 pb-2 mb-3">
-            {isGift ? 'Delivery Recipient (Gift)' : 'Delivery Address'}
+            {isGift ? 'Gift Recipient Details' : 'Delivery Details (Not a Gift)'}
           </h3>
           <p className="text-sm font-bold text-slate-800">
             {recipientName}
           </p>
           <div className="text-xs text-slate-600 space-y-1 mt-2 leading-relaxed">
             <p><strong>Phone:</strong> {recipientPhone}</p>
+            {isGift && order.giftDetails?.recipientEmail && (
+              <p><strong>Email:</strong> {order.giftDetails.recipientEmail}</p>
+            )}
             <p><strong>Address:</strong> {recipientAddress}{recipientApartment ? `, ${recipientApartment}` : ''}, {recipientCity}{recipientState ? `, ${recipientState}` : ''} {recipientZip}</p>
+            {!isGift && (
+              <p className="text-[10px] text-slate-400 mt-1 italic">This order will be delivered to the customer.</p>
+            )}
           </div>
         </div>
       </div>
@@ -256,7 +262,23 @@ const Invoice: React.FC<InvoiceProps> = ({ order, isAdmin = false }) => {
             </div>
           </div>
 
-          {(shipping.cardMessage || shipping.giftMessage) && (
+          {isGift ? (
+            <div className="border border-dashed border-emerald-300 bg-emerald-50/10 rounded-xl p-3.5 space-y-2">
+              <h4 className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider border-b border-emerald-250 pb-1 mb-1.5 flex items-center gap-1">
+                🎁 Gift Delivery Options
+              </h4>
+              <div className="text-xs text-slate-700 space-y-1.5">
+                {order.giftDetails?.message && (
+                  <p className="italic font-semibold">
+                    <strong>Message:</strong> "{order.giftDetails.message}"
+                  </p>
+                )}
+                <p><strong>Greeting Card:</strong> {order.giftDetails?.greetingCard && order.giftDetails.greetingCard !== 'none' ? order.giftDetails.greetingCard : 'None'}</p>
+                <p><strong>Surprise Delivery:</strong> {order.giftDetails?.surpriseDelivery ? 'Yes' : 'No'}</p>
+                <p><strong>Anonymous Gift:</strong> {order.giftDetails?.anonymousGift ? 'Yes' : 'No'}</p>
+              </div>
+            </div>
+          ) : (shipping.cardMessage || shipping.giftMessage) ? (
             <div className="border border-dashed border-amber-300 bg-amber-50/30 rounded-xl p-3.5">
               <h4 className="text-[10px] font-bold text-amber-600 uppercase tracking-wider border-b border-amber-200/50 pb-1 mb-1.5">
                 💌 Card Message
@@ -265,7 +287,7 @@ const Invoice: React.FC<InvoiceProps> = ({ order, isAdmin = false }) => {
                 "{shipping.cardMessage || shipping.giftMessage}"
               </p>
             </div>
-          )}
+          ) : null}
         </div>
 
         {/* Pricing Summary */}

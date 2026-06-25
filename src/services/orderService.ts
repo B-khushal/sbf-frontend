@@ -14,6 +14,7 @@ export interface Order {
     zipCode: string;
     notes?: string;
     cardMessage?: string;
+    giftMessage?: string;
     deliverySpecialInstructions?: string;
     deliveryDate: string;
     timeSlot: string;
@@ -56,6 +57,20 @@ export interface Order {
     updatedBy?: string;
   }[];
   createdAt: string;
+  giftDetails?: {
+    message: string;
+    recipientName: string;
+    recipientEmail?: string;
+    recipientPhone: string;
+    recipientAddress: string;
+    recipientApartment?: string;
+    recipientCity: string;
+    recipientState: string;
+    recipientZipCode: string;
+    greetingCard: string;
+    surpriseDelivery: boolean;
+    anonymousGift: boolean;
+  };
 }
 
 export interface DeliveryCalculation {
