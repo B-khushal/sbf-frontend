@@ -3897,6 +3897,34 @@ const AdminSettingsPage = () => {
                         />
                       </div>
                     </div>
+
+                    <Separator className="bg-slate-800 my-6" />
+
+                    <div className="space-y-4">
+                      <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider">System Settings</h3>
+                      <Card className="bg-slate-800/40 border-slate-800">
+                        <CardContent className="p-4 space-y-4">
+                          <div className="flex items-center justify-between">
+                            <div className="space-y-0.5">
+                              <Label htmlFor="show-admin-logs-toggle" className="text-xs font-bold text-slate-200 cursor-pointer">
+                                Show Admin Logs in User Activity
+                              </Label>
+                              <p className="text-[10px] text-slate-400">
+                                When enabled, administrator activities will be displayed together with customer activities in the User Log Activity page.
+                              </p>
+                            </div>
+                            <Switch
+                              id="show-admin-logs-toggle"
+                              checked={localSettings.globalSettings?.showAdminLogsInUserActivity ?? false}
+                              onCheckedChange={(checked) => {
+                                const copy = { ...localSettings.globalSettings, showAdminLogsInUserActivity: checked };
+                                updateSettingsState({ ...localSettings, globalSettings: copy });
+                              }}
+                            />
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
                   </div>
                 )}
 

@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import api from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
+import { useSettings } from '@/contexts/SettingsContext';
 
 type ActivityLogRow = {
   id: string;
@@ -37,6 +38,7 @@ type ActivityLogRow = {
   userId?: string;
   userName?: string;
   email?: string;
+  role?: string;
   actionType: string;
   url: string;
   method: string;
@@ -65,11 +67,15 @@ const PAGE_SIZE_OPTIONS = ['10', '25', '50', '100', '250', '500', '1000'];
 const UserActivityLogs: React.FC = () => {
   const { toast } = useToast();
 
+  const { globalSettings } = useSettings();
+  const showAdminLogsInUserActivity = globalSettings?.showAdminLogsInUserActivity ?? false;
+
   const [logs, setLogs] = useState<ActivityLogRow[]>([]);
   const [actionTypes, setActionTypes] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState('');
+  const [userTypeFilter, setUserTypeFilter] = useState('customer');
   const [actionTypeFilter, setActionTypeFilter] = useState('all');
   const [urlFilter, setUrlFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -89,6 +95,13 @@ const UserActivityLogs: React.FC = () => {
     totalPages: 1,
   });
 
+  // Reset userTypeFilter to 'customer' if showAdminLogsInUserActivity is toggled OFF
+  useEffect(() => {
+    if (!showAdminLogsInUserActivity) {
+      setUserTypeFilter('customer');
+    }
+  }, [showAdminLogsInUserActivity]);
+
   const buildQueryParams = () => {
     const params = new URLSearchParams();
 
@@ -96,6 +109,7 @@ const UserActivityLogs: React.FC = () => {
     params.append('limit', String(pageSize));
     params.append('sortBy', sortBy);
     params.append('sortOrder', sortOrder);
+    params.append('userType', showAdminLogsInUserActivity ? userTypeFilter : 'customer');
 
     if (searchTerm.trim()) params.append('search', searchTerm.trim());
     if (actionTypeFilter !== 'all') params.append('actionType', actionTypeFilter);
@@ -142,11 +156,11 @@ const UserActivityLogs: React.FC = () => {
 
   useEffect(() => {
     setPage(1);
-  }, [searchTerm, actionTypeFilter, urlFilter, statusFilter, methodFilter, dateFrom, dateTo]);
+  }, [searchTerm, userTypeFilter, actionTypeFilter, urlFilter, statusFilter, methodFilter, dateFrom, dateTo]);
 
   useEffect(() => {
     void fetchLogs();
-  }, [searchTerm, actionTypeFilter, urlFilter, statusFilter, methodFilter, dateFrom, dateTo]);
+  }, [searchTerm, userTypeFilter, actionTypeFilter, urlFilter, statusFilter, methodFilter, dateFrom, dateTo]);
 
   const toggleSort = (column: SortBy) => {
     if (sortBy === column) {
@@ -323,12 +337,37 @@ const UserActivityLogs: React.FC = () => {
     }
   };
 
+  const getDeviceDisplay = (deviceStr?: string) => {
+    if (!deviceStr) return '-';
+    if (deviceStr.includes('•')) return deviceStr;
+    if (deviceStr.includes(',')) return deviceStr.replace(',', ' •');
+    
+    // Fallback parser if it is a raw user-agent string
+    const ua = deviceStr;
+    let browser = 'Browser';
+    let os = 'OS';
+    
+    if (ua.includes('Chrome')) browser = 'Chrome';
+    else if (ua.includes('Safari')) browser = 'Safari';
+    else if (ua.includes('Firefox')) browser = 'Firefox';
+    else if (ua.includes('Edge')) browser = 'Edge';
+    
+    if (ua.includes('Windows')) os = 'Windows';
+    else if (ua.includes('Mac')) os = 'macOS';
+    else if (ua.includes('Android')) os = 'Android';
+    else if (ua.includes('iPhone') || ua.includes('iPad')) os = 'iOS';
+    else if (ua.includes('Linux')) os = 'Linux';
+    
+    return `${browser} • ${os}`;
+  };
+
   const clearFilters = () => {
     setSearchTerm('');
     setActionTypeFilter('all');
     setUrlFilter('');
     setStatusFilter('all');
     setMethodFilter('all');
+    setUserTypeFilter('customer');
     setDateFrom('');
     setDateTo('');
     setPage(1);
@@ -361,7 +400,7 @@ const UserActivityLogs: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 mt-4">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 mt-4">
             <div className="relative xl:col-span-2">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
@@ -371,6 +410,23 @@ const UserActivityLogs: React.FC = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
+
+            <Select value={userTypeFilter} onValueChange={setUserTypeFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Activity Type" />
+              </SelectTrigger>
+              <SelectContent>
+                {showAdminLogsInUserActivity ? (
+                  <>
+                    <SelectItem value="all">All Activities</SelectItem>
+                    <SelectItem value="customer">Customer Only</SelectItem>
+                    <SelectItem value="admin">Admin Only</SelectItem>
+                  </>
+                ) : (
+                  <SelectItem value="customer">Customer Only</SelectItem>
+                )}
+              </SelectContent>
+            </Select>
 
             <Select value={actionTypeFilter} onValueChange={setActionTypeFilter}>
               <SelectTrigger>
@@ -432,29 +488,29 @@ const UserActivityLogs: React.FC = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Log ID</TableHead>
+                  <TableHead>Type</TableHead>
                   <TableHead>
                     <button type="button" onClick={() => toggleSort('user')} className="inline-flex items-center gap-1 font-medium">
-                      User {sortIndicator('user')}
+                      User / Admin {sortIndicator('user')}
                     </button>
                   </TableHead>
+                  <TableHead>Role</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>
                     <button type="button" onClick={() => toggleSort('actionType')} className="inline-flex items-center gap-1 font-medium">
                       Action {sortIndicator('actionType')}
                     </button>
                   </TableHead>
-                  <TableHead>URL</TableHead>
+                  <TableHead>Module (URL)</TableHead>
                   <TableHead>Method</TableHead>
                   <TableHead>
                     <button type="button" onClick={() => toggleSort('timestamp')} className="inline-flex items-center gap-1 font-medium">
                       Timestamp {sortIndicator('timestamp')}
                     </button>
                   </TableHead>
-                  <TableHead>IP</TableHead>
-                  <TableHead>Device</TableHead>
+                  <TableHead>IP Address</TableHead>
+                  <TableHead>Browser & OS</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Session</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -471,23 +527,41 @@ const UserActivityLogs: React.FC = () => {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  logs.map((log, index) => (
-                    <TableRow key={log.logId} className={index % 2 === 0 ? 'bg-muted/20' : ''}>
-                      <TableCell className="font-mono text-xs">{log.logId.slice(-8)}</TableCell>
-                      <TableCell>{log.userName || '-'}</TableCell>
-                      <TableCell>{log.email || '-'}</TableCell>
-                      <TableCell>{log.actionType}</TableCell>
-                      <TableCell className="max-w-[260px] truncate" title={log.url}>{log.url || '-'}</TableCell>
-                      <TableCell>{log.method || '-'}</TableCell>
-                      <TableCell>{formatDateTime(log.timestamp)}</TableCell>
-                      <TableCell>{log.ipAddress || '-'}</TableCell>
-                      <TableCell className="max-w-[220px] truncate" title={log.device || ''}>{log.device || '-'}</TableCell>
-                      <TableCell>
-                        <Badge variant={getStatusVariant(log.status)}>{log.status}</Badge>
-                      </TableCell>
-                      <TableCell className="font-mono text-xs">{log.sessionId || '-'}</TableCell>
-                    </TableRow>
-                  ))
+                  logs.map((log, index) => {
+                    const isAdmin = log.role && log.role !== 'user';
+                    const roleLabel = log.role === 'admin' ? 'Super Admin' : log.role === 'vendor' ? 'Vendor' : log.role === 'user' ? 'Customer' : log.role || 'Customer';
+                    return (
+                      <TableRow key={log.logId} className={index % 2 === 0 ? 'bg-muted/20' : ''}>
+                        <TableCell>
+                          {isAdmin ? (
+                            <Badge className="bg-indigo-650 hover:bg-indigo-650 text-white font-extrabold border-transparent select-none text-[9px] uppercase tracking-wider py-0.5 px-2">
+                              🛡️ ADMIN
+                            </Badge>
+                          ) : (
+                            <Badge className="bg-slate-100 hover:bg-slate-100 text-slate-650 font-extrabold border-slate-200 select-none text-[9px] uppercase tracking-wider py-0.5 px-2 dark:bg-slate-850 dark:text-slate-300 dark:border-slate-700" variant="outline">
+                              👤 CUSTOMER
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="font-semibold text-slate-900 dark:text-slate-100">{log.userName || '-'}</TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className="text-[10px] font-bold py-0 h-4.5">
+                            {roleLabel}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{log.email || '-'}</TableCell>
+                        <TableCell className="font-medium text-slate-800 dark:text-slate-200">{log.actionType}</TableCell>
+                        <TableCell className="max-w-[200px] truncate font-mono text-xs" title={log.url}>{log.url || '-'}</TableCell>
+                        <TableCell className="font-mono text-xs">{log.method || '-'}</TableCell>
+                        <TableCell className="whitespace-nowrap text-xs">{formatDateTime(log.timestamp)}</TableCell>
+                        <TableCell className="font-mono text-xs">{log.ipAddress || '-'}</TableCell>
+                        <TableCell className="text-xs">{getDeviceDisplay(log.device)}</TableCell>
+                        <TableCell>
+                          <Badge variant={getStatusVariant(log.status)}>{log.status}</Badge>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
                 )}
               </TableBody>
             </Table>
