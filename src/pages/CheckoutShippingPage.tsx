@@ -150,7 +150,21 @@ const CheckoutShippingPage = () => {
   const [showOrderSummary, setShowOrderSummary] = useState(false);
   const [isSavedAddressesOpen, setIsSavedAddressesOpen] = useState(false);
 
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date>(() => {
+    try {
+      const info = localStorage.getItem('shippingInfo');
+      if (info) {
+        const parsed = JSON.parse(info);
+        if (parsed.selectedDate) {
+          const date = new Date(parsed.selectedDate);
+          if (!isNaN(date.getTime())) return date;
+        }
+      }
+      return new Date();
+    } catch {
+      return new Date();
+    }
+  });
   const [formData, setFormData] = useState({
     // Sender details
     firstName: '',
