@@ -9,13 +9,14 @@ import { Badge } from '@/components/ui/badge';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { format } from 'date-fns';
 import { 
   Download, Camera, Hash, MessageSquare, Flower2, Gift, Mail, Phone,
   ArrowLeft, Clock, User, MapPin, CreditCard, Calendar, ChevronRight,
   ExternalLink, Copy, Check, CheckCircle2, AlertCircle, ShoppingBag, 
-  HelpCircle, ChevronDown, Plus, Heart, Trash2
+  HelpCircle, ChevronDown, Plus, Heart, Trash2, Truck
 } from 'lucide-react';
 // @ts-ignore
 import html2pdf from 'html2pdf.js';
