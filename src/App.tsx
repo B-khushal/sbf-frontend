@@ -58,6 +58,14 @@ const CheckoutConfirmationPage = lazy(() => import("./pages/CheckoutConfirmation
 // Admin Pages (heavily lazy loaded as they're admin-only)
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const AdminDashboardHome = lazy(() => import("./pages/Admin/Dashboard"));
+const DeliveryPartners = lazy(() => import("./pages/Admin/DeliveryPartners"));
+const ActiveDeliveries = lazy(() => import("./pages/Admin/ActiveDeliveries"));
+const DeliveryAnalytics = lazy(() => import("./pages/Admin/DeliveryAnalytics"));
+const PartnerEarnings = lazy(() => import("./pages/Admin/PartnerEarnings"));
+const DeliveryZones = lazy(() => import("./pages/Admin/DeliveryZones"));
+const DeliverySettingsPage = lazy(() => import("./pages/Admin/DeliverySettingsPage"));
+const AssignmentRules = lazy(() => import("./pages/Admin/AssignmentRules"));
+const TrackOrderPage = lazy(() => import("./pages/TrackOrderPage"));
 const AdminProducts = lazy(() => import("./pages/Admin/Products"));
 const AdminOrders = lazy(() => import("./pages/Admin/Orders"));
 const AdminReviews = lazy(() => import("./pages/Admin/Reviews"));
@@ -76,11 +84,17 @@ const AddonFormPage = lazy(() => import("./pages/Admin/AddonForm"));
 const ProductForm = lazy(() => import('@/pages/Admin/ProductForm'));
 const ProductApproval = lazy(() => import('@/pages/Admin/ProductApproval'));
 const UserViewPage = lazy(() => import('./pages/Admin/UserViewPage'));
+const UserAddPage = lazy(() => import('./pages/Admin/UserAddPage'));
 const AdminCategories = lazy(() => import('./pages/Admin/Categories'));
 const CategoryForm = lazy(() => import('./pages/Admin/CategoryForm'));
 const CategoryResolver = lazy(() => import('./pages/CategoryResolver'));
 const UserEditPage = lazy(() => import('./pages/Admin/UserEditPage'));
 const UserActivityLogs = lazy(() => import('./pages/Admin/UserActivityLogs'));
+const StaffList = lazy(() => import('./pages/Admin/StaffList'));
+const StaffAdd = lazy(() => import('./pages/Admin/StaffAdd'));
+const RolesPermissions = lazy(() => import('./pages/Admin/RolesPermissions'));
+const AttendanceLogs = lazy(() => import('./pages/Admin/AttendanceLogs'));
+const LoginSessions = lazy(() => import('./pages/Admin/LoginSessions'));
 const ValentineManagement = lazy(() => import('./pages/Admin/ValentineManagement'));
 const ValentineAnalyticsDashboard = lazy(() => import('./pages/Admin/ValentineAnalytics'));
 const SeasonalCampaigns = lazy(() => import('./pages/Admin/SeasonalCampaigns'));
@@ -175,92 +189,6 @@ const App = () => {
                       <ActivityRouteTracker />
                       <Suspense fallback={<LoadingFallback />}>
                         <Routes>
-                          {/* Main Layout Routes */}
-                          <Route element={<MainLayout />}>
-                            <Route path="/" element={<HomePage />} />
-                            <Route path="/shop" element={
-                              <Suspense fallback={<LoadingFallback message="Loading shop..." />}>
-                                <ShopPage />
-                              </Suspense>
-                            } />
-                            <Route path="/shop/:category" element={
-                              <Suspense fallback={<LoadingFallback message="Loading products..." />}>
-                                <ShopPage />
-                              </Suspense>
-                            } />
-                            <Route path="/product/:id" element={
-                              <Suspense fallback={<LoadingFallback message="Loading product..." />}>
-                                <ProductPage />
-                              </Suspense>
-                            } />
-                            <Route path="/products/:productId" element={
-                              <Suspense fallback={<LoadingFallback message="Loading product..." />}>
-                                <ProductPage />
-                              </Suspense>
-                            } />
-                            <Route path="/products/:productId/reviews" element={
-                              <Suspense fallback={<LoadingFallback message="Loading reviews..." />}>
-                                <ProductReviewsPage />
-                              </Suspense>
-                            } />
-                            <Route path="/products/:productId/reviews/:slug" element={
-                              <Suspense fallback={<LoadingFallback message="Loading reviews..." />}>
-                                <ProductReviewsPage />
-                              </Suspense>
-                            } />
-                            <Route path="/cart" element={
-                              <Suspense fallback={<LoadingFallback message="Loading cart..." />}>
-                                <CartPage />
-                              </Suspense>
-                            } />
-                            <Route path="/about" element={
-                              <Suspense fallback={<LoadingFallback message="Loading about..." />}>
-                                <AboutPage />
-                              </Suspense>
-                            } />
-                            <Route path="/wishlist" element={
-                              <Suspense fallback={<LoadingFallback message="Loading wishlist..." />}>
-                                <WishlistPage />
-                              </Suspense>
-                            } />
-                            <Route path="/contact" element={
-                              <Suspense fallback={<LoadingFallback message="Loading contact..." />}>
-                                <ContactPage />
-                              </Suspense>
-                            } />
-                            <Route path="/:categorySlug" element={
-                              <Suspense fallback={<LoadingFallback message="Loading category..." />}>
-                                <CategoryResolver />
-                              </Suspense>
-                            } />
-                            <Route path="/:parentCategory/:categorySlug" element={
-                              <Suspense fallback={<LoadingFallback message="Loading category..." />}>
-                                <CategoryResolver />
-                              </Suspense>
-                            } />
-                            {/* Valentine Special Page */}
-                            <Route path="/valentine-special" element={
-                              <Suspense fallback={<LoadingFallback message="Loading Valentine's experience..." />}>
-                                <ValentineSpecialPage />
-                              </Suspense>
-                            } />
-                            <Route path="/valentine-shop" element={
-                              <Suspense fallback={<LoadingFallback message="Loading Valentine shop..." />}>
-                                <ValentineShopPage />
-                              </Suspense>
-                            } />
-                            <Route path="/valentine-product/:id" element={
-                              <Suspense fallback={<LoadingFallback message="Loading product..." />}>
-                                <ValentineProductDetailsPage />
-                              </Suspense>
-                            } />
-                            <Route path="/valentine-product/:id/:slug" element={
-                              <Suspense fallback={<LoadingFallback message="Loading product..." />}>
-                                <ValentineProductDetailsPage />
-                              </Suspense>
-                            } />
-                          </Route>
-
                           {/* Legal Pages */}
                           <Route path="/terms" element={
                             <Suspense fallback={<LoadingFallback />}>
@@ -324,6 +252,12 @@ const App = () => {
                                 <ProfilePage />
                               </Suspense>
                             </ProtectedRoute>
+                          } />
+
+                          <Route path="/track/:orderNumber" element={
+                            <Suspense fallback={<LoadingFallback message="Loading tracking details..." />}>
+                              <TrackOrderPage />
+                            </Suspense>
                           } />
 
                           {/* Admin Panel Routes - Protected and Lazy Loaded */}
@@ -399,6 +333,11 @@ const App = () => {
                                 <UserViewPage />
                               </Suspense>
                             } />
+                            <Route path="users/add" element={
+                              <Suspense fallback={<LoadingFallback message="Loading add user form..." />}>
+                                <UserAddPage />
+                              </Suspense>
+                            } />
                             <Route path="users/edit/:userId" element={
                               <Suspense fallback={<LoadingFallback message="Loading user edit form..." />}>
                                 <UserEditPage />
@@ -407,6 +346,36 @@ const App = () => {
                             <Route path="activity-logs" element={
                               <Suspense fallback={<LoadingFallback message="Loading activity logs..." />}>
                                 <UserActivityLogs />
+                              </Suspense>
+                            } />
+                            <Route path="staff" element={
+                              <Suspense fallback={<LoadingFallback message="Loading staff list..." />}>
+                                <StaffList />
+                              </Suspense>
+                            } />
+                            <Route path="staff/add" element={
+                              <Suspense fallback={<LoadingFallback message="Loading add staff page..." />}>
+                                <StaffAdd />
+                              </Suspense>
+                            } />
+                            <Route path="staff/roles" element={
+                              <Suspense fallback={<LoadingFallback message="Loading roles & permissions..." />}>
+                                <RolesPermissions />
+                              </Suspense>
+                            } />
+                            <Route path="staff/attendance" element={
+                              <Suspense fallback={<LoadingFallback message="Loading attendance logs..." />}>
+                                <AttendanceLogs />
+                              </Suspense>
+                            } />
+                            <Route path="staff/logs" element={
+                              <Suspense fallback={<LoadingFallback message="Loading activity logs..." />}>
+                                <UserActivityLogs />
+                              </Suspense>
+                            } />
+                            <Route path="staff/sessions" element={
+                              <Suspense fallback={<LoadingFallback message="Loading login sessions..." />}>
+                                <LoginSessions />
                               </Suspense>
                             } />
                             <Route path="vendors" element={
@@ -459,13 +428,48 @@ const App = () => {
                                 <AdminSettingsPage />
                               </Suspense>
                             } />
+                            <Route path="delivery-partners" element={
+                              <Suspense fallback={<LoadingFallback message="Loading delivery partners..." />}>
+                                <DeliveryPartners />
+                              </Suspense>
+                            } />
+                            <Route path="active-deliveries" element={
+                              <Suspense fallback={<LoadingFallback message="Loading active deliveries..." />}>
+                                <ActiveDeliveries />
+                              </Suspense>
+                            } />
+                            <Route path="delivery-analytics" element={
+                              <Suspense fallback={<LoadingFallback message="Loading delivery analytics..." />}>
+                                <DeliveryAnalytics />
+                              </Suspense>
+                            } />
+                            <Route path="partner-earnings" element={
+                              <Suspense fallback={<LoadingFallback message="Loading partner earnings..." />}>
+                                <PartnerEarnings />
+                              </Suspense>
+                            } />
+                            <Route path="delivery-zones" element={
+                              <Suspense fallback={<LoadingFallback message="Loading delivery zones..." />}>
+                                <DeliveryZones />
+                              </Suspense>
+                            } />
+                            <Route path="delivery-settings" element={
+                              <Suspense fallback={<LoadingFallback message="Loading delivery settings..." />}>
+                                <DeliverySettingsPage />
+                              </Suspense>
+                            } />
+                            <Route path="assignment-rules" element={
+                              <Suspense fallback={<LoadingFallback message="Loading assignment rules..." />}>
+                                <AssignmentRules />
+                              </Suspense>
+                            } />
                             <Route path="valentine" element={
-                              <Suspense fallback={<LoadingFallback message="Loading Valentine's management..." />}>
+                              <Suspense fallback={<LoadingFallback message="Loading Valentine\'s management..." />}>
                                 <ValentineManagement />
                               </Suspense>
                             } />
                             <Route path="valentine/analytics" element={
-                              <Suspense fallback={<LoadingFallback message="Loading Valentine's analytics..." />}>
+                              <Suspense fallback={<LoadingFallback message="Loading Valentine\'s analytics..." />}>
                                 <ValentineAnalyticsDashboard />
                               </Suspense>
                             } />
@@ -542,7 +546,42 @@ const App = () => {
                                   <VendorPayouts />
                                 </Suspense>
                               } />
-                              <Route path="settings" element={
+                              <Route path="delivery-partners" element={
+                               <Suspense fallback={<LoadingFallback message="Loading delivery partners..." />}>
+                                 <DeliveryPartners />
+                               </Suspense>
+                             } />
+                             <Route path="active-deliveries" element={
+                               <Suspense fallback={<LoadingFallback message="Loading active deliveries..." />}>
+                                 <ActiveDeliveries />
+                               </Suspense>
+                             } />
+                             <Route path="delivery-analytics" element={
+                               <Suspense fallback={<LoadingFallback message="Loading analytics..." />}>
+                                 <DeliveryAnalytics />
+                               </Suspense>
+                             } />
+                             <Route path="partner-earnings" element={
+                               <Suspense fallback={<LoadingFallback message="Loading partner earnings..." />}>
+                                 <PartnerEarnings />
+                               </Suspense>
+                             } />
+                             <Route path="delivery-zones" element={
+                               <Suspense fallback={<LoadingFallback message="Loading delivery zones..." />}>
+                                 <DeliveryZones />
+                               </Suspense>
+                             } />
+                             <Route path="delivery-settings" element={
+                               <Suspense fallback={<LoadingFallback message="Loading delivery settings..." />}>
+                                 <DeliverySettingsPage />
+                               </Suspense>
+                             } />
+                             <Route path="assignment-rules" element={
+                               <Suspense fallback={<LoadingFallback message="Loading assignment rules..." />}>
+                                 <AssignmentRules />
+                               </Suspense>
+                             } />
+                             <Route path="settings" element={
                                 <Suspense fallback={<LoadingFallback message="Loading settings..." />}>
                                   <VendorSettings />
                                 </Suspense>
@@ -554,6 +593,92 @@ const App = () => {
                               <VendorRegistration />
                             </Suspense>
                           } />
+
+                          {/* Main Layout Routes */}
+                          <Route element={<MainLayout />}>
+                            <Route path="/" element={<HomePage />} />
+                            <Route path="/shop" element={
+                              <Suspense fallback={<LoadingFallback message="Loading shop..." />}>
+                                <ShopPage />
+                              </Suspense>
+                            } />
+                            <Route path="/shop/:category" element={
+                              <Suspense fallback={<LoadingFallback message="Loading products..." />}>
+                                <ShopPage />
+                              </Suspense>
+                            } />
+                            <Route path="/product/:id" element={
+                              <Suspense fallback={<LoadingFallback message="Loading product..." />}>
+                                <ProductPage />
+                              </Suspense>
+                            } />
+                            <Route path="/products/:productId" element={
+                              <Suspense fallback={<LoadingFallback message="Loading product..." />}>
+                                <ProductPage />
+                              </Suspense>
+                            } />
+                            <Route path="/products/:productId/reviews" element={
+                              <Suspense fallback={<LoadingFallback message="Loading reviews..." />}>
+                                <ProductReviewsPage />
+                              </Suspense>
+                            } />
+                            <Route path="/products/:productId/reviews/:slug" element={
+                              <Suspense fallback={<LoadingFallback message="Loading reviews..." />}>
+                                <ProductReviewsPage />
+                              </Suspense>
+                            } />
+                            <Route path="/cart" element={
+                              <Suspense fallback={<LoadingFallback message="Loading cart..." />}>
+                                <CartPage />
+                              </Suspense>
+                            } />
+                            <Route path="/about" element={
+                              <Suspense fallback={<LoadingFallback message="Loading about..." />}>
+                                <AboutPage />
+                              </Suspense>
+                            } />
+                            <Route path="/wishlist" element={
+                              <Suspense fallback={<LoadingFallback message="Loading wishlist..." />}>
+                                <WishlistPage />
+                              </Suspense>
+                            } />
+                            <Route path="/contact" element={
+                              <Suspense fallback={<LoadingFallback message="Loading contact..." />}>
+                                <ContactPage />
+                              </Suspense>
+                            } />
+                            <Route path="/:categorySlug" element={
+                              <Suspense fallback={<LoadingFallback message="Loading category..." />}>
+                                <CategoryResolver />
+                              </Suspense>
+                            } />
+                            <Route path="/:parentCategory/:categorySlug" element={
+                              <Suspense fallback={<LoadingFallback message="Loading category..." />}>
+                                <CategoryResolver />
+                              </Suspense>
+                            } />
+                            {/* Valentine Special Page */}
+                            <Route path="/valentine-special" element={
+                              <Suspense fallback={<LoadingFallback message="Loading Valentine\'s experience..." />}>
+                                <ValentineSpecialPage />
+                              </Suspense>
+                            } />
+                            <Route path="/valentine-shop" element={
+                              <Suspense fallback={<LoadingFallback message="Loading Valentine shop..." />}>
+                                <ValentineShopPage />
+                              </Suspense>
+                            } />
+                            <Route path="/valentine-product/:id" element={
+                              <Suspense fallback={<LoadingFallback message="Loading product..." />}>
+                                <ValentineProductDetailsPage />
+                              </Suspense>
+                            } />
+                            <Route path="/valentine-product/:id/:slug" element={
+                              <Suspense fallback={<LoadingFallback message="Loading product..." />}>
+                                <ValentineProductDetailsPage />
+                              </Suspense>
+                            } />
+                          </Route>
 
                           <Route path="*" element={<NotFound />} />
                         </Routes>

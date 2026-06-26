@@ -156,6 +156,10 @@ const OrderDetailsPage: React.FC = () => {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [copiedId, setCopiedId] = useState(false);
+  const [assignment, setAssignment] = useState<any>(null);
+  const [partners, setPartners] = useState<any[]>([]);
+  const [assigning, setAssigning] = useState(false);
+  const [selectedPartnerId, setSelectedPartnerId] = useState('');
   const { formatPrice, convertPrice, currency } = useCurrency();
   const { toast } = useToast();
   const orderRef = useRef<HTMLDivElement>(null);
@@ -195,12 +199,74 @@ const OrderDetailsPage: React.FC = () => {
     return formatPriceWithCurrency(finalAmount, currency);
   };
 
+  const fetchAssignment = async (orderNumber: string) => {
+    try {
+      const res = await api.get(`/delivery/track/${orderNumber}`);
+      if (res.data.success) {
+        setAssignment(res.data.assignment);
+      }
+    } catch (err) {
+      console.log('Error fetching assignment:', err);
+    }
+  };
+
+  const handleAssignPartner = async () => {
+    if (!selectedPartnerId || !order) return;
+    setAssigning(true);
+    try {
+      const res = await api.post('/delivery/admin/assign', {
+        orderId: order._id,
+        partnerId: selectedPartnerId
+      });
+      if (res.data.success) {
+        toast({ title: 'Success', description: 'Partner assigned successfully!' });
+        fetchAssignment(order.orderNumber);
+      }
+    } catch (err) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to assign partner' });
+    } finally {
+      setAssigning(false);
+    }
+  };
+
+  const handleForceComplete = async () => {
+    if (!assignment || !order) return;
+    try {
+      const res = await api.post(`/delivery/admin/orders/${assignment._id || assignment.id || 'current'}/force-complete`);
+      if (res.data.success) {
+        toast({ title: 'Success', description: 'Delivery marked as completed.' });
+        fetchAssignment(order.orderNumber);
+        const response = await api.get(`/orders/${orderId}`);
+        setOrder(response.data);
+      }
+    } catch (err) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to force complete delivery' });
+    }
+  };
+
+  useEffect(() => {
+    const fetchPartners = async () => {
+      try {
+        const res = await api.get('/delivery/admin/partners?status=online');
+        if (res.data.success) {
+          setPartners(res.data.partners);
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    };
+    fetchPartners();
+  }, []);
+
   useEffect(() => {
     const fetchOrder = async () => {
       setLoading(true);
       try {
         const response = await api.get(`/orders/${orderId}`);
         setOrder(response.data);
+        if (response.data && response.data.orderNumber) {
+          fetchAssignment(response.data.orderNumber);
+        }
       } catch (error) {
         setOrder(null);
         toast({
@@ -1000,6 +1066,113 @@ const OrderDetailsPage: React.FC = () => {
                   )}
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Delivery Dispatch Logistics Card */}
+          <Card className="border-emerald-100 dark:border-emerald-800 shadow-sm rounded-2xl bg-white dark:bg-slate-900 overflow-hidden">
+            <CardHeader className="bg-emerald-50/50 border-b border-emerald-100/50 pb-4">
+              <CardTitle className="text-sm font-bold text-emerald-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                <Truck className="h-4 w-4 text-emerald-700" />
+                Delivery Partner Info
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-5 space-y-4">
+              {assignment ? (
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-slate-500 font-semibold">Live Courier Status:</span>
+                    <Badge className="bg-emerald-700 text-white font-bold capitalize">
+                      {assignment.status.replace(/_/g, ' ')}
+                    </Badge>
+                  </div>
+
+                  {assignment.partner ? (
+                    <div className="p-3 bg-emerald-50/20 border border-emerald-100 rounded-xl space-y-2 text-xs">
+                      <div className="flex justify-between">
+                        <span className="text-slate-500 font-semibold">Courier Name</span>
+                        <span className="font-bold text-slate-800 dark:text-slate-200">{assignment.partner.name}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500 font-semibold">Vehicle</span>
+                        <span className="font-semibold text-slate-800 dark:text-slate-200 capitalize">{assignment.partner.vehicleType}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500 font-semibold">Live ETA</span>
+                        <span className="font-semibold text-emerald-700">{assignment.eta} mins ({assignment.distance} km)</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500 font-semibold">Verification OTP</span>
+                        <span className="font-mono font-bold text-emerald-800 tracking-wider text-sm">{assignment.customerOtp || '****'}</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-3 bg-amber-50/20 border border-amber-100 rounded-xl text-xs text-amber-800">
+                      Auto Assign Searching...
+                    </div>
+                  )}
+
+                  {/* Admin overrides */}
+                  <div className="pt-3 border-t border-emerald-100 space-y-2">
+                    <div className="flex flex-col gap-1.5">
+                      <Label htmlFor="courier-assign" className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Assign Manual Partner</Label>
+                      <div className="flex gap-2">
+                        <Select value={selectedPartnerId} onValueChange={setSelectedPartnerId}>
+                          <SelectTrigger className="text-xs h-9 border-emerald-250 bg-white">
+                            <SelectValue placeholder="Select online courier" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {partners.map(p => (
+                              <SelectItem key={p._id} value={p._id}>{p.name} ({p.vehicleType})</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Button
+                          onClick={handleAssignPartner}
+                          disabled={assigning}
+                          className="bg-emerald-700 hover:bg-emerald-800 text-white text-xs h-9 font-semibold"
+                        >
+                          Assign
+                        </Button>
+                      </div>
+                    </div>
+
+                    <Button
+                      onClick={handleForceComplete}
+                      variant="outline"
+                      className="w-full text-xs font-semibold text-emerald-800 border-emerald-200 hover:bg-emerald-50 h-9 justify-center"
+                    >
+                      Force Complete Delivery
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <p className="text-xs text-muted-foreground">No active assignments exist for this order. Trigger manual assign below:</p>
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="courier-assign" className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Assign Partner</Label>
+                    <div className="flex gap-2">
+                      <Select value={selectedPartnerId} onValueChange={setSelectedPartnerId}>
+                        <SelectTrigger className="text-xs h-9 border-emerald-250 bg-white">
+                          <SelectValue placeholder="Select online courier" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {partners.map(p => (
+                            <SelectItem key={p._id} value={p._id}>{p.name} ({p.vehicleType})</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        onClick={handleAssignPartner}
+                        disabled={assigning}
+                        className="bg-emerald-700 hover:bg-emerald-800 text-white text-xs h-9 font-semibold"
+                      >
+                        Assign
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

@@ -15,7 +15,10 @@ type User = {
   id: string;
   email: string;
   name: string;
-  role: 'admin' | 'user' | 'vendor';
+  role: string;
+  permissions?: string[];
+  assigned_store?: any;
+  assigned_zone?: any;
   photoURL?: string;
   provider?: string;
   token?: string;
@@ -107,6 +110,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             name: profileData.name,
             email: profileData.email,
             role: profileData.role,
+            permissions: profileData.permissions || [],
+            assigned_store: profileData.assigned_store || null,
+            assigned_zone: profileData.assigned_zone || null,
             vendorStatus: profileData.vendorStatus,
             photoURL: profileData.photoURL,
             provider: profileData.provider,
@@ -133,6 +139,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 name: parsedUser.name,
                 email: parsedUser.email,
                 role: parsedUser.role,
+                permissions: parsedUser.permissions || [],
+                assigned_store: parsedUser.assigned_store || null,
+                assigned_zone: parsedUser.assigned_zone || null,
                 vendorStatus: parsedUser.vendorStatus,
                 photoURL: parsedUser.photoURL,
                 provider: parsedUser.provider,
@@ -210,6 +219,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         name: profileData.name,
         email: profileData.email,
         role: profileData.role,
+        permissions: profileData.permissions || [],
+        assigned_store: profileData.assigned_store || null,
+        assigned_zone: profileData.assigned_zone || null,
         vendorStatus: profileData.vendorStatus,
         lastLogin: profileData.lastLogin,
         createdAt: profileData.createdAt,
@@ -224,15 +236,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       // Determine redirect destination based on user role
       let redirectTo = '/';
-      switch (user.role) {
-        case 'admin':
-          redirectTo = '/admin';
-          break;
-        case 'vendor':
-          redirectTo = '/vendor/dashboard';
-          break;
-        default:
-          redirectTo = '/';
+      const allowedAdminRoles = ['platform_admin', 'store_owner', 'store_manager', 'delivery_manager', 'support_staff', 'inventory_staff', 'finance_staff', 'admin'];
+      if (allowedAdminRoles.includes(user.role)) {
+        redirectTo = '/admin';
+      } else if (user.role === 'vendor') {
+        redirectTo = '/vendor/dashboard';
+      } else {
+        redirectTo = '/';
       }
       
       return { success: true, redirectTo };
@@ -256,6 +266,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         name: profileData.name,
         email: profileData.email,
         role: profileData.role,
+        permissions: profileData.permissions || [],
+        assigned_store: profileData.assigned_store || null,
+        assigned_zone: profileData.assigned_zone || null,
         vendorStatus: profileData.vendorStatus,
         lastLogin: profileData.lastLogin,
         createdAt: profileData.createdAt,
@@ -269,15 +282,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       // Determine redirect destination based on user role
       let redirectTo = '/';
-      switch (user.role) {
-        case 'admin':
-          redirectTo = '/admin';
-          break;
-        case 'vendor':
-          redirectTo = '/vendor/dashboard';
-          break;
-        default:
-          redirectTo = '/';
+      const allowedAdminRoles = ['platform_admin', 'store_owner', 'store_manager', 'delivery_manager', 'support_staff', 'inventory_staff', 'finance_staff', 'admin'];
+      if (allowedAdminRoles.includes(user.role)) {
+        redirectTo = '/admin';
+      } else if (user.role === 'vendor') {
+        redirectTo = '/vendor/dashboard';
+      } else {
+        redirectTo = '/';
       }
       
       return { success: true, redirectTo };
@@ -343,6 +354,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         name: profileData.name,
         email: profileData.email,
         role: profileData.role,
+        permissions: profileData.permissions || [],
+        assigned_store: profileData.assigned_store || null,
+        assigned_zone: profileData.assigned_zone || null,
         vendorStatus: profileData.vendorStatus,
         provider: profileData.provider,
         photoURL: profileData.photoURL,
@@ -359,15 +373,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       // Determine redirect destination based on user role
       let redirectTo = '/';
-      switch (user.role) {
-        case 'admin':
-          redirectTo = '/admin';
-          break;
-        case 'vendor':
-          redirectTo = '/vendor/dashboard';
-          break;
-        default:
-          redirectTo = '/';
+      const allowedAdminRoles = ['platform_admin', 'store_owner', 'store_manager', 'delivery_manager', 'support_staff', 'inventory_staff', 'finance_staff', 'admin'];
+      if (allowedAdminRoles.includes(user.role)) {
+        redirectTo = '/admin';
+      } else if (user.role === 'vendor') {
+        redirectTo = '/vendor/dashboard';
+      } else {
+        redirectTo = '/';
       }
       
       return { success: true, redirectTo };

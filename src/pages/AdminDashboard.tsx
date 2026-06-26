@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
 import AdminNavbar from '@/components/AdminNavbar';
+import { Truck, Map, DollarSign, Sliders, UserCheck, ChevronDown, ChevronUp, Scroll, Shield, Clock } from 'lucide-react';
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -21,10 +22,43 @@ const AdminDashboard: React.FC = () => {
     return saved ? JSON.parse(saved) : false;
   });
   const [isKitchenModeActive, setIsKitchenModeActive] = useState(false);
+
+  // Check if any sub-route of delivery is active to auto-expand the dropdown
+  const isDeliveryActive = location.pathname.startsWith('/admin/delivery-') || 
+                           location.pathname === '/admin/partner-earnings' ||
+                           location.pathname === '/admin/active-deliveries' ||
+                           location.pathname === '/admin/assignment-rules';
+
+  const allowedAdminRoles = ['platform_admin', 'store_owner', 'store_manager', 'delivery_manager', 'support_staff', 'inventory_staff', 'finance_staff', 'admin'];
+  const [isDeliveryOpen, setIsDeliveryOpen] = useState(isDeliveryActive);
+
+  const hasPermission = (permission: string) => {
+    if (user?.role === 'platform_admin' || user?.role === 'admin') return true;
+    return user?.permissions?.includes(permission) || false;
+  };
+
+  const isStaffActive = location.pathname.startsWith('/admin/staff') ||
+                        location.pathname === '/admin/activity-logs' ||
+                        location.pathname === '/admin/login-history';
+
+  const [isStaffOpen, setIsStaffOpen] = useState(isStaffActive);
+
+  // Keep dropdown open if the route matches
+  useEffect(() => {
+    if (isDeliveryActive) {
+      setIsDeliveryOpen(true);
+    }
+  }, [location.pathname, isDeliveryActive]);
+
+  useEffect(() => {
+    if (isStaffActive) {
+      setIsStaffOpen(true);
+    }
+  }, [location.pathname, isStaffActive]);
   
   // Check if user is admin, if not redirect
   useEffect(() => {
-    if (!isLoading && (!user || user.role !== 'admin')) {
+    if (!isLoading && (!user || !allowedAdminRoles.includes(user.role))) {
       toast({
         variant: "destructive",
         title: "Access Denied",
@@ -98,7 +132,7 @@ const AdminDashboard: React.FC = () => {
   }
   
   // If no user or not admin after loading completes, don't render dashboard
-  if (!user || user.role !== 'admin') {
+  if (!user || !allowedAdminRoles.includes(user.role)) {
     return null;
   }
 
@@ -364,6 +398,202 @@ const AdminDashboard: React.FC = () => {
           </div>
           {!isCollapsed && <span className="sidebar-item-text">Seasonal Campaigns</span>}
         </Link>
+        {/* Delivery Dropdown */}
+        <div className="space-y-1">
+          <button
+            onClick={() => {
+              if (isCollapsed) {
+                setIsSidebarCollapsed(false);
+                setIsDeliveryOpen(true);
+              } else {
+                setIsDeliveryOpen(prev => !prev);
+              }
+            }}
+            className={cn(
+              "w-full sidebar-item flex items-center justify-between transition-colors",
+              isDeliveryActive ? "bg-accent/40 text-accent-foreground font-medium" : "",
+              isCollapsed ? "sidebar-item-collapsed justify-center" : "sidebar-item-expanded"
+            )}
+            title={isCollapsed ? 'Delivery' : ''}
+          >
+            <div className="flex items-center">
+              <div className="sidebar-item-icon">
+                <Truck className="h-4 w-4 text-muted-foreground" />
+              </div>
+              {!isCollapsed && <span className="sidebar-item-text ml-3">Delivery</span>}
+            </div>
+            {!isCollapsed && (
+              isDeliveryOpen ? 
+                <ChevronUp className="h-4 w-4 text-muted-foreground transition-transform" /> : 
+                <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform" />
+            )}
+          </button>
+          
+          {isDeliveryOpen && !isCollapsed && (
+            <div className="pl-4 space-y-1 mt-1 border-l-2 border-primary/20 ml-5">
+              <Link 
+                to="/admin/delivery-partners" 
+                className={cn(
+                  "sidebar-item flex items-center py-2 px-3 rounded-md text-sm transition-colors",
+                  location.pathname === "/admin/delivery-partners" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                )}
+              >
+                <UserCheck className="h-4 w-4 mr-2" />
+                <span className="sidebar-item-text">Delivery Partners</span>
+              </Link>
+              <Link 
+                to="/admin/active-deliveries" 
+                className={cn(
+                  "sidebar-item flex items-center py-2 px-3 rounded-md text-sm transition-colors",
+                  location.pathname === "/admin/active-deliveries" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                )}
+              >
+                <Truck className="h-4 w-4 mr-2" />
+                <span className="sidebar-item-text">Active Deliveries</span>
+              </Link>
+              <Link 
+                to="/admin/delivery-analytics" 
+                className={cn(
+                  "sidebar-item flex items-center py-2 px-3 rounded-md text-sm transition-colors",
+                  location.pathname === "/admin/delivery-analytics" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                )}
+              >
+                <TrendingUp className="h-4 w-4 mr-2" />
+                <span className="sidebar-item-text">Delivery Analytics</span>
+              </Link>
+              <Link 
+                to="/admin/partner-earnings" 
+                className={cn(
+                  "sidebar-item flex items-center py-2 px-3 rounded-md text-sm transition-colors",
+                  location.pathname === "/admin/partner-earnings" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                )}
+              >
+                <DollarSign className="h-4 w-4 mr-2" />
+                <span className="sidebar-item-text">Partner Earnings</span>
+              </Link>
+              <Link 
+                to="/admin/delivery-zones" 
+                className={cn(
+                  "sidebar-item flex items-center py-2 px-3 rounded-md text-sm transition-colors",
+                  location.pathname === "/admin/delivery-zones" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                )}
+              >
+                <Map className="h-4 w-4 mr-2" />
+                <span className="sidebar-item-text">Delivery Zones</span>
+              </Link>
+              <Link 
+                to="/admin/delivery-settings" 
+                className={cn(
+                  "sidebar-item flex items-center py-2 px-3 rounded-md text-sm transition-colors",
+                  location.pathname === "/admin/delivery-settings" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                )}
+              >
+                <Sliders className="h-4 w-4 mr-2" />
+                <span className="sidebar-item-text">Delivery Settings</span>
+              </Link>
+              <Link 
+                to="/admin/assignment-rules" 
+                className={cn(
+                  "sidebar-item flex items-center py-2 px-3 rounded-md text-sm transition-colors",
+                  location.pathname === "/admin/assignment-rules" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                )}
+              >
+                <Scroll className="h-4 w-4 mr-2" />
+                <span className="sidebar-item-text">Assignment Rules</span>
+              </Link>
+            </div>
+          )}
+        </div>
+        {/* Staff Management Dropdown */}
+        {hasPermission('staff:view') && (
+          <div className="space-y-1">
+            <button
+              onClick={() => {
+                if (isCollapsed) {
+                  setIsSidebarCollapsed(false);
+                  setIsStaffOpen(true);
+                } else {
+                  setIsStaffOpen(prev => !prev);
+                }
+              }}
+              className={cn(
+                "w-full sidebar-item flex items-center justify-between transition-colors",
+                isStaffActive ? "bg-accent/40 text-accent-foreground font-medium" : "",
+                isCollapsed ? "sidebar-item-collapsed justify-center" : "sidebar-item-expanded"
+              )}
+              title={isCollapsed ? 'Staff Management' : ''}
+            >
+              <div className="flex items-center">
+                <div className="sidebar-item-icon">
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                </div>
+                {!isCollapsed && <span className="sidebar-item-text ml-3">Staff Management</span>}
+              </div>
+              {!isCollapsed && (
+                isStaffOpen ? 
+                  <ChevronUp className="h-4 w-4 text-muted-foreground transition-transform" /> : 
+                  <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform" />
+              )}
+            </button>
+            
+            {isStaffOpen && !isCollapsed && (
+              <div className="pl-4 space-y-1 mt-1 border-l-2 border-primary/20 ml-5">
+                <Link 
+                  to="/admin/staff" 
+                  className={cn(
+                    "sidebar-item flex items-center py-2 px-3 rounded-md text-sm transition-colors",
+                    location.pathname === "/admin/staff" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  )}
+                >
+                  <Users className="h-4 w-4 mr-2" />
+                  <span className="sidebar-item-text">Staff List</span>
+                </Link>
+                <Link 
+                  to="/admin/staff/roles" 
+                  className={cn(
+                    "sidebar-item flex items-center py-2 px-3 rounded-md text-sm transition-colors",
+                    location.pathname === "/admin/staff/roles" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  )}
+                >
+                  <Shield className="h-4 w-4 mr-2" />
+                  <span className="sidebar-item-text">Roles & Permissions</span>
+                </Link>
+                <Link 
+                  to="/admin/staff/attendance" 
+                  className={cn(
+                    "sidebar-item flex items-center py-2 px-3 rounded-md text-sm transition-colors",
+                    location.pathname === "/admin/staff/attendance" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  )}
+                >
+                  <Clock className="h-4 w-4 mr-2" />
+                  <span className="sidebar-item-text">Attendance</span>
+                </Link>
+                {hasPermission('settings:view') && (
+                  <Link 
+                    to="/admin/staff/logs" 
+                    className={cn(
+                      "sidebar-item flex items-center py-2 px-3 rounded-md text-sm transition-colors",
+                      location.pathname === "/admin/staff/logs" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                    )}
+                  >
+                    <Activity className="h-4 w-4 mr-2" />
+                    <span className="sidebar-item-text">Activity Logs</span>
+                  </Link>
+                )}
+                <Link 
+                  to="/admin/staff/sessions" 
+                  className={cn(
+                    "sidebar-item flex items-center py-2 px-3 rounded-md text-sm transition-colors",
+                    location.pathname === "/admin/staff/sessions" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  )}
+                >
+                  <Sliders className="h-4 w-4 mr-2" />
+                  <span className="sidebar-item-text">Login Sessions</span>
+                </Link>
+              </div>
+            )}
+          </div>
+        )}
         <Link 
           to="/admin/settings" 
           className={cn(

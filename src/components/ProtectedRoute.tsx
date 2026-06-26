@@ -5,12 +5,14 @@ import { checkAuthToken } from '@/services/authService';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRole?: 'admin' | 'user';
+  requiredRole?: string;
+  requiredPermission?: string;
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
   children, 
-  requiredRole 
+  requiredRole,
+  requiredPermission
 }) => {
   const { user, isLoading } = useAuth();
   const location = useLocation();
@@ -103,12 +105,25 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
 
   // If role check is required and user doesn't have that role
-  if (requiredRole && user && user.role !== requiredRole) {
-    // Redirect to appropriate page based on role
+  const allowedAdminRoles = ['platform_admin', 'store_owner', 'store_manager', 'delivery_manager', 'support_staff', 'inventory_staff', 'finance_staff', 'admin'];
+  
+  if (requiredRole && user) {
     if (requiredRole === 'admin') {
-      return <Navigate to="/" replace />;
-    } else {
+      if (!allowedAdminRoles.includes(user.role)) {
+        return <Navigate to="/" replace />;
+      }
+    } else if (user.role !== requiredRole) {
       return <Navigate to="/admin" replace />;
+    }
+  }
+
+  // If permission check is required
+  if (requiredPermission && user) {
+    if (user.role !== 'platform_admin' && user.role !== 'admin') {
+      const hasPerm = user.permissions && user.permissions.includes(requiredPermission);
+      if (!hasPerm) {
+        return <Navigate to="/admin" replace />;
+      }
     }
   }
 

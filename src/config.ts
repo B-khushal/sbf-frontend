@@ -1,5 +1,5 @@
-const LOCAL_API_URL = 'http://localhost:5000/api';
-const LOCAL_UPLOADS_URL = 'http://localhost:5000';
+const LOCAL_API_URL = 'https://api.sbflorist.in/api';
+const LOCAL_UPLOADS_URL = 'https://api.sbflorist.in';
 const REMOTE_API_URL = 'https://api.sbflorist.in/api';
 const REMOTE_UPLOADS_URL = 'https://api.sbflorist.in';
 
@@ -48,6 +48,7 @@ const defaultUploadsUrl = getDefaultUrl(LOCAL_UPLOADS_URL, REMOTE_UPLOADS_URL);
 
 export const API_URL = validateAndFixUrl(rawApiUrl, defaultApiUrl);
 export const UPLOADS_URL = validateAndFixUrl(rawUploadsUrl, defaultUploadsUrl);
+export const API_BASE_URL = UPLOADS_URL;
 
 // Validate HTTPS in production
 if (import.meta.env.PROD) {
