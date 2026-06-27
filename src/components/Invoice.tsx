@@ -106,7 +106,7 @@ const Invoice: React.FC<InvoiceProps> = ({ order, isAdmin = false }) => {
           </div>
           <div>
             <h1 className="text-2xl font-extrabold text-emerald-800 tracking-tight">Spring Blossoms Florist</h1>
-            <p className="text-xs font-bold text-amber-600 uppercase tracking-widest mt-0.5">Premium Floral Arrangements & Gifts</p>
+            <p className="text-xs font-bold text-amber-600 uppercase tracking-widest mt-0.5">A Reason to Express</p>
             <div className="text-[11px] text-slate-500 space-y-0.5 mt-1.5 leading-relaxed">
               <p>Door No. 12-2-786/A & B, Najam Centre, Pillar No. 32</p>
               <p>Rethi Bowli, Mehdipatnam, Hyderabad, Telangana 500028</p>

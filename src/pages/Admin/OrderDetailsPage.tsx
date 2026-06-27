@@ -537,7 +537,7 @@ const OrderDetailsPage: React.FC = () => {
             </div>
             <div>
               <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">Spring Blossoms Florist</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-0.5">Premium Floral Arrangements & Gift Services</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-0.5">A Reason to Express</p>
               <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mt-0.5">Najam Centre, Pillar No. 32, Rethi Bowli, Mehdipatnam, Hyderabad | GSTIN: 36AABFS1234Z1Z5</p>
             </div>
           </div>
