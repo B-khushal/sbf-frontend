@@ -97,167 +97,364 @@ const Invoice: React.FC<InvoiceProps> = ({ order, isAdmin = false }) => {
   const grandTotal = order.totalAmount || order.total || (itemsSubtotal + deliveryFee - promoDiscount);
 
   return (
-    <div 
-      className="invoice-container bg-white text-slate-800" 
-      style={{ 
-        width: '190mm', 
-        minHeight: '277mm', 
-        margin: '0 auto', 
-        padding: '0', 
-        boxSizing: 'border-box',
-        fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
-        position: 'relative',
-        background: 'white',
-        overflow: 'hidden'
-      }}
-    >
-      {/* Brand Header */}
-      <div 
-        className="flex justify-between items-start" 
-        style={{ 
-          height: '35mm', 
-          width: '100%', 
-          marginBottom: '5mm', 
-          borderBottom: '2px solid #064e3b',
-          paddingBottom: '3mm'
-        }}
-      >
-        <div className="flex items-start gap-3 h-full">
-          <div 
-            className="rounded-xl flex items-center justify-center border border-emerald-100 text-3xl shadow-sm bg-emerald-50"
-            style={{ width: '15mm', height: '15mm' }}
-          >
-            🌸
-          </div>
+    <div className="invoice-container">
+      <style dangerouslySetInnerHTML={{ __html: `
+        .invoice-container {
+          width: 190mm;
+          min-height: 277mm;
+          margin: 0 auto;
+          padding: 0;
+          box-sizing: border-box;
+          background: white;
+          overflow: hidden;
+          font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+          color: #334155;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+        }
+
+        .invoice-header {
+          height: 35mm;
+          width: 100%;
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          border-bottom: 2px solid #064e3b;
+          padding-bottom: 4mm;
+          margin-bottom: 6mm;
+          box-sizing: border-box;
+        }
+
+        .header-left {
+          display: flex;
+          align-items: center;
+          gap: 5mm;
+        }
+
+        .header-logo {
+          font-size: 38px;
+          line-height: 1;
+        }
+
+        .company-name {
+          font-size: 26px;
+          font-weight: 800;
+          color: #064e3b;
+          line-height: 1.1;
+          margin-bottom: 2px;
+        }
+
+        .company-tagline {
+          font-size: 11px;
+          font-weight: 700;
+          color: #c5a880;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          margin-bottom: 4px;
+        }
+
+        .company-info {
+          font-size: 11px;
+          color: #64748b;
+          line-height: 1.3;
+        }
+
+        .header-right-card {
+          background: #f0fdf4;
+          border: 1px solid #bbf7d0;
+          border-radius: 6px;
+          padding: 10px 12px;
+          width: 70mm;
+          box-sizing: border-box;
+        }
+
+        .invoice-title {
+          font-size: 28px;
+          font-weight: 850;
+          color: #064e3b;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          border-bottom: 2px solid #064e3b;
+          padding-bottom: 4px;
+          margin-bottom: 6px;
+          text-align: right;
+        }
+
+        .invoice-meta-table {
+          width: 100%;
+          border-collapse: collapse;
+          font-size: 11px;
+        }
+
+        .invoice-meta-table td {
+          padding: 2px 0;
+        }
+
+        .invoice-meta-label {
+          color: #64748b;
+          font-weight: 600;
+        }
+
+        .invoice-meta-value {
+          font-weight: 700;
+          color: #334155;
+          text-align: right;
+        }
+
+        .details-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 8mm;
+          margin-bottom: 6mm;
+        }
+
+        .details-card {
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+          background: #f8fafc;
+          padding: 14px 16px;
+          display: flex;
+          flex-direction: column;
+          box-sizing: border-box;
+        }
+
+        .card-title {
+          font-size: 12px;
+          font-weight: 700;
+          color: #064e3b;
+          text-transform: uppercase;
+          letter-spacing: 0.8px;
+          margin-bottom: 8px;
+          border-bottom: 1px solid #e2e8f0;
+          padding-bottom: 4px;
+        }
+
+        .card-content-title {
+          font-size: 13px;
+          font-weight: 700;
+          color: #0f172a;
+          margin-bottom: 4px;
+        }
+
+        .card-content-details {
+          font-size: 11px;
+          color: #475569;
+          line-height: 1.45;
+        }
+
+        .product-table-container {
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+          overflow: hidden;
+          margin-bottom: 6mm;
+        }
+
+        .product-table {
+          width: 100%;
+          table-layout: fixed;
+          border-collapse: collapse;
+        }
+
+        .product-table th {
+          background-color: #f0fdf4;
+          border-bottom: 2px solid #064e3b;
+          padding: 10px 12px;
+          font-weight: 700;
+          color: #064e3b;
+          font-size: 11px;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .product-table td {
+          padding: 12px 14px;
+          border-bottom: 1px solid #e2e8f0;
+          font-size: 11px;
+          vertical-align: middle;
+        }
+
+        .col-desc { width: 55%; text-align: left; }
+        .col-qty { width: 10%; text-align: center; }
+        .col-price { width: 15%; text-align: right; }
+        .col-total { width: 20%; text-align: right; }
+
+        .product-title {
+          font-weight: 700;
+          color: #0f172a;
+          word-break: break-word;
+        }
+
+        .product-variant {
+          font-size: 10px;
+          color: #64748b;
+          margin-top: 2px;
+        }
+
+        .product-custom {
+          font-size: 9px;
+          color: #b45309;
+          font-weight: 600;
+          margin-top: 1px;
+        }
+
+        .summary-and-logistics {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          gap: 8mm;
+          margin-bottom: 6mm;
+        }
+
+        .logistics-block {
+          width: 110mm;
+          display: flex;
+          flex-direction: column;
+          gap: 3mm;
+        }
+
+        .logistics-card {
+          border: 1px solid #e2e8f0;
+          border-radius: 6px;
+          background: #f8fafc;
+          padding: 10px 12px;
+        }
+
+        .summary-block {
+          width: 70mm;
+          display: flex;
+          flex-direction: column;
+          font-size: 11px;
+        }
+
+        .summary-row {
+          display: flex;
+          justify-content: space-between;
+          padding: 5px 0;
+          color: #64748b;
+          font-weight: 500;
+        }
+
+        .summary-row-grand {
+          display: flex;
+          justify-content: space-between;
+          padding: 8px 0;
+          border-top: 2px solid #064e3b;
+          font-weight: 700;
+          font-size: 14px;
+          color: #064e3b;
+          margin-top: 4px;
+        }
+
+        .invoice-footer {
+          text-align: center;
+          border-top: 1px solid #e2e8f0;
+          padding-top: 12px;
+          margin-top: auto; /* Push to bottom naturally */
+        }
+
+        .footer-thankyou {
+          font-weight: 700;
+          color: #064e3b;
+          font-size: 11px;
+          margin-bottom: 4px;
+        }
+
+        .footer-text {
+          font-size: 8.5px;
+          color: #94a3b8;
+          line-height: 1.4;
+        }
+      ` }} />
+
+      {/* Main Container Content */}
+      <div className="invoice-header">
+        <div className="header-left">
+          <div className="header-logo">🌸</div>
           <div>
-            <h1 className="font-extrabold text-emerald-800 tracking-tight" style={{ fontSize: '26px', lineHeight: '1.1' }}>
-              Spring Blossoms Florist
-            </h1>
-            <p className="font-bold text-amber-600 uppercase tracking-widest mt-0.5" style={{ fontSize: '10px' }}>
-              A Reason to Express
-            </p>
-            <div className="text-slate-500 space-y-0.5 mt-1 leading-normal" style={{ fontSize: '10px' }}>
-              <p>Door No. 12-2-786/A & B, Najam Centre, Pillar No. 32</p>
-              <p>Rethi Bowli, Mehdipatnam, Hyderabad, Telangana 500028</p>
-              <p><strong>GSTIN:</strong> 36AABFS1234Z1Z5 | <strong>Ph:</strong> +91 9949683222</p>
+            <div className="company-name">Spring Blossoms Florist</div>
+            <div className="company-tagline">A Reason to Express</div>
+            <div className="company-info">
+              Door No. 12-2-786/A & B, Najam Centre, Pillar No. 32,<br />
+              Rethi Bowli, Mehdipatnam, Hyderabad, Telangana 500028<br />
+              <strong>GSTIN:</strong> 36AABFS1234Z1Z5 | <strong>Ph:</strong> +91 9949683222
             </div>
           </div>
         </div>
+        <div className="header-right-card">
+          <div className="invoice-title">TAX INVOICE</div>
+          <table className="invoice-meta-table">
+            <tbody>
+              <tr>
+                <td className="invoice-meta-label">Invoice No:</td>
+                <td className="invoice-meta-value">INV-{order.orderNumber}</td>
+              </tr>
+              <tr>
+                <td className="invoice-meta-label">Order Date:</td>
+                <td className="invoice-meta-value">{formatDate(order.createdAt)}</td>
+              </tr>
+              <tr>
+                <td className="invoice-meta-label">Delivery Date:</td>
+                <td className="invoice-meta-value">{formatDate(shipping.deliveryDate || order.createdAt)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-        <div className="text-right h-full flex flex-col justify-between">
-          <div 
-            className="bg-emerald-50/50 p-2.5 rounded-xl border border-emerald-100/60 text-left" 
-            style={{ width: '65mm' }}
-          >
-            <h2 className="font-bold text-emerald-800 uppercase tracking-wider border-b-2 border-emerald-800 pb-1 mb-1.5 text-right" style={{ fontSize: '28px' }}>
-              TAX INVOICE
-            </h2>
-            <div className="space-y-0.5 font-medium" style={{ fontSize: '10px' }}>
-              <div className="flex justify-between">
-                <span className="text-slate-500 font-semibold">Invoice No:</span>
-                <span className="font-bold text-emerald-800">INV-{order.orderNumber}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500 font-semibold">Order Date:</span>
-                <span className="text-slate-700">{formatDate(order.createdAt)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500 font-semibold">Delivery Date:</span>
-                <span className="text-slate-700">{formatDate(shipping.deliveryDate || order.createdAt)}</span>
-              </div>
-            </div>
+      <div className="details-grid">
+        <div className="details-card" style={{ borderLeft: '3px solid #064e3b' }}>
+          <div className="card-title">Billing Details</div>
+          <div className="card-content-title">{order.shippingDetails?.fullName || order.shipping?.fullName || customerName}</div>
+          <div className="card-content-details">
+            <strong>Email:</strong> {customerEmail}<br />
+            <strong>Phone:</strong> {customerPhone}<br />
+            <strong>Billing Address:</strong> Same as Shipping Address
+          </div>
+        </div>
+        <div className="details-card" style={{ borderLeft: '3px solid #c5a880' }}>
+          <div className="card-title">{isGift ? 'Delivery Recipient (Gift)' : 'Delivery Address'}</div>
+          <div className="card-content-title">{recipientName}</div>
+          <div className="card-content-details">
+            <strong>Phone:</strong> {recipientPhone}<br />
+            <strong>Address:</strong> {recipientAddress}{recipientApartment ? `, ${recipientApartment}` : ''}, {recipientCity}{recipientState ? `, ${recipientState}` : ''} {recipientZip}
           </div>
         </div>
       </div>
 
-      {/* Billing & Shipping Section */}
-      <div 
-        className="grid grid-cols-2" 
-        style={{ 
-          gap: '8mm', 
-          marginBottom: '6mm',
-          width: '100%'
-        }}
-      >
-        {/* Bill To */}
-        <div 
-          className="border border-slate-200 bg-slate-50/50 rounded-lg p-3 border-l-4 border-l-emerald-800"
-          style={{ width: '91mm' }}
-        >
-          <h3 className="font-bold text-emerald-800 uppercase tracking-wider border-b border-slate-200 pb-1 mb-2" style={{ fontSize: '12px' }}>
-            Billing Details
-          </h3>
-          <p className="font-bold text-slate-800" style={{ fontSize: '11px' }}>
-            {order.shippingDetails?.fullName || order.shipping?.fullName || customerName}
-          </p>
-          <div className="text-slate-600 space-y-1 mt-1" style={{ fontSize: '10px' }}>
-            <p><strong>Email:</strong> {customerEmail}</p>
-            <p><strong>Phone:</strong> {customerPhone}</p>
-            <p className="text-slate-400 mt-1 italic" style={{ fontSize: '9px' }}>Billing Address same as Shipping Address</p>
-          </div>
-        </div>
-
-        {/* Ship To */}
-        <div 
-          className="border border-slate-200 bg-slate-50/50 rounded-lg p-3 border-l-4 border-l-amber-500"
-          style={{ width: '91mm' }}
-        >
-          <h3 className="font-bold text-amber-600 uppercase tracking-wider border-b border-slate-200 pb-1 mb-2" style={{ fontSize: '12px' }}>
-            {isGift ? 'Gift Recipient Details' : 'Delivery Details'}
-          </h3>
-          <p className="font-bold text-slate-800" style={{ fontSize: '11px' }}>
-            {recipientName}
-          </p>
-          <div className="text-slate-600 space-y-1 mt-1 leading-relaxed" style={{ fontSize: '10px' }}>
-            <p><strong>Phone:</strong> {recipientPhone}</p>
-            {isGift && order.giftDetails?.recipientEmail && (
-              <p><strong>Email:</strong> {order.giftDetails.recipientEmail}</p>
-            )}
-            <p><strong>Address:</strong> {recipientAddress}{recipientApartment ? `, ${recipientApartment}` : ''}, {recipientCity}{recipientState ? `, ${recipientState}` : ''} {recipientZip}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Items Table */}
-      <div className="border border-slate-200 rounded-lg overflow-hidden mb-4" style={{ width: '100%' }}>
-        <table style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse' }}>
+      <div className="product-table-container">
+        <table className="product-table">
           <thead>
-            <tr className="bg-emerald-50 text-emerald-800 border-b-2 border-b-emerald-800 text-left font-bold uppercase tracking-wider">
-              <th className="px-3 py-2" style={{ width: '55%', fontSize: '11px' }}>Item Description</th>
-              <th className="px-3 py-2 text-center" style={{ width: '10%', fontSize: '11px' }}>Qty</th>
-              <th className="px-3 py-2 text-right" style={{ width: '15%', fontSize: '11px' }}>Unit Price</th>
-              <th className="px-3 py-2 text-right" style={{ width: '20%', fontSize: '11px' }}>Total</th>
+            <tr>
+              <th className="col-desc">Item Description</th>
+              <th className="col-qty">Qty</th>
+              <th className="col-price">Unit Price</th>
+              <th className="col-total">Total</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-200" style={{ fontSize: '10px' }}>
+          <tbody>
             {items.map((item: any, idx: number) => {
               const title = item.product?.title || item.title || 'Florist Arrangement';
               const variantText = item.selectedVariant?.label ? `Variant: ${item.selectedVariant.label}` : 'Premium Arrangement';
               const customText = item.customizations?.messageCard ? `Message Card Included` : '';
-
               return (
-                <tr key={idx} className="hover:bg-slate-50/50">
-                  <td className="px-3 py-2" style={{ wordBreak: 'break-word', overflowWrap: 'break-word', whiteSpace: 'normal' }}>
-                    <div className="font-bold text-slate-900">{title}</div>
-                    <div className="text-[9px] text-slate-500 mt-0.5">{variantText}</div>
-                    {customText && <div className="text-[9px] text-amber-700 font-semibold mt-0.5">✨ {customText}</div>}
-                    
+                <tr key={idx}>
+                  <td className="col-desc">
+                    <div className="product-title">{title}</div>
+                    <div className="product-variant">{variantText}</div>
+                    {customText && <div className="product-custom">✨ {customText}</div>}
                     {item.customizations?.isGiftBundle && item.customizations?.giftComponents && (
-                      <div className="text-[9px] text-rose-700 bg-rose-50/40 border border-rose-100 rounded-lg p-1.5 mt-1 space-y-0.5">
-                        <div className="font-semibold">🎁 Included components:</div>
+                      <div style={{ fontSize: '10px', color: '#be123c', marginTop: '6px' }}>
+                        <strong>🎁 Included components:</strong>
                         {item.customizations.giftComponents.map((comp: any, cIdx: number) => (
-                          <div key={cIdx} className="pl-1.5 text-slate-600 flex items-center gap-1">
-                            <span className="w-1 h-1 rounded-full bg-rose-400 shrink-0" />
-                            <span className="capitalize font-semibold text-rose-600">{comp.category.replace('_', ' ')}:</span>
-                            <span className="truncate">{comp.name}</span>
-                          </div>
+                          <div key={cIdx} style={{ paddingLeft: '6px' }}>• {comp.name}</div>
                         ))}
                       </div>
                     )}
                   </td>
-                  <td className="px-3 py-2 text-center text-slate-600" style={{ verticalAlign: 'middle' }}>{item.quantity}</td>
-                  <td className="px-3 py-2 text-right text-slate-600" style={{ verticalAlign: 'middle', whiteSpace: 'nowrap' }}>{formatCurrency(item.finalPrice || item.price)}</td>
-                  <td className="px-3 py-2 text-right font-bold text-slate-900" style={{ verticalAlign: 'middle', whiteSpace: 'nowrap' }}>{formatCurrency((item.finalPrice || item.price) * item.quantity)}</td>
+                  <td className="col-qty">{item.quantity}</td>
+                  <td className="col-price">{formatCurrency(item.finalPrice || item.price)}</td>
+                  <td className="col-total" style={{ fontWeight: 700 }}>{formatCurrency((item.finalPrice || item.price) * item.quantity)}</td>
                 </tr>
               );
             })}
@@ -265,104 +462,66 @@ const Invoice: React.FC<InvoiceProps> = ({ order, isAdmin = false }) => {
         </table>
       </div>
 
-      {/* Summary & Logistics Grid */}
-      <div className="flex justify-between items-start mb-4" style={{ width: '100%' }}>
-        {/* Logistics details */}
-        <div style={{ width: '110mm' }} className="space-y-3">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="border border-slate-200 bg-white rounded-lg p-2 border-l-2 border-l-blue-500">
-              <h4 className="text-[10px] font-bold text-blue-600 uppercase tracking-wider border-b border-slate-100 pb-0.5 mb-1">
-                Payment Status
-              </h4>
-              <div className="text-[10px] text-slate-700 space-y-0.5">
-                <p><strong>Method:</strong> {paymentMethod}</p>
-                <p><strong>Status:</strong> <span className="text-emerald-600 font-bold">● {paymentStatus}</span></p>
-                {transactionId && <p className="text-[9px] text-slate-400 mt-0.5 truncate"><strong>TxID:</strong> {transactionId}</p>}
+      <div className="summary-and-logistics">
+        <div className="logistics-block">
+          <div style={{ display: 'flex', gap: '4mm' }}>
+            <div className="logistics-card" style={{ flex: 1, borderLeft: '2px solid #3b82f6' }}>
+              <div className="card-title" style={{ fontSize: '10px', color: '#3b82f6', borderBottom: '1px solid #eff6ff', marginBottom: '4px', paddingBottom: '2px' }}>Payment Status</div>
+              <div style={{ fontSize: '10px', lineHeight: 1.4 }}>
+                <strong>Method:</strong> {paymentMethod}<br />
+                <strong>Status:</strong> <span style={{ color: '#059669', fontWeight: 700 }}>● {paymentStatus}</span>
+                {transactionId && <div style={{ fontSize: '8.5px', color: '#64748b', wordBreak: 'break-all', marginTop: '4px' }}>TxID: {transactionId}</div>}
               </div>
             </div>
-
-            <div className="border border-slate-200 bg-white rounded-lg p-2 border-l-2 border-l-purple-500">
-              <h4 className="text-[10px] font-bold text-purple-600 uppercase tracking-wider border-b border-slate-100 pb-0.5 mb-1">
-                Delivery Logistics
-              </h4>
-              <div className="text-[10px] text-slate-700 space-y-0.5">
-                <p><strong>Date:</strong> {formatDate(shipping.deliveryDate)}</p>
-                <p><strong>Slot:</strong> {shipping.timeSlot || 'Standard Delivery'}</p>
+            <div className="logistics-card" style={{ flex: 1, borderLeft: '2px solid #8b5cf6' }}>
+              <div className="card-title" style={{ fontSize: '10px', color: '#8b5cf6', borderBottom: '1px solid #f5f3ff', marginBottom: '4px', paddingBottom: '2px' }}>Delivery Logistics</div>
+              <div style={{ fontSize: '10px', lineHeight: 1.4 }}>
+                <strong>Date:</strong> {formatDate(shipping.deliveryDate)}<br />
+                <strong>Slot:</strong> {shipping.timeSlot || 'Standard Delivery'}
               </div>
             </div>
           </div>
-
-          {isGift ? (
-            <div className="border border-dashed border-emerald-300 bg-emerald-50/10 rounded-lg p-2.5 space-y-1">
-              <h4 className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider border-b border-emerald-250 pb-0.5 mb-1 flex items-center gap-1">
-                🎁 Gift Options
-              </h4>
-              <div className="text-[10px] text-slate-700 space-y-1">
-                {order.giftDetails?.message && (
-                  <p className="italic font-semibold">
-                    <strong>Message:</strong> "{order.giftDetails.message}"
-                  </p>
-                )}
-                <p><strong>Greeting Card:</strong> {order.giftDetails?.greetingCard && order.giftDetails.greetingCard !== 'none' ? order.giftDetails.greetingCard : 'None'}</p>
+          {(shipping.cardMessage || shipping.giftMessage || order.giftDetails?.message) && (
+            <div className="logistics-card" style={{ border: '1px dashed #c5a880', background: '#fffdf5' }}>
+              <div className="card-title" style={{ fontSize: '10px', color: '#c5a880', borderBottom: '1px dashed #fed7aa', marginBottom: '4px', paddingBottom: '2px' }}>💌 Card Message</div>
+              <div style={{ fontSize: '10px', fontStyle: 'italic', color: '#475569', lineHeight: 1.3 }}>
+                "{shipping.cardMessage || shipping.giftMessage || order.giftDetails?.message}"
               </div>
             </div>
-          ) : (shipping.cardMessage || shipping.giftMessage) ? (
-            <div className="border border-dashed border-amber-300 bg-amber-50/30 rounded-lg p-2.5">
-              <h4 className="text-[10px] font-bold text-amber-600 uppercase tracking-wider border-b border-amber-200/50 pb-0.5 mb-1">
-                💌 Card Message
-              </h4>
-              <p className="text-[10px] font-medium text-slate-700 italic leading-relaxed">
-                "{shipping.cardMessage || shipping.giftMessage}"
-              </p>
-            </div>
-          ) : null}
+          )}
         </div>
 
-        {/* Pricing summary */}
-        <div style={{ width: '70mm' }}>
-          <div className="space-y-1.5 text-slate-600" style={{ fontSize: '10px' }}>
-            <div className="flex justify-between">
-              <span>Subtotal</span>
-              <span className="font-semibold text-slate-900">{formatCurrency(itemsSubtotal)}</span>
+        <div className="summary-block">
+          <div className="summary-row">
+            <span>Subtotal:</span>
+            <span style={{ fontWeight: 600, color: '#1e293b' }}>{formatCurrency(itemsSubtotal)}</span>
+          </div>
+          <div className="summary-row">
+            <span>Delivery Fee:</span>
+            <span style={{ fontWeight: 600, color: '#1e293b' }}>
+              {order.isFirstOrderFreeDelivery ? 'FREE' : (hasDeliveryFee ? formatCurrency(deliveryFee) : 'FREE')}
+            </span>
+          </div>
+          {hasPromo && (
+            <div className="summary-row" style={{ color: '#dc2626' }}>
+              <span>Promo Discount:</span>
+              <span style={{ fontWeight: 600 }}>-{formatCurrency(promoDiscount)}</span>
             </div>
-            <div className="flex justify-between">
-              <span>Delivery Fee</span>
-              <span className="font-semibold text-slate-900">
-                {order.isFirstOrderFreeDelivery ? (
-                  <span className="text-emerald-700 font-bold">FREE</span>
-                ) : (
-                  hasDeliveryFee ? formatCurrency(deliveryFee) : 'FREE'
-                )}
-              </span>
-            </div>
-            {hasPromo && (
-              <div className="flex justify-between text-red-650">
-                <span>Promo Discount</span>
-                <span className="font-semibold">-{formatCurrency(promoDiscount)}</span>
-              </div>
-            )}
-            <div className="h-[1px] bg-slate-200 my-1"></div>
-            <div className="flex justify-between items-center font-bold text-emerald-800 pt-1 border-t-2 border-emerald-800" style={{ fontSize: '12px' }}>
-              <span>Grand Total</span>
-              <span style={{ fontSize: '14px' }}>{formatCurrency(grandTotal)}</span>
-            </div>
+          )}
+          <div className="summary-row-grand">
+            <span>Grand Total:</span>
+            <span>{formatCurrency(grandTotal)}</span>
           </div>
         </div>
       </div>
 
-      {/* Elegant Footer - Flows naturally below the content */}
-      <div 
-        className="text-center text-slate-500 border-t border-slate-200 pt-3 mt-4 leading-relaxed" 
-        style={{ width: '100%', paddingBottom: '3mm' }}
-      >
-        <h4 className="font-bold text-emerald-800" style={{ fontSize: '10px' }}>
-          Thank you for choosing Spring Blossoms Florist.
-        </h4>
-        <p className="text-slate-400 mt-1.5" style={{ fontSize: '8.5px' }}>
+      <div className="invoice-footer">
+        <div className="footer-thankyou">Thank you for choosing Spring Blossoms Florist.</div>
+        <div className="footer-text">
           We design premium floral arrangements and curated gift solutions to make your moments unforgettable.<br />
           For any queries or modifications to your delivery, please contact +91 9949683222 or email contact@sbflorist.in.<br />
           This is a computer-generated tax invoice and requires no signature.
-        </p>
+        </div>
       </div>
     </div>
   );

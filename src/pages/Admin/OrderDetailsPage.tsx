@@ -307,13 +307,16 @@ const OrderDetailsPage: React.FC = () => {
   const handleDownloadPDF = () => {
     const element = document.getElementById('clean-invoice-pdf');
     if (element) {
+      const invoiceHeight = element.scrollHeight;
+      console.log('Invoice Height:', invoiceHeight);
+      
       toast({
         title: "Exporting PDF",
         description: `Generating high-quality invoice for order #${order?.orderNumber}`,
       });
       
       const options = {
-        margin: [10, 10, 10, 10] as any,
+        margin: [10, 10, 10, 10],
         filename: `invoice-${order?.orderNumber}.pdf`,
         image: {
           type: 'jpeg',
@@ -330,24 +333,26 @@ const OrderDetailsPage: React.FC = () => {
         jsPDF: {
           unit: 'mm',
           format: 'a4',
-          orientation: 'portrait' as const
+          orientation: 'portrait'
         },
         pagebreak: {
-          mode: ['avoid-all', 'css', 'legacy'] as any
+          mode: ['avoid-all', 'css', 'legacy']
         }
       };
-
+      
       html2pdf().from(element).set(options).save();
     } else if (orderRef.current) {
-      // Fallback to old behavior if element is missing
       const fallbackElement = document.getElementById('order-details-pdf') || orderRef.current;
+      const invoiceHeight = fallbackElement.scrollHeight;
+      console.log('Fallback Invoice Height:', invoiceHeight);
+      
       toast({
         title: "Exporting PDF (Fallback)",
         description: `Generating invoice for order #${order?.orderNumber}`,
       });
       
       const options = {
-        margin: [10, 10, 10, 10] as any,
+        margin: [10, 10, 10, 10],
         filename: `invoice-${order?.orderNumber}.pdf`,
         image: {
           type: 'jpeg',
@@ -364,13 +369,13 @@ const OrderDetailsPage: React.FC = () => {
         jsPDF: {
           unit: 'mm',
           format: 'a4',
-          orientation: 'portrait' as const
+          orientation: 'portrait'
         },
         pagebreak: {
-          mode: ['avoid-all', 'css', 'legacy'] as any
+          mode: ['avoid-all', 'css', 'legacy']
         }
       };
-
+      
       html2pdf().from(fallbackElement).set(options).save();
     }
   };
@@ -1222,7 +1227,7 @@ const OrderDetailsPage: React.FC = () => {
       </div>
       
       {/* Offscreen print-ready invoice */}
-      <div style={{ position: 'absolute', left: '-9999px', top: '-9999px', width: '794px' }}>
+      <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
         <div id="clean-invoice-pdf" className="bg-white">
           <Invoice order={order} />
         </div>
