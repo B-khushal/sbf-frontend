@@ -311,12 +311,33 @@ const OrderDetailsPage: React.FC = () => {
         title: "Exporting PDF",
         description: `Generating high-quality invoice for order #${order?.orderNumber}`,
       });
-      html2pdf().from(element).set({
-        margin: [0.3, 0.4, 0.3, 0.4] as any,
-        filename: `invoice-order-${order?.orderNumber}.pdf`,
-        html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
-      }).save();
+      
+      const options = {
+        margin: [10, 10, 10, 10] as any,
+        filename: `invoice-${order?.orderNumber}.pdf`,
+        image: {
+          type: 'jpeg',
+          quality: 1
+        },
+        html2canvas: {
+          scale: 3,
+          useCORS: true,
+          letterRendering: true,
+          logging: false,
+          windowWidth: 1200,
+          windowHeight: 1600
+        },
+        jsPDF: {
+          unit: 'mm',
+          format: 'a4',
+          orientation: 'portrait' as const
+        },
+        pagebreak: {
+          mode: ['avoid-all', 'css', 'legacy'] as any
+        }
+      };
+
+      html2pdf().from(element).set(options).save();
     } else if (orderRef.current) {
       // Fallback to old behavior if element is missing
       const fallbackElement = document.getElementById('order-details-pdf') || orderRef.current;
@@ -324,12 +345,33 @@ const OrderDetailsPage: React.FC = () => {
         title: "Exporting PDF (Fallback)",
         description: `Generating invoice for order #${order?.orderNumber}`,
       });
-      html2pdf().from(fallbackElement).set({
-        margin: 0.5,
-        filename: `invoice-order-${order?.orderNumber}.pdf`,
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
-      }).save();
+      
+      const options = {
+        margin: [10, 10, 10, 10] as any,
+        filename: `invoice-${order?.orderNumber}.pdf`,
+        image: {
+          type: 'jpeg',
+          quality: 1
+        },
+        html2canvas: {
+          scale: 3,
+          useCORS: true,
+          letterRendering: true,
+          logging: false,
+          windowWidth: 1200,
+          windowHeight: 1600
+        },
+        jsPDF: {
+          unit: 'mm',
+          format: 'a4',
+          orientation: 'portrait' as const
+        },
+        pagebreak: {
+          mode: ['avoid-all', 'css', 'legacy'] as any
+        }
+      };
+
+      html2pdf().from(fallbackElement).set(options).save();
     }
   };
 
