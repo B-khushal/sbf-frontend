@@ -506,7 +506,7 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
   return (
     <>
       {/* Main Navigation */}
-      <header className="bg-white/95 backdrop-blur-xl border-b border-gray-100 sticky top-0 z-nav">
+      <header className="bg-gradient-to-r from-sky-100/90 via-pink-100/90 to-emerald-100/90 dark:from-sky-950/60 dark:via-pink-950/60 dark:to-emerald-950/60 backdrop-blur-xl border-b border-gray-200/50 sticky top-0 z-nav">
         <div className="container mx-auto px-3 sm:px-4 lg:px-6">
           {/* Main Navigation Row */}
           <div className="flex items-center justify-between h-16 sm:h-18 lg:h-20">
