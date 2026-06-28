@@ -65,7 +65,7 @@ const HomePage = () => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const { homeSections, loading: settingsLoading } = useSettings();
-  const { currentOffer, isOpen: isOfferOpen, closeOffer } = useOfferPopup();
+  const { currentOffer, isOpen: isOfferOpen, closeOffer, trackCtaClick, trackCouponCopy } = useOfferPopup();
   const isMobile = useIsMobile();
   const { isValentineEnabled, settings: valentineSettings, offers: valentineOffers } = useValentine();
   const normalizedOffer = currentOffer
@@ -234,6 +234,8 @@ const HomePage = () => {
         isOpen={isOfferOpen && currentOffer !== null}
         onClose={closeOffer}
         offer={normalizedOffer}
+        trackCtaClick={trackCtaClick}
+        trackCouponCopy={trackCouponCopy}
       />
 
       {/* Debug button - remove this after testing */}
@@ -255,7 +257,7 @@ const HomePage = () => {
         switch (section.type) {
           case 'hero':
             return (
-              <React.Fragment key={`hero-${index}`}>
+              <div key={`hero-${index}`} className="contents">
                 <SeasonalCampaignHomeSection />
                 <motion.div
                   variants={itemVariants}
@@ -266,7 +268,7 @@ const HomePage = () => {
                 {isValentineEnabled && valentineSettings && (
                   <ValentineHomeSections settings={valentineSettings} offers={valentineOffers} />
                 )}
-              </React.Fragment>
+              </div>
             );
 
           case 'categories':

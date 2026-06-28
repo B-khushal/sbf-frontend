@@ -143,6 +143,10 @@ declare global {
     receiverCity?: string;
     receiverState?: string;
     receiverZipCode?: string;
+    isFirstOrderFreeDelivery?: boolean;
+    greetingCard?: string;
+    surpriseDelivery?: boolean;
+    anonymousGift?: boolean;
   }
 
 const CheckoutPaymentPage = () => {
@@ -384,7 +388,12 @@ const CheckoutPaymentPage = () => {
          isFirstOrderFreeDelivery: shippingInfo?.isFirstOrderFreeDelivery || false,
          currency: 'INR',
          currencyRate: rate || 1,       // ✅ Correct field name for backend
-         originalCurrency: 'INR'
+         originalCurrency: 'INR',
+         promoCode: appliedPromoCode ? {
+           code: appliedPromoCode.code,
+           discountAmount: appliedPromoCode.discount,
+           promoCodeId: (appliedPromoCode as any).promoCodeId || undefined
+         } : undefined
        };
        
         // Add gift details if present or if there are Valentine upgrades
