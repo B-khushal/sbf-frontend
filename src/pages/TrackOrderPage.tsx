@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { API_BASE_URL } from '@/config';
 import { Truck, Clock, MapPin, ArrowLeft, RefreshCw, Star, CheckCircle } from 'lucide-react';
+import { useAuth } from '@/hooks/use-auth';
 
 interface TrackingData {
   orderStatus: string;
@@ -31,6 +32,12 @@ interface TrackingData {
 }
 
 const TrackOrderPage: React.FC = () => {
+  const { user } = useAuth();
+  const hasInternalAccess = user && [
+    'platform_admin', 'store_owner', 'store_manager', 'delivery_manager', 
+    'support_staff', 'inventory_staff', 'finance_staff', 'admin', 'delivery_partner'
+  ].includes(user.role);
+
   const { orderNumber } = useParams<{ orderNumber: string }>();
   const [data, setData] = useState<TrackingData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -60,6 +67,7 @@ const TrackOrderPage: React.FC = () => {
 
   // Dynamically Load Leaflet from unpkg
   useEffect(() => {
+    if (!hasInternalAccess) return;
     if (window.L) {
       setIsMapLoaded(true);
       return;
@@ -74,11 +82,11 @@ const TrackOrderPage: React.FC = () => {
     script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
     script.onload = () => setIsMapLoaded(true);
     document.head.appendChild(script);
-  }, []);
+  }, [hasInternalAccess]);
 
   // Update Map
   useEffect(() => {
-    if (!isMapLoaded || !mapContainerRef.current || !data) return;
+    if (!hasInternalAccess || !isMapLoaded || !mapContainerRef.current || !data) return;
 
     const storeCoords: [number, number] = [17.3912, 78.4326]; // Mehdipatnam store
     const customerCoords: [number, number] = [17.3850, 78.4867]; // Approximate customer location in central Hyderabad if coordinates not saved
@@ -141,7 +149,7 @@ const TrackOrderPage: React.FC = () => {
       const group = window.L.featureGroup(markersRef.current);
       mapRef.current.fitBounds(group.getBounds().pad(0.2));
     }
-  }, [isMapLoaded, data]);
+  }, [isMapLoaded, data, hasInternalAccess]);
 
   const getStepStatus = (stepStatus: string) => {
     if (!data) return 'pending';
@@ -154,12 +162,41 @@ const TrackOrderPage: React.FC = () => {
     return 'pending';
   };
 
+  const getCustomerStepStatus = (stepKey: string) => {
+    if (!data) return 'pending';
+    
+    // Map orderStatus to one of the 4 steps
+    let currentStepKey = 'confirmed';
+    if (data.orderStatus === 'being_made') {
+      currentStepKey = 'preparing';
+    } else if (data.orderStatus === 'out_for_delivery') {
+      currentStepKey = 'ready';
+    } else if (data.orderStatus === 'delivered') {
+      currentStepKey = 'completed';
+    }
+
+    const stepOrder = ['confirmed', 'preparing', 'ready', 'completed'];
+    const currentIdx = stepOrder.indexOf(currentStepKey);
+    const stepIdx = stepOrder.indexOf(stepKey);
+
+    if (stepIdx < currentIdx) return 'completed';
+    if (stepIdx === currentIdx) return 'current';
+    return 'pending';
+  };
+
   const steps = [
     { status: 'order_placed', label: 'Placed', desc: 'Order submitted' },
     { status: 'received', label: 'Accepted', desc: 'Order received by store' },
     { status: 'being_made', label: 'Prepared', desc: 'Floral arrangement design' },
     { status: 'out_for_delivery', label: 'On the way', desc: 'Out for delivery' },
     { status: 'delivered', label: 'Delivered', desc: 'Arrived at destination' }
+  ];
+
+  const customerSteps = [
+    { status: 'confirmed', label: 'Order Confirmed', desc: 'Your order is confirmed' },
+    { status: 'preparing', label: 'Preparing', desc: 'Your bouquet is being prepared' },
+    { status: 'ready', label: 'Ready', desc: 'Your order is ready' },
+    { status: 'completed', label: 'Completed', desc: 'Order completed' }
   ];
 
   return (
@@ -175,7 +212,7 @@ const TrackOrderPage: React.FC = () => {
           <Card className="p-6 text-center text-muted-foreground border-emerald-100 bg-white">
             No active order tracking found. Please check your order number.
           </Card>
-        ) : (
+        ) : hasInternalAccess ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Tracking Map & Driver Info */}
             <div className="md:col-span-2 space-y-6">
@@ -248,6 +285,40 @@ const TrackOrderPage: React.FC = () => {
                 </CardContent>
               </Card>
             </div>
+          </div>
+        ) : (
+          <div className="max-w-xl mx-auto">
+            {/* Customer view: Centered simplified timeline details */}
+            <Card className="border-emerald-100 shadow-sm bg-white">
+              <CardHeader className="bg-emerald-50/20 border-b border-emerald-50 pb-4">
+                <CardTitle className="text-emerald-900 text-base">Order Progress</CardTitle>
+                <CardDescription>Follow your order's updates.</CardDescription>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="relative border-l border-emerald-100 ml-3 space-y-6">
+                  {customerSteps.map((step, idx) => {
+                    const state = getCustomerStepStatus(step.status);
+                    return (
+                      <div key={idx} className="relative pl-6">
+                        <div className={`absolute -left-2 top-0.5 w-4 h-4 rounded-full border-2 border-white shadow-sm ${
+                          state === 'completed' ? 'bg-emerald-600' : state === 'current' ? 'bg-emerald-700 animate-ping' : 'bg-neutral-200'
+                        }`} />
+                        <div className={`absolute -left-2 top-0.5 w-4 h-4 rounded-full border-2 border-white ${
+                          state === 'completed' ? 'bg-emerald-600' : state === 'current' ? 'bg-emerald-700' : 'bg-neutral-200'
+                        }`} />
+                        
+                        <div>
+                          <h4 className={`text-sm font-bold ${state === 'current' ? 'text-emerald-800' : 'text-neutral-700'}`}>
+                            {step.label}
+                          </h4>
+                          <p className="text-xs text-muted-foreground mt-0.5">{step.desc}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
       </div>

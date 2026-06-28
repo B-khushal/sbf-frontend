@@ -112,6 +112,7 @@ interface RecentOrder {
   originalCurrency: string;
   originalAmount: number;
   assignedWorker: string;
+  isTestOrder?: boolean;
 }
 
 interface TopProduct {
@@ -729,7 +730,14 @@ const AdminDashboardHome: React.FC = () => {
                     <tbody className="divide-y divide-slate-100">
                       {recentOrders.map(order => (
                         <tr key={order.id} className="hover:bg-slate-50/30 transition-colors">
-                          <td className="p-3 font-semibold text-slate-700 font-mono">{order.orderNumber}</td>
+                          <td className="p-3 font-semibold text-slate-700 font-mono flex items-center gap-2 flex-wrap">
+                            {order.orderNumber}
+                            {order.isTestOrder && (
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                🧪 INTERNAL TEST ORDER
+                              </span>
+                            )}
+                          </td>
                           <td className="p-3 text-slate-600">{order.customer}</td>
                           <td className="p-3 text-slate-500 capitalize">{order.recipientName}</td>
                           <td className="p-3 text-slate-800 font-bold">{formatPrice(order.amount)}</td>

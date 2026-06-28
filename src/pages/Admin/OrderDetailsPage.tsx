@@ -494,6 +494,16 @@ const OrderDetailsPage: React.FC = () => {
   return (
     <div className="max-w-6xl mx-auto p-4 sm:p-6 space-y-6">
       
+      {order.isTestOrder && (
+        <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-250 dark:border-amber-900/40 rounded-2xl p-4 flex items-start gap-3.5 text-amber-850 dark:text-amber-350 shadow-sm animate-in slide-in-from-top duration-300">
+          <AlertCircle className="h-5.5 w-5.5 text-amber-600 dark:text-amber-500 animate-pulse shrink-0 mt-0.5" />
+          <div className="min-w-0 flex-1">
+            <h4 className="text-sm font-bold tracking-wide uppercase">🧪 Internal Test Order</h4>
+            <p className="text-xs mt-1 leading-relaxed opacity-85">This order is flagged as a placeholder/testing transaction. All customer-facing notifications (emails, invoices, review requests, WhatsApp, and SMS alerts) are skipped. Automatic delivery partner routing and live updates remain fully active.</p>
+          </div>
+        </div>
+      )}
+
       {/* Top Breadcrumb Navigation */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 dark:border-slate-800 pb-5">
         <div>

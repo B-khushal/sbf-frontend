@@ -1,6 +1,7 @@
 import React from 'react';
 import { Check, Package, Eye, Wrench, Truck, CheckCircle, XCircle, Clock, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/use-auth';
 
 interface TrackingStep {
   status: string;
@@ -20,6 +21,12 @@ interface OrderTrackingProps {
 }
 
 const OrderTracking: React.FC<OrderTrackingProps> = ({ currentStatus, trackingHistory, className }) => {
+  const { user } = useAuth();
+  const hasInternalAccess = user && [
+    'platform_admin', 'store_owner', 'store_manager', 'delivery_manager', 
+    'support_staff', 'inventory_staff', 'finance_staff', 'admin', 'delivery_partner'
+  ].includes(user.role);
+
   const isDelivered = currentStatus === 'delivered';
   
   const trackingSteps: TrackingStep[] = [
@@ -55,6 +62,33 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ currentStatus, trackingHi
     }
   ];
 
+  const customerSteps: TrackingStep[] = [
+    {
+      status: 'confirmed',
+      label: 'Order Confirmed',
+      icon: <Package className="w-5 h-5" />,
+      description: 'Your order has been confirmed'
+    },
+    {
+      status: 'preparing',
+      label: 'Preparing',
+      icon: <Wrench className="w-5 h-5" />,
+      description: 'Your beautiful arrangement is being prepared'
+    },
+    {
+      status: 'ready',
+      label: 'Ready',
+      icon: <Truck className="w-5 h-5" />,
+      description: 'Your order is ready'
+    },
+    {
+      status: 'completed',
+      label: 'Completed',
+      icon: <CheckCircle className="w-5 h-5" />,
+      description: 'Order completed successfully'
+    }
+  ];
+
   const getStepStatus = (stepStatus: string) => {
     if (currentStatus === 'cancelled') {
       return 'cancelled';
@@ -68,8 +102,48 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ currentStatus, trackingHi
     return 'pending';
   };
 
+  const getCustomerCurrentStepKey = () => {
+    if (currentStatus === 'being_made') return 'preparing';
+    if (currentStatus === 'out_for_delivery') return 'ready';
+    if (currentStatus === 'delivered') return 'completed';
+    return 'confirmed';
+  };
+
+  const getCustomerStepStatus = (stepStatus: string) => {
+    if (currentStatus === 'cancelled') {
+      return 'cancelled';
+    }
+
+    const customerStepOrder = ['confirmed', 'preparing', 'ready', 'completed'];
+    const currentStepKey = getCustomerCurrentStepKey();
+    
+    const currentIndex = customerStepOrder.indexOf(currentStepKey);
+    const stepIndex = customerStepOrder.indexOf(stepStatus);
+
+    if (stepIndex < currentIndex) return 'completed';
+    if (stepIndex === currentIndex) return 'current';
+    return 'pending';
+  };
+
   const getStepHistory = (stepStatus: string) => {
     return trackingHistory?.find(history => history.status === stepStatus);
+  };
+
+  const getCustomerStepHistory = (stepStatus: string) => {
+    if (!trackingHistory) return undefined;
+    if (stepStatus === 'confirmed') {
+      return trackingHistory.find(h => h.status === 'received') || trackingHistory.find(h => h.status === 'order_placed');
+    }
+    if (stepStatus === 'preparing') {
+      return trackingHistory.find(h => h.status === 'being_made');
+    }
+    if (stepStatus === 'ready') {
+      return trackingHistory.find(h => h.status === 'out_for_delivery');
+    }
+    if (stepStatus === 'completed') {
+      return trackingHistory.find(h => h.status === 'delivered');
+    }
+    return undefined;
   };
 
   const formatDate = (dateString: string) => {
@@ -95,11 +169,13 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ currentStatus, trackingHi
     );
   }
 
+  const activeSteps = hasInternalAccess ? trackingSteps : customerSteps;
+
   return (
     <div className={cn(
       "rounded-lg border p-6 transition-all duration-300",
       isDelivered 
-        ? "bg-green-100 border-green-300" 
+        ? "bg-green-50 border-green-300" 
         : "bg-white border-gray-200",
       className
     )}>
@@ -119,10 +195,14 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ currentStatus, trackingHi
       </h3>
       
       <div className="space-y-6">
-        {trackingSteps.map((step, index) => {
-          const stepStatus = getStepStatus(step.status);
-          const history = getStepHistory(step.status);
-          const isCurrentStepDelivered = step.status === 'delivered' && stepStatus === 'current';
+        {activeSteps.map((step, index) => {
+          const stepStatus = hasInternalAccess 
+            ? getStepStatus(step.status) 
+            : getCustomerStepStatus(step.status);
+          const history = hasInternalAccess 
+            ? getStepHistory(step.status) 
+            : getCustomerStepHistory(step.status);
+          const isCurrentStepDelivered = step.status === (hasInternalAccess ? 'delivered' : 'completed') && stepStatus === 'current';
           
           return (
             <div key={step.status} className="flex gap-4">
@@ -147,7 +227,7 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ currentStatus, trackingHi
                 </div>
                 
                 {/* Connecting Line */}
-                {index < trackingSteps.length - 1 && (
+                {index < activeSteps.length - 1 && (
                   <div
                     className={cn(
                       "w-0.5 h-12 mt-2 transition-all duration-300",

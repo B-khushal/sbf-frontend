@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingCart, Heart, Share2, Minus, Plus, ChevronLeft, ChevronRight, Star, Eye, ShoppingBag, Wand2, Gift, ClipboardList, Leaf, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -313,6 +314,27 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [showStickyBar, setShowStickyBar] = useState(false);
+
+  // Lock body scroll and listen for Escape key when lightbox is open
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsLightboxOpen(false);
+      }
+    };
+
+    if (isLightboxOpen) {
+      document.body.style.overflow = 'hidden';
+      window.addEventListener('keydown', handleKeyDown);
+    } else {
+      document.body.style.overflow = '';
+    }
+
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isLightboxOpen]);
 
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -1406,90 +1428,114 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
       </AnimatePresence>
 
       {/* Fullscreen Lightbox Gallery */}
-      <AnimatePresence>
-        {isLightboxOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/95 backdrop-blur-md z-modal flex flex-col justify-between p-6 select-none"
-          >
-            {/* Lightbox header */}
-            <div className="flex justify-center items-center text-white/80">
-              <span className="text-xs font-bold tracking-[0.1em] uppercase">
-                {selectedImage + 1} / {product.images.length} • {product.title}
-              </span>
-            </div>
-
-            {/* Lightbox Main Image */}
-            <div className="relative flex-1 flex items-center justify-center max-w-4xl mx-auto w-full">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  prevImage();
-                }}
-                className="absolute left-0 w-12 h-12 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white hover:scale-105 active:scale-95 transition-all z-10"
+      {typeof window !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {isLightboxOpen && (
+            <motion.div
+              key="product-lightbox"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsLightboxOpen(false)}
+              className="fixed inset-0 flex flex-col justify-between p-6 select-none"
+              style={{
+                position: 'fixed',
+                inset: 0,
+                width: '100vw',
+                height: '100vh',
+                zIndex: 99999,
+                background: 'rgba(0, 0, 0, 0.75)',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+              }}
+            >
+              {/* Lightbox header */}
+              <div 
+                className="flex justify-center items-center text-white/80"
+                onClick={(e) => e.stopPropagation()}
               >
-                <ChevronLeft size={24} />
-              </button>
+                <span className="text-xs font-bold tracking-[0.1em] uppercase">
+                  {selectedImage + 1} / {product.images.length} • {product.title}
+                </span>
+              </div>
 
-              <div className="relative max-w-fit mx-auto">
-                <MotionProtectedImage
-                  key={selectedImage}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.3 }}
-                  src={getImageUrl(product.images[selectedImage], { bustCache: false })}
-                  alt={product.title}
-                  className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-2xl"
-                />
-                
+              {/* Lightbox Main Image */}
+              <div className="relative flex-1 flex items-center justify-center max-w-4xl mx-auto w-full">
                 <button
-                  onClick={() => setIsLightboxOpen(false)}
-                  className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-black/85 hover:bg-black text-white flex items-center justify-center border border-white/40 shadow-xl hover:scale-110 active:scale-95 transition-all z-20"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    prevImage();
+                  }}
+                  className="absolute left-0 w-12 h-12 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white hover:scale-105 active:scale-95 transition-all z-10"
                 >
-                  <X size={16} />
+                  <ChevronLeft size={24} />
+                </button>
+
+                <div 
+                  className="relative max-w-fit mx-auto"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <MotionProtectedImage
+                    key={selectedImage}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.3 }}
+                    src={getImageUrl(product.images[selectedImage], { bustCache: false })}
+                    alt={product.title}
+                    className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-2xl"
+                  />
+                  
+                  <button
+                    onClick={() => setIsLightboxOpen(false)}
+                    className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-black/85 hover:bg-black text-white flex items-center justify-center border border-white/40 shadow-xl hover:scale-110 active:scale-95 transition-all z-20"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    nextImage();
+                  }}
+                  className="absolute right-0 w-12 h-12 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white hover:scale-105 active:scale-95 transition-all z-10"
+                >
+                  <ChevronRight size={24} />
                 </button>
               </div>
 
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  nextImage();
-                }}
-                className="absolute right-0 w-12 h-12 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white hover:scale-105 active:scale-95 transition-all z-10"
-              >
-                <ChevronRight size={24} />
-              </button>
-            </div>
-
-            {/* Lightbox Thumbnails Strip */}
-            {product.images.length > 1 && (
-              <div className="flex gap-2.5 justify-center py-4 overflow-x-auto no-scrollbar">
-                {product.images.map((image, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setSelectedImage(index)}
-                    className={cn(
-                      "w-12 h-16 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0",
-                      selectedImage === index
-                        ? "border-white scale-105"
-                        : "border-transparent opacity-40 hover:opacity-100"
-                    )}
-                  >
-                    <ProtectedImage
-                      src={getImageUrl(image, { bustCache: false })}
-                      alt="preview thumb"
-                      className="w-full h-full object-cover"
-                    />
-                  </button>
-                ))}
-              </div>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+              {/* Lightbox Thumbnails Strip */}
+              {product.images.length > 1 && (
+                <div 
+                  className="flex gap-2.5 justify-center py-4 overflow-x-auto no-scrollbar"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {product.images.map((image, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setSelectedImage(index)}
+                      className={cn(
+                        "w-12 h-16 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0",
+                        selectedImage === index
+                          ? "border-white scale-105"
+                          : "border-transparent opacity-40 hover:opacity-100"
+                      )}
+                    >
+                      <ProtectedImage
+                        src={getImageUrl(image, { bustCache: false })}
+                        alt="preview thumb"
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </section>
   );
 };

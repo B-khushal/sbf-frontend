@@ -1219,8 +1219,13 @@ const AdminOrders = () => {
                         {/* Order ID & Priority */}
                         <TableCell className="align-middle font-medium py-3.5">
                           <div className="flex flex-col gap-1.5">
-                            <div className="flex items-center gap-1.5">
+                            <div className="flex items-center gap-1.5 flex-wrap">
                               <span className="font-bold text-slate-900 dark:text-slate-100 text-sm tracking-tight">{order.orderNumber}</span>
+                              {order.isTestOrder && (
+                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                  🧪 INTERNAL TEST ORDER
+                                </span>
+                              )}
                               <Button
                                 size="icon"
                                 variant="ghost"
