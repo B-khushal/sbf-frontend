@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, Heart, Share2, Minus, Plus, ChevronLeft, ChevronRight, Star, Eye, ShoppingBag, Wand2, Gift, ClipboardList, Leaf, Info } from 'lucide-react';
+import { ShoppingCart, Heart, Share2, Minus, Plus, ChevronLeft, ChevronRight, Star, Eye, ShoppingBag, Wand2, Gift, ClipboardList, Leaf, Info, Truck, Tag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useCurrency } from '@/contexts/CurrencyContext';
@@ -222,7 +222,7 @@ const RecommendedProducts: React.FC<{ productId: string; category: string }> = (
   );
 };
 
-const getComboMaxPrice = (product: typeof product) => {
+const getComboMaxPrice = (product: ProductData) => {
   if (product.category !== 'combos' || !product.comboItems) return product.price;
   let total = product.price;
   product.comboItems.forEach(item => {
@@ -309,11 +309,37 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
   };
 
   // Redesign Luxury Interaction States
+  const [isMobile, setIsMobile] = useState(false);
+  const [defaultExpanded, setDefaultExpanded] = useState<string[]>([]);
+  const [zoomPos, setZoomPos] = useState({ x: 0, y: 0 });
+  const [showLens, setShowLens] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [showStickyBar, setShowStickyBar] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const handleResize = () => {
+        const mobileCheck = window.innerWidth < 1024;
+        setIsMobile(mobileCheck);
+        
+        // Expand accordions by default on desktop
+        if (!mobileCheck) {
+          setDefaultExpanded(["details", "description", "combo", "care", "delivery", "faqs"]);
+        } else {
+          setDefaultExpanded(["details"]);
+        }
+      };
+      
+      handleResize();
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }
+  }, []);
 
   // Lock body scroll and listen for Escape key when lightbox is open
   useEffect(() => {
@@ -338,15 +364,33 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
 
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-  const { currentTarget, clientX, clientY } = e;
+    const { currentTarget, clientX, clientY } = e;
+    const rect = currentTarget.getBoundingClientRect();
 
-  const rect = currentTarget.getBoundingClientRect();
+    // Parallax mouse position
+    const px = (clientX - rect.left) / rect.width - 0.5;
+    const py = (clientY - rect.top) / rect.height - 0.5;
+    setMousePos({ x: px, y: py });
 
-  const x = (clientX - rect.left) / rect.width - 0.5;
-  const y = (clientY - rect.top) / rect.height - 0.5;
+    // Lens zoom mouse position
+    const lx = clientX - rect.left;
+    const ly = clientY - rect.top;
+    setZoomPos({ x: lx, y: ly });
+  };
 
-  setMousePos({ x, y });
-};
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!isLightboxOpen) {
+        if (e.key === 'ArrowLeft') {
+          prevImage();
+        } else if (e.key === 'ArrowRight') {
+          nextImage();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isLightboxOpen, selectedImage, product.images]);
 
 
   // Scroll handler to toggle sticky bottom checkout bar
@@ -717,27 +761,28 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
   };
 
   return (
-    <section className="pt-12 sm:pt-16 pb-24 px-4 sm:px-6 md:px-8 bg-gradient-to-b from-slate-50/50 via-white to-slate-50/50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 animate-fade-in relative overflow-hidden">
+    <section className="pt-12 sm:pt-16 pb-24 px-4 sm:px-6 md:px-8 bg-gradient-to-b from-slate-50/50 via-white to-slate-50/50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 relative overflow-visible lg:overflow-visible">
       
       {/* Decorative ambient background lighting */}
       <div className="absolute top-20 left-1/4 w-[500px] h-[500px] bg-gradient-to-tr from-bloom-pink-100/20 via-bloom-blue-100/10 to-transparent rounded-full blur-[100px] pointer-events-none -z-10" />
       <div className="absolute bottom-10 right-1/4 w-[600px] h-[600px] bg-gradient-to-br from-bloom-green-100/15 via-bloom-blue-100/10 to-transparent rounded-full blur-[120px] pointer-events-none -z-10" />
-
-      <div className="max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+ 
+      <div className="max-w-[1440px] mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-[560px_minmax(0,1fr)] lg:gap-[72px] gap-8 items-start relative">
           
-          {/* LEFT SIDE: Immersive Product Gallery (Span 7 on lg) */}
-          <div className="lg:col-span-7 grid grid-cols-1 md:grid-cols-12 gap-4">
+          {/* LEFT SIDE: Immersive Sticky Product Gallery */}
+          <div className="lg:sticky lg:top-[120px] lg:self-start w-full relative">
+            <div className="flex flex-col md:flex-row gap-6 lg:w-full">
             
-            {/* 1. Vertical Thumbnail Strip (Desktop, Span 2) */}
+            {/* 1. Vertical Thumbnail Strip (Desktop) */}
             {product.images.length > 1 && (
-              <div className="hidden md:flex md:flex-col gap-3 md:col-span-2 max-h-[500px] overflow-y-auto no-scrollbar pr-1 py-1">
+              <div className="hidden md:flex md:flex-col gap-3 w-20 max-h-[520px] overflow-y-auto no-scrollbar pr-1 py-1 flex-shrink-0">
                 {product.images.map((image, index) => (
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
                     className={cn(
-                      "aspect-[4/5] w-full relative overflow-hidden rounded-xl bg-white border transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm",
+                      "aspect-[3/4] w-full relative overflow-hidden rounded-xl bg-white dark:bg-slate-950 border transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm",
                       selectedImage === index
                         ? "border-slate-800 dark:border-slate-100 shadow-[0_0_15px_rgba(0,0,0,0.06)] ring-2 ring-slate-800/10 dark:ring-slate-100/20 scale-102"
                         : "border-slate-200/60 opacity-60 hover:opacity-100"
@@ -754,20 +799,29 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
               </div>
             )}
 
-            {/* 2. Main Large Cinematic Image (Span 10 on lg/md) */}
-            <div className={cn(
-              "relative md:col-span-10 group rounded-2xl bg-slate-50/50 dark:bg-slate-900/40 border border-slate-200/50 dark:border-slate-800/80 shadow-[0_15px_45px_rgba(0,0,0,0.04)] overflow-hidden",
-              product.images.length <= 1 ? "md:col-span-12" : ""
-            )}>
-              {/* Soft ambient glow behind images */}
-              <div className="absolute -inset-4 bg-gradient-to-tr from-bloom-pink-100/20 via-bloom-blue-100/10 to-transparent rounded-[2.5rem] blur-2xl opacity-60 -z-10 group-hover:opacity-80 transition-opacity duration-500" />
+            {/* 2. Main Large Cinematic Image (with Parallax & Magnifier Lens) */}
+            <div className="relative flex-1">
+              <div className="relative w-full">
+                <div 
+                ref={containerRef}
+                className={cn(
+                  "relative w-full group rounded-[28px] bg-slate-100/30 dark:bg-slate-900/20 border border-slate-200/40 dark:border-slate-800/60 shadow-[0_20px_50px_rgba(0,0,0,0.04)] overflow-hidden aspect-[4/5] lg:max-h-[calc(100vh-160px)] flex items-center justify-center p-0 backdrop-blur-sm",
+                  ""
+                )}
+              >
+              {/* Soft ambient background glow inside container for premium look */}
+              <div className="absolute inset-0 bg-gradient-to-tr from-bloom-pink-100/5 via-bloom-blue-100/5 to-transparent blur-xl pointer-events-none" />
               
               <div 
-                className="relative pb-[125%] overflow-hidden cursor-zoom-in"
+                className="relative w-full h-full cursor-zoom-in flex items-center justify-center"
                 onMouseMove={handleMouseMove}
-                onMouseEnter={() => setIsHovered(true)}
+                onMouseEnter={() => {
+                  setIsHovered(true);
+                  setShowLens(true);
+                }}
                 onMouseLeave={() => {
                   setIsHovered(false);
+                  setShowLens(false);
                   setMousePos({ x: 0, y: 0 });
                 }}
                 onClick={() => setIsLightboxOpen(true)}
@@ -779,22 +833,23 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                   </div>
                 )}
 
-                {/* Animated & Swipeable Image Frame */}
+                {/* Animated Image Frame */}
                 <motion.div
                   key={selectedImage}
-                  initial={{ opacity: 0, scale: 1.02 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                  className="absolute inset-0 w-full h-full"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.35 }}
+                  className="w-full h-full flex items-center justify-center"
                 >
                   <MotionProtectedImage
                     src={imageUrl}
                     alt={product.title}
                     onLoad={() => setIsImageLoading(false)}
-                    className="absolute inset-0 w-full h-full object-cover"
+                    className="w-full h-full object-cover rounded-[28px] transition-transform duration-700 ease-out"
                     style={{
-                      transform: isHovered 
-                        ? `scale(1.08) translate(${mousePos.x * 15}px, ${mousePos.y * 15}px)` 
+                      transform: isHovered && !isMobile
+                        ? `scale(1.08) translate(${mousePos.x * 12}px, ${mousePos.y * 12}px)` 
                         : 'scale(1) translate(0px, 0px)',
                       transition: isHovered ? 'transform 0.05s ease-out' : 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)'
                     }}
@@ -816,33 +871,51 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                   />
                 </motion.div>
 
+                {/* Magnifying Lens (Desktop Only) */}
+                {showLens && !isMobile && containerRef.current && (
+                  <div 
+                    className="absolute pointer-events-none border border-white/30 shadow-[0_25px_60px_rgba(0,0,0,0.35)] rounded-full overflow-hidden hidden lg:block"
+                    style={{
+                      width: '180px',
+                      height: '180px',
+                      left: `${zoomPos.x - 90}px`,
+                      top: `${zoomPos.y - 90}px`,
+                      backgroundImage: `url(${imageUrl})`,
+                      backgroundPosition: `${(zoomPos.x / containerRef.current.getBoundingClientRect().width) * 100}% ${(zoomPos.y / containerRef.current.getBoundingClientRect().height) * 100}%`,
+                      backgroundSize: '250%',
+                      backgroundRepeat: 'no-repeat',
+                      zIndex: 30,
+                    }}
+                  />
+                )}
+
                 {/* Badges for New / Featured */}
                 <div className="absolute top-4 left-4 flex flex-col gap-2 z-10 pointer-events-none">
                   {(product.isNewArrival || (product as { isNew?: boolean }).isNew) && (
-                    <span className="bg-slate-900/90 dark:bg-white/90 text-white dark:text-slate-900 text-[10px] font-bold tracking-[0.15em] uppercase px-3 py-1.5 rounded-md shadow-sm">
+                    <span className="bg-slate-900/90 dark:bg-white/90 text-white dark:text-slate-900 text-[9px] font-bold tracking-[0.15em] uppercase px-2.5 py-1 rounded shadow-sm">
                       New Arrival
                     </span>
                   )}
                   {product.isFeatured && (
-                    <span className="bg-amber-500/90 text-white text-[10px] font-bold tracking-[0.15em] uppercase px-3 py-1.5 rounded-md shadow-sm">
+                    <span className="bg-amber-500/90 text-white text-[9px] font-bold tracking-[0.15em] uppercase px-2.5 py-1 rounded shadow-sm">
                       Featured
                     </span>
                   )}
                 </div>
 
                 {product.discount > 0 && (
-                  <span className="absolute bottom-4 right-4 bg-rose-600/90 text-white text-[10px] font-bold tracking-[0.15em] uppercase px-3 py-1.5 rounded-md shadow-sm z-10">
+                  <span className="absolute bottom-4 right-4 bg-rose-600/90 text-white text-[9px] font-bold tracking-[0.15em] uppercase px-2.5 py-1 rounded shadow-sm z-10">
                     -{product.discount}% Off
                   </span>
                 )}
 
-                {/* Hover UI overlay hints */}
+                {/* Hover UI Overlay hints */}
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 dark:group-hover:bg-black/10 transition-colors pointer-events-none duration-300" />
                 <div className="absolute bottom-4 left-4 text-xs font-semibold bg-white/70 backdrop-blur-md text-slate-800 dark:bg-slate-950/70 dark:text-slate-200 px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-sm pointer-events-none">
                   🔍 Hover to inspect • Click to expand
                 </div>
 
-                {/* Left/Right controls (Mobile and desktop fallback) */}
+                {/* Left/Right Controls (Mobile and desktop fallback) */}
                 {product.images.length > 1 && (
                   <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 flex justify-between pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <button
@@ -867,6 +940,8 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                 )}
               </div>
             </div>
+          </div>
+        </div>
 
             {/* 3. Horizontal Thumbnail Strip (Mobile, below image) */}
             {product.images.length > 1 && (
@@ -891,22 +966,30 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                 ))}
               </div>
             )}
+            </div>
           </div>
-
-          {/* RIGHT SIDE: Redesigned Product Info (Span 5 on lg) */}
-          <div ref={productInfoRef} className="lg:col-span-5 flex flex-col space-y-6">
+ 
+          {/* RIGHT SIDE: Scrollable luxury product content panel */}
+          <div className="min-w-0 flex flex-col space-y-6 lg:pb-12">
             
-            {/* Category badge */}
-            <div className="space-y-2">
-              <span className="text-[10px] sm:text-xs font-bold tracking-[0.2em] text-slate-400 dark:text-slate-500 uppercase">
-                {product.category || 'Luxury Gifting'}
-              </span>
-              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 leading-tight">
+            {/* 1. Product Name */}
+            <div>
+              <h1 
+                className="font-extrabold tracking-tight text-slate-900 dark:text-slate-100 font-serif"
+                style={!isMobile ? { fontSize: 'clamp(2.5rem, 3vw, 3.5rem)', lineHeight: '1.05', maxWidth: '100%', wordBreak: 'normal' } : undefined}
+              >
                 {product.title}
               </h1>
             </div>
 
-            {/* Ratings & reviews summary inline */}
+            {/* 2. Category Breadcrumb */}
+            <div className="flex items-center gap-1 text-[10px] sm:text-xs font-bold tracking-[0.15em] text-slate-400 dark:text-slate-500 uppercase">
+              <span>Shop</span>
+              <span>/</span>
+              <span>{product.category || 'Luxury Gifting'}</span>
+            </div>
+
+            {/* 3. Rating & Reviews */}
             <div className="flex items-center gap-3">
               {product.numReviews && product.numReviews > 0 ? (
                 <>
@@ -937,20 +1020,20 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                   <span className="text-xs text-slate-400 font-medium">No reviews yet</span>
                 </>
               )}
-              <span className="h-3 w-px bg-slate-200" />
+              <span className="h-3 w-px bg-slate-200 dark:bg-slate-800" />
               <button 
                 onClick={() => navigate(buildProductReviewUrl(product._id, product.title))}
-                className="text-xs text-slate-500 hover:text-slate-800 font-semibold underline underline-offset-2"
+                className="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-semibold underline underline-offset-2"
               >
                 View all reviews
               </button>
             </div>
 
-            {/* Animated Pricing & Discount */}
-            <div className="py-4 border-y border-slate-100 dark:border-slate-900">
+            {/* 4. Price Section */}
+            <div className="py-4 border-y border-slate-100 dark:border-slate-900/60">
               <div className="flex items-baseline gap-3">
                 {product.category === 'combos' && product.comboItems && product.comboItems.length > 0 ? (
-                  <span className="text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+                  <span className="text-3xl lg:text-[3rem] font-bold text-slate-900 dark:text-slate-100 tracking-tight">
                     {formatPrice(convertPrice(getComboMaxPrice(product)))}
                   </span>
                 ) : (
@@ -959,7 +1042,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                       key={displayDiscountedPrice}
                       initial={{ opacity: 0, y: -4 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight"
+                      className="text-3xl lg:text-[3rem] font-bold text-slate-900 dark:text-slate-100 tracking-tight"
                     >
                       {formatPrice(convertPrice(displayDiscountedPrice))}
                     </motion.span>
@@ -984,8 +1067,21 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
               </div>
             </div>
 
-            {/* Pincode Availability Section */}
-            <div className="py-2 border-b border-slate-100 dark:border-slate-900">
+            {/* 5. Offer Details (Luxury Coupon Info) */}
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-50/50 via-pink-50/30 to-slate-50/10 dark:from-slate-900/40 dark:via-pink-950/5 dark:to-slate-900/20 border border-slate-200/50 dark:border-slate-800/80 space-y-2.5 shadow-sm">
+              <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-bold text-xs">
+                <Tag size={14} />
+                <span>Exclusive Store Offers</span>
+              </div>
+              <ul className="text-[11px] text-slate-600 dark:text-slate-400 space-y-1.5 list-disc pl-4 font-medium leading-relaxed">
+                <li>Use coupon <strong className="font-extrabold text-slate-800 dark:text-slate-200">SBF100</strong> for Flat ₹100 discount on your first order.</li>
+                <li>Free temperature-controlled premium gift wrapping box included.</li>
+                <li>Same-day urgent dispatch available across Hyderabad city bounds.</li>
+              </ul>
+            </div>
+
+            {/* 6. Delivery Availability (Pincode checker) */}
+            <div className="py-2 border-b border-slate-100 dark:border-slate-900/60">
               <button
                 type="button"
                 onClick={handleTogglePincode}
@@ -994,7 +1090,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                 <span className="flex items-center gap-2">
                   <MapPin size={16} className="text-primary group-hover:scale-110 transition-transform" />
                   {pincodeLocation ? (
-                    <span className="text-emerald-605 dark:text-emerald-400 font-medium">
+                    <span className="text-emerald-600 dark:text-emerald-400 font-medium">
                       Delivering to: <strong className="font-bold">{pincodeLocation.area.split('/')[0]} ({pincodeLocation.code})</strong>
                     </span>
                   ) : (
@@ -1036,10 +1132,8 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                               setPincodeLocation(selection);
                               setIsPincodeValid(true);
                               setPincodeMessage(`Deliverable: Dispatched via premium climate-controlled courier.`);
-                              // Save to session and local storage
                               localStorage.setItem('sbf_delivery_location', JSON.stringify(selection));
                               sessionStorage.setItem('sbf_entered_pincode', selection.code);
-                              // Sync other components
                               window.dispatchEvent(new CustomEvent('sbf-location-updated', { detail: selection }));
                             } else {
                               setPincodeLocation(null);
@@ -1073,89 +1167,203 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
               </AnimatePresence>
             </div>
 
-            {/* Variant Select Grid (Inline render) */}
+            {/* 7. Product Variants */}
             {renderVariantSelection()}
 
-            {/* Quantity Selector + Checkout Actions container */}
-            <div id="main-cta-section" className="space-y-4 pt-4">
+            {/* 8. Add-ons Customize Banner */}
+            {product.isCustomizable && (
+              <div className="p-4 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-950/20 flex items-center justify-between gap-3 shadow-sm">
+                <div className="flex items-center gap-2">
+                  <Wand2 className="h-5 w-5 text-primary animate-pulse" />
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">Customizations & Add-ons</h4>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500">Include message card, dry fruits, or chocolates.</p>
+                  </div>
+                </div>
+                <Button 
+                  type="button" 
+                  onClick={handleCustomize}
+                  variant="outline"
+                  size="sm"
+                  className="border-slate-200 dark:border-slate-800 hover:bg-slate-50 text-xs rounded-xl"
+                >
+                  Customize
+                </Button>
+              </div>
+            )}
+
+            {/* 9. Quantity Selector (Desktop/Mobile Non-sticky version) */}
+            <div className="flex items-center gap-4 lg:hidden">
+              <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Quantity</span>
+              <div className="flex items-center h-10 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-slate-50/50 dark:bg-slate-950/50 shadow-sm max-w-[130px]">
+                <button
+                  onClick={decrementQuantity}
+                  disabled={quantity <= 1}
+                  className="w-10 h-full flex items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors disabled:opacity-30 rounded-l-xl"
+                >
+                  <Minus size={14} />
+                </button>
+                <span className="w-10 text-center font-bold text-sm text-slate-800 dark:text-slate-200">{quantity}</span>
+                <button
+                  onClick={incrementQuantity}
+                  className="w-10 h-full flex items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors rounded-r-xl"
+                >
+                  <Plus size={14} />
+                </button>
+              </div>
+            </div>
+
+            {/* 10. Normal CTA Buttons (Only visible on mobile/tablet) */}
+            <div className="flex gap-3 lg:hidden">
+              {product.isCustomizable ? (
+                <Button
+                  type="button"
+                  className="flex-1 h-12 rounded-xl bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 text-white font-bold hover:shadow-[0_10px_30px_rgba(0,0,0,0.12)] hover:scale-[1.01] transition-all duration-300 dark:from-white dark:to-slate-100 dark:text-slate-900 border-none"
+                  onClick={handleCustomize}
+                  disabled={product.hasPriceVariants && !selectedVariant}
+                >
+                  <Wand2 className="mr-2 h-4 w-4" />
+                  Customize Bouquet
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  className="flex-1 h-12 rounded-xl bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 text-white font-bold hover:shadow-[0_10px_30px_rgba(0,0,0,0.12)] hover:scale-[1.01] transition-all duration-300 dark:from-white dark:to-slate-100 dark:text-slate-900 border-none"
+                  onClick={handleAddToCart}
+                  disabled={product.hasPriceVariants && !selectedVariant}
+                >
+                  <ShoppingCart className="mr-2 h-4 w-4" />
+                  Add to Cart
+                </Button>
+              )}
               
-              <div className="flex items-center gap-4">
-                <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Quantity</span>
-                <div className="flex items-center h-10 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-slate-50/50 dark:bg-slate-950/50 shadow-sm max-w-[130px]">
-                  <button
-                    onClick={decrementQuantity}
-                    disabled={quantity <= 1}
-                    className="w-10 h-full flex items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors disabled:opacity-30 rounded-l-xl"
-                  >
-                    <Minus size={14} />
-                  </button>
-                  <span className="w-10 text-center font-bold text-sm text-slate-800 dark:text-slate-200">{quantity}</span>
-                  <button
-                    onClick={incrementQuantity}
-                    className="w-10 h-full flex items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors rounded-r-xl"
-                  >
-                    <Plus size={14} />
-                  </button>
+              <button
+                type="button"
+                onClick={handleAddToWishlist}
+                className="h-12 w-12 border border-slate-200 dark:border-slate-800 flex items-center justify-center rounded-xl bg-white dark:bg-slate-950 hover:bg-slate-50 hover:scale-105 active:scale-95 transition-all duration-300 text-slate-700 dark:text-slate-350 shadow-sm"
+                title="Add to wishlist"
+              >
+                <Heart size={18} className={cn("transition-colors", wishlistItems?.some(i => i.id === String(product._id)) ? "fill-rose-500 text-rose-500" : "")} />
+              </button>
+              
+              <button
+                type="button"
+                onClick={handleShare}
+                className="h-12 w-12 border border-slate-200 dark:border-slate-800 flex items-center justify-center rounded-xl bg-white dark:bg-slate-950 hover:bg-slate-50 hover:scale-105 active:scale-95 transition-all duration-300 text-slate-700 dark:text-slate-350 shadow-sm"
+                title="Share product"
+              >
+                <Share2 size={18} />
+              </button>
+            </div>
+
+            {/* 10. Sticky Luxury Purchase Box (Desktop Only) */}
+            <div className="sticky bottom-6 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200/50 dark:border-slate-800/80 p-5 rounded-2xl shadow-[0_15px_30px_rgba(0,0,0,0.06)] hidden lg:flex flex-col gap-4.5 animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-4">
+                  {/* Quantity selector inside desktop sticky box */}
+                  <div className="flex items-center h-9 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-slate-50/50 dark:bg-slate-950/50 shadow-inner">
+                    <button
+                      onClick={decrementQuantity}
+                      disabled={quantity <= 1}
+                      type="button"
+                      className="w-8 h-full flex items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors disabled:opacity-30 rounded-l-xl"
+                    >
+                      <Minus size={12} />
+                    </button>
+                    <span className="w-8 text-center font-bold text-xs text-slate-800 dark:text-slate-200">{quantity}</span>
+                    <button
+                      onClick={incrementQuantity}
+                      type="button"
+                      className="w-8 h-full flex items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors rounded-r-xl"
+                    >
+                      <Plus size={12} />
+                    </button>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="block text-[9px] uppercase tracking-wider text-slate-400 font-bold">Total price</span>
+                  <span className="text-xl font-extrabold text-slate-900 dark:text-slate-100 font-mono">
+                    {formatPrice(convertPrice(displayDiscountedPrice * quantity))}
+                  </span>
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex gap-3">
+              <div className="flex gap-2">
                 {product.isCustomizable ? (
                   <Button
                     type="button"
-                    className="flex-1 h-12 rounded-xl bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 text-white font-bold hover:shadow-[0_10px_30px_rgba(0,0,0,0.12)] hover:scale-[1.01] transition-all duration-300 dark:from-white dark:to-slate-100 dark:text-slate-900 border-none"
+                    className="flex-1 h-11 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 font-bold hover:shadow-md transition-all border-none"
                     onClick={handleCustomize}
                     disabled={product.hasPriceVariants && !selectedVariant}
                   >
                     <Wand2 className="mr-2 h-4 w-4" />
-                    Customize Bouquet
+                    Customize & Add to Cart
                   </Button>
                 ) : (
-                  <Button
-                    type="button"
-                    className="flex-1 h-12 rounded-xl bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 text-white font-bold hover:shadow-[0_10px_30px_rgba(0,0,0,0.12)] hover:scale-[1.01] transition-all duration-300 dark:from-white dark:to-slate-100 dark:text-slate-900 border-none"
-                    onClick={handleAddToCart}
-                    disabled={product.hasPriceVariants && !selectedVariant}
-                  >
-                    <ShoppingCart className="mr-2 h-4 w-4" />
-                    Add to Cart
-                  </Button>
+                  <>
+                    <Button
+                      type="button"
+                      className="flex-1 h-11 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 font-bold hover:shadow-md transition-all border-none"
+                      onClick={handleAddToCart}
+                      disabled={product.hasPriceVariants && !selectedVariant}
+                    >
+                      <ShoppingCart className="mr-2 h-4 w-4" />
+                      Add to Cart
+                    </Button>
+                    <Button
+                      type="button"
+                      className="flex-1 h-11 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 text-white font-bold hover:opacity-95 transition-all shadow-[0_4px_15px_rgba(225,29,72,0.15)] border-none"
+                      onClick={async () => {
+                        await handleAddToCart();
+                        navigate('/cart');
+                      }}
+                      disabled={product.hasPriceVariants && !selectedVariant}
+                    >
+                      <ShoppingBag className="mr-2 h-4 w-4" />
+                      Buy Now
+                    </Button>
+                  </>
                 )}
-                
+
+                {/* Wishlist & Share in sticky container */}
                 <button
                   type="button"
                   onClick={handleAddToWishlist}
-                  className="h-12 w-12 border border-slate-200 dark:border-slate-800 flex items-center justify-center rounded-xl bg-white dark:bg-slate-950 hover:bg-slate-50 hover:scale-105 active:scale-95 transition-all duration-300 text-slate-700 dark:text-slate-350 shadow-sm"
+                  className="h-11 w-11 border border-slate-200 dark:border-slate-800 flex items-center justify-center rounded-xl bg-white dark:bg-slate-950 hover:bg-slate-50 hover:scale-105 active:scale-95 transition-all text-slate-700 dark:text-slate-350 shadow-sm"
                   title="Add to wishlist"
                 >
-                  <Heart size={18} className={cn("transition-colors", wishlistItems?.some(i => i.id === String(product._id)) ? "fill-rose-500 text-rose-500" : "")} />
+                  <Heart size={16} className={cn("transition-colors", wishlistItems?.some(i => i.id === String(product._id)) ? "fill-rose-500 text-rose-500" : "")} />
                 </button>
-                
                 <button
                   type="button"
                   onClick={handleShare}
-                  className="h-12 w-12 border border-slate-200 dark:border-slate-800 flex items-center justify-center rounded-xl bg-white dark:bg-slate-950 hover:bg-slate-50 hover:scale-105 active:scale-95 transition-all duration-300 text-slate-700 dark:text-slate-350 shadow-sm"
+                  className="h-11 w-11 border border-slate-200 dark:border-slate-800 flex items-center justify-center rounded-xl bg-white dark:bg-slate-950 hover:bg-slate-50 hover:scale-105 active:scale-95 transition-all text-slate-700 dark:text-slate-350 shadow-sm"
                   title="Share product"
                 >
-                  <Share2 size={18} />
+                  <Share2 size={16} />
                 </button>
               </div>
 
+              {/* Trust & promise badges */}
+              <div className="flex justify-between items-center pt-2 text-[8px] sm:text-[9px] text-slate-400 dark:text-slate-500 uppercase font-black tracking-widest border-t border-slate-100 dark:border-slate-800/80">
+                <span className="flex items-center gap-1.5">🌸 Fresh Flowers</span>
+                <span className="flex items-center gap-1.5">🚚 Same Day</span>
+                <span className="flex items-center gap-1.5">🎁 Premium Pack</span>
+              </div>
             </div>
 
-            {/* Luxury Trust Indicators Grid */}
-            <div className="grid grid-cols-2 gap-3 pt-6 border-t border-slate-100 dark:border-slate-900">
-              <div className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900/60 shadow-sm hover:-translate-y-0.5 transition-transform duration-200">
+            {/* Luxury Trust Indicators Grid (Non-sticky details) */}
+            <div className="grid grid-cols-2 gap-3 pt-6 border-t border-slate-100 dark:border-slate-900/60 lg:hidden">
+              <div className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900/60 shadow-sm">
                 <div className="w-9 h-9 rounded-xl bg-pink-50 dark:bg-pink-950/20 text-pink-500 dark:text-pink-400 flex items-center justify-center flex-shrink-0">
                   <Leaf size={16} />
                 </div>
                 <div>
                   <h4 className="text-xs font-bold text-slate-800 dark:text-slate-250">Fresh Blooms</h4>
-                  <p className="text-[10px] text-slate-400 dark:text-slate-500">100% Freshness Guaranteed</p>
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500">100% Freshness</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900/60 shadow-sm hover:-translate-y-0.5 transition-transform duration-200">
+              <div className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900/60 shadow-sm">
                 <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950/20 text-blue-500 dark:text-blue-400 flex items-center justify-center flex-shrink-0">
                   <Gift size={16} />
                 </div>
@@ -1164,30 +1372,17 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                   <p className="text-[10px] text-slate-400 dark:text-slate-500">Order by 1 PM</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900/60 shadow-sm hover:-translate-y-0.5 transition-transform duration-200">
-                <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 text-emerald-500 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
-                  <span className="text-sm">🛡️</span>
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-slate-800 dark:text-slate-250">Secure Checkout</h4>
-                  <p className="text-[10px] text-slate-400 dark:text-slate-500">Encrypted Payments</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900/60 shadow-sm hover:-translate-y-0.5 transition-transform duration-200">
-                <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/20 text-amber-500 dark:text-amber-400 flex items-center justify-center flex-shrink-0">
-                  <span className="text-sm">💝</span>
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-slate-800 dark:text-slate-250">Handcrafted</h4>
-                  <p className="text-[10px] text-slate-400 dark:text-slate-500">Prepared with Care</p>
-                </div>
-              </div>
             </div>
 
             {/* Overhauled Product Details Accordion Section */}
-            <Accordion type="multiple" className="w-full space-y-3 pt-4 border-t border-slate-100 dark:border-slate-900" defaultValue={["details"]}>
+            <Accordion 
+              type="multiple" 
+              className="w-full space-y-3 pt-4 border-t border-slate-100 dark:border-slate-900/60" 
+              value={defaultExpanded}
+              onValueChange={setDefaultExpanded}
+            >
               
-              {/* Detail Accordion */}
+              {/* 11. Product Contents (Details) */}
               <AccordionItem value="details" className="border-none">
                 <AccordionTrigger className="w-full flex items-center justify-between py-3 px-4 font-bold text-sm text-slate-850 dark:text-slate-200 bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-slate-900/60 border border-slate-150/70 dark:border-slate-900 rounded-xl hover:no-underline transition-all">
                   <span className="flex items-center gap-2.5">
@@ -1195,7 +1390,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                     Product Contents
                   </span>
                 </AccordionTrigger>
-                <AccordionContent className="p-4 bg-white dark:bg-slate-950 border border-t-0 border-slate-150/70 dark:border-slate-900 rounded-b-xl -mt-1 shadow-inner text-xs text-slate-600 dark:text-slate-400 space-y-3">
+                <AccordionContent className="p-4 bg-white dark:bg-slate-950 border border-t-0 border-slate-150/70 dark:border-slate-900 rounded-b-xl -mt-1 shadow-inner text-xs text-slate-650 dark:text-slate-400 space-y-3">
                   <div className="bg-amber-50/50 dark:bg-amber-950/10 p-3.5 rounded-xl border border-amber-100/70 dark:border-amber-950/40">
                     <div className="flex items-start gap-3">
                       <span className="text-amber-500 text-sm flex-shrink-0">📸</span>
@@ -1204,8 +1399,8 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                       </p>
                     </div>
                   </div>
-                  {product.details.map((detail, index) => (
-                    <div key={index} className="flex items-start gap-2.5 py-1 text-slate-700 dark:text-slate-300">
+                  {product.details && product.details.map((detail, index) => (
+                    <div key={index} className="flex items-start gap-2.5 py-1 text-slate-700 dark:text-slate-350">
                       <span className="text-primary text-xs mt-0.5 flex-shrink-0">✦</span>
                       <p className="text-[11px] leading-relaxed font-medium">{detail}</p>
                     </div>
@@ -1213,7 +1408,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                 </AccordionContent>
               </AccordionItem>
 
-              {/* Description Accordion */}
+              {/* 11. Product Description */}
               {product.description && (
                 <AccordionItem value="description" className="border-none">
                   <AccordionTrigger className="w-full flex items-center justify-between py-3 px-4 font-bold text-sm text-slate-850 dark:text-slate-200 bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-slate-900/60 border border-slate-150/70 dark:border-slate-900 rounded-xl hover:no-underline transition-all">
@@ -1222,7 +1417,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                       Product Description
                     </span>
                   </AccordionTrigger>
-                  <AccordionContent className="p-4 bg-white dark:bg-slate-950 border border-t-0 border-slate-150/70 dark:border-slate-900 rounded-b-xl -mt-1 shadow-inner text-xs text-slate-600 dark:text-slate-400">
+                  <AccordionContent className="p-4 bg-white dark:bg-slate-950 border border-t-0 border-slate-150/70 dark:border-slate-900 rounded-b-xl -mt-1 shadow-inner text-xs text-slate-650 dark:text-slate-400">
                     <p className="leading-relaxed font-medium text-slate-700 dark:text-slate-350">{product.description}</p>
                   </AccordionContent>
                 </AccordionItem>
@@ -1237,7 +1432,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                       Combo Contents
                     </span>
                   </AccordionTrigger>
-                  <AccordionContent className="p-4 bg-white dark:bg-slate-950 border border-t-0 border-slate-150/70 dark:border-slate-900 rounded-b-xl -mt-1 shadow-inner text-xs text-slate-600 dark:text-slate-400">
+                  <AccordionContent className="p-4 bg-white dark:bg-slate-950 border border-t-0 border-slate-150/70 dark:border-slate-900 rounded-b-xl -mt-1 shadow-inner text-xs text-slate-650 dark:text-slate-400">
                     {product.comboName && (
                       <div className="mb-4 pb-2 border-b border-slate-100 dark:border-slate-900">
                         <h4 className="font-bold text-slate-800 dark:text-slate-200 text-xs">{product.comboName}</h4>
@@ -1272,7 +1467,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                 </AccordionItem>
               )}
 
-              {/* Care Instructions Accordion */}
+              {/* 12. Artisanal Care Instructions */}
               {product.careInstructions && product.careInstructions.length > 0 && (
                 <AccordionItem value="care" className="border-none">
                   <AccordionTrigger className="w-full flex items-center justify-between py-3 px-4 font-bold text-sm text-slate-850 dark:text-slate-200 bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-slate-900/60 border border-slate-150/70 dark:border-slate-900 rounded-xl hover:no-underline transition-all">
@@ -1281,7 +1476,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                       Artisanal Care Instructions
                     </span>
                   </AccordionTrigger>
-                  <AccordionContent className="p-4 bg-white dark:bg-slate-950 border border-t-0 border-slate-150/70 dark:border-slate-900 rounded-b-xl -mt-1 shadow-inner text-xs text-slate-600 dark:text-slate-400 space-y-2">
+                  <AccordionContent className="p-4 bg-white dark:bg-slate-950 border border-t-0 border-slate-150/70 dark:border-slate-900 rounded-b-xl -mt-1 shadow-inner text-xs text-slate-650 dark:text-slate-400 space-y-2">
                     {product.careInstructions.map((instruction, index) => (
                       <div key={index} className="flex items-start gap-2.5 py-1 text-slate-700 dark:text-slate-350">
                         <span className="text-emerald-500 text-xs flex-shrink-0">🌿</span>
@@ -1292,81 +1487,132 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                 </AccordionItem>
               )}
 
+              {/* 13. Delivery Information */}
+              <AccordionItem value="delivery" className="border-none">
+                <AccordionTrigger className="w-full flex items-center justify-between py-3.5 px-4 font-bold text-sm text-slate-850 dark:text-slate-200 bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-slate-900/60 border border-slate-150/70 dark:border-slate-900 rounded-xl hover:no-underline transition-all">
+                  <span className="flex items-center gap-2.5">
+                    <Truck className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+                    Delivery Information
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent className="p-4 bg-white dark:bg-slate-950 border border-t-0 border-slate-150/70 dark:border-slate-900 rounded-b-xl -mt-1 shadow-inner text-xs text-slate-650 dark:text-slate-400 space-y-3">
+                  <div className="flex items-start gap-2.5 py-1 text-slate-700 dark:text-slate-350">
+                    <span className="text-primary text-xs mt-0.5">🚚</span>
+                    <p className="text-[11px] leading-relaxed font-medium">
+                      All luxury floral arrangements are hand-delivered by our specialized logistics team in temperature-controlled boxes to preserve pristine freshness.
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-2.5 py-1 text-slate-700 dark:text-slate-350">
+                    <span className="text-primary text-xs mt-0.5">⏰</span>
+                    <p className="text-[11px] leading-relaxed font-medium">
+                      Choose from flexible delivery slots including Morning Delivery, Standard Same-Day, or Midnight Surprise.
+                    </p>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              {/* 14. Frequently Asked Questions (FAQs) */}
+              <AccordionItem value="faqs" className="border-none">
+                <AccordionTrigger className="w-full flex items-center justify-between py-3.5 px-4 font-bold text-sm text-slate-850 dark:text-slate-200 bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-slate-900/60 border border-slate-150/70 dark:border-slate-900 rounded-xl hover:no-underline transition-all">
+                  <span className="flex items-center gap-2.5">
+                    <Star className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+                    Frequently Asked Questions
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent className="p-4 bg-white dark:bg-slate-950 border border-t-0 border-slate-150/70 dark:border-slate-900 rounded-b-xl -mt-1 shadow-inner text-xs text-slate-650 dark:text-slate-400 space-y-3.5">
+                  <div>
+                    <h5 className="font-bold text-slate-855 dark:text-slate-200 text-xs">Q: Will my flowers look exactly like the image?</h5>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-450 mt-1 leading-relaxed">
+                      Our master florists craft each bouquet by hand. While we preserve the design, volume, and color palette, minor seasonal substitutions of flower types may occur to guarantee maximum freshness.
+                    </p>
+                  </div>
+                  <div>
+                    <h5 className="font-bold text-slate-850 dark:text-slate-200 text-xs">Q: Can I add a custom card or select a specific delivery date?</h5>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-450 mt-1 leading-relaxed">
+                      Yes. During checkout, you can select your preferred delivery date, time slot, and write a personalized message card.
+                    </p>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
             </Accordion>
 
+            {/* Inline Product Customizer */}
+            {product.isCustomizable && product.customizationOptions && (
+              <InlineProductCustomizer
+                isOpen={isCustomizerExpanded}
+                onToggleOpen={() => setIsCustomizerExpanded(!isCustomizerExpanded)}
+                product={{
+                  _id: product._id,
+                  title: product.title,
+                  price: discountedPrice,
+                  images: product.images,
+                  category: product.category,
+                  customizationOptions: product.customizationOptions,
+                  comboItems: product.comboItems,
+                  comboName: product.comboName,
+                  comboDescription: product.comboDescription,
+                  discount: product.discount
+                }}
+                selectedVariant={selectedVariant}
+                onAddToCart={(customizations, customTotalPrice) => {
+                  setCustomizations(customizations);
+                  // Use the customTotalPrice as the unit price for the cart item
+                  const cartItem = {
+                    _id: product._id,
+                    id: `${product._id}${selectedVariant ? `-${selectedVariant.label}` : ''}`,
+                    productId: product._id,
+                    title: product.title,
+                    price: customTotalPrice, // unit price only
+                    originalPrice: originalPrice,
+                    image: imageUrl,
+                    quantity: quantity, // quantity is handled by cart
+                    category: product.category,
+                    discount: product.discount,
+                    images: product.images,
+                    description: product.description,
+                    details: product.details,
+                    careInstructions: product.careInstructions,
+                    isNewArrival: Boolean(
+                      product.isNewArrival || (product as { isNew?: boolean }).isNew
+                    ),
+                    isFeatured: product.isFeatured,
+                    customizations: customizations
+                  };
+                  addToCart(cartItem);
+                  toast({
+                    title: "Added to cart",
+                    description: `${quantity} × ${product.title} added to your cart`,
+                    duration: 3000,
+                  });
+
+                  // Redirect to cart page after successful addition
+                  setTimeout(() => {
+                    navigate('/cart');
+                  }, 1000);
+                }}
+              />
+            )}
+
+            {/* Product Reviews Section */}
+            <div id="reviews-section" className="pt-8 border-t border-slate-100 dark:border-slate-900/60 overflow-visible relative">
+              <ProductReviews
+                productId={product._id}
+                productTitle={product.title}
+                onReviewSubmit={onReviewSubmit}
+              />
+            </div>
           </div>
         </div>
-
-        {/* Inline Product Customizer */}
-        {product.isCustomizable && product.customizationOptions && (
-          <InlineProductCustomizer
-            isOpen={isCustomizerExpanded}
-            onToggleOpen={() => setIsCustomizerExpanded(!isCustomizerExpanded)}
-            product={{
-              _id: product._id,
-              title: product.title,
-              price: discountedPrice,
-              images: product.images,
-              category: product.category,
-              customizationOptions: product.customizationOptions,
-              comboItems: product.comboItems,
-              comboName: product.comboName,
-              comboDescription: product.comboDescription,
-              discount: product.discount
-            }}
-            selectedVariant={selectedVariant}
-            onAddToCart={(customizations, customTotalPrice) => {
-              setCustomizations(customizations);
-              // Use the customTotalPrice as the unit price for the cart item
-              const cartItem = {
-                _id: product._id,
-                id: `${product._id}${selectedVariant ? `-${selectedVariant.label}` : ''}`,
-                productId: product._id,
-                title: product.title,
-                price: customTotalPrice, // unit price only
-                originalPrice: originalPrice,
-                image: imageUrl,
-                quantity: quantity, // quantity is handled by cart
-                category: product.category,
-                discount: product.discount,
-                images: product.images,
-                description: product.description,
-                details: product.details,
-                careInstructions: product.careInstructions,
-                isNewArrival: Boolean(
-                  product.isNewArrival || (product as { isNew?: boolean }).isNew
-                ),
-                isFeatured: product.isFeatured,
-                customizations: customizations
-              };
-              addToCart(cartItem);
-              toast({
-                title: "Added to cart",
-                description: `${quantity} × ${product.title} added to your cart`,
-                duration: 3000,
-              });
-
-              // Redirect to cart page after successful addition
-              setTimeout(() => {
-                navigate('/cart');
-              }, 1000);
-            }}
-          />
-        )}
-
-        {/* Product Reviews Section */}
-        <div id="reviews-section">
-          <ProductReviews
-            productId={product._id}
-            productTitle={product.title}
-            onReviewSubmit={onReviewSubmit}
-          />
-        </div>
-
-        {/* Recommended Products Section */}
-        <RecommendedProducts productId={product._id} category={product.category} />
       </div>
 
+      {/* Recommended Products Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mt-16 pb-16">
+        <div className="pt-8 border-t border-slate-100 dark:border-slate-900/60 overflow-visible relative">
+          <RecommendedProducts productId={product._id} category={product.category} />
+        </div>
+      </div>
+ 
       {/* Contact Modal */}
       <ContactModal
         isOpen={isContactModalOpen}
