@@ -209,7 +209,9 @@ const ShippingPage = () => {
                         General Delivery Terms
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700">
-                        <li>Flowers may be delivered in <strong>fully bloomed, semi-bloomed, or bud stage</strong> depending on availability.</li>
+                        <li><strong>Delivery Method:</strong> All flowers are hand-delivered to ensure freshness and quality. We do not use couriers for perishable items.</li>
+                        <li><strong>Images on the Website:</strong> The images on the website give a general idea of how the flowers will look, but the actual product may slightly differ in shape and size. Rest assured, SBF strives to replicate the design closely.</li>
+                        <li><strong>Blooming Stage:</strong> Flowers may arrive fully bloomed, semi-bloomed, or in buds depending on availability and freshness.</li>
                         <li>Orders are hand-delivered by our in-house team or authorized delivery personnel.</li>
                         <li>Deliveries are available from <strong>Monday to Sunday</strong>, excluding national holidays or any unforeseen closures.</li>
                       </ul>
@@ -226,6 +228,7 @@ const ShippingPage = () => {
                         Delivery Timeframes
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700">
+                        <li><strong>Delivery Timing:</strong> While we strive to deliver within the selected time window, delivery times may vary based on your location and the specific flowers ordered. Please allow some flexibility.</li>
                         <li><strong>Standard delivery:</strong> Place orders by <strong>4:00 PM IST</strong> for next day delivery.</li>
                         <li><strong>Fixed time delivery:</strong> Subject to a delivery window of ±30 minutes from the chosen time.</li>
                         <li><strong>Midnight delivery:</strong> Currently not available.</li>
@@ -311,8 +314,9 @@ const ShippingPage = () => {
                         Redelivery and Refunds
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700">
-                        <li><strong>We attempt delivery only once</strong> for perishable items such as flowers.</li>
-                        <li>In case the delivery is not executed for reasons not attributable to Spring Blossoms Florist, <strong>no redelivery or refund</strong> will be made.</li>
+                        <li><strong>One Delivery Attempt:</strong> As flowers are perishable, only one delivery attempt will be made. Please ensure someone is available at the delivery address to receive the order. If re-delivery is required, additional charges will apply.</li>
+                        <li><strong>No Redirection of Address:</strong> Once an order has been dispatched, it cannot be redirected to a different address. Please double-check the delivery address during checkout.</li>
+                        <li>In case the delivery is not executed for reasons not attributable to the florist, no refund will be made, and redelivery requests will incur additional shipping fees.</li>
                       </ul>
                     </motion.div>
 

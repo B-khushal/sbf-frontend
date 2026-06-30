@@ -232,15 +232,16 @@ const TermsPage: React.FC = () => {
                         Delivery and Shipping
                       </h3>
                       <p className="text-gray-700 leading-relaxed mb-4">
-                        We offer scheduled deliveries within our operational regions. Delivery charges may apply depending on location, time, or urgency. While we strive to honor requested delivery times, delays may occur due to factors beyond our control such as traffic, weather, or public holidays.
+                        We offer hand-deliveries to ensure freshness and quality. We do not use couriers for perishable items. While we strive to deliver within the selected time window, delivery times may vary based on your location and the specific flowers ordered; please allow some flexibility.
                       </p>
-                      <p className="text-gray-700 leading-relaxed mb-4">
-                        In case the recipient is unavailable at the time of delivery:
+                      <p className="text-gray-700 leading-relaxed mb-4 font-bold">
+                        Important Delivery Conditions:
                       </p>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700">
-                        <li>The product may be left with a neighbor/security personnel (with prior approval)</li>
-                        <li>A second attempt may be scheduled (additional charges may apply)</li>
-                        <li>The order may be marked as delivered if all efforts are made</li>
+                        <li><strong>One Delivery Attempt:</strong> As flowers are perishable, only one delivery attempt will be made. Please ensure someone is available at the delivery address to receive the order. If re-delivery is required, additional charges will apply.</li>
+                        <li><strong>No Redirection of Address:</strong> Once an order has been dispatched, it cannot be redirected to a different address. Please double-check the delivery address during checkout.</li>
+                        <li><strong>Blooming Stage:</strong> Flowers may arrive fully bloomed, semi-bloomed, or in buds depending on availability and freshness.</li>
+                        <li><strong>Product Appearance:</strong> Images on the website give a general idea of how the flowers will look, but the actual product may slightly differ in shape, size, or wrapping. We strive to replicate the design as closely as possible.</li>
                       </ul>
                     </motion.div>
 

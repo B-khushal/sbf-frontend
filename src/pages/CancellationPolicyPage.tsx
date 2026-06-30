@@ -215,6 +215,7 @@ const CancellationPolicyPage: React.FC = () => {
                       <h3 className="text-xl font-bold text-gray-800 mb-4">Important Terms</h3>
                       <div className="space-y-2 text-gray-700 text-sm">
                         <p>• This policy is effective from order confirmation</p>
+                        <p>• Once an order has been dispatched, it cannot be cancelled or redirected to a different address</p>
                         <p>• Spring Blossoms Florist reserves the right to make final decisions on cancellation requests</p>
                         <p>• Any approved cancellations will follow our refund policy</p>
                         <p>• By placing an order, you agree to these cancellation terms</p>

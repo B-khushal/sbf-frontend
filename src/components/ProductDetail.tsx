@@ -1487,7 +1487,6 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                 </AccordionItem>
               )}
 
-              {/* 13. Delivery Information */}
               <AccordionItem value="delivery" className="border-none">
                 <AccordionTrigger className="w-full flex items-center justify-between py-3.5 px-4 font-bold text-sm text-slate-850 dark:text-slate-200 bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-slate-900/60 border border-slate-150/70 dark:border-slate-900 rounded-xl hover:no-underline transition-all">
                   <span className="flex items-center gap-2.5">
@@ -1495,17 +1494,55 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                     Delivery Information
                   </span>
                 </AccordionTrigger>
-                <AccordionContent className="p-4 bg-white dark:bg-slate-950 border border-t-0 border-slate-150/70 dark:border-slate-900 rounded-b-xl -mt-1 shadow-inner text-xs text-slate-650 dark:text-slate-400 space-y-3">
-                  <div className="flex items-start gap-2.5 py-1 text-slate-700 dark:text-slate-350">
-                    <span className="text-primary text-xs mt-0.5">🚚</span>
-                    <p className="text-[11px] leading-relaxed font-medium">
-                      All luxury floral arrangements are hand-delivered by our specialized logistics team in temperature-controlled boxes to preserve pristine freshness.
+                <AccordionContent className="p-4 bg-white dark:bg-slate-950 border border-t-0 border-slate-150/70 dark:border-slate-900 rounded-b-xl -mt-1 shadow-inner text-xs text-slate-650 dark:text-slate-400 space-y-4.5">
+                  <div className="bg-primary/5 dark:bg-primary/10 p-3.5 rounded-xl border border-primary/10 dark:border-primary/20">
+                    <p className="font-bold text-slate-800 dark:text-slate-250 text-xs mb-1">
+                      Important Notes When Using SBF Delivery Service:
                     </p>
                   </div>
-                  <div className="flex items-start gap-2.5 py-1 text-slate-700 dark:text-slate-350">
-                    <span className="text-primary text-xs mt-0.5">⏰</span>
-                    <p className="text-[11px] leading-relaxed font-medium">
-                      Choose from flexible delivery slots including Morning Delivery, Standard Same-Day, or Midnight Surprise.
+                  
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-2.5 text-slate-750 dark:text-slate-350">
+                      <span className="text-primary text-xs mt-0.5 flex-shrink-0">🚚</span>
+                      <p className="text-[11px] leading-relaxed font-medium">
+                        <strong className="text-slate-850 dark:text-slate-200 font-bold">Delivery Method:</strong> All flowers are hand-delivered to ensure freshness and quality. We do not use couriers for perishable items.
+                      </p>
+                    </div>
+                    <div className="flex items-start gap-2.5 text-slate-750 dark:text-slate-350">
+                      <span className="text-primary text-xs mt-0.5 flex-shrink-0">📸</span>
+                      <p className="text-[11px] leading-relaxed font-medium">
+                        <strong className="text-slate-850 dark:text-slate-200 font-bold">Images on the Website:</strong> The images on the website give a general idea of how the flowers will look, but the actual product may slightly differ in shape and size. Rest assured, SBF strives to replicate the design closely.
+                      </p>
+                    </div>
+                    <div className="flex items-start gap-2.5 text-slate-750 dark:text-slate-350">
+                      <span className="text-primary text-xs mt-0.5 flex-shrink-0">⏰</span>
+                      <p className="text-[11px] leading-relaxed font-medium">
+                        <strong className="text-slate-850 dark:text-slate-200 font-bold">Delivery Timing:</strong> While we strive to deliver within the selected time window, delivery times may vary based on your location and the specific flowers ordered. Please allow some flexibility.
+                      </p>
+                    </div>
+                    <div className="flex items-start gap-2.5 text-slate-750 dark:text-slate-350">
+                      <span className="text-primary text-xs mt-0.5 flex-shrink-0">📍</span>
+                      <p className="text-[11px] leading-relaxed font-medium">
+                        <strong className="text-slate-850 dark:text-slate-200 font-bold">One Delivery Attempt:</strong> As flowers are perishable, only one delivery attempt will be made. Please ensure someone is available at the delivery address to receive the order. If re-delivery is required, additional charges will apply.
+                      </p>
+                    </div>
+                    <div className="flex items-start gap-2.5 text-slate-750 dark:text-slate-350">
+                      <span className="text-primary text-xs mt-0.5 flex-shrink-0">🚫</span>
+                      <p className="text-[11px] leading-relaxed font-medium">
+                        <strong className="text-slate-850 dark:text-slate-200 font-bold">No Redirection of Address:</strong> Once an order has been dispatched, it cannot be redirected to a different address. Please double-check the delivery address during checkout.
+                      </p>
+                    </div>
+                    <div className="flex items-start gap-2.5 text-slate-750 dark:text-slate-350">
+                      <span className="text-primary text-xs mt-0.5 flex-shrink-0">🌿</span>
+                      <p className="text-[11px] leading-relaxed font-medium">
+                        <strong className="text-slate-850 dark:text-slate-200 font-bold">Blooming Stage:</strong> Flowers may arrive fully bloomed, semi-bloomed, or in buds depending on availability and freshness.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="bg-emerald-50/50 dark:bg-emerald-950/10 p-3 rounded-xl border border-emerald-100/70 dark:border-emerald-950/40 mt-1">
+                    <p className="text-emerald-800 dark:text-emerald-400 text-[11px] leading-relaxed font-semibold">
+                      By following these care and delivery guidelines, you can enjoy your flowers at their best for as long as possible!
                     </p>
                   </div>
                 </AccordionContent>

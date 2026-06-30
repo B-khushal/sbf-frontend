@@ -181,23 +181,23 @@ const RefundPolicyPage: React.FC = () => {
                       <div className="space-y-3">
                         <div className="flex items-start gap-3">
                           <ArrowRight className="w-4 h-4 text-red-500 mt-1 flex-shrink-0" />
-                          <p className="text-gray-700"><strong>Successfully Delivered Orders:</strong> Orders delivered correctly as per specifications</p>
+                          <p className="text-gray-700"><strong>Successfully Delivered Orders:</strong> Orders delivered correctly as per specifications.</p>
                         </div>
                         <div className="flex items-start gap-3">
                           <ArrowRight className="w-4 h-4 text-red-500 mt-1 flex-shrink-0" />
-                          <p className="text-gray-700"><strong>Customer Address Issues:</strong> Delivery failures due to incorrect/incomplete address provided by customer</p>
+                          <p className="text-gray-700"><strong>Customer Address Issues:</strong> Delivery failures due to incorrect or incomplete addresses. Once dispatched, an order cannot be redirected to a different address.</p>
                         </div>
                         <div className="flex items-start gap-3">
                           <ArrowRight className="w-4 h-4 text-red-500 mt-1 flex-shrink-0" />
-                          <p className="text-gray-700"><strong>Recipient Unavailability:</strong> Unable to deliver due to recipient not being available after multiple attempts</p>
+                          <p className="text-gray-700"><strong>Recipient Unavailability:</strong> As flowers are perishable, only one delivery attempt will be made. Additional charges apply for re-delivery; no refunds are processed for failed deliveries due to unavailability.</p>
                         </div>
                         <div className="flex items-start gap-3">
                           <ArrowRight className="w-4 h-4 text-red-500 mt-1 flex-shrink-0" />
-                          <p className="text-gray-700"><strong>Natural Variation:</strong> Minor variations in flower appearance due to natural characteristics</p>
+                          <p className="text-gray-700"><strong>Natural Variation & Blooming Stage:</strong> Minor variations in flower appearance, shape, size, or blooming stage (fully bloomed, semi-bloomed, or in buds depending on freshness and availability) compared to website images.</p>
                         </div>
                         <div className="flex items-start gap-3">
                           <ArrowRight className="w-4 h-4 text-red-500 mt-1 flex-shrink-0" />
-                          <p className="text-gray-700"><strong>Change of Mind:</strong> Customer deciding they no longer want the order after it has been prepared</p>
+                          <p className="text-gray-700"><strong>Change of Mind:</strong> Customer deciding they no longer want the order after it has been prepared.</p>
                         </div>
                       </div>
                     </motion.div>
