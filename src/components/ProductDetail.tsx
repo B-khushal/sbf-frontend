@@ -1068,7 +1068,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
             </div>
 
             {/* 5. Offer Details (Luxury Coupon Info) */}
-            <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-50/50 via-pink-50/30 to-slate-50/10 dark:from-slate-900/40 dark:via-pink-950/5 dark:to-slate-900/20 border border-slate-200/50 dark:border-slate-800/80 space-y-2.5 shadow-sm">
+            {/*<div className="p-4 rounded-2xl bg-gradient-to-r from-amber-50/50 via-pink-50/30 to-slate-50/10 dark:from-slate-900/40 dark:via-pink-950/5 dark:to-slate-900/20 border border-slate-200/50 dark:border-slate-800/80 space-y-2.5 shadow-sm">
               <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-bold text-xs">
                 <Tag size={14} />
                 <span>Exclusive Store Offers</span>
@@ -1078,7 +1078,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                 <li>Free temperature-controlled premium gift wrapping box included.</li>
                 <li>Same-day urgent dispatch available across Hyderabad city bounds.</li>
               </ul>
-            </div>
+            </div> */}
 
             {/* 6. Delivery Availability (Pincode checker) */}
             <div className="py-2 border-b border-slate-100 dark:border-slate-900/60">
