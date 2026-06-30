@@ -257,7 +257,7 @@ const ValentineProductDetailsPage: React.FC = () => {
           <div className="space-y-4">
             <motion.div
               layoutId={`product-img-${product._id}`}
-              className="aspect-square rounded-3xl overflow-hidden border border-rose-950 bg-rose-950/20 shadow-2xl relative"
+              className="aspect-[9/16] md:max-h-[750px] md:max-w-[422px] mx-auto rounded-3xl overflow-hidden border border-rose-950 bg-rose-950/20 shadow-2xl relative"
             >
               <ProtectedImage
                 src={activeImage || '/images/placeholder.jpg'}
@@ -276,7 +276,7 @@ const ValentineProductDetailsPage: React.FC = () => {
                   <button
                     key={idx}
                     onClick={() => setActiveImage(img)}
-                    className={`w-20 h-20 rounded-2xl overflow-hidden border-2 transition-all flex-shrink-0 ${
+                    className={`h-20 aspect-[9/16] rounded-2xl overflow-hidden border-2 transition-all flex-shrink-0 ${
                       activeImage === img ? 'border-rose-500 scale-95 shadow-md shadow-rose-950/50' : 'border-rose-950 hover:border-rose-800'
                     }`}
                   >

@@ -115,7 +115,7 @@ const RecommendedProducts: React.FC<{ productId: string; category: string }> = (
   // Cinematic slow panning auto-scroll effect (pauses on hover)
   useEffect(() => {
     if (!isAutoScrolling || loading || !recommendedProducts.length) return;
-    
+
     const container = scrollRef.current;
     if (!container) return;
 
@@ -177,7 +177,7 @@ const RecommendedProducts: React.FC<{ productId: string; category: string }> = (
 
   return (
     <div className="mt-24 pt-12 border-t border-slate-100 dark:border-slate-900/60 relative">
-      
+
       {/* Header Branding */}
       <span className="text-[10px] uppercase font-extrabold tracking-[0.25em] text-slate-400 dark:text-slate-500 block text-center mb-2">Curated Arrangements</span>
       <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-center text-slate-900 dark:text-slate-100 mb-10">
@@ -294,7 +294,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
   const handleTogglePincode = () => {
     const nextState = !isPincodeExpanded;
     setIsPincodeExpanded(nextState);
-    
+
     if (nextState) {
       // Smooth scroll to the top of the product info section
       setTimeout(() => {
@@ -326,7 +326,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
       const handleResize = () => {
         const mobileCheck = window.innerWidth < 1024;
         setIsMobile(mobileCheck);
-        
+
         // Expand accordions by default on desktop
         if (!mobileCheck) {
           setDefaultExpanded(["details", "description", "combo", "care", "delivery", "faqs"]);
@@ -334,7 +334,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
           setDefaultExpanded(["details"]);
         }
       };
-      
+
       handleResize();
       window.addEventListener('resize', handleResize);
       return () => window.removeEventListener('resize', handleResize);
@@ -418,9 +418,9 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
       // Small delay to ensure the page is fully loaded
       setTimeout(() => {
         setIsCustomizerExpanded(true);
-        document.getElementById('customize-section')?.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'start' 
+        document.getElementById('customize-section')?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
         });
       }, 500);
     }
@@ -507,9 +507,9 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
 
     setIsCustomizerExpanded(true);
     setTimeout(() => {
-      document.getElementById('customize-section')?.scrollIntoView({ 
-        behavior: 'smooth', 
-        block: 'start' 
+      document.getElementById('customize-section')?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
       });
     }, 100);
   };
@@ -762,219 +762,219 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
 
   return (
     <section className="pt-12 sm:pt-16 pb-24 px-4 sm:px-6 md:px-8 bg-gradient-to-b from-slate-50/50 via-white to-slate-50/50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 relative overflow-visible lg:overflow-visible">
-      
+
       {/* Decorative ambient background lighting */}
       <div className="absolute top-20 left-1/4 w-[500px] h-[500px] bg-gradient-to-tr from-bloom-pink-100/20 via-bloom-blue-100/10 to-transparent rounded-full blur-[100px] pointer-events-none -z-10" />
       <div className="absolute bottom-10 right-1/4 w-[600px] h-[600px] bg-gradient-to-br from-bloom-green-100/15 via-bloom-blue-100/10 to-transparent rounded-full blur-[120px] pointer-events-none -z-10" />
- 
+
       <div className="max-w-[1440px] mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-[560px_minmax(0,1fr)] lg:gap-[72px] gap-8 items-start relative">
-          
+
           {/* LEFT SIDE: Immersive Sticky Product Gallery */}
           <div className="lg:sticky lg:top-[120px] lg:self-start w-full relative">
             <div className="flex flex-col md:flex-row gap-6 lg:w-full">
-            
-            {/* 1. Vertical Thumbnail Strip (Desktop) */}
-            {product.images.length > 1 && (
-              <div className="hidden md:flex md:flex-col gap-3 w-20 max-h-[520px] overflow-y-auto no-scrollbar pr-1 py-1 flex-shrink-0">
-                {product.images.map((image, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setSelectedImage(index)}
+
+              {/* 1. Vertical Thumbnail Strip (Desktop) */}
+              {product.images.length > 1 && (
+                <div className="hidden md:flex md:flex-col gap-3 w-20 max-h-[520px] overflow-y-auto no-scrollbar pr-1 py-1 flex-shrink-0">
+                  {product.images.map((image, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setSelectedImage(index)}
+                      className={cn(
+                        "aspect-[4/5] w-full relative overflow-hidden rounded-xl bg-white dark:bg-slate-950 border transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm",
+                        selectedImage === index
+                          ? "border-slate-800 dark:border-slate-100 shadow-[0_0_15px_rgba(0,0,0,0.06)] ring-2 ring-slate-800/10 dark:ring-slate-100/20 scale-102"
+                          : "border-slate-200/60 opacity-60 hover:opacity-100"
+                      )}
+                    >
+                      <ProtectedImage
+                        src={getImageUrl(image, { bustCache: false })}
+                        alt={`${product.title} thumbnail ${index + 1}`}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* 2. Main Large Cinematic Image (with Parallax & Magnifier Lens) */}
+              <div className="relative flex-1">
+                <div className="relative w-full">
+                  <div
+                    ref={containerRef}
                     className={cn(
-                      "aspect-[3/4] w-full relative overflow-hidden rounded-xl bg-white dark:bg-slate-950 border transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm",
-                      selectedImage === index
-                        ? "border-slate-800 dark:border-slate-100 shadow-[0_0_15px_rgba(0,0,0,0.06)] ring-2 ring-slate-800/10 dark:ring-slate-100/20 scale-102"
-                        : "border-slate-200/60 opacity-60 hover:opacity-100"
+                      "relative w-full group rounded-[28px] bg-slate-100/30 dark:bg-slate-900/20 border border-slate-200/40 dark:border-slate-800/60 shadow-[0_20px_50px_rgba(0,0,0,0.04)] overflow-hidden aspect-[4/5] lg:max-w-[calc((100vh-160px)*4/5)] lg:max-h-[calc(100vh-160px)] mx-auto flex items-center justify-center p-0 backdrop-blur-sm",
+                    ""
                     )}
                   >
-                    <ProtectedImage
-                      src={getImageUrl(image, { bustCache: false })}
-                      alt={`${product.title} thumbnail ${index + 1}`}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
-                  </button>
-                ))}
-              </div>
-            )}
+                    {/* Soft ambient background glow inside container for premium look */}
+                    <div className="absolute inset-0 bg-gradient-to-tr from-bloom-pink-100/5 via-bloom-blue-100/5 to-transparent blur-xl pointer-events-none" />
 
-            {/* 2. Main Large Cinematic Image (with Parallax & Magnifier Lens) */}
-            <div className="relative flex-1">
-              <div className="relative w-full">
-                <div 
-                ref={containerRef}
-                className={cn(
-                  "relative w-full group rounded-[28px] bg-slate-100/30 dark:bg-slate-900/20 border border-slate-200/40 dark:border-slate-800/60 shadow-[0_20px_50px_rgba(0,0,0,0.04)] overflow-hidden aspect-[4/5] lg:max-h-[calc(100vh-160px)] flex items-center justify-center p-0 backdrop-blur-sm",
-                  ""
-                )}
-              >
-              {/* Soft ambient background glow inside container for premium look */}
-              <div className="absolute inset-0 bg-gradient-to-tr from-bloom-pink-100/5 via-bloom-blue-100/5 to-transparent blur-xl pointer-events-none" />
-              
-              <div 
-                className="relative w-full h-full cursor-zoom-in flex items-center justify-center"
-                onMouseMove={handleMouseMove}
-                onMouseEnter={() => {
-                  setIsHovered(true);
-                  setShowLens(true);
-                }}
-                onMouseLeave={() => {
-                  setIsHovered(false);
-                  setShowLens(false);
-                  setMousePos({ x: 0, y: 0 });
-                }}
-                onClick={() => setIsLightboxOpen(true)}
-              >
-                {/* Image Loading Skeleton */}
-                {isImageLoading && (
-                  <div className="absolute inset-0 bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 dark:from-slate-800 dark:via-slate-700 dark:to-slate-800 animate-pulse flex items-center justify-center">
-                    <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                  </div>
-                )}
-
-                {/* Animated Image Frame */}
-                <motion.div
-                  key={selectedImage}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.35 }}
-                  className="w-full h-full flex items-center justify-center"
-                >
-                  <MotionProtectedImage
-                    src={imageUrl}
-                    alt={product.title}
-                    onLoad={() => setIsImageLoading(false)}
-                    className="w-full h-full object-cover rounded-[28px] transition-transform duration-700 ease-out"
-                    style={{
-                      transform: isHovered && !isMobile
-                        ? `scale(1.08) translate(${mousePos.x * 12}px, ${mousePos.y * 12}px)` 
-                        : 'scale(1) translate(0px, 0px)',
-                      transition: isHovered ? 'transform 0.05s ease-out' : 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)'
-                    }}
-                  />
-                  
-                  {/* Swipe Area for Mobile */}
-                  <motion.div
-                    drag="x"
-                    dragConstraints={{ left: 0, right: 0 }}
-                    onDragEnd={(e, { offset, velocity }) => {
-                      const swipeThreshold = 50;
-                      if (offset.x < -swipeThreshold) {
-                        nextImage();
-                      } else if (offset.x > swipeThreshold) {
-                        prevImage();
-                      }
-                    }}
-                    className="absolute inset-0 cursor-grab active:cursor-grabbing md:hidden"
-                  />
-                </motion.div>
-
-                {/* Magnifying Lens (Desktop Only) */}
-                {showLens && !isMobile && containerRef.current && (
-                  <div 
-                    className="absolute pointer-events-none border border-white/30 shadow-[0_25px_60px_rgba(0,0,0,0.35)] rounded-full overflow-hidden hidden lg:block"
-                    style={{
-                      width: '180px',
-                      height: '180px',
-                      left: `${zoomPos.x - 90}px`,
-                      top: `${zoomPos.y - 90}px`,
-                      backgroundImage: `url(${imageUrl})`,
-                      backgroundPosition: `${(zoomPos.x / containerRef.current.getBoundingClientRect().width) * 100}% ${(zoomPos.y / containerRef.current.getBoundingClientRect().height) * 100}%`,
-                      backgroundSize: '250%',
-                      backgroundRepeat: 'no-repeat',
-                      zIndex: 30,
-                    }}
-                  />
-                )}
-
-                {/* Badges for New / Featured */}
-                <div className="absolute top-4 left-4 flex flex-col gap-2 z-10 pointer-events-none">
-                  {(product.isNewArrival || (product as { isNew?: boolean }).isNew) && (
-                    <span className="bg-slate-900/90 dark:bg-white/90 text-white dark:text-slate-900 text-[9px] font-bold tracking-[0.15em] uppercase px-2.5 py-1 rounded shadow-sm">
-                      New Arrival
-                    </span>
-                  )}
-                  {product.isFeatured && (
-                    <span className="bg-amber-500/90 text-white text-[9px] font-bold tracking-[0.15em] uppercase px-2.5 py-1 rounded shadow-sm">
-                      Featured
-                    </span>
-                  )}
-                </div>
-
-                {product.discount > 0 && (
-                  <span className="absolute bottom-4 right-4 bg-rose-600/90 text-white text-[9px] font-bold tracking-[0.15em] uppercase px-2.5 py-1 rounded shadow-sm z-10">
-                    -{product.discount}% Off
-                  </span>
-                )}
-
-                {/* Hover UI Overlay hints */}
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 dark:group-hover:bg-black/10 transition-colors pointer-events-none duration-300" />
-                <div className="absolute bottom-4 left-4 text-xs font-semibold bg-white/70 backdrop-blur-md text-slate-800 dark:bg-slate-950/70 dark:text-slate-200 px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-sm pointer-events-none">
-                  🔍 Hover to inspect • Click to expand
-                </div>
-
-                {/* Left/Right Controls (Mobile and desktop fallback) */}
-                {product.images.length > 1 && (
-                  <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 flex justify-between pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        prevImage();
+                    <div
+                      className="relative w-full h-full cursor-zoom-in flex items-center justify-center"
+                      onMouseMove={handleMouseMove}
+                      onMouseEnter={() => {
+                        setIsHovered(true);
+                        setShowLens(true);
                       }}
-                      className="w-10 h-10 rounded-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md flex items-center justify-center text-slate-800 dark:text-slate-250 shadow-sm pointer-events-auto hover:bg-white dark:hover:bg-slate-900 hover:scale-105 active:scale-95 transition-all"
-                    >
-                      <ChevronLeft size={20} />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        nextImage();
+                      onMouseLeave={() => {
+                        setIsHovered(false);
+                        setShowLens(false);
+                        setMousePos({ x: 0, y: 0 });
                       }}
-                      className="w-10 h-10 rounded-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md flex items-center justify-center text-slate-800 dark:text-slate-250 shadow-sm pointer-events-auto hover:bg-white dark:hover:bg-slate-900 hover:scale-105 active:scale-95 transition-all"
+                      onClick={() => setIsLightboxOpen(true)}
                     >
-                      <ChevronRight size={20} />
-                    </button>
+                      {/* Image Loading Skeleton */}
+                      {isImageLoading && (
+                        <div className="absolute inset-0 bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 dark:from-slate-800 dark:via-slate-700 dark:to-slate-800 animate-pulse flex items-center justify-center">
+                          <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                      )}
+
+                      {/* Animated Image Frame */}
+                      <motion.div
+                        key={selectedImage}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.35 }}
+                        className="w-full h-full flex items-center justify-center"
+                      >
+                        <MotionProtectedImage
+                          src={imageUrl}
+                          alt={product.title}
+                          onLoad={() => setIsImageLoading(false)}
+                          className="w-full h-full object-cover rounded-[28px] transition-transform duration-700 ease-out"
+                          style={{
+                            transform: isHovered && !isMobile
+                              ? `scale(1.08) translate(${mousePos.x * 12}px, ${mousePos.y * 12}px)`
+                              : 'scale(1) translate(0px, 0px)',
+                            transition: isHovered ? 'transform 0.05s ease-out' : 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)'
+                          }}
+                        />
+
+                        {/* Swipe Area for Mobile */}
+                        <motion.div
+                          drag="x"
+                          dragConstraints={{ left: 0, right: 0 }}
+                          onDragEnd={(e, { offset, velocity }) => {
+                            const swipeThreshold = 50;
+                            if (offset.x < -swipeThreshold) {
+                              nextImage();
+                            } else if (offset.x > swipeThreshold) {
+                              prevImage();
+                            }
+                          }}
+                          className="absolute inset-0 cursor-grab active:cursor-grabbing md:hidden"
+                        />
+                      </motion.div>
+
+                      {/* Magnifying Lens (Desktop Only) */}
+                      {showLens && !isMobile && containerRef.current && (
+                        <div
+                          className="absolute pointer-events-none border border-white/30 shadow-[0_25px_60px_rgba(0,0,0,0.35)] rounded-full overflow-hidden hidden lg:block"
+                          style={{
+                            width: '180px',
+                            height: '180px',
+                            left: `${zoomPos.x - 90}px`,
+                            top: `${zoomPos.y - 90}px`,
+                            backgroundImage: `url(${imageUrl})`,
+                            backgroundPosition: `${(zoomPos.x / containerRef.current.getBoundingClientRect().width) * 100}% ${(zoomPos.y / containerRef.current.getBoundingClientRect().height) * 100}%`,
+                            backgroundSize: '250%',
+                            backgroundRepeat: 'no-repeat',
+                            zIndex: 30,
+                          }}
+                        />
+                      )}
+
+                      {/* Badges for New / Featured */}
+                      <div className="absolute top-4 left-4 flex flex-col gap-2 z-10 pointer-events-none">
+                        {(product.isNewArrival || (product as { isNew?: boolean }).isNew) && (
+                          <span className="bg-slate-900/90 dark:bg-white/90 text-white dark:text-slate-900 text-[9px] font-bold tracking-[0.15em] uppercase px-2.5 py-1 rounded shadow-sm">
+                            New Arrival
+                          </span>
+                        )}
+                        {product.isFeatured && (
+                          <span className="bg-amber-500/90 text-white text-[9px] font-bold tracking-[0.15em] uppercase px-2.5 py-1 rounded shadow-sm">
+                            Featured
+                          </span>
+                        )}
+                      </div>
+
+                      {product.discount > 0 && (
+                        <span className="absolute bottom-4 right-4 bg-rose-600/90 text-white text-[9px] font-bold tracking-[0.15em] uppercase px-2.5 py-1 rounded shadow-sm z-10">
+                          -{product.discount}% Off
+                        </span>
+                      )}
+
+                      {/* Hover UI Overlay hints */}
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 dark:group-hover:bg-black/10 transition-colors pointer-events-none duration-300" />
+                      <div className="absolute bottom-4 left-4 text-xs font-semibold bg-white/70 backdrop-blur-md text-slate-800 dark:bg-slate-950/70 dark:text-slate-200 px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-sm pointer-events-none">
+                        🔍 Hover to inspect • Click to expand
+                      </div>
+
+                      {/* Left/Right Controls (Mobile and desktop fallback) */}
+                      {product.images.length > 1 && (
+                        <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 flex justify-between pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              prevImage();
+                            }}
+                            className="w-10 h-10 rounded-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md flex items-center justify-center text-slate-800 dark:text-slate-250 shadow-sm pointer-events-auto hover:bg-white dark:hover:bg-slate-900 hover:scale-105 active:scale-95 transition-all"
+                          >
+                            <ChevronLeft size={20} />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              nextImage();
+                            }}
+                            className="w-10 h-10 rounded-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md flex items-center justify-center text-slate-800 dark:text-slate-250 shadow-sm pointer-events-auto hover:bg-white dark:hover:bg-slate-900 hover:scale-105 active:scale-95 transition-all"
+                          >
+                            <ChevronRight size={20} />
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                )}
+                </div>
               </div>
+
+              {/* 3. Horizontal Thumbnail Strip (Mobile, below image) */}
+              {product.images.length > 1 && (
+                <div className="flex md:hidden gap-2 overflow-x-auto no-scrollbar py-2 col-span-1 justify-center px-1">
+                  {product.images.map((image, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setSelectedImage(index)}
+                      className={cn(
+                        "h-16 aspect-[4/5] relative overflow-hidden rounded-lg bg-white border flex-shrink-0 transition-all duration-300",
+                        selectedImage === index
+                          ? "border-slate-800 ring-2 ring-slate-800/10 scale-102"
+                          : "border-slate-200/80 opacity-60"
+                      )}
+                    >
+                      <ProtectedImage
+                        src={getImageUrl(image, { bustCache: false })}
+                        alt={`${product.title} visual ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
-        </div>
 
-            {/* 3. Horizontal Thumbnail Strip (Mobile, below image) */}
-            {product.images.length > 1 && (
-              <div className="flex md:hidden gap-2 overflow-x-auto no-scrollbar py-2 col-span-1 justify-center px-1">
-                {product.images.map((image, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setSelectedImage(index)}
-                    className={cn(
-                      "w-12 h-15 relative overflow-hidden rounded-lg bg-white border flex-shrink-0 transition-all duration-300",
-                      selectedImage === index
-                        ? "border-slate-800 ring-2 ring-slate-800/10 scale-102"
-                        : "border-slate-200/80 opacity-60"
-                    )}
-                  >
-                    <ProtectedImage
-                      src={getImageUrl(image, { bustCache: false })}
-                      alt={`${product.title} visual ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </button>
-                ))}
-              </div>
-            )}
-            </div>
-          </div>
- 
           {/* RIGHT SIDE: Scrollable luxury product content panel */}
           <div className="min-w-0 flex flex-col space-y-6 lg:pb-12">
-            
+
             {/* 1. Product Name */}
             <div>
-              <h1 
+              <h1
                 className="font-extrabold tracking-tight text-slate-900 dark:text-slate-100 font-serif"
                 style={!isMobile ? { fontSize: 'clamp(2.5rem, 3vw, 3.5rem)', lineHeight: '1.05', maxWidth: '100%', wordBreak: 'normal' } : undefined}
               >
@@ -1021,7 +1021,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                 </>
               )}
               <span className="h-3 w-px bg-slate-200 dark:bg-slate-800" />
-              <button 
+              <button
                 onClick={() => navigate(buildProductReviewUrl(product._id, product.title))}
                 className="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-semibold underline underline-offset-2"
               >
@@ -1038,7 +1038,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                   </span>
                 ) : (
                   <>
-                    <motion.span 
+                    <motion.span
                       key={displayDiscountedPrice}
                       initial={{ opacity: 0, y: -4 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -1054,7 +1054,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                   </>
                 )}
               </div>
-              
+
               {/* Availability Indicator */}
               <div className="mt-2.5 flex items-center gap-2">
                 <span className="relative flex h-2 w-2">
@@ -1115,7 +1115,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                       <p className="text-[11px] text-slate-500 dark:text-slate-400">
                         Enter a Hyderabad pincode to see if this luxury arrangement can be dispatched to your location.
                       </p>
-                      
+
                       <div className="relative">
                         <PinCodeInput
                           value={pincodeCheckVal}
@@ -1153,8 +1153,8 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                       {pincodeMessage && (
                         <div className={cn(
                           "text-xs px-3 py-2 rounded-xl flex items-start gap-1.5 leading-relaxed font-medium animate-fade-in",
-                          isPincodeValid 
-                            ? "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border border-emerald-100/30" 
+                          isPincodeValid
+                            ? "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border border-emerald-100/30"
                             : "bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400 border border-red-100/30"
                         )}>
                           <span className="text-[14px] leading-none">{isPincodeValid ? '✓' : '⚠'}</span>
@@ -1180,8 +1180,8 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                     <p className="text-[10px] text-slate-400 dark:text-slate-500">Include message card, dry fruits, or chocolates.</p>
                   </div>
                 </div>
-                <Button 
-                  type="button" 
+                <Button
+                  type="button"
                   onClick={handleCustomize}
                   variant="outline"
                   size="sm"
@@ -1236,7 +1236,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                   Add to Cart
                 </Button>
               )}
-              
+
               <button
                 type="button"
                 onClick={handleAddToWishlist}
@@ -1245,7 +1245,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
               >
                 <Heart size={18} className={cn("transition-colors", wishlistItems?.some(i => i.id === String(product._id)) ? "fill-rose-500 text-rose-500" : "")} />
               </button>
-              
+
               <button
                 type="button"
                 onClick={handleShare}
@@ -1375,13 +1375,13 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
             </div>
 
             {/* Overhauled Product Details Accordion Section */}
-            <Accordion 
-              type="multiple" 
-              className="w-full space-y-3 pt-4 border-t border-slate-100 dark:border-slate-900/60" 
+            <Accordion
+              type="multiple"
+              className="w-full space-y-3 pt-4 border-t border-slate-100 dark:border-slate-900/60"
               value={defaultExpanded}
               onValueChange={setDefaultExpanded}
             >
-              
+
               {/* 11. Product Contents (Details) */}
               <AccordionItem value="details" className="border-none">
                 <AccordionTrigger className="w-full flex items-center justify-between py-3 px-4 font-bold text-sm text-slate-850 dark:text-slate-200 bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-slate-900/60 border border-slate-150/70 dark:border-slate-900 rounded-xl hover:no-underline transition-all">
@@ -1500,7 +1500,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                       Important Notes When Using SBF Delivery Service:
                     </p>
                   </div>
-                  
+
                   <div className="space-y-3">
                     <div className="flex items-start gap-2.5 text-slate-750 dark:text-slate-350">
                       <span className="text-primary text-xs mt-0.5 flex-shrink-0">🚚</span>
@@ -1649,7 +1649,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
           <RecommendedProducts productId={product._id} category={product.category} />
         </div>
       </div>
- 
+
       {/* Contact Modal */}
       <ContactModal
         isOpen={isContactModalOpen}
@@ -1733,7 +1733,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
               }}
             >
               {/* Lightbox header */}
-              <div 
+              <div
                 className="flex justify-center items-center text-white/80"
                 onClick={(e) => e.stopPropagation()}
               >
@@ -1754,7 +1754,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                   <ChevronLeft size={24} />
                 </button>
 
-                <div 
+                <div
                   className="relative max-w-fit mx-auto"
                   onClick={(e) => e.stopPropagation()}
                 >
@@ -1768,7 +1768,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                     alt={product.title}
                     className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-2xl"
                   />
-                  
+
                   <button
                     onClick={() => setIsLightboxOpen(false)}
                     className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-black/85 hover:bg-black text-white flex items-center justify-center border border-white/40 shadow-xl hover:scale-110 active:scale-95 transition-all z-20"
@@ -1790,7 +1790,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
 
               {/* Lightbox Thumbnails Strip */}
               {product.images.length > 1 && (
-                <div 
+                <div
                   className="flex gap-2.5 justify-center py-4 overflow-x-auto no-scrollbar"
                   onClick={(e) => e.stopPropagation()}
                 >
