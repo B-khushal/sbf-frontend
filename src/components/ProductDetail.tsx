@@ -176,7 +176,7 @@ const RecommendedProducts: React.FC<{ productId: string; category: string }> = (
   }
 
   return (
-    <div className="mt-24 pt-12 border-t border-slate-100 dark:border-slate-900/60 relative">
+    <div className="mt-24 pt-12 border-t border-slate-200/40 dark:border-slate-800/40 relative">
 
       {/* Header Branding */}
       <span className="text-[10px] uppercase font-extrabold tracking-[0.25em] text-slate-400 dark:text-slate-500 block text-center mb-2">Curated Arrangements</span>
@@ -761,11 +761,19 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
   };
 
   return (
-    <section className="pt-12 sm:pt-16 pb-24 px-4 sm:px-6 md:px-8 bg-gradient-to-b from-slate-50/50 via-white to-slate-50/50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 relative overflow-visible lg:overflow-visible">
+    <section className="pt-12 sm:pt-16 pb-24 px-4 sm:px-6 md:px-8 bg-gradient-to-b from-[#FAF9F6] via-[#F5EFE6]/30 to-[#FAF8F5] dark:from-[#141517] dark:via-[#1B1C1F] dark:to-[#141517] relative overflow-visible lg:overflow-visible">
 
-      {/* Decorative ambient background lighting */}
-      <div className="absolute top-20 left-1/4 w-[500px] h-[500px] bg-gradient-to-tr from-bloom-pink-100/20 via-bloom-blue-100/10 to-transparent rounded-full blur-[100px] pointer-events-none -z-10" />
-      <div className="absolute bottom-10 right-1/4 w-[600px] h-[600px] bg-gradient-to-br from-bloom-green-100/15 via-bloom-blue-100/10 to-transparent rounded-full blur-[120px] pointer-events-none -z-10" />
+      {/* Elegant low-opacity radial ambient glow behind main sections */}
+      <div className="absolute inset-0 pointer-events-none -z-10 overflow-hidden">
+        {/* Soft pink top-right glow */}
+        <div className="absolute -top-40 right-[10%] w-[600px] h-[600px] rounded-full bg-[radial-gradient(circle_at_center,rgba(236,72,153,0.035)_0%,transparent_70%)] blur-[80px]" />
+        {/* Soft champagne/warm center glow */}
+        <div className="absolute top-[20%] left-[5%] w-[800px] h-[800px] rounded-full bg-[radial-gradient(circle_at_center,rgba(245,239,230,0.3)_0%,transparent_70%)] dark:bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.012)_0%,transparent_70%)] blur-[100px]" />
+        {/* Soft blue-green middle-left glow */}
+        <div className="absolute top-[45%] -left-[10%] w-[700px] h-[700px] rounded-full bg-[radial-gradient(circle_at_center,rgba(14,165,233,0.02)_0%,rgba(34,197,94,0.015)_50%,transparent_70%)] blur-[90px]" />
+        {/* Soft pink/rose bottom-right glow */}
+        <div className="absolute bottom-[10%] right-[-10%] w-[800px] h-[800px] rounded-full bg-[radial-gradient(circle_at_center,rgba(236,72,153,0.025)_0%,transparent_70%)] blur-[100px]" />
+      </div>
 
       <div className="max-w-[1440px] mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-[560px_minmax(0,1fr)] lg:gap-[72px] gap-8 items-start relative">
@@ -805,12 +813,12 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                   <div
                     ref={containerRef}
                     className={cn(
-                      "relative w-full group rounded-[28px] bg-slate-100/30 dark:bg-slate-900/20 border border-slate-200/40 dark:border-slate-800/60 shadow-[0_20px_50px_rgba(0,0,0,0.04)] overflow-hidden aspect-[4/5] lg:max-w-[calc((100vh-160px)*4/5)] lg:max-h-[calc(100vh-160px)] mx-auto flex items-center justify-center p-0 backdrop-blur-sm",
+                      "relative w-full group rounded-[28px] bg-white/40 dark:bg-white/[0.02] border border-slate-200/30 dark:border-slate-800/40 shadow-[0_24px_60px_rgba(0,0,0,0.03)] overflow-hidden aspect-[4/5] lg:max-w-[calc((100vh-160px)*4/5)] lg:max-h-[calc(100vh-160px)] mx-auto flex items-center justify-center p-0 backdrop-blur-md",
                     ""
                     )}
                   >
                     {/* Soft ambient background glow inside container for premium look */}
-                    <div className="absolute inset-0 bg-gradient-to-tr from-bloom-pink-100/5 via-bloom-blue-100/5 to-transparent blur-xl pointer-events-none" />
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(236,72,153,0.04)_0%,rgba(14,165,233,0.03)_50%,transparent_100%)] pointer-events-none" />
 
                     <div
                       className="relative w-full h-full cursor-zoom-in flex items-center justify-center"
@@ -1030,7 +1038,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
             </div>
 
             {/* 4. Price Section */}
-            <div className="py-4 border-y border-slate-100 dark:border-slate-900/60">
+            <div className="py-4 border-y border-slate-200/40 dark:border-slate-800/40">
               <div className="flex items-baseline gap-3">
                 {product.category === 'combos' && product.comboItems && product.comboItems.length > 0 ? (
                   <span className="text-3xl lg:text-[3rem] font-bold text-slate-900 dark:text-slate-100 tracking-tight">
@@ -1081,7 +1089,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
             </div> */}
 
             {/* 6. Delivery Availability (Pincode checker) */}
-            <div className="py-2 border-b border-slate-100 dark:border-slate-900/60">
+            <div className="py-2 border-b border-slate-200/40 dark:border-slate-800/40">
               <button
                 type="button"
                 onClick={handleTogglePincode}
@@ -1111,7 +1119,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                     transition={{ duration: 0.3, ease: "easeInOut" }}
                     className="overflow-hidden mt-2"
                   >
-                    <div className="p-4 bg-slate-50/50 dark:bg-slate-900/30 border border-slate-100 dark:border-slate-800 rounded-2xl space-y-3">
+                    <div className="p-4 bg-white/20 dark:bg-[#1E2024]/10 backdrop-blur-sm border border-slate-200/30 dark:border-slate-800/30 rounded-2xl space-y-3">
                       <p className="text-[11px] text-slate-500 dark:text-slate-400">
                         Enter a Hyderabad pincode to see if this luxury arrangement can be dispatched to your location.
                       </p>
@@ -1172,7 +1180,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
 
             {/* 8. Add-ons Customize Banner */}
             {product.isCustomizable && (
-              <div className="p-4 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-950/20 flex items-center justify-between gap-3 shadow-sm">
+              <div className="p-4 rounded-2xl border border-dashed border-slate-200/40 dark:border-slate-800/40 bg-white/20 dark:bg-[#1E2024]/10 backdrop-blur-sm flex items-center justify-between gap-3 shadow-sm">
                 <div className="flex items-center gap-2">
                   <Wand2 className="h-5 w-5 text-primary animate-pulse" />
                   <div>
@@ -1257,7 +1265,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
             </div>
 
             {/* 10. Sticky Luxury Purchase Box (Desktop Only) */}
-            <div className="sticky bottom-6 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200/50 dark:border-slate-800/80 p-5 rounded-2xl shadow-[0_15px_30px_rgba(0,0,0,0.06)] hidden lg:flex flex-col gap-4.5 animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div className="sticky bottom-6 z-30 bg-white/70 dark:bg-[#1E2024]/70 backdrop-blur-xl border border-slate-200/40 dark:border-slate-800/50 p-5 rounded-2xl shadow-[0_30px_60px_rgba(0,0,0,0.05)] hidden lg:flex flex-col gap-4.5 animate-in fade-in slide-in-from-bottom-2 duration-300">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-4">
                   {/* Quantity selector inside desktop sticky box */}
@@ -1354,7 +1362,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
 
             {/* Luxury Trust Indicators Grid (Non-sticky details) */}
             <div className="grid grid-cols-2 gap-3 pt-6 border-t border-slate-100 dark:border-slate-900/60 lg:hidden">
-              <div className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900/60 shadow-sm">
+              <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/40 dark:bg-[#1E2024]/30 backdrop-blur-md border border-slate-200/40 dark:border-slate-850/40 shadow-sm">
                 <div className="w-9 h-9 rounded-xl bg-pink-50 dark:bg-pink-950/20 text-pink-500 dark:text-pink-400 flex items-center justify-center flex-shrink-0">
                   <Leaf size={16} />
                 </div>
@@ -1363,7 +1371,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                   <p className="text-[10px] text-slate-400 dark:text-slate-500">100% Freshness</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900/60 shadow-sm">
+              <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/40 dark:bg-[#1E2024]/30 backdrop-blur-md border border-slate-200/40 dark:border-slate-850/40 shadow-sm">
                 <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950/20 text-blue-500 dark:text-blue-400 flex items-center justify-center flex-shrink-0">
                   <Gift size={16} />
                 </div>
@@ -1384,13 +1392,13 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
 
               {/* 11. Product Contents (Details) */}
               <AccordionItem value="details" className="border-none">
-                <AccordionTrigger className="w-full flex items-center justify-between py-3 px-4 font-bold text-sm text-slate-850 dark:text-slate-200 bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-slate-900/60 border border-slate-150/70 dark:border-slate-900 rounded-xl hover:no-underline transition-all">
+                <AccordionTrigger className="w-full flex items-center justify-between py-3 px-4 font-bold text-sm text-slate-850 dark:text-slate-200 bg-white/40 dark:bg-[#1E2024]/30 backdrop-blur-md hover:bg-white/60 dark:hover:bg-[#1E2024]/50 border border-slate-200/40 dark:border-slate-850/40 rounded-xl hover:no-underline transition-all">
                   <span className="flex items-center gap-2.5">
                     <ClipboardList className="h-4 w-4 text-slate-500 dark:text-slate-400" />
                     Product Contents
                   </span>
                 </AccordionTrigger>
-                <AccordionContent className="p-4 bg-white dark:bg-slate-950 border border-t-0 border-slate-150/70 dark:border-slate-900 rounded-b-xl -mt-1 shadow-inner text-xs text-slate-650 dark:text-slate-400 space-y-3">
+                <AccordionContent className="p-4 bg-white/20 dark:bg-[#1E2024]/10 backdrop-blur-md border border-t-0 border-slate-200/40 dark:border-slate-850/40 rounded-b-xl -mt-1 shadow-inner text-xs text-slate-650 dark:text-slate-400 space-y-3">
                   <div className="bg-amber-50/50 dark:bg-amber-950/10 p-3.5 rounded-xl border border-amber-100/70 dark:border-amber-950/40">
                     <div className="flex items-start gap-3">
                       <span className="text-amber-500 text-sm flex-shrink-0">📸</span>
@@ -1411,13 +1419,13 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
               {/* 11. Product Description */}
               {product.description && (
                 <AccordionItem value="description" className="border-none">
-                  <AccordionTrigger className="w-full flex items-center justify-between py-3 px-4 font-bold text-sm text-slate-850 dark:text-slate-200 bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-slate-900/60 border border-slate-150/70 dark:border-slate-900 rounded-xl hover:no-underline transition-all">
+                  <AccordionTrigger className="w-full flex items-center justify-between py-3 px-4 font-bold text-sm text-slate-850 dark:text-slate-200 bg-white/40 dark:bg-[#1E2024]/30 backdrop-blur-md hover:bg-white/60 dark:hover:bg-[#1E2024]/50 border border-slate-200/40 dark:border-slate-850/40 rounded-xl hover:no-underline transition-all">
                     <span className="flex items-center gap-2.5">
                       <Info className="h-4 w-4 text-slate-500 dark:text-slate-400" />
                       Product Description
                     </span>
                   </AccordionTrigger>
-                  <AccordionContent className="p-4 bg-white dark:bg-slate-950 border border-t-0 border-slate-150/70 dark:border-slate-900 rounded-b-xl -mt-1 shadow-inner text-xs text-slate-650 dark:text-slate-400">
+                  <AccordionContent className="p-4 bg-white/20 dark:bg-[#1E2024]/10 backdrop-blur-md border border-t-0 border-slate-200/40 dark:border-slate-850/40 rounded-b-xl -mt-1 shadow-inner text-xs text-slate-650 dark:text-slate-400">
                     <p className="leading-relaxed font-medium text-slate-700 dark:text-slate-350">{product.description}</p>
                   </AccordionContent>
                 </AccordionItem>
@@ -1426,13 +1434,13 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
               {/* Combo Contents */}
               {product.category === "combos" && product.comboItems && product.comboItems.length > 0 && (
                 <AccordionItem value="combo" className="border-none">
-                  <AccordionTrigger className="w-full flex items-center justify-between py-3 px-4 font-bold text-sm text-slate-850 dark:text-slate-200 bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-slate-900/60 border border-slate-150/70 dark:border-slate-900 rounded-xl hover:no-underline transition-all">
+                  <AccordionTrigger className="w-full flex items-center justify-between py-3 px-4 font-bold text-sm text-slate-850 dark:text-slate-200 bg-white/40 dark:bg-[#1E2024]/30 backdrop-blur-md hover:bg-white/60 dark:hover:bg-[#1E2024]/50 border border-slate-200/40 dark:border-slate-850/40 rounded-xl hover:no-underline transition-all">
                     <span className="flex items-center gap-2.5">
                       <Gift className="h-4 w-4 text-slate-500 dark:text-slate-400" />
                       Combo Contents
                     </span>
                   </AccordionTrigger>
-                  <AccordionContent className="p-4 bg-white dark:bg-slate-950 border border-t-0 border-slate-150/70 dark:border-slate-900 rounded-b-xl -mt-1 shadow-inner text-xs text-slate-650 dark:text-slate-400">
+                  <AccordionContent className="p-4 bg-white/20 dark:bg-[#1E2024]/10 backdrop-blur-md border border-t-0 border-slate-200/40 dark:border-slate-850/40 rounded-b-xl -mt-1 shadow-inner text-xs text-slate-650 dark:text-slate-400">
                     {product.comboName && (
                       <div className="mb-4 pb-2 border-b border-slate-100 dark:border-slate-900">
                         <h4 className="font-bold text-slate-800 dark:text-slate-200 text-xs">{product.comboName}</h4>
@@ -1470,13 +1478,13 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
               {/* 12. Artisanal Care Instructions */}
               {product.careInstructions && product.careInstructions.length > 0 && (
                 <AccordionItem value="care" className="border-none">
-                  <AccordionTrigger className="w-full flex items-center justify-between py-3 px-4 font-bold text-sm text-slate-850 dark:text-slate-200 bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-slate-900/60 border border-slate-150/70 dark:border-slate-900 rounded-xl hover:no-underline transition-all">
+                  <AccordionTrigger className="w-full flex items-center justify-between py-3 px-4 font-bold text-sm text-slate-850 dark:text-slate-200 bg-white/40 dark:bg-[#1E2024]/30 backdrop-blur-md hover:bg-white/60 dark:hover:bg-[#1E2024]/50 border border-slate-200/40 dark:border-slate-850/40 rounded-xl hover:no-underline transition-all">
                     <span className="flex items-center gap-2.5">
                       <Leaf className="h-4 w-4 text-slate-500 dark:text-slate-400" />
                       Artisanal Care Instructions
                     </span>
                   </AccordionTrigger>
-                  <AccordionContent className="p-4 bg-white dark:bg-slate-950 border border-t-0 border-slate-150/70 dark:border-slate-900 rounded-b-xl -mt-1 shadow-inner text-xs text-slate-650 dark:text-slate-400 space-y-2">
+                  <AccordionContent className="p-4 bg-white/20 dark:bg-[#1E2024]/10 backdrop-blur-md border border-t-0 border-slate-200/40 dark:border-slate-850/40 rounded-b-xl -mt-1 shadow-inner text-xs text-slate-650 dark:text-slate-400 space-y-2">
                     {product.careInstructions.map((instruction, index) => (
                       <div key={index} className="flex items-start gap-2.5 py-1 text-slate-700 dark:text-slate-350">
                         <span className="text-emerald-500 text-xs flex-shrink-0">🌿</span>
@@ -1488,13 +1496,13 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
               )}
 
               <AccordionItem value="delivery" className="border-none">
-                <AccordionTrigger className="w-full flex items-center justify-between py-3.5 px-4 font-bold text-sm text-slate-850 dark:text-slate-200 bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-slate-900/60 border border-slate-150/70 dark:border-slate-900 rounded-xl hover:no-underline transition-all">
+                <AccordionTrigger className="w-full flex items-center justify-between py-3.5 px-4 font-bold text-sm text-slate-850 dark:text-slate-200 bg-white/40 dark:bg-[#1E2024]/30 backdrop-blur-md hover:bg-white/60 dark:hover:bg-[#1E2024]/50 border border-slate-200/40 dark:border-slate-850/40 rounded-xl hover:no-underline transition-all">
                   <span className="flex items-center gap-2.5">
                     <Truck className="h-4 w-4 text-slate-500 dark:text-slate-400" />
                     Delivery Information
                   </span>
                 </AccordionTrigger>
-                <AccordionContent className="p-4 bg-white dark:bg-slate-950 border border-t-0 border-slate-150/70 dark:border-slate-900 rounded-b-xl -mt-1 shadow-inner text-xs text-slate-650 dark:text-slate-400 space-y-4.5">
+                <AccordionContent className="p-4 bg-white/20 dark:bg-[#1E2024]/10 backdrop-blur-md border border-t-0 border-slate-200/40 dark:border-slate-850/40 rounded-b-xl -mt-1 shadow-inner text-xs text-slate-650 dark:text-slate-400 space-y-4.5">
                   <div className="bg-primary/5 dark:bg-primary/10 p-3.5 rounded-xl border border-primary/10 dark:border-primary/20">
                     <p className="font-bold text-slate-800 dark:text-slate-250 text-xs mb-1">
                       Important Notes When Using SBF Delivery Service:
@@ -1550,13 +1558,13 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
 
               {/* 14. Frequently Asked Questions (FAQs) */}
               <AccordionItem value="faqs" className="border-none">
-                <AccordionTrigger className="w-full flex items-center justify-between py-3.5 px-4 font-bold text-sm text-slate-850 dark:text-slate-200 bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-slate-900/60 border border-slate-150/70 dark:border-slate-900 rounded-xl hover:no-underline transition-all">
+                <AccordionTrigger className="w-full flex items-center justify-between py-3.5 px-4 font-bold text-sm text-slate-850 dark:text-slate-200 bg-white/40 dark:bg-[#1E2024]/30 backdrop-blur-md hover:bg-white/60 dark:hover:bg-[#1E2024]/50 border border-slate-200/40 dark:border-slate-850/40 rounded-xl hover:no-underline transition-all">
                   <span className="flex items-center gap-2.5">
                     <Star className="h-4 w-4 text-slate-500 dark:text-slate-400" />
                     Frequently Asked Questions
                   </span>
                 </AccordionTrigger>
-                <AccordionContent className="p-4 bg-white dark:bg-slate-950 border border-t-0 border-slate-150/70 dark:border-slate-900 rounded-b-xl -mt-1 shadow-inner text-xs text-slate-650 dark:text-slate-400 space-y-3.5">
+                <AccordionContent className="p-4 bg-white/20 dark:bg-[#1E2024]/10 backdrop-blur-md border border-t-0 border-slate-200/40 dark:border-slate-850/40 rounded-b-xl -mt-1 shadow-inner text-xs text-slate-650 dark:text-slate-400 space-y-3.5">
                   <div>
                     <h5 className="font-bold text-slate-855 dark:text-slate-200 text-xs">Q: Will my flowers look exactly like the image?</h5>
                     <p className="text-[11px] text-slate-500 dark:text-slate-450 mt-1 leading-relaxed">
@@ -1632,7 +1640,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
             )}
 
             {/* Product Reviews Section */}
-            <div id="reviews-section" className="pt-8 border-t border-slate-100 dark:border-slate-900/60 overflow-visible relative">
+            <div id="reviews-section" className="pt-8 border-t border-slate-200/40 dark:border-slate-800/40 overflow-visible relative">
               <ProductReviews
                 productId={product._id}
                 productTitle={product.title}
@@ -1645,7 +1653,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
 
       {/* Recommended Products Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mt-16 pb-16">
-        <div className="pt-8 border-t border-slate-100 dark:border-slate-900/60 overflow-visible relative">
+        <div className="pt-8 border-t border-slate-200/40 dark:border-slate-800/40 overflow-visible relative">
           <RecommendedProducts productId={product._id} category={product.category} />
         </div>
       </div>
