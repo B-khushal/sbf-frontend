@@ -1,10 +1,6 @@
 {
-  "name": "SBF Admin",
+  "name": "Spring Blossoms Florist",
   "short_name": "SBF",
-  "start_url": "/admin",
-  "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#0284c7",
   "icons": [
     {
       "src": "/favicons/android-chrome-192x192.png",
@@ -16,5 +12,8 @@
       "sizes": "512x512",
       "type": "image/png"
     }
-  ]
+  ],
+  "theme_color": "#0284c7",
+  "background_color": "#ffffff",
+  "display": "standalone"
 }

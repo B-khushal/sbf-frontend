@@ -21,7 +21,7 @@ const getManifestForPath = (path: string) => {
     return "/manifest-admin.json";
   }
 
-  return null;
+  return "/favicons/site.webmanifest";
 };
 
 const getInstallTitle = (path: string) =>
@@ -82,7 +82,8 @@ const PwaInstallManager = () => {
   useEffect(() => {
     const manifestPath = getManifestForPath(location.pathname);
     setManifestLink(manifestPath);
-    ensureThemeColorMeta(manifestPath ? "#0f172a" : "#ffffff");
+    const isDashboard = manifestPath && manifestPath !== "/favicons/site.webmanifest";
+    ensureThemeColorMeta(isDashboard ? "#0f172a" : "#0284c7");
   }, [location.pathname]);
 
   useEffect(() => {

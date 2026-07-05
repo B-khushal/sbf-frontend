@@ -28,8 +28,8 @@ const PRECACHE_URLS = [
   "/manifest.json",
   "/manifest-admin.json",
   "/manifest-vendor.json",
-  "/icons/icon-192.png",
-  "/icons/icon-512.png",
+  "/favicons/android-chrome-192x192.png",
+  "/favicons/android-chrome-512x512.png",
 ];
 
 const isStaticAssetRequest = (request, pathname) => {
