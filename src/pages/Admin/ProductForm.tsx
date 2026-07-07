@@ -13,7 +13,7 @@ import productService from '@/services/productService';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, Trash2, ArrowLeft, Upload, Image as ImageIcon, Plus, X, Wand2, Flower2, Gift, Camera, Hash, MessageSquare, IndianRupee, AlertCircle, ChevronDown, ChevronUp, Heart } from 'lucide-react';
+import { Loader2, Trash2, ArrowLeft, Upload, Image as ImageIcon, Plus, X, Wand2, Flower2, Gift, Camera, Hash, MessageSquare, IndianRupee, AlertCircle, ChevronDown, ChevronUp, Heart, Film, Play, Link as LinkIcon, Move } from 'lucide-react';
 import api from '../../services/api';
 import axios from 'axios'; // Keep for axios.isAxiosError
 import ProductFeaturesToggle from '@/components/ui/ProductFeaturesToggle';
@@ -21,6 +21,7 @@ import { getImageUrl } from '@/config';
 import { PRIMARY_CATEGORIES, getAdditionalCategoryOptions, getSubcategoryOptions, normalizeCategoryKey } from '@/utils/categoryTaxonomy';
 import categoryService, { Category } from '@/services/categoryService';
 import { useSeasonalCampaign } from '@/contexts/SeasonalCampaignContext';
+import { cn } from '@/lib/utils';
 
 type FormErrors = {
   [key in keyof ProductData]?: string;
@@ -145,7 +146,9 @@ const CARE_INSTRUCTIONS_OPTIONS = [
 ];
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
 const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/quicktime'];
 
 interface PriceVariant {
   label: string;
@@ -162,6 +165,28 @@ const initialFormData: ProductData = {
   categories: [],
   countInStock: 0,
   images: [],
+  videos: [],
+  personalizationEnabled: false,
+  personalizationType: 'name',
+  fieldLabel: '',
+  placeholder: '',
+  minCharacters: 1,
+  maxCharacters: 10,
+  allowedCharacters: {
+    alphabets: true,
+    numbers: false,
+    spaces: true,
+    hyphen: false,
+    ampersand: false,
+    period: false,
+    emoji: false
+  },
+  personalizationRequired: false,
+  textTransform: 'original',
+  helperText: '',
+  pricePerCharacter: 0,
+  baseIncludedCharacters: 0,
+  maxExtraPrice: 0,
   details: [],
   careInstructions: [],
   isNewArrival: false,
@@ -254,6 +279,272 @@ const ProductForm = () => {
   const [isUploadingPreview, setIsUploadingPreview] = useState(false);
   const [isUploadingFlowerGroup, setIsUploadingFlowerGroup] = useState(false);
   const [isUploadingChocolateGroup, setIsUploadingChocolateGroup] = useState(false);
+
+  // State for video fields
+  const [videoUrlInput, setVideoUrlInput] = useState('');
+  const [videoTitleInput, setVideoTitleInput] = useState('');
+  const [videoDurationInput, setVideoDurationInput] = useState(0);
+  const [isUploadingVideo, setIsUploadingVideo] = useState(false);
+  const [videoUploadProgress, setVideoUploadProgress] = useState(0);
+
+  // Video URL helper parsing
+  const getYoutubeId = (url: string): string | null => {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+  };
+
+  const getVimeoId = (url: string): string | null => {
+    const regExp = /^.*(vimeo\.com\/)((channels\/[A-z]+\/)|(groups\/[A-z]+\/videos\/)|(video\/))?([0-9]+)\/?.*?/;
+    const match = url.match(regExp);
+    return match ? match[6] : null;
+  };
+
+  const parseVideoUrl = (url: string) => {
+    const ytId = getYoutubeId(url);
+    if (ytId) {
+      return {
+        url: `https://www.youtube.com/embed/${ytId}`,
+        source: 'youtube' as const,
+        thumbnailUrl: `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`,
+      };
+    }
+    const vimId = getVimeoId(url);
+    if (vimId) {
+      return {
+        url: `https://player.vimeo.com/video/${vimId}`,
+        source: 'vimeo' as const,
+        thumbnailUrl: '',
+      };
+    }
+    const isMp4 = url.toLowerCase().endsWith('.mp4') || url.toLowerCase().includes('.mp4') || url.toLowerCase().includes('.webm');
+    return {
+      url: url,
+      source: isMp4 ? ('cloudinary' as const) : ('custom' as const),
+      thumbnailUrl: '',
+    };
+  };
+
+  // Video Thumbnail Generator helper
+  const getVideoThumbnailUrl = (videoUrl: string): string => {
+    if (!videoUrl) return '';
+    if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) {
+      const ytId = videoUrl.split('/embed/')[1] || videoUrl.split('v=')[1];
+      if (ytId) return `https://img.youtube.com/vi/${ytId.split('?')[0]}/hqdefault.jpg`;
+    }
+    if (videoUrl.includes('cloudinary.com')) {
+      const lastSlashIdx = videoUrl.lastIndexOf('.');
+      if (lastSlashIdx !== -1) {
+        const base = videoUrl.substring(0, lastSlashIdx);
+        return base.replace('/video/upload/', '/video/upload/w_400,h_300,c_fill,so_1/') + '.jpg';
+      }
+    }
+    return '';
+  };
+
+  // Handlers for videos
+  const addVideoFromUrl = () => {
+    if (!videoUrlInput.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid video URL",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const { url, source, thumbnailUrl } = parseVideoUrl(videoUrlInput);
+    const newVideo = {
+      url,
+      source,
+      title: videoTitleInput || 'Product Video',
+      description: '',
+      duration: videoDurationInput || 30,
+      thumbnailUrl: thumbnailUrl || getVideoThumbnailUrl(url) || '',
+      isFeatured: (formData.videos || []).length === 0,
+      order: (formData.videos || []).length,
+    };
+
+    setFormData(prev => ({
+      ...prev,
+      videos: [...(prev.videos || []), newVideo]
+    }));
+
+    setVideoUrlInput('');
+    setVideoTitleInput('');
+    setVideoDurationInput(0);
+
+    toast({
+      title: "Success",
+      description: "Video added from URL",
+    });
+  };
+
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > MAX_VIDEO_SIZE) {
+      toast({
+        title: "File Too Large",
+        description: "Maximum video size is 50MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const allowedMimeTypes = ['video/mp4', 'video/webm', 'video/quicktime'];
+    const isMov = file.name.endsWith('.mov');
+    const isWebm = file.name.endsWith('.webm');
+    const isMp4 = file.name.endsWith('.mp4');
+
+    if (!allowedMimeTypes.includes(file.type) && !isMov && !isWebm && !isMp4) {
+      toast({
+        title: "Invalid File Type",
+        description: "Only MP4, WebM, and MOV videos are allowed",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const uploadFormData = new FormData();
+    uploadFormData.append('image', file); // Multer uses 'image' key name
+
+    try {
+      setIsUploadingVideo(true);
+      setVideoUploadProgress(10);
+      
+      const response = await api.post('/uploads', uploadFormData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        params: {
+          type: 'video'
+        },
+        timeout: 180000,
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            const percentCompleted = Math.round((progressEvent.loaded * 90) / progressEvent.total) + 10;
+            setVideoUploadProgress(percentCompleted);
+          }
+        }
+      });
+
+      const videoUrl = response.data.videoUrl || response.data.imageUrl;
+      const publicId = response.data.publicId;
+
+      if (!videoUrl) {
+        throw new Error("No video URL returned from server");
+      }
+
+      const generatedThumb = getVideoThumbnailUrl(videoUrl);
+
+      const newVideo = {
+        url: videoUrl,
+        source: 'upload' as const,
+        publicId: publicId || '',
+        title: file.name.substring(0, file.name.lastIndexOf('.')) || 'Product Video',
+        description: '',
+        duration: 30, // Default duration placeholder
+        thumbnailUrl: generatedThumb,
+        isFeatured: (formData.videos || []).length === 0,
+        order: (formData.videos || []).length,
+      };
+
+      setFormData(prev => ({
+        ...prev,
+        videos: [...(prev.videos || []), newVideo]
+      }));
+
+      toast({
+        title: "Upload Successful",
+        description: `Video uploaded: ${file.name}`,
+      });
+    } catch (error: any) {
+      console.error('Error uploading video:', error);
+      toast({
+        title: "Upload Failed",
+        description: error.response?.data?.message || "Failed to upload video",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingVideo(false);
+      setVideoUploadProgress(0);
+      e.target.value = '';
+    }
+  };
+
+  const setFeaturedVideo = (index: number) => {
+    setFormData(prev => {
+      const updated = (prev.videos || []).map((v, idx) => ({
+        ...v,
+        isFeatured: idx === index
+      }));
+      return { ...prev, videos: updated };
+    });
+    toast({
+      title: "Featured Video Updated",
+      description: "Successfully set as featured product video.",
+    });
+  };
+
+  const removeVideo = async (index: number) => {
+    const videoToDelete = formData.videos?.[index];
+    
+    // If it has a publicId, delete it from Cloudinary
+    if (videoToDelete?.publicId && videoToDelete?.source === 'upload') {
+      try {
+        console.log('Deleting video from Cloudinary:', videoToDelete.publicId);
+        await api.delete(`/uploads/${videoToDelete.publicId}`, {
+          params: {
+            resourceType: 'video'
+          }
+        });
+      } catch (err) {
+        console.error('Cloudinary video delete failed:', err);
+      }
+    }
+
+    setFormData(prev => {
+      const remaining = (prev.videos || []).filter((_, idx) => idx !== index);
+      const reordered = remaining.map((v, i) => ({ ...v, order: i }));
+      if (reordered.length > 0 && !reordered.some(v => v.isFeatured)) {
+        reordered[0].isFeatured = true;
+      }
+      return { ...prev, videos: reordered };
+    });
+
+    toast({
+      title: "Video Removed",
+      description: "Product video removed successfully.",
+    });
+  };
+
+  // Drag and drop sorting handlers
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    e.dataTransfer.setData('text/plain', index.toString());
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: React.DragEvent, targetIndex: number) => {
+    e.preventDefault();
+    const sourceIndex = parseInt(e.dataTransfer.getData('text/plain'), 10);
+    if (isNaN(sourceIndex) || sourceIndex === targetIndex) return;
+
+    setFormData(prev => {
+      const updatedVideos = [...(prev.videos || [])];
+      const [movedVideo] = updatedVideos.splice(sourceIndex, 1);
+      updatedVideos.splice(targetIndex, 0, movedVideo);
+      
+      return {
+        ...prev,
+        videos: updatedVideos.map((v, i) => ({ ...v, order: i }))
+      };
+    });
+  };
   const [isUploadingNewFlower, setIsUploadingNewFlower] = useState(false);
   const [isUploadingNewChocolate, setIsUploadingNewChocolate] = useState(false);
   
@@ -387,6 +678,28 @@ const ProductForm = () => {
         details: Array.isArray(data.details) ? data.details : [],
         careInstructions: Array.isArray(data.careInstructions) ? data.careInstructions : [],
         images: Array.isArray(data.images) ? data.images : [],
+        videos: Array.isArray(data.videos) ? data.videos : [],
+        personalizationEnabled: Boolean(data.personalizationEnabled),
+        personalizationType: data.personalizationType || 'name',
+        fieldLabel: data.fieldLabel || '',
+        placeholder: data.placeholder || '',
+        minCharacters: data.minCharacters !== undefined ? Number(data.minCharacters) : 1,
+        maxCharacters: data.maxCharacters !== undefined ? Number(data.maxCharacters) : 10,
+        allowedCharacters: data.allowedCharacters || {
+          alphabets: true,
+          numbers: false,
+          spaces: true,
+          hyphen: false,
+          ampersand: false,
+          period: false,
+          emoji: false
+        },
+        personalizationRequired: Boolean(data.personalizationRequired),
+        textTransform: data.textTransform || 'original',
+        helperText: data.helperText || '',
+        pricePerCharacter: data.pricePerCharacter !== undefined ? Number(data.pricePerCharacter) : 0,
+        baseIncludedCharacters: data.baseIncludedCharacters !== undefined ? Number(data.baseIncludedCharacters) : 0,
+        maxExtraPrice: data.maxExtraPrice !== undefined ? Number(data.maxExtraPrice) : 0,
         comboItems: Array.isArray(data.comboItems) ? data.comboItems : [],
         sameDay: data.sameDay !== undefined ? Boolean(data.sameDay) : true,
         customizationOptions: data.customizationOptions || {
@@ -423,6 +736,7 @@ const ProductForm = () => {
       };
 
       setFormData(processedData);
+      console.log("ProductForm - fetchProductData processedData:", processedData);
       setUploadProgress(new Array(processedData.images.length).fill(100));
       setIsDataLoaded(true);
       
@@ -1153,6 +1467,28 @@ const ProductForm = () => {
         priceVariants: formData.priceVariants || [],
         subcategory: formData.subcategory || '',
         categories: formData.categories || [],
+        videos: formData.videos || [],
+        personalizationEnabled: Boolean(formData.personalizationEnabled),
+        personalizationType: formData.personalizationType || 'name',
+        fieldLabel: formData.fieldLabel || '',
+        placeholder: formData.placeholder || '',
+        minCharacters: formData.minCharacters !== undefined ? Number(formData.minCharacters) : 1,
+        maxCharacters: formData.maxCharacters !== undefined ? Number(formData.maxCharacters) : 10,
+        allowedCharacters: formData.allowedCharacters || {
+          alphabets: true,
+          numbers: false,
+          spaces: true,
+          hyphen: false,
+          ampersand: false,
+          period: false,
+          emoji: false
+        },
+        personalizationRequired: Boolean(formData.personalizationRequired),
+        textTransform: formData.textTransform || 'original',
+        helperText: formData.helperText || '',
+        pricePerCharacter: formData.pricePerCharacter !== undefined ? Number(formData.pricePerCharacter) : 0,
+        baseIncludedCharacters: formData.baseIncludedCharacters !== undefined ? Number(formData.baseIncludedCharacters) : 0,
+        maxExtraPrice: formData.maxExtraPrice !== undefined ? Number(formData.maxExtraPrice) : 0,
         customizationOptions: formData.isCustomizable ? {
           allowPhotoUpload: Boolean(formData.customizationOptions?.allowPhotoUpload),
           allowNumberInput: Boolean(formData.customizationOptions?.allowNumberInput),
@@ -2602,6 +2938,215 @@ const ProductForm = () => {
           </CardContent>
         </Card>
 
+        {/* Product Videos */}
+        <Card className="border border-slate-200/80 dark:border-slate-800/80 shadow-sm rounded-2xl">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Film className="h-5 w-5 text-bloom-pink-600" />
+              <span>Product Videos</span>
+            </CardTitle>
+            <CardDescription>
+              Add premium videos to showcase bouquet motion, 360° views, lighting effects, or presentation packaging.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            
+            {/* Input Options (Upload OR URL) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 rounded-xl bg-slate-50/50 dark:bg-slate-900/30 border border-slate-100 dark:border-slate-800/50">
+              
+              {/* Option A: Direct Video File Upload */}
+              <div className="space-y-3">
+                <Label className="font-semibold text-xs text-slate-500 uppercase tracking-wider">Upload Video File</Label>
+                <div className="flex flex-col gap-2">
+                  <Label
+                    htmlFor="video-file-upload"
+                    className={cn(
+                      "flex flex-col items-center justify-center border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-bloom-pink-400 dark:hover:border-bloom-pink-500 rounded-xl p-4 cursor-pointer bg-white dark:bg-slate-950 transition-all duration-300",
+                      isUploadingVideo && "opacity-50 cursor-not-allowed"
+                    )}
+                  >
+                    <Upload className="h-6 w-6 text-slate-400 mb-2" />
+                    <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                      {isUploadingVideo ? 'Uploading...' : 'Choose MP4, WebM, or MOV'}
+                    </span>
+                    <span className="text-[10px] text-slate-400 mt-1">Max file size: 50MB</span>
+                  </Label>
+                  <input
+                    id="video-file-upload"
+                    type="file"
+                    accept="video/*"
+                    onChange={handleVideoUpload}
+                    className="hidden"
+                    disabled={isUploadingVideo}
+                  />
+                  
+                  {isUploadingVideo && (
+                    <div className="space-y-1">
+                      <div className="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-2">
+                        <div
+                          className="bg-gradient-to-r from-bloom-pink-500 to-rose-500 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${videoUploadProgress}%` }}
+                        ></div>
+                      </div>
+                      <p className="text-[10px] text-slate-500 text-right font-medium">{videoUploadProgress}% uploaded</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Option B: Embed Video URL */}
+              <div className="space-y-3 flex flex-col justify-between">
+                <div className="space-y-2">
+                  <Label className="font-semibold text-xs text-slate-500 uppercase tracking-wider">Embed Video URL</Label>
+                  <div className="relative">
+                    <Input
+                      placeholder="Paste YouTube, Vimeo, or Cloud URL (MP4)..."
+                      value={videoUrlInput}
+                      onChange={(e) => setVideoUrlInput(e.target.value)}
+                      className="pl-8 rounded-lg"
+                    />
+                    <LinkIcon className="absolute left-2.5 top-3 h-4 w-4 text-slate-400" />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    <div>
+                      <Label className="text-[10px] text-slate-400">Video Title (Optional)</Label>
+                      <Input
+                        placeholder="e.g. 360° Bouquet View"
+                        value={videoTitleInput}
+                        onChange={(e) => setVideoTitleInput(e.target.value)}
+                        className="h-8 text-xs rounded-lg mt-0.5"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-[10px] text-slate-400">Duration (seconds)</Label>
+                      <Input
+                        type="number"
+                        placeholder="e.g. 30"
+                        value={videoDurationInput || ''}
+                        onChange={(e) => setVideoDurationInput(parseInt(e.target.value, 10) || 0)}
+                        className="h-8 text-xs rounded-lg mt-0.5"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <Button
+                  type="button"
+                  onClick={addVideoFromUrl}
+                  className="w-full bg-slate-900 text-white dark:bg-white dark:text-slate-950 hover:bg-slate-800 rounded-lg text-xs py-2 font-medium"
+                >
+                  <Plus className="h-3.5 w-3.5 mr-1" /> Add Video URL
+                </Button>
+              </div>
+
+            </div>
+
+            {/* Video List & Sorting */}
+            <div className="space-y-3">
+              <Label className="font-bold text-sm text-slate-700 dark:text-slate-300">
+                Videos Queue ({(formData.videos || []).length})
+              </Label>
+              
+              {(formData.videos || []).length === 0 ? (
+                <div className="text-center py-8 rounded-xl border border-slate-150 dark:border-slate-850 bg-slate-50/20 dark:bg-slate-900/10">
+                  <Film className="h-8 w-8 text-slate-300 mx-auto mb-2" />
+                  <p className="text-sm text-slate-400 dark:text-slate-400">No videos uploaded yet</p>
+                  <p className="text-xs text-slate-450 mt-1">Upload a video file or paste an embed link to begin.</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-[10px] text-slate-400 flex items-center gap-1 mb-2">
+                    <Move className="h-3 w-3" />
+                    <span>Drag and drop video items to change their display order. Featured video will render first.</span>
+                  </p>
+                  
+                  {(formData.videos || []).map((video, index) => (
+                    <div
+                      key={index}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, index)}
+                      onDragOver={handleDragOver}
+                      onDrop={(e) => handleDrop(e, index)}
+                      className={cn(
+                        "flex items-center justify-between p-3 rounded-xl border transition-all duration-300 bg-white dark:bg-slate-950 cursor-grab active:cursor-grabbing",
+                        video.isFeatured 
+                          ? "border-bloom-pink-400 dark:border-bloom-pink-500 bg-pink-50/10 dark:bg-pink-950/5 shadow-sm"
+                          : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
+                      )}
+                    >
+                      <div className="flex items-center space-x-3 flex-1 min-w-0">
+                        {/* Drag Handle Icon */}
+                        <div className="text-slate-400 hover:text-slate-600 cursor-grab pr-1">
+                          <Move className="h-4 w-4" />
+                        </div>
+                        
+                        {/* Thumbnail / Source Badge */}
+                        <div className="relative h-12 w-16 bg-slate-100 dark:bg-slate-900 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center">
+                          {video.thumbnailUrl ? (
+                            <img
+                              src={video.thumbnailUrl}
+                              alt={video.title}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <Film className="h-5 w-5 text-slate-400" />
+                          )}
+                          <div className="absolute bottom-1 right-1 bg-black/75 px-1 py-0.5 rounded text-[8px] text-white font-mono">
+                            {video.duration ? `${Math.floor(video.duration / 60)}:${String(video.duration % 60).padStart(2, '0')}` : '0:30'}
+                          </div>
+                        </div>
+
+                        {/* Title & details */}
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-sm text-slate-800 dark:text-slate-200 truncate">
+                            {video.title}
+                          </h4>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-[9px] uppercase font-bold text-slate-400 dark:text-slate-500 tracking-wider">
+                              Source: {video.source}
+                            </span>
+                            <span className="text-[10px] text-slate-300">•</span>
+                            <span className="text-[10px] text-slate-450 dark:text-slate-550 truncate max-w-[200px]" title={video.url}>
+                              {video.url}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Video Actions */}
+                      <div className="flex items-center space-x-2 pl-4">
+                        <button
+                          type="button"
+                          onClick={() => setFeaturedVideo(index)}
+                          className={cn(
+                            "text-[10px] font-bold px-2.5 py-1 rounded-full transition-all duration-300",
+                            video.isFeatured
+                              ? "bg-bloom-pink-100 text-bloom-pink-700 dark:bg-pink-950/50 dark:text-pink-400 border border-bloom-pink-200"
+                              : "bg-slate-100 text-slate-650 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800"
+                          )}
+                        >
+                          {video.isFeatured ? '★ Featured' : 'Set Featured'}
+                        </button>
+                        
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeVideo(index)}
+                          className="h-8 w-8 text-slate-400 hover:text-red-600 dark:hover:text-red-400 rounded-full"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Product Details */}
         <Card>
           <CardHeader>
@@ -2849,6 +3394,219 @@ const ProductForm = () => {
                         }
                         className="w-32"
                       />
+                    </div>
+                  )}
+                </div>
+
+                <Separator />
+
+                {/* Name/Letter Personalization Option */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-pink-100">
+                        <Wand2 className="h-4 w-4 text-pink-600" />
+                      </div>
+                      <div>
+                        <Label htmlFor="personalizationEnabled" className="text-base font-medium">Name/Letter Personalization</Label>
+                        <p className="text-sm text-gray-500">Allow customers to input customized name/word text (e.g. Letter Bouquets)</p>
+                      </div>
+                    </div>
+                    <Switch
+                      id="personalizationEnabled"
+                      checked={formData.personalizationEnabled || false}
+                      onCheckedChange={(checked) => 
+                        setFormData(prev => ({
+                          ...prev,
+                          personalizationEnabled: checked
+                        }))
+                      }
+                    />
+                  </div>
+                  {formData.personalizationEnabled && (
+                    <div className="ml-11 space-y-6 pt-2 border-l-2 border-pink-100 pl-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Customization Type</Label>
+                          <Select
+                            value={formData.personalizationType || 'name'}
+                            onValueChange={(val: any) => setFormData(prev => ({ ...prev, personalizationType: val }))}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent disablePortal>
+                              <SelectItem value="name">Name</SelectItem>
+                              <SelectItem value="word">Word</SelectItem>
+                              <SelectItem value="text">Text</SelectItem>
+                              <SelectItem value="letter-bouquet">Letter Bouquet</SelectItem>
+                              <SelectItem value="custom-message">Custom Message</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Convert Input Case</Label>
+                          <Select
+                            value={formData.textTransform || 'original'}
+                            onValueChange={(val: any) => setFormData(prev => ({ ...prev, textTransform: val }))}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent disablePortal>
+                              <SelectItem value="original">Original Case (No Change)</SelectItem>
+                              <SelectItem value="uppercase">UPPERCASE</SelectItem>
+                              <SelectItem value="lowercase">lowercase</SelectItem>
+                              <SelectItem value="titlecase">Title Case</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Field Label</Label>
+                          <Input
+                            placeholder="e.g. Recipient Name, Name on Bouquet"
+                            value={formData.fieldLabel || ''}
+                            onChange={(e) => setFormData(prev => ({ ...prev, fieldLabel: e.target.value }))}
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Placeholder Text</Label>
+                          <Input
+                            placeholder="e.g. Enter Name"
+                            value={formData.placeholder || ''}
+                            onChange={(e) => setFormData(prev => ({ ...prev, placeholder: e.target.value }))}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Minimum Characters</Label>
+                          <Input
+                            type="number"
+                            min={1}
+                            value={formData.minCharacters || 1}
+                            onChange={(e) => setFormData(prev => ({ ...prev, minCharacters: Math.max(1, Number(e.target.value)) }))}
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Maximum Characters</Label>
+                          <Input
+                            type="number"
+                            min={1}
+                            value={formData.maxCharacters || 10}
+                            onChange={(e) => setFormData(prev => ({ ...prev, maxCharacters: Math.max(1, Number(e.target.value)) }))}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Allowed Characters</Label>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/5">
+                          {[
+                            { key: 'alphabets', label: 'Alphabets' },
+                            { key: 'numbers', label: 'Numbers' },
+                            { key: 'spaces', label: 'Spaces' },
+                            { key: 'hyphen', label: 'Hyphen (-)' },
+                            { key: 'ampersand', label: 'Ampersand (&)' },
+                            { key: 'period', label: 'Period (.)' },
+                            { key: 'emoji', label: 'Emoji' },
+                          ].map((item) => (
+                            <label key={item.key} className="flex items-center space-x-2 text-xs font-medium text-slate-600 dark:text-slate-300 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                className="rounded border-slate-300 text-bloom-pink-650 focus:ring-bloom-pink-500 h-4 w-4"
+                                checked={!!formData.allowedCharacters?.[item.key as keyof typeof formData.allowedCharacters]}
+                                onChange={(e) => {
+                                  const newAllowed = {
+                                    alphabets: true,
+                                    numbers: false,
+                                    spaces: true,
+                                    hyphen: false,
+                                    ampersand: false,
+                                    period: false,
+                                    emoji: false,
+                                    ...formData.allowedCharacters,
+                                    [item.key]: e.target.checked
+                                  };
+                                  setFormData(prev => ({ ...prev, allowedCharacters: newAllowed }));
+                                }}
+                              />
+                              <span>{item.label}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/30">
+                        <div className="space-y-0.5">
+                          <Label className="text-xs font-bold text-slate-750">Required Field</Label>
+                          <p className="text-[11px] text-slate-500">Customer cannot add the product to the cart without custom text input.</p>
+                        </div>
+                        <Switch
+                          checked={formData.personalizationRequired || false}
+                          onCheckedChange={(checked) => setFormData(prev => ({ ...prev, personalizationRequired: checked }))}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Helper Text</Label>
+                        <Input
+                          placeholder="e.g. Maximum 10 characters."
+                          value={formData.helperText || ''}
+                          onChange={(e) => setFormData(prev => ({ ...prev, helperText: e.target.value }))}
+                        />
+                      </div>
+
+                      <Separator />
+
+                      <div className="space-y-4">
+                        <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                          <IndianRupee className="h-4 w-4 text-bloom-pink-500" />
+                          <span>Personalization Character Pricing (Optional)</span>
+                        </h4>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Base Included Characters</Label>
+                            <Input
+                              type="number"
+                              min={0}
+                              value={formData.baseIncludedCharacters || 0}
+                              onChange={(e) => setFormData(prev => ({ ...prev, baseIncludedCharacters: Math.max(0, Number(e.target.value)) }))}
+                            />
+                            <p className="text-[10px] text-slate-400">Characters included in base product price.</p>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Price Per Additional Char</Label>
+                            <Input
+                              type="number"
+                              min={0}
+                              value={formData.pricePerCharacter || 0}
+                              onChange={(e) => setFormData(prev => ({ ...prev, pricePerCharacter: Math.max(0, Number(e.target.value)) }))}
+                            />
+                            <p className="text-[10px] text-slate-400">Extra fee charged for each additional character.</p>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Max Extra Price Limit</Label>
+                            <Input
+                              type="number"
+                              min={0}
+                              value={formData.maxExtraPrice || 0}
+                              onChange={(e) => setFormData(prev => ({ ...prev, maxExtraPrice: Math.max(0, Number(e.target.value)) }))}
+                            />
+                            <p className="text-[10px] text-slate-400">Capped limit for personalization extra charges.</p>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>

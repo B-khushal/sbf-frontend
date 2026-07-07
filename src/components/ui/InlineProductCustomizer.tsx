@@ -25,7 +25,8 @@ import {
   ShoppingBag,
   Calendar,
   Clock,
-  ArrowRight
+  ArrowRight,
+  AlertCircle
 } from 'lucide-react';
 import { uploadToCloudinary } from '@/lib/cloudinaryUpload';
 import { ComboItem } from '@/services/productService';
@@ -81,6 +82,12 @@ type CustomizationData = {
   deliveryDate?: string;
   deliveryTimeSlot?: string;
   deliveryInstructions?: string;
+  personalization?: {
+    type: string;
+    label: string;
+    value: string;
+    characterCount: number;
+  };
 };
 
 type PriceVariant = {
@@ -101,11 +108,34 @@ interface InlineProductCustomizerProps {
     comboName?: string;
     comboDescription?: string;
     discount?: number;
+    personalizationEnabled?: boolean;
+    personalizationType?: string;
+    fieldLabel?: string;
+    placeholder?: string;
+    minCharacters?: number;
+    maxCharacters?: number;
+    allowedCharacters?: {
+      alphabets?: boolean;
+      numbers?: boolean;
+      spaces?: boolean;
+      hyphen?: boolean;
+      ampersand?: boolean;
+      period?: boolean;
+      emoji?: boolean;
+    };
+    helperText?: string;
+    baseIncludedCharacters?: number;
+    pricePerCharacter?: number;
+    maxExtraPrice?: number;
+    textTransform?: string;
+    personalizationRequired?: boolean;
   };
   selectedVariant?: PriceVariant | null;
   onAddToCart: (customizations: CustomizationData, totalPrice: number) => void;
   isOpen: boolean;
   onToggleOpen: () => void;
+  personalizationText?: string;
+  setPersonalizationText?: (text: string) => void;
 }
 
 // Unsplash placeholders
@@ -169,6 +199,8 @@ export function InlineProductCustomizer({
   onAddToCart,
   isOpen,
   onToggleOpen,
+  personalizationText,
+  setPersonalizationText,
 }: InlineProductCustomizerProps) {
   const { formatPrice, convertPrice } = useCurrency();
   const [customizations, setCustomizations] = useState<CustomizationData>({
@@ -180,6 +212,60 @@ export function InlineProductCustomizer({
       selectedAddons: []
     })) || []
   });
+
+  const [localPersonalizationText, setLocalPersonalizationText] = useState('');
+  const activePersonalizationText = personalizationText !== undefined ? personalizationText : localPersonalizationText;
+  const activeSetPersonalizationText = setPersonalizationText !== undefined ? setPersonalizationText : setLocalPersonalizationText;
+
+  const validatePersonalizedText = (text: string) => {
+    if (!product.personalizationEnabled) return { valid: true, error: "" };
+    
+    const minLimit = product.minCharacters || 1;
+    const maxLimit = product.maxCharacters || 10;
+    
+    if (text.length > 0 && text.length < minLimit) {
+      return { valid: false, error: `Minimum ${minLimit} characters required.` };
+    }
+    
+    // Character set validation
+    const allowed = product.allowedCharacters || { alphabets: true, spaces: true };
+    const charArray = Array.from(text);
+    
+    for (const char of charArray) {
+      if (char === ' ') {
+        if (!allowed.spaces) return { valid: false, error: "Spaces are not allowed." };
+        continue;
+      }
+      if (/^[a-zA-Z]$/.test(char)) {
+        if (!allowed.alphabets) return { valid: false, error: "Alphabets are not allowed." };
+        continue;
+      }
+      if (/^[0-9]$/.test(char)) {
+        if (!allowed.numbers) return { valid: false, error: "Numbers are not allowed." };
+        continue;
+      }
+      if (char === '-') {
+        if (!allowed.hyphen) return { valid: false, error: "Hyphen (-) is not allowed." };
+        continue;
+      }
+      if (char === '&') {
+        if (!allowed.ampersand) return { valid: false, error: "Ampersand (&) is not allowed." };
+        continue;
+      }
+      if (char === '.') {
+        if (!allowed.period) return { valid: false, error: "Period (.) is not allowed." };
+        continue;
+      }
+      if (/\p{Emoji}/u.test(char)) {
+        if (!allowed.emoji) return { valid: false, error: "Emojis are not allowed." };
+        continue;
+      }
+      
+      return { valid: false, error: `Character "${char}" is not allowed.` };
+    }
+    
+    return { valid: true, error: "" };
+  };
 
   const [activeTab, setActiveTab] = useState<string | null>(null);
   const [uploadedPhoto, setUploadedPhoto] = useState<string | null>(null);
@@ -193,7 +279,8 @@ export function InlineProductCustomizer({
   useEffect(() => {
     if (isOpen && !activeTab) {
       // Pick the first available step
-      if (product.customizationOptions.allowPhotoUpload) setActiveTab('photo');
+      if (product.personalizationEnabled) setActiveTab('personalization');
+      else if (product.customizationOptions.allowPhotoUpload) setActiveTab('photo');
       else if (product.customizationOptions.allowNumberInput) setActiveTab('number');
       else if (product.customizationOptions.allowMessageCard) setActiveTab('message');
       else if (product.comboItems && product.comboItems.length > 0) setActiveTab('combo');
@@ -220,8 +307,18 @@ export function InlineProductCustomizer({
     if (customizations.messageCard && product.customizationOptions.allowMessageCard) {
       total += product.customizationOptions.messageCardPrice;
     }
+    // Personalization Cost Calculation
+    if (product.personalizationEnabled && activePersonalizationText.trim().length > 0) {
+      const len = activePersonalizationText.trim().length;
+      const base = product.baseIncludedCharacters || 0;
+      const rate = product.pricePerCharacter || 0;
+      const cap = product.maxExtraPrice || 0;
+      const extraCost = Math.max(0, len - base) * rate;
+      const finalCost = cap > 0 ? Math.min(cap, extraCost) : extraCost;
+      total += finalCost;
+    }
     return total;
-  }, [customizations, product.customizationOptions.allowMessageCard, product.customizationOptions.messageCardPrice]);
+  }, [customizations, product, activePersonalizationText]);
 
   // Combo items subtotal additions
   const comboTotal = useMemo(() => {
@@ -244,6 +341,10 @@ export function InlineProductCustomizer({
   // Steps definitions & progress tracking
   const steps = useMemo(() => {
     const list = [];
+    if (product.personalizationEnabled) {
+      const isCompleted = activePersonalizationText.trim().length >= (product.minCharacters || 1) && validatePersonalizedText(activePersonalizationText).valid;
+      list.push({ id: 'personalization', label: product.fieldLabel || 'Enter Name / Word', completed: isCompleted, icon: Sparkles });
+    }
     if (product.customizationOptions.allowPhotoUpload) {
       list.push({ id: 'photo', label: 'Photo Upload', completed: !!uploadedPhoto, icon: Camera });
     }
@@ -263,7 +364,7 @@ export function InlineProductCustomizer({
       list.push({ id: 'chocolates', label: 'Treats & Gifts', completed: customizations.selectedChocolates.length > 0, icon: Gift });
     }
     return list;
-  }, [product, customizations, uploadedPhoto]);
+  }, [product, customizations, uploadedPhoto, activePersonalizationText]);
 
   const completedCount = steps.filter(s => s.completed).length;
   const progressPercent = Math.round((completedCount / steps.length) * 100);
@@ -401,7 +502,36 @@ export function InlineProductCustomizer({
   };
 
   const handleSubmit = () => {
-    onAddToCart(customizations, activeTotalPrice);
+    if (product.personalizationEnabled) {
+      const valResult = validatePersonalizedText(activePersonalizationText);
+      if (!valResult.valid) {
+        alert(valResult.error || "Please enter valid personalization text.");
+        return;
+      }
+      if (product.personalizationRequired && activePersonalizationText.trim().length === 0) {
+        alert("Personalization text is required.");
+        return;
+      }
+    }
+
+    const finalCustomizations = {
+      ...customizations,
+      personalization: product.personalizationEnabled ? {
+        type: product.personalizationType || 'name',
+        label: product.fieldLabel || 'Recipient Name',
+        value: (() => {
+          const transform = product.textTransform || 'original';
+          let txt = activePersonalizationText.trim();
+          if (transform === 'uppercase') return txt.toUpperCase();
+          if (transform === 'lowercase') return txt.toLowerCase();
+          if (transform === 'titlecase') return txt.replace(/\b\w/g, c => c.toUpperCase());
+          return txt;
+        })(),
+        characterCount: activePersonalizationText.trim().length
+      } : undefined
+    };
+
+    onAddToCart(finalCustomizations, activeTotalPrice);
   };
 
   return (
@@ -510,6 +640,114 @@ export function InlineProductCustomizer({
               {/* Left Column: Accordion Panels (Span 7) */}
               <div className="lg:col-span-7 space-y-4">
                 
+                {/* 0. Name/Letter Personalization */}
+                {product.personalizationEnabled && (
+                  <div 
+                    className={cn(
+                      "rounded-2xl border bg-white dark:bg-slate-950 transition-all duration-300 overflow-hidden shadow-sm",
+                      activeTab === 'personalization' 
+                        ? "border-primary ring-1 ring-primary/20 shadow-md shadow-primary/5" 
+                        : "border-slate-200/80 dark:border-slate-800"
+                    )}
+                  >
+                    <div 
+                      onClick={() => setActiveTab(activeTab === 'personalization' ? null : 'personalization')}
+                      className="p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-900/30 select-none"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={cn(
+                          "h-9 w-9 rounded-xl flex items-center justify-center transition-colors",
+                          activeTab === 'personalization' ? "bg-primary/10 text-primary" : "bg-slate-100 dark:bg-slate-900 text-slate-500"
+                        )}>
+                          <Sparkles className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-slate-800 dark:text-slate-200 text-sm sm:text-base flex items-center gap-2">
+                            {product.fieldLabel || 'Enter Name / Word'}
+                            {activePersonalizationText.trim().length >= (product.minCharacters || 1) && validatePersonalizedText(activePersonalizationText).valid && (
+                              <Check className="h-4 w-4 text-emerald-500" />
+                            )}
+                          </h3>
+                          <p className="text-xs text-slate-400 mt-0.5">{product.helperText || `Enter text for personalization.`}</p>
+                        </div>
+                      </div>
+                      <ChevronDown className={cn("h-4 w-4 text-slate-400 transition-transform duration-300", activeTab === 'personalization' && "rotate-180")} />
+                    </div>
+
+                    <AnimatePresence initial={false}>
+                      {activeTab === 'personalization' && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.25 }}
+                          className="border-t border-slate-100 dark:border-slate-900 p-5 bg-slate-50/20 dark:bg-slate-950/20 space-y-4"
+                        >
+                          <div className="space-y-1.5">
+                            <Input
+                              placeholder={product.placeholder || 'Example: KHUSHAL, LOVE, MOM'}
+                              value={activePersonalizationText}
+                              onChange={(e) => {
+                                const raw = e.target.value;
+                                const maxLimit = product.maxCharacters || 10;
+                                if (raw.length <= maxLimit) {
+                                  activeSetPersonalizationText(raw);
+                                }
+                              }}
+                              className="border-slate-200 dark:border-slate-800 rounded-xl focus-visible:ring-bloom-pink-500 bg-white"
+                            />
+                            
+                            <div className="flex items-center justify-between text-[11px] text-slate-405">
+                              <span>Min {product.minCharacters || 1}, Max {product.maxCharacters || 10} characters</span>
+                              <span className={cn(
+                                "font-semibold",
+                                activePersonalizationText.length > (product.maxCharacters || 10) ? "text-red-500" : "text-slate-500"
+                              )}>
+                                Characters: {activePersonalizationText.length} / {product.maxCharacters || 10}
+                              </span>
+                            </div>
+
+                            {/* Real-time Validation Message */}
+                            {(() => {
+                              const validation = validatePersonalizedText(activePersonalizationText);
+                              if (!validation.valid && activePersonalizationText.length > 0) {
+                                return (
+                                  <p className="text-[10px] text-red-550 font-medium flex items-center gap-1">
+                                    <AlertCircle className="h-3 w-3 animate-pulse" />
+                                    <span>{validation.error}</span>
+                                  </p>
+                                );
+                              }
+                              return null;
+                            })()}
+                          </div>
+
+                          {/* Live Preview */}
+                          {activePersonalizationText.trim().length > 0 && (
+                            <div className="p-3 rounded-xl bg-white dark:bg-slate-900/50 border border-slate-200/50 dark:border-slate-800/40 text-center space-y-1">
+                              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Your Bouquet Will Spell</span>
+                              <div className="text-base font-extrabold text-slate-800 dark:text-slate-100 flex items-center justify-center gap-1">
+                                <span>❤️</span>
+                                <span className="tracking-wide">
+                                  {(() => {
+                                    const transform = product.textTransform || 'original';
+                                    let txt = activePersonalizationText.trim();
+                                    if (transform === 'uppercase') return txt.toUpperCase();
+                                    if (transform === 'lowercase') return txt.toLowerCase();
+                                    if (transform === 'titlecase') return txt.replace(/\b\w/g, c => c.toUpperCase());
+                                    return txt;
+                                  })()}
+                                </span>
+                                <span>❤️</span>
+                              </div>
+                            </div>
+                          )}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )}
+
                 {/* 1. Photo Upload */}
                 {product.customizationOptions.allowPhotoUpload && (
                   <div 

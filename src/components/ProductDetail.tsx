@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, Heart, Share2, Minus, Plus, ChevronLeft, ChevronRight, Star, Eye, ShoppingBag, Wand2, Gift, ClipboardList, Leaf, Info, Truck, Tag } from 'lucide-react';
+import { ShoppingCart, Heart, Share2, Minus, Plus, ChevronLeft, ChevronRight, Star, Eye, ShoppingBag, Wand2, Gift, ClipboardList, Leaf, Info, Truck, Tag, Sparkles, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useCurrency } from '@/contexts/CurrencyContext';
@@ -13,12 +13,13 @@ import useCart from '@/hooks/use-cart';
 import useWishlist from '@/hooks/use-wishlist';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import productService, { ProductData, ComboItem } from '@/services/productService';
+import { Input } from './ui/input';
+import productService, { ProductData, ComboItem, ProductVideo } from '@/services/productService';
 import { ProductCard } from './ProductGrid';
 import ProductReviews from '@/components/ProductReviews';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { Card } from '@/components/ui/card';
-import { X, MapPin } from 'lucide-react';
+import { X, MapPin, Play, Pause, Volume2, VolumeX, Maximize2, Minimize2, Sliders, Film } from 'lucide-react';
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { buildProductReviewUrl } from '@/utils/reviewUrls';
 import PinCodeInput from '@/components/ui/PinCodeInput';
@@ -238,8 +239,178 @@ const getComboMaxPrice = (product: ProductData) => {
 };
 
 const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailProps) => {
+  console.log("ProductDetail component product prop:", product);
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
+
+  // Combine images and videos into a single gallery array
+  const galleryItems = React.useMemo(() => {
+    const items: Array<
+      | { type: 'image'; url: string; index: number }
+      | { type: 'video'; video: ProductVideo; index: number }
+    > = [];
+
+    // 1. Add all images
+    if (product.images && product.images.length > 0) {
+      product.images.forEach((img, idx) => {
+        items.push({
+          type: 'image',
+          url: img,
+          index: idx
+        });
+      });
+    }
+
+    // 2. Add all videos (sorted by order, featured videos first)
+    const sortedVideos = product.videos ? [...product.videos] : [];
+    sortedVideos.sort((a, b) => {
+      if (a.isFeatured && !b.isFeatured) return -1;
+      if (!a.isFeatured && b.isFeatured) return 1;
+      return (a.order || 0) - (b.order || 0);
+    });
+
+    sortedVideos.forEach((vid, idx) => {
+      items.push({
+        type: 'video',
+        video: vid,
+        index: (product.images?.length || 0) + idx
+      });
+    });
+
+    return items;
+  }, [product.images, product.videos]);
+
+  // Video Player state variables
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const videoContainerRef = useRef<HTMLDivElement | null>(null);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [isVideoMuted, setIsVideoMuted] = useState(true);
+  const [videoCurrentTime, setVideoCurrentTime] = useState(0);
+  const [videoDuration, setVideoDuration] = useState(0);
+  const [videoPlaybackRate, setVideoPlaybackRate] = useState(1);
+  const [isVideoFullscreen, setIsVideoFullscreen] = useState(false);
+  const [showSpeedMenu, setShowSpeedMenu] = useState(false);
+
+  // Video Thumbnail Generator (to get poster image)
+  const getVideoPosterUrl = (videoUrl: string): string => {
+    if (!videoUrl) return '';
+    if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) {
+      const ytId = videoUrl.split('/embed/')[1] || videoUrl.split('v=')[1];
+      if (ytId) return `https://img.youtube.com/vi/${ytId.split('?')[0]}/hqdefault.jpg`;
+    }
+    if (videoUrl.includes('cloudinary.com')) {
+      const lastSlashIdx = videoUrl.lastIndexOf('.');
+      if (lastSlashIdx !== -1) {
+        const base = videoUrl.substring(0, lastSlashIdx);
+        return base.replace('/video/upload/', '/video/upload/w_800,h_600,c_fill,so_1/') + '.jpg';
+      }
+    }
+    return '';
+  };
+
+  // Auto-play the video when selected
+  useEffect(() => {
+    const activeItem = galleryItems[selectedImage];
+    if (activeItem?.type === 'video') {
+      setTimeout(() => {
+        const videoEl = videoRef.current;
+        if (videoEl) {
+          videoEl.muted = isVideoMuted;
+          videoEl.play()
+            .then(() => {
+              setIsVideoPlaying(true);
+            })
+            .catch(err => {
+              console.log('Video autoplay prevented or failed:', err);
+              setIsVideoPlaying(false);
+            });
+        }
+      }, 100);
+    } else {
+      setIsVideoPlaying(false);
+    }
+  }, [selectedImage, galleryItems, isVideoMuted]);
+
+  // Video Handlers
+  const handlePlayPause = () => {
+    const videoEl = videoRef.current;
+    if (!videoEl) return;
+    if (isVideoPlaying) {
+      videoEl.pause();
+      setIsVideoPlaying(false);
+    } else {
+      videoEl.play()
+        .then(() => setIsVideoPlaying(true))
+        .catch(err => console.error(err));
+    }
+  };
+
+  const handleMuteUnmute = () => {
+    const videoEl = videoRef.current;
+    if (!videoEl) return;
+    videoEl.muted = !videoEl.muted;
+    setIsVideoMuted(videoEl.muted);
+  };
+
+  const handleVideoTimeUpdate = () => {
+    const videoEl = videoRef.current;
+    if (!videoEl) return;
+    setVideoCurrentTime(videoEl.currentTime);
+  };
+
+  const handleVideoLoadedMetadata = () => {
+    const videoEl = videoRef.current;
+    if (!videoEl) return;
+    setVideoDuration(videoEl.duration);
+  };
+
+  const handleVideoSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const videoEl = videoRef.current;
+    if (!videoEl) return;
+    const seekTime = parseFloat(e.target.value);
+    videoEl.currentTime = seekTime;
+    setVideoCurrentTime(seekTime);
+  };
+
+  const handlePlaybackRateChange = (rate: number) => {
+    const videoEl = videoRef.current;
+    if (!videoEl) return;
+    videoEl.playbackRate = rate;
+    setVideoPlaybackRate(rate);
+    setShowSpeedMenu(false);
+  };
+
+  const handleToggleFullscreen = () => {
+    const container = videoContainerRef.current;
+    if (!container) return;
+
+    if (!document.fullscreenElement) {
+      container.requestFullscreen()
+        .then(() => setIsVideoFullscreen(true))
+        .catch(err => console.error('Error enabling fullscreen:', err));
+    } else {
+      document.exitFullscreen()
+        .then(() => setIsVideoFullscreen(false))
+        .catch(err => console.error('Error exiting fullscreen:', err));
+    }
+  };
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsVideoFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  // Format time (seconds to M:SS)
+  const formatVideoTime = (seconds: number) => {
+    if (isNaN(seconds)) return '0:00';
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m}:${String(s).padStart(2, '0')}`;
+  };
+
   const [selectedVariant, setSelectedVariant] = useState<PriceVariant | null>(
     product.hasPriceVariants && product.priceVariants?.length ? product.priceVariants[0] : null
   );
@@ -252,6 +423,99 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
   const [isCustomizerExpanded, setIsCustomizerExpanded] = useState(false);
   const [customizations, setCustomizations] = useState<CustomizationData | undefined>();
   const [selectedVariants, setSelectedVariants] = useState<string[]>([]);
+  const [personalizationText, setPersonalizationText] = useState('');
+
+  const validatePersonalizedText = (text: string) => {
+    if (!product.personalizationEnabled) return { valid: true, error: "" };
+    
+    let transformed = text;
+    const transform = product.textTransform || 'original';
+    if (transform === 'uppercase') transformed = text.toUpperCase();
+    else if (transform === 'lowercase') transformed = text.toLowerCase();
+    else if (transform === 'titlecase') transformed = text.replace(/\b\w/g, c => c.toUpperCase());
+    
+    const allowed = product.allowedCharacters || {
+      alphabets: true,
+      numbers: false,
+      spaces: true,
+      hyphen: false,
+      ampersand: false,
+      period: false,
+      emoji: false
+    };
+
+    const trimmedLength = transformed.trim().length;
+    
+    if (product.personalizationRequired && trimmedLength === 0) {
+      return { valid: false, error: `${product.fieldLabel || 'Custom text'} is required.` };
+    }
+    
+    if (trimmedLength > 0 && trimmedLength < (product.minCharacters || 1)) {
+      return { valid: false, error: `Minimum ${product.minCharacters || 1} characters required.` };
+    }
+    
+    if (trimmedLength > (product.maxCharacters || 10)) {
+      return { valid: false, error: `Maximum ${product.maxCharacters || 10} characters allowed.` };
+    }
+
+    const emojiRegex = /[\uD800-\uDBFF][\uDC00-\uDFFF]|\u2600-\u27BF|[\uE000-\uF8FF]|\u2010-\u201f|[\u2000-\u3300]/;
+
+    for (let i = 0; i < transformed.length; i++) {
+      const char = transformed[i];
+      
+      if (char === ' ') {
+        if (!allowed.spaces) return { valid: false, error: "Spaces are not allowed." };
+        continue;
+      }
+      
+      if (char === '-') {
+        if (!allowed.hyphen) return { valid: false, error: "Hyphens are not allowed." };
+        continue;
+      }
+      
+      if (char === '&') {
+        if (!allowed.ampersand) return { valid: false, error: "Ampersands (&) are not allowed." };
+        continue;
+      }
+      
+      if (char === '.') {
+        if (!allowed.period) return { valid: false, error: "Periods (.) are not allowed." };
+        continue;
+      }
+      
+      if (char >= '0' && char <= '9') {
+        if (!allowed.numbers) return { valid: false, error: "Numbers are not allowed." };
+        continue;
+      }
+
+      const isEmoji = emojiRegex.test(char) || (i + 1 < transformed.length && emojiRegex.test(transformed.substring(i, i + 2)));
+      if (isEmoji) {
+        if (!allowed.emoji) return { valid: false, error: "Emojis are not allowed." };
+        if (emojiRegex.test(char)) continue;
+        i++; 
+        continue;
+      }
+
+      const isLetter = (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z');
+      if (isLetter) {
+        if (!allowed.alphabets) return { valid: false, error: "Alphabets are not allowed." };
+        continue;
+      }
+
+      return { valid: false, error: `Character "${char}" is not allowed.` };
+    }
+
+    return { valid: true, error: "" };
+  };
+
+  const personalizationCost = React.useMemo(() => {
+    if (!product.personalizationEnabled || !personalizationText.trim()) return 0;
+    const charCount = personalizationText.trim().length;
+    const extraChars = Math.max(0, charCount - (product.baseIncludedCharacters || 0));
+    const extraPrice = extraChars * (product.pricePerCharacter || 0);
+    return Math.min(product.maxExtraPrice || Infinity, extraPrice);
+  }, [personalizationText, product]);
+
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -466,15 +730,18 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
   }, [currentPrice, product.discount]);
 
   // Handle image URL using utility function with optimization for product detail view
-  const imageUrl = getProductImageUrl(product.images[selectedImage], 800, false);
+  const currentGalleryItem = galleryItems[selectedImage];
+  const imageUrl = currentGalleryItem?.type === 'image'
+    ? getProductImageUrl(currentGalleryItem.url, 800, false)
+    : getVideoPosterUrl(currentGalleryItem?.video?.url || '');
 
   // Image Navigation
   const prevImage = () => {
-    setSelectedImage((prev) => (prev === 0 ? product.images.length - 1 : prev - 1));
+    setSelectedImage((prev) => (prev === 0 ? galleryItems.length - 1 : prev - 1));
   };
 
   const nextImage = () => {
-    setSelectedImage((prev) => (prev === product.images.length - 1 ? 0 : prev + 1));
+    setSelectedImage((prev) => (prev === galleryItems.length - 1 ? 0 : prev + 1));
   };
 
   const incrementQuantity = () => {
@@ -540,6 +807,35 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
         return;
       }
 
+      if (product.personalizationEnabled) {
+        const valResult = validatePersonalizedText(personalizationText);
+        if (!valResult.valid) {
+          toast({
+            title: "Personalization Error",
+            description: valResult.error || "Please enter valid personalization text.",
+            type: "warning",
+          });
+          return;
+        }
+      }
+
+      const customizationsObj = {
+        ...customizations,
+        personalization: product.personalizationEnabled ? {
+          type: product.personalizationType || 'name',
+          label: product.fieldLabel || 'Recipient Name',
+          value: (() => {
+            const transform = product.textTransform || 'original';
+            let txt = personalizationText.trim();
+            if (transform === 'uppercase') return txt.toUpperCase();
+            if (transform === 'lowercase') return txt.toLowerCase();
+            if (transform === 'titlecase') return txt.replace(/\b\w/g, c => c.toUpperCase());
+            return txt;
+          })(),
+          characterCount: personalizationText.trim().length
+        } : undefined
+      };
+
       const cartItem = {
         _id: product._id,
         id: `${product._id}${selectedVariant ? `-${selectedVariant.label}` : ''}`,
@@ -551,7 +847,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
         images: product.images,
         quantity,
         selectedVariant,
-        customizations,
+        customizations: customizationsObj,
       };
 
       onAddToCart(cartItem);
@@ -685,11 +981,14 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
     }
   };
 
-  // Update price display based on selected variant
-  const displayPrice = selectedVariant ? selectedVariant.price : product.price;
-  const displayDiscountedPrice = product.discount
-    ? displayPrice - (displayPrice * product.discount) / 100
-    : displayPrice;
+  // Update price display based on selected variant + personalization cost
+  const baseProductPrice = selectedVariant ? selectedVariant.price : product.price;
+  const baseDiscountedPrice = product.discount
+    ? baseProductPrice - (baseProductPrice * product.discount) / 100
+    : baseProductPrice;
+
+  const displayPrice = baseProductPrice + personalizationCost;
+  const displayDiscountedPrice = baseDiscountedPrice + personalizationCost;
 
   // Price Variants Section
   const renderVariantSelection = () => {
@@ -760,8 +1059,74 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
     );
   };
 
+  // Generate SEO schema markup dynamically
+  const schemaMarkup = React.useMemo(() => {
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://sbflorist.in';
+    const productUrl = `${baseUrl}/product/${product._id}`;
+    
+    const imageList = product.images ? product.images.map(img => getImageUrl(img)) : [];
+    
+    const offers = {
+      "@type": "Offer",
+      "priceCurrency": "INR",
+      "price": discountedPrice,
+      "availability": product.countInStock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      "url": productUrl
+    };
+
+    const reviews = product.numReviews ? {
+      "@type": "AggregateRating",
+      "ratingValue": product.rating || 0,
+      "reviewCount": product.numReviews || 0
+    } : undefined;
+
+    // Map videos to schema VideoObject
+    const videosSchema = (product.videos || []).map(vid => {
+      const durationSec = vid.duration || 30;
+      const m = Math.floor(durationSec / 60);
+      const s = durationSec % 60;
+      const isoDuration = `PT${m}M${s}S`;
+
+      return {
+        "@type": "VideoObject",
+        "name": vid.title || product.title,
+        "description": vid.description || product.description || `Watch our premium arrangement ${product.title} in motion.`,
+        "thumbnailUrl": vid.thumbnailUrl || (product.images && getImageUrl(product.images[0])) || '',
+        "uploadDate": product.createdAt || new Date().toISOString(),
+        "duration": isoDuration,
+        "contentUrl": vid.url,
+        "embedUrl": vid.source === 'youtube' || vid.source === 'vimeo' ? vid.url : undefined
+      };
+    });
+
+    const schemaObj: Record<string, any> = {
+      "@context": "https://schema.org/",
+      "@type": "Product",
+      "name": product.title,
+      "image": imageList,
+      "description": product.description,
+      "sku": product._id,
+      "offers": offers
+    };
+
+    if (reviews) {
+      schemaObj.aggregateRating = reviews;
+    }
+
+    if (videosSchema.length > 0) {
+      schemaObj.subjectOf = videosSchema;
+    }
+
+    return JSON.stringify(schemaObj);
+  }, [product, discountedPrice]);
+
   return (
     <section className="pt-12 sm:pt-16 pb-24 px-4 sm:px-6 md:px-8 bg-gradient-to-b from-[#FAF9F6] via-[#F5EFE6]/30 to-[#FAF8F5] dark:from-[#141517] dark:via-[#1B1C1F] dark:to-[#141517] relative overflow-visible lg:overflow-visible">
+      {/* Dynamic SEO Video and Product Schema Markup */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: schemaMarkup }}
+      />
 
       {/* Elegant low-opacity radial ambient glow behind main sections */}
       <div className="absolute inset-0 pointer-events-none -z-10 overflow-hidden">
@@ -783,104 +1148,253 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
             <div className="flex flex-col md:flex-row gap-6 lg:w-full">
 
               {/* 1. Vertical Thumbnail Strip (Desktop) */}
-              {product.images.length > 1 && (
+              {galleryItems.length > 1 && (
                 <div className="hidden md:flex md:flex-col gap-3 w-20 max-h-[520px] overflow-y-auto no-scrollbar pr-1 py-1 flex-shrink-0">
-                  {product.images.map((image, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setSelectedImage(index)}
-                      className={cn(
-                        "aspect-[4/5] w-full relative overflow-hidden rounded-xl bg-white dark:bg-slate-950 border transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm",
-                        selectedImage === index
-                          ? "border-slate-800 dark:border-slate-100 shadow-[0_0_15px_rgba(0,0,0,0.06)] ring-2 ring-slate-800/10 dark:ring-slate-100/20 scale-102"
-                          : "border-slate-200/60 opacity-60 hover:opacity-100"
-                      )}
-                    >
-                      <ProtectedImage
-                        src={getImageUrl(image, { bustCache: false })}
-                        alt={`${product.title} thumbnail ${index + 1}`}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                      />
-                    </button>
-                  ))}
+                  {galleryItems.map((item, index) => {
+                    const isVideo = item.type === 'video';
+                    const thumbUrl = isVideo 
+                      ? (item.video.thumbnailUrl || getVideoPosterUrl(item.video.url) || '/images/placeholder.svg')
+                      : getImageUrl(item.url, { bustCache: false });
+
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => setSelectedImage(index)}
+                        className={cn(
+                          "aspect-[4/5] w-full relative overflow-hidden rounded-xl bg-white dark:bg-slate-950 border transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm",
+                          selectedImage === index
+                            ? "border-slate-800 dark:border-slate-100 shadow-[0_0_15px_rgba(0,0,0,0.06)] ring-2 ring-slate-800/10 dark:ring-slate-100/20 scale-102"
+                            : "border-slate-200/60 opacity-60 hover:opacity-100"
+                        )}
+                      >
+                        <ProtectedImage
+                          src={thumbUrl}
+                          alt={`${product.title} thumbnail ${index + 1}`}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                        
+                        {isVideo && (
+                          <div className="absolute inset-0 bg-black/30 flex items-center justify-center transition-opacity hover:bg-black/25">
+                            <div className="p-1 rounded-full bg-white/25 backdrop-blur-sm border border-white/20">
+                              <Play size={14} className="text-white fill-current ml-0.5" />
+                            </div>
+                            <span className="absolute bottom-1 right-1 bg-black/75 px-1 py-0.5 rounded text-[8px] font-mono text-white">
+                              {item.video.duration ? `${Math.floor(item.video.duration / 60)}:${String(item.video.duration % 60).padStart(2, '0')}` : '0:30'}
+                            </span>
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
 
-              {/* 2. Main Large Cinematic Image (with Parallax & Magnifier Lens) */}
+              {/* 2. Main Large Cinematic Image / Video Viewer */}
               <div className="relative flex-1">
                 <div className="relative w-full">
                   <div
                     ref={containerRef}
                     className={cn(
                       "relative w-full group rounded-[28px] bg-white/40 dark:bg-white/[0.02] border border-slate-200/30 dark:border-slate-800/40 shadow-[0_24px_60px_rgba(0,0,0,0.03)] overflow-hidden aspect-[4/5] lg:max-w-[calc((100vh-160px)*4/5)] lg:max-h-[calc(100vh-160px)] mx-auto flex items-center justify-center p-0 backdrop-blur-md",
-                    ""
+                      ""
                     )}
                   >
                     {/* Soft ambient background glow inside container for premium look */}
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(236,72,153,0.04)_0%,rgba(14,165,233,0.03)_50%,transparent_100%)] pointer-events-none" />
 
                     <div
-                      className="relative w-full h-full cursor-zoom-in flex items-center justify-center"
-                      onMouseMove={handleMouseMove}
-                      onMouseEnter={() => {
+                      className={cn(
+                        "relative w-full h-full flex items-center justify-center",
+                        currentGalleryItem?.type === 'image' ? 'cursor-zoom-in' : ''
+                      )}
+                      onMouseMove={currentGalleryItem?.type === 'image' ? handleMouseMove : undefined}
+                      onMouseEnter={currentGalleryItem?.type === 'image' ? () => {
                         setIsHovered(true);
                         setShowLens(true);
-                      }}
-                      onMouseLeave={() => {
+                      } : undefined}
+                      onMouseLeave={currentGalleryItem?.type === 'image' ? () => {
                         setIsHovered(false);
                         setShowLens(false);
                         setMousePos({ x: 0, y: 0 });
-                      }}
-                      onClick={() => setIsLightboxOpen(true)}
+                      } : undefined}
+                      onClick={currentGalleryItem?.type === 'image' ? () => setIsLightboxOpen(true) : undefined}
                     >
-                      {/* Image Loading Skeleton */}
-                      {isImageLoading && (
+                      {/* Image/Video Loading Skeleton */}
+                      {isImageLoading && currentGalleryItem?.type === 'image' && (
                         <div className="absolute inset-0 bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 dark:from-slate-800 dark:via-slate-700 dark:to-slate-800 animate-pulse flex items-center justify-center">
                           <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
                         </div>
                       )}
 
-                      {/* Animated Image Frame */}
-                      <motion.div
-                        key={selectedImage}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.35 }}
-                        className="w-full h-full flex items-center justify-center"
-                      >
-                        <MotionProtectedImage
-                          src={imageUrl}
-                          alt={product.title}
-                          onLoad={() => setIsImageLoading(false)}
-                          className="w-full h-full object-cover rounded-[28px] transition-transform duration-700 ease-out"
-                          style={{
-                            transform: isHovered && !isMobile
-                              ? `scale(1.08) translate(${mousePos.x * 12}px, ${mousePos.y * 12}px)`
-                              : 'scale(1) translate(0px, 0px)',
-                            transition: isHovered ? 'transform 0.05s ease-out' : 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)'
-                          }}
-                        />
-
-                        {/* Swipe Area for Mobile */}
+                      {/* Main Media Dispatcher */}
+                      <AnimatePresence mode="wait">
                         <motion.div
-                          drag="x"
-                          dragConstraints={{ left: 0, right: 0 }}
-                          onDragEnd={(e, { offset, velocity }) => {
-                            const swipeThreshold = 50;
-                            if (offset.x < -swipeThreshold) {
-                              nextImage();
-                            } else if (offset.x > swipeThreshold) {
-                              prevImage();
-                            }
-                          }}
-                          className="absolute inset-0 cursor-grab active:cursor-grabbing md:hidden"
-                        />
-                      </motion.div>
+                          key={selectedImage}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.35 }}
+                          className="w-full h-full flex items-center justify-center"
+                        >
+                          {currentGalleryItem?.type === 'image' ? (
+                            <MotionProtectedImage
+                              src={imageUrl}
+                              alt={product.title}
+                              onLoad={() => setIsImageLoading(false)}
+                              className="w-full h-full object-cover rounded-[28px] transition-transform duration-700 ease-out"
+                              style={{
+                                transform: isHovered && !isMobile
+                                  ? `scale(1.08) translate(${mousePos.x * 12}px, ${mousePos.y * 12}px)`
+                                  : 'scale(1) translate(0px, 0px)',
+                                transition: isHovered ? 'transform 0.05s ease-out' : 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)'
+                              }}
+                            />
+                          ) : currentGalleryItem?.type === 'video' ? (
+                            /* Premium Video Player */
+                            <div className="relative w-full h-full bg-slate-950 flex items-center justify-center rounded-[28px] overflow-hidden group/video-container">
+                              {currentGalleryItem.video.source === 'youtube' ? (
+                                <iframe
+                                  src={`${currentGalleryItem.video.url}?autoplay=1&mute=1&controls=1&rel=0&modestbranding=1&enablejsapi=1`}
+                                  title={currentGalleryItem.video.title || 'Product YouTube Showcase'}
+                                  className="w-full h-full rounded-[28px] border-0 pointer-events-auto"
+                                  allow="autoplay; encrypted-media; gyroscope; picture-in-picture"
+                                  allowFullScreen
+                                />
+                              ) : currentGalleryItem.video.source === 'vimeo' ? (
+                                <iframe
+                                  src={`${currentGalleryItem.video.url}?autoplay=1&muted=1&controls=1&loop=1`}
+                                  title={currentGalleryItem.video.title || 'Product Vimeo Showcase'}
+                                  className="w-full h-full rounded-[28px] border-0 pointer-events-auto"
+                                  allow="autoplay; fullscreen; picture-in-picture"
+                                  allowFullScreen
+                                />
+                              ) : (
+                                /* Custom styled HTML5 player for uploads / MP4 links */
+                                <div ref={videoContainerRef} className="relative w-full h-full flex items-center justify-center bg-black group/player">
+                                  <video
+                                    ref={videoRef}
+                                    src={currentGalleryItem.video.url}
+                                    className="w-full h-full object-contain cursor-pointer pointer-events-auto"
+                                    loop
+                                    playsInline
+                                    muted={isVideoMuted}
+                                    onTimeUpdate={handleVideoTimeUpdate}
+                                    onLoadedMetadata={handleVideoLoadedMetadata}
+                                    onClick={handlePlayPause}
+                                    poster={getVideoPosterUrl(currentGalleryItem.video.url)}
+                                  />
+                                  
+                                  {/* Glassmorphic Dark Overlay for Controls */}
+                                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/35 opacity-0 group-hover/player:opacity-100 transition-opacity duration-300 pointer-events-none z-10" />
 
-                      {/* Magnifying Lens (Desktop Only) */}
-                      {showLens && !isMobile && containerRef.current && (
+                                  {/* Top HUD */}
+                                  <div className="absolute top-4 inset-x-4 flex justify-between items-center opacity-0 group-hover/player:opacity-100 transition-opacity duration-300 z-20">
+                                    <span className="text-[10px] tracking-wider uppercase font-semibold text-white/95 backdrop-blur-md bg-black/40 border border-white/10 px-3 py-1.5 rounded-full">
+                                      {currentGalleryItem.video.title || 'Product Video'}
+                                    </span>
+                                    
+                                    <button
+                                      onClick={handleToggleFullscreen}
+                                      className="p-2 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white hover:bg-black/60 hover:scale-105 active:scale-95 transition-all pointer-events-auto"
+                                      title="Toggle Fullscreen"
+                                    >
+                                      {isVideoFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+                                    </button>
+                                  </div>
+
+                                  {/* Giant Center Play HUD */}
+                                  {!isVideoPlaying && (
+                                    <div onClick={handlePlayPause} className="absolute inset-0 flex items-center justify-center z-15 cursor-pointer pointer-events-auto">
+                                      <div className="p-4 rounded-full bg-white/15 backdrop-blur-md border border-white/20 text-white transform scale-95 hover:scale-100 transition-all duration-500 shadow-2xl hover:bg-white/25">
+                                        <Play className="h-8 w-8 fill-white ml-0.5" />
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Bottom controls panel */}
+                                  <div className="absolute bottom-4 inset-x-4 flex flex-col gap-2 opacity-0 group-hover/player:opacity-100 transition-opacity duration-300 z-20 pointer-events-auto">
+                                    
+                                    {/* Progress track */}
+                                    <input
+                                      type="range"
+                                      min="0"
+                                      max={videoDuration || 100}
+                                      value={videoCurrentTime}
+                                      onChange={handleVideoSeek}
+                                      className="w-full h-1 bg-white/30 rounded-lg appearance-none cursor-pointer accent-pink-500"
+                                    />
+
+                                    {/* HUD buttons row */}
+                                    <div className="flex items-center justify-between backdrop-blur-md bg-black/40 border border-white/10 px-3 py-1.5 rounded-xl text-white text-xs">
+                                      <div className="flex items-center gap-3">
+                                        <button onClick={handlePlayPause} className="hover:text-pink-400 transition-colors">
+                                          {isVideoPlaying ? <Pause size={16} /> : <Play size={16} className="fill-current" />}
+                                        </button>
+                                        <span className="text-[10px] font-mono text-slate-350">
+                                          {formatVideoTime(videoCurrentTime)} / {formatVideoTime(videoDuration)}
+                                        </span>
+                                      </div>
+
+                                      <div className="flex items-center gap-3">
+                                        {/* Speed */}
+                                        <div className="relative">
+                                          <button
+                                            onClick={() => setShowSpeedMenu(!showSpeedMenu)}
+                                            className="text-[9px] font-bold border border-white/20 hover:border-white/40 px-1.5 py-0.5 rounded tracking-wider hover:bg-white/10"
+                                          >
+                                            {videoPlaybackRate}x
+                                          </button>
+                                          {showSpeedMenu && (
+                                            <div className="absolute bottom-full right-0 mb-1.5 bg-slate-900 border border-slate-800 rounded-lg shadow-xl py-1 w-16 flex flex-col text-left z-30">
+                                              {[0.5, 1, 1.5, 2].map((r) => (
+                                                <button
+                                                  key={r}
+                                                  onClick={() => handlePlaybackRateChange(r)}
+                                                  className={cn(
+                                                    "text-[10px] px-2 py-1 hover:bg-slate-800 text-left transition-colors",
+                                                    videoPlaybackRate === r ? "text-pink-400 font-bold" : "text-white"
+                                                  )}
+                                                >
+                                                  {r}x
+                                                </button>
+                                              ))}
+                                            </div>
+                                          )}
+                                        </div>
+
+                                        {/* Mute */}
+                                        <button onClick={handleMuteUnmute} className="hover:text-pink-400 transition-colors">
+                                          {isVideoMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                                        </button>
+                                      </div>
+                                    </div>
+
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          ) : null}
+
+                          {/* Swipe Area for Mobile */}
+                          <motion.div
+                            drag="x"
+                            dragConstraints={{ left: 0, right: 0 }}
+                            onDragEnd={(e, { offset, velocity }) => {
+                              const swipeThreshold = 50;
+                              if (offset.x < -swipeThreshold) {
+                                nextImage();
+                              } else if (offset.x > swipeThreshold) {
+                                prevImage();
+                              }
+                            }}
+                            className="absolute inset-0 cursor-grab active:cursor-grabbing md:hidden z-10"
+                          />
+                        </motion.div>
+                      </AnimatePresence>
+
+                      {/* Magnifying Lens (Desktop Only - Image Only) */}
+                      {showLens && !isMobile && containerRef.current && currentGalleryItem?.type === 'image' && (
                         <div
                           className="absolute pointer-events-none border border-white/30 shadow-[0_25px_60px_rgba(0,0,0,0.35)] rounded-full overflow-hidden hidden lg:block"
                           style={{
@@ -897,8 +1411,25 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                         />
                       )}
 
+                      {/* Floating Glassmorphic WATCH VIDEO Button Overlay */}
+                      {product.videos && product.videos.length > 0 && currentGalleryItem?.type === 'image' && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const videoIdx = galleryItems.findIndex(item => item.type === 'video');
+                            if (videoIdx !== -1) {
+                              setSelectedImage(videoIdx);
+                            }
+                          }}
+                          className="absolute bottom-4 left-4 z-20 flex items-center gap-2 px-4 py-2 bg-white/75 dark:bg-slate-900/75 hover:bg-white dark:hover:bg-slate-900 backdrop-blur-md border border-slate-200/20 text-slate-800 dark:text-slate-100 rounded-full font-semibold text-xs tracking-wider shadow-sm transition-all duration-300 hover:scale-105 hover:shadow-md cursor-pointer pointer-events-auto"
+                        >
+                          <Play size={12} className="fill-current text-slate-800 dark:text-slate-100" />
+                          <span>WATCH VIDEO</span>
+                        </button>
+                      )}
+
                       {/* Badges for New / Featured */}
-                      <div className="absolute top-4 left-4 flex flex-col gap-2 z-10 pointer-events-none">
+                      <div className="absolute top-4 left-4 flex flex-col gap-2 z-20 pointer-events-none">
                         {(product.isNewArrival || (product as { isNew?: boolean }).isNew) && (
                           <span className="bg-slate-900/90 dark:bg-white/90 text-white dark:text-slate-900 text-[9px] font-bold tracking-[0.15em] uppercase px-2.5 py-1 rounded shadow-sm">
                             New Arrival
@@ -912,20 +1443,24 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                       </div>
 
                       {product.discount > 0 && (
-                        <span className="absolute bottom-4 right-4 bg-rose-600/90 text-white text-[9px] font-bold tracking-[0.15em] uppercase px-2.5 py-1 rounded shadow-sm z-10">
+                        <span className="absolute bottom-4 right-4 bg-rose-600/90 text-white text-[9px] font-bold tracking-[0.15em] uppercase px-2.5 py-1 rounded shadow-sm z-20">
                           -{product.discount}% Off
                         </span>
                       )}
 
                       {/* Hover UI Overlay hints */}
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 dark:group-hover:bg-black/10 transition-colors pointer-events-none duration-300" />
-                      <div className="absolute bottom-4 left-4 text-xs font-semibold bg-white/70 backdrop-blur-md text-slate-800 dark:bg-slate-950/70 dark:text-slate-200 px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-sm pointer-events-none">
-                        🔍 Hover to inspect • Click to expand
-                      </div>
+                      {currentGalleryItem?.type === 'image' && (
+                        <>
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 dark:group-hover:bg-black/10 transition-colors pointer-events-none duration-300" />
+                          <div className="absolute bottom-4 left-4 text-xs font-semibold bg-white/70 backdrop-blur-md text-slate-800 dark:bg-slate-950/70 dark:text-slate-200 px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-sm pointer-events-none">
+                            🔍 Hover to inspect • Click to expand
+                          </div>
+                        </>
+                      )}
 
                       {/* Left/Right Controls (Mobile and desktop fallback) */}
-                      {product.images.length > 1 && (
-                        <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 flex justify-between pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      {galleryItems.length > 1 && (
+                        <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 flex justify-between pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -952,26 +1487,44 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
               </div>
 
               {/* 3. Horizontal Thumbnail Strip (Mobile, below image) */}
-              {product.images.length > 1 && (
+              {galleryItems.length > 1 && (
                 <div className="flex md:hidden gap-2 overflow-x-auto no-scrollbar py-2 col-span-1 justify-center px-1">
-                  {product.images.map((image, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setSelectedImage(index)}
-                      className={cn(
-                        "h-16 aspect-[4/5] relative overflow-hidden rounded-lg bg-white border flex-shrink-0 transition-all duration-300",
-                        selectedImage === index
-                          ? "border-slate-800 ring-2 ring-slate-800/10 scale-102"
-                          : "border-slate-200/80 opacity-60"
-                      )}
-                    >
-                      <ProtectedImage
-                        src={getImageUrl(image, { bustCache: false })}
-                        alt={`${product.title} visual ${index + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </button>
-                  ))}
+                  {galleryItems.map((item, index) => {
+                    const isVideo = item.type === 'video';
+                    const thumbUrl = isVideo 
+                      ? (item.video.thumbnailUrl || getVideoPosterUrl(item.video.url) || '/images/placeholder.svg')
+                      : getImageUrl(item.url, { bustCache: false });
+
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => setSelectedImage(index)}
+                        className={cn(
+                          "h-16 aspect-[4/5] relative overflow-hidden rounded-lg bg-white border flex-shrink-0 transition-all duration-300",
+                          selectedImage === index
+                            ? "border-slate-800 ring-2 ring-slate-800/10 scale-102"
+                            : "border-slate-200/80 opacity-60"
+                        )}
+                      >
+                        <ProtectedImage
+                          src={thumbUrl}
+                          alt={`${product.title} visual ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                        
+                        {isVideo && (
+                          <div className="absolute inset-0 bg-black/25 flex items-center justify-center">
+                            <div className="p-0.5 rounded-full bg-white/20 backdrop-blur-sm border border-white/20">
+                              <Play size={10} className="text-white fill-current ml-0.5" />
+                            </div>
+                            <span className="absolute bottom-0.5 right-0.5 bg-black/75 px-1 py-0.5 rounded text-[7px] font-mono text-white">
+                              {item.video.duration ? `${Math.floor(item.video.duration / 60)}:${String(item.video.duration % 60).padStart(2, '0')}` : '0:30'}
+                            </span>
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -1177,6 +1730,79 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
 
             {/* 7. Product Variants */}
             {renderVariantSelection()}
+
+            {/* Personalization Section */}
+            {product.personalizationEnabled && (
+              <div className="p-5 rounded-[24px] border border-slate-200/50 dark:border-slate-800/40 bg-white/40 dark:bg-[#1E2024]/20 backdrop-blur-md shadow-sm space-y-4">
+                <div className="flex items-center space-x-2">
+                  <Sparkles className="h-5 w-5 text-bloom-pink-500" />
+                  <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                    {product.fieldLabel || 'Enter Name / Word'}
+                    {product.personalizationRequired && <span className="text-red-500 ml-1">*</span>}
+                  </h4>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Input
+                    placeholder={product.placeholder || 'Example: KHUSHAL, LOVE, MOM'}
+                    value={personalizationText}
+                    onChange={(e) => {
+                      const raw = e.target.value;
+                      const maxLimit = product.maxCharacters || 10;
+                      if (raw.length <= maxLimit) {
+                        setPersonalizationText(raw);
+                      }
+                    }}
+                    className="border-slate-200 dark:border-slate-800 rounded-xl focus-visible:ring-bloom-pink-500"
+                  />
+                  
+                  <div className="flex items-center justify-between text-[11px] text-slate-400">
+                    <span>{product.helperText || `Enter text for personalization.`}</span>
+                    <span className={cn(
+                      "font-semibold",
+                      personalizationText.length > (product.maxCharacters || 10) ? "text-red-505" : "text-slate-500"
+                    )}>
+                      Characters: {personalizationText.length} / {product.maxCharacters || 10}
+                    </span>
+                  </div>
+
+                  {/* Real-time Validation Message */}
+                  {(() => {
+                    const validation = validatePersonalizedText(personalizationText);
+                    if (!validation.valid && personalizationText.length > 0) {
+                      return (
+                        <p className="text-[10px] text-red-500 font-medium flex items-center gap-1">
+                          <AlertCircle className="h-3 w-3 animate-pulse" />
+                          <span>{validation.error}</span>
+                        </p>
+                      );
+                    }
+                    return null;
+                  })()}
+                </div>
+
+                {/* Live Preview */}
+                {personalizationText.trim().length > 0 && (
+                  <div className="p-3 rounded-xl bg-slate-50/50 dark:bg-slate-900/10 border border-slate-200/30 dark:border-slate-800/20 text-center space-y-1">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Your Bouquet Will Spell</span>
+                    <div className="text-base font-extrabold text-slate-800 dark:text-slate-100 flex items-center justify-center gap-1">
+                      <span>❤️</span>
+                      <span className="tracking-wide">
+                        {(() => {
+                          const transform = product.textTransform || 'original';
+                          let txt = personalizationText.trim();
+                          if (transform === 'uppercase') return txt.toUpperCase();
+                          if (transform === 'lowercase') return txt.toLowerCase();
+                          if (transform === 'titlecase') return txt.replace(/\b\w/g, c => c.toUpperCase());
+                          return txt;
+                        })()}
+                      </span>
+                      <span>❤️</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* 8. Add-ons Customize Banner */}
             {product.isCustomizable && (
@@ -1583,10 +2209,12 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
             </Accordion>
 
             {/* Inline Product Customizer */}
-            {product.isCustomizable && product.customizationOptions && (
+            {(product.isCustomizable || product.personalizationEnabled) && product.customizationOptions && (
               <InlineProductCustomizer
                 isOpen={isCustomizerExpanded}
                 onToggleOpen={() => setIsCustomizerExpanded(!isCustomizerExpanded)}
+                personalizationText={personalizationText}
+                setPersonalizationText={setPersonalizationText}
                 product={{
                   _id: product._id,
                   title: product.title,
@@ -1597,7 +2225,20 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                   comboItems: product.comboItems,
                   comboName: product.comboName,
                   comboDescription: product.comboDescription,
-                  discount: product.discount
+                  discount: product.discount,
+                  personalizationEnabled: product.personalizationEnabled,
+                  personalizationType: product.personalizationType,
+                  fieldLabel: product.fieldLabel,
+                  placeholder: product.placeholder,
+                  minCharacters: product.minCharacters,
+                  maxCharacters: product.maxCharacters,
+                  allowedCharacters: product.allowedCharacters,
+                  helperText: product.helperText,
+                  baseIncludedCharacters: product.baseIncludedCharacters,
+                  pricePerCharacter: product.pricePerCharacter,
+                  maxExtraPrice: product.maxExtraPrice,
+                  textTransform: product.textTransform,
+                  personalizationRequired: product.personalizationRequired
                 }}
                 selectedVariant={selectedVariant}
                 onAddToCart={(customizations, customTotalPrice) => {
@@ -1746,12 +2387,12 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                 onClick={(e) => e.stopPropagation()}
               >
                 <span className="text-xs font-bold tracking-[0.1em] uppercase">
-                  {selectedImage + 1} / {product.images.length} • {product.title}
+                  {selectedImage + 1} / {galleryItems.length} • {product.title}
                 </span>
               </div>
 
-              {/* Lightbox Main Image */}
-              <div className="relative flex-1 flex items-center justify-center max-w-4xl mx-auto w-full">
+              {/* Lightbox Main Content (Image or Video) */}
+              <div className="relative flex-1 flex items-center justify-center max-w-5xl mx-auto w-full">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -1763,26 +2404,64 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                 </button>
 
                 <div
-                  className="relative max-w-fit mx-auto"
+                  className="relative max-w-full mx-auto"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <MotionProtectedImage
-                    key={selectedImage}
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ duration: 0.3 }}
-                    src={getImageUrl(product.images[selectedImage], { bustCache: false })}
-                    alt={product.title}
-                    className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-2xl"
-                  />
+                  {currentGalleryItem?.type === 'video' ? (
+                    <div className="w-[85vw] max-w-4xl aspect-[16/9] bg-black rounded-2xl overflow-hidden flex items-center justify-center relative shadow-2xl">
+                      {currentGalleryItem.video.source === 'youtube' ? (
+                        <iframe
+                          src={`${currentGalleryItem.video.url}?autoplay=1&mute=0&controls=1`}
+                          title={currentGalleryItem.video.title || 'Product Video'}
+                          className="w-full h-full border-0"
+                          allow="autoplay; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
+                      ) : currentGalleryItem.video.source === 'vimeo' ? (
+                        <iframe
+                          src={`${currentGalleryItem.video.url}?autoplay=1&muted=0&controls=1`}
+                          title={currentGalleryItem.video.title || 'Product Video'}
+                          className="w-full h-full border-0"
+                          allow="autoplay; fullscreen; picture-in-picture"
+                          allowFullScreen
+                        />
+                      ) : (
+                        <video
+                          src={currentGalleryItem.video.url}
+                          controls
+                          autoPlay
+                          className="w-full h-full object-contain"
+                        />
+                      )}
+                      
+                      <button
+                        onClick={() => setIsLightboxOpen(false)}
+                        className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/80 hover:bg-black text-white flex items-center justify-center border border-white/20 shadow-xl z-20 hover:scale-105 active:scale-95 transition-all"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="relative max-w-fit mx-auto">
+                      <MotionProtectedImage
+                        key={selectedImage}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.3 }}
+                        src={getImageUrl(currentGalleryItem?.url || '', { bustCache: false })}
+                        alt={product.title}
+                        className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-2xl"
+                      />
 
-                  <button
-                    onClick={() => setIsLightboxOpen(false)}
-                    className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-black/85 hover:bg-black text-white flex items-center justify-center border border-white/40 shadow-xl hover:scale-110 active:scale-95 transition-all z-20"
-                  >
-                    <X size={16} />
-                  </button>
+                      <button
+                        onClick={() => setIsLightboxOpen(false)}
+                        className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-black/85 hover:bg-black text-white flex items-center justify-center border border-white/40 shadow-xl hover:scale-110 active:scale-95 transition-all z-20"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <button
@@ -1797,29 +2476,41 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
               </div>
 
               {/* Lightbox Thumbnails Strip */}
-              {product.images.length > 1 && (
+              {galleryItems.length > 1 && (
                 <div
                   className="flex gap-2.5 justify-center py-4 overflow-x-auto no-scrollbar"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  {product.images.map((image, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setSelectedImage(index)}
-                      className={cn(
-                        "w-12 h-16 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0",
-                        selectedImage === index
-                          ? "border-white scale-105"
-                          : "border-transparent opacity-40 hover:opacity-100"
-                      )}
-                    >
-                      <ProtectedImage
-                        src={getImageUrl(image, { bustCache: false })}
-                        alt="preview thumb"
-                        className="w-full h-full object-cover"
-                      />
-                    </button>
-                  ))}
+                  {galleryItems.map((item, index) => {
+                    const isVideo = item.type === 'video';
+                    const thumbUrl = isVideo 
+                      ? (item.video.thumbnailUrl || getVideoPosterUrl(item.video.url) || '/images/placeholder.svg')
+                      : getImageUrl(item.url, { bustCache: false });
+
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => setSelectedImage(index)}
+                        className={cn(
+                          "w-12 h-16 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 relative",
+                          selectedImage === index
+                            ? "border-white scale-105"
+                            : "border-transparent opacity-40 hover:opacity-100"
+                        )}
+                      >
+                        <ProtectedImage
+                          src={thumbUrl}
+                          alt="preview thumb"
+                          className="w-full h-full object-cover"
+                        />
+                        {isVideo && (
+                          <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                            <Play size={10} className="text-white fill-current" />
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </motion.div>

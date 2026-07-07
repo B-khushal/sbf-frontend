@@ -1393,6 +1393,17 @@ const CheckoutShippingPage = () => {
                                     )}
                                   </div>
                                 )}
+                                {item.customizations.personalization && (
+                                  <div className="text-xs text-slate-700 bg-slate-50/50 border border-slate-200/40 rounded-lg p-2 space-y-1 mt-1.5">
+                                    <div className="font-semibold text-slate-800 flex items-center gap-1">
+                                      <span>✨ Customization:</span>
+                                    </div>
+                                    <div className="pl-1 text-slate-600">
+                                      <span className="font-medium text-slate-500">{item.customizations.personalization.label || 'Recipient Name'}:</span>{' '}
+                                      <span className="font-bold text-slate-800">{item.customizations.personalization.value}</span>
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             )}
                           </div>

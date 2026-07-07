@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 import { useNavigate } from 'react-router-dom';
-import { Trash2, ShoppingCart, Plus, Minus, ArrowRight, Info, Sparkles, AlertTriangle } from 'lucide-react';
+import { Trash2, ShoppingCart, Plus, Minus, ArrowRight, Info, Sparkles, AlertTriangle, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import useCart from '@/hooks/use-cart';
 import { useCurrency } from '@/contexts/CurrencyContext';
@@ -116,6 +116,12 @@ const CartPage: React.FC = () => {
     finalAmount: number;
   } | null>(null);
 
+  // Edit personalization modal state
+  const [editingItem, setEditingItem] = useState<any | null>(null);
+  const [editingText, setEditingText] = useState('');
+  const [editError, setEditError] = useState('');
+  const { updateItemCustomizations } = useCart();
+
   // State for dynamic delivery calculation
   const [deliveryCalculation, setDeliveryCalculation] = useState<{
     deliveryCharge: number;
@@ -208,6 +214,145 @@ const CartPage: React.FC = () => {
 
   const handlePromoCodeRemoved = () => {
     setAppliedPromoCode(null);
+  };
+
+  const openEditModal = (item: any) => {
+    setEditingItem(item);
+    setEditingText(item.customizations?.personalization?.value || '');
+    setEditError('');
+  };
+
+  const validateEditText = (text: string, item: any) => {
+    let transformed = text;
+    const transform = item.textTransform || 'original';
+    if (transform === 'uppercase') transformed = text.toUpperCase();
+    else if (transform === 'lowercase') transformed = text.toLowerCase();
+    else if (transform === 'titlecase') transformed = text.replace(/\b\w/g, c => c.toUpperCase());
+
+    const allowed = item.allowedCharacters || {
+      alphabets: true,
+      numbers: false,
+      spaces: true,
+      hyphen: false,
+      ampersand: false,
+      period: false,
+      emoji: false
+    };
+
+    const trimmedLength = transformed.trim().length;
+
+    if (item.personalizationRequired && trimmedLength === 0) {
+      return { valid: false, error: `${item.fieldLabel || 'Custom text'} is required.` };
+    }
+
+    if (trimmedLength > 0 && trimmedLength < (item.minCharacters || 1)) {
+      return { valid: false, error: `Minimum ${item.minCharacters || 1} characters required.` };
+    }
+
+    if (trimmedLength > (item.maxCharacters || 10)) {
+      return { valid: false, error: `Maximum ${item.maxCharacters || 10} characters allowed.` };
+    }
+
+    const emojiRegex = /[\uD800-\uDBFF][\uDC00-\uDFFF]|\u2600-\u27BF|[\uE000-\uF8FF]|\u2010-\u201f|[\u2000-\u3300]/;
+
+    for (let i = 0; i < transformed.length; i++) {
+      const char = transformed[i];
+
+      if (char === ' ') {
+        if (!allowed.spaces) return { valid: false, error: "Spaces are not allowed." };
+        continue;
+      }
+
+      if (char === '-') {
+        if (!allowed.hyphen) return { valid: false, error: "Hyphens are not allowed." };
+        continue;
+      }
+
+      if (char === '&') {
+        if (!allowed.ampersand) return { valid: false, error: "Ampersands (&) are not allowed." };
+        continue;
+      }
+
+      if (char === '.') {
+        if (!allowed.period) return { valid: false, error: "Periods (.) are not allowed." };
+        continue;
+      }
+
+      if (char >= '0' && char <= '9') {
+        if (!allowed.numbers) return { valid: false, error: "Numbers are not allowed." };
+        continue;
+      }
+
+      const isEmoji = emojiRegex.test(char) || (i + 1 < transformed.length && emojiRegex.test(transformed.substring(i, i + 2)));
+      if (isEmoji) {
+        if (!allowed.emoji) return { valid: false, error: "Emojis are not allowed." };
+        if (emojiRegex.test(char)) continue;
+        i++;
+        continue;
+      }
+
+      const isLetter = (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z');
+      if (isLetter) {
+        if (!allowed.alphabets) return { valid: false, error: "Alphabets are not allowed." };
+        continue;
+      }
+
+      return { valid: false, error: `Character "${char}" is not allowed.` };
+    }
+
+    return { valid: true, error: "" };
+  };
+
+  const handleSavePersonalization = async () => {
+    if (!editingItem) return;
+
+    const valResult = validateEditText(editingText, editingItem);
+    if (!valResult.valid) {
+      setEditError(valResult.error);
+      return;
+    }
+
+    try {
+      const transform = editingItem.textTransform || 'original';
+      let transformedValue = editingText.trim();
+      if (transform === 'uppercase') transformedValue = editingText.toUpperCase();
+      else if (transform === 'lowercase') transformedValue = editingText.toLowerCase();
+      else if (transform === 'titlecase') transformedValue = editingText.replace(/\b\w/g, c => c.toUpperCase());
+
+      const charCount = transformedValue.length;
+      const extraChars = Math.max(0, charCount - (editingItem.baseIncludedCharacters || 0));
+      const extraPrice = extraChars * (editingItem.pricePerCharacter || 0);
+      const personalizationCost = Math.min(editingItem.maxExtraPrice || Infinity, extraPrice);
+
+      const itemBasePrice = editingItem.selectedVariant?.price || editingItem.originalPrice || editingItem.price;
+      const itemBaseDiscountedPrice = editingItem.discount
+        ? itemBasePrice - (itemBasePrice * editingItem.discount) / 100
+        : itemBasePrice;
+
+      const newPrice = itemBaseDiscountedPrice + personalizationCost;
+
+      const updatedPersonalization = {
+        ...editingItem.customizations.personalization,
+        value: transformedValue,
+        characterCount: charCount
+      };
+
+      const updatedCustomizations = {
+        ...editingItem.customizations,
+        personalization: updatedPersonalization
+      };
+
+      await updateItemCustomizations(editingItem._id || editingItem.id, updatedCustomizations, newPrice);
+
+      setEditingItem(null);
+      toast({
+        title: "Customization Updated",
+        description: "Your personalized text has been updated successfully.",
+      });
+    } catch (err: any) {
+      console.error(err);
+      setEditError(err.message || "Failed to update customization.");
+    }
   };
 
   return (
@@ -370,6 +515,32 @@ const CartPage: React.FC = () => {
                                         </p>
                                       </div>
                                     )}
+                                  </div>
+                                )}
+
+                                {item.customizations?.personalization && (
+                                  <div className="text-xs text-slate-600 bg-slate-50/70 border border-slate-200/50 rounded-xl p-3 mt-2 mb-3 text-left">
+                                    <p className="font-bold mb-1.5 flex items-center gap-1">
+                                      <span>✨ Customization:</span>
+                                    </p>
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                                      <div>
+                                        <span className="capitalize font-semibold text-slate-550">
+                                          {item.customizations.personalization.label || 'Personalized Text'}:
+                                        </span>{' '}
+                                        <span className="font-bold text-slate-800">
+                                          {item.customizations.personalization.value}
+                                        </span>
+                                      </div>
+                                      <Button
+                                        onClick={() => openEditModal(item)}
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-7 text-[10px] px-2.5 border-slate-200 hover:bg-slate-100/50 rounded-xl"
+                                      >
+                                        Edit
+                                      </Button>
+                                    </div>
                                   </div>
                                 )}
 
@@ -646,6 +817,98 @@ const CartPage: React.FC = () => {
         onClose={closeContactModal}
         productTitle={contactModalProduct}
       />
+
+      {/* Edit Personalization Dialog */}
+      {editingItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-950 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 max-w-md w-full shadow-2xl space-y-4 animate-in fade-in zoom-in duration-300">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-150">
+              <h3 className="text-base font-extrabold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-bloom-pink-500" />
+                <span>Edit Personalization</span>
+              </h3>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setEditingItem(null)}
+                className="h-8 w-8 rounded-full hover:bg-slate-100"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  {editingItem.fieldLabel || 'Custom Text'}
+                </Label>
+                <Input
+                  value={editingText}
+                  placeholder={editingItem.placeholder || 'Enter text'}
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    const maxLimit = editingItem.maxCharacters || 10;
+                    if (raw.length <= maxLimit) {
+                      setEditingText(raw);
+                    }
+                  }}
+                  className="focus-visible:ring-bloom-pink-500 rounded-xl w-full"
+                />
+                
+                <div className="flex items-center justify-between text-[10px] text-slate-400">
+                  <span>{editingItem.helperText || 'Verify your capitalization and spelling.'}</span>
+                  <span className="font-semibold">
+                    Characters: {editingText.length} / {editingItem.maxCharacters || 10}
+                  </span>
+                </div>
+
+                {editError && (
+                  <p className="text-[10px] text-red-500 font-medium flex items-center gap-1 mt-1">
+                    <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                    <span>{editError}</span>
+                  </p>
+                )}
+              </div>
+
+              {editingText.trim().length > 0 && (
+                <div className="p-3 rounded-xl bg-slate-50/50 dark:bg-slate-900/10 border border-slate-200/30 dark:border-slate-800/20 text-center">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1">Your Bouquet Will Spell</span>
+                  <div className="text-sm font-extrabold text-slate-800 dark:text-slate-100 flex items-center justify-center gap-1">
+                    <span>❤️</span>
+                    <span className="tracking-wide">
+                      {(() => {
+                        const transform = editingItem.textTransform || 'original';
+                        let txt = editingText.trim();
+                        if (transform === 'uppercase') return txt.toUpperCase();
+                        if (transform === 'lowercase') return txt.toLowerCase();
+                        if (transform === 'titlecase') return txt.replace(/\b\w/g, c => c.toUpperCase());
+                        return txt;
+                      })()}
+                    </span>
+                    <span>❤️</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <Button
+                variant="outline"
+                onClick={() => setEditingItem(null)}
+                className="rounded-xl text-xs px-4"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSavePersonalization}
+                className="bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-950 rounded-xl text-xs px-4 font-bold"
+              >
+                Save Changes
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

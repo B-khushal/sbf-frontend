@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 import { cn } from "@/lib/utils";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { Heart, ShoppingBag, Star, ArrowRight, Sparkles, Wand2, ChevronLeft, ChevronRight, Flower2 } from "lucide-react";
+import { Heart, ShoppingBag, Star, ArrowRight, Sparkles, Wand2, ChevronLeft, ChevronRight, Flower2, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import useCart from "@/hooks/use-cart";
@@ -517,6 +517,9 @@ const LuxuryProductCard = ({
     if (product.sameDay !== false) {
       items.push({ text: "⚡ Same Day", type: "sameday" });
     }
+    if (product.videos && product.videos.length > 0) {
+      items.push({ text: "🎥 In Motion", type: "inmotion" });
+    }
     return items;
   }, [product]);
 
@@ -567,7 +570,8 @@ const LuxuryProductCard = ({
                 badge.type === "discount" && "bg-red-50/90 text-red-650 border-red-100/60",
                 badge.type === "featured" && "bg-amber-50/90 text-amber-600 border-amber-100/60",
                 badge.type === "new" && "bg-emerald-50/90 text-emerald-700 border-emerald-100/60",
-                badge.type === "sameday" && "bg-sky-50/90 text-sky-700 border-sky-100/60"
+                badge.type === "sameday" && "bg-sky-50/90 text-sky-700 border-sky-100/60",
+                badge.type === "inmotion" && "bg-indigo-50/90 text-indigo-700 border-indigo-100/60"
               )}
             >
               {badge.text}

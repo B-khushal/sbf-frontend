@@ -8,6 +8,47 @@ import {
 } from '@/utils/cartManager';
 import * as cartService from '@/services/cartService';
 
+const transformCartItem = (cartItem: any) => ({
+  _id: cartItem._id,
+  id: cartItem._id,
+  productId: cartItem.productId,
+  productModel: cartItem.productModel || 'Product',
+  title: cartItem.title,
+  price: cartItem.price,
+  image: cartItem.images?.[0] || '',
+  images: cartItem.images,
+  quantity: cartItem.quantity,
+  category: cartItem.category,
+  discount: cartItem.discount,
+  description: cartItem.description,
+  careInstructions: cartItem.careInstructions ?? [],
+  isNewArrival: cartItem.isNewArrival ?? false,
+  isFeatured: cartItem.isFeatured ?? false,
+  customizations: cartItem.customizations ?? undefined,
+  selectedVariant: cartItem.selectedVariant ?? undefined,
+  productType: cartItem.productType,
+  isValentineProduct: cartItem.isValentineProduct,
+  availableDates: cartItem.availableDates,
+  dateWiseStock: cartItem.dateWiseStock,
+  dateWisePricing: cartItem.dateWisePricing,
+  dateWiseOffers: cartItem.dateWiseOffers,
+  dateWiseDeliveryCharges: cartItem.dateWiseDeliveryCharges,
+  personalizationEnabled: cartItem.personalizationEnabled,
+  personalizationType: cartItem.personalizationType,
+  fieldLabel: cartItem.fieldLabel,
+  placeholder: cartItem.placeholder,
+  minCharacters: cartItem.minCharacters,
+  maxCharacters: cartItem.maxCharacters,
+  allowedCharacters: cartItem.allowedCharacters,
+  personalizationRequired: cartItem.personalizationRequired,
+  textTransform: cartItem.textTransform,
+  helperText: cartItem.helperText,
+  pricePerCharacter: cartItem.pricePerCharacter,
+  baseIncludedCharacters: cartItem.baseIncludedCharacters,
+  maxExtraPrice: cartItem.maxExtraPrice,
+  sameDay: cartItem.sameDay !== undefined ? cartItem.sameDay : true,
+});
+
 interface CartState {
   items: CartItem[];
   isLoading: boolean;
@@ -15,6 +56,7 @@ interface CartState {
   removeFromCart: (productId: string) => Promise<void>;
   removeItem: (itemId: string) => Promise<void>;
   updateItemQuantity: (itemId: string, quantity: number) => Promise<void>;
+  updateItemCustomizations: (itemId: string, customizations: any, customPrice?: number) => Promise<void>;
   clearCart: () => Promise<void>;
   loadCart: (userId?: string) => Promise<void>;
   saveCart: (cart: CartItem[], userId?: string) => void;
@@ -68,32 +110,7 @@ export const useCart = create<CartState>((set, get) => ({
           item.productModel || 'Product'
         );
         // Update local state with backend response
-        const transformedItems = response.cart.map(cartItem => ({
-          _id: cartItem._id,
-          id: cartItem._id,
-          productId: cartItem.productId,
-          productModel: cartItem.productModel || 'Product',
-          title: cartItem.title,
-          price: cartItem.price,
-          image: cartItem.images?.[0] || '',
-          images: cartItem.images,
-          quantity: cartItem.quantity,
-          category: cartItem.category,
-          discount: cartItem.discount,
-          description: cartItem.description,
-          careInstructions: cartItem.careInstructions ?? [],
-          isNewArrival: cartItem.isNewArrival ?? false,
-          isFeatured: cartItem.isFeatured ?? false,
-          customizations: cartItem.customizations ?? undefined,
-          selectedVariant: cartItem.selectedVariant ?? undefined,
-          productType: cartItem.productType,
-          isValentineProduct: cartItem.isValentineProduct,
-          availableDates: cartItem.availableDates,
-          dateWiseStock: cartItem.dateWiseStock,
-          dateWisePricing: cartItem.dateWisePricing,
-          dateWiseOffers: cartItem.dateWiseOffers,
-          dateWiseDeliveryCharges: cartItem.dateWiseDeliveryCharges,
-        }));
+        const transformedItems = response.cart.map(transformCartItem);
         set({ items: transformedItems });
         const userId = getCurrentUserId();
         saveUserCart(transformedItems, userId);
@@ -142,30 +159,7 @@ export const useCart = create<CartState>((set, get) => ({
     try {
       const response = await cartService.removeFromCart(productId);
       
-      const transformedItems = response.cart.map(cartItem => ({
-        _id: cartItem._id,
-        id: cartItem._id,
-        productId: cartItem.productId,
-        productModel: cartItem.productModel || 'Product',
-        title: cartItem.title,
-        price: cartItem.price,
-        image: cartItem.images?.[0] || '',
-        images: cartItem.images,
-        quantity: cartItem.quantity,
-        category: cartItem.category,
-        discount: cartItem.discount,
-        description: cartItem.description,
-        careInstructions: cartItem.careInstructions ?? [],
-        isNewArrival: cartItem.isNewArrival ?? false,
-        isFeatured: cartItem.isFeatured ?? false,
-        productType: cartItem.productType,
-        isValentineProduct: cartItem.isValentineProduct,
-        availableDates: cartItem.availableDates,
-        dateWiseStock: cartItem.dateWiseStock,
-        dateWisePricing: cartItem.dateWisePricing,
-        dateWiseOffers: cartItem.dateWiseOffers,
-        dateWiseDeliveryCharges: cartItem.dateWiseDeliveryCharges,
-      }));
+      const transformedItems = response.cart.map(transformCartItem);
       
       set({ items: transformedItems });
       
@@ -200,30 +194,7 @@ export const useCart = create<CartState>((set, get) => ({
     try {
       const response = await cartService.updateCartItem(itemId, quantity);
       
-      const transformedItems = response.cart.map(cartItem => ({
-        _id: cartItem._id,
-        id: cartItem._id,
-        productId: cartItem.productId,
-        productModel: cartItem.productModel || 'Product',
-        title: cartItem.title,
-        price: cartItem.price,
-        image: cartItem.images?.[0] || '',
-        images: cartItem.images,
-        quantity: cartItem.quantity,
-        category: cartItem.category,
-        discount: cartItem.discount,
-        description: cartItem.description,
-        careInstructions: cartItem.careInstructions ?? [],
-        isNewArrival: cartItem.isNewArrival ?? false,
-        isFeatured: cartItem.isFeatured ?? false,
-        productType: cartItem.productType,
-        isValentineProduct: cartItem.isValentineProduct,
-        availableDates: cartItem.availableDates,
-        dateWiseStock: cartItem.dateWiseStock,
-        dateWisePricing: cartItem.dateWisePricing,
-        dateWiseOffers: cartItem.dateWiseOffers,
-        dateWiseDeliveryCharges: cartItem.dateWiseDeliveryCharges,
-      }));
+      const transformedItems = response.cart.map(transformCartItem);
       
       set({ items: transformedItems });
       
@@ -232,6 +203,44 @@ export const useCart = create<CartState>((set, get) => ({
       
     } catch (error) {
       console.error('Error updating cart item:', error);
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  updateItemCustomizations: async (itemId, customizations, customPrice) => {
+    const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+    if (!isAuthenticated) {
+      const currentItems = get().items;
+      const idx = currentItems.findIndex(i => i.id === itemId || i._id === itemId);
+      if (idx > -1) {
+        const newItems = [...currentItems];
+        newItems[idx].customizations = customizations;
+        if (customPrice !== undefined) {
+          newItems[idx].price = customPrice;
+        }
+        set({ items: newItems });
+        const userId = getCurrentUserId();
+        saveUserCart(newItems, userId);
+      }
+      return;
+    }
+
+    set({ isLoading: true });
+    
+    try {
+      const response = await cartService.updateCartItem(itemId, undefined, customizations, customPrice);
+      
+      const transformedItems = response.cart.map(transformCartItem);
+      
+      set({ items: transformedItems });
+      
+      const userId = getCurrentUserId();
+      saveUserCart(transformedItems, userId);
+      
+    } catch (error) {
+      console.error('Error updating cart item customizations:', error);
       throw error;
     } finally {
       set({ isLoading: false });
@@ -287,32 +296,7 @@ export const useCart = create<CartState>((set, get) => ({
           product.selectedVariant,
           product.productModel || 'Product'
         );
-        const transformedItems = response.cart.map(cartItem => ({
-          _id: cartItem._id,
-          id: cartItem._id,
-          productId: cartItem.productId,
-          productModel: cartItem.productModel || 'Product',
-          title: cartItem.title,
-          price: cartItem.price,
-          image: cartItem.images?.[0] || '',
-          images: cartItem.images,
-          quantity: cartItem.quantity,
-          category: cartItem.category,
-          discount: cartItem.discount,
-          description: cartItem.description,
-          careInstructions: cartItem.careInstructions ?? [],
-          isNewArrival: cartItem.isNewArrival ?? false,
-          isFeatured: cartItem.isFeatured ?? false,
-          customizations: cartItem.customizations ?? undefined,
-          selectedVariant: cartItem.selectedVariant ?? undefined,
-          productType: cartItem.productType,
-          isValentineProduct: cartItem.isValentineProduct,
-          availableDates: cartItem.availableDates,
-          dateWiseStock: cartItem.dateWiseStock,
-          dateWisePricing: cartItem.dateWisePricing,
-          dateWiseOffers: cartItem.dateWiseOffers,
-          dateWiseDeliveryCharges: cartItem.dateWiseDeliveryCharges,
-        }));
+        const transformedItems = response.cart.map(transformCartItem);
         set({ items: transformedItems });
         saveUserCart(transformedItems, userId);
       } else {
@@ -389,32 +373,7 @@ export const useCart = create<CartState>((set, get) => ({
     try {
       const response = await cartService.getCart();
       
-      const transformedItems = response.cart.map(cartItem => ({
-        _id: cartItem._id,
-        id: cartItem._id,
-        productId: cartItem.productId,
-        productModel: cartItem.productModel || 'Product',
-        title: cartItem.title,
-        price: cartItem.price,
-        image: cartItem.images?.[0] || '',
-        images: cartItem.images,
-        quantity: cartItem.quantity,
-        category: cartItem.category,
-        discount: cartItem.discount,
-        description: cartItem.description,
-        careInstructions: cartItem.careInstructions ?? [],
-        isNewArrival: cartItem.isNewArrival ?? false,
-        isFeatured: cartItem.isFeatured ?? false,
-        customizations: cartItem.customizations ?? undefined,
-        selectedVariant: cartItem.selectedVariant ?? undefined,
-        productType: cartItem.productType,
-        isValentineProduct: cartItem.isValentineProduct,
-        availableDates: cartItem.availableDates,
-        dateWiseStock: cartItem.dateWiseStock,
-        dateWisePricing: cartItem.dateWisePricing,
-        dateWiseOffers: cartItem.dateWiseOffers,
-        dateWiseDeliveryCharges: cartItem.dateWiseDeliveryCharges,
-      }));
+      const transformedItems = response.cart.map(transformCartItem);
       
       set({ items: transformedItems });
       

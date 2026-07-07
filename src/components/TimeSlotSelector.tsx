@@ -259,7 +259,10 @@ const TimeSlotSelector = ({
   }, [date]);
 
   const activeTimeSlots = useMemo(() => {
-    if (isToday) {
+    // If all items in the cart are toggled to sameDay, show only the 9-9 delivery slot
+    const onlySameDay = items.length > 0 && items.every(item => item.sameDay === true);
+
+    if (onlySameDay || isToday) {
       return [
         {
           id: 'same_day',
@@ -270,7 +273,7 @@ const TimeSlotSelector = ({
       ];
     }
     return timeSlots;
-  }, [isToday, timeSlots]);
+  }, [isToday, timeSlots, items]);
 
   // Auto-select slot if there is only one option (like same-day standard)
   useEffect(() => {

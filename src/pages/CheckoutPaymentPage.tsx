@@ -361,6 +361,7 @@ const CheckoutPaymentPage = () => {
           price: item.price,
           finalPrice: item.price,
           customizations: item.customizations || null,
+          characterCount: item.customizations?.personalization?.characterCount || 0,
           image: item.image || item.images?.[0] || '',
           images: item.images || [],
           selectedVariant: item.selectedVariant || null
@@ -1204,6 +1205,17 @@ const CheckoutPaymentPage = () => {
                                          Card Message: "{item.customizations.customMessage}"
                                        </div>
                                      )}
+                                   </div>
+                                 )}
+                                 {item.customizations.personalization && (
+                                   <div className="text-xs text-slate-700 bg-slate-50/50 border border-slate-200/40 rounded-lg p-2 space-y-1 mt-1.5">
+                                     <div className="font-semibold text-slate-800 flex items-center gap-1">
+                                       <span>✨ Customization:</span>
+                                     </div>
+                                     <div className="pl-1 text-slate-600">
+                                       <span className="font-medium text-slate-500">{item.customizations.personalization.label || 'Recipient Name'}:</span>{' '}
+                                       <span className="font-bold text-slate-800">{item.customizations.personalization.value}</span>
+                                     </div>
                                    </div>
                                  )}
                                </div>

@@ -30,6 +30,28 @@ export interface CartItem {
   dateWisePricing?: Record<string, number>;
   dateWiseOffers?: Record<string, string>;
   dateWiseDeliveryCharges?: Record<string, number>;
+  personalizationEnabled?: boolean;
+  personalizationType?: string;
+  fieldLabel?: string;
+  placeholder?: string;
+  minCharacters?: number;
+  maxCharacters?: number;
+  allowedCharacters?: {
+    alphabets: boolean;
+    numbers: boolean;
+    spaces: boolean;
+    hyphen: boolean;
+    ampersand: boolean;
+    period: boolean;
+    emoji: boolean;
+  };
+  personalizationRequired?: boolean;
+  textTransform?: string;
+  helperText?: string;
+  pricePerCharacter?: number;
+  baseIncludedCharacters?: number;
+  maxExtraPrice?: number;
+  sameDay?: boolean;
 }
 
 // Get current user ID from localStorage

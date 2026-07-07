@@ -21,6 +21,28 @@ export interface CartItem {
     price: number;
     stock: number;
   };
+  personalizationEnabled?: boolean;
+  personalizationType?: string;
+  fieldLabel?: string;
+  placeholder?: string;
+  minCharacters?: number;
+  maxCharacters?: number;
+  allowedCharacters?: {
+    alphabets: boolean;
+    numbers: boolean;
+    spaces: boolean;
+    hyphen: boolean;
+    ampersand: boolean;
+    period: boolean;
+    emoji: boolean;
+  };
+  personalizationRequired?: boolean;
+  textTransform?: string;
+  helperText?: string;
+  pricePerCharacter?: number;
+  baseIncludedCharacters?: number;
+  maxExtraPrice?: number;
+  sameDay?: boolean;
 }
 
 export interface CartResponse {
@@ -66,10 +88,15 @@ export const addToCart = async (
   }
 };
 
-// Update cart item quantity
-export const updateCartItem = async (productId: string, quantity: number): Promise<CartResponse> => {
+// Update cart item details
+export const updateCartItem = async (
+  productId: string,
+  quantity?: number,
+  customizations?: any,
+  customPrice?: number
+): Promise<CartResponse> => {
   try {
-    const response = await api.put(`/cart/${productId}`, { quantity });
+    const response = await api.put(`/cart/${productId}`, { quantity, customizations, customPrice });
     return response.data;
   } catch (error: any) {
     console.error('Error updating cart item:', error);

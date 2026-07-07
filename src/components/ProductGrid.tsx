@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { Heart, ShoppingBag, Star, ArrowRight, Sparkles, Wand2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Heart, ShoppingBag, Star, ArrowRight, Sparkles, Wand2, ChevronLeft, ChevronRight, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -50,6 +50,7 @@ export type Product = {
   comboItems?: ComboItem[];
   comboName?: string;
   comboDescription?: string;
+  videos?: any[];
 };
 
 type ProductGridProps = {
@@ -434,6 +435,13 @@ export const ProductCard = ({ product, onAddToCart }: {
       >
         {/* Product Image Section */}
         <div className="relative h-[58%] md:h-[62%] lg:h-[58%] xl:h-[58%] w-full overflow-hidden bg-gray-50 flex-shrink-0">
+          {/* See It In Motion Overlay badge */}
+          {product.videos && product.videos.length > 0 && (
+            <div className="absolute top-3 left-3 z-20 bg-black/60 backdrop-blur-md text-white text-[8px] sm:text-[9px] font-extrabold px-2 py-1 rounded-full flex items-center gap-1 shadow-sm uppercase tracking-wider">
+              <Play size={10} className="fill-current text-white animate-pulse" />
+              <span>In Motion</span>
+            </div>
+          )}
           
           {/* Wishlist Button */}
           <button
@@ -547,6 +555,11 @@ export const ProductCard = ({ product, onAddToCart }: {
               {isNewProduct() && (
                 <span className="text-[8px] sm:text-[9px] font-extrabold text-[#0f766e] bg-[#f0fdfa] border border-[#ccfbf1] px-1.5 py-0.5 rounded-md uppercase tracking-wider">
                   NEW
+                </span>
+              )}
+              {product.videos && product.videos.length > 0 && (
+                <span className="text-[8px] sm:text-[9px] font-extrabold text-indigo-600 bg-indigo-50 border border-indigo-100 px-1.5 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-0.5">
+                  🎥 In Motion
                 </span>
               )}
               {product.hidden && (

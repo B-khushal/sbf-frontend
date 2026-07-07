@@ -67,6 +67,19 @@ export interface PriceVariant {
   stock: number;
 }
 
+export interface ProductVideo {
+  _id?: string;
+  url: string;
+  source: 'upload' | 'youtube' | 'vimeo' | 'cloudinary' | 'custom';
+  publicId?: string;
+  title?: string;
+  description?: string;
+  duration?: number;
+  thumbnailUrl?: string;
+  isFeatured?: boolean;
+  order?: number;
+}
+
 export interface ProductData {
   _id?: string;
   title: string;
@@ -119,6 +132,28 @@ export interface ProductData {
   valentineSlug?: string;
   seasonalCampaigns?: string[];
   campaignSettings?: Record<string, any>;
+  videos?: ProductVideo[];
+  personalizationEnabled?: boolean;
+  personalizationType?: 'name' | 'word' | 'text' | 'letter-bouquet' | 'custom-message';
+  fieldLabel?: string;
+  placeholder?: string;
+  minCharacters?: number;
+  maxCharacters?: number;
+  allowedCharacters?: {
+    alphabets: boolean;
+    numbers: boolean;
+    spaces: boolean;
+    hyphen: boolean;
+    ampersand: boolean;
+    period: boolean;
+    emoji: boolean;
+  };
+  personalizationRequired?: boolean;
+  textTransform?: 'original' | 'uppercase' | 'lowercase' | 'titlecase';
+  helperText?: string;
+  pricePerCharacter?: number;
+  baseIncludedCharacters?: number;
+  maxExtraPrice?: number;
 }
 
 // Define backend product type to match backend schema
@@ -173,6 +208,28 @@ interface BackendProductData {
   valentineSlug?: string;
   seasonalCampaigns?: string[];
   campaignSettings?: Record<string, any>;
+  videos?: ProductVideo[];
+  personalizationEnabled?: boolean;
+  personalizationType?: 'name' | 'word' | 'text' | 'letter-bouquet' | 'custom-message';
+  fieldLabel?: string;
+  placeholder?: string;
+  minCharacters?: number;
+  maxCharacters?: number;
+  allowedCharacters?: {
+    alphabets: boolean;
+    numbers: boolean;
+    spaces: boolean;
+    hyphen: boolean;
+    ampersand: boolean;
+    period: boolean;
+    emoji: boolean;
+  };
+  personalizationRequired?: boolean;
+  textTransform?: 'original' | 'uppercase' | 'lowercase' | 'titlecase';
+  helperText?: string;
+  pricePerCharacter?: number;
+  baseIncludedCharacters?: number;
+  maxExtraPrice?: number;
   createdAt?: string;
   updatedAt?: string;
   [key: string]: unknown; // Allow other properties with unknown type
@@ -317,6 +374,32 @@ const prepareProductData = (productData: ProductData): BackendProductData => {
     cleanData.comboDescription = productData.comboDescription;
   }
   
+  // Process videos for backend
+  cleanData.videos = Array.isArray(productData.videos) ? productData.videos : [];
+  
+  // Process personalization settings for backend
+  cleanData.personalizationEnabled = Boolean(productData.personalizationEnabled);
+  cleanData.personalizationType = productData.personalizationType || 'name';
+  cleanData.fieldLabel = productData.fieldLabel || '';
+  cleanData.placeholder = productData.placeholder || '';
+  cleanData.minCharacters = productData.minCharacters !== undefined ? Number(productData.minCharacters) : 1;
+  cleanData.maxCharacters = productData.maxCharacters !== undefined ? Number(productData.maxCharacters) : 10;
+  cleanData.allowedCharacters = productData.allowedCharacters || {
+    alphabets: true,
+    numbers: false,
+    spaces: true,
+    hyphen: false,
+    ampersand: false,
+    period: false,
+    emoji: false
+  };
+  cleanData.personalizationRequired = Boolean(productData.personalizationRequired);
+  cleanData.textTransform = productData.textTransform || 'original';
+  cleanData.helperText = productData.helperText || '';
+  cleanData.pricePerCharacter = productData.pricePerCharacter !== undefined ? Number(productData.pricePerCharacter) : 0;
+  cleanData.baseIncludedCharacters = productData.baseIncludedCharacters !== undefined ? Number(productData.baseIncludedCharacters) : 0;
+  cleanData.maxExtraPrice = productData.maxExtraPrice !== undefined ? Number(productData.maxExtraPrice) : 0;
+
   return cleanData;
 };
 
@@ -367,6 +450,32 @@ const mapBackendToFrontend = (data: BackendProductData): ProductData => {
   if (data.comboDescription) {
     mappedData.comboDescription = data.comboDescription;
   }
+
+  // Map videos
+  mappedData.videos = Array.isArray(data.videos) ? data.videos : [];
+
+  // Map personalization settings
+  mappedData.personalizationEnabled = Boolean(data.personalizationEnabled);
+  mappedData.personalizationType = data.personalizationType || 'name';
+  mappedData.fieldLabel = data.fieldLabel || '';
+  mappedData.placeholder = data.placeholder || '';
+  mappedData.minCharacters = data.minCharacters !== undefined ? Number(data.minCharacters) : 1;
+  mappedData.maxCharacters = data.maxCharacters !== undefined ? Number(data.maxCharacters) : 10;
+  mappedData.allowedCharacters = data.allowedCharacters || {
+    alphabets: true,
+    numbers: false,
+    spaces: true,
+    hyphen: false,
+    ampersand: false,
+    period: false,
+    emoji: false
+  };
+  mappedData.personalizationRequired = Boolean(data.personalizationRequired);
+  mappedData.textTransform = data.textTransform || 'original';
+  mappedData.helperText = data.helperText || '';
+  mappedData.pricePerCharacter = data.pricePerCharacter !== undefined ? Number(data.pricePerCharacter) : 0;
+  mappedData.baseIncludedCharacters = data.baseIncludedCharacters !== undefined ? Number(data.baseIncludedCharacters) : 0;
+  mappedData.maxExtraPrice = data.maxExtraPrice !== undefined ? Number(data.maxExtraPrice) : 0;
 
   // ✅ Handle details properly (flatten nested arrays from backend)
   const details = data.details;
