@@ -80,6 +80,24 @@ export interface ProductVideo {
   order?: number;
 }
 
+export interface OccasionData {
+  _id?: string;
+  name: string;
+  slug: string;
+  icon: string;
+  banner: string;
+  thumbnail: string;
+  accentColor: string;
+  displayOrder: number;
+  status: 'active' | 'inactive';
+  featured: boolean;
+  visibleOnHomepage: boolean;
+  seoTitle?: string;
+  seoDescription?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface ProductData {
   _id?: string;
   title: string;
@@ -89,6 +107,7 @@ export interface ProductData {
   category: string;
   subcategory: string;
   categories: string[];
+  occasionIds?: string[];
   countInStock: number;
   images: string[];
   details: string[];
@@ -166,6 +185,7 @@ interface BackendProductData {
   category: string;
   subcategory?: string;
   categories?: string[];
+  occasionIds?: string[];
   brand?: string;
   countInStock: number;
   images: string[];
@@ -717,6 +737,45 @@ class ProductService {
   async resetSectionProductsOrder(section: string): Promise<any> {
     const config = createAuthConfig();
     const response = await axios.post(`${API_URL}/products/order/reset`, { section }, config);
+    return response.data;
+  }
+
+  // Occasion management APIs
+  async getOccasions(homepageOnly = false): Promise<OccasionData[]> {
+    const response = await axios.get<OccasionData[]>(`${API_URL}/occasions`, {
+      params: homepageOnly ? { homepage: 'true' } : {}
+    });
+    return response.data;
+  }
+
+  async getAdminOccasions(): Promise<OccasionData[]> {
+    const config = createAuthConfig();
+    const response = await axios.get<OccasionData[]>(`${API_URL}/occasions/admin`, config);
+    return response.data;
+  }
+
+  async createOccasion(occasionData: Partial<OccasionData>): Promise<OccasionData> {
+    const config = createAuthConfig();
+    const response = await axios.post<OccasionData>(`${API_URL}/occasions`, occasionData, config);
+    return response.data;
+  }
+
+  async updateOccasion(id: string, occasionData: Partial<OccasionData>): Promise<OccasionData> {
+    const config = createAuthConfig();
+    const response = await axios.put<OccasionData>(`${API_URL}/occasions/${id}`, occasionData, config);
+    return response.data;
+  }
+
+  async deleteOccasion(id: string): Promise<{ message: string }> {
+    const config = createAuthConfig();
+    const response = await axios.delete<{ message: string }>(`${API_URL}/occasions/${id}`, config);
+    return response.data;
+  }
+
+  async getProductsByOccasion(slug: string): Promise<{ occasion: OccasionData, products: ProductData[], total: number }> {
+    const response = await axios.get<{ occasion: OccasionData, products: ProductData[], total: number }>(
+      `${API_URL}/products/by-occasion/${slug}`
+    );
     return response.data;
   }
 }

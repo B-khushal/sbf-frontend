@@ -22,6 +22,8 @@ import { useValentine } from "../contexts/ValentineContext";
 import { ValentineHomeSections } from "../components/valentine/ValentineHomeSections";
 import { ExitIntentPopup, RecentPurchases } from "../components/valentine/ValentineMarketingWidgets";
 import { SeasonalCampaignHomeSection } from "../components/SeasonalCampaignHomeSection";
+import { OccasionsSection } from "../components/OccasionsSection";
+import { HomePageSkeleton } from "../components/HomePageSkeleton";
 
 import api from "../services/api";
 
@@ -193,15 +195,8 @@ const HomePage = () => {
     return sections;
   }, [homeSections, isMobile]);
 
-  if (loading || settingsLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
-          <p className="text-gray-600">Loading amazing products...</p>
-        </div>
-      </div>
-    );
+  if (settingsLoading) {
+    return <HomePageSkeleton />;
   }
 
   if (error) {
@@ -305,6 +300,20 @@ const HomePage = () => {
                   title={section.title || "✨ Featured Collection"}
                   subtitle={section.subtitle || "Explore our most popular floral arrangements"}
                   loading={loading}
+                  onAddToCart={handleAddToCart}
+                />
+              </motion.section>
+            );
+
+          case 'occasions':
+            return (
+              <motion.section
+                key={`occasions-${index}`}
+                variants={itemVariants}
+                className="relative animate-fade-in"
+              >
+                <OccasionsSection
+                  section={section as any}
                   onAddToCart={handleAddToCart}
                 />
               </motion.section>

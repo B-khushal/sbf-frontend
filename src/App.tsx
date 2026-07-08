@@ -99,6 +99,8 @@ const ValentineManagement = lazy(() => import('./pages/Admin/ValentineManagement
 const ValentineAnalyticsDashboard = lazy(() => import('./pages/Admin/ValentineAnalytics'));
 const SeasonalCampaigns = lazy(() => import('./pages/Admin/SeasonalCampaigns'));
 const SeasonalCampaignForm = lazy(() => import('./pages/Admin/SeasonalCampaignForm'));
+const AdminOccasions = lazy(() => import('./pages/Admin/Occasions'));
+const OccasionProductsPage = lazy(() => import('./pages/OccasionProductsPage').then(m => ({ default: m.OccasionProductsPage })));
 
 // Valentine Pages
 const ValentineSpecialPage = lazy(() => import('./pages/ValentineSpecialPage'));
@@ -278,9 +280,14 @@ const App = () => {
                                 <AdminProducts />
                               </Suspense>
                             } />
-                            <Route path="categories" element={
+                             <Route path="categories" element={
                               <Suspense fallback={<LoadingFallback message="Loading categories..." />}>
                                 <AdminCategories />
+                              </Suspense>
+                            } />
+                            <Route path="occasions" element={
+                              <Suspense fallback={<LoadingFallback message="Loading occasions..." />}>
+                                <AdminOccasions />
                               </Suspense>
                             } />
                             <Route path="categories/new" element={
@@ -647,9 +654,9 @@ const App = () => {
                                 <ContactPage />
                               </Suspense>
                             } />
-                            <Route path="/:categorySlug" element={
-                              <Suspense fallback={<LoadingFallback message="Loading category..." />}>
-                                <CategoryResolver />
+                            <Route path="/:slug" element={
+                              <Suspense fallback={<LoadingFallback message="Loading celebration gifts..." />}>
+                                <OccasionProductsPage />
                               </Suspense>
                             } />
                             <Route path="/:parentCategory/:categorySlug" element={

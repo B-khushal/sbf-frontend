@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
 import AdminNavbar from '@/components/AdminNavbar';
-import { Truck, Map, DollarSign, Sliders, UserCheck, ChevronDown, ChevronUp, Scroll, Shield, Clock } from 'lucide-react';
+import { Truck, Map, DollarSign, Sliders, UserCheck, ChevronDown, ChevronUp, Scroll, Shield, Clock, Megaphone, Percent } from 'lucide-react';
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -43,6 +43,13 @@ const AdminDashboard: React.FC = () => {
 
   const [isStaffOpen, setIsStaffOpen] = useState(isStaffActive);
 
+  const isMarketingActive = location.pathname.startsWith('/admin/occasions') ||
+                            location.pathname.startsWith('/admin/seasonal-campaigns') ||
+                            location.pathname === '/admin/promocodes' ||
+                            location.pathname === '/admin/offers';
+
+  const [isMarketingOpen, setIsMarketingOpen] = useState(isMarketingActive);
+
   // Keep dropdown open if the route matches
   useEffect(() => {
     if (isDeliveryActive) {
@@ -55,6 +62,12 @@ const AdminDashboard: React.FC = () => {
       setIsStaffOpen(true);
     }
   }, [location.pathname, isStaffActive]);
+
+  useEffect(() => {
+    if (isMarketingActive) {
+      setIsMarketingOpen(true);
+    }
+  }, [location.pathname, isMarketingActive]);
   
   // Check if user is admin, if not redirect
   useEffect(() => {
@@ -333,32 +346,82 @@ const AdminDashboard: React.FC = () => {
           </div>
           {!isCollapsed && <span className="sidebar-item-text">Analytics</span>}
         </Link>
-        <Link 
-          to="/admin/promocodes" 
-          className={cn(
-            "sidebar-item",
-            isCollapsed ? "sidebar-item-collapsed" : "sidebar-item-expanded"
+        {/* Marketing Dropdown */}
+        <div className="space-y-1">
+          <button
+            onClick={() => {
+              if (isCollapsed) {
+                setIsSidebarCollapsed(false);
+                setIsMarketingOpen(true);
+              } else {
+                setIsMarketingOpen(prev => !prev);
+              }
+            }}
+            className={cn(
+              "w-full sidebar-item flex items-center justify-between transition-colors",
+              isMarketingActive ? "bg-accent/40 text-accent-foreground font-medium" : "",
+              isCollapsed ? "sidebar-item-collapsed justify-center" : "sidebar-item-expanded"
+            )}
+            title={isCollapsed ? 'Marketing' : ''}
+          >
+            <div className="flex items-center">
+              <div className="sidebar-item-icon">
+                <Megaphone className="h-4 w-4 text-muted-foreground" />
+              </div>
+              {!isCollapsed && <span className="sidebar-item-text ml-3">Marketing</span>}
+            </div>
+            {!isCollapsed && (
+              isMarketingOpen ? 
+                <ChevronUp className="h-4 w-4 text-muted-foreground transition-transform" /> : 
+                <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform" />
+            )}
+          </button>
+          
+          {isMarketingOpen && !isCollapsed && (
+            <div className="pl-4 space-y-1 mt-1 border-l-2 border-primary/20 ml-5">
+              <Link 
+                to="/admin/occasions" 
+                className={cn(
+                  "sidebar-item flex items-center py-2 px-3 rounded-md text-sm transition-colors",
+                  location.pathname === "/admin/occasions" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                )}
+              >
+                <Gift className="h-4 w-4 mr-2" />
+                <span className="sidebar-item-text">Occasions</span>
+              </Link>
+              <Link 
+                to="/admin/promocodes" 
+                className={cn(
+                  "sidebar-item flex items-center py-2 px-3 rounded-md text-sm transition-colors",
+                  location.pathname === "/admin/promocodes" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                )}
+              >
+                <Tag className="h-4 w-4 mr-2" />
+                <span className="sidebar-item-text">Promo Codes</span>
+              </Link>
+              <Link 
+                to="/admin/offers" 
+                className={cn(
+                  "sidebar-item flex items-center py-2 px-3 rounded-md text-sm transition-colors",
+                  location.pathname === "/admin/offers" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                )}
+              >
+                <Percent className="h-4 w-4 mr-2" />
+                <span className="sidebar-item-text">Offers</span>
+              </Link>
+              <Link 
+                to="/admin/seasonal-campaigns" 
+                className={cn(
+                  "sidebar-item flex items-center py-2 px-3 rounded-md text-sm transition-colors",
+                  location.pathname === "/admin/seasonal-campaigns" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                )}
+              >
+                <Calendar className="h-4 w-4 mr-2" />
+                <span className="sidebar-item-text">Seasonal Campaigns</span>
+              </Link>
+            </div>
           )}
-          title={isCollapsed ? 'Promo Codes' : ''}
-        >
-          <div className="sidebar-item-icon">
-            <Tag className="h-4 w-4 text-muted-foreground" />
-          </div>
-          {!isCollapsed && <span className="sidebar-item-text">Promo Codes</span>}
-        </Link>
-        <Link 
-          to="/admin/offers" 
-          className={cn(
-            "sidebar-item",
-            isCollapsed ? "sidebar-item-collapsed" : "sidebar-item-expanded"
-          )}
-          title={isCollapsed ? 'Offers' : ''}
-        >
-          <div className="sidebar-item-icon">
-            <Gift className="h-4 w-4 text-muted-foreground" />
-          </div>
-          {!isCollapsed && <span className="sidebar-item-text">Offers</span>}
-        </Link>
+        </div>
         <Link 
           to="/admin/holidays" 
           className={cn(
@@ -384,19 +447,6 @@ const AdminDashboard: React.FC = () => {
             <Heart className="h-4 w-4 text-muted-foreground" />
           </div>
           {!isCollapsed && <span className="sidebar-item-text">Valentine's</span>}
-        </Link>
-        <Link 
-          to="/admin/seasonal-campaigns" 
-          className={cn(
-            "sidebar-item",
-            isCollapsed ? "sidebar-item-collapsed" : "sidebar-item-expanded"
-          )}
-          title={isCollapsed ? "Seasonal Campaigns" : ''}
-        >
-          <div className="sidebar-item-icon">
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </div>
-          {!isCollapsed && <span className="sidebar-item-text">Seasonal Campaigns</span>}
         </Link>
         {/* Delivery Dropdown */}
         <div className="space-y-1">

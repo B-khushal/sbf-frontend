@@ -2660,6 +2660,158 @@ const AdminSettingsPage = () => {
                                     </div>
                                   )}
 
+                                  {sec.type === 'occasions' && (
+                                    <div className="pt-4 border-t border-slate-800/80 space-y-4">
+                                      <h4 className="text-xs font-bold text-cyan-400 uppercase tracking-wide">
+                                        Shop by Occasion ⭐ Configuration
+                                      </h4>
+                                      
+                                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-900/60 p-4 rounded-lg border border-slate-800">
+                                        {/* Max Products */}
+                                        <div className="space-y-1.5">
+                                          <Label className="text-xs text-slate-300">Max Products in Tab</Label>
+                                          <Input
+                                            type="number"
+                                            value={sec.content?.maxProducts ?? 10}
+                                            onChange={(e) => {
+                                              const copy = localSettings.homeSections.map((s: any) => 
+                                                s.id === sec.id ? { ...s, content: { ...s.content, maxProducts: Number(e.target.value) } } : s
+                                              );
+                                              updateSettingsState({ ...localSettings, homeSections: copy });
+                                            }}
+                                            className="bg-slate-800 border-slate-700 text-xs text-slate-200 mt-1"
+                                            min="2"
+                                            max="30"
+                                          />
+                                        </div>
+
+                                        {/* Card Style */}
+                                        <div className="space-y-1.5">
+                                          <Label className="text-xs text-slate-300">Card Layout Style</Label>
+                                          <select
+                                            value={sec.content?.cardStyle || 'premium'}
+                                            onChange={(e) => {
+                                              const copy = localSettings.homeSections.map((s: any) => 
+                                                s.id === sec.id ? { ...s, content: { ...s.content, cardStyle: e.target.value } } : s
+                                              );
+                                              updateSettingsState({ ...localSettings, homeSections: copy });
+                                            }}
+                                            className="w-full bg-slate-800 border border-slate-700 text-xs text-slate-200 rounded px-2.5 py-1.5 mt-1"
+                                          >
+                                            <option value="premium">Premium Glassmorphism</option>
+                                            <option value="bordered">Classic Bordered</option>
+                                            <option value="minimalist">Minimalist Flat</option>
+                                          </select>
+                                        </div>
+
+                                        {/* Carousel Arrow Style */}
+                                        <div className="space-y-1.5">
+                                          <Label className="text-xs text-slate-300">Carousel Controls</Label>
+                                          <select
+                                            value={sec.content?.arrowStyle || 'floating-semi-transparent'}
+                                            onChange={(e) => {
+                                              const copy = localSettings.homeSections.map((s: any) => 
+                                                s.id === sec.id ? { ...s, content: { ...s.content, arrowStyle: e.target.value } } : s
+                                              );
+                                              updateSettingsState({ ...localSettings, homeSections: copy });
+                                            }}
+                                            className="w-full bg-slate-800 border border-slate-700 text-xs text-slate-200 rounded px-2.5 py-1.5 mt-1"
+                                          >
+                                            <option value="floating-semi-transparent">Floating Arrow Buttons</option>
+                                            <option value="none">No Arrows (Touch scroll only)</option>
+                                          </select>
+                                        </div>
+
+                                        {/* Toggle features */}
+                                        <div className="md:col-span-3 grid grid-cols-2 md:grid-cols-4 gap-4 pt-3 border-t border-slate-800">
+                                          {/* Ratings */}
+                                          <div className="flex items-center gap-2">
+                                            <Switch
+                                              checked={sec.content?.showRatings !== false}
+                                              onCheckedChange={(checked) => {
+                                                const copy = localSettings.homeSections.map((s: any) => 
+                                                  s.id === sec.id ? { ...s, content: { ...s.content, showRatings: checked } } : s
+                                                );
+                                                updateSettingsState({ ...localSettings, homeSections: copy });
+                                              }}
+                                            />
+                                            <span className="text-xs text-slate-300">Show Ratings</span>
+                                          </div>
+
+                                          {/* Reviews */}
+                                          <div className="flex items-center gap-2">
+                                            <Switch
+                                              checked={sec.content?.showReviews !== false}
+                                              onCheckedChange={(checked) => {
+                                                const copy = localSettings.homeSections.map((s: any) => 
+                                                  s.id === sec.id ? { ...s, content: { ...s.content, showReviews: checked } } : s
+                                                );
+                                                updateSettingsState({ ...localSettings, homeSections: copy });
+                                              }}
+                                            />
+                                            <span className="text-xs text-slate-300">Show Reviews</span>
+                                          </div>
+
+                                          {/* Wishlist */}
+                                          <div className="flex items-center gap-2">
+                                            <Switch
+                                              checked={sec.content?.showWishlist !== false}
+                                              onCheckedChange={(checked) => {
+                                                const copy = localSettings.homeSections.map((s: any) => 
+                                                  s.id === sec.id ? { ...s, content: { ...s.content, showWishlist: checked } } : s
+                                                );
+                                                updateSettingsState({ ...localSettings, homeSections: copy });
+                                              }}
+                                            />
+                                            <span className="text-xs text-slate-300">Show Wishlist</span>
+                                          </div>
+
+                                          {/* Quick View */}
+                                          <div className="flex items-center gap-2">
+                                            <Switch
+                                              checked={sec.content?.showQuickView !== false}
+                                              onCheckedChange={(checked) => {
+                                                const copy = localSettings.homeSections.map((s: any) => 
+                                                  s.id === sec.id ? { ...s, content: { ...s.content, showQuickView: checked } } : s
+                                                );
+                                                updateSettingsState({ ...localSettings, homeSections: copy });
+                                              }}
+                                            />
+                                            <span className="text-xs text-slate-300">Show Quick View</span>
+                                          </div>
+
+                                          {/* Delivery Badge */}
+                                          <div className="flex items-center gap-2">
+                                            <Switch
+                                              checked={sec.content?.showDeliveryBadge !== false}
+                                              onCheckedChange={(checked) => {
+                                                const copy = localSettings.homeSections.map((s: any) => 
+                                                  s.id === sec.id ? { ...s, content: { ...s.content, showDeliveryBadge: checked } } : s
+                                                );
+                                                updateSettingsState({ ...localSettings, homeSections: copy });
+                                              }}
+                                            />
+                                            <span className="text-xs text-slate-300">Show Delivery Speed</span>
+                                          </div>
+
+                                          {/* Discount */}
+                                          <div className="flex items-center gap-2">
+                                            <Switch
+                                              checked={sec.content?.showDiscount !== false}
+                                              onCheckedChange={(checked) => {
+                                                const copy = localSettings.homeSections.map((s: any) => 
+                                                  s.id === sec.id ? { ...s, content: { ...s.content, showDiscount: checked } } : s
+                                                );
+                                                updateSettingsState({ ...localSettings, homeSections: copy });
+                                              }}
+                                            />
+                                            <span className="text-xs text-slate-300">Show Discount Badge</span>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+
                                   {sec.type === 'offers' && (
                                     <div className="pt-4 border-t border-slate-800/80 space-y-4">
                                       <h4 className="text-xs font-bold text-cyan-400 uppercase tracking-wide">

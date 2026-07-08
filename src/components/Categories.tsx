@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useSettings } from '@/contexts/SettingsContext';
 import { ArrowUpRight, Flower2, Gift, Heart, Leaf, Sparkles } from 'lucide-react';
+import { CategorySkeleton } from './HomePageSkeleton';
 
 const CATEGORY_QUERY_ALIASES: Record<string, string> = {
   anivarsery: 'anniversary',
@@ -106,14 +107,7 @@ const Categories = () => {
   }, [mobileBanners]);
 
   if (loading) {
-    return (
-      <section className="py-8 sm:py-12 px-4 sm:px-6">
-        <div className="max-w-7xl mx-auto text-center">
-          <div className="inline-block w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-3"></div>
-          <p className="text-gray-500 text-sm">Loading categories...</p>
-        </div>
-      </section>
-    );
+    return <CategorySkeleton />;
   }
 
   if (!categories || categories.length === 0) {

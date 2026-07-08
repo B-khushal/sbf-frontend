@@ -13,6 +13,7 @@ import { getImageUrl } from "@/config";
 import { ComboItem } from "@/services/productService";
 import { QuickViewModal } from "./ui/QuickViewModal";
 import ProtectedImage from "./ui/ProtectedImage";
+import { ProductCardSkeleton } from "./HomePageSkeleton";
 
 
 export type Product = {
@@ -188,9 +189,12 @@ const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCar
       )}
 
       {loading ? (
-        <div className="text-center py-8 sm:py-12 lg:py-16">
-          <div className="inline-block w-8 h-8 sm:w-12 sm:h-12 lg:w-16 lg:h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mb-3 sm:mb-4"></div>
-          <p className="text-gray-600 text-sm sm:text-base lg:text-lg text-center">Loading products...</p>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+          {Array.from({ length: 4 }).map((_, idx) => (
+            <div key={idx} className={idx >= 2 ? "hidden md:block" : ""}>
+              <ProductCardSkeleton />
+            </div>
+          ))}
         </div>
       ) : visibleProducts.length === 0 ? (
         <div className="text-center py-8 sm:py-12 lg:py-16">
@@ -198,7 +202,7 @@ const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCar
           <p className="text-muted-foreground text-sm sm:text-base lg:text-lg text-center">No products available at the moment.</p>
         </div>
       ) : horizontal ? (
-        <div className="relative">
+        <div className="relative animate-fade-in">
           <button
             aria-label="Scroll left"
             className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-white/80 hover:bg-primary/80 hover:text-white text-primary shadow rounded-full p-2 transition-all duration-200"
@@ -235,7 +239,7 @@ const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCar
         </div>
       ) : (
         <div className={cn(
-          "grid gap-3 sm:gap-4 md:gap-5 lg:gap-6 xl:gap-6 2xl:gap-7",
+          "grid gap-3 sm:gap-4 md:gap-5 lg:gap-6 xl:gap-6 2xl:gap-7 animate-fade-in",
           shopView 
             ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-3" 
             : "grid-cols-2 md:grid-cols-3 lg:grid-cols-4",

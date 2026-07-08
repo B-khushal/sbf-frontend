@@ -279,15 +279,15 @@ export const NewArrivals = ({ products, loading, onAddToCart }: NewArrivalsProps
               <div
                 key={i}
                 className={cn(
-                  "bg-white/60 border border-white/40 rounded-3xl p-4 aspect-[4/5] flex flex-col justify-between animate-pulse shadow-sm",
+                  "bg-white dark:bg-[#1E1E1E] border border-slate-100 dark:border-neutral-800 rounded-3xl p-4 aspect-[4/5] flex flex-col justify-between shadow-sm",
                   i % 2 === 1 && "md:translate-y-8"
                 )}
               >
-                <div className="w-full h-[65%] bg-gray-200/60 rounded-2xl" />
+                <div className="w-full h-[65%] rounded-2xl skeleton-shimmer" />
                 <div className="space-y-3 mt-4 flex-1 flex flex-col justify-end">
-                  <div className="w-3/4 h-4 bg-gray-200/60 rounded" />
-                  <div className="w-1/2 h-3 bg-gray-200/60 rounded" />
-                  <div className="w-full h-8 bg-gray-200/60 rounded-xl" />
+                  <div className="w-3/4 h-4 rounded skeleton-shimmer" />
+                  <div className="w-1/2 h-3 rounded skeleton-shimmer" />
+                  <div className="w-full h-8 rounded-xl skeleton-shimmer" />
                 </div>
               </div>
             ))}

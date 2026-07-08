@@ -272,18 +272,18 @@ export const SocialFeed: React.FC = () => {
         {loading && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 justify-items-center w-full">
             {[1, 2, 3].map((n) => (
-              <div key={n} className="w-full max-w-[320px] md:max-w-none mx-auto min-h-[450px] bg-white border border-[#FFF0F5] rounded-2xl p-4 flex flex-col space-y-4 animate-pulse shadow-sm">
+              <div key={n} className="w-full max-w-[320px] md:max-w-none mx-auto min-h-[450px] bg-white dark:bg-[#1E1E1E] border border-slate-100 dark:border-neutral-800 rounded-2xl p-4 flex flex-col space-y-4 shadow-sm">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-[#FFE4E1]/50" />
+                  <div className="w-9 h-9 rounded-full skeleton-shimmer" />
                   <div className="flex-1 space-y-2">
-                    <div className="h-3 w-1/3 bg-[#FFE4E1]/50 rounded" />
-                    <div className="h-2 w-1/4 bg-[#FFE4E1]/50 rounded" />
+                    <div className="h-3 w-1/3 rounded skeleton-shimmer" />
+                    <div className="h-2 w-1/4 rounded skeleton-shimmer" />
                   </div>
                 </div>
-                <div className="aspect-[4/5] w-full bg-[#FFE4E1]/40 rounded-xl" />
+                <div className="aspect-[4/5] w-full rounded-xl skeleton-shimmer" />
                 <div className="space-y-2 pt-1">
-                  <div className="h-2.5 w-full bg-[#FFE4E1]/40 rounded" />
-                  <div className="h-2.5 w-5/6 bg-[#FFE4E1]/40 rounded" />
+                  <div className="h-2.5 w-full rounded skeleton-shimmer" />
+                  <div className="h-2.5 w-5/6 rounded skeleton-shimmer" />
                 </div>
               </div>
             ))}

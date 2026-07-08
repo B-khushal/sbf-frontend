@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import type { ProductData, AddonOption, CustomizationOptions } from '@/services/productService';
+import type { ProductData, AddonOption, CustomizationOptions, OccasionData } from '@/services/productService';
 import productService from '@/services/productService';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
@@ -255,6 +255,7 @@ const ProductForm = () => {
 
   const [formData, setFormData] = useState<ProductData>(initialFormData);
   const [dbCategories, setDbCategories] = useState<Category[]>([]);
+  const [dbOccasions, setDbOccasions] = useState<OccasionData[]>([]);
 
   const getSubcategories = (parentSlug: string) => {
     const parent = dbCategories.find(c => c.slug === parentSlug);
@@ -594,6 +595,14 @@ const ProductForm = () => {
       const cats = await categoryService.getCategories({ status: 'active' });
       setDbCategories(cats);
 
+      // Fetch dynamic occasions
+      try {
+        const occs = await productService.getOccasions();
+        setDbOccasions(occs);
+      } catch (occErr) {
+        console.error('Error fetching occasions in fetchProductData:', occErr);
+      }
+
       const data = await productService.getProductById(id);
       
       // Ensure categories is an array
@@ -733,6 +742,7 @@ const ProductForm = () => {
         valentineSlug: data.valentineSlug || '',
         seasonalCampaigns: Array.isArray(data.seasonalCampaigns) ? data.seasonalCampaigns : [],
         campaignSettings: data.campaignSettings || {},
+        occasionIds: Array.isArray(data.occasionIds) ? data.occasionIds : [],
       };
 
       setFormData(processedData);
@@ -864,10 +874,16 @@ const ProductForm = () => {
         if (isEditMode) {
           fetchProductData();
         } else {
-          // Fetch dynamic categories for new product creation too
-          categoryService.getCategories({ status: 'active' })
-            .then(cats => setDbCategories(cats))
-            .catch(err => console.error('Error fetching categories:', err))
+          // Fetch dynamic categories and occasions for new product creation too
+          Promise.all([
+            categoryService.getCategories({ status: 'active' }),
+            productService.getOccasions()
+          ])
+            .then(([cats, occs]) => {
+              setDbCategories(cats);
+              setDbOccasions(occs);
+            })
+            .catch(err => console.error('Error fetching categories or occasions:', err))
             .finally(() => setIsDataLoaded(true));
         }
       } catch (err) {
@@ -1346,6 +1362,31 @@ const ProductForm = () => {
     }));
   };
 
+  const handleAddOccasion = (occasionToAdd: string) => {
+    if (!occasionToAdd || formData.occasionIds?.includes(occasionToAdd)) return;
+    
+    setFormData(prev => ({
+      ...prev,
+      occasionIds: [...(prev.occasionIds || []), occasionToAdd]
+    }));
+  };
+
+  const handleRemoveOccasion = (occasionToRemove: string) => {
+    setFormData(prev => ({
+      ...prev,
+      occasionIds: (prev.occasionIds || []).filter(occ => occ !== occasionToRemove)
+    }));
+  };
+
+  const getAvailableOccasions = () => {
+    return dbOccasions
+      .filter(occ => !(formData.occasionIds || []).includes(occ._id || occ.id || ''))
+      .map(occ => ({
+        value: occ._id || occ.id || '',
+        label: occ.name
+      }));
+  };
+
   const getAvailableCategories = () => {
     const excluded = new Set([formData.category, formData.subcategory]);
     return dbCategories
@@ -1516,7 +1557,8 @@ const ProductForm = () => {
           chocolateGroupImage: formData.customizationOptions?.chocolateGroupImage || ""
         } : undefined,
         seasonalCampaigns: formData.seasonalCampaigns || [],
-        campaignSettings: formData.campaignSettings || {}
+        campaignSettings: formData.campaignSettings || {},
+        occasionIds: formData.occasionIds || []
       };
       
       if (isEditMode) {
@@ -2323,6 +2365,61 @@ const ProductForm = () => {
                 onHiddenChange={handleHiddenChange}
                 onSameDayChange={handleSameDayChange}
               />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 🎉 Occasions Assignment */}
+        <Card className="border-gray-200">
+          <CardHeader>
+            <CardTitle>Occasions Gifting Tags</CardTitle>
+            <CardDescription>Assign this product to one or more gifting occasions (e.g. Birthday, Anniversary)</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-3">
+              {/* Current Occasions */}
+              {formData.occasionIds && formData.occasionIds.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {formData.occasionIds.map((occId, index) => {
+                    const dbOcc = dbOccasions.find(o => (o._id || o.id) === occId);
+                    return (
+                      <Badge
+                        key={index}
+                        variant="secondary"
+                        className="flex items-center gap-1 px-3 py-1 bg-amber-50 text-amber-900 hover:bg-amber-100 border border-amber-200 font-semibold"
+                      >
+                        {dbOcc ? dbOcc.name : 'Unknown Occasion'}
+                        <X
+                          className="h-3.5 w-3.5 cursor-pointer text-amber-600 hover:text-red-500 transition-colors"
+                          onClick={() => handleRemoveOccasion(occId)}
+                        />
+                      </Badge>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Add Occasion */}
+              <div className="flex gap-2">
+                <Select
+                  onValueChange={handleAddOccasion}
+                  value=""
+                >
+                  <SelectTrigger className="flex-1 bg-white">
+                    <SelectValue placeholder="Add an occasion tag..." />
+                  </SelectTrigger>
+                  <SelectContent disablePortal>
+                    {getAvailableOccasions().map((occ) => (
+                      <SelectItem key={occ.value} value={occ.value}>
+                        {occ.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Tagging a product places it inside the homepage occasions tab and the corresponding public landing page.
+              </p>
             </div>
           </CardContent>
         </Card>

@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import api from "@/services/api";
 import { useNavigate } from "react-router-dom";
-import productService, { ProductData } from "@/services/productService";
+import productService, { ProductData, OccasionData } from "@/services/productService";
 import { getImageUrl } from "@/config";
 import { useSeasonalCampaign } from "@/contexts/SeasonalCampaignContext";
 import { useValentine } from "@/contexts/ValentineContext";
@@ -75,8 +75,11 @@ const AdminProducts: React.FC = () => {
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
   const [showCategoryDialog, setShowCategoryDialog] = useState(false);
   const [showDateDialog, setShowDateDialog] = useState(false);
+  const [showOccasionDialog, setShowOccasionDialog] = useState(false);
   const [bulkCategories, setBulkCategories] = useState<string[]>([]);
   const [bulkDates, setBulkDates] = useState<string[]>([]);
+  const [bulkOccasions, setBulkOccasions] = useState<string[]>([]);
+  const [dbOccasions, setDbOccasions] = useState<OccasionData[]>([]);
 
   // Display Order Management States
   const [activeSection, setActiveSection] = useState<string>("none");
@@ -451,6 +454,8 @@ const AdminProducts: React.FC = () => {
       setShowCategoryDialog(true);
     } else if (action === "assignValDates") {
       setShowDateDialog(true);
+    } else if (action === "assignOccasions") {
+      setShowOccasionDialog(true);
     } else if (action === "changeVisibilityVisible") {
       executeBulkVisibilityChange(true);
     } else if (action === "changeVisibilityHidden") {
@@ -589,7 +594,11 @@ const AdminProducts: React.FC = () => {
 
   const handleBulkAction = async (action: string, value?: any) => {
     try {
-      await productService.bulkUpdateValentineSettings(selectedProductIds, action, value);
+      if (action === 'assignOccasions') {
+        await productService.bulkUpdateSectionProducts(selectedProductIds, 'assignOccasions', value, activeSection);
+      } else {
+        await productService.bulkUpdateValentineSettings(selectedProductIds, action, value);
+      }
       toast({
         title: "Success",
         description: "Bulk action applied successfully",
@@ -598,8 +607,10 @@ const AdminProducts: React.FC = () => {
       setSelectedProductIds([]);
       setShowCategoryDialog(false);
       setShowDateDialog(false);
+      setShowOccasionDialog(false);
       setBulkCategories([]);
       setBulkDates([]);
+      setBulkOccasions([]);
       // Reload products list
       fetchProducts();
     } catch (error) {
@@ -620,12 +631,22 @@ const AdminProducts: React.FC = () => {
     fetchProducts();
     fetchLowStockProducts();
     fetchCategories();
+    fetchOccasions();
   }, []);
 
   // Apply filters whenever filter states change
   useEffect(() => {
     applyFilters();
   }, [products, searchTerm, selectedCategory, stockFilter, featuredFilter, newFilter, visibilityFilter]);
+
+  const fetchOccasions = async () => {
+    try {
+      const data = await productService.getOccasions();
+      setDbOccasions(data);
+    } catch (error) {
+      console.error("Error fetching occasions:", error);
+    }
+  };
 
   const fetchProducts = async () => {
     try {
@@ -1095,6 +1116,7 @@ const AdminProducts: React.FC = () => {
                   <SelectItem value="removeFromValentine">💔 Remove from Valentine Shop</SelectItem>
                   <SelectItem value="assignValCategories">🏷️ Assign Valentine Categories</SelectItem>
                   <SelectItem value="assignValDates">📅 Assign Valentine Dates</SelectItem>
+                  <SelectItem value="assignOccasions">🎉 Assign Gifting Occasions</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -1263,6 +1285,52 @@ const AdminProducts: React.FC = () => {
                 </Button>
                 <Button className="bg-pink-600 hover:bg-pink-700" onClick={() => handleBulkAction('assignDates', bulkDates)}>
                   Apply Dates
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Occasions Assignment Modal */}
+      {showOccasionDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 backdrop-blur-sm p-4">
+          <Card className="w-full max-w-lg border-2 border-amber-200 shadow-2xl">
+            <CardHeader className="bg-amber-50/50 border-b border-amber-100">
+              <CardTitle className="text-amber-800 flex items-center gap-2">🎉 Bulk Assign Gifting Occasions</CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 space-y-4">
+              <p className="text-sm text-gray-600">Select gifting occasions to apply to all {selectedProductIds.length} selected products:</p>
+              <div className="grid grid-cols-2 gap-3 max-h-[300px] overflow-y-auto p-3 border border-amber-100 rounded-lg bg-white">
+                {dbOccasions.map((occ) => {
+                  const isChecked = bulkOccasions.includes(occ._id || occ.id || '');
+                  return (
+                    <div key={occ._id || occ.id} className="flex items-center space-x-2.5 p-2 hover:bg-amber-50/30 rounded-lg transition-colors border border-transparent hover:border-amber-100/50">
+                      <input
+                        type="checkbox"
+                        id={`bulk-occ-${occ._id || occ.id}`}
+                        checked={isChecked}
+                        onChange={() => {
+                          const occId = occ._id || occ.id || '';
+                          setBulkOccasions(prev =>
+                            prev.includes(occId) ? prev.filter(o => o !== occId) : [...prev, occId]
+                          );
+                        }}
+                        className="h-4.5 w-4.5 rounded border-gray-300 text-amber-605 focus:ring-amber-550 cursor-pointer"
+                      />
+                      <label htmlFor={`bulk-occ-${occ._id || occ.id}`} className="text-xs sm:text-sm font-semibold text-gray-700 cursor-pointer select-none">
+                        {occ.name}
+                      </label>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="flex justify-end gap-2 border-t pt-4">
+                <Button variant="outline" onClick={() => { setShowOccasionDialog(false); setBulkOccasions([]); }}>
+                  Cancel
+                </Button>
+                <Button className="bg-amber-500 hover:bg-amber-600 text-white font-bold" onClick={() => handleBulkAction('assignOccasions', bulkOccasions)}>
+                  Apply Occasions
                 </Button>
               </div>
             </CardContent>
