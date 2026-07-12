@@ -5,7 +5,6 @@ import { motion } from 'framer-motion';
 import { ProductCard } from '@/components/ProductGrid';
 import productService, { OccasionData, ProductData } from '@/services/productService';
 import { useCurrency } from '@/contexts/CurrencyContext';
-import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -14,6 +13,7 @@ import * as LucideIcons from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PRIMARY_CATEGORIES } from '@/utils/categoryTaxonomy';
 import CategoryResolver from './CategoryResolver';
+import { PriceRangeFilterCard, PRICE_FILTER_MIN, PRICE_FILTER_MAX } from './ShopPage';
 
 export const OccasionProductsPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -28,9 +28,11 @@ export const OccasionProductsPage: React.FC = () => {
   // Filter States
   const [sortOption, setSortOption] = useState<string>('featured');
   const [selectedSubcategories, setSelectedSubcategories] = useState<string[]>([]);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([PRICE_FILTER_MIN, PRICE_FILTER_MAX]);
   const [sameDayOnly, setSameDayOnly] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [isDesktopPriceOpen, setIsDesktopPriceOpen] = useState(true);
+  const [isMobilePriceOpen, setIsMobilePriceOpen] = useState(true);
 
   useEffect(() => {
     if (!slug) return;
@@ -124,7 +126,7 @@ export const OccasionProductsPage: React.FC = () => {
 
   const handleClearFilters = () => {
     setSelectedSubcategories([]);
-    setPriceRange([0, 5000]);
+    setPriceRange([PRICE_FILTER_MIN, PRICE_FILTER_MAX]);
     setSameDayOnly(false);
     setSortOption('featured');
   };
@@ -222,6 +224,8 @@ export const OccasionProductsPage: React.FC = () => {
               setSameDayOnly={setSameDayOnly}
               handleClearFilters={handleClearFilters}
               formatPrice={formatPrice}
+              isPriceOpen={isDesktopPriceOpen}
+              setIsPriceOpen={setIsDesktopPriceOpen}
             />
           </aside>
 
@@ -317,6 +321,8 @@ export const OccasionProductsPage: React.FC = () => {
                   setSameDayOnly={setSameDayOnly}
                   handleClearFilters={handleClearFilters}
                   formatPrice={formatPrice}
+                  isPriceOpen={isMobilePriceOpen}
+                  setIsPriceOpen={setIsMobilePriceOpen}
                 />
               </div>
             </div>
@@ -343,7 +349,9 @@ const CardFilters = ({
   sameDayOnly,
   setSameDayOnly,
   handleClearFilters,
-  formatPrice
+  formatPrice,
+  isPriceOpen,
+  setIsPriceOpen
 }: {
   uniqueTypes: string[];
   selectedSubcategories: string[];
@@ -354,13 +362,15 @@ const CardFilters = ({
   setSameDayOnly: (val: boolean) => void;
   handleClearFilters: () => void;
   formatPrice: (price: number) => string;
+  isPriceOpen: boolean;
+  setIsPriceOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
   return (
     <div className="space-y-6">
       {/* Clear Filters Header */}
       <div className="flex items-center justify-between">
         <h3 className="font-bold text-sm uppercase tracking-wider text-slate-900">Filters</h3>
-        {(selectedSubcategories.length > 0 || sameDayOnly || priceRange[0] > 0 || priceRange[1] < 5000) && (
+        {(selectedSubcategories.length > 0 || sameDayOnly || priceRange[0] > PRICE_FILTER_MIN || priceRange[1] < PRICE_FILTER_MAX) && (
           <button
             onClick={handleClearFilters}
             className="text-xs text-rose-600 hover:text-rose-700 font-semibold hover:underline flex items-center gap-0.5"
@@ -408,23 +418,14 @@ const CardFilters = ({
       )}
 
       {/* Price Range Slider */}
-      <div className="space-y-3.5">
-        <h4 className="font-bold text-xs uppercase tracking-wider text-slate-400">Price Range</h4>
-        <div className="px-1.5">
-          <Slider
-            min={0}
-            max={5000}
-            step={100}
-            value={[priceRange[0], priceRange[1]]}
-            onValueChange={val => setPriceRange([val[0], val[1]])}
-            className="my-4"
-          />
-          <div className="flex justify-between items-center text-[11px] font-bold text-slate-500">
-            <span>{formatPrice(priceRange[0])}</span>
-            <span>{formatPrice(priceRange[1])}</span>
-          </div>
-        </div>
-      </div>
+      <PriceRangeFilterCard
+        isOpen={isPriceOpen}
+        onToggle={() => setIsPriceOpen(prev => !prev)}
+        minValue={priceRange[0]}
+        maxValue={priceRange[1]}
+        onMinChange={minVal => setPriceRange([minVal, priceRange[1]])}
+        onMaxChange={maxVal => setPriceRange([priceRange[0], maxVal])}
+      />
     </div>
   );
 };

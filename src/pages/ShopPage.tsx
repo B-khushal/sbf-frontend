@@ -86,11 +86,11 @@ const FilterSection: React.FC<{ title: string; children: React.ReactNode }> = ({
   );
 };
 
-const PRICE_FILTER_MIN = 0;
-const PRICE_FILTER_MAX = 88000;
-const PRICE_HISTOGRAM_BARS = [32, 40, 34, 28, 24, 20, 18, 22];
+export const PRICE_FILTER_MIN = 0;
+export const PRICE_FILTER_MAX = 88000;
+export const PRICE_HISTOGRAM_BARS = [32, 40, 34, 28, 24, 20, 18, 22];
 
-type PriceRangeFilterCardProps = {
+export type PriceRangeFilterCardProps = {
   isOpen: boolean;
   onToggle: () => void;
   minValue: number;
@@ -99,7 +99,7 @@ type PriceRangeFilterCardProps = {
   onMaxChange: (value: number) => void;
 };
 
-const PriceRangeFilterCard: React.FC<PriceRangeFilterCardProps> = ({
+export const PriceRangeFilterCard: React.FC<PriceRangeFilterCardProps> = ({
   isOpen,
   onToggle,
   minValue,
@@ -107,14 +107,64 @@ const PriceRangeFilterCard: React.FC<PriceRangeFilterCardProps> = ({
   onMinChange,
   onMaxChange,
 }) => {
-  const normalizeInput = (value: string, fallback: number) => {
-    const numeric = value.replace(/\D/g, "");
-    if (!numeric) return fallback;
-    return Math.min(PRICE_FILTER_MAX, Math.max(PRICE_FILTER_MIN, Number(numeric)));
+  const [localMin, setLocalMin] = useState(String(minValue));
+  const [localMax, setLocalMax] = useState(String(maxValue));
+
+  useEffect(() => {
+    const currentNum = localMin === "" ? PRICE_FILTER_MIN : Number(localMin);
+    if (minValue !== currentNum) {
+      setLocalMin(String(minValue));
+    }
+  }, [minValue]);
+
+  useEffect(() => {
+    const currentNum = localMax === "" ? PRICE_FILTER_MAX : Number(localMax);
+    if (maxValue !== currentNum) {
+      setLocalMax(String(maxValue));
+    }
+  }, [maxValue]);
+
+  const handleMinChange = (val: string) => {
+    const numeric = val.replace(/\D/g, "");
+    setLocalMin(numeric);
+    const numericVal = numeric ? Number(numeric) : PRICE_FILTER_MIN;
+    onMinChange(Math.min(PRICE_FILTER_MAX, Math.max(PRICE_FILTER_MIN, numericVal)));
+  };
+
+  const handleMaxChange = (val: string) => {
+    const numeric = val.replace(/\D/g, "");
+    setLocalMax(numeric);
+    const numericVal = numeric ? Number(numeric) : PRICE_FILTER_MAX;
+    onMaxChange(Math.min(PRICE_FILTER_MAX, Math.max(PRICE_FILTER_MIN, numericVal)));
+  };
+
+  const handleMinBlur = () => {
+    const numMin = localMin ? Number(localMin) : PRICE_FILTER_MIN;
+    const numMax = localMax ? Number(localMax) : PRICE_FILTER_MAX;
+    if (numMin > numMax) {
+      onMinChange(numMax);
+      onMaxChange(numMin);
+      setLocalMin(String(numMax));
+      setLocalMax(String(numMin));
+    }
+  };
+
+  const handleMaxBlur = () => {
+    const numMin = localMin ? Number(localMin) : PRICE_FILTER_MIN;
+    const numMax = localMax ? Number(localMax) : PRICE_FILTER_MAX;
+    if (numMax < numMin) {
+      onMinChange(numMax);
+      onMaxChange(numMin);
+      setLocalMin(String(numMax));
+      setLocalMax(String(numMin));
+    }
   };
 
   const minPercent = ((minValue - PRICE_FILTER_MIN) / (PRICE_FILTER_MAX - PRICE_FILTER_MIN)) * 100;
   const maxPercent = ((maxValue - PRICE_FILTER_MIN) / (PRICE_FILTER_MAX - PRICE_FILTER_MIN)) * 100;
+
+  const displayMinPercent = Math.min(minPercent, maxPercent);
+  const displayMaxPercent = Math.max(minPercent, maxPercent);
 
   return (
     <div className="w-full mt-3 mb-4 rounded-2xl bg-white shadow-md border border-sky-100 p-4">
@@ -191,7 +241,7 @@ const PriceRangeFilterCard: React.FC<PriceRangeFilterCardProps> = ({
           <div className="absolute top-1/2 -translate-y-1/2 h-1 w-full rounded-full bg-[#ddd]" />
           <div
             className="absolute top-1/2 -translate-y-1/2 h-1 rounded-full bg-gradient-to-r from-sky-400 to-pink-500"
-            style={{ left: `${minPercent}%`, right: `${100 - maxPercent}%` }}
+            style={{ left: `${displayMinPercent}%`, right: `${100 - displayMaxPercent}%` }}
           />
 
           <input
@@ -218,11 +268,9 @@ const PriceRangeFilterCard: React.FC<PriceRangeFilterCardProps> = ({
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-600">₹</span>
               <input
-                value={minValue}
-                onChange={(e) => {
-                  const next = normalizeInput(e.target.value, PRICE_FILTER_MIN);
-                  onMinChange(Math.min(next, maxValue));
-                }}
+                value={localMin}
+                onChange={(e) => handleMinChange(e.target.value)}
+                onBlur={handleMinBlur}
                 className="w-full h-10 rounded-md border border-[#ddd] bg-white pl-8 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-sky-300/60 focus:border-sky-300"
                 inputMode="numeric"
               />
@@ -234,11 +282,9 @@ const PriceRangeFilterCard: React.FC<PriceRangeFilterCardProps> = ({
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-600">₹</span>
               <input
-                value={maxValue}
-                onChange={(e) => {
-                  const next = normalizeInput(e.target.value, PRICE_FILTER_MAX);
-                  onMaxChange(Math.max(next, minValue));
-                }}
+                value={localMax}
+                onChange={(e) => handleMaxChange(e.target.value)}
+                onBlur={handleMaxBlur}
                 className="w-full h-10 rounded-md border border-[#ddd] bg-white pl-8 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-sky-300/60 focus:border-sky-300"
                 inputMode="numeric"
               />

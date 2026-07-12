@@ -332,8 +332,13 @@ const TimeSlotSelector = ({
       return true;
     }
 
-    // Check same-day delivery cutoff (6:00 PM IST)
+    // Check same-day delivery cutoff (6:00 PM IST) or if same-day is disabled in cart
     if (isSameDay(normalizedDate, today)) {
+      const hasNoSameDayItem = items.some(item => item.sameDay === false);
+      if (hasNoSameDayItem) {
+        return true; // Disable today's date because at least one item doesn't support same-day delivery
+      }
+
       const now = new Date();
       const utcTime = now.getTime() + now.getTimezoneOffset() * 60000;
       const istTime = new Date(utcTime + 5.5 * 3600000);
