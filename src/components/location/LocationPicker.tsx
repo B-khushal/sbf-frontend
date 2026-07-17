@@ -143,25 +143,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
       return;
     }
 
-    const isSelf = deliveryOption === 'self';
 
-    if (!isSelf && !addressDetails.recipientName.trim()) {
-      toast({
-        title: 'Validation Error',
-        description: 'Recipient Name is required.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if (!isSelf && !addressDetails.phone.trim()) {
-      toast({
-        title: 'Validation Error',
-        description: 'Phone Number is required.',
-        variant: 'destructive',
-      });
-      return;
-    }
 
     if (!addressDetails.houseNo.trim()) {
       toast({

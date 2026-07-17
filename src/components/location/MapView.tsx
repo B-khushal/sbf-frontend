@@ -66,6 +66,18 @@ export const MapView: React.FC<MapViewProps> = ({
             onMarkerDragEnd(position.lat, position.lng);
           }
         });
+
+        // Trigger size updates after modal animations/render passes complete
+        setTimeout(() => {
+          try {
+            if (mapInstance && typeof mapInstance.resize === 'function') {
+              mapInstance.resize();
+            }
+            window.dispatchEvent(new Event('resize'));
+          } catch (e) {
+            console.warn('Map resize error on load:', e);
+          }
+        }, 350);
       });
     } catch (error) {
       console.error('Error initializing Mappls Map:', error);
@@ -101,6 +113,11 @@ export const MapView: React.FC<MapViewProps> = ({
       try {
         mapRef.current.panTo({ lat: latitude, lng: longitude });
         markerRef.current.setPosition({ lat: latitude, lng: longitude });
+        
+        // Ensure tiles are correctly loaded at the new location
+        if (typeof mapRef.current.resize === 'function') {
+          mapRef.current.resize();
+        }
       } catch (error) {
         console.error('Error updates map/marker positions:', error);
       }

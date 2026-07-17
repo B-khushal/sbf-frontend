@@ -41,7 +41,7 @@ export const useMappls = () => {
     }
 
     // Mappls Web Map JS SDK URL
-    const scriptSrc = `https://apis.mappls.com/advancedmaps/api/${apiKey}/map_sdk?v=3.0&layer=vector`;
+    const scriptSrc = `https://apis.mappls.com/advancedmaps/api/${apiKey}/map_sdk?v=3.0`;
 
     const existingScript = document.querySelector(`script[src^="https://apis.mappls.com/advancedmaps/api/"]`);
 

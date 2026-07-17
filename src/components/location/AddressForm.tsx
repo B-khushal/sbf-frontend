@@ -35,42 +35,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({
 
   return (
     <div className={cn("space-y-4", className)}>
-      {deliveryOption !== 'self' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Recipient Name */}
-          <div className="space-y-1.5">
-            <label htmlFor="recipientName" className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-              Recipient Name *
-            </label>
-            <Input
-              id="recipientName"
-              name="recipientName"
-              value={formData.recipientName}
-              onChange={handleInputChange}
-              required
-              placeholder="Name of person receiving the order"
-              className={inputClass}
-            />
-          </div>
-
-          {/* Recipient Phone */}
-          <div className="space-y-1.5">
-            <label htmlFor="phone" className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-              Phone Number *
-            </label>
-            <Input
-              id="phone"
-              name="phone"
-              type="tel"
-              value={formData.phone}
-              onChange={handleInputChange}
-              required
-              placeholder="Mobile number for delivery updates"
-              className={inputClass}
-            />
-          </div>
-        </div>
-      )}
+      {/* Recipient details are collected on the main shipping form, so they are not shown in this sub-form */}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* House / Flat Number */}
