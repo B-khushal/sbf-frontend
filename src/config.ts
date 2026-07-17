@@ -1,5 +1,5 @@
-const LOCAL_API_URL = 'https://api.sbflorist.in/api';
-const LOCAL_UPLOADS_URL = 'https://api.sbflorist.in';
+const LOCAL_API_URL = 'http://localhost:5000/api';
+const LOCAL_UPLOADS_URL = 'http://localhost:5000';
 const REMOTE_API_URL = 'https://api.sbflorist.in/api';
 const REMOTE_UPLOADS_URL = 'https://api.sbflorist.in';
 
