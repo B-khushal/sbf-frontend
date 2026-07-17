@@ -53,10 +53,12 @@ export interface InvoiceOrder {
 export interface Order {
   id: string;
   orderNumber: string;
+  isTestOrder?: boolean;
   createdAt: string;
   shipping: {
     firstName: string;
     lastName: string;
+    fullName?: string;
     email: string;
     phone: string;
     address: string;
@@ -80,7 +82,19 @@ export interface Order {
     receiverZipCode?: string;
     timeSlot: string;
     deliveryDate: string;
+
+    // Mappls fields
+    latitude?: number;
+    longitude?: number;
+    formattedAddress?: string;
+    country?: string;
+    pincode?: string;
+    landmark?: string;
+    houseNo?: string;
+    floor?: string;
+    deliveryInstructions?: string;
   };
+  giftDetails?: any;
   items: Array<{
     id: string;
     title: string;
@@ -88,12 +102,17 @@ export interface Order {
     price: number;
     quantity: number;
     discount?: number;
+    selectedVariant?: any;
     customizations?: {
       photo?: string;
       number?: string;
       messageCard?: string;
       selectedFlowers?: Array<{ name: string; quantity?: number }>;
       selectedChocolates?: Array<{ name: string; quantity?: number }>;
+      isGiftBundle?: boolean;
+      giftComponents?: any[];
+      customMessage?: string;
+      personalization?: any;
     } | null;
     product: {
       name: string;

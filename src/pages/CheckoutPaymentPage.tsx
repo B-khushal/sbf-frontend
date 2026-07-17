@@ -147,6 +147,17 @@ declare global {
     greetingCard?: string;
     surpriseDelivery?: boolean;
     anonymousGift?: boolean;
+    
+    // Mappls fields
+    latitude?: number;
+    longitude?: number;
+    formattedAddress?: string;
+    country?: string;
+    pincode?: string;
+    landmark?: string;
+    houseNo?: string;
+    floor?: string;
+    deliveryInstructions?: string;
   }
 
 const CheckoutPaymentPage = () => {
@@ -379,7 +390,18 @@ const CheckoutPaymentPage = () => {
            cardMessage: shippingInfo.cardMessage || shippingInfo.giftMessage || '',
            deliverySpecialInstructions: shippingInfo.deliverySpecialInstructions || shippingInfo.notes || '',
            deliveryDate: shippingInfo.selectedDate ? new Date(shippingInfo.selectedDate) : new Date(),
-           timeSlot: shippingInfo.timeSlot
+           timeSlot: shippingInfo.timeSlot,
+           
+           // Mappls location details
+           latitude: shippingInfo.latitude,
+           longitude: shippingInfo.longitude,
+           formattedAddress: shippingInfo.formattedAddress,
+           country: shippingInfo.country || 'India',
+           pincode: shippingInfo.pincode,
+           landmark: shippingInfo.landmark,
+           houseNo: shippingInfo.houseNo,
+           floor: shippingInfo.floor,
+           deliveryInstructions: shippingInfo.deliveryInstructions,
          },
          totalAmount: orderTotal,       // ✅ Correct field name for backend
          subtotal: subtotal,
@@ -413,7 +435,18 @@ const CheckoutPaymentPage = () => {
             recipientZipCode: shippingInfo.receiverZipCode || '',
             greetingCard: shippingInfo.greetingCard || 'none',
             surpriseDelivery: !!shippingInfo.surpriseDelivery,
-            anonymousGift: !!shippingInfo.anonymousGift
+            anonymousGift: !!shippingInfo.anonymousGift,
+            
+            // Mappls location details
+            latitude: shippingInfo.latitude,
+            longitude: shippingInfo.longitude,
+            formattedAddress: shippingInfo.formattedAddress,
+            country: shippingInfo.country || 'India',
+            pincode: shippingInfo.pincode,
+            landmark: shippingInfo.landmark,
+            houseNo: shippingInfo.houseNo,
+            floor: shippingInfo.floor,
+            deliveryInstructions: shippingInfo.deliveryInstructions,
           };
         }
 

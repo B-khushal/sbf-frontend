@@ -3,6 +3,7 @@ import api from './api';
 export interface Order {
   _id: string;
   orderNumber: string;
+  isTestOrder?: boolean;
   shippingDetails: {
     fullName: string;
     email: string;
@@ -18,6 +19,17 @@ export interface Order {
     deliverySpecialInstructions?: string;
     deliveryDate: string;
     timeSlot: string;
+    
+    // Mappls location details
+    latitude?: number;
+    longitude?: number;
+    formattedAddress?: string;
+    country?: string;
+    pincode?: string;
+    landmark?: string;
+    houseNo?: string;
+    floor?: string;
+    deliveryInstructions?: string;
   };
   items: {
     product: {
@@ -70,6 +82,17 @@ export interface Order {
     greetingCard: string;
     surpriseDelivery: boolean;
     anonymousGift: boolean;
+    
+    // Mappls location details
+    latitude?: number;
+    longitude?: number;
+    formattedAddress?: string;
+    country?: string;
+    pincode?: string;
+    landmark?: string;
+    houseNo?: string;
+    floor?: string;
+    deliveryInstructions?: string;
   };
 }
 

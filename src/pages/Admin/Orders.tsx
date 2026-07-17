@@ -11,7 +11,7 @@ import {
   Search, Eye, Download, Calendar, Clock, AlertTriangle, Filter, X, 
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Copy, Check, 
   Phone, MessageSquare, List, Grid, ChevronDown, Sparkles, AlertCircle, 
-  ArrowUpDown, ExternalLink, Mail, ShieldAlert, Truck, Loader2
+  ArrowUpDown, ExternalLink, Mail, ShieldAlert, Truck, Loader2, Package
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -134,6 +134,34 @@ const STATUS_CONFIG: Record<string, { label: string; bg: string; border: string;
 
 const getStatusConfig = (status: string) => {
   return STATUS_CONFIG[status] || STATUS_CONFIG.pending;
+};
+
+const renderLocationNavLinks = (lat?: number, lng?: number) => {
+  if (!lat || !lng) return null;
+  return (
+    <div className="flex items-center gap-1.5 mt-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800/60 rounded-lg p-1.5 w-max select-none">
+      <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">🗺️ Nav:</span>
+      <a
+        href={`https://mappls.com/pin-code?lat=${lat}&lng=${lng}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={(e) => e.stopPropagation()}
+        className="inline-flex items-center gap-0.5 text-[10px] font-bold text-emerald-650 dark:text-emerald-400 hover:underline"
+      >
+        Mappls
+      </a>
+      <span className="text-slate-300 dark:text-slate-700">|</span>
+      <a
+        href={`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={(e) => e.stopPropagation()}
+        className="inline-flex items-center gap-0.5 text-[10px] font-bold text-blue-650 dark:text-blue-400 hover:underline"
+      >
+        G Maps
+      </a>
+    </div>
+  );
 };
 
 // Formats messy raw database slot strings beautifully
@@ -316,7 +344,7 @@ const AdminOrders = () => {
   }, [selectedStatus, dateRange, deliveryDateRange, searchTerm]);
 
   const handleCurrencyChange = (newCurrency: string) => {
-    setCurrency(newCurrency);
+    setCurrency(newCurrency as any);
   };
 
   const fetchOrders = async () => {
@@ -1285,6 +1313,7 @@ const AdminOrders = () => {
                                     <MessageSquare className="h-3 w-3" />
                                   </a>
                                 </div>
+                                {renderLocationNavLinks(order.giftDetails?.latitude, order.giftDetails?.longitude)}
                               </>
                             ) : (
                               <>
@@ -1313,6 +1342,7 @@ const AdminOrders = () => {
                                     <MessageSquare className="h-3 w-3" />
                                   </a>
                                 </div>
+                                {renderLocationNavLinks(order.shippingDetails?.latitude, order.shippingDetails?.longitude)}
                               </>
                             )}
                           </div>
@@ -1522,6 +1552,7 @@ const AdminOrders = () => {
                                   <MessageSquare className="h-3 w-3" />
                                 </a>
                               </div>
+                              {renderLocationNavLinks(order.giftDetails?.latitude, order.giftDetails?.longitude)}
                             </>
                           ) : (
                             <>
@@ -1553,6 +1584,7 @@ const AdminOrders = () => {
                                   <MessageSquare className="h-3 w-3" />
                                 </a>
                               </div>
+                              {renderLocationNavLinks(order.shippingDetails?.latitude, order.shippingDetails?.longitude)}
                             </>
                           )}
                         </div>

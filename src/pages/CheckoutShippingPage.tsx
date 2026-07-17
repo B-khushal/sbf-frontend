@@ -20,7 +20,10 @@ import { useToast } from '@/hooks/use-toast';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useValentine } from '@/contexts/ValentineContext';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import PinCodeInput, { type PinCodeSelection } from '@/components/ui/PinCodeInput';
+import PinCodeInput, { type PinCodeSelection, SERVICEABLE_PINCODES } from '@/components/ui/PinCodeInput';
+import { LocationPicker } from '@/components/location/LocationPicker';
+import { LocationPreview } from '@/components/location/LocationPreview';
+import { MapplsLocation } from '@/types/location';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { getUserProfile, updateUserProfile, SavedAddress } from '@/services/authService';
@@ -60,6 +63,103 @@ const CheckoutShippingPage = () => {
   const { subtotal } = useCartSelectors();
   const { toast } = useToast();
   const { isValentineEnabled } = useValentine();
+  
+  const [deliveryLocation, setDeliveryLocation] = useState<MapplsLocation | null>(() => {
+    try {
+      const info = localStorage.getItem('shippingInfo');
+      if (info) {
+        const parsed = JSON.parse(info);
+        if (parsed.latitude && parsed.longitude && parsed.formattedAddress) {
+          return {
+            latitude: parsed.latitude,
+            longitude: parsed.longitude,
+            formattedAddress: parsed.formattedAddress,
+            city: parsed.city || 'Hyderabad',
+            state: parsed.state || 'Telangana',
+            country: parsed.country || 'India',
+            pincode: parsed.pincode || parsed.zipCode || '',
+            recipientName: parsed.recipientName || '',
+            phone: parsed.phone || '',
+            houseNo: parsed.houseNo || '',
+            apartment: parsed.apartment || '',
+            floor: parsed.floor || '',
+            landmark: parsed.landmark || '',
+            deliveryInstructions: parsed.deliveryInstructions || '',
+          };
+        }
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  });
+
+  const [isPickingLocation, setIsPickingLocation] = useState(false);
+
+  const handleLocationConfirm = (location: MapplsLocation) => {
+    const isServiceable = SERVICEABLE_PINCODES.some(pin => pin.code === location.pincode);
+    if (!isServiceable) {
+      toast({
+        title: "Outside Delivery Area",
+        description: `Unfortunately, SBFlorist does not deliver to the selected PIN code (${location.pincode}) in Hyderabad. Please select a serviceable address.`,
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setDeliveryLocation(location);
+    setIsPickingLocation(false);
+
+    const names = location.recipientName ? location.recipientName.split(' ') : ['', ''];
+    const fName = names[0] || '';
+    const lName = names.slice(1).join(' ') || '';
+
+    if (deliveryOption === 'self') {
+      setFormData(prev => ({
+        ...prev,
+        firstName: prev.firstName || fName,
+        lastName: prev.lastName || lName,
+        phone: prev.phone || location.phone || '',
+        address: location.formattedAddress,
+        apartment: location.apartment || '',
+        zipCode: location.pincode,
+        city: location.city,
+        state: location.state
+      }));
+      setSelectedSenderPin({
+        code: location.pincode,
+        area: location.landmark || '',
+        city: location.city,
+        state: location.state
+      });
+      setSenderPinValidation({ isValid: true, message: '' });
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        receiverFirstName: fName,
+        receiverLastName: lName,
+        receiverPhone: location.phone || '',
+        receiverAddress: location.formattedAddress,
+        receiverApartment: location.apartment || '',
+        receiverZipCode: location.pincode,
+        receiverCity: location.city,
+        receiverState: location.state
+      }));
+      setSelectedReceiverPin({
+        code: location.pincode,
+        area: location.landmark || '',
+        city: location.city,
+        state: location.state
+      });
+      setReceiverPinValidation({ isValid: true, message: '' });
+    }
+
+    toast({
+      title: "Delivery Location Set",
+      description: "Address has been successfully configured.",
+    });
+  };
+
   const hasValentine = items.some(item => item.productType === 'valentine' || item.isValentineProduct);
 
   const [greetingCard, setGreetingCard] = useState<string>(() => {
@@ -397,11 +497,11 @@ const CheckoutShippingPage = () => {
       return;
     }
     
-    // Check PIN code validation first
-    if (!activePinValidation.isValid || !selectedDeliveryPin?.code) {
+    // Check if delivery location has been pinned
+    if (!deliveryLocation || !deliveryLocation.latitude || !deliveryLocation.longitude) {
       toast({
-        title: "Invalid PIN code",
-        description: activePinValidation.message,
+        title: "No Location Selected",
+        description: "Please select a delivery location using the MapmyIndia location picker.",
         variant: "destructive"
       });
       return;
@@ -409,12 +509,10 @@ const CheckoutShippingPage = () => {
 
     // Validate based on delivery option
     if (deliveryOption === 'self') {
-      if (!formData.firstName || !formData.lastName || !formData.address || 
-          !formData.city || !formData.state || !formData.zipCode || 
-          !formData.phone) {
+      if (!formData.firstName || !formData.lastName || !formData.phone) {
         toast({
           title: "Missing information",
-          description: "Please fill in all required fields",
+          description: "Please fill in your name and phone number.",
           variant: "destructive"
         });
         return;
@@ -422,12 +520,10 @@ const CheckoutShippingPage = () => {
     } else {
       if (!formData.firstName || !formData.lastName || !formData.phone ||
           !formData.receiverFirstName || !formData.receiverLastName || 
-          !formData.receiverAddress || !formData.receiverCity || 
-          !formData.receiverState || !formData.receiverZipCode || 
           !formData.receiverPhone) {
         toast({
           title: "Missing information",
-          description: "Please fill in all required fields for both sender and receiver",
+          description: "Please fill in names and phone numbers for both sender and receiver.",
           variant: "destructive"
         });
         return;
@@ -443,12 +539,23 @@ const CheckoutShippingPage = () => {
       isFirstOrderFreeDelivery: deliveryCalculation?.isFirstOrderFreeDelivery ?? false,
       selectedDate: selectedDate.toISOString(),
       cardMessage: cardMessage,
-      deliverySpecialInstructions: deliverySpecialInstructions,
+      deliverySpecialInstructions: deliveryLocation.deliveryInstructions || deliverySpecialInstructions,
       giftMessage: cardMessage, // legacy compatibility
-      notes: deliverySpecialInstructions, // legacy compatibility
+      notes: deliveryLocation.deliveryInstructions || deliverySpecialInstructions, // legacy compatibility
       greetingCard: hasValentine ? greetingCard : 'none',
       surpriseDelivery: hasValentine ? surpriseDelivery : false,
       anonymousGift: hasValentine ? anonymousGift : false,
+
+      // Mappls location details
+      latitude: deliveryLocation.latitude,
+      longitude: deliveryLocation.longitude,
+      formattedAddress: deliveryLocation.formattedAddress,
+      country: deliveryLocation.country || 'India',
+      pincode: deliveryLocation.pincode,
+      landmark: deliveryLocation.landmark,
+      houseNo: deliveryLocation.houseNo,
+      floor: deliveryLocation.floor,
+      deliveryInstructions: deliveryLocation.deliveryInstructions,
     };
 
     localStorage.setItem('shippingInfo', JSON.stringify(shippingInfo));
@@ -467,9 +574,9 @@ const CheckoutShippingPage = () => {
           zipCode: deliveryOption === 'self' ? formData.zipCode : formData.receiverZipCode,
           phone: deliveryOption === 'self' ? formData.phone : formData.receiverPhone,
           email: deliveryOption === 'self' ? formData.email : formData.receiverEmail,
-          notes: deliverySpecialInstructions,
+          notes: deliveryLocation.deliveryInstructions || deliverySpecialInstructions,
           cardMessage: cardMessage,
-          deliverySpecialInstructions: deliverySpecialInstructions,
+          deliverySpecialInstructions: deliveryLocation.deliveryInstructions || deliverySpecialInstructions,
           deliveryOption,
           isDefault: savedAddresses.length === 0,
           giftMessage: cardMessage,
@@ -482,6 +589,17 @@ const CheckoutShippingPage = () => {
           receiverCity: formData.receiverCity,
           receiverState: formData.receiverState,
           receiverZipCode: formData.receiverZipCode,
+          
+          // Mappls fields
+          latitude: deliveryLocation.latitude,
+          longitude: deliveryLocation.longitude,
+          formattedAddress: deliveryLocation.formattedAddress,
+          country: deliveryLocation.country || 'India',
+          pincode: deliveryLocation.pincode,
+          landmark: deliveryLocation.landmark,
+          houseNo: deliveryLocation.houseNo,
+          floor: deliveryLocation.floor,
+          deliveryInstructions: deliveryLocation.deliveryInstructions,
         };
 
         const updatedAddresses = [...savedAddresses, newAddress];
@@ -557,6 +675,23 @@ const CheckoutShippingPage = () => {
         : "bg-gradient-to-br from-green-50 via-blue-50 to-purple-50"
     )}>
       <Navigation />
+
+      {isPickingLocation && (
+        <div className="fixed inset-0 bg-slate-950/65 backdrop-blur-sm z-[9999] overflow-y-auto flex items-center justify-center p-4">
+          <div className="w-full max-w-4xl max-h-[92vh] overflow-y-auto bg-white dark:bg-slate-900 rounded-3xl relative shadow-2xl animate-in zoom-in-95 duration-200">
+            <LocationPicker
+              initialLocation={deliveryLocation || {
+                recipientName: deliveryOption === 'self' 
+                  ? `${formData.firstName} ${formData.lastName}`.trim()
+                  : `${formData.receiverFirstName} ${formData.receiverLastName}`.trim(),
+                phone: deliveryOption === 'self' ? formData.phone : formData.receiverPhone
+              }}
+              onConfirm={handleLocationConfirm}
+              onCancel={() => setIsPickingLocation(false)}
+            />
+          </div>
+        </div>
+      )}
       
       <motion.div 
         className="container mx-auto max-w-6xl px-4 py-4 pb-32 sm:px-6 sm:py-6 lg:px-8 lg:py-8 lg:pb-8"
@@ -814,102 +949,24 @@ const CheckoutShippingPage = () => {
                       
                       {deliveryOption === 'self' && (
                         <div className="space-y-4">
-                          <div className="space-y-2">
-                            <label htmlFor="address" className="block text-sm font-medium">
-                              Address *
-                            </label>
-                            <Input
-                              id="address"
-                              name="address"
-                              value={formData.address}
-                              onChange={handleInputChange}
-                              required
-                              placeholder="Enter your address"
-                              className={inputClassName}
+                          {deliveryLocation ? (
+                            <LocationPreview
+                              location={deliveryLocation}
+                              onChangeLocation={() => setIsPickingLocation(true)}
                             />
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <label htmlFor="apartment" className="block text-sm font-medium">
-                              Apartment, suite, etc. (optional)
-                            </label>
-                            <Input
-                              id="apartment"
-                              name="apartment"
-                              value={formData.apartment}
-                              onChange={handleInputChange}
-                              placeholder="Apartment, suite, etc."
-                              className={inputClassName}
-                            />
-                          </div>
-                          
-                          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                            <div className="space-y-2 sm:col-span-3">
-                              <label htmlFor="zipCode" className="block text-sm font-medium">
-                                Delivery PIN Code *
-                              </label>
-                              <PinCodeInput
-                                value={formData.zipCode}
-                                onChange={handleZipCodeChange}
-                                placeholder="Enter PIN code"
-                                required
-                                inputClassName={inputClassName}
-                                onSelectPinCode={handleSenderPinSelect}
-                                onValidationChange={handleSenderPinValidation}
-                              />
+                          ) : (
+                            <div className="p-6 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl flex flex-col items-center justify-center text-center bg-slate-50/50 dark:bg-slate-900/10">
+                              <MapPin className="h-10 w-10 text-emerald-500 mb-3 animate-pulse" />
+                              <h4 className="font-semibold text-slate-800 dark:text-slate-200">No Delivery Location Selected</h4>
+                              <p className="text-xs text-slate-500 mt-1 mb-4">Please pinpoint your delivery address on the MapmyIndia map.</p>
+                              <Button
+                                type="button"
+                                onClick={() => setIsPickingLocation(true)}
+                                className="rounded-xl h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+                              >
+                                Select Delivery Location
+                              </Button>
                             </div>
-                            <div className="space-y-2">
-                              <label htmlFor="city" className="block text-sm font-medium">
-                                City *
-                              </label>
-                              <Input
-                                id="city"
-                                name="city"
-                                value={formData.city}
-                                onChange={handleInputChange}
-                                required
-                                readOnly
-                                placeholder="Auto-filled from pincode"
-                                className={cn(inputClassName, 'bg-slate-100')}
-                              />
-                            </div>
-                            
-                            <div className="space-y-2">
-                              <label htmlFor="state" className="block text-sm font-medium">
-                                State/Province *
-                              </label>
-                              <Input
-                                id="state"
-                                name="state"
-                                value={formData.state}
-                                onChange={handleInputChange}
-                                required
-                                readOnly
-                                placeholder="Auto-filled from pincode"
-                                className={cn(inputClassName, 'bg-slate-100')}
-                              />
-                            </div>
-                            
-                            <div className="space-y-2">
-                              <label htmlFor="zipCodeDisplay" className="block text-sm font-medium">
-                                Selected PIN
-                              </label>
-                              <Input
-                                id="zipCodeDisplay"
-                                value={formData.zipCode}
-                                readOnly
-                                placeholder="Choose a pincode above"
-                                className={cn(inputClassName, 'bg-slate-100')}
-                              />
-                            </div>
-                          </div>
-                          
-                          {!senderPinValidation.isValid && (
-                            <Alert className="border-amber-200 bg-amber-50">
-                              <AlertDescription className="text-amber-700">
-                                {senderPinValidation.message}
-                              </AlertDescription>
-                            </Alert>
                           )}
                         </div>
                       )}
@@ -955,103 +1012,27 @@ const CheckoutShippingPage = () => {
                           </div>
                         </div>
                         
-                        <div className="space-y-2">
-                          <label htmlFor="receiverAddress" className="block text-sm font-medium">
-                            Address *
-                          </label>
-                          <Input
-                            id="receiverAddress"
-                            name="receiverAddress"
-                            value={formData.receiverAddress}
-                            onChange={handleInputChange}
-                            required={deliveryOption === 'gift'}
-                            placeholder="Enter receiver's address"
-                            className={inputClassName}
-                          />
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <label htmlFor="receiverApartment" className="block text-sm font-medium">
-                            Apartment, suite, etc. (optional)
-                          </label>
-                          <Input
-                            id="receiverApartment"
-                            name="receiverApartment"
-                            value={formData.receiverApartment}
-                            onChange={handleInputChange}
-                            placeholder="Apartment, suite, etc."
-                            className={inputClassName}
-                          />
-                        </div>
-                        
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                          <div className="space-y-2 sm:col-span-3">
-                            <label htmlFor="receiverZipCode" className="block text-sm font-medium">
-                              Receiver PIN Code *
-                            </label>
-                            <PinCodeInput
-                              value={formData.receiverZipCode}
-                              onChange={handleReceiverZipCodeChange}
-                              placeholder="Enter PIN code"
-                              required={deliveryOption === 'gift'}
-                              inputClassName={inputClassName}
-                              onSelectPinCode={handleReceiverPinSelect}
-                              onValidationChange={handleReceiverPinValidation}
+                        <div className="space-y-4 pt-2">
+                          {deliveryLocation ? (
+                            <LocationPreview
+                              location={deliveryLocation}
+                              onChangeLocation={() => setIsPickingLocation(true)}
                             />
-                          </div>
-                          <div className="space-y-2">
-                            <label htmlFor="receiverCity" className="block text-sm font-medium">
-                              City *
-                            </label>
-                            <Input
-                              id="receiverCity"
-                              name="receiverCity"
-                                value={formData.receiverCity}
-                                onChange={handleInputChange}
-                                required={deliveryOption === 'gift'}
-                                readOnly
-                                placeholder="Auto-filled from pincode"
-                                className={cn(inputClassName, 'bg-slate-100')}
-                              />
+                          ) : (
+                            <div className="p-6 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl flex flex-col items-center justify-center text-center bg-slate-50/50 dark:bg-slate-900/10">
+                              <MapPin className="h-10 w-10 text-emerald-500 mb-3 animate-pulse" />
+                              <h4 className="font-semibold text-slate-800 dark:text-slate-200">No Delivery Location Selected</h4>
+                              <p className="text-xs text-slate-500 mt-1 mb-4">Please pinpoint the recipient's delivery address on the MapmyIndia map.</p>
+                              <Button
+                                type="button"
+                                onClick={() => setIsPickingLocation(true)}
+                                className="rounded-xl h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+                              >
+                                Select Delivery Location
+                              </Button>
                             </div>
-                          
-                          <div className="space-y-2">
-                            <label htmlFor="receiverState" className="block text-sm font-medium">
-                              State/Province *
-                            </label>
-                            <Input
-                              id="receiverState"
-                              name="receiverState"
-                                value={formData.receiverState}
-                                onChange={handleInputChange}
-                                required={deliveryOption === 'gift'}
-                                readOnly
-                                placeholder="Auto-filled from pincode"
-                                className={cn(inputClassName, 'bg-slate-100')}
-                              />
-                            </div>
-                            
-                            <div className="space-y-2">
-                              <label htmlFor="receiverZipCodeDisplay" className="block text-sm font-medium">
-                                Selected PIN
-                              </label>
-                              <Input
-                                id="receiverZipCodeDisplay"
-                                value={formData.receiverZipCode}
-                                readOnly
-                                placeholder="Choose a pincode above"
-                                className={cn(inputClassName, 'bg-slate-100')}
-                              />
-                            </div>
-                          </div>
-
-                          {!receiverPinValidation.isValid && (
-                            <Alert className="border-amber-200 bg-amber-50">
-                              <AlertDescription className="text-amber-700">
-                                {receiverPinValidation.message}
-                              </AlertDescription>
-                            </Alert>
                           )}
+                        </div>
                         
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                           <div className="space-y-2">

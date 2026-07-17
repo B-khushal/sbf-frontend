@@ -17,6 +17,8 @@ import { Order } from '@/types/invoice';
 import { useAuth } from '@/hooks/use-auth';
 import { useNotification } from '@/contexts/NotificationContext';
 import api from '@/services/api';
+import { LocationPreview } from '@/components/location/LocationPreview';
+import { MapplsLocation } from '@/types/location';
 
 // Animation variants
 const containerVariants = {
@@ -455,6 +457,24 @@ const CheckoutConfirmationPage = () => {
     );
   }
 
+  const hasMapplsLoc = order.shipping?.latitude && order.shipping?.longitude;
+  const deliveryLoc: MapplsLocation | null = hasMapplsLoc ? {
+    latitude: order.shipping.latitude,
+    longitude: order.shipping.longitude,
+    formattedAddress: order.shipping.formattedAddress || order.shipping.address || '',
+    city: order.shipping.city || 'Hyderabad',
+    state: order.shipping.state || 'Telangana',
+    country: order.shipping.country || 'India',
+    pincode: order.shipping.pincode || order.shipping.zipCode || '',
+    recipientName: order.shipping.fullName || `${order.shipping.firstName || ''} ${order.shipping.lastName || ''}`.trim(),
+    phone: order.shipping.phone || '',
+    houseNo: order.shipping.houseNo || '',
+    apartment: order.shipping.apartment || '',
+    floor: order.shipping.floor || '',
+    landmark: order.shipping.landmark || '',
+    deliveryInstructions: order.shipping.deliveryInstructions || order.shipping.notes || '',
+  } : null;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 relative overflow-hidden">
       <Navigation />
@@ -657,20 +677,28 @@ const CheckoutConfirmationPage = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  {deliveryLoc && (
+                    <div className="mb-4">
+                      <LocationPreview location={deliveryLoc} className="shadow-none border-slate-105" />
+                    </div>
+                  )}
+
                   {/* Delivery Address */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <MapPin className="w-4 h-4 text-primary" />
-                        <span className="font-medium">Delivery Address</span>
+                    {!deliveryLoc && (
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <MapPin className="w-4 h-4 text-primary" />
+                          <span className="font-medium">Delivery Address</span>
+                        </div>
+                        <div className="text-sm text-gray-650 space-y-1">
+                          <p className="font-medium">{order.shipping?.firstName || 'N/A'} {order.shipping?.lastName || ''}</p>
+                          <p>{order.shipping?.address || 'N/A'}</p>
+                          {order.shipping?.apartment && <p>{order.shipping.apartment}</p>}
+                          <p>{order.shipping?.city || ''}{order.shipping?.state ? `, ${order.shipping.state}` : ''}{order.shipping?.zipCode || ''}</p>
+                        </div>
                       </div>
-                      <div className="text-sm text-gray-600 space-y-1">
-                        <p className="font-medium">{order.shipping?.firstName || 'N/A'} {order.shipping?.lastName || ''}</p>
-                        <p>{order.shipping?.address || 'N/A'}</p>
-                        {order.shipping?.apartment && <p>{order.shipping.apartment}</p>}
-                        <p>{order.shipping?.city || ''}{order.shipping?.state ? `, ${order.shipping.state}` : ''}{order.shipping?.zipCode || ''}</p>
-                      </div>
-                    </div>
+                    )}
 
                     <div>
                       <div className="flex items-center gap-2 mb-2">

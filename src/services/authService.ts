@@ -39,6 +39,17 @@ export interface SavedAddress {
   receiverCity?: string;
   receiverState?: string;
   receiverZipCode?: string;
+  
+  // Mappls location details
+  latitude?: number;
+  longitude?: number;
+  formattedAddress?: string;
+  country?: string;
+  pincode?: string;
+  landmark?: string;
+  houseNo?: string;
+  floor?: string;
+  deliveryInstructions?: string;
 }
 
 interface UserProfile {
