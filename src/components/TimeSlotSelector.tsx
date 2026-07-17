@@ -262,7 +262,7 @@ const TimeSlotSelector = ({
     // If all items in the cart are toggled to sameDay, show only the 9-9 delivery slot
     const onlySameDay = items.length > 0 && items.every(item => item.sameDay === true);
 
-    if (onlySameDay || isToday) {
+    if (onlySameDay && isToday) {
       return [
         {
           id: 'same_day',
