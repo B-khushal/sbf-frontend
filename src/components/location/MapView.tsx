@@ -18,6 +18,7 @@ export const MapView: React.FC<MapViewProps> = ({
 }) => {
   const { isLoaded, isError } = useMappls();
   const [mapLoading, setMapLoading] = useState(true);
+  const [mapId] = useState(() => 'mappls-map-' + Math.random().toString(36).substring(2, 9));
   const mapContainerRef = useRef<HTMLDivElement>(null);
   
   // Keep references to Mappls map and marker instances
@@ -35,8 +36,8 @@ export const MapView: React.FC<MapViewProps> = ({
       setMapLoading(true);
       initializedRef.current = true;
 
-      // Initialize map instance
-      const mapInstance = new window.mappls.Map(mapContainerRef.current, {
+      // Initialize map instance using the container's unique ID string
+      const mapInstance = new window.mappls.Map(mapId, {
         center: { lat: latitude, lng: longitude },
         zoom: 15,
         zoomControl: true,
@@ -128,6 +129,7 @@ export const MapView: React.FC<MapViewProps> = ({
     <div className={cn("relative w-full h-full rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 dark:border-slate-800 shadow-inner min-h-[300px]", className)}>
       <div 
         ref={mapContainerRef} 
+        id={mapId}
         style={{ width: '100%', height: '100%', minHeight: '300px' }}
         className="w-full h-full"
       />
