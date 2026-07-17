@@ -686,6 +686,7 @@ const CheckoutShippingPage = () => {
                   : `${formData.receiverFirstName} ${formData.receiverLastName}`.trim(),
                 phone: deliveryOption === 'self' ? formData.phone : formData.receiverPhone
               }}
+              deliveryOption={deliveryOption}
               onConfirm={handleLocationConfirm}
               onCancel={() => setIsPickingLocation(false)}
             />

@@ -15,12 +15,14 @@ interface LocationPickerProps {
   initialLocation?: Partial<MapplsLocation>;
   onConfirm: (location: MapplsLocation) => void;
   onCancel?: () => void;
+  deliveryOption?: 'self' | 'gift';
 }
 
 export const LocationPicker: React.FC<LocationPickerProps> = ({
   initialLocation,
   onConfirm,
   onCancel,
+  deliveryOption,
 }) => {
   const { toast } = useToast();
   const { getCurrentLocation, loading: geoLoading } = useCurrentLocation();
@@ -141,7 +143,9 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
       return;
     }
 
-    if (!addressDetails.recipientName.trim()) {
+    const isSelf = deliveryOption === 'self';
+
+    if (!isSelf && !addressDetails.recipientName.trim()) {
       toast({
         title: 'Validation Error',
         description: 'Recipient Name is required.',
@@ -150,7 +154,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
       return;
     }
 
-    if (!addressDetails.phone.trim()) {
+    if (!isSelf && !addressDetails.phone.trim()) {
       toast({
         title: 'Validation Error',
         description: 'Phone Number is required.',
@@ -309,6 +313,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
                 <AddressForm
                   formData={addressDetails}
                   onChange={handleFormChange}
+                  deliveryOption={deliveryOption}
                 />
               </div>
 

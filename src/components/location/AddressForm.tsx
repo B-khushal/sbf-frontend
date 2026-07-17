@@ -17,12 +17,14 @@ interface AddressFormProps {
   formData: AddressFormData;
   onChange: (name: keyof AddressFormData, value: string) => void;
   className?: string;
+  deliveryOption?: 'self' | 'gift';
 }
 
 export const AddressForm: React.FC<AddressFormProps> = ({
   formData,
   onChange,
   className,
+  deliveryOption,
 }) => {
   const inputClass = 'h-11 rounded-xl border-slate-200 dark:border-slate-800 text-sm shadow-sm bg-white/50 dark:bg-slate-900/50 focus-visible:ring-2 focus-visible:ring-emerald-500';
 
@@ -33,40 +35,42 @@ export const AddressForm: React.FC<AddressFormProps> = ({
 
   return (
     <div className={cn("space-y-4", className)}>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Recipient Name */}
-        <div className="space-y-1.5">
-          <label htmlFor="recipientName" className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-            Recipient Name *
-          </label>
-          <Input
-            id="recipientName"
-            name="recipientName"
-            value={formData.recipientName}
-            onChange={handleInputChange}
-            required
-            placeholder="Name of person receiving the order"
-            className={inputClass}
-          />
-        </div>
+      {deliveryOption !== 'self' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Recipient Name */}
+          <div className="space-y-1.5">
+            <label htmlFor="recipientName" className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              Recipient Name *
+            </label>
+            <Input
+              id="recipientName"
+              name="recipientName"
+              value={formData.recipientName}
+              onChange={handleInputChange}
+              required
+              placeholder="Name of person receiving the order"
+              className={inputClass}
+            />
+          </div>
 
-        {/* Recipient Phone */}
-        <div className="space-y-1.5">
-          <label htmlFor="phone" className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-            Phone Number *
-          </label>
-          <Input
-            id="phone"
-            name="phone"
-            type="tel"
-            value={formData.phone}
-            onChange={handleInputChange}
-            required
-            placeholder="Mobile number for delivery updates"
-            className={inputClass}
-          />
+          {/* Recipient Phone */}
+          <div className="space-y-1.5">
+            <label htmlFor="phone" className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              Phone Number *
+            </label>
+            <Input
+              id="phone"
+              name="phone"
+              type="tel"
+              value={formData.phone}
+              onChange={handleInputChange}
+              required
+              placeholder="Mobile number for delivery updates"
+              className={inputClass}
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* House / Flat Number */}
