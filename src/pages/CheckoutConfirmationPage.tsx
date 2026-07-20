@@ -19,6 +19,9 @@ import { useNotification } from '@/contexts/NotificationContext';
 import api from '@/services/api';
 import { LocationPreview } from '@/components/location/LocationPreview';
 import { MapplsLocation } from '@/types/location';
+import Invoice from '@/components/Invoice';
+// @ts-ignore
+import html2pdf from 'html2pdf.js';
 
 // Animation variants
 const containerVariants = {
@@ -370,45 +373,51 @@ const CheckoutConfirmationPage = () => {
     navigate('/shop');
   };
 
-  const handleDownloadInvoice = async () => {
+  const handleDownloadInvoice = () => {
     if (!order) return;
 
-    // The order from localStorage may have _id (from backend) or id (from frontend type)
-    const orderId = (order as any)._id || order.id;
-
-    if (!orderId) {
+    const element = document.getElementById('clean-invoice-pdf');
+    if (element) {
       toast({
-        title: "Download Failed",
-        description: "Order ID not found. Please try again later.",
-        variant: "destructive",
+        title: "Exporting PDF",
+        description: `Generating high-quality invoice for order #${order.orderNumber}`,
       });
-      return;
-    }
-
-    try {
-      const response = await api.get(`/orders/${orderId}/invoice`, {
-        responseType: 'blob'
-      });
-
-      const blob = new Blob([response.data], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `Invoice-${order.orderNumber}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      
+      const options = {
+        margin: [10, 10, 10, 10],
+        filename: `Invoice-${order.orderNumber}.pdf`,
+        image: {
+          type: 'jpeg',
+          quality: 1
+        },
+        html2canvas: {
+          scale: 3,
+          useCORS: true,
+          letterRendering: true,
+          logging: false,
+          windowWidth: 1200,
+          windowHeight: 1600
+        },
+        jsPDF: {
+          unit: 'mm',
+          format: 'a4',
+          orientation: 'portrait'
+        },
+        pagebreak: {
+          mode: ['avoid-all', 'css', 'legacy']
+        }
+      };
+      
+      html2pdf().from(element).set(options as any).save();
 
       toast({
         title: "Invoice Downloaded",
         description: "Your invoice has been downloaded successfully.",
       });
-    } catch (error) {
-      console.error('Error downloading invoice:', error);
+    } else {
       toast({
         title: "Download Failed",
-        description: "Unable to download invoice. Please try again later.",
+        description: "Invoice template element not found.",
         variant: "destructive",
       });
     }
@@ -916,6 +925,13 @@ const CheckoutConfirmationPage = () => {
       </motion.div>
 
       <Footer />
+
+      {/* Offscreen print-ready invoice */}
+      <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
+        <div id="clean-invoice-pdf" className="bg-white">
+          <Invoice order={order} />
+        </div>
+      </div>
     </div>
   );
 };

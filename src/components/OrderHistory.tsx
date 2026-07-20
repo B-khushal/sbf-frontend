@@ -266,24 +266,83 @@ const OrderHistory = () => {
 
               <div className="mt-6 border-t border-gray-200 pt-4">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="space-y-1 text-sm">
-                    <p className="font-semibold text-gray-700">Shipping Address</p>
-                    <p className="text-gray-600">{order.shippingDetails.fullName}</p>
-                    <p className="text-gray-600">{order.shippingDetails.address}</p>
-                    {order.shippingDetails.apartment ? (
-                      <p className="text-gray-600">{order.shippingDetails.apartment}</p>
-                    ) : null}
-                    <p className="text-gray-600">
-                      {order.shippingDetails.city}, {order.shippingDetails.state}{' '}
-                      {order.shippingDetails.zipCode}
-                    </p>
-                    {order.shippingDetails.deliveryDate ? (
-                      <p className="font-medium text-gray-600">
-                        Delivery: {format(new Date(order.shippingDetails.deliveryDate), 'MMM d, yyyy')}
-                        {order.shippingDetails.timeSlot ? ` • ${order.shippingDetails.timeSlot}` : ''}
-                      </p>
-                    ) : null}
-                  </div>
+                  {(() => {
+                    const isGift = !!(order.giftDetails && order.giftDetails.recipientName && order.giftDetails.recipientName.trim() !== '');
+                    return (
+                      <div className="space-y-2 text-sm max-w-md">
+                        <p className="font-bold text-gray-800 uppercase tracking-wide text-xs">
+                          {isGift ? '🎁 Gift Recipient Details' : '📦 Shipping Address'}
+                        </p>
+                        {isGift ? (
+                          <>
+                            <p className="text-gray-700 font-semibold">{order.giftDetails?.recipientName}</p>
+                            <p className="text-gray-600">
+                              {order.giftDetails?.houseNo ? `Flat/House No: ${order.giftDetails.houseNo}, ` : ''}
+                              {order.giftDetails?.floor ? `Floor: ${order.giftDetails.floor}, ` : ''}
+                              {order.giftDetails?.recipientAddress}
+                            </p>
+                            {(order.giftDetails?.recipientApartment || order.giftDetails?.landmark) ? (
+                              <p className="text-gray-500 text-xs">
+                                {order.giftDetails.recipientApartment ? `Apt/Bldg: ${order.giftDetails.recipientApartment}` : ''}
+                                {order.giftDetails.recipientApartment && order.giftDetails.landmark ? ' | ' : ''}
+                                {order.giftDetails.landmark ? `Landmark: ${order.giftDetails.landmark}` : ''}
+                              </p>
+                            ) : null}
+                            <p className="text-gray-600">
+                              {order.giftDetails?.recipientCity}, {order.giftDetails?.recipientState}{' '}
+                              {order.giftDetails?.recipientZipCode}
+                            </p>
+                            {order.giftDetails?.recipientPhone ? (
+                              <p className="text-gray-500 text-xs font-semibold">Phone: {order.giftDetails.recipientPhone}</p>
+                            ) : null}
+                          </>
+                        ) : (
+                          <>
+                            <p className="text-gray-700 font-semibold">{order.shippingDetails.fullName}</p>
+                            <p className="text-gray-600">
+                              {(order.shippingDetails.houseNo || order.giftDetails?.houseNo) ? `Flat/House No: ${order.shippingDetails.houseNo || order.giftDetails?.houseNo}, ` : ''}
+                              {(order.shippingDetails.floor || order.giftDetails?.floor) ? `Floor: ${order.shippingDetails.floor || order.giftDetails?.floor}, ` : ''}
+                              {order.shippingDetails.address}
+                            </p>
+                            {(order.shippingDetails.apartment || order.shippingDetails.landmark || order.giftDetails?.landmark) ? (
+                              <p className="text-gray-500 text-xs">
+                                {order.shippingDetails.apartment ? `Apt/Bldg: ${order.shippingDetails.apartment}` : ''}
+                                {order.shippingDetails.apartment && (order.shippingDetails.landmark || order.giftDetails?.landmark) ? ' | ' : ''}
+                                {(order.shippingDetails.landmark || order.giftDetails?.landmark) ? `Landmark: ${order.shippingDetails.landmark || order.giftDetails?.landmark}` : ''}
+                              </p>
+                            ) : null}
+                            <p className="text-gray-600">
+                              {order.shippingDetails.city}, {order.shippingDetails.state}{' '}
+                              {order.shippingDetails.zipCode}
+                            </p>
+                          </>
+                        )}
+                        
+                        {order.shippingDetails.deliveryDate ? (
+                          <p className="font-semibold text-xs text-gray-700 bg-slate-105/90 dark:bg-slate-800 px-2.5 py-1 rounded-lg inline-block mt-1 border border-slate-200/50">
+                            Scheduled: {format(new Date(order.shippingDetails.deliveryDate), 'MMM d, yyyy')}
+                            {order.shippingDetails.timeSlot ? ` • ${order.shippingDetails.timeSlot}` : ''}
+                          </p>
+                        ) : null}
+
+                        {/* Greeting Card Message Callout */}
+                        {(order.giftDetails?.message || order.shippingDetails.cardMessage || order.shippingDetails.giftMessage) ? (
+                          <div className="mt-2.5 p-3 bg-rose-50 border border-rose-200/60 rounded-xl text-xs text-rose-800 max-w-sm">
+                            <span className="font-bold block mb-0.5">💌 Greeting Card Message:</span>
+                            <span className="italic">"{order.giftDetails?.message || order.shippingDetails.cardMessage || order.shippingDetails.giftMessage}"</span>
+                          </div>
+                        ) : null}
+
+                        {/* Delivery Instructions Callout */}
+                        {(order.giftDetails?.deliveryInstructions || order.shippingDetails.deliveryInstructions || order.shippingDetails.deliverySpecialInstructions || order.shippingDetails.notes) ? (
+                          <div className="mt-2.5 p-3 bg-blue-50 border border-blue-200/60 rounded-xl text-xs text-blue-800 max-w-sm">
+                            <span className="font-bold block mb-0.5">🚚 Delivery Instructions:</span>
+                            <span className="italic">"{order.giftDetails?.deliveryInstructions || order.shippingDetails.deliveryInstructions || order.shippingDetails.deliverySpecialInstructions || order.shippingDetails.notes}"</span>
+                          </div>
+                        ) : null}
+                      </div>
+                    );
+                  })()}
                   <div className="space-y-1 text-right">
                     <p className={cn('text-lg font-bold', isDelivered ? 'text-green-800' : 'text-gray-800')}>
                       Total: {displayOrderPrice(order.totalAmount, order.currency, order.currencyRate)}

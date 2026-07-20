@@ -51,6 +51,11 @@ const Invoice: React.FC<InvoiceProps> = ({ order, isAdmin = false }) => {
     ? (order.giftDetails?.recipientZipCode || shipping.receiverZipCode || '')
     : (shipping.zipCode || '');
 
+  // Retrieve Mappls map details
+  const houseNo = isGift ? order.giftDetails?.houseNo : shipping.houseNo;
+  const floor = isGift ? order.giftDetails?.floor : shipping.floor;
+  const landmark = isGift ? order.giftDetails?.landmark : shipping.landmark;
+
   // Resolve payment details
   const payment = order.paymentDetails || order.payment || {};
   const paymentMethod = payment.method === 'razorpay' 
@@ -417,7 +422,11 @@ const Invoice: React.FC<InvoiceProps> = ({ order, isAdmin = false }) => {
           <div className="card-content-title">{recipientName}</div>
           <div className="card-content-details">
             <strong>Phone:</strong> {recipientPhone}<br />
-            <strong>Address:</strong> {recipientAddress}{recipientApartment ? `, ${recipientApartment}` : ''}, {recipientCity}{recipientState ? `, ${recipientState}` : ''} {recipientZip}
+            {houseNo && <span><strong>House/Flat No:</strong> {houseNo}<br /></span>}
+            {floor && <span><strong>Floor:</strong> {floor}<br /></span>}
+            <strong>Address:</strong> {recipientAddress}{recipientApartment ? `, ${recipientApartment}` : ''}
+            {landmark && <span><br /><strong>Landmark:</strong> {landmark}</span>}
+            <br />{recipientCity}{recipientState ? `, ${recipientState}` : ''} {recipientZip}
           </div>
         </div>
       </div>
@@ -489,7 +498,16 @@ const Invoice: React.FC<InvoiceProps> = ({ order, isAdmin = false }) => {
               </div>
             </div>
           )}
+          {(shipping.deliveryInstructions || shipping.deliverySpecialInstructions || shipping.notes || order.giftDetails?.deliveryInstructions) && (
+            <div className="logistics-card" style={{ border: '1px dashed #3b82f6', background: '#f0f9ff' }}>
+              <div className="card-title" style={{ fontSize: '10px', color: '#3b82f6', borderBottom: '1px dashed #bae6fd', marginBottom: '4px', paddingBottom: '2px' }}>🚚 Delivery Instructions</div>
+              <div style={{ fontSize: '10px', fontStyle: 'italic', color: '#475569', lineHeight: 1.3 }}>
+                "{shipping.deliveryInstructions || shipping.deliverySpecialInstructions || shipping.notes || order.giftDetails?.deliveryInstructions}"
+              </div>
+            </div>
+          )}
         </div>
+
 
         <div className="summary-block">
           <div className="summary-row">

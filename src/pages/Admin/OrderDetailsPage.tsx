@@ -988,8 +988,16 @@ const OrderDetailsPage: React.FC = () => {
                   <div className="space-y-1 mt-2">
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Recipient Address</span>
                     <p className="text-xs text-slate-800 dark:text-slate-200 leading-relaxed font-semibold">
+                      {order.giftDetails?.houseNo && <span className="block font-bold">House/Flat No: {order.giftDetails.houseNo}</span>}
+                      {order.giftDetails?.floor && <span className="block font-semibold">Floor: {order.giftDetails.floor}</span>}
                       {order.giftDetails?.recipientAddress}
-                      {order.giftDetails?.recipientApartment && <span className="block mt-0.5 text-slate-500 dark:text-slate-400">Apt: {order.giftDetails.recipientApartment}</span>}
+                      {(order.giftDetails?.recipientApartment || order.giftDetails?.landmark) && (
+                        <span className="block mt-0.5 text-slate-500 dark:text-slate-400">
+                          {order.giftDetails.recipientApartment && `Apt/Bldg: ${order.giftDetails.recipientApartment}`}
+                          {order.giftDetails.recipientApartment && order.giftDetails.landmark && ' | '}
+                          {order.giftDetails.landmark && `Landmark: ${order.giftDetails.landmark}`}
+                        </span>
+                      )}
                       <span className="block mt-0.5 text-slate-600 dark:text-slate-400 font-bold">{order.giftDetails?.recipientCity}, {order.giftDetails?.recipientState} {order.giftDetails?.recipientZipCode}</span>
                     </p>
                     {renderLocationNavLinks(order.giftDetails?.latitude, order.giftDetails?.longitude)}
@@ -998,7 +1006,7 @@ const OrderDetailsPage: React.FC = () => {
                   {/* Gift Message */}
                   {order.giftDetails?.message && (
                     <div className="bg-rose-50/50 dark:bg-rose-950/10 border border-rose-250 bg-rose-50/20 dark:border-rose-800/30 p-3 rounded-xl space-y-1">
-                      <span className="text-[9px] font-bold text-rose-700 dark:text-rose-450 uppercase tracking-wider block flex items-center gap-1">💌 Gift Message</span>
+                      <span className="text-[9px] font-bold text-rose-700 dark:text-rose-455 uppercase tracking-wider block flex items-center gap-1">💌 Gift Message</span>
                       <p className="text-xs text-slate-700 dark:text-slate-350 italic font-bold leading-relaxed">
                         "{order.giftDetails.message}"
                       </p>
@@ -1045,19 +1053,31 @@ const OrderDetailsPage: React.FC = () => {
                   <div className="space-y-1.5">
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Delivery Address</span>
                     <p className="text-xs text-slate-800 dark:text-slate-200 leading-relaxed font-semibold">
+                      {(order.shippingDetails.houseNo || order.giftDetails?.houseNo) && (
+                        <span className="block font-bold">House/Flat No: {order.shippingDetails.houseNo || order.giftDetails?.houseNo}</span>
+                      )}
+                      {(order.shippingDetails.floor || order.giftDetails?.floor) && (
+                        <span className="block font-semibold">Floor: {order.shippingDetails.floor || order.giftDetails?.floor}</span>
+                      )}
                       {order.shippingDetails.address}
-                      {order.shippingDetails.apartment && <span className="block mt-0.5 text-slate-500 dark:text-slate-400">Apt: {order.shippingDetails.apartment}</span>}
+                      {(order.shippingDetails.apartment || order.shippingDetails.landmark || order.giftDetails?.landmark) && (
+                        <span className="block mt-0.5 text-slate-500 dark:text-slate-400">
+                          {order.shippingDetails.apartment && `Apt/Bldg: ${order.shippingDetails.apartment}`}
+                          {order.shippingDetails.apartment && (order.shippingDetails.landmark || order.giftDetails?.landmark) && ' | '}
+                          {(order.shippingDetails.landmark || order.giftDetails?.landmark) && `Landmark: ${order.shippingDetails.landmark || order.giftDetails?.landmark}`}
+                        </span>
+                      )}
                       <span className="block mt-0.5 text-slate-600 dark:text-slate-400 font-bold">{order.shippingDetails.city}, {order.shippingDetails.state} {order.shippingDetails.zipCode}</span>
                     </p>
-                    {renderLocationNavLinks(order.shippingDetails?.latitude, order.shippingDetails?.longitude)}
+                    {renderLocationNavLinks(order.shippingDetails?.latitude || order.giftDetails?.latitude, order.shippingDetails?.longitude || order.giftDetails?.longitude)}
                   </div>
 
                   {/* Card Message Section for guest checkout or fallback */}
-                  {(order.shippingDetails.cardMessage || order.shippingDetails.giftMessage) && (
+                  {(order.shippingDetails.cardMessage || order.shippingDetails.giftMessage || order.giftDetails?.message) && (
                     <div className="bg-rose-50/50 dark:bg-rose-950/10 border border-rose-250 bg-rose-50/20 dark:border-rose-800/30 p-3 rounded-xl space-y-1">
-                      <span className="text-[9px] font-bold text-rose-700 dark:text-rose-450 uppercase tracking-wider block flex items-center gap-1">💌 Greeting Card Message</span>
+                      <span className="text-[9px] font-bold text-rose-700 dark:text-rose-455 uppercase tracking-wider block flex items-center gap-1">💌 Greeting Card Message</span>
                       <p className="text-xs text-slate-700 dark:text-slate-355 italic font-bold leading-relaxed">
-                        "{order.shippingDetails.cardMessage || order.shippingDetails.giftMessage}"
+                        "{order.shippingDetails.cardMessage || order.shippingDetails.giftMessage || order.giftDetails?.message}"
                       </p>
                     </div>
                   )}
@@ -1065,11 +1085,11 @@ const OrderDetailsPage: React.FC = () => {
               )}
 
               {/* Special Instructions */}
-              {(order.shippingDetails.deliverySpecialInstructions || order.shippingDetails.notes) && (
+              {(order.shippingDetails.deliveryInstructions || order.shippingDetails.deliverySpecialInstructions || order.shippingDetails.notes || order.giftDetails?.deliveryInstructions) && (
                 <div className="bg-blue-50/50 dark:bg-blue-950/10 border border-blue-250 bg-blue-50/20 dark:border-blue-800/30 p-3 rounded-xl space-y-1">
-                  <span className="text-[9px] font-bold text-blue-700 dark:text-blue-450 uppercase tracking-wider block">🚚 Delivery Special Instructions</span>
-                  <p className="text-xs text-slate-700 dark:text-slate-350 italic font-medium leading-relaxed">
-                    "{order.shippingDetails.deliverySpecialInstructions || order.shippingDetails.notes}"
+                  <span className="text-[9px] font-bold text-blue-700 dark:text-blue-455 uppercase tracking-wider block">🚚 Delivery Instructions</span>
+                  <p className="text-xs text-slate-700 dark:text-slate-355 italic font-medium leading-relaxed">
+                    "{order.giftDetails?.deliveryInstructions || order.shippingDetails.deliveryInstructions || order.shippingDetails.deliverySpecialInstructions || order.shippingDetails.notes}"
                   </p>
                 </div>
               )}
