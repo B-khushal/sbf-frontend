@@ -136,13 +136,28 @@ const getStatusConfig = (status: string) => {
   return STATUS_CONFIG[status] || STATUS_CONFIG.pending;
 };
 
-const renderLocationNavLinks = (lat?: number, lng?: number) => {
-  if (!lat || !lng) return null;
+const renderLocationNavLinks = (lat?: number, lng?: number, fallbackLat?: number, fallbackLng?: number) => {
+  const defaultLat = 17.3912;
+  const defaultLng = 78.4326;
+  
+  let finalLat = lat;
+  let finalLng = lng;
+  
+  if (!finalLat || finalLat === defaultLat) {
+    if (fallbackLat && fallbackLat !== defaultLat) {
+      finalLat = fallbackLat;
+      finalLng = fallbackLng;
+    }
+  }
+  
+  if (!finalLat) finalLat = lat || fallbackLat || defaultLat;
+  if (!finalLng) finalLng = lng || fallbackLng || defaultLng;
+
   return (
     <div className="flex items-center gap-1.5 mt-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800/60 rounded-lg p-1.5 w-max select-none">
       <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">🗺️ Nav:</span>
       <a
-        href={`https://mappls.com/pin-code?lat=${lat}&lng=${lng}`}
+        href={`https://mappls.com/@${finalLat},${finalLng}`}
         target="_blank"
         rel="noopener noreferrer"
         onClick={(e) => e.stopPropagation()}
@@ -152,7 +167,7 @@ const renderLocationNavLinks = (lat?: number, lng?: number) => {
       </a>
       <span className="text-slate-300 dark:text-slate-700">|</span>
       <a
-        href={`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`}
+        href={`https://www.google.com/maps/search/?api=1&query=${finalLat},${finalLng}`}
         target="_blank"
         rel="noopener noreferrer"
         onClick={(e) => e.stopPropagation()}
@@ -1313,7 +1328,7 @@ const AdminOrders = () => {
                                     <MessageSquare className="h-3 w-3" />
                                   </a>
                                 </div>
-                                {renderLocationNavLinks(order.giftDetails?.latitude, order.giftDetails?.longitude)}
+                                {renderLocationNavLinks(order.giftDetails?.latitude, order.giftDetails?.longitude, order.shippingDetails?.latitude, order.shippingDetails?.longitude)}
                               </>
                             ) : (
                               <>
@@ -1342,7 +1357,7 @@ const AdminOrders = () => {
                                     <MessageSquare className="h-3 w-3" />
                                   </a>
                                 </div>
-                                {renderLocationNavLinks(order.shippingDetails?.latitude, order.shippingDetails?.longitude)}
+                                {renderLocationNavLinks(order.shippingDetails?.latitude, order.shippingDetails?.longitude, order.giftDetails?.latitude, order.giftDetails?.longitude)}
                               </>
                             )}
                           </div>
@@ -1552,7 +1567,7 @@ const AdminOrders = () => {
                                   <MessageSquare className="h-3 w-3" />
                                 </a>
                               </div>
-                              {renderLocationNavLinks(order.giftDetails?.latitude, order.giftDetails?.longitude)}
+                              {renderLocationNavLinks(order.giftDetails?.latitude, order.giftDetails?.longitude, order.shippingDetails?.latitude, order.shippingDetails?.longitude)}
                             </>
                           ) : (
                             <>
@@ -1584,7 +1599,7 @@ const AdminOrders = () => {
                                   <MessageSquare className="h-3 w-3" />
                                 </a>
                               </div>
-                              {renderLocationNavLinks(order.shippingDetails?.latitude, order.shippingDetails?.longitude)}
+                              {renderLocationNavLinks(order.shippingDetails?.latitude, order.shippingDetails?.longitude, order.giftDetails?.latitude, order.giftDetails?.longitude)}
                             </>
                           )}
                         </div>

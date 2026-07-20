@@ -151,19 +151,34 @@ const formatTimeSlot = (slot: string) => {
   return slot.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 };
 
-const renderLocationNavLinks = (lat?: number, lng?: number) => {
-  if (!lat || !lng) return null;
+const renderLocationNavLinks = (lat?: number, lng?: number, fallbackLat?: number, fallbackLng?: number) => {
+  const defaultLat = 17.3912;
+  const defaultLng = 78.4326;
+  
+  let finalLat = lat;
+  let finalLng = lng;
+  
+  if (!finalLat || finalLat === defaultLat) {
+    if (fallbackLat && fallbackLat !== defaultLat) {
+      finalLat = fallbackLat;
+      finalLng = fallbackLng;
+    }
+  }
+  
+  if (!finalLat) finalLat = lat || fallbackLat || defaultLat;
+  if (!finalLng) finalLng = lng || fallbackLng || defaultLng;
+
   return (
     <div className="mt-2.5 p-2 bg-emerald-500/5 dark:bg-emerald-500/10 border border-emerald-500/20 rounded-xl space-y-1.5 select-none">
-      <div className="text-[10px] font-bold text-emerald-600 dark:text-emerald-450 uppercase tracking-widest flex items-center gap-1">
+      <div className="text-[10px] font-bold text-emerald-600 dark:text-emerald-455 uppercase tracking-widest flex items-center gap-1">
         <span>🗺️ Precise Coordinates Active</span>
       </div>
       <p className="text-[10px] font-mono text-slate-500">
-        Lat: {lat.toFixed(6)}, Lng: {lng.toFixed(6)}
+        Lat: {finalLat.toFixed(6)}, Lng: {finalLng.toFixed(6)}
       </p>
       <div className="flex gap-2">
         <a
-          href={`https://mappls.com/pin-code?lat=${lat}&lng=${lng}`}
+          href={`https://mappls.com/@${finalLat},${finalLng}`}
           target="_blank"
           rel="noopener noreferrer"
           className="flex-1 py-1 px-2 text-center text-[10px] font-extrabold text-emerald-700 bg-emerald-100 hover:bg-emerald-250 dark:text-emerald-300 dark:bg-emerald-950/40 rounded-lg transition-colors border border-emerald-200/40"
@@ -171,7 +186,7 @@ const renderLocationNavLinks = (lat?: number, lng?: number) => {
           Mappls Nav
         </a>
         <a
-          href={`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`}
+          href={`https://www.google.com/maps/search/?api=1&query=${finalLat},${finalLng}`}
           target="_blank"
           rel="noopener noreferrer"
           className="flex-1 py-1 px-2 text-center text-[10px] font-extrabold text-blue-700 bg-blue-100 hover:bg-blue-250 dark:text-blue-300 dark:bg-blue-950/40 rounded-lg transition-colors border border-blue-200/40"
@@ -1000,7 +1015,7 @@ const OrderDetailsPage: React.FC = () => {
                       )}
                       <span className="block mt-0.5 text-slate-600 dark:text-slate-400 font-bold">{order.giftDetails?.recipientCity}, {order.giftDetails?.recipientState} {order.giftDetails?.recipientZipCode}</span>
                     </p>
-                    {renderLocationNavLinks(order.giftDetails?.latitude, order.giftDetails?.longitude)}
+                    {renderLocationNavLinks(order.giftDetails?.latitude, order.giftDetails?.longitude, order.shippingDetails?.latitude, order.shippingDetails?.longitude)}
                   </div>
 
                   {/* Gift Message */}
@@ -1069,7 +1084,7 @@ const OrderDetailsPage: React.FC = () => {
                       )}
                       <span className="block mt-0.5 text-slate-600 dark:text-slate-400 font-bold">{order.shippingDetails.city}, {order.shippingDetails.state} {order.shippingDetails.zipCode}</span>
                     </p>
-                    {renderLocationNavLinks(order.shippingDetails?.latitude || order.giftDetails?.latitude, order.shippingDetails?.longitude || order.giftDetails?.longitude)}
+                    {renderLocationNavLinks(order.shippingDetails?.latitude, order.shippingDetails?.longitude, order.giftDetails?.latitude, order.giftDetails?.longitude)}
                   </div>
 
                   {/* Card Message Section for guest checkout or fallback */}
