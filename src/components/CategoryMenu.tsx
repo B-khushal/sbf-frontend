@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronRight, Sparkles } from 'lucide-react';
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useSettings } from '@/contexts/SettingsContext';
-import productService from '@/services/productService';
+import productService, { OccasionData } from '@/services/productService';
 import { normalizeCategoryKey } from '@/utils/categoryTaxonomy';
 import { useSeasonalCampaign } from '@/contexts/SeasonalCampaignContext';
 
@@ -29,6 +29,7 @@ const CategoryMenu = () => {
   const [dropdownPosition, setDropdownPosition] = useState({ left: 0 });
   const { shopCategories, loading: settingsLoading } = useSettings();
   const { activeCampaigns } = useSeasonalCampaign();
+  const [activeOccasions, setActiveOccasions] = useState<OccasionData[]>([]);
   const [categoryCounts, setCategoryCounts] = useState<{ [key: string]: number }>({});
   const [isLoadingCounts, setIsLoadingCounts] = useState(true);
   const navRef = useRef<HTMLDivElement>(null);
@@ -48,26 +49,31 @@ const CategoryMenu = () => {
     }, 200);
   };
 
-  // Fetch dynamic category product counts on mount
+  // Fetch dynamic category product counts & active occasions on mount
   useEffect(() => {
-    const fetchCategoryCounts = async () => {
+    const fetchData = async () => {
       try {
         setIsLoadingCounts(true);
-        const counts = await productService.getCategoriesWithCounts();
+        const [counts, dbOccasions] = await Promise.all([
+          productService.getCategoriesWithCounts(),
+          productService.getOccasions().catch(() => [])
+        ]);
+
         const countsMap: { [key: string]: number } = {};
         counts.forEach(item => {
           const normalizedKey = normalizeCategoryKey(item.name);
           countsMap[normalizedKey] = item.count;
         });
         setCategoryCounts(countsMap);
+        setActiveOccasions(dbOccasions || []);
       } catch (error) {
-        console.error('Error fetching category counts in CategoryMenu:', error);
+        console.error('Error fetching data in CategoryMenu:', error);
       } finally {
         setIsLoadingCounts(false);
       }
     };
 
-    fetchCategoryCounts();
+    fetchData();
   }, []);
 
   const getEmoji = (slug: string) => EMOJI_MAPPING[slug.toLowerCase()] || DEFAULT_EMOJI;
@@ -95,15 +101,54 @@ const CategoryMenu = () => {
             count: getCategoryCount(sub.name)
           }));
 
-        // Dynamically append created seasonal campaigns to "Occasions" parent category
+        // Dynamically handle Occasions parent category
         const isOccasions = parent.name.toLowerCase().includes('occasions') || parent.slug?.toLowerCase().includes('occasions');
-        if (isOccasions && activeCampaigns) {
-          const campaignSubcats = activeCampaigns.map(campaign => ({
-            name: campaign.name,
-            path: `/occasions/${campaign.slug}`,
-            count: campaign.productCount || 0
-          }));
-          subcats = [...subcats, ...campaignSubcats];
+        if (isOccasions) {
+          const activeOccasionSlugs = new Set((activeOccasions || []).map(o => o.slug?.toLowerCase()));
+          const activeOccasionNames = new Set((activeOccasions || []).map(o => o.name?.toLowerCase()));
+          
+          const activeCampaignSlugs = new Set((activeCampaigns || []).map(c => c.slug?.toLowerCase()));
+          const activeCampaignNames = new Set((activeCampaigns || []).map(c => c.name?.toLowerCase()));
+
+          // Filter static category subcats against active db occasions & active seasonal campaigns
+          if (activeOccasions.length > 0 || (activeCampaigns && activeCampaigns.length > 0)) {
+            subcats = subcats.filter(sub => {
+              const subNameLower = sub.name.toLowerCase().trim();
+              const subSlugLower = sub.name.toLowerCase().trim().replace(/\s+/g, '-').replace(/'/g, '');
+
+              const isDbActive = activeOccasionNames.has(subNameLower) || 
+                                 activeOccasionSlugs.has(subSlugLower) ||
+                                 Array.from(activeOccasionSlugs).some(s => s && (subSlugLower.includes(s) || s.includes(subSlugLower)));
+
+              const isCampaignActive = activeCampaignNames.has(subNameLower) || 
+                                       activeCampaignSlugs.has(subSlugLower) ||
+                                       Array.from(activeCampaignSlugs).some(s => s && (subSlugLower.includes(s) || s.includes(subSlugLower)));
+
+              return isDbActive || isCampaignActive;
+            });
+          }
+
+          // Append any active campaign subcategories not already present
+          if (activeCampaigns) {
+            const campaignSubcats = activeCampaigns.map(campaign => ({
+              name: campaign.name,
+              path: `/occasions/${campaign.slug}`,
+              count: campaign.productCount || getCategoryCount(campaign.name)
+            }));
+            subcats = [...subcats, ...campaignSubcats];
+          }
+
+          // Keep only subcategories with active products (count > 0)
+          subcats = subcats.filter(sub => sub.count > 0);
+          
+          // Deduplicate by name
+          const seen = new Set<string>();
+          subcats = subcats.filter(sub => {
+            const key = sub.name.toLowerCase().trim();
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          });
         }
 
         return {
