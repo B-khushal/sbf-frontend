@@ -13,7 +13,7 @@ import productService from '@/services/productService';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, Trash2, ArrowLeft, Upload, Image as ImageIcon, Plus, X, Wand2, Flower2, Gift, Camera, Hash, MessageSquare, IndianRupee, AlertCircle, ChevronDown, ChevronUp, Heart, Film, Play, Link as LinkIcon, Move } from 'lucide-react';
+import { Loader2, Trash2, ArrowLeft, Upload, Image as ImageIcon, Plus, X, Wand2, Flower2, Gift, Camera, Hash, MessageSquare, IndianRupee, AlertCircle, ChevronDown, ChevronUp, Heart, Film, Play, Link as LinkIcon, Move, FolderTree, Sparkles, CheckCircle } from 'lucide-react';
 import api from '../../services/api';
 import axios from 'axios'; // Keep for axios.isAxiosError
 import ProductFeaturesToggle from '@/components/ui/ProductFeaturesToggle';
@@ -1381,9 +1381,9 @@ const ProductForm = () => {
 
   const getAvailableOccasions = () => {
     return dbOccasions
-      .filter(occ => !(formData.occasionIds || []).includes(occ._id || occ.id || ''))
+      .filter(occ => !(formData.occasionIds || []).includes(occ._id || (occ as any).id || ''))
       .map(occ => ({
-        value: occ._id || occ.id || '',
+        value: occ._id || (occ as any).id || '',
         label: occ.name
       }));
   };
@@ -1985,30 +1985,84 @@ const ProductForm = () => {
   }
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate(getProductsListRoute())}
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h1 className="text-2xl font-bold">
-            {isEditMode ? 'Edit Product' : 'Add New Product'}
-          </h1>
+    <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 space-y-6">
+      {/* Premium Header Banner */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 sm:p-8 text-white shadow-xl border border-slate-800">
+        <div className="absolute -right-10 -bottom-10 h-48 w-48 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
+        <div className="absolute right-20 -top-10 h-32 w-32 rounded-full bg-purple-500/10 blur-2xl pointer-events-none" />
+
+        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => navigate(getProductsListRoute())}
+              className="h-11 w-11 rounded-xl border-slate-700/80 bg-slate-800/80 text-white hover:bg-slate-700 hover:text-white transition-all shrink-0 shadow-md"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <div className="flex items-center gap-3 flex-wrap">
+                <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
+                  {isEditMode ? (formData.title || 'Edit Product') : 'Add New Product'}
+                </h1>
+                <Badge className={isEditMode ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-xs px-2.5 py-0.5" : "bg-indigo-500/20 text-indigo-300 border-indigo-500/30 text-xs px-2.5 py-0.5"}>
+                  {isEditMode ? 'Editing Catalog Entry' : 'New Catalog Item'}
+                </Badge>
+              </div>
+              <p className="text-xs sm:text-sm text-slate-300 mt-1 font-normal">
+                {isEditMode ? 'Update product pricing, inventory, categories, media, and specialized details.' : 'Create a premium product listing with variants, custom options, and media.'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 shrink-0">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => navigate(getProductsListRoute())}
+              className="h-11 px-5 rounded-xl border-slate-700 text-slate-200 hover:bg-slate-800 hover:text-white text-xs font-semibold"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={isLoading || isUploading}
+              onClick={handleSubmit}
+              className="h-11 px-6 rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white font-bold text-xs gap-2 shadow-lg shadow-purple-500/25 transition-all transform hover:scale-[1.02]"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Wand2 className="h-4 w-4" />
+                  {isEditMode ? 'Save Changes' : 'Publish Product'}
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8 pb-10">
+
         {/* Basic Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Basic Information</CardTitle>
-            <CardDescription>Enter the basic details of the product</CardDescription>
+        <Card className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+          <CardHeader className="bg-slate-50/70 dark:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800/80 py-4 px-6">
+            <CardTitle className="flex items-center gap-3 text-slate-900 dark:text-slate-100 text-lg font-bold">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400">
+                <Hash className="h-4.5 w-4.5" />
+              </div>
+              Basic Information
+            </CardTitle>
+            <CardDescription className="text-xs text-slate-500 dark:text-slate-400">Enter title, description, baseline pricing, and available inventory stock.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="p-6 space-y-4">
+
             <div className="space-y-2">
               <Label htmlFor="title">Product Title *</Label>
               <Input
@@ -2221,12 +2275,18 @@ const ProductForm = () => {
         </Card>
 
         {/* Categories & Features */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Categories & Features</CardTitle>
-            <CardDescription>Select primary category and additional categories, then set product features</CardDescription>
+        <Card className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+          <CardHeader className="bg-slate-50/70 dark:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800/80 py-4 px-6">
+            <CardTitle className="flex items-center gap-3 text-slate-900 dark:text-slate-100 text-lg font-bold">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">
+                <FolderTree className="h-4.5 w-4.5" />
+              </div>
+              Categories & Features
+            </CardTitle>
+            <CardDescription className="text-xs text-slate-500 dark:text-slate-400">Select primary category, subcategories, additional categories, and product flags.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="p-6 space-y-6">
+
             {/* Primary Category */}
             <div className="space-y-2">
               <Label htmlFor="category">Primary Category *</Label>
@@ -2371,18 +2431,24 @@ const ProductForm = () => {
         </Card>
 
         {/* 🎉 Occasions Assignment */}
-        <Card className="border-gray-200">
-          <CardHeader>
-            <CardTitle>Occasions Gifting Tags</CardTitle>
-            <CardDescription>Assign this product to one or more gifting occasions (e.g. Birthday, Anniversary)</CardDescription>
+        <Card className="rounded-2xl border border-amber-200/80 dark:border-amber-900/40 bg-gradient-to-br from-amber-50/40 via-white to-white dark:from-slate-900 dark:to-slate-900 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+          <CardHeader className="bg-gradient-to-r from-amber-100/50 to-orange-100/30 dark:from-amber-950/30 dark:to-orange-950/20 border-b border-amber-200/60 dark:border-amber-900/30 py-4 px-6">
+            <CardTitle className="flex items-center gap-3 text-amber-900 dark:text-amber-300 text-lg font-bold">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500 text-white shadow-sm">
+                <Gift className="h-4.5 w-4.5" />
+              </div>
+              Occasions Gifting Tags
+            </CardTitle>
+            <CardDescription className="text-xs text-amber-700/80 dark:text-amber-400/80">Assign this product to one or more gifting occasions (e.g. Birthday, Anniversary)</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="p-6 space-y-4">
+
             <div className="space-y-3">
               {/* Current Occasions */}
               {formData.occasionIds && formData.occasionIds.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                   {formData.occasionIds.map((occId, index) => {
-                    const dbOcc = dbOccasions.find(o => (o._id || o.id) === occId);
+                    const dbOcc = dbOccasions.find(o => (o._id || (o as any).id) === occId);
                     return (
                       <Badge
                         key={index}
@@ -2976,12 +3042,18 @@ const ProductForm = () => {
         </Card>
 
         {/* Product Images */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Product Images</CardTitle>
-            <CardDescription>Upload product images (Max 5MB each)</CardDescription>
+        <Card className="rounded-2xl border border-blue-200/80 dark:border-blue-900/40 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+          <CardHeader className="bg-slate-50/70 dark:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800/80 py-4 px-6">
+            <CardTitle className="flex items-center gap-3 text-slate-900 dark:text-slate-100 text-lg font-bold">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400">
+                <ImageIcon className="h-4.5 w-4.5" />
+              </div>
+              Product Images & Gallery
+            </CardTitle>
+            <CardDescription className="text-xs text-slate-500 dark:text-slate-400">Upload high-resolution product photos (Max 5MB each)</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="p-6 space-y-4">
+
             {formData.images.map((image, index) => (
               <div key={index} className="space-y-2">
                 <div className="flex items-center space-x-2">
@@ -5199,23 +5271,53 @@ const ProductForm = () => {
           </Card>
         )}
 
-        <div className="flex justify-end space-x-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => navigate(getProductsListRoute())}
-          >
-            Cancel
-          </Button>
-          <Button type="submit" disabled={isLoading || isUploading}>
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                {isEditMode ? 'Updating...' : 'Creating...'}
-              </>
-            ) : isEditMode ? 'Update Product' : 'Create Product'}
-          </Button>
+        {/* Sticky Floating Save Bar */}
+        <div className="sticky bottom-4 z-40 rounded-2xl border border-slate-800/80 bg-slate-950/90 p-4 shadow-2xl backdrop-blur-xl transition-all">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3 text-white">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-md shrink-0">
+                <Sparkles className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-white">
+                  {isEditMode ? `Editing: ${formData.title || 'Product'}` : 'New Product Registration'}
+                </p>
+                <p className="text-xs text-slate-400">
+                  {isUploading ? 'Uploading media assets...' : 'Ensure all mandatory fields marked with * are filled before publishing.'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => navigate(getProductsListRoute())}
+                className="h-11 px-5 rounded-xl border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-semibold"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isLoading || isUploading}
+                className="h-11 px-7 rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white font-extrabold text-xs gap-2 shadow-lg shadow-purple-500/25 transition-all transform hover:scale-[1.02]"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    {isEditMode ? 'Updating Product...' : 'Publishing Product...'}
+                  </>
+                ) : (
+                  <>
+                    <Wand2 className="h-4 w-4" />
+                    {isEditMode ? 'Update Product' : 'Create & Publish Product'}
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
         </div>
+
       </form>
     </div>
   );
