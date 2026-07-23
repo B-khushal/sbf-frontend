@@ -67,6 +67,17 @@ const DeliverySettingsPage = lazy(() => import("./pages/Admin/DeliverySettingsPa
 const AssignmentRules = lazy(() => import("./pages/Admin/AssignmentRules"));
 const TrackOrderPage = lazy(() => import("./pages/TrackOrderPage"));
 const AdminProducts = lazy(() => import("./pages/Admin/Products"));
+const ProductsLayout = lazy(() => import("./pages/Admin/ProductsLayout"));
+const ProductsOverview = lazy(() => import("./pages/Admin/ProductsOverview"));
+const BouquetsPage = lazy(() => import("./pages/Admin/BouquetsPage"));
+const CakesPage = lazy(() => import("./pages/Admin/CakesPage"));
+const PlantsPage = lazy(() => import("./pages/Admin/PlantsPage"));
+const ChocolatesPage = lazy(() => import("./pages/Admin/ChocolatesPage"));
+const HampersBuilderPage = lazy(() => import("./pages/Admin/HampersBuilderPage"));
+const ComboBuilderPage = lazy(() => import("./pages/Admin/ComboBuilderPage"));
+const CollectionsPage = lazy(() => import("./pages/Admin/CollectionsPage"));
+const InventoryPage = lazy(() => import("./pages/Admin/InventoryPage"));
+const CatalogSettingsPage = lazy(() => import("./pages/Admin/CatalogSettingsPage"));
 const AdminOrders = lazy(() => import("./pages/Admin/Orders"));
 const AdminReviews = lazy(() => import("./pages/Admin/Reviews"));
 const AdminTodayOrders = lazy(() => import("./pages/Admin/TodayOrders"));
@@ -86,6 +97,7 @@ const ProductApproval = lazy(() => import('@/pages/Admin/ProductApproval'));
 const UserViewPage = lazy(() => import('./pages/Admin/UserViewPage'));
 const UserAddPage = lazy(() => import('./pages/Admin/UserAddPage'));
 const AdminCategories = lazy(() => import('./pages/Admin/Categories'));
+const ProductOrderArrangementPage = lazy(() => import('./pages/Admin/ProductOrderArrangementPage'));
 const CategoryForm = lazy(() => import('./pages/Admin/CategoryForm'));
 const CategoryResolver = lazy(() => import('./pages/CategoryResolver'));
 const UserEditPage = lazy(() => import('./pages/Admin/UserEditPage'));
@@ -276,10 +288,26 @@ const App = () => {
                               </Suspense>
                             } />
                             <Route path="products" element={
-                              <Suspense fallback={<LoadingFallback message="Loading products..." />}>
-                                <AdminProducts />
+                              <Suspense fallback={<LoadingFallback message="Loading catalog..." />}>
+                                <ProductsLayout />
                               </Suspense>
-                            } />
+                            }>
+                              <Route index element={<ProductsOverview />} />
+                              <Route path="overview" element={<ProductsOverview />} />
+                              <Route path="bouquets" element={<BouquetsPage />} />
+                              <Route path="cakes" element={<CakesPage />} />
+                              <Route path="plants" element={<PlantsPage />} />
+                              <Route path="chocolates" element={<ChocolatesPage />} />
+                              <Route path="hampers" element={<HampersBuilderPage />} />
+                              <Route path="combos" element={<ComboBuilderPage />} />
+                              <Route path="addons" element={<AdminAddonPage />} />
+                              <Route path="categories" element={<AdminCategories />} />
+                              <Route path="collections" element={<CollectionsPage />} />
+                              <Route path="inventory" element={<InventoryPage />} />
+                              <Route path="order-arrangement" element={<ProductOrderArrangementPage />} />
+                              <Route path="reviews" element={<AdminReviews />} />
+                              <Route path="settings" element={<CatalogSettingsPage />} />
+                            </Route>
                              <Route path="categories" element={
                               <Suspense fallback={<LoadingFallback message="Loading categories..." />}>
                                 <AdminCategories />

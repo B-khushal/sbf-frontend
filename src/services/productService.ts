@@ -173,6 +173,105 @@ export interface ProductData {
   pricePerCharacter?: number;
   baseIncludedCharacters?: number;
   maxExtraPrice?: number;
+  // Enterprise Catalog Architecture Fields
+  catalogType?: 'bouquet' | 'plant' | 'cake' | 'chocolate' | 'hamper' | 'combo' | 'addon' | 'custom';
+  sku?: string;
+  status?: 'published' | 'draft' | 'hidden' | 'archived' | 'scheduled';
+  costPrice?: number;
+  barcode?: string;
+  allowBackorders?: boolean;
+  warehouseLocation?: string;
+  vendor?: string | { _id: string; name: string; storeName?: string };
+  cakeAttributes?: {
+    flavor?: string;
+    weight?: string;
+    shape?: string;
+    eggless?: boolean;
+    prepTime?: string;
+    availableSizes?: string[];
+    occasion?: string;
+  };
+  plantAttributes?: {
+    scientificName?: string;
+    potIncluded?: boolean;
+    indoor?: boolean;
+    outdoor?: boolean;
+    waterFrequency?: string;
+    lightRequirement?: string;
+    height?: string;
+    careInstructions?: string[];
+  };
+  chocolateAttributes?: {
+    brand?: string;
+    weight?: string;
+    imported?: boolean;
+    vegetarian?: boolean;
+    expiryDate?: string;
+    storage?: string;
+  };
+  hamperAttributes?: {
+    hamperItems?: Array<{
+      productId?: string;
+      name: string;
+      type: string;
+      price: number;
+      image: string;
+      quantity: number;
+    }>;
+  };
+  comboAttributes?: {
+    comboProducts?: Array<{
+      productId?: string;
+      name: string;
+      type: string;
+      price: number;
+      image: string;
+      quantity: number;
+    }>;
+    stockPolicy?: 'hide' | 'partial' | 'replace';
+  };
+  seoSettings?: {
+    metaTitle?: string;
+    metaDescription?: string;
+    slug?: string;
+    canonicalUrl?: string;
+    ogImage?: string;
+    twitterCard?: string;
+    keywords?: string[];
+  };
+  collections?: string[];
+  versionHistory?: Array<{
+    version: number;
+    updatedBy: string;
+    changes: string;
+    data: any;
+    timestamp: string;
+  }>;
+  activityLogs?: Array<{
+    action: string;
+    performedBy: string;
+    details: string;
+    timestamp: string;
+  }>;
+  relatedProducts?: string[];
+  crossSellProducts?: string[];
+  upsellProducts?: string[];
+}
+
+export interface OverviewStats {
+  totalProducts: number;
+  activeProducts: number;
+  outOfStock: number;
+  hiddenProducts: number;
+  draftProducts: number;
+  bestSellingCategory: string;
+  recentlyAdded: ProductData[];
+  lowInventoryCount: number;
+  averageRating: number;
+  pendingReviewCount: number;
+  typeDistribution: Record<string, number>;
+  categoryDistribution: Record<string, number>;
+  recentlyUpdated: ProductData[];
 }
 
 // Define backend product type to match backend schema
@@ -595,6 +694,16 @@ class ProductService {
       : [];
   }
 
+  async getAllProducts(): Promise<ProductData[]> {
+    return this.getProducts();
+  }
+
+  async toggleVisibility(id: string): Promise<any> {
+    const config = createAuthConfig();
+    const response = await axios.put(`${API_URL}/products/admin/${id}/toggle-visibility`, {}, config);
+    return response.data;
+  }
+
   async getProductById(id: string): Promise<ProductData> {
     const config = createAuthConfig();
     const response = await axios.get(`${API_URL}/products/${id}`, config);
@@ -776,6 +885,31 @@ class ProductService {
     const response = await axios.get<{ occasion: OccasionData, products: ProductData[], total: number }>(
       `${API_URL}/products/by-occasion/${slug}`
     );
+    return response.data;
+  }
+
+  // Enterprise Catalog Services
+  async getOverviewStats(): Promise<OverviewStats> {
+    const config = createAuthConfig();
+    const response = await axios.get<OverviewStats>(`${API_URL}/products/admin/overview-stats`, config);
+    return response.data;
+  }
+
+  async getProductsByCatalogType(type: string): Promise<{ products: ProductData[]; total: number }> {
+    const config = createAuthConfig();
+    const response = await axios.get<{ products: ProductData[]; total: number }>(`${API_URL}/products/type/${type}`, config);
+    return response.data;
+  }
+
+  async executeBulkAction(action: string, productIds: string[], payload?: any): Promise<any> {
+    const config = createAuthConfig();
+    const response = await axios.post(`${API_URL}/products/admin/bulk-action`, { action, productIds, payload }, config);
+    return response.data;
+  }
+
+  async restoreProductVersion(productId: string, versionIndex: number): Promise<any> {
+    const config = createAuthConfig();
+    const response = await axios.post(`${API_URL}/products/${productId}/restore-version`, { versionIndex }, config);
     return response.data;
   }
 }

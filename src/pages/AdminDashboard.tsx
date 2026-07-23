@@ -3,7 +3,7 @@ import { useNavigate, Link, Outlet, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { BarChart, Users, ShoppingBag, Package, Settings, LogOut, Menu, TrendingUp, ChevronLeft, ChevronRight, Tag, Gift, Store, Calendar, CheckCircle, ClipboardList, Activity, MessageSquareText, Heart } from 'lucide-react';
+import { BarChart, Users, ShoppingBag, Package, Settings, LogOut, Menu, TrendingUp, ChevronLeft, ChevronRight, Tag, Gift, Store, Calendar, CheckCircle, ClipboardList, Activity, MessageSquareText, Heart, Flower2, Sprout, Cake, Cookie, Boxes, FolderTree, Layers, Warehouse, LayoutDashboard, ArrowUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
@@ -50,7 +50,29 @@ const AdminDashboard: React.FC = () => {
 
   const [isMarketingOpen, setIsMarketingOpen] = useState(isMarketingActive);
 
+  const isProductsActive = location.pathname.startsWith('/admin/products') ||
+                           location.pathname === '/admin/categories' ||
+                           location.pathname === '/admin/addons' ||
+                           location.pathname === '/admin/product-approval';
+
+  const [isProductsOpen, setIsProductsOpen] = useState(isProductsActive);
+
+  const isOrdersActive = location.pathname.startsWith('/admin/orders');
+  const [isOrdersOpen, setIsOrdersOpen] = useState(isOrdersActive);
+
+  useEffect(() => {
+    if (isOrdersActive) {
+      setIsOrdersOpen(true);
+    }
+  }, [location.pathname, isOrdersActive]);
+
   // Keep dropdown open if the route matches
+  useEffect(() => {
+    if (isProductsActive) {
+      setIsProductsOpen(true);
+    }
+  }, [location.pathname, isProductsActive]);
+
   useEffect(() => {
     if (isDeliveryActive) {
       setIsDeliveryOpen(true);
@@ -194,157 +216,272 @@ const AdminDashboard: React.FC = () => {
           to="/admin" 
           className={cn(
             "sidebar-item",
+            location.pathname === "/admin" ? "bg-primary text-white font-medium" : "",
             isCollapsed ? "sidebar-item-collapsed" : "sidebar-item-expanded"
           )}
           title={isCollapsed ? 'Dashboard' : ''}
         >
           <div className="sidebar-item-icon">
-            <BarChart className="h-4 w-4 text-muted-foreground" />
+            <BarChart className="h-4 w-4" />
           </div>
           {!isCollapsed && <span className="sidebar-item-text">Dashboard</span>}
         </Link>
-        <Link 
-          to="/admin/products" 
-          className={cn(
-            "sidebar-item",
-            isCollapsed ? "sidebar-item-collapsed" : "sidebar-item-expanded"
+        {/* Orders Collapsible Dropdown */}
+        <div className="space-y-1">
+          <button
+            onClick={() => {
+              if (isCollapsed) {
+                setIsSidebarCollapsed(false);
+                setIsOrdersOpen(true);
+              } else {
+                setIsOrdersOpen(prev => !prev);
+              }
+            }}
+            className={cn(
+              "w-full sidebar-item flex items-center justify-between transition-colors",
+              isOrdersActive ? "bg-accent/40 text-accent-foreground font-medium" : "",
+              isCollapsed ? "sidebar-item-collapsed justify-center" : "sidebar-item-expanded"
+            )}
+            title={isCollapsed ? 'Orders' : ''}
+          >
+            <div className="flex items-center">
+              <div className="sidebar-item-icon">
+                <ShoppingBag className="h-4 w-4" />
+              </div>
+              {!isCollapsed && <span className="sidebar-item-text ml-3">Orders</span>}
+            </div>
+            {!isCollapsed && (
+              isOrdersOpen ? 
+                <ChevronUp className="h-4 w-4 transition-transform" /> : 
+                <ChevronDown className="h-4 w-4 transition-transform" />
+            )}
+          </button>
+
+          {isOrdersOpen && !isCollapsed && (
+            <div className="pl-4 space-y-1 mt-1 border-l-2 border-primary/20 ml-5 text-xs">
+              <Link
+                to="/admin/orders"
+                className={cn(
+                  "sidebar-item flex items-center py-2 px-3 rounded-md transition-colors",
+                  location.pathname === "/admin/orders" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                )}
+              >
+                <ShoppingBag className="h-4 w-4 mr-2" />
+                <span className="sidebar-item-text">All Orders</span>
+              </Link>
+              <Link
+                to="/admin/orders/today"
+                className={cn(
+                  "sidebar-item flex items-center py-2 px-3 rounded-md transition-colors",
+                  location.pathname === "/admin/orders/today" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                )}
+              >
+                <Clock className="h-4 w-4 mr-2 text-amber-500" />
+                <span className="sidebar-item-text">Today's Orders</span>
+                <span className="ml-auto text-[10px] bg-amber-100 text-amber-800 font-bold px-1.5 py-0.5 rounded">LIVE</span>
+              </Link>
+            </div>
           )}
-          title={isCollapsed ? 'Products' : ''}
-        >
-          <div className="sidebar-item-icon">
-            <Package className="h-4 w-4 text-muted-foreground" />
-          </div>
-          {!isCollapsed && <span className="sidebar-item-text">Products</span>}
-        </Link>
-        <Link 
-          to="/admin/categories" 
-          className={cn(
-            "sidebar-item",
-            isCollapsed ? "sidebar-item-collapsed" : "sidebar-item-expanded"
+        </div>
+        {/* Products Collapsible Dropdown */}
+        <div className="space-y-1">
+          <button
+            onClick={() => {
+              if (isCollapsed) {
+                setIsSidebarCollapsed(false);
+                setIsProductsOpen(true);
+              } else {
+                setIsProductsOpen(prev => !prev);
+              }
+            }}
+            className={cn(
+              "w-full sidebar-item flex items-center justify-between transition-colors",
+              isProductsActive ? "bg-accent/40 text-accent-foreground font-medium" : "",
+              isCollapsed ? "sidebar-item-collapsed justify-center" : "sidebar-item-expanded"
+            )}
+            title={isCollapsed ? 'Products' : ''}
+          >
+            <div className="flex items-center">
+              <div className="sidebar-item-icon">
+                <Package className="h-4 w-4" />
+              </div>
+              {!isCollapsed && <span className="sidebar-item-text ml-3">Products</span>}
+            </div>
+            {!isCollapsed && (
+              isProductsOpen ? 
+                <ChevronUp className="h-4 w-4 transition-transform" /> : 
+                <ChevronDown className="h-4 w-4 transition-transform" />
+            )}
+          </button>
+
+          {isProductsOpen && !isCollapsed && (
+            <div className="pl-4 space-y-1 mt-1 border-l-2 border-primary/20 ml-5 text-xs">
+              <Link
+                to="/admin/products"
+                className={cn(
+                  "sidebar-item flex items-center py-2 px-3 rounded-md transition-colors",
+                  location.pathname === "/admin/products" || location.pathname === "/admin/products/overview" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                )}
+              >
+                <LayoutDashboard className="h-4 w-4 mr-2" />
+                <span className="sidebar-item-text">Overview</span>
+              </Link>
+              <Link
+                to="/admin/products/bouquets"
+                className={cn(
+                  "sidebar-item flex items-center py-2 px-3 rounded-md transition-colors",
+                  location.pathname === "/admin/products/bouquets" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                )}
+              >
+                <Flower2 className="h-4 w-4 mr-2" />
+                <span className="sidebar-item-text">Bouquets</span>
+              </Link>
+              <Link
+                to="/admin/products/plants"
+                className={cn(
+                  "sidebar-item flex items-center py-2 px-3 rounded-md transition-colors",
+                  location.pathname === "/admin/products/plants" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                )}
+              >
+                <Sprout className="h-4 w-4 mr-2" />
+                <span className="sidebar-item-text">Plants</span>
+              </Link>
+              <Link
+                to="/admin/products/cakes"
+                className={cn(
+                  "sidebar-item flex items-center py-2 px-3 rounded-md transition-colors",
+                  location.pathname === "/admin/products/cakes" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                )}
+              >
+                <Cake className="h-4 w-4 mr-2" />
+                <span className="sidebar-item-text">Cakes</span>
+              </Link>
+              <Link
+                to="/admin/products/chocolates"
+                className={cn(
+                  "sidebar-item flex items-center py-2 px-3 rounded-md transition-colors",
+                  location.pathname === "/admin/products/chocolates" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                )}
+              >
+                <Cookie className="h-4 w-4 mr-2" />
+                <span className="sidebar-item-text">Chocolates</span>
+              </Link>
+              <Link
+                to="/admin/products/hampers"
+                className={cn(
+                  "sidebar-item flex items-center py-2 px-3 rounded-md transition-colors",
+                  location.pathname === "/admin/products/hampers" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                )}
+              >
+                <Gift className="h-4 w-4 mr-2" />
+                <span className="sidebar-item-text">Hampers</span>
+              </Link>
+              <Link
+                to="/admin/products/combos"
+                className={cn(
+                  "sidebar-item flex items-center py-2 px-3 rounded-md transition-colors",
+                  location.pathname === "/admin/products/combos" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                )}
+              >
+                <Boxes className="h-4 w-4 mr-2" />
+                <span className="sidebar-item-text">Combo Products</span>
+              </Link>
+              <Link
+                to="/admin/products/addons"
+                className={cn(
+                  "sidebar-item flex items-center py-2 px-3 rounded-md transition-colors",
+                  location.pathname === "/admin/products/addons" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                )}
+              >
+                <Tag className="h-4 w-4 mr-2" />
+                <span className="sidebar-item-text">Add-ons</span>
+              </Link>
+              <Link
+                to="/admin/products/categories"
+                className={cn(
+                  "sidebar-item flex items-center py-2 px-3 rounded-md transition-colors",
+                  location.pathname === "/admin/products/categories" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                )}
+              >
+                <FolderTree className="h-4 w-4 mr-2" />
+                <span className="sidebar-item-text">Categories</span>
+              </Link>
+              <Link
+                to="/admin/products/collections"
+                className={cn(
+                  "sidebar-item flex items-center py-2 px-3 rounded-md transition-colors",
+                  location.pathname === "/admin/products/collections" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                )}
+              >
+                <Layers className="h-4 w-4 mr-2" />
+                <span className="sidebar-item-text">Collections</span>
+              </Link>
+              <Link
+                to="/admin/products/inventory"
+                className={cn(
+                  "sidebar-item flex items-center py-2 px-3 rounded-md transition-colors",
+                  location.pathname === "/admin/products/inventory" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                )}
+              >
+                <Warehouse className="h-4 w-4 mr-2" />
+                <span className="sidebar-item-text">Inventory</span>
+              </Link>
+              <Link
+                to="/admin/products/order-arrangement"
+                className={cn(
+                  "sidebar-item flex items-center py-2 px-3 rounded-md transition-colors",
+                  location.pathname === "/admin/products/order-arrangement" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                )}
+              >
+                <ArrowUpDown className="h-4 w-4 mr-2" />
+                <span className="sidebar-item-text">Order Arrangement</span>
+              </Link>
+              <Link
+                to="/admin/product-approval"
+                className={cn(
+                  "sidebar-item flex items-center py-2 px-3 rounded-md transition-colors",
+                  location.pathname === "/admin/product-approval" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                )}
+              >
+                <CheckCircle className="h-4 w-4 mr-2" />
+                <span className="sidebar-item-text">Product Approvals</span>
+              </Link>
+              <Link
+                to="/admin/products/reviews"
+                className={cn(
+                  "sidebar-item flex items-center py-2 px-3 rounded-md transition-colors",
+                  location.pathname === "/admin/products/reviews" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                )}
+              >
+                <MessageSquareText className="h-4 w-4 mr-2" />
+                <span className="sidebar-item-text">Reviews</span>
+              </Link>
+              <Link
+                to="/admin/products/settings"
+                className={cn(
+                  "sidebar-item flex items-center py-2 px-3 rounded-md transition-colors",
+                  location.pathname === "/admin/products/settings" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                )}
+              >
+                <Settings className="h-4 w-4 mr-2" />
+                <span className="sidebar-item-text">Settings</span>
+              </Link>
+            </div>
           )}
-          title={isCollapsed ? 'Categories' : ''}
-        >
-          <div className="sidebar-item-icon">
-            <Tag className="h-4 w-4 text-muted-foreground" />
-          </div>
-          {!isCollapsed && <span className="sidebar-item-text">Categories</span>}
-        </Link>
-        <Link 
-          to="/admin/addons" 
-          className={cn(
-            "sidebar-item",
-            isCollapsed ? "sidebar-item-collapsed" : "sidebar-item-expanded"
-          )}
-          title={isCollapsed ? 'Addon Products' : ''}
-        >
-          <div className="sidebar-item-icon">
-            <Gift className="h-4 w-4 text-muted-foreground" />
-          </div>
-          {!isCollapsed && <span className="sidebar-item-text">Addon Products</span>}
-        </Link>
-        <Link 
-          to="/admin/product-approval" 
-          className={cn(
-            "sidebar-item",
-            isCollapsed ? "sidebar-item-collapsed" : "sidebar-item-expanded"
-          )}
-          title={isCollapsed ? 'Product Approval' : ''}
-        >
-          <div className="sidebar-item-icon">
-            <CheckCircle className="h-4 w-4 text-muted-foreground" />
-          </div>
-          {!isCollapsed && <span className="sidebar-item-text">Product Approval</span>}
-        </Link>
-        <Link 
-          to="/admin/orders" 
-          className={cn(
-            "sidebar-item",
-            isCollapsed ? "sidebar-item-collapsed" : "sidebar-item-expanded"
-          )}
-          title={isCollapsed ? 'Orders' : ''}
-        >
-          <div className="sidebar-item-icon">
-            <ShoppingBag className="h-4 w-4 text-muted-foreground" />
-          </div>
-          {!isCollapsed && <span className="sidebar-item-text">Orders</span>}
-        </Link>
-        <Link 
-          to="/admin/reviews" 
-          className={cn(
-            "sidebar-item",
-            isCollapsed ? "sidebar-item-collapsed" : "sidebar-item-expanded"
-          )}
-          title={isCollapsed ? 'Reviews' : ''}
-        >
-          <div className="sidebar-item-icon">
-            <MessageSquareText className="h-4 w-4 text-muted-foreground" />
-          </div>
-          {!isCollapsed && <span className="sidebar-item-text">Reviews</span>}
-        </Link>
-        <Link 
-          to="/admin/orders/today" 
-          className={cn(
-            "sidebar-item",
-            isCollapsed ? "sidebar-item-collapsed" : "sidebar-item-expanded"
-          )}
-          title={isCollapsed ? "Today's Orders" : ''}
-        >
-          <div className="sidebar-item-icon">
-            <ClipboardList className="h-4 w-4 text-muted-foreground" />
-          </div>
-          {!isCollapsed && <span className="sidebar-item-text">Today's Orders</span>}
-        </Link>
+        </div>
         <Link 
           to="/admin/users" 
           className={cn(
             "sidebar-item",
+            location.pathname.startsWith("/admin/users") ? "bg-primary text-white font-medium" : "",
             isCollapsed ? "sidebar-item-collapsed" : "sidebar-item-expanded"
           )}
-          title={isCollapsed ? 'Users' : ''}
+          title={isCollapsed ? 'Customers' : ''}
         >
           <div className="sidebar-item-icon">
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <Users className="h-4 w-4" />
           </div>
-          {!isCollapsed && <span className="sidebar-item-text">Users</span>}
-        </Link>
-        <Link 
-          to="/admin/activity-logs" 
-          className={cn(
-            "sidebar-item",
-            isCollapsed ? "sidebar-item-collapsed" : "sidebar-item-expanded"
-          )}
-          title={isCollapsed ? 'User Activity Logs' : ''}
-        >
-          <div className="sidebar-item-icon">
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </div>
-          {!isCollapsed && <span className="sidebar-item-text">User Activity Logs</span>}
-        </Link>
-        <Link 
-          to="/admin/vendors" 
-          className={cn(
-            "sidebar-item",
-            isCollapsed ? "sidebar-item-collapsed" : "sidebar-item-expanded"
-          )}
-          title={isCollapsed ? 'Vendors' : ''}
-        >
-          <div className="sidebar-item-icon">
-            <Store className="h-4 w-4 text-muted-foreground" />
-          </div>
-          {!isCollapsed && <span className="sidebar-item-text">Vendors</span>}
-        </Link>
-        <Link 
-          to="/admin/analytics" 
-          className={cn(
-            "sidebar-item",
-            isCollapsed ? "sidebar-item-collapsed" : "sidebar-item-expanded"
-          )}
-          title={isCollapsed ? 'Analytics' : ''}
-        >
-          <div className="sidebar-item-icon">
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </div>
-          {!isCollapsed && <span className="sidebar-item-text">Analytics</span>}
+          {!isCollapsed && <span className="sidebar-item-text">Customers</span>}
         </Link>
         {/* Marketing Dropdown */}
         <div className="space-y-1">
@@ -366,14 +503,14 @@ const AdminDashboard: React.FC = () => {
           >
             <div className="flex items-center">
               <div className="sidebar-item-icon">
-                <Megaphone className="h-4 w-4 text-muted-foreground" />
+                <Megaphone className="h-4 w-4" />
               </div>
               {!isCollapsed && <span className="sidebar-item-text ml-3">Marketing</span>}
             </div>
             {!isCollapsed && (
               isMarketingOpen ? 
-                <ChevronUp className="h-4 w-4 text-muted-foreground transition-transform" /> : 
-                <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform" />
+                <ChevronUp className="h-4 w-4 transition-transform" /> : 
+                <ChevronDown className="h-4 w-4 transition-transform" />
             )}
           </button>
           
@@ -390,26 +527,6 @@ const AdminDashboard: React.FC = () => {
                 <span className="sidebar-item-text">Occasions</span>
               </Link>
               <Link 
-                to="/admin/promocodes" 
-                className={cn(
-                  "sidebar-item flex items-center py-2 px-3 rounded-md text-sm transition-colors",
-                  location.pathname === "/admin/promocodes" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                )}
-              >
-                <Tag className="h-4 w-4 mr-2" />
-                <span className="sidebar-item-text">Promo Codes</span>
-              </Link>
-              <Link 
-                to="/admin/offers" 
-                className={cn(
-                  "sidebar-item flex items-center py-2 px-3 rounded-md text-sm transition-colors",
-                  location.pathname === "/admin/offers" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                )}
-              >
-                <Percent className="h-4 w-4 mr-2" />
-                <span className="sidebar-item-text">Offers</span>
-              </Link>
-              <Link 
                 to="/admin/seasonal-campaigns" 
                 className={cn(
                   "sidebar-item flex items-center py-2 px-3 rounded-md text-sm transition-colors",
@@ -419,34 +536,102 @@ const AdminDashboard: React.FC = () => {
                 <Calendar className="h-4 w-4 mr-2" />
                 <span className="sidebar-item-text">Seasonal Campaigns</span>
               </Link>
+              <Link 
+                to="/admin/valentine" 
+                className={cn(
+                  "sidebar-item flex items-center py-2 px-3 rounded-md text-sm transition-colors",
+                  location.pathname === "/admin/valentine" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                )}
+              >
+                <Heart className="h-4 w-4 mr-2" />
+                <span className="sidebar-item-text">Valentine's</span>
+              </Link>
             </div>
           )}
         </div>
         <Link 
+          to="/admin/offers" 
+          className={cn(
+            "sidebar-item",
+            location.pathname === "/admin/offers" ? "bg-primary text-white font-medium" : "",
+            isCollapsed ? "sidebar-item-collapsed" : "sidebar-item-expanded"
+          )}
+          title={isCollapsed ? 'Offers' : ''}
+        >
+          <div className="sidebar-item-icon">
+            <Percent className="h-4 w-4" />
+          </div>
+          {!isCollapsed && <span className="sidebar-item-text">Offers</span>}
+        </Link>
+        <Link 
+          to="/admin/promocodes" 
+          className={cn(
+            "sidebar-item",
+            location.pathname === "/admin/promocodes" ? "bg-primary text-white font-medium" : "",
+            isCollapsed ? "sidebar-item-collapsed" : "sidebar-item-expanded"
+          )}
+          title={isCollapsed ? 'Coupons' : ''}
+        >
+          <div className="sidebar-item-icon">
+            <Tag className="h-4 w-4" />
+          </div>
+          {!isCollapsed && <span className="sidebar-item-text">Coupons</span>}
+        </Link>
+        <Link 
+          to="/admin/vendors" 
+          className={cn(
+            "sidebar-item",
+            location.pathname === "/admin/vendors" ? "bg-primary text-white font-medium" : "",
+            isCollapsed ? "sidebar-item-collapsed" : "sidebar-item-expanded"
+          )}
+          title={isCollapsed ? 'Vendors' : ''}
+        >
+          <div className="sidebar-item-icon">
+            <Store className="h-4 w-4" />
+          </div>
+          {!isCollapsed && <span className="sidebar-item-text">Vendors</span>}
+        </Link>
+        <Link 
+          to="/admin/analytics" 
+          className={cn(
+            "sidebar-item",
+            location.pathname === "/admin/analytics" ? "bg-primary text-white font-medium" : "",
+            isCollapsed ? "sidebar-item-collapsed" : "sidebar-item-expanded"
+          )}
+          title={isCollapsed ? 'Reports' : ''}
+        >
+          <div className="sidebar-item-icon">
+            <TrendingUp className="h-4 w-4" />
+          </div>
+          {!isCollapsed && <span className="sidebar-item-text">Reports</span>}
+        </Link>
+        <Link 
+          to="/admin/activity-logs" 
+          className={cn(
+            "sidebar-item",
+            location.pathname === "/admin/activity-logs" ? "bg-primary text-white font-medium" : "",
+            isCollapsed ? "sidebar-item-collapsed" : "sidebar-item-expanded"
+          )}
+          title={isCollapsed ? 'User Activity Logs' : ''}
+        >
+          <div className="sidebar-item-icon">
+            <Activity className="h-4 w-4" />
+          </div>
+          {!isCollapsed && <span className="sidebar-item-text">User Activity Logs</span>}
+        </Link>
+        <Link 
           to="/admin/holidays" 
           className={cn(
             "sidebar-item",
+            location.pathname === "/admin/holidays" ? "bg-primary text-white font-medium" : "",
             isCollapsed ? "sidebar-item-collapsed" : "sidebar-item-expanded"
           )}
           title={isCollapsed ? 'Holidays' : ''}
         >
           <div className="sidebar-item-icon">
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <Calendar className="h-4 w-4" />
           </div>
           {!isCollapsed && <span className="sidebar-item-text">Holidays</span>}
-        </Link>
-        <Link 
-          to="/admin/valentine" 
-          className={cn(
-            "sidebar-item",
-            isCollapsed ? "sidebar-item-collapsed" : "sidebar-item-expanded"
-          )}
-          title={isCollapsed ? "Valentine's" : ''}
-        >
-          <div className="sidebar-item-icon">
-            <Heart className="h-4 w-4 text-muted-foreground" />
-          </div>
-          {!isCollapsed && <span className="sidebar-item-text">Valentine's</span>}
         </Link>
         {/* Delivery Dropdown */}
         <div className="space-y-1">

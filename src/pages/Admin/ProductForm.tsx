@@ -22,6 +22,7 @@ import { PRIMARY_CATEGORIES, getAdditionalCategoryOptions, getSubcategoryOptions
 import categoryService, { Category } from '@/services/categoryService';
 import { useSeasonalCampaign } from '@/contexts/SeasonalCampaignContext';
 import { cn } from '@/lib/utils';
+import { CakeFormSection, PlantFormSection, ChocolateFormSection, HamperFormSection } from '@/components/Admin/ProductFormSections';
 
 type FormErrors = {
   [key in keyof ProductData]?: string;
@@ -2423,6 +2424,23 @@ const ProductForm = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Specialized Domain Product Forms (Cakes, Plants, Chocolates, Hampers) */}
+        {(formData.category === 'cakes' || formData.category === 'cake' || formData.subcategory?.toLowerCase().includes('cake') || formData.catalogType === 'cake') && (
+          <CakeFormSection formData={formData} setFormData={setFormData} />
+        )}
+
+        {(formData.category === 'plants' || formData.category === 'plant' || formData.subcategory?.toLowerCase().includes('plant') || formData.catalogType === 'plant') && (
+          <PlantFormSection formData={formData} setFormData={setFormData} />
+        )}
+
+        {(formData.category === 'chocolate' || formData.category === 'chocolates' || formData.subcategory?.toLowerCase().includes('chocolate') || formData.catalogType === 'chocolate') && (
+          <ChocolateFormSection formData={formData} setFormData={setFormData} />
+        )}
+
+        {(formData.category === 'baskets' || formData.category === 'hampers' || formData.subcategory?.toLowerCase().includes('hamper') || formData.catalogType === 'hamper') && (
+          <HamperFormSection formData={formData} setFormData={setFormData} />
+        )}
 
         {/* ❤️ Valentine's Settings */}
         <Card className={`transition-all duration-300 border-2 ${formData.isValentineProduct ? 'border-pink-200 bg-gradient-to-br from-pink-50/50 to-rose-50/50 shadow-md shadow-pink-100/55' : 'border-gray-200'}`}>
