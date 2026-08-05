@@ -182,56 +182,98 @@ export const useOfferPopup = () => {
           console.warn('General offers fetch error:', err);
         }
 
-        // Fallback: If no general offers found, fetch active Valentine offers
+        // Fallback 1: Check active seasonal campaigns if no general offers found
         if (offers.length === 0) {
           try {
-            const { data: valOffers } = await api.get('/valentine/offers');
-            if (Array.isArray(valOffers) && valOffers.length > 0) {
-              const activeValOffers = valOffers.filter((o: any) => o.enabled !== false);
-              offers = activeValOffers.map((valOffer: any) => ({
-                _id: valOffer._id || `val_offer_${Date.now()}`,
-                title: valOffer.title || "Valentine's Special Offer 💖",
-                description: valOffer.description || "Get exclusive discounts on handcrafted Valentine bouquets & romantic gifts!",
-                subtitle: valOffer.subtitle || "Limited Season of Love Offer",
-                code: valOffer.code || "VALENTINE20",
-                discountPercent: valOffer.discountValue || valOffer.discountPercent || 20,
-                badgeText: valOffer.badgeText || (valOffer.discountValue ? `${valOffer.discountValue}% OFF` : "20% OFF"),
-                buttonText: "Explore Valentine Specials",
-                buttonLink: "/valentine-special",
-                theme: "valentines",
-                backgroundColor: "linear-gradient(135deg, #881337 0%, #be123c 50%, #e11d48 100%)",
-                textColor: "#ffffff",
-                triggerType: "combined",
-                triggerDelay: 4,
-                triggerScrollPercent: 30,
-                frequencyCap: "oncePerSession"
-              }));
+            const { data: campaignRes } = await api.get('/seasonal-campaigns/status');
+            if (campaignRes?.success && Array.isArray(campaignRes.campaigns)) {
+              const activeCampaigns = campaignRes.campaigns.filter((c: any) => c.enabled || c.isActive);
+              for (const campaign of activeCampaigns) {
+                if (campaign.offers && Array.isArray(campaign.offers)) {
+                  const activeOffers = campaign.offers.filter((o: any) => o.enabled !== false);
+                  if (activeOffers.length > 0) {
+                    const mapped = activeOffers.map((o: any) => ({
+                      _id: o._id || `campaign_offer_${Date.now()}`,
+                      title: o.title || `${campaign.name} Special Offer 🎉`,
+                      description: o.description || `Enjoy exclusive discounts on ${campaign.name} arrangements!`,
+                      code: o.code || '',
+                      discountPercent: o.discountPercent || o.discountValue || 10,
+                      badgeText: o.badgeText || (o.discountPercent ? `${o.discountPercent}% OFF` : 'Special Offer'),
+                      buttonText: o.buttonText || `Shop ${campaign.name}`,
+                      buttonLink: o.buttonLink || `/campaign/${campaign.slug}`,
+                      theme: campaign.slug || 'general',
+                      backgroundColor: campaign.theme?.backgroundGradient || 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                      textColor: '#ffffff',
+                      triggerType: 'combined',
+                      triggerDelay: 4,
+                      triggerScrollPercent: 30,
+                      frequencyCap: 'oncePerSession'
+                    }));
+                    offers.push(...mapped);
+                  }
+                }
+              }
+            }
+          } catch (err) {
+            console.warn('Seasonal campaigns offers fetch error:', err);
+          }
+        }
+
+        // Fallback 2: Check active Valentine offers ONLY if Valentine is enabled
+        if (offers.length === 0) {
+          try {
+            const statusRes = await api.get('/valentine/status').catch(() => null);
+            const isValentineEnabled = statusRes?.data?.enabled || false;
+
+            if (isValentineEnabled) {
+              const { data: valOffers } = await api.get('/valentine/offers');
+              if (Array.isArray(valOffers) && valOffers.length > 0) {
+                const activeValOffers = valOffers.filter((o: any) => o.enabled !== false);
+                offers = activeValOffers.map((valOffer: any) => ({
+                  _id: valOffer._id || `val_offer_${Date.now()}`,
+                  title: valOffer.title || "Valentine's Special Offer 💖",
+                  description: valOffer.description || "Get exclusive discounts on handcrafted Valentine bouquets & romantic gifts!",
+                  subtitle: valOffer.subtitle || "Limited Season of Love Offer",
+                  code: valOffer.code || "VALENTINE20",
+                  discountPercent: valOffer.discountValue || valOffer.discountPercent || 20,
+                  badgeText: valOffer.badgeText || (valOffer.discountValue ? `${valOffer.discountValue}% OFF` : "20% OFF"),
+                  buttonText: "Explore Valentine Specials",
+                  buttonLink: "/valentine-special",
+                  theme: "valentines",
+                  backgroundColor: "linear-gradient(135deg, #881337 0%, #be123c 50%, #e11d48 100%)",
+                  textColor: "#ffffff",
+                  triggerType: "combined",
+                  triggerDelay: 4,
+                  triggerScrollPercent: 30,
+                  frequencyCap: "oncePerSession"
+                }));
+              }
+
+              // Fallback default Valentine offer ONLY if Valentine is enabled
+              if (offers.length === 0) {
+                offers = [{
+                  _id: 'default_valentine_popup_offer',
+                  title: "Valentine's Special Offer 🌹",
+                  description: "Save 20% on all exclusive Valentine bouquets, flower boxes & hampers! Use code VALENTINE20 at checkout.",
+                  subtitle: "Exclusive Season of Love Deal",
+                  code: "VALENTINE20",
+                  discountPercent: 20,
+                  badgeText: "20% OFF",
+                  buttonText: "Shop Valentine Specials",
+                  buttonLink: "/valentine-special",
+                  theme: "valentines",
+                  backgroundColor: "linear-gradient(135deg, #881337 0%, #be123c 50%, #e11d48 100%)",
+                  textColor: "#ffffff",
+                  triggerType: "combined",
+                  triggerDelay: 4,
+                  triggerScrollPercent: 30,
+                  frequencyCap: "oncePerSession"
+                }];
+              }
             }
           } catch (err) {
             console.warn('Valentine offers fetch error:', err);
           }
-        }
-
-        // Fallback default Valentine offer if still empty
-        if (offers.length === 0) {
-          offers = [{
-            _id: 'default_valentine_popup_offer',
-            title: "Valentine's Special Offer 🌹",
-            description: "Save 20% on all exclusive Valentine bouquets, flower boxes & hampers! Use code VALENTINE20 at checkout.",
-            subtitle: "Exclusive Season of Love Deal",
-            code: "VALENTINE20",
-            discountPercent: 20,
-            badgeText: "20% OFF",
-            buttonText: "Shop Valentine Specials",
-            buttonLink: "/valentine-special",
-            theme: "valentines",
-            backgroundColor: "linear-gradient(135deg, #881337 0%, #be123c 50%, #e11d48 100%)",
-            textColor: "#ffffff",
-            triggerType: "combined",
-            triggerDelay: 4,
-            triggerScrollPercent: 30,
-            frequencyCap: "oncePerSession"
-          }];
         }
 
         console.log('📦 Processed popup offers:', offers);
