@@ -314,7 +314,7 @@ const WishlistPage = () => {
                       <div className="flex-1 min-w-0 text-center sm:text-left space-y-2 sm:space-y-1">
                         <h4 className="text-lg sm:text-xl font-black text-gray-800 leading-tight px-2 sm:px-0">{item.title}</h4>
                         <div className="flex items-center justify-center sm:justify-start gap-2">
-                          <span className="text-xl sm:text-2xl font-black text-primary">₹{item.price.toFixed(2)}</span>
+                          <span className="text-xl sm:text-2xl font-black text-primary">₹{Number(item.price || 0).toFixed(2)}</span>
                           <div className="px-2 sm:px-3 py-1 bg-gradient-to-r from-red-100 to-pink-100 rounded-full">
                             <span className="text-xs sm:text-sm font-semibold text-red-600">❤️ Saved</span>
                           </div>

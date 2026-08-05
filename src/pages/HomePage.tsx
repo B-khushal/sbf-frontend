@@ -418,15 +418,15 @@ const HomePage = () => {
       })}
 
       {/* Valentine marketing overlays */}
-      {isValentineEnabled && valentineSettings && (
+      {isValentineEnabled && (
         <>
           <ExitIntentPopup 
-            enabled={valentineSettings.marketing?.exitIntentPopup || false} 
-            title={valentineSettings.marketing?.exitIntentTitle}
-            subtitle={valentineSettings.marketing?.exitIntentSubtitle}
-            code={valentineSettings.marketing?.exitIntentCode}
+            enabled={true} 
+            title={valentineSettings?.marketing?.exitIntentTitle || "Wait! Special Valentine Offer 🌹"}
+            subtitle={valentineSettings?.marketing?.exitIntentSubtitle || "Get 20% off your romantic flower arrangements & gift hampers!"}
+            code={valentineSettings?.marketing?.exitIntentCode || "VALENTINE20"}
           />
-          <RecentPurchases enabled={valentineSettings.marketing?.recentPurchaseNotifications || false} />
+          <RecentPurchases enabled={valentineSettings?.marketing?.recentPurchaseNotifications ?? true} />
         </>
       )}
 

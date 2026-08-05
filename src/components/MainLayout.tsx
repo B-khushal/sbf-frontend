@@ -20,11 +20,13 @@ const MainLayout: React.FC = () => {
 
   const isAnnouncementEnabled = headerSettings?.announcementBar?.enabled ?? true;
 
-  const [showAnnouncement, setShowAnnouncement] = useState(() => {
-    return localStorage.getItem('sbf_announcement_dismissed') !== 'true';
-  });
+  const [showAnnouncement, setShowAnnouncement] = useState(true);
 
   useEffect(() => {
+    // Clear legacy permanent flag on layout mount so next refresh always shows announcement
+    localStorage.removeItem('sbf_announcement_dismissed');
+    setShowAnnouncement(true);
+
     const handleDismiss = () => {
       setShowAnnouncement(false);
     };

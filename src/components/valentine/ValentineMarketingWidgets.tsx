@@ -22,23 +22,31 @@ export const ExitIntentPopup: React.FC<ExitIntentPopupProps> = ({
   useEffect(() => {
     if (!enabled) return;
 
-    // Check if shown this session
-    const hasBeenShown = sessionStorage.getItem('sbf_valentine_exit_popup_shown');
-    if (hasBeenShown === 'true') return;
-
     const handleMouseLeave = (e: MouseEvent) => {
-      // If cursor leaves client area (y < 0 or close to 0)
       if (e.clientY <= 15) {
         setIsOpen(true);
-        sessionStorage.setItem('sbf_valentine_exit_popup_shown', 'true');
       }
     };
+
+    // Mobile / delay fallback (after 10s) if popup hasn't been shown
+    const delayTimer = setTimeout(() => {
+      const shown = sessionStorage.getItem('sbf_valentine_exit_popup_shown');
+      if (!shown) {
+        setIsOpen(true);
+      }
+    }, 10000);
 
     document.addEventListener('mouseleave', handleMouseLeave);
     return () => {
       document.removeEventListener('mouseleave', handleMouseLeave);
+      clearTimeout(delayTimer);
     };
   }, [enabled]);
+
+  const handleClose = () => {
+    setIsOpen(false);
+    sessionStorage.setItem('sbf_valentine_exit_popup_shown', 'true');
+  };
 
   if (!isOpen) return null;
 
@@ -51,7 +59,7 @@ export const ExitIntentPopup: React.FC<ExitIntentPopupProps> = ({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-          onClick={() => setIsOpen(false)}
+          onClick={handleClose}
         />
         
         {/* Card */}
@@ -63,7 +71,7 @@ export const ExitIntentPopup: React.FC<ExitIntentPopupProps> = ({
         >
           {/* Close button */}
           <button 
-            onClick={() => setIsOpen(false)}
+            onClick={handleClose}
             className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 bg-gray-50 hover:bg-gray-100 p-1.5 rounded-full transition-colors"
           >
             <X size={18} />

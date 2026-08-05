@@ -850,7 +850,11 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
         customizations: customizationsObj,
       };
 
-      onAddToCart(cartItem);
+      await onAddToCart(cartItem);
+
+      if (useCart.getState().showMixedCartModal) {
+        return;
+      }
 
       toast({
         title: "Added to Cart",
@@ -887,15 +891,29 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
         return;
       }
 
+      const prodId = String(product._id || product.id || '');
+      const prodTitle = product.title || product.name || '';
+      const rawPrice = product.price ?? product.costPrice ?? 0;
+      const prodPrice = typeof rawPrice === 'number' ? rawPrice : parseFloat(rawPrice || '0');
+
+      if (!prodId || !prodTitle) {
+        toast({
+          title: "Invalid product data",
+          description: "Cannot add this product to wishlist",
+          variant: "destructive"
+        });
+        return;
+      }
+
       // Use utility function for consistent image URL construction
       const imageUrl = getImageUrl(product.images?.[0], { bustCache: true });
 
       // Create wishlist item with proper ID
       const wishlistItem = {
-        id: String(product._id),
-        title: product.title,
+        id: prodId,
+        title: prodTitle,
         image: imageUrl,
-        price: product.price
+        price: prodPrice
       };
 
       console.log("Adding to wishlist from ProductDetail:", wishlistItem);
@@ -1983,6 +2001,91 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                 <span className="flex items-center gap-1.5">🌸 Fresh Flowers</span>
                 <span className="flex items-center gap-1.5">🚚 Same Day</span>
                 <span className="flex items-center gap-1.5">🎁 Premium Pack</span>
+              </div>
+            </div>
+
+            {/* Available Delivery Options Card */}
+            <div className="p-4 rounded-3xl bg-slate-900 dark:bg-slate-950 text-white space-y-3 shadow-xl border border-slate-800">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
+                <div className="flex items-center gap-2">
+                  <Truck className="w-4 h-4 text-emerald-400" />
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-200">Available Delivery Services</h4>
+                </div>
+                <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  Active
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                {/* 1. Same Day Delivery */}
+                <div className="p-2.5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">🚚</span>
+                    <div>
+                      <p className="font-bold text-white">Same Day Delivery</p>
+                      <p className="text-[10px] text-slate-400">Cutoff 6:00 PM</p>
+                    </div>
+                  </div>
+                  <span className="font-extrabold text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded-md border border-emerald-500/30">
+                    ₹0 (FREE)
+                  </span>
+                </div>
+
+                {/* 2. Midnight Delivery */}
+                <div className="p-2.5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">🌙</span>
+                    <div>
+                      <p className="font-bold text-white">Midnight Delivery</p>
+                      <p className="text-[10px] text-slate-400">Cutoff 8:00 PM</p>
+                    </div>
+                  </div>
+                  <span className="font-extrabold text-amber-300 bg-amber-500/20 px-2 py-0.5 rounded-md border border-amber-500/30">
+                    +₹200
+                  </span>
+                </div>
+
+                {/* 3. Fixed Time Delivery */}
+                <div className="p-2.5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">⏰</span>
+                    <div>
+                      <p className="font-bold text-white">Fixed Time Delivery</p>
+                      <p className="text-[10px] text-slate-400">Select Time Slot</p>
+                    </div>
+                  </div>
+                  <span className="font-extrabold text-amber-300 bg-amber-500/20 px-2 py-0.5 rounded-md border border-amber-500/30">
+                    +₹150
+                  </span>
+                </div>
+
+                {/* 4. Surprise Delivery */}
+                <div className="p-2.5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">🎁</span>
+                    <div>
+                      <p className="font-bold text-white">Surprise Delivery</p>
+                      <p className="text-[10px] text-slate-400">Discreet Delivery</p>
+                    </div>
+                  </div>
+                  <span className="font-extrabold text-amber-300 bg-amber-500/20 px-2 py-0.5 rounded-md border border-amber-500/30">
+                    +₹100
+                  </span>
+                </div>
+
+                {/* 5. Anonymous Delivery */}
+                <div className="sm:col-span-2 p-2.5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">🕵️</span>
+                    <div>
+                      <p className="font-bold text-white">Anonymous Delivery</p>
+                      <p className="text-[10px] text-slate-400">Sender Name Hidden on Package Tag</p>
+                    </div>
+                  </div>
+                  <span className="font-extrabold text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded-md border border-emerald-500/30">
+                    FREE
+                  </span>
+                </div>
               </div>
             </div>
 

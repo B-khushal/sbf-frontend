@@ -14,6 +14,7 @@ import CurrencyConverter from './CurrencyConverter';
 import { Input } from '@/components/ui/input';
 import api from '@/services/api';
 import useCart, { useCartSelectors } from '@/hooks/use-cart';
+import useWishlist from '@/hooks/use-wishlist';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useAuth } from '@/hooks/use-auth';
 import { useValentine } from '@/contexts/ValentineContext';
@@ -124,19 +125,13 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isMobile = useIsMobile();
   const { pathname } = useLocation();
-  const [wishlistCount, setWishlistCount] = useState(0);
+  const { items: wishlistItems } = useWishlist();
+  const wishlistCount = wishlistItems?.length || 0;
   const cartHook = useCart();
   const { itemCount: actualCartCount } = useCartSelectors();
   const { items } = cartHook;
   
-  // Debug cart state with detailed logging
-  useEffect(() => {
-    console.log('Navigation - Cart state:', { 
-      actualCartCount,
-      itemsLength: items.length,
-      items: items,
-    });
-  }, [actualCartCount, items]);
+  // Debug cart state log removed
   const { headerSettings, loading: settingsLoading } = useSettings();
   const [searchQuery, setSearchQuery] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -203,43 +198,6 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
     setShowUserMenu(!showUserMenu);
   };
 
-  // Get wishlist count directly from localStorage
-  useEffect(() => {
-    const updateWishlistCount = () => {
-      try {
-        const wishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
-        setWishlistCount(Array.isArray(wishlist) ? wishlist.length : 0);
-      } catch (error) {
-        console.error("Error reading wishlist:", error);
-        setWishlistCount(0);
-      }
-    };
-    
-    updateWishlistCount();
-    
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'wishlist') {
-        updateWishlistCount();
-      }
-    };
-    
-    const handleCustomEvent = (e: CustomEvent) => {
-      if (e.detail && typeof e.detail.count === 'number') {
-        setWishlistCount(e.detail.count);
-      } else {
-        updateWishlistCount();
-      }
-    };
-    
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('wishlist-update', handleCustomEvent as EventListener);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('wishlist-update', handleCustomEvent as EventListener);
-    };
-  }, []);
-
   const shouldShowDropdown =
     isSearchFocused &&
     (
@@ -260,7 +218,8 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
     whileElementsMounted: autoUpdate,
   });
 
-  // Debug logging
+  // Debug logging removed to prevent console spam
+  /*
   console.log("NAV_SEARCH_DEBUG:", JSON.stringify({
     isSearchFocused,
     searchQuery,
@@ -273,6 +232,7 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
     hasReference: !!refs.reference.current,
     hasFloating: !!refs.floating.current
   }));
+  */
 
   // Load recent searches from localStorage
   useEffect(() => {
@@ -581,7 +541,7 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                 </NavLink>
               )}
               {activeCampaigns && activeCampaigns
-                .filter(c => c.enabled && c.navigation?.showInNavigationMenu && c.slug !== 'valentine' && c.slug !== 'valentines-week')
+                .filter(c => (c.enabled || (c as any).isActive) && (c.navigation?.showInNavigationMenu !== false) && ((c.navigation as any)?.showInNavbar !== false) && c.slug !== 'valentine' && c.slug !== 'valentines-week')
                 .map((campaign) => (
                   <NavLink 
                     key={campaign.slug} 
@@ -968,20 +928,18 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                 <CurrencyConverter />
               </div>
               
-              {user && (
-                <div className="hidden md:block">
-                  <Button variant="ghost" size="icon" asChild>
-                    <Link to="/wishlist" className="relative">
-                      <Heart size={18} />
-                      {wishlistCount > 0 && (
-                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                          {wishlistCount}
-                        </span>
-                      )}
-                    </Link>
-                  </Button>
-                </div>
-              )}
+              <div className="hidden md:block">
+                <Button variant="ghost" size="icon" asChild>
+                  <Link to="/wishlist" className="relative" title="Wishlist">
+                    <Heart size={18} />
+                    {wishlistCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-semibold rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center shadow-sm animate-pulse">
+                        {wishlistCount}
+                      </span>
+                    )}
+                  </Link>
+                </Button>
+              </div>
               
               <div className="hidden md:block">
                 <Button variant="ghost" size="icon" onClick={handleCartClick} className="relative">
@@ -1206,7 +1164,7 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                       </Link>
                     )}
                     {activeCampaigns && activeCampaigns
-                      .filter(c => c.enabled && c.navigation?.showInNavigationMenu && c.slug !== 'valentine' && c.slug !== 'valentines-week')
+                      .filter(c => (c.enabled || (c as any).isActive) && (c.navigation?.showInNavigationMenu !== false) && ((c.navigation as any)?.showInNavbar !== false) && c.slug !== 'valentine' && c.slug !== 'valentines-week')
                       .map((campaign) => (
                         <Link
                           key={campaign.slug}

@@ -211,8 +211,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(true);
       const loginResponse = await loginService({ email, password });
       
-      // After successful login, get the full user profile
-      const profileData = await getUserProfile();
+      // After successful login, get the fresh user profile
+      const profileData = await getUserProfile({ force: true });
       
       const user = {
         id: profileData._id,
@@ -237,10 +237,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Determine redirect destination based on user role
       let redirectTo = '/';
       const allowedAdminRoles = ['platform_admin', 'store_owner', 'store_manager', 'delivery_manager', 'support_staff', 'inventory_staff', 'finance_staff', 'admin'];
-      if (allowedAdminRoles.includes(user.role)) {
-        redirectTo = '/admin';
-      } else if (user.role === 'vendor') {
+      if (user.role === 'vendor' || Boolean(user.vendorStatus)) {
         redirectTo = '/vendor/dashboard';
+      } else if (allowedAdminRoles.includes(user.role)) {
+        redirectTo = '/admin';
       } else {
         redirectTo = '/';
       }
@@ -347,7 +347,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return { success: false, isNewUser: true };
       }
       
-      const profileData = await getUserProfile();
+      const profileData = await getUserProfile({ force: true });
       
       const user = {
         id: profileData._id,
@@ -374,10 +374,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Determine redirect destination based on user role
       let redirectTo = '/';
       const allowedAdminRoles = ['platform_admin', 'store_owner', 'store_manager', 'delivery_manager', 'support_staff', 'inventory_staff', 'finance_staff', 'admin'];
-      if (allowedAdminRoles.includes(user.role)) {
-        redirectTo = '/admin';
-      } else if (user.role === 'vendor') {
+      if (user.role === 'vendor' || Boolean(user.vendorStatus)) {
         redirectTo = '/vendor/dashboard';
+      } else if (allowedAdminRoles.includes(user.role)) {
+        redirectTo = '/admin';
       } else {
         redirectTo = '/';
       }

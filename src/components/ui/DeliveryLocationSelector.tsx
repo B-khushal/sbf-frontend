@@ -107,7 +107,7 @@ export const DeliveryLocationSelector: React.FC<DeliveryLocationSelectorProps> =
     setIsSearching(true);
 
     setTimeout(() => {
-      const cleanPincode = pincode.replace(/\D/g, '').slice(0, 6);
+      const cleanPincode = (pincode || '').replace(/\D/g, '').slice(0, 6);
       const match = SERVICEABLE_PINCODES.find((item) => item.code === cleanPincode);
 
       setIsSearching(false);

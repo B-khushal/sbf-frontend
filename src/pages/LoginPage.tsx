@@ -103,7 +103,15 @@ const LoginPage = () => {
           description: "You have successfully logged in.",
           type: "login"
         });
-        navigate(result.redirectTo || redirectPath);
+
+        if (result.redirectTo === '/vendor/dashboard') {
+          navigate('/vendor/dashboard', { replace: true });
+        } else {
+          const finalPath = (redirectPath && redirectPath !== '/' && !redirectPath.startsWith('/admin'))
+            ? redirectPath
+            : (result.redirectTo || '/');
+          navigate(finalPath, { replace: true });
+        }
       } else {
         toast({
           title: "Login failed",

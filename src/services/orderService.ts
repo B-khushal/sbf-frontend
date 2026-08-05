@@ -44,6 +44,7 @@ export interface Order {
     quantity: number;
     price: number;
     finalPrice: number;
+    unitPrice?: number;
     customizations?: any;
   }[];
   paymentDetails: {
@@ -55,8 +56,10 @@ export interface Order {
   totalAmount: number;
   subtotal: number;
   deliveryCharge: number;
+  shippingFee?: number;
   discount: number;
   finalTotal: number;
+  total?: number;
   isFirstOrderFreeDelivery: boolean;
   currency?: string;
   currencyRate?: number;
@@ -107,6 +110,7 @@ export const calculateDeliveryFee = async (data: {
   timeSlot?: string;
   email?: string;
   phone?: string;
+  userId?: string;
 }): Promise<DeliveryCalculation> => {
   const response = await api.post('/orders/calculate-delivery', data);
   return response.data;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Heart, Save, RefreshCw, BarChart3, Power, Settings, Palette, Clock, Calendar, Package, Tag, Gift, Truck, Image, Search as SearchIcon, Plus, Trash2, Edit, Eye, EyeOff, GripVertical, ChevronDown, ChevronUp } from 'lucide-react';
+import { Heart, Save, RefreshCw, BarChart3, Power, Settings, Palette, Clock, Calendar, Package, Tag, Gift, Truck, Image, Search as SearchIcon, Plus, Trash2, Edit, Eye, EyeOff, GripVertical, ChevronDown, ChevronUp, UploadCloud } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,8 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import api from '@/services/api';
+import { getImageUrl } from '@/config';
+import { uploadImage } from '@/services/uploadService';
 import type { ValentineSettings, ValentineOfferItem } from '@/types/valentine';
 
 const ValentineManagement: React.FC = () => {
@@ -543,76 +545,177 @@ const ValentineManagement: React.FC = () => {
               </Button>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {settings.giftBuilderItems?.map((item, index) => (
-                  <div key={item.id} className="p-3 rounded-xl border bg-card">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium">{item.name}</span>
-                      <div className="flex items-center gap-2">
-                        <Switch
-                          checked={item.enabled}
-                          onCheckedChange={(v) => {
-                            const items = [...settings.giftBuilderItems];
-                            items[index] = { ...items[index], enabled: v };
-                            updateSetting('giftBuilderItems', items);
-                          }}
-                        />
+                  <div key={item.id || index} className="p-4 rounded-2xl border border-border bg-card shadow-sm space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-xl overflow-hidden bg-muted border flex-shrink-0 flex items-center justify-center shadow-inner">
+                          {item.image ? (
+                            <img src={getImageUrl(item.image)} alt={item.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <Image className="w-5 h-5 text-muted-foreground" />
+                          )}
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-bold text-foreground">{item.name || 'Unnamed Item'}</h4>
+                          <span className="text-xs text-muted-foreground font-medium capitalize">
+                            Category: <span className="text-rose-600 font-semibold">{item.category}</span> • ₹{item.price} • Stock: {item.stock}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs text-muted-foreground">{item.enabled ? 'Active' : 'Disabled'}</span>
+                          <Switch
+                            checked={item.enabled}
+                            onCheckedChange={(v) => {
+                              const items = [...settings.giftBuilderItems];
+                              items[index] = { ...items[index], enabled: v };
+                              updateSetting('giftBuilderItems', items);
+                            }}
+                          />
+                        </div>
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="h-7 w-7 text-destructive"
+                          className="h-8 w-8 text-destructive hover:bg-destructive/10 rounded-lg"
                           onClick={() => {
                             const items = settings.giftBuilderItems.filter((_, i) => i !== index);
                             updateSetting('giftBuilderItems', items);
                           }}
                         >
-                          <Trash2 className="w-3 h-3" />
+                          <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                      <Input
-                        placeholder="Name"
-                        value={item.name}
-                        onChange={(e) => {
-                          const items = [...settings.giftBuilderItems];
-                          items[index] = { ...items[index], name: e.target.value };
-                          updateSetting('giftBuilderItems', items);
-                        }}
-                      />
-                      <select
-                        value={item.category}
-                        onChange={(e) => {
-                          const items = [...settings.giftBuilderItems];
-                          items[index] = { ...items[index], category: e.target.value as any };
-                          updateSetting('giftBuilderItems', items);
-                        }}
-                        className="flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm"
-                      >
-                        {['flowers', 'chocolates', 'teddy', 'greeting_card', 'photo_frame', 'perfume', 'custom_message'].map(c => (
-                          <option key={c} value={c}>{c.replace('_', ' ')}</option>
-                        ))}
-                      </select>
-                      <Input
-                        type="number"
-                        placeholder="Price"
-                        value={item.price}
-                        onChange={(e) => {
-                          const items = [...settings.giftBuilderItems];
-                          items[index] = { ...items[index], price: parseInt(e.target.value) || 0 };
-                          updateSetting('giftBuilderItems', items);
-                        }}
-                      />
-                      <Input
-                        type="number"
-                        placeholder="Stock"
-                        value={item.stock}
-                        onChange={(e) => {
-                          const items = [...settings.giftBuilderItems];
-                          items[index] = { ...items[index], stock: parseInt(e.target.value) || 0 };
-                          updateSetting('giftBuilderItems', items);
-                        }}
-                      />
+
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3 pt-1">
+                      <div>
+                        <label className="text-[11px] font-semibold text-muted-foreground mb-1 block">Item Name</label>
+                        <Input
+                          placeholder="e.g. Heart Bouquet of 100 Red Roses"
+                          value={item.name}
+                          onChange={(e) => {
+                            const items = [...settings.giftBuilderItems];
+                            items[index] = { ...items[index], name: e.target.value };
+                            updateSetting('giftBuilderItems', items);
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-semibold text-muted-foreground mb-1 block">Category</label>
+                        <select
+                          value={item.category}
+                          onChange={(e) => {
+                            const items = [...settings.giftBuilderItems];
+                            items[index] = { ...items[index], category: e.target.value as any };
+                            updateSetting('giftBuilderItems', items);
+                          }}
+                          className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm font-medium"
+                        >
+                          <option value="flowers">Flowers / Bouquets</option>
+                          <option value="chocolates">Chocolates & Truffles</option>
+                          <option value="teddy">Teddy Bear</option>
+                          <option value="greeting_card">Greeting Card</option>
+                          <option value="photo_frame">Photo Frame</option>
+                          <option value="perfume">Perfume</option>
+                          <option value="custom_message">Custom Message</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-semibold text-muted-foreground mb-1 block">Price (₹)</label>
+                        <Input
+                          type="number"
+                          placeholder="Price"
+                          value={item.price}
+                          onChange={(e) => {
+                            const items = [...settings.giftBuilderItems];
+                            items[index] = { ...items[index], price: parseInt(e.target.value) || 0 };
+                            updateSetting('giftBuilderItems', items);
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-semibold text-muted-foreground mb-1 block">Stock Count</label>
+                        <Input
+                          type="number"
+                          placeholder="Stock"
+                          value={item.stock}
+                          onChange={(e) => {
+                            const items = [...settings.giftBuilderItems];
+                            items[index] = { ...items[index], stock: parseInt(e.target.value) || 0 };
+                            updateSetting('giftBuilderItems', items);
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Image URL & Upload Controls */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div className="md:col-span-2">
+                        <label className="text-[11px] font-semibold text-muted-foreground mb-1 block">Image URL / Link (Paste Link or Upload File)</label>
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="https://... or /uploads/..."
+                            value={item.image || ''}
+                            onChange={(e) => {
+                              const items = [...settings.giftBuilderItems];
+                              items[index] = { ...items[index], image: e.target.value };
+                              updateSetting('giftBuilderItems', items);
+                            }}
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="flex-shrink-0 gap-1.5 font-medium"
+                            onClick={() => {
+                              const fileInput = document.getElementById(`gb-file-input-${index}`);
+                              if (fileInput) fileInput.click();
+                            }}
+                          >
+                            <UploadCloud className="w-4 h-4 text-rose-500" />
+                            Upload File
+                          </Button>
+                          <input
+                            id={`gb-file-input-${index}`}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              try {
+                                const formData = new FormData();
+                                formData.append('image', file);
+                                const res = await uploadImage(formData, 'product');
+                                if (res?.imageUrl) {
+                                  const items = [...settings.giftBuilderItems];
+                                  items[index] = { ...items[index], image: res.imageUrl };
+                                  updateSetting('giftBuilderItems', items);
+                                  toast({ title: 'Image Uploaded', description: 'Product image updated successfully!' });
+                                }
+                              } catch (uploadErr) {
+                                console.error('Image upload error:', uploadErr);
+                                toast({ variant: 'destructive', title: 'Upload Failed', description: 'Failed to upload image file.' });
+                              }
+                            }}
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-semibold text-muted-foreground mb-1 block">Description</label>
+                        <Input
+                          placeholder="e.g. Heart-shaped 100 velvet roses"
+                          value={item.description || ''}
+                          onChange={(e) => {
+                            const items = [...settings.giftBuilderItems];
+                            items[index] = { ...items[index], description: e.target.value };
+                            updateSetting('giftBuilderItems', items);
+                          }}
+                        />
+                      </div>
                     </div>
                   </div>
                 ))}

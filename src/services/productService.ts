@@ -100,9 +100,12 @@ export interface OccasionData {
 
 export interface ProductData {
   _id?: string;
+  id?: string;
   title: string;
+  name?: string;
   description: string;
   price: number;
+  costPrice?: number;
   discount: number;
   category: string;
   subcategory: string;
@@ -110,6 +113,7 @@ export interface ProductData {
   occasionIds?: string[];
   countInStock: number;
   images: string[];
+  image?: string;
   details: string[];
   careInstructions: string[];
   isNew?: boolean;
@@ -910,6 +914,15 @@ class ProductService {
   async restoreProductVersion(productId: string, versionIndex: number): Promise<any> {
     const config = createAuthConfig();
     const response = await axios.post(`${API_URL}/products/${productId}/restore-version`, { versionIndex }, config);
+    return response.data;
+  }
+
+  async getAdminProducts(params?: any): Promise<{ products: ProductData[]; page?: number; pages?: number; total?: number }> {
+    const config = createAuthConfig();
+    const response = await axios.get<{ products: ProductData[]; page?: number; pages?: number; total?: number }>(
+      `${API_URL}/products/admin/all`,
+      { ...config, params }
+    );
     return response.data;
   }
 }

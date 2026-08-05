@@ -464,21 +464,21 @@ const OfferPopup: React.FC<OfferPopupProps> = ({
             }}
             className={`relative z-20 w-full overflow-hidden 
               ${isMobile 
-                ? 'fixed bottom-0 left-0 right-0 rounded-t-[32px] max-h-[92vh] border-t' 
-                : 'max-w-4xl rounded-[32px] border shadow-2xl'
+                ? 'fixed bottom-0 left-0 right-0 rounded-t-[28px] max-h-[85vh] border-t' 
+                : 'max-w-2xl rounded-[28px] border shadow-2xl'
               } 
               ${theme.border} ${theme.glow} backdrop-blur-md flex flex-col md:flex-row transition-shadow duration-300 font-sans`}
           >
             {/* Mobile Drag Indicator / Handle */}
             {isMobile && (
-              <div className="w-full flex justify-center py-3 select-none">
-                <div className="w-12 h-1 bg-white/20 rounded-full" />
+              <div className="w-full flex justify-center py-2 select-none">
+                <div className="w-10 h-1 bg-white/20 rounded-full" />
               </div>
             )}
 
             {/* Campaign Visual Column */}
             {hasImage && (
-              <div className="relative w-full md:w-5/12 h-44 sm:h-56 md:h-auto overflow-hidden group select-none">
+              <div className="relative w-full md:w-5/12 h-36 sm:h-44 md:h-auto overflow-hidden group select-none shrink-0">
                 {/* Immersive overlay gradients */}
                 <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-black/45 via-transparent to-transparent z-10" />
                 <motion.img
@@ -490,8 +490,8 @@ const OfferPopup: React.FC<OfferPopupProps> = ({
                 
                 {/* Floating Badges */}
                 {offer.badgeText && (
-                  <div className="absolute top-4 left-4 z-20 flex flex-col gap-1.5">
-                    <span className="px-3 py-1 text-[10px] sm:text-[11px] font-black uppercase tracking-wider bg-white/90 text-slate-900 rounded-full shadow-md backdrop-blur-sm border border-slate-200/50">
+                  <div className="absolute top-3 left-3 z-20 flex flex-col gap-1">
+                    <span className="px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider bg-white/90 text-slate-900 rounded-full shadow-md backdrop-blur-sm border border-slate-200/50">
                       ✨ {offer.badgeText}
                     </span>
                   </div>
@@ -500,56 +500,56 @@ const OfferPopup: React.FC<OfferPopupProps> = ({
             )}
 
             {/* Campaign Details Column */}
-            <div className={`flex-1 flex flex-col justify-between p-6 sm:p-8 md:p-10 relative z-10 ${hasImage ? '' : 'w-full'}`}>
+            <div className={`flex-1 flex flex-col justify-between p-4 sm:p-5 md:p-6 relative z-10 ${hasImage ? '' : 'w-full'}`}>
               
               {/* Close Button */}
               <button
                 onClick={onClose}
-                className="absolute right-4 top-4 md:right-6 md:top-6 rounded-full p-2 bg-black/15 hover:bg-black/30 text-current hover:rotate-90 hover:scale-110 transition-all duration-300 pointer-events-auto"
+                className="absolute right-3 top-3 md:right-4 md:top-4 rounded-full p-1.5 bg-black/20 hover:bg-black/40 text-current hover:rotate-90 hover:scale-110 transition-all duration-300 pointer-events-auto"
                 aria-label="Dismiss discount popup"
               >
-                <X className="h-5 w-5" />
+                <X className="h-4 w-4" />
               </button>
 
               <div>
                 {/* Festive Banner Header */}
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="p-1.5 rounded-full bg-white/15 animate-pulse">
-                    <ThemeIcon className="h-4.5 w-4.5 text-yellow-300" />
+                <div className="flex items-center gap-1.5 mb-2">
+                  <div className="p-1 rounded-full bg-white/15 animate-pulse">
+                    <ThemeIcon className="h-3.5 w-3.5 text-yellow-300" />
                   </div>
                   {offer.discountPercent && offer.discountPercent > 0 ? (
-                    <span className="text-xs font-black uppercase tracking-widest text-yellow-300">
+                    <span className="text-[11px] font-black uppercase tracking-widest text-yellow-300">
                       {offer.discountPercent}% SPECIAL DISCOUNT
                     </span>
                   ) : (
-                    <span className="text-xs font-black uppercase tracking-widest text-yellow-300">
+                    <span className="text-[11px] font-black uppercase tracking-widest text-yellow-300">
                       SEASONAL SPECIAL
                     </span>
                   )}
                 </div>
 
                 {/* Offer Titles */}
-                <h2 id="campaign-title" className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight leading-tight mb-2 select-text font-serif">
+                <h2 id="campaign-title" className="text-xl sm:text-2xl font-extrabold tracking-tight leading-snug mb-1 select-text font-serif">
                   {offer.title}
                 </h2>
                 {offer.subtitle && (
-                  <h3 className="text-sm font-semibold opacity-90 tracking-wide uppercase mb-4 text-yellow-100 select-text">
+                  <h3 className="text-xs font-semibold opacity-90 tracking-wide uppercase mb-2 text-yellow-100 select-text">
                     {offer.subtitle}
                   </h3>
                 )}
 
                 {/* Description */}
-                <p className="text-sm sm:text-base opacity-80 leading-relaxed mb-6 select-text">
+                <p className="text-xs sm:text-sm opacity-85 leading-relaxed mb-3.5 select-text">
                   {offer.description}
                 </p>
 
                 {/* Claim Progress bar */}
-                <div className="mb-6 bg-black/25 rounded-2xl p-4 border border-white/5">
-                  <div className="flex justify-between items-center text-xs font-bold mb-2">
+                <div className="mb-3.5 bg-black/25 rounded-xl p-2.5 border border-white/5">
+                  <div className="flex justify-between items-center text-[11px] font-bold mb-1">
                     <span className="text-slate-300">Offer Claim Rate</span>
                     <span className="text-yellow-300">{claimCount} Claimed Today</span>
                   </div>
-                  <div className="w-full h-2.5 bg-white/10 rounded-full overflow-hidden">
+                  <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${claimProgress}%` }}
@@ -557,25 +557,25 @@ const OfferPopup: React.FC<OfferPopupProps> = ({
                       className="h-full bg-gradient-to-r from-amber-400 to-yellow-300 rounded-full"
                     />
                   </div>
-                  <p className="text-[10px] text-slate-400 mt-2 italic text-left">
+                  <p className="text-[9px] text-slate-400 mt-1 italic text-left">
                     * Limited coupons remaining. Claims are allocated on a first-come, first-served basis.
                   </p>
                 </div>
 
                 {/* Copyable Coupon Pill */}
                 {offer.code && (
-                  <div className="mb-6">
-                    <span className="block text-xs font-bold uppercase tracking-wider mb-2 opacity-75">
+                  <div className="mb-3.5">
+                    <span className="block text-[10px] font-bold uppercase tracking-wider mb-1 opacity-75">
                       Coupon Code
                     </span>
-                    <div className="flex p-1 bg-black/35 backdrop-blur-md rounded-2xl border border-white/15 focus-within:border-amber-400/50 transition-colors">
-                      <div className="flex-1 flex items-center px-4 font-mono text-base sm:text-lg font-black tracking-widest text-yellow-300 uppercase select-all">
+                    <div className="flex p-1 bg-black/35 backdrop-blur-md rounded-xl border border-white/15 focus-within:border-amber-400/50 transition-colors">
+                      <div className="flex-1 flex items-center px-3 font-mono text-sm sm:text-base font-black tracking-widest text-yellow-300 uppercase select-all">
                         {offer.code}
                       </div>
                       <motion.button
                         onClick={handleCopyCode}
                         whileTap={{ scale: 0.95 }}
-                        className={`flex items-center gap-2 px-5 py-3 text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-md
+                        className={`flex items-center gap-1.5 px-3.5 py-2 text-[11px] font-black uppercase tracking-wider rounded-lg transition-all shadow-md
                           ${copied 
                             ? 'bg-emerald-600 hover:bg-emerald-700 text-white' 
                             : 'bg-white hover:bg-slate-100 text-slate-900'
@@ -583,12 +583,12 @@ const OfferPopup: React.FC<OfferPopupProps> = ({
                       >
                         {copied ? (
                           <>
-                            <Check className="h-4.5 w-4.5 animate-bounce" />
+                            <Check className="h-3.5 w-3.5 animate-bounce" />
                             Copied
                           </>
                         ) : (
                           <>
-                            <Copy className="h-4 w-4" />
+                            <Copy className="h-3.5 w-3.5" />
                             Copy Code
                           </>
                         )}
@@ -599,22 +599,22 @@ const OfferPopup: React.FC<OfferPopupProps> = ({
 
                 {/* Countdown Timer */}
                 {offer.showCountdown !== false && (timeLeft.days > 0 || timeLeft.hours > 0 || timeLeft.minutes > 0 || timeLeft.seconds > 0) && (
-                  <div className="mb-6">
-                    <span className="block text-xs font-bold uppercase tracking-wider mb-2 opacity-75">
+                  <div className="mb-3.5">
+                    <span className="block text-[10px] font-bold uppercase tracking-wider mb-1 opacity-75">
                       Offer Ends In
                     </span>
-                    <div className="flex gap-2 sm:gap-3 text-center">
+                    <div className="flex gap-2 text-center">
                       {[
                         { label: 'Days', val: timeLeft.days },
                         { label: 'Hrs', val: timeLeft.hours },
                         { label: 'Mins', val: timeLeft.minutes },
                         { label: 'Secs', val: timeLeft.seconds }
                       ].map((item, idx) => (
-                        <div key={idx} className="flex-1 bg-black/20 backdrop-blur-sm rounded-xl p-2 sm:p-3 border border-white/5">
-                          <span className="block text-lg sm:text-2xl font-black text-white font-mono leading-none">
+                        <div key={idx} className="flex-1 bg-black/20 backdrop-blur-sm rounded-lg p-1.5 border border-white/5">
+                          <span className="block text-sm sm:text-base font-black text-white font-mono leading-none">
                             {item.val.toString().padStart(2, '0')}
                           </span>
-                          <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 block">
+                          <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-0.5 block">
                             {item.label}
                           </span>
                         </div>
@@ -625,15 +625,15 @@ const OfferPopup: React.FC<OfferPopupProps> = ({
               </div>
 
               {/* Action Buttons & Trust Badges */}
-              <div className="mt-4">
+              <div className="mt-2">
                 {/* CTA Buttons */}
-                <div className="flex flex-col sm:flex-row gap-3 mb-6">
+                <div className="flex flex-col sm:flex-row gap-2">
                   {/* Primary Action */}
                   <motion.button
                     onClick={handleButtonClick}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="flex-1 py-4 px-6 text-sm sm:text-base font-black uppercase tracking-wider rounded-2xl bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 text-slate-900 shadow-[0_4px_20px_rgba(245,158,11,0.3)] hover:shadow-[0_4px_25px_rgba(245,158,11,0.45)] hover:brightness-105 duration-300 relative overflow-hidden group select-none text-center cursor-pointer"
+                    className="flex-1 py-3 px-4 text-xs sm:text-sm font-black uppercase tracking-wider rounded-xl bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 text-slate-900 shadow-[0_4px_15px_rgba(245,158,11,0.25)] hover:shadow-[0_4px_20px_rgba(245,158,11,0.4)] hover:brightness-105 duration-300 relative overflow-hidden group select-none text-center cursor-pointer"
                   >
                     {/* Shine sweep effect */}
                     <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:animate-shine" />

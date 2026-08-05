@@ -170,15 +170,71 @@ export const useOfferPopup = () => {
       setCurrentOffer(null);
       triggerFiredRef.current = false;
 
-      // Rule 1: Only show popups on the homepage ('/')
-      if (location.pathname !== '/') {
-        return;
-      }
-
       try {
         console.log('🔍 Fetching active offers...');
-        const { data: offers } = await api.get('/offers/active');
-        console.log('📦 Received offers:', offers);
+        let offers: any[] = [];
+        try {
+          const res = await api.get('/offers/active');
+          if (Array.isArray(res.data)) {
+            offers = res.data;
+          }
+        } catch (err) {
+          console.warn('General offers fetch error:', err);
+        }
+
+        // Fallback: If no general offers found, fetch active Valentine offers
+        if (offers.length === 0) {
+          try {
+            const { data: valOffers } = await api.get('/valentine/offers');
+            if (Array.isArray(valOffers) && valOffers.length > 0) {
+              const activeValOffers = valOffers.filter((o: any) => o.enabled !== false);
+              offers = activeValOffers.map((valOffer: any) => ({
+                _id: valOffer._id || `val_offer_${Date.now()}`,
+                title: valOffer.title || "Valentine's Special Offer 💖",
+                description: valOffer.description || "Get exclusive discounts on handcrafted Valentine bouquets & romantic gifts!",
+                subtitle: valOffer.subtitle || "Limited Season of Love Offer",
+                code: valOffer.code || "VALENTINE20",
+                discountPercent: valOffer.discountValue || valOffer.discountPercent || 20,
+                badgeText: valOffer.badgeText || (valOffer.discountValue ? `${valOffer.discountValue}% OFF` : "20% OFF"),
+                buttonText: "Explore Valentine Specials",
+                buttonLink: "/valentine-special",
+                theme: "valentines",
+                backgroundColor: "linear-gradient(135deg, #881337 0%, #be123c 50%, #e11d48 100%)",
+                textColor: "#ffffff",
+                triggerType: "combined",
+                triggerDelay: 4,
+                triggerScrollPercent: 30,
+                frequencyCap: "oncePerSession"
+              }));
+            }
+          } catch (err) {
+            console.warn('Valentine offers fetch error:', err);
+          }
+        }
+
+        // Fallback default Valentine offer if still empty
+        if (offers.length === 0) {
+          offers = [{
+            _id: 'default_valentine_popup_offer',
+            title: "Valentine's Special Offer 🌹",
+            description: "Save 20% on all exclusive Valentine bouquets, flower boxes & hampers! Use code VALENTINE20 at checkout.",
+            subtitle: "Exclusive Season of Love Deal",
+            code: "VALENTINE20",
+            discountPercent: 20,
+            badgeText: "20% OFF",
+            buttonText: "Shop Valentine Specials",
+            buttonLink: "/valentine-special",
+            theme: "valentines",
+            backgroundColor: "linear-gradient(135deg, #881337 0%, #be123c 50%, #e11d48 100%)",
+            textColor: "#ffffff",
+            triggerType: "combined",
+            triggerDelay: 4,
+            triggerScrollPercent: 30,
+            frequencyCap: "oncePerSession"
+          }];
+        }
+
+        console.log('📦 Processed popup offers:', offers);
 
         if (offers && offers.length > 0) {
           // Filter valid offers by device and start/end dates
@@ -274,8 +330,8 @@ export const useOfferPopup = () => {
 
           // Initialize Smart Trigger Mechanisms
           const triggerType = transformedOffer.triggerType || 'combined';
-          const triggerDelaySec = transformedOffer.triggerDelay ?? 8;
-          const scrollPercent = transformedOffer.triggerScrollPercent ?? 30;
+          const triggerDelaySec = transformedOffer.triggerDelay !== undefined && transformedOffer.triggerDelay !== null ? transformedOffer.triggerDelay : 2;
+          const scrollPercent = transformedOffer.triggerScrollPercent ?? 20;
 
           const fireTrigger = () => {
             if (triggerFiredRef.current) return;
@@ -363,8 +419,10 @@ export const useOfferPopup = () => {
 
   const closeOffer = async () => {
     setIsOpen(false);
+    sessionStorage.setItem('sbf_offer_popup_closed', 'true');
 
     if (currentOffer) {
+      sessionStorage.setItem(`offer_shown_session_${currentOffer._id}`, 'true');
       try {
         await api.post(`/offers/${currentOffer._id}/close`, {
           variantId: currentOffer.assignedVariantId

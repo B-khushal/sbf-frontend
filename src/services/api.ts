@@ -86,6 +86,11 @@ api.interceptors.response.use(
     
     // Only clear auth on true authentication failures.
     if (error.response?.status === 401) {
+      // Ignore 401 on logout requests as user is already exiting session
+      if (error.config?.url?.includes('/auth/logout')) {
+        return Promise.resolve({ data: {} });
+      }
+      
       console.error('API Response: Authentication error:', {
         status: error.response?.status,
         message: error.response?.data?.message,

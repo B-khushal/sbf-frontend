@@ -82,27 +82,33 @@ const AdminUsers: React.FC = () => {
       try {
         // Fetch users
         const usersResponse = await api.get("/users");
-        console.log("Fetched users:", usersResponse.data);
+        const rawUsers = Array.isArray(usersResponse.data) 
+          ? usersResponse.data 
+          : (usersResponse.data?.users || []);
+        console.log("Fetched users:", rawUsers);
         
-        // Fetch vendors
-        const vendorsResponse = await getAllVendors();
-        console.log("Fetched vendors:", vendorsResponse.vendors);
+        // Fetch vendors safely
+        let vendorList: any[] = [];
+        try {
+          const vendorsResponse = await getAllVendors();
+          vendorList = vendorsResponse?.vendors || (Array.isArray(vendorsResponse) ? vendorsResponse : []);
+        } catch (vendorErr) {
+          console.warn("Could not fetch vendors list:", vendorErr);
+        }
         
         // Merge vendor data with user data
-        const usersWithVendorInfo = usersResponse.data.map((user: User) => {
-          const vendorInfo = vendorsResponse.vendors.find((vendor: any) => {
-            // Check if vendor has a user reference
+        const usersWithVendorInfo = rawUsers.map((user: User) => {
+          const vendorInfo = vendorList.find((vendor: any) => {
             if (!vendor.user) return false;
-            
-            // Handle both populated and unpopulated user references
-            const vendorUserId = typeof vendor.user === 'object' ? vendor.user._id : vendor.user;
-            return vendorUserId === user._id;
+            const vendorUserId = typeof vendor.user === 'object' ? (vendor.user._id || vendor.user.id) : vendor.user;
+            return vendorUserId === user._id || vendorUserId === user.id;
           });
           
           return {
             ...user,
+            _id: user._id || user.id,
             vendorInfo: vendorInfo ? {
-              _id: vendorInfo._id,
+              _id: vendorInfo._id || vendorInfo.id,
               storeName: vendorInfo.storeName,
               storeDescription: vendorInfo.storeDescription,
               status: vendorInfo.status,
@@ -113,7 +119,7 @@ const AdminUsers: React.FC = () => {
         });
         
         setUsers(usersWithVendorInfo);
-        setVendors(vendorsResponse.vendors);
+        setVendors(vendorList);
       } catch (error: any) {
         console.error("Error fetching data:", error.response || error);
         toast({

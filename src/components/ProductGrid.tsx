@@ -18,10 +18,14 @@ import { ProductCardSkeleton } from "./HomePageSkeleton";
 
 export type Product = {
   _id: string;
+  id?: string;
   title: string;
+  name?: string;
   price: number;
+  costPrice?: number;
   discount: number;
   images: string[];
+  image?: string;
   category: string;
   categories?: string[];
   description?: string;
@@ -325,11 +329,16 @@ export const ProductCard = ({ product, onAddToCart }: {
         : product.price;
 
       // Create cart item with proper structure
+      const resolvedId = product._id || (product as any).id;
+      const resolvedTitle = product.title || (product as any).name || 'Product';
       const cartItem = {
-        _id: product._id,
-        title: product.title,
+        _id: resolvedId,
+        id: resolvedId,
+        productId: resolvedId,
+        title: resolvedTitle,
+        name: resolvedTitle,
         price: discountedPrice,
-        images: product.images || [],
+        images: product.images || ((product as any).image ? [(product as any).image] : []),
         quantity: 1,
         discount: product.discount || 0,
         category: product.category,
@@ -389,21 +398,26 @@ export const ProductCard = ({ product, onAddToCart }: {
     setTimeout(() => setIsHeartPounding(false), 500);
 
     try {
-      if (!product._id || !product.title || typeof product.price !== 'number') {
+      const prodId = String(product._id || product.id || '');
+      const prodTitle = product.title || product.name || '';
+      const rawPrice = product.price ?? product.costPrice ?? 0;
+      const prodPrice = typeof rawPrice === 'number' ? rawPrice : parseFloat(rawPrice || '0');
+
+      if (!prodId || !prodTitle) {
         console.error('Invalid product data for wishlist:', product);
         toast.error("Invalid product data");
         return;
       }
 
       const wishlistItem = {
-        id: String(product._id),
-        title: product.title,
-        image: product.images?.[0] || '/images/placeholder.svg',
-        price: product.price
+        id: prodId,
+        title: prodTitle,
+        image: product.images?.[0] || (typeof product.image === 'string' ? product.image : '/images/placeholder.svg'),
+        price: prodPrice
       };
 
       if (isInWishlist) {
-        await removeFromWishlist(String(product._id));
+        await removeFromWishlist(prodId);
       } else {
         await addToWishlist(wishlistItem);
       }

@@ -484,15 +484,25 @@ const LuxuryProductCard = ({
     setTimeout(() => setIsHeartPounding(false), 500);
 
     try {
+      const prodId = String(product._id || product.id || '');
+      const prodTitle = product.title || product.name || '';
+      const rawPrice = product.price ?? product.costPrice ?? 0;
+      const prodPrice = typeof rawPrice === 'number' ? rawPrice : parseFloat(rawPrice || '0');
+
+      if (!prodId || !prodTitle) {
+        toast.error("Invalid product data");
+        return;
+      }
+
       const wishlistItem = {
-        id: String(product._id),
-        title: product.title,
-        image: product.images?.[0] || "/images/placeholder.svg",
-        price: product.price,
+        id: prodId,
+        title: prodTitle,
+        image: product.images?.[0] || (typeof product.image === 'string' ? product.image : "/images/placeholder.svg"),
+        price: prodPrice,
       };
 
       if (isInWishlist) {
-        await removeFromWishlist(String(product._id));
+        await removeFromWishlist(prodId);
       } else {
         await addToWishlist(wishlistItem);
       }

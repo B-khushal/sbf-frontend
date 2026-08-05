@@ -78,8 +78,14 @@ const CategoryMenu = () => {
 
   const getEmoji = (slug: string) => EMOJI_MAPPING[slug.toLowerCase()] || DEFAULT_EMOJI;
   const getCategoryCount = (categoryName: string): number => {
+    if (!categoryName) return 0;
     const key = normalizeCategoryKey(categoryName);
-    return categoryCounts[key] || 0;
+    if (categoryCounts[key] !== undefined) return categoryCounts[key];
+    const slugKey = categoryName.toLowerCase().trim().replace(/\s+/g, '-').replace(/'/g, '');
+    if (categoryCounts[slugKey] !== undefined) return categoryCounts[slugKey];
+    const unhyphenated = key.replace(/-/g, ' ');
+    if (categoryCounts[unhyphenated] !== undefined) return categoryCounts[unhyphenated];
+    return 0;
   };
 
   const categories = useMemo(() => {
@@ -88,6 +94,9 @@ const CategoryMenu = () => {
       .sort((a, b) => (a.priority ?? a.sortOrder ?? 0) - (b.priority ?? b.sortOrder ?? 0))
       .map(parent => {
         const parentIdStr = parent._id || parent.id;
+        const parentSlug = parent.slug || parent.name.toLowerCase().trim().replace(/\s+/g, '-').replace(/'/g, '');
+        const parentPath = parent.categoryUrl || parent.link || `/${parentSlug}`;
+
         let subcats = ((shopCategories || []) as any[])
           .filter(c => {
             if (!c.enabled || !c.parentId) return false;
@@ -95,11 +104,16 @@ const CategoryMenu = () => {
             return childParentId === parentIdStr;
           })
           .sort((a, b) => (a.priority ?? a.sortOrder ?? 0) - (b.priority ?? b.sortOrder ?? 0))
-          .map(sub => ({
-            name: sub.name,
-            path: sub.link || sub.categoryUrl,
-            count: getCategoryCount(sub.name)
-          }));
+          .map(sub => {
+            const subSlug = sub.slug || sub.name.toLowerCase().trim().replace(/\s+/g, '-').replace(/'/g, '');
+            const validPath = sub.categoryUrl || sub.link || `/${subSlug}`;
+            const count = getCategoryCount(sub.name) || getCategoryCount(subSlug);
+            return {
+              name: sub.name,
+              path: validPath,
+              count
+            };
+          });
 
         // Dynamically handle Occasions parent category
         const isOccasions = parent.name.toLowerCase().includes('occasions') || parent.slug?.toLowerCase().includes('occasions');
@@ -130,16 +144,18 @@ const CategoryMenu = () => {
 
           // Append any active campaign subcategories not already present
           if (activeCampaigns) {
-            const campaignSubcats = activeCampaigns.map(campaign => ({
-              name: campaign.name,
-              path: `/occasions/${campaign.slug}`,
-              count: campaign.productCount || getCategoryCount(campaign.name)
-            }));
+            const campaignSubcats = activeCampaigns
+              .filter(campaign => campaign.enabled || campaign.isActive)
+              .map(campaign => ({
+                name: campaign.name,
+                path: `/occasions/${campaign.slug}`,
+                count: campaign.productCount || getCategoryCount(campaign.name) || 1
+              }));
             subcats = [...subcats, ...campaignSubcats];
           }
 
-          // Keep only subcategories with active products (count > 0)
-          subcats = subcats.filter(sub => sub.count > 0);
+          // Keep subcategories with valid paths
+          subcats = subcats.filter(sub => sub.count >= 0 && Boolean(sub.path));
           
           // Deduplicate by name
           const seen = new Set<string>();
@@ -153,14 +169,14 @@ const CategoryMenu = () => {
 
         return {
           name: parent.name,
-          path: parent.link || parent.categoryUrl,
+          path: parentPath,
           emoji: getEmoji(parent.slug || parent.name),
           description: parent.description || '',
           popular: parent.featured || false,
           subcategories: subcats
         };
       });
-  }, [shopCategories, categoryCounts, activeCampaigns]);
+  }, [shopCategories, categoryCounts, activeCampaigns, activeOccasions]);
 
   useLayoutEffect(() => {
     if (hoveredCategory && navRef.current) {
@@ -314,7 +330,7 @@ const CategoryMenu = () => {
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="absolute top-full mt-2 dropdown-content w-72 sm:w-80 overflow-hidden dropdown-responsive"
+              className="absolute top-full mt-2 dropdown-content w-72 sm:w-80 overflow-hidden dropdown-responsive z-50 shadow-2xl bg-white border border-gray-200/80 rounded-2xl"
               style={{ 
                 left: `${dropdownPosition.left}px`, 
                 maxWidth: 'calc(100vw - 2rem)' // Prevent overflow on small screens

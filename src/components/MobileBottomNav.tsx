@@ -4,6 +4,7 @@ import { ShoppingBag, Heart, ShoppingCart, User } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useCartSelectors } from '@/hooks/use-cart';
+import useWishlist from '@/hooks/use-wishlist';
 import { useAuth } from '@/hooks/use-auth';
 import { useValentine } from '@/contexts/ValentineContext';
 import { useSeasonalCampaign } from '@/contexts/SeasonalCampaignContext';
@@ -93,45 +94,12 @@ export const MobileBottomNav = () => {
   const { isValentineEnabled, settings } = useValentine();
   const { activeCampaigns } = useSeasonalCampaign();
   const { itemCount: actualCartCount } = useCartSelectors();
-  const [wishlistCount, setWishlistCount] = useState(0);
+  const { items: wishlistItems } = useWishlist();
+  const wishlistCount = wishlistItems?.length || 0;
   const [mounted, setMounted] = useState(false);
 
-  // Sync wishlist count from localStorage
   useEffect(() => {
     setMounted(true);
-    const updateWishlistCount = () => {
-      try {
-        const wishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
-        setWishlistCount(Array.isArray(wishlist) ? wishlist.length : 0);
-      } catch (error) {
-        console.error("Error reading wishlist:", error);
-        setWishlistCount(0);
-      }
-    };
-    
-    updateWishlistCount();
-    
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'wishlist') {
-        updateWishlistCount();
-      }
-    };
-    
-    const handleCustomEvent = (e: CustomEvent) => {
-      if (e.detail && typeof e.detail.count === 'number') {
-        setWishlistCount(e.detail.count);
-      } else {
-        updateWishlistCount();
-      }
-    };
-    
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('wishlist-update', handleCustomEvent as EventListener);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('wishlist-update', handleCustomEvent as EventListener);
-    };
   }, []);
 
   const isExcludedPage = 

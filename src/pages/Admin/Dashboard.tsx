@@ -873,29 +873,44 @@ const AdminDashboardHome: React.FC = () => {
           if (widget.id === 'bestsellers') {
             return (
               <Card key={widget.id} className="border shadow-md">
-                <CardHeader className="pb-2 border-b">
-                  <CardTitle className="text-base font-bold">Top 10 Selling Products</CardTitle>
+                <CardHeader className="pb-2 border-b flex flex-row items-center justify-between">
+                  <CardTitle className="text-base font-bold flex items-center gap-2">
+                    <TrendingUp className="h-4.5 w-4.5 text-indigo-600" />
+                    Top 10 Selling Products
+                  </CardTitle>
+                  <span className="text-xs text-slate-400 font-semibold">{topProducts.length} Items</span>
                 </CardHeader>
-                <CardContent className="pt-3 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
-                  {topProducts.slice(0, 5).map((p, idx) => (
-                    <div key={p.id} className="p-2 border rounded-xl bg-white shadow-sm flex flex-col justify-between hover:border-indigo-300 transition-colors">
-                      <div className="w-full aspect-square bg-slate-50 rounded-lg overflow-hidden flex items-center justify-center border">
-                        {p.image ? (
-                          <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
-                        ) : (
-                          <Package className="h-8 w-8 text-slate-300" />
-                        )}
-                      </div>
-                      <div className="mt-2 min-w-0">
-                        <p className="font-bold text-slate-700 text-xs truncate">{p.name}</p>
-                        <p className="text-[10px] text-slate-400 capitalize">{p.category}</p>
-                      </div>
-                      <div className="border-t pt-2 mt-2 flex justify-between items-center text-xs">
-                        <span className="font-black text-slate-800">{p.sold} Sold</span>
-                        <span className="text-indigo-600 font-bold">{formatPrice(p.revenue)}</span>
-                      </div>
+                <CardContent className="pt-3">
+                  {topProducts && topProducts.length > 0 ? (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                      {topProducts.slice(0, 10).map((p, idx) => (
+                        <div key={p.id || idx} className="p-2 border.5 border-slate-200 rounded-xl bg-white shadow-sm flex flex-col justify-between hover:border-indigo-400 hover:shadow-md transition-all">
+                          <div className="relative w-full aspect-square bg-slate-50 rounded-lg overflow-hidden flex items-center justify-center border">
+                            {p.image ? (
+                              <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+                            ) : (
+                              <Package className="h-8 w-8 text-slate-300" />
+                            )}
+                            <span className="absolute top-1 left-1 bg-indigo-600 text-white font-black text-[10px] w-5 h-5 rounded-full flex items-center justify-center shadow-sm">
+                              #{idx + 1}
+                            </span>
+                          </div>
+                          <div className="mt-2 min-w-0">
+                            <p className="font-bold text-slate-800 text-xs truncate" title={p.name}>{p.name}</p>
+                            <p className="text-[10px] text-slate-400 capitalize">{p.category}</p>
+                          </div>
+                          <div className="border-t pt-2 mt-2 flex justify-between items-center text-xs">
+                            <span className="font-black text-slate-800">{p.sold} Sold</span>
+                            <span className="text-indigo-600 font-extrabold">{formatPrice(p.revenue)}</span>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  ) : (
+                    <div className="text-center py-8 text-slate-400 text-sm">
+                      No top selling products recorded yet.
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             );

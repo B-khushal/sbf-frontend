@@ -80,11 +80,14 @@ export const addToCart = async (
     const response = await api.post('/cart', { productId, quantity, customizations, customPrice, selectedVariant, productModel });
     return response.data;
   } catch (error: any) {
-    console.error('Error adding to cart:', error);
     if (error.response?.status === 401) {
       throw new Error('Please log in to add items to cart');
     }
-    throw new Error(error.response?.data?.message || 'Failed to add to cart');
+    const message = error.response?.data?.message || 'Failed to add to cart';
+    const err = new Error(message);
+    (err as any).response = error.response;
+    (err as any).status = error.response?.status;
+    throw err;
   }
 };
 

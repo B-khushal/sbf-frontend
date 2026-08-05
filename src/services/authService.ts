@@ -73,8 +73,15 @@ let profileCache: any = null;
 let profileCacheTime = 0;
 const PROFILE_CACHE_TTL_MS = 5000;
 
+export const clearAuthCache = () => {
+  profileCache = null;
+  profileCacheTime = 0;
+  profileRequestPromise = null;
+};
+
 // Login user
 export const login = async (credentials: LoginCredentials) => {
+  clearAuthCache();
   try {
     console.log("🔍 Sending login request:", credentials);
 
@@ -133,6 +140,7 @@ export const register = async (userData: RegisterData) => {
 
 // Logout user
 export const logout = () => {
+  clearAuthCache();
   // Get user ID before clearing user data
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const userId = user._id || user.id;
@@ -256,6 +264,7 @@ export const forgotPassword = async (email: string) => {
 
 // Social login - updated to use real Google OAuth
 export const socialLogin = async (provider: string, credential?: string, agreedToTerms?: boolean) => {
+  clearAuthCache();
   try {
     const response = await api.post('/auth/google', { 
       provider,

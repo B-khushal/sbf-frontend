@@ -133,7 +133,10 @@ const loadServiceablePincodes = async () => {
   return pincodeCachePromise;
 };
 
-const normalizePinCodeQuery = (rawValue: string) => rawValue.replace(/\D/g, '').slice(0, 6);
+const normalizePinCodeQuery = (rawValue?: string | number | null): string => {
+  if (rawValue === undefined || rawValue === null) return '';
+  return String(rawValue).replace(/\D/g, '').slice(0, 6);
+};
 
 const filterPincodes = (options: ServiceablePinCode[], rawQuery: string) => {
   const query = normalizePinCodeQuery(rawQuery);
@@ -164,6 +167,7 @@ interface PinCodeInputProps {
   disabled?: boolean;
   onValidationChange?: (isValid: boolean, message?: string) => void;
   onSelectPinCode?: (selection: PinCodeSelection | null) => void;
+  onSelect?: (selection: PinCodeSelection) => void;
 }
 
 const PinCodeInput: React.FC<PinCodeInputProps> = ({
@@ -176,11 +180,12 @@ const PinCodeInput: React.FC<PinCodeInputProps> = ({
   disabled = false,
   onValidationChange,
   onSelectPinCode,
+  onSelect,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const desktopInputRef = useRef<HTMLInputElement>(null);
   const mobileSearchRef = useRef<HTMLInputElement>(null);
-  const [query, setQuery] = useState(value);
+  const [query, setQuery] = useState(() => normalizePinCodeQuery(value));
   const [results, setResults] = useState<ServiceablePinCode[]>([]);
   const [selectedOption, setSelectedOption] = useState<ServiceablePinCode | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -311,6 +316,7 @@ const PinCodeInput: React.FC<PinCodeInputProps> = ({
     setErrorMessage('');
     onChange(option.code);
     onSelectPinCode?.(option);
+    onSelect?.(option);
     onValidationChange?.(true);
   };
 
@@ -349,14 +355,25 @@ const PinCodeInput: React.FC<PinCodeInputProps> = ({
   };
 
   const handleQueryChange = (nextValue: string) => {
-    setQuery(normalizePinCodeQuery(nextValue));
+    const norm = normalizePinCodeQuery(nextValue);
+    setQuery(norm);
     setIsOpen(true);
     setErrorMessage('');
+    onChange(norm);
 
-    if (selectedOption) {
+    const exactMatch = SERVICEABLE_PINCODES.find((option) => option.code === norm);
+    if (exactMatch) {
+      setSelectedOption(exactMatch);
+      onSelectPinCode?.(exactMatch);
+      onValidationChange?.(true);
+    } else {
       setSelectedOption(null);
-      onChange('');
       onSelectPinCode?.(null);
+      if (norm.length === 6) {
+        onValidationChange?.(true);
+      } else {
+        onValidationChange?.(!required && norm.length === 0);
+      }
     }
   };
 

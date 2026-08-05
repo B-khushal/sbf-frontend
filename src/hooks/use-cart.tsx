@@ -92,22 +92,39 @@ export const useCart = create<CartState>((set, get) => ({
 
     // Check if user is authenticated
     const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
-    const resolvedProductId = item.productId || item._id;
-    if (!resolvedProductId || !item.title || typeof item.price !== 'number' || typeof item.quantity !== 'number') {
+    const resolvedProductId = item.productId || item._id || (item as any).id;
+    const resolvedTitle = item.title || (item as any).name || 'Product';
+    const resolvedPrice = typeof item.price === 'number' ? item.price : Number(item.price || 0);
+    const resolvedQuantity = typeof item.quantity === 'number' && item.quantity > 0 ? item.quantity : 1;
+
+    if (!resolvedProductId || !resolvedTitle || isNaN(resolvedPrice)) {
       console.error('Invalid cart item:', item);
       throw new Error('Invalid cart item');
     }
+
+    const normalizedItem: CartItem = {
+      ...item,
+      _id: resolvedProductId,
+      id: resolvedProductId,
+      productId: resolvedProductId,
+      title: resolvedTitle,
+      name: resolvedTitle,
+      price: resolvedPrice,
+      quantity: resolvedQuantity,
+      images: item.images || (item.image ? [item.image] : []),
+    };
+
     set({ isLoading: true });
     try {
       if (isAuthenticated) {
         // Add to backend with customizations and custom price
         const response = await cartService.addToCart(
           resolvedProductId,
-          item.quantity,
-          item.customizations,
-          item.price, // customPrice
-          item.selectedVariant,
-          item.productModel || 'Product'
+          normalizedItem.quantity,
+          normalizedItem.customizations,
+          normalizedItem.price, // customPrice
+          normalizedItem.selectedVariant,
+          normalizedItem.productModel || 'Product'
         );
         // Update local state with backend response
         const transformedItems = response.cart.map(transformCartItem);
@@ -119,12 +136,12 @@ export const useCart = create<CartState>((set, get) => ({
         // If same product + variant + customizations exists, increase quantity.
         const matchIndex = currentItems.findIndex(
           i => {
-            const currentProductId = i.productId || i._id;
-            const incomingProductId = item.productId || item._id;
+            const currentProductId = i.productId || i._id || (i as any).id;
+            const incomingProductId = normalizedItem.productId;
             const sameProduct = currentProductId === incomingProductId;
-            const sameModel = (i.productModel || 'Product') === (item.productModel || 'Product');
-            const sameVariant = JSON.stringify(i.selectedVariant ?? null) === JSON.stringify(item.selectedVariant ?? null);
-            const sameCustomizations = JSON.stringify(i.customizations ?? null) === JSON.stringify(item.customizations ?? null);
+            const sameModel = (i.productModel || 'Product') === (normalizedItem.productModel || 'Product');
+            const sameVariant = JSON.stringify(i.selectedVariant ?? null) === JSON.stringify(normalizedItem.selectedVariant ?? null);
+            const sameCustomizations = JSON.stringify(i.customizations ?? null) === JSON.stringify(normalizedItem.customizations ?? null);
 
             return sameProduct && sameModel && sameVariant && sameCustomizations;
           }
@@ -132,15 +149,24 @@ export const useCart = create<CartState>((set, get) => ({
         let newItems;
         if (matchIndex > -1) {
           newItems = [...currentItems];
-          newItems[matchIndex].quantity += item.quantity;
+          newItems[matchIndex].quantity += normalizedItem.quantity;
         } else {
-          newItems = [...currentItems, item];
+          newItems = [...currentItems, normalizedItem];
         }
         set({ items: newItems });
         const userId = getCurrentUserId();
         saveUserCart(newItems, userId);
       }
-    } catch (error) {
+    } catch (error: any) {
+      const errMsg = error?.message || error?.response?.data?.message || '';
+      if (
+        errMsg.includes('Valentine Special products') || 
+        errMsg.includes('different delivery schedules') || 
+        errMsg.includes('cannot be checked out together')
+      ) {
+        set({ showMixedCartModal: true, conflictingProduct: normalizedItem });
+        return;
+      }
       console.error('Error adding to cart:', error);
       throw error;
     } finally {

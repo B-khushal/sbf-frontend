@@ -10,7 +10,7 @@ const CartLoader = () => {
   useEffect(() => {
     // Load cart for current user (or anonymous if no user)
     loadCart(userId);
-  }, [loadCart, userId]);
+  }, [userId]);
 
   // This component doesn't render anything
   return null;

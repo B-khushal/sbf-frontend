@@ -68,19 +68,8 @@ export const ValentineHomeSections: React.FC<ValentineHomeSectionsProps> = ({ se
       {/* 2. Valentine Week Timeline Preview */}
       {activeTimelineCards.length > 0 && (
         <div className="container mx-auto px-4">
-          <div className="text-center space-y-3 mb-10">
-            <div className="inline-flex items-center justify-center p-2 bg-rose-50 rounded-2xl text-rose-600">
-              <Calendar size={20} className="animate-bounce" />
-            </div>
-            <h3 className="text-2xl md:text-3xl font-bold text-gray-800 font-serif">
-              Valentine's Week Timeline
-            </h3>
-            <p className="text-gray-500 max-w-lg mx-auto text-sm">
-              Each day is a new promise of love. Select a special day to view exclusive products crafted just for that day!
-            </p>
-          </div>
-
-          <div className="relative">
+          <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-[#1a0011] via-[#2d0a1f] to-[#12000e] text-white shadow-2xl p-4 sm:p-8 md:p-10 border border-rose-500/20">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(253,164,175,0.12),transparent_70%)] pointer-events-none" />
             <ValentineTimeline 
               timeline={activeTimelineCards} 
               onDateClick={(dateSlug) => navigate(`/valentine-special?day=${dateSlug}`)}
@@ -92,15 +81,10 @@ export const ValentineHomeSections: React.FC<ValentineHomeSectionsProps> = ({ se
       {/* 3. Special Offers Carousel */}
       {offers && offers.length > 0 && (
         <div className="container mx-auto px-4">
-          <div className="text-center space-y-3 mb-8">
-            <h3 className="text-2xl md:text-3xl font-bold text-gray-800 font-serif">
-              Exclusive Romantic Offers
-            </h3>
-            <p className="text-gray-500 max-w-lg mx-auto text-sm">
-              Save on your romantic gifts with these curated discounts and bundles
-            </p>
+          <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-[#1a0011] via-[#2d0a1f] to-[#12000e] text-white shadow-2xl p-4 sm:p-8 md:p-10 border border-rose-500/20">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(253,164,175,0.12),transparent_70%)] pointer-events-none" />
+            <ValentineOfferCarousel offers={offers} />
           </div>
-          <ValentineOfferCarousel offers={offers} />
         </div>
       )}
 

@@ -207,6 +207,17 @@ type TimeSlotSelectorProps = {
   className?: string;
   selectedDate?: Date | null;
   onSelectDate?: (date: Date) => void;
+  surpriseDelivery?: boolean;
+  onToggleSurpriseDelivery?: (checked: boolean) => void;
+  anonymousGift?: boolean;
+  onToggleAnonymousGift?: (checked: boolean) => void;
+  valSettings?: {
+    sameDayEnabled?: boolean; sameDayCharge?: number; sameDayCutoff?: string;
+    midnightEnabled?: boolean; midnightCharge?: number; midnightCutoff?: string;
+    fixedTimeEnabled?: boolean; fixedTimeCharge?: number;
+    surpriseEnabled?: boolean; surpriseCharge?: number;
+    anonymousEnabled?: boolean; anonymousCharge?: number;
+  };
 };
 
 const TimeSlotSelector = ({
@@ -215,7 +226,12 @@ const TimeSlotSelector = ({
   timeSlots = DEFAULT_TIME_SLOTS,
   className,
   selectedDate,
-  onSelectDate
+  onSelectDate,
+  surpriseDelivery,
+  onToggleSurpriseDelivery,
+  anonymousGift,
+  onToggleAnonymousGift,
+  valSettings
 }: TimeSlotSelectorProps) => {
   const normalizeDate = (value: Date) => startOfDay(value);
   const toDateInputValue = (value: Date) => format(value, 'yyyy-MM-dd');
@@ -355,28 +371,26 @@ const TimeSlotSelector = ({
     // Check Valentine Week constraints
     const isValWeek = (normalizedDate.getMonth() === 1 && normalizedDate.getDate() >= 8 && normalizedDate.getDate() <= 15);
     
-    if (isValentineEnabled) {
-      if (hasValentine) {
-        if (!isValWeek) {
-          return true; // Valentine products ONLY on Feb 8-15
+    if (hasValentine) {
+      if (!isValWeek) {
+        return true; // Valentine products ONLY on Feb 8-15
+      }
+      if (commonAvailableDates) {
+        const dayStr = `${normalizedDate.getDate()} Feb`;
+        const fullDayStr = `${normalizedDate.getDate()} February`;
+        const allowed = commonAvailableDates.some(d => 
+          d === dayStr.toLowerCase() || 
+          d === fullDayStr.toLowerCase() ||
+          d.includes(String(normalizedDate.getDate()))
+        );
+        if (!allowed && commonAvailableDates.length > 0) {
+          return true; // Not allowed for this product
         }
-        if (commonAvailableDates) {
-          const dayStr = `${normalizedDate.getDate()} Feb`;
-          const fullDayStr = `${normalizedDate.getDate()} February`;
-          const allowed = commonAvailableDates.some(d => 
-            d === dayStr.toLowerCase() || 
-            d === fullDayStr.toLowerCase() ||
-            d.includes(String(normalizedDate.getDate()))
-          );
-          if (!allowed && commonAvailableDates.length > 0) {
-            return true; // Not allowed for this product
-          }
-        }
-      } else {
-        // Regular products: block Valentine Week (Feb 8-15)
-        if (isValWeek) {
-          return true;
-        }
+      }
+    } else if (isValentineEnabled) {
+      // Regular products: block Valentine Week (Feb 8-15)
+      if (isValWeek) {
+        return true;
       }
     }
     
@@ -854,11 +868,89 @@ const TimeSlotSelector = ({
         )}
       </div>
       
-      {/* Delivery Time Slots */}
-      <div>
-        <div className="flex items-center gap-2 mb-2">
-          <Clock className="h-5 w-5 text-primary" />
-          <span className="font-medium text-base">Select Delivery Time</span>
+      {/* Delivery Time & Service Mode Selector */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Clock className="h-5 w-5 text-rose-500" />
+            <span className="font-semibold text-base text-slate-900">Select Delivery Option & Time Slot</span>
+          </div>
+          <span className="text-xs font-bold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-full border border-rose-200">
+            Verified Service Rates
+          </span>
+        </div>
+
+        {/* 3 Main Delivery Service Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {/* 1. Same Day Delivery */}
+          <div 
+            onClick={() => onSelectSlot('same_day')}
+            className={cn(
+              "p-3.5 rounded-2xl border cursor-pointer transition-all duration-200 shadow-sm flex flex-col justify-between select-none",
+              selectedSlot === 'same_day' 
+                ? "bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-500 ring-2 ring-emerald-500/20 text-emerald-950 font-bold scale-[1.01]" 
+                : "bg-white border-slate-200 hover:border-slate-300 text-slate-800"
+            )}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xl">🚚</span>
+              <span className="text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                ₹0 (FREE)
+              </span>
+            </div>
+            <div className="mt-2.5">
+              <p className="font-bold text-sm">Same Day Standard</p>
+              <p className="text-[11px] text-slate-500">9 AM - 9 PM • Cutoff 6:00 PM</p>
+            </div>
+          </div>
+
+          {/* 2. Midnight Delivery */}
+          <div 
+            onClick={() => onSelectSlot('midnight')}
+            className={cn(
+              "p-3.5 rounded-2xl border cursor-pointer transition-all duration-200 shadow-sm flex flex-col justify-between select-none",
+              selectedSlot === 'midnight' 
+                ? "bg-gradient-to-br from-purple-50 to-pink-50 border-purple-500 ring-2 ring-purple-500/20 text-purple-950 font-bold scale-[1.01]" 
+                : "bg-white border-slate-200 hover:border-slate-300 text-slate-800"
+            )}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xl">🌙</span>
+              <span className="text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-300">
+                +{formatPrice(convertPrice(valSettings?.midnightCharge ?? 200))}
+              </span>
+            </div>
+            <div className="mt-2.5">
+              <p className="font-bold text-sm">Midnight Delivery</p>
+              <p className="text-[11px] text-slate-500">11:30 PM - 12:30 AM • Cutoff 8 PM</p>
+            </div>
+          </div>
+
+          {/* 3. Fixed Time Slot */}
+          <div 
+            onClick={() => {
+              if (!['morning', 'afternoon', 'late_afternoon', 'evening'].includes(selectedSlot || '')) {
+                onSelectSlot('morning');
+              }
+            }}
+            className={cn(
+              "p-3.5 rounded-2xl border cursor-pointer transition-all duration-200 shadow-sm flex flex-col justify-between select-none",
+              ['morning', 'afternoon', 'late_afternoon', 'evening'].includes(selectedSlot || '')
+                ? "bg-gradient-to-br from-amber-50 to-orange-50 border-amber-500 ring-2 ring-amber-500/20 text-amber-950 font-bold scale-[1.01]" 
+                : "bg-white border-slate-200 hover:border-slate-300 text-slate-800"
+            )}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xl">⏰</span>
+              <span className="text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300">
+                +{formatPrice(convertPrice(valSettings?.fixedTimeCharge ?? 150))}
+              </span>
+            </div>
+            <div className="mt-2.5">
+              <p className="font-bold text-sm">Fixed Time Slot</p>
+              <p className="text-[11px] text-slate-500">Pick Specific 3-Hour Slot</p>
+            </div>
+          </div>
         </div>
 
         {isMobile && date && isValid(date) && (
@@ -881,16 +973,16 @@ const TimeSlotSelector = ({
           return (
             <div className="space-y-2">
               {isToday && activeTimeSlots.length > 1 && (
-                <p className="text-sm text-amber-500">
+                <p className="text-xs text-amber-600 font-medium">
                   Notice required: Morning (5+ hrs), Midnight (2+ hrs), Others (30+ min). Current time: {now.getHours()}:{now.getMinutes().toString().padStart(2, '0')}
                 </p>
               )}
               {holiday && (
-                <div className="flex items-center gap-2 p-2 bg-red-50 border border-red-200 rounded-md">
+                <div className="flex items-center gap-2 p-2.5 bg-red-50 border border-red-200 rounded-xl">
                   <Info className="h-4 w-4 text-red-500" />
                   <div>
-                    <p className="text-sm font-medium text-red-700">{holiday.name}</p>
-                    <p className="text-xs text-red-600">{holiday.reason}</p>
+                    <p className="text-xs font-bold text-red-700">{holiday.name}</p>
+                    <p className="text-[11px] text-red-600">{holiday.reason}</p>
                   </div>
                 </div>
               )}
@@ -898,55 +990,126 @@ const TimeSlotSelector = ({
           );
         })()}
         
-        <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4">
-          {activeTimeSlots.map((slot) => {
-            const available = isSlotAvailable(slot);
-            const unavailableReason = !available ? getUnavailableReason(slot) : null;
-            
-            return (
-            <Card 
-              key={slot.id}
-              className={cn(
-                  "cursor-pointer transition-all hover:border-primary relative",
-                selectedSlot === slot.id && "border-primary ring-1 ring-primary",
-                  !available && "opacity-60 cursor-not-allowed"
-              )}
-                onClick={() => available && onSelectSlot(slot.id)}
-            >
-              <CardContent className="p-4">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <div className="font-medium">{slot.label}</div>
-                    <div className="text-sm text-muted-foreground">{slot.time}</div>
-                    {slot.price && (
-                      <div className="text-sm text-primary font-medium mt-1">
-                          +{formatPrice(convertPrice(slot.price))}
-                        </div>
-                      )}
-                      {unavailableReason && (
-                        <div className="text-xs text-red-500 mt-1">
-                          {unavailableReason}
-                      </div>
+        {/* Specific Time Window Slots (For Fixed Time or Standard Slots) */}
+        {selectedSlot !== 'midnight' && selectedSlot !== 'same_day' && (
+          <div className="space-y-2 pt-1">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Select Preferred Time Window</p>
+            <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4">
+              {activeTimeSlots.map((slot) => {
+                const available = isSlotAvailable(slot);
+                const unavailableReason = !available ? getUnavailableReason(slot) : null;
+                
+                return (
+                  <Card 
+                    key={slot.id}
+                    className={cn(
+                      "cursor-pointer transition-all hover:border-amber-400 relative rounded-2xl",
+                      selectedSlot === slot.id && "border-amber-500 ring-2 ring-amber-500/20 bg-amber-50/50 font-semibold",
+                      !available && "opacity-60 cursor-not-allowed"
                     )}
-                  </div>
-                  <Checkbox 
-                    checked={selectedSlot === slot.id} 
-                      disabled={!available}
-                    className="mt-1"
-                      onClick={(e) => {
-                        // Prevent the click from reaching the card
-                        e.stopPropagation();
-                        if (available) onSelectSlot(slot.id);
-                      }}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-            );
-          })}
-        </div>
-        
+                    onClick={() => available && onSelectSlot(slot.id)}
+                  >
+                    <CardContent className="p-3.5">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="font-medium text-sm text-slate-900">{slot.label}</div>
+                          <div className="text-xs text-muted-foreground">{slot.time}</div>
+                          <div className="text-xs text-amber-600 font-bold mt-1">
+                            +{formatPrice(convertPrice(valSettings?.fixedTimeCharge ?? 150))}
+                          </div>
+                          {unavailableReason && (
+                            <div className="text-xs text-red-500 mt-1">
+                              {unavailableReason}
+                            </div>
+                          )}
+                        </div>
+                        <Checkbox 
+                          checked={selectedSlot === slot.id} 
+                          disabled={!available}
+                          className="mt-1"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (available) onSelectSlot(slot.id);
+                          }}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
+        {/* Special Delivery Upgrades Toggles (Surprise & Anonymous) */}
+        {(onToggleSurpriseDelivery || onToggleAnonymousGift) && (
+          <div className="mt-4 pt-4 border-t border-slate-200 space-y-2.5">
+            <p className="text-xs font-extrabold uppercase tracking-wider text-rose-800 flex items-center gap-1.5">
+              <span>✨</span> Valentine Delivery Upgrades
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {onToggleSurpriseDelivery && (
+                <label 
+                  className={cn(
+                    "p-3 rounded-2xl border cursor-pointer flex items-center justify-between transition-all duration-200 shadow-sm select-none",
+                    surpriseDelivery 
+                      ? "bg-rose-50 border-rose-400 ring-2 ring-rose-400/20 text-rose-950 font-bold" 
+                      : "bg-white border-slate-200 hover:bg-slate-50 text-slate-700"
+                  )}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">🎁</span>
+                    <div>
+                      <p className="text-xs font-bold text-slate-900">Surprise Delivery</p>
+                      <p className="text-[10px] text-slate-500">Discreet delivery service</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300">
+                      +{formatPrice(convertPrice(valSettings?.surpriseCharge ?? 100))}
+                    </span>
+                    <input
+                      type="checkbox"
+                      checked={!!surpriseDelivery}
+                      onChange={(e) => onToggleSurpriseDelivery(e.target.checked)}
+                      className="h-4 w-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500 cursor-pointer"
+                    />
+                  </div>
+                </label>
+              )}
+
+              {onToggleAnonymousGift && (
+                <label 
+                  className={cn(
+                    "p-3 rounded-2xl border cursor-pointer flex items-center justify-between transition-all duration-200 shadow-sm select-none",
+                    anonymousGift 
+                      ? "bg-purple-50 border-purple-400 ring-2 ring-purple-400/20 text-purple-950 font-bold" 
+                      : "bg-white border-slate-200 hover:bg-slate-50 text-slate-700"
+                  )}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">🕵️</span>
+                    <div>
+                      <p className="text-xs font-bold text-slate-900">Anonymous Sender</p>
+                      <p className="text-[10px] text-slate-500">Hide sender info on box</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">
+                      FREE
+                    </span>
+                    <input
+                      type="checkbox"
+                      checked={!!anonymousGift}
+                      onChange={(e) => onToggleAnonymousGift(e.target.checked)}
+                      className="h-4 w-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
+                    />
+                  </div>
+                </label>
+              )}
+            </div>
+          </div>
+        )}
         
         {!date && (
           <p className="text-sm text-amber-500 font-medium">

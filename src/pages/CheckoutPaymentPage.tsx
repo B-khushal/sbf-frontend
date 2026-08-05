@@ -362,6 +362,18 @@ const CheckoutPaymentPage = () => {
         currency: orderCurrency
       });
 
+      const isGift = shippingInfo.deliveryOption === 'gift';
+      const fName = isGift ? (shippingInfo.receiverFirstName || shippingInfo.firstName || 'Customer') : (shippingInfo.firstName || 'Customer');
+      const lName = isGift ? (shippingInfo.receiverLastName || shippingInfo.lastName || '') : (shippingInfo.lastName || '');
+      const fullCustName = `${fName} ${lName}`.trim();
+      const custAddr = isGift ? (shippingInfo.receiverAddress || shippingInfo.address || '') : (shippingInfo.address || '');
+      const custApt = isGift ? (shippingInfo.receiverApartment || shippingInfo.apartment || '') : (shippingInfo.apartment || '');
+      const custCity = isGift ? (shippingInfo.receiverCity || shippingInfo.city || 'Hyderabad') : (shippingInfo.city || 'Hyderabad');
+      const custState = isGift ? (shippingInfo.receiverState || shippingInfo.state || 'Telangana') : (shippingInfo.state || 'Telangana');
+      const custZip = isGift ? (shippingInfo.receiverZipCode || shippingInfo.zipCode || '') : (shippingInfo.zipCode || '');
+      const custPhone = isGift ? (shippingInfo.receiverPhone || shippingInfo.phone || '') : (shippingInfo.phone || '');
+      const custEmail = isGift ? (shippingInfo.receiverEmail || shippingInfo.email || '') : (shippingInfo.email || '');
+
       // Prepare order data in correct backend format
       const orderData = {
         items: items.map(item => ({
@@ -378,29 +390,34 @@ const CheckoutPaymentPage = () => {
           selectedVariant: item.selectedVariant || null
         })),
         shippingDetails: {
-           fullName: `${shippingInfo.firstName} ${shippingInfo.lastName}`.trim(),
-           email: shippingInfo.email,
-           phone: shippingInfo.phone,
-           address: shippingInfo.address,
-           apartment: shippingInfo.apartment || '',
-           city: shippingInfo.city,
-           state: shippingInfo.state,
-           zipCode: shippingInfo.zipCode,
+           fullName: fullCustName,
+           firstName: fName,
+           lastName: lName,
+           email: custEmail,
+           phone: custPhone,
+           address: custAddr,
+           apartment: custApt,
+           city: custCity,
+           state: custState,
+           zipCode: custZip,
            notes: shippingInfo.deliverySpecialInstructions || shippingInfo.notes || '',
            cardMessage: shippingInfo.cardMessage || shippingInfo.giftMessage || '',
            deliverySpecialInstructions: shippingInfo.deliverySpecialInstructions || shippingInfo.notes || '',
            deliveryDate: shippingInfo.selectedDate ? new Date(shippingInfo.selectedDate) : new Date(),
-           timeSlot: shippingInfo.timeSlot,
+           timeSlot: shippingInfo.selectedTimeSlot || shippingInfo.timeSlot || '',
+           deliveryType: shippingInfo.deliveryType || (shippingInfo.selectedTimeSlot === 'midnight' ? 'Midnight Delivery' : 'Standard Delivery'),
+           surpriseDelivery: !!shippingInfo.surpriseDelivery,
+           anonymousGift: !!shippingInfo.anonymousGift,
            
            // Mappls location details
            latitude: shippingInfo.latitude,
            longitude: shippingInfo.longitude,
-           formattedAddress: shippingInfo.formattedAddress,
+           formattedAddress: shippingInfo.formattedAddress || custAddr,
            country: shippingInfo.country || 'India',
-           pincode: shippingInfo.pincode,
-           landmark: shippingInfo.landmark,
-           houseNo: shippingInfo.houseNo,
-           floor: shippingInfo.floor,
+           pincode: shippingInfo.pincode || custZip,
+           landmark: shippingInfo.landmark || custApt,
+           houseNo: shippingInfo.houseNo || '',
+           floor: shippingInfo.floor || '',
            deliveryInstructions: shippingInfo.deliveryInstructions,
          },
          totalAmount: orderTotal,       // ✅ Correct field name for backend

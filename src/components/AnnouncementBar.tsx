@@ -9,14 +9,11 @@ export const AnnouncementBar: React.FC = () => {
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
-    const isDismissed = localStorage.getItem('sbf_announcement_dismissed');
-    if (isDismissed === 'true') {
-      setIsVisible(false);
-    }
+    // Clear any legacy permanent dismissal flag so page refresh always shows top banner
+    localStorage.removeItem('sbf_announcement_dismissed');
   }, []);
 
   const handleDismiss = () => {
-    localStorage.setItem('sbf_announcement_dismissed', 'true');
     setIsVisible(false);
     // Dispatch a custom event to notify parent components of layout change
     window.dispatchEvent(new Event('announcementDismissed'));
@@ -35,7 +32,7 @@ export const AnnouncementBar: React.FC = () => {
 
   const { activeCampaigns } = useSeasonalCampaign();
   const activeAnnounceCampaign = activeCampaigns.find(
-    c => c.enabled && c.navigation?.showInAnnouncementBar && c.slug !== 'valentine' && c.slug !== 'valentines-week'
+    c => (c.enabled || c.isActive) && (c.navigation?.showInAnnouncementBar !== false) && c.slug !== 'valentine' && c.slug !== 'valentines-week'
   );
 
   if (isValentineEnabled) {

@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 
 interface ImageUploadProps {
   currentImage?: string;
-  onImageUpload: (file: File) => Promise<void>;
+  onImageUpload: (file: File) => Promise<void> | void;
   isUploading?: boolean;
   className?: string;
   aspectRatio?: 'square' | 'landscape' | 'portrait';

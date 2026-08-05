@@ -219,10 +219,18 @@ const CATEGORY_GROUPS: Record<string, string[]> = Object.fromEntries(
   ])
 );
 
-export const normalizeCategoryKey = (value?: string | null): string => {
+export const normalizeCategoryKey = (value?: any): string => {
   if (!value) return "";
+  let strVal = "";
+  if (typeof value === 'string') {
+    strVal = value;
+  } else if (typeof value === 'object') {
+    strVal = value.name || value.title || value.slug || value.value || String(value);
+  } else {
+    strVal = String(value);
+  }
 
-  return value
+  return strVal
     .trim()
     .toLowerCase()
     .replace(/&/g, " and ")

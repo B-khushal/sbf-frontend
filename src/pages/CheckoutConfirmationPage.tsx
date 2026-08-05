@@ -127,31 +127,35 @@ const CheckoutConfirmationPage = () => {
   };
 
   // Helper function to format price with specific currency
-  const formatPriceWithCurrency = (amount: number, targetCurrency: string) => {
+  const formatPriceWithCurrency = (amount: number | string | undefined | null, targetCurrency: string) => {
+    const num = Number(amount);
+    const safeAmount = isNaN(num) ? 0 : num;
     return new Intl.NumberFormat(targetCurrency === 'INR' ? 'en-IN' : 'en-US', {
       style: 'currency',
-      currency: targetCurrency,
+      currency: targetCurrency || 'INR',
       minimumFractionDigits: 2,
-    }).format(amount);
+    }).format(safeAmount);
   };
 
   // Helper function to handle currency display based on order's original currency
-  const displayPrice = (amount: number, orderCurrency?: string, orderRate?: number) => {
+  const displayPrice = (amount: number | string | undefined | null, orderCurrency?: string, orderRate?: number) => {
+    const num = Number(amount);
+    const safeAmount = isNaN(num) ? 0 : num;
     if (orderCurrency && orderRate && orderCurrency !== currency) {
       if (orderCurrency === 'INR') {
-        const convertedAmount = convertPrice(amount);
+        const convertedAmount = convertPrice(safeAmount);
         return formatPriceWithCurrency(convertedAmount, currency);
       } else {
-        const amountInINR = amount / orderRate;
+        const amountInINR = safeAmount / orderRate;
         const convertedAmount = convertPrice(amountInINR);
         return formatPriceWithCurrency(convertedAmount, currency);
       }
     } else if (orderCurrency && orderCurrency === currency) {
-      return formatPriceWithCurrency(amount, orderCurrency);
+      return formatPriceWithCurrency(safeAmount, orderCurrency);
     } else if (orderCurrency) {
-      return formatPriceWithCurrency(amount, orderCurrency);
+      return formatPriceWithCurrency(safeAmount, orderCurrency);
     } else {
-      const convertedAmount = convertPrice(amount);
+      const convertedAmount = convertPrice(safeAmount);
       return formatPriceWithCurrency(convertedAmount, currency);
     }
   };
@@ -224,39 +228,77 @@ const CheckoutConfirmationPage = () => {
             });
 
             // --- Normalization logic ---
-            // If backend uses shippingDetails, map to shipping
-            if (parsedOrder.shippingDetails && !parsedOrder.shipping) {
-              parsedOrder.shipping = parsedOrder.shippingDetails;
+            const rawShip = parsedOrder.shippingDetails || parsedOrder.shippingAddress || parsedOrder.shipping || {};
+            const fullName = rawShip.fullName || parsedOrder.customerName || `${parsedOrder.firstName || ''} ${parsedOrder.lastName || ''}`.trim() || 'Valued Customer';
+            const nameParts = fullName.split(' ');
+            const fName = rawShip.firstName || parsedOrder.firstName || nameParts[0] || 'Customer';
+            const lName = rawShip.lastName || parsedOrder.lastName || nameParts.slice(1).join(' ') || '';
+
+            parsedOrder.shipping = {
+              ...rawShip,
+              fullName,
+              firstName: fName,
+              lastName: lName,
+              email: rawShip.email || parsedOrder.customerEmail || parsedOrder.email || 'N/A',
+              phone: rawShip.phone || parsedOrder.customerPhone || parsedOrder.phone || 'N/A',
+              address: rawShip.address || rawShip.formattedAddress || rawShip.street || 'N/A',
+              apartment: rawShip.apartment || rawShip.landmark || '',
+              city: rawShip.city || 'Hyderabad',
+              state: rawShip.state || 'Telangana',
+              zipCode: rawShip.zipCode || rawShip.pincode || '',
+              timeSlot: rawShip.timeSlot || parsedOrder.deliverySlot || parsedOrder.timeSlot || '',
+              cardMessage: rawShip.cardMessage || parsedOrder.cardMessage || ''
+            };
+
+            if (!parsedOrder.shippingDetails) {
+              parsedOrder.shippingDetails = parsedOrder.shipping;
             }
-            // If backend uses items with product subfield, flatten for display
-            if (parsedOrder.items && parsedOrder.items.length > 0 && parsedOrder.items[0].product) {
-              parsedOrder.items = parsedOrder.items.map((item: any) => ({
-                id: item.product?._id || item.product?.id || item.productId || item._id || '',
-                title: item.title || item.product?.title || item.product?.name || '',
-                image: item.image || (item.images && item.images[0]) || (item.product?.images && item.product.images[0]) || '',
-                images: item.images || item.product?.images || [],
-                price: item.finalPrice || item.price || (item.product?.price ?? 0),
-                quantity: item.quantity || 1,
-                customizations: item.customizations || null,
-                selectedVariant: item.selectedVariant || null,
-                // fallback for legacy
-                product: item.product
-              }));
+
+            // Normalize items array
+            if (Array.isArray(parsedOrder.items)) {
+              parsedOrder.items = parsedOrder.items.map((item: any) => {
+                const itemProduct = typeof item.product === 'object' ? item.product : null;
+                const rawPrice = item.price ?? item.finalPrice ?? item.unitPrice ?? (itemProduct?.price ?? 0);
+                const priceNum = Number(rawPrice);
+                const safePrice = isNaN(priceNum) ? 0 : priceNum;
+                const qtyNum = Number(item.quantity ?? item.qty ?? 1);
+                const safeQty = isNaN(qtyNum) || qtyNum <= 0 ? 1 : qtyNum;
+
+                return {
+                  ...item,
+                  id: itemProduct?._id || itemProduct?.id || item.productId || item.product || item._id || item.id || '',
+                  title: item.title || item.productName || item.name || itemProduct?.title || itemProduct?.name || 'Product Item',
+                  image: item.image || (item.images && item.images[0]) || (itemProduct?.images && itemProduct.images[0]) || '',
+                  images: item.images || itemProduct?.images || [],
+                  price: safePrice,
+                  quantity: safeQty,
+                  customizations: item.customizations || null,
+                  selectedVariant: item.selectedVariant || null,
+                  product: itemProduct || item.product
+                };
+              });
             }
-            // Fallback for subtotal/total
-            if (typeof parsedOrder.subtotal === 'undefined') {
+
+            // Fallback for subtotal/total/deliveryFee
+            const rawSubtotal = Number(parsedOrder.subtotal ?? parsedOrder.totalAmount);
+            if (isNaN(rawSubtotal) || rawSubtotal === 0) {
               parsedOrder.subtotal = Array.isArray(parsedOrder.items)
-                ? parsedOrder.items.reduce((sum: number, item: any) => {
-                  const discountedPrice = item.discount && item.discount > 0
-                    ? item.price - (item.price * item.discount / 100)
-                    : item.price;
-                  return sum + ((discountedPrice || 0) * (item.quantity || 1));
-                }, 0)
+                ? parsedOrder.items.reduce((sum: number, item: any) => sum + (Number(item.price) || 0) * (Number(item.quantity) || 1), 0)
                 : 0;
+            } else {
+              parsedOrder.subtotal = rawSubtotal;
             }
-            if (typeof parsedOrder.total === 'undefined') {
-              parsedOrder.total = parsedOrder.subtotal + (parsedOrder.deliveryFee || 0);
+
+            const delFee = Number(parsedOrder.deliveryFee ?? parsedOrder.shippingFee ?? parsedOrder.deliveryCharge ?? 0);
+            parsedOrder.deliveryFee = isNaN(delFee) ? 0 : delFee;
+
+            const rawTotal = Number(parsedOrder.total ?? parsedOrder.totalAmount ?? parsedOrder.finalTotal);
+            if (isNaN(rawTotal) || rawTotal === 0) {
+              parsedOrder.total = parsedOrder.subtotal + parsedOrder.deliveryFee;
+            } else {
+              parsedOrder.total = rawTotal;
             }
+
             // Fallback for payment
             if (!parsedOrder.payment && parsedOrder.paymentDetails) {
               parsedOrder.payment = parsedOrder.paymentDetails;
@@ -738,11 +780,23 @@ const CheckoutConfirmationPage = () => {
                       </div>
                       <div className="text-sm text-gray-600">
                         <p>{getTimeSlot(order.shipping?.timeSlot || '').time}</p>
-                        {order.shipping?.timeSlot === 'midnight' && (
-                          <Badge variant="secondary" className="mt-1">
-                            Midnight Delivery
-                          </Badge>
-                        )}
+                        <div className="flex flex-wrap gap-1.5 mt-1.5">
+                          {(order.shipping?.timeSlot === 'midnight' || order.shipping?.deliveryType?.toLowerCase().includes('midnight')) && (
+                            <Badge variant="secondary" className="bg-purple-100 text-purple-800 border-purple-200">
+                              🌙 Midnight Delivery
+                            </Badge>
+                          )}
+                          {(order.shipping?.surpriseDelivery || order.giftDetails?.surpriseDelivery) && (
+                            <Badge className="bg-rose-500 text-white font-bold border-0">
+                              🎁 Surprise Delivery
+                            </Badge>
+                          )}
+                          {(order.shipping?.anonymousGift || order.giftDetails?.anonymousGift) && (
+                            <Badge className="bg-slate-800 text-white font-bold border-0">
+                              🕵️ Anonymous Gift
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                     </div>
 

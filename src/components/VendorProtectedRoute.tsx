@@ -17,7 +17,7 @@ const VendorProtectedRoute: React.FC = () => {
     return <Navigate to="/login" replace />;
   }
 
-  if (user.role !== 'vendor') {
+  if (user.role !== 'vendor' && !user.vendorStatus && user.role !== 'admin' && user.role !== 'platform_admin') {
     return <Navigate to="/" replace />;
   }
 

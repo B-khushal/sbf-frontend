@@ -213,38 +213,42 @@ const OrderDetailsPage: React.FC = () => {
   const orderRef = useRef<HTMLDivElement>(null);
 
   // Helper function to format price with specific currency
-  const formatPriceWithCurrency = (amount: number, targetCurrency: string) => {
+  const formatPriceWithCurrency = (amount: number | string | undefined | null, targetCurrency: string) => {
+    const num = Number(amount);
+    const safeAmount = isNaN(num) ? 0 : num;
     return new Intl.NumberFormat(targetCurrency === 'INR' ? 'en-IN' : 'en-US', {
       style: 'currency',
-      currency: targetCurrency,
+      currency: targetCurrency || 'INR',
       minimumFractionDigits: 2,
-    }).format(amount);
+    }).format(safeAmount);
   };
 
   // Helper function to handle currency display based on order's original currency
-  const displayOrderPrice = (amount: number, orderCurrency?: string, orderRate?: number) => {
-    let finalAmount = amount;
+  const displayOrderPrice = (amount: number | string | undefined | null, orderCurrency?: string, orderRate?: number) => {
+    const num = Number(amount);
+    const safeAmount = isNaN(num) ? 0 : num;
+    let finalAmount = safeAmount;
     
     if (orderCurrency && orderCurrency !== currency) {
       if (orderCurrency === 'INR' && currency !== 'INR') {
-        finalAmount = convertPrice(amount);
+        finalAmount = convertPrice(safeAmount);
       } else if (orderCurrency !== 'INR' && currency === 'INR') {
         if (orderRate) {
-          finalAmount = amount / orderRate;
+          finalAmount = safeAmount / orderRate;
         } else {
-          finalAmount = amount / 0.01199; // Fallback
+          finalAmount = safeAmount / 0.01199; // Fallback
         }
       } else if (orderCurrency !== 'INR' && currency !== 'INR') {
         if (orderRate) {
-          const amountInINR = amount / orderRate;
+          const amountInINR = safeAmount / orderRate;
           finalAmount = convertPrice(amountInINR);
         }
       }
     } else if (!orderCurrency) {
-      finalAmount = convertPrice(amount);
+      finalAmount = convertPrice(safeAmount);
     }
     
-    return formatPriceWithCurrency(finalAmount, currency);
+    return formatPriceWithCurrency(isNaN(finalAmount) ? 0 : finalAmount, currency);
   };
 
   const fetchAssignment = async (orderNumber: string) => {
@@ -311,9 +315,35 @@ const OrderDetailsPage: React.FC = () => {
       setLoading(true);
       try {
         const response = await api.get(`/orders/${orderId}`);
-        setOrder(response.data);
-        if (response.data && response.data.orderNumber) {
-          fetchAssignment(response.data.orderNumber);
+        const data = response.data;
+        if (data) {
+          const rawShip = data.shippingDetails || data.shippingAddress || {};
+          const fullName = (rawShip.fullName && rawShip.fullName !== 'Customer') 
+            ? rawShip.fullName 
+            : (data.customerName && data.customerName !== 'Customer' ? data.customerName : (data.user?.name || 'Customer'));
+          const nameParts = fullName.split(' ');
+          const fName = rawShip.firstName || nameParts[0] || 'Customer';
+          const lName = rawShip.lastName || nameParts.slice(1).join(' ') || '';
+
+          data.shippingDetails = {
+            ...rawShip,
+            fullName,
+            firstName: fName,
+            lastName: lName,
+            email: (rawShip.email && rawShip.email !== 'N/A') ? rawShip.email : (data.customerEmail && data.customerEmail !== 'N/A' ? data.customerEmail : (data.user?.email || 'N/A')),
+            phone: (rawShip.phone && rawShip.phone !== 'N/A') ? rawShip.phone : (data.customerPhone && data.customerPhone !== 'N/A' ? data.customerPhone : (data.user?.phone || 'N/A')),
+            address: rawShip.address || rawShip.formattedAddress || 'N/A',
+            apartment: rawShip.apartment || rawShip.landmark || '',
+            city: rawShip.city || 'Hyderabad',
+            state: rawShip.state || 'Telangana',
+            zipCode: rawShip.zipCode || rawShip.pincode || '',
+            timeSlot: rawShip.timeSlot || data.deliverySlot || data.timeSlot || ''
+          };
+
+          setOrder(data);
+          if (data.orderNumber) {
+            fetchAssignment(data.orderNumber);
+          }
         }
       } catch (error) {
         setOrder(null);
@@ -701,9 +731,9 @@ const OrderDetailsPage: React.FC = () => {
                         </div>
                         <div className="text-right">
                           <div className="text-xs.5 font-extrabold text-slate-900 dark:text-white">
-                            {displayOrderPrice(item.finalPrice, order.currency, order.currencyRate)}
+                            {displayOrderPrice(item.finalPrice || item.price || item.unitPrice || item.product?.price || 0, order.currency, order.currencyRate)}
                           </div>
-                          {item.finalPrice !== item.price && (
+                          {(item.finalPrice && item.price && item.finalPrice !== item.price) && (
                             <div className="text-[10px] text-slate-400 font-semibold line-through">
                               {displayOrderPrice(item.price, order.currency, order.currencyRate)}
                             </div>
@@ -1126,7 +1156,7 @@ const OrderDetailsPage: React.FC = () => {
                 <div className="flex justify-between">
                   <span>Items Subtotal</span>
                   <span className="text-slate-900 dark:text-white">
-                    {displayOrderPrice(order.subtotal || order.items.reduce((sum: number, item: any) => sum + (item.finalPrice || item.price) * item.quantity, 0), order.currency, order.currencyRate)}
+                    {displayOrderPrice(order.subtotal || order.items.reduce((sum: number, item: any) => sum + (Number(item.finalPrice || item.price || item.unitPrice || item.product?.price) || 0) * (Number(item.quantity) || 1), 0), order.currency, order.currencyRate)}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
@@ -1137,7 +1167,7 @@ const OrderDetailsPage: React.FC = () => {
                         FREE (waived)
                       </span>
                     ) : (
-                      displayOrderPrice(order.deliveryCharge ?? 150, order.currency, order.currencyRate)
+                      displayOrderPrice(order.deliveryCharge ?? order.shippingFee ?? 0, order.currency, order.currencyRate)
                     )}
                   </span>
                 </div>
@@ -1152,12 +1182,12 @@ const OrderDetailsPage: React.FC = () => {
                 <div className="flex justify-between border-t border-slate-50 dark:border-slate-850/40 pt-2.5 text-sm">
                   <span className="font-bold text-slate-800 dark:text-slate-200">Grand Total</span>
                   <span className="font-extrabold text-slate-900 dark:text-white">
-                    {displayOrderPrice(order.totalAmount, order.currency, order.currencyRate)}
+                    {displayOrderPrice(order.totalAmount || order.total || ((order.subtotal || order.items.reduce((sum: number, item: any) => sum + (Number(item.finalPrice || item.price || item.unitPrice || item.product?.price) || 0) * (Number(item.quantity) || 1), 0)) + (order.deliveryCharge || order.shippingFee || 0) - (order.discount || 0)), order.currency, order.currencyRate)}
                   </span>
                 </div>
                 {order.currency && order.currency !== currency && (
                   <div className="text-[10px] text-slate-400 font-semibold text-right italic pt-0.5">
-                    Original placement amount: {formatPriceWithCurrency(order.totalAmount, order.currency)}
+                    Original placement amount: {formatPriceWithCurrency(order.totalAmount || order.total || 0, order.currency)}
                   </div>
                 )}
               </div>

@@ -354,10 +354,10 @@ const Analytics: React.FC = () => {
         <h3>1. Key Performance Indicators</h3>
         <table>
           <tr><th>Metric</th><th>Calculated Value</th></tr>
-          <tr><td>Total Lifetime Revenue</td><td>₹${analyticsData.revenue.total.toFixed(2)}</td></tr>
-          <tr><td>Gross Sales</td><td>₹${analyticsData.revenue.grossSales.toFixed(2)}</td></tr>
-          <tr><td>Net Sales (Period)</td><td>₹${analyticsData.revenue.netRevenue.toFixed(2)}</td></tr>
-          <tr><td>Average Order Value (AOV)</td><td>₹${analyticsData.revenue.averageOrderValue.toFixed(2)}</td></tr>
+          <tr><td>Total Lifetime Revenue</td><td>₹${(Number(analyticsData.revenue.total) || 0).toFixed(2)}</td></tr>
+          <tr><td>Gross Sales</td><td>₹${(Number(analyticsData.revenue.grossSales) || 0).toFixed(2)}</td></tr>
+          <tr><td>Net Sales (Period)</td><td>₹${(Number(analyticsData.revenue.netRevenue) || 0).toFixed(2)}</td></tr>
+          <tr><td>Average Order Value (AOV)</td><td>₹${(Number(analyticsData.revenue.averageOrderValue) || 0).toFixed(2)}</td></tr>
           <tr><td>Total Orders (Period)</td><td>${analyticsData.sales.total}</td></tr>
           <tr><td>Order Success Rate</td><td>${analyticsData.sales.orderSuccessRate}%</td></tr>
         </table>
@@ -368,7 +368,7 @@ const Analytics: React.FC = () => {
     `;
 
     analyticsData.products.topSelling.forEach((p, idx) => {
-      excelHTML += `<tr><td>${idx+1}</td><td>${p.name}</td><td>${p.category}</td><td>${p.sold}</td><td>₹${p.revenue.toFixed(2)}</td></tr>`;
+      excelHTML += `<tr><td>${idx+1}</td><td>${p.name}</td><td>${p.category}</td><td>${p.sold}</td><td>₹${(Number(p.revenue) || 0).toFixed(2)}</td></tr>`;
     });
 
     excelHTML += `
@@ -379,7 +379,7 @@ const Analytics: React.FC = () => {
     `;
 
     analyticsData.sales.paymentBreakdown.forEach(p => {
-      excelHTML += `<tr><td>${p.method}</td><td>${p.transactions}</td><td>₹${p.revenue.toFixed(2)}</td><td>${p.successRate}%</td><td>${p.failureRate}%</td></tr>`;
+      excelHTML += `<tr><td>${p.method}</td><td>${p.transactions}</td><td>₹${(Number(p.revenue) || 0).toFixed(2)}</td><td>${p.successRate}%</td><td>${p.failureRate}%</td></tr>`;
     });
 
     excelHTML += `
@@ -582,12 +582,12 @@ const Analytics: React.FC = () => {
               {analyticsData.revenue.growth >= 0 ? (
                 <span className="flex items-center text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md font-bold">
                   <TrendingUp className="h-3 w-3 mr-1" />
-                  +{analyticsData.revenue.growth.toFixed(1)}%
+                  +{(Number(analyticsData.revenue.growth) || 0).toFixed(1)}%
                 </span>
               ) : (
                 <span className="flex items-center text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded-md font-bold">
                   <TrendingDown className="h-3 w-3 mr-1" />
-                  {analyticsData.revenue.growth.toFixed(1)}%
+                  {(Number(analyticsData.revenue.growth) || 0).toFixed(1)}%
                 </span>
               )}
               <span className="text-slate-400 ml-1.5 text-[10px]">vs previous filter</span>
@@ -610,12 +610,12 @@ const Analytics: React.FC = () => {
               {analyticsData.sales.growth >= 0 ? (
                 <span className="flex items-center text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md font-bold">
                   <TrendingUp className="h-3 w-3 mr-1" />
-                  +{analyticsData.sales.growth.toFixed(1)}%
+                  +{(Number(analyticsData.sales.growth) || 0).toFixed(1)}%
                 </span>
               ) : (
                 <span className="flex items-center text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded-md font-bold">
                   <TrendingDown className="h-3 w-3 mr-1" />
-                  {analyticsData.sales.growth.toFixed(1)}%
+                  {(Number(analyticsData.sales.growth) || 0).toFixed(1)}%
                 </span>
               )}
               <span className="text-slate-400 ml-1.5 text-[10px]">vs previous filter</span>
@@ -651,7 +651,7 @@ const Analytics: React.FC = () => {
             </div>
           </CardHeader>
           <CardContent className="pb-4 px-4">
-            <div className="text-2xl sm:text-3xl font-extrabold text-slate-800 tracking-tight">{analyticsData.users.repeatPurchaseRate.toFixed(1)}%</div>
+            <div className="text-2xl sm:text-3xl font-extrabold text-slate-800 tracking-tight">{(Number(analyticsData.users.repeatPurchaseRate) || 0).toFixed(1)}%</div>
             <div className="mt-1 text-[11px] text-slate-400 flex items-center gap-1 truncate">
               <Percent className="h-3 w-3 text-pink-500" />
               <span>CLV average: <strong>{formatPrice(analyticsData.users.clv)}</strong></span>
@@ -862,13 +862,13 @@ const Analytics: React.FC = () => {
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-slate-500">Order Success Rate:</span>
                   <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-50 font-bold">
-                    {analyticsData.sales.orderSuccessRate.toFixed(1)}%
+                    {(Number(analyticsData.sales.orderSuccessRate) || 0).toFixed(1)}%
                   </Badge>
                 </div>
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-slate-500">Cancellation Rate:</span>
                   <Badge className="bg-rose-50 text-rose-700 border border-rose-100 hover:bg-rose-50 font-bold">
-                    {analyticsData.sales.cancellationRate.toFixed(1)}%
+                    {(Number(analyticsData.sales.cancellationRate) || 0).toFixed(1)}%
                   </Badge>
                 </div>
                 <div className="flex justify-between items-center text-xs">
@@ -937,11 +937,11 @@ const Analytics: React.FC = () => {
                         <span className="text-slate-400 text-[10px]">Prev: {formatPrice(comparison.previous)}</span>
                         {comparison.growth >= 0 ? (
                           <span className="text-emerald-600 font-bold flex items-center bg-emerald-50 px-1 py-0.5 rounded">
-                            <ArrowUpRight className="h-3 w-3 mr-0.5" /> +{comparison.growth.toFixed(1)}%
+                            <ArrowUpRight className="h-3 w-3 mr-0.5" /> +{(Number(comparison.growth) || 0).toFixed(1)}%
                           </span>
                         ) : (
                           <span className="text-rose-600 font-bold flex items-center bg-rose-50 px-1 py-0.5 rounded">
-                            <ArrowDownRight className="h-3 w-3 mr-0.5" /> {comparison.growth.toFixed(1)}%
+                            <ArrowDownRight className="h-3 w-3 mr-0.5" /> {(Number(comparison.growth) || 0).toFixed(1)}%
                           </span>
                         )}
                       </div>
@@ -1187,7 +1187,7 @@ const Analytics: React.FC = () => {
                           <td className="p-3 font-mono text-slate-600">{p.views}</td>
                           <td className="p-3 font-mono text-slate-500">{wish}</td>
                           <td className="p-3 font-mono text-slate-500">{cart}</td>
-                          <td className="p-3 font-bold text-emerald-600">{p.conversion.toFixed(1)}%</td>
+                          <td className="p-3 font-bold text-emerald-600">{(Number(p.conversion) || 0).toFixed(1)}%</td>
                         </tr>
                       );
                     })}
@@ -1212,7 +1212,7 @@ const Analytics: React.FC = () => {
             <Card className="p-4 border bg-white shadow-sm flex flex-col justify-between">
               <div>
                 <span className="text-[10px] text-slate-400 font-bold uppercase">Purchase Frequency</span>
-                <h3 className="text-2xl font-extrabold text-slate-800 mt-1">{analyticsData.users.ordersPerCustomer.toFixed(2)}</h3>
+                <h3 className="text-2xl font-extrabold text-slate-800 mt-1">{(Number(analyticsData.users.ordersPerCustomer) || 0).toFixed(2)}</h3>
               </div>
               <p className="text-[10px] text-slate-400 mt-3">Average orders count per customer</p>
             </Card>
@@ -1228,7 +1228,7 @@ const Analytics: React.FC = () => {
             <Card className="p-4 border bg-white shadow-sm flex flex-col justify-between">
               <div>
                 <span className="text-[10px] text-slate-400 font-bold uppercase">Customer Retention Rate</span>
-                <h3 className="text-2xl font-extrabold text-slate-800 mt-1">{analyticsData.users.retention.toFixed(1)}%</h3>
+                <h3 className="text-2xl font-extrabold text-slate-800 mt-1">{(Number(analyticsData.users.retention) || 0).toFixed(1)}%</h3>
               </div>
               <p className="text-[10px] text-slate-400 mt-3">Repeat purchase rate metrics for filter</p>
             </Card>

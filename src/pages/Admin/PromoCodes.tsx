@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Power } from 'lucide-react';
 import { 
   getAllPromoCodes, 
   createPromoCode, 
@@ -15,6 +15,7 @@ import { uploadImage } from '@/services/uploadService';
 import { useToast } from '@/hooks/use-toast';
 import { ImageUpload } from '@/components/ui/ImageUpload';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const gradientOptions = [
   { name: 'Sunrise', value: 'linear-gradient(to right, #ff9966, #ff5e62)' },
@@ -29,7 +30,7 @@ const gradientOptions = [
   { name: 'Custom', value: '#ffffff' }
 ];
 
-const PromoCodesPage: React.FC = () => {
+export const PromoCodes: React.FC = () => {
   const [promoCodes, setPromoCodes] = useState<PromoCode[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -44,7 +45,8 @@ const PromoCodesPage: React.FC = () => {
     minimumOrderAmount: 0,
     validUntil: '',
     image: '',
-    background: '#ffffff'
+    background: '#ffffff',
+    isActive: true
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
@@ -80,7 +82,8 @@ const PromoCodesPage: React.FC = () => {
       minimumOrderAmount: 0,
       validUntil: '',
       image: '',
-      background: '#ffffff'
+      background: '#ffffff',
+      isActive: true
     });
     setSelectedFile(null);
   };
@@ -92,7 +95,6 @@ const PromoCodesPage: React.FC = () => {
     try {
       let imageUrl = '';
 
-      // Upload image if a new file is selected
       if (selectedFile) {
         const uploadFormData = new FormData();
         uploadFormData.append('image', selectedFile);
@@ -103,6 +105,7 @@ const PromoCodesPage: React.FC = () => {
       const promoCodeData = {
         ...formData,
         image: imageUrl,
+        isActive: formData.isActive !== false
       };
 
       const response = await createPromoCode(promoCodeData);
@@ -131,15 +134,21 @@ const PromoCodesPage: React.FC = () => {
 
   const handleEditPromoCode = (promoCode: PromoCode) => {
     setEditingPromoCode(promoCode);
+    const rawDate = promoCode.validUntil || (promoCode as any).endDate || (promoCode as any).validFrom;
+    const parsedDate = (rawDate && !isNaN(new Date(rawDate).getTime()))
+      ? new Date(rawDate).toISOString().split('T')[0]
+      : '';
+
     setFormData({
       code: promoCode.code,
       description: promoCode.description,
       discountType: promoCode.discountType,
       discountValue: promoCode.discountValue,
       minimumOrderAmount: promoCode.minimumOrderAmount || 0,
-      validUntil: new Date(promoCode.validUntil).toISOString().split('T')[0],
+      validUntil: parsedDate,
       image: (promoCode as any).image || '',
-      background: (promoCode as any).background || '#ffffff'
+      background: (promoCode as any).background || '#ffffff',
+      isActive: promoCode.isActive !== false
     });
     setSelectedFile(null);
     
@@ -156,7 +165,6 @@ const PromoCodesPage: React.FC = () => {
     try {
       let imageUrl = formData.image;
 
-      // Upload image if a new file is selected
       if (selectedFile) {
         const uploadFormData = new FormData();
         uploadFormData.append('image', selectedFile);
@@ -166,10 +174,11 @@ const PromoCodesPage: React.FC = () => {
 
       const promoCodeData = {
         ...formData,
-        image: imageUrl
+        image: imageUrl,
+        isActive: formData.isActive !== false
       };
 
-      const response = await updatePromoCode(editingPromoCode._id, promoCodeData);
+      const response = await updatePromoCode(editingPromoCode._id || (editingPromoCode as any).id, promoCodeData);
       
       if (response.success) {
         toast({
@@ -191,6 +200,26 @@ const PromoCodesPage: React.FC = () => {
       });
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleToggleActive = async (promoCode: PromoCode) => {
+    try {
+      const targetId = promoCode._id || (promoCode as any).id;
+      const newStatus = !promoCode.isActive;
+      await updatePromoCode(targetId, { isActive: newStatus });
+      toast({
+        title: "Success",
+        description: `Promo code "${promoCode.code}" is now ${newStatus ? 'Active' : 'Inactive'}`
+      });
+      fetchPromoCodes();
+    } catch (error: any) {
+      console.error('Error toggling active status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update active status",
+        variant: "destructive"
+      });
     }
   };
 
@@ -343,7 +372,7 @@ const PromoCodesPage: React.FC = () => {
                 <label className="block text-sm font-medium mb-2">Promo Code Image</label>
                 <ImageUpload
                   currentImage={formData.image}
-                  onImageUpload={(file) => setSelectedFile(file)}
+                  onImageUpload={async (file) => setSelectedFile(file)}
                   placeholder="Click or drag to upload an image for the promo code"
                 />
                 <p className="text-xs text-gray-500 mt-2">
@@ -384,6 +413,17 @@ const PromoCodesPage: React.FC = () => {
                     required
                   />
                 </div>
+              </div>
+
+              <div className="flex items-center space-x-2 py-2">
+                <Checkbox
+                  id="createIsActive"
+                  checked={formData.isActive}
+                  onCheckedChange={(checked) => setFormData({ ...formData, isActive: Boolean(checked) })}
+                />
+                <label htmlFor="createIsActive" className="text-sm font-medium cursor-pointer">
+                  Active (Enable this promo code for checkout redemptions)
+                </label>
               </div>
 
               <div className="flex space-x-2">
@@ -484,7 +524,7 @@ const PromoCodesPage: React.FC = () => {
                 <label className="block text-sm font-medium mb-2">Promo Code Image</label>
                 <ImageUpload
                   currentImage={formData.image}
-                  onImageUpload={(file) => setSelectedFile(file)}
+                  onImageUpload={async (file) => setSelectedFile(file)}
                   placeholder="Click or drag to upload an image for the promo code"
                 />
                 <p className="text-xs text-gray-500 mt-2">
@@ -527,6 +567,17 @@ const PromoCodesPage: React.FC = () => {
                 </div>
               </div>
 
+              <div className="flex items-center space-x-2 py-2">
+                <Checkbox
+                  id="editIsActive"
+                  checked={formData.isActive}
+                  onCheckedChange={(checked) => setFormData({ ...formData, isActive: Boolean(checked) })}
+                />
+                <label htmlFor="editIsActive" className="text-sm font-medium cursor-pointer">
+                  Active (Enable this promo code for checkout redemptions)
+                </label>
+              </div>
+
               <div className="flex space-x-2">
                 <Button type="submit" disabled={uploading}>
                   {uploading ? 'Updating...' : 'Update Promo Code'}
@@ -549,13 +600,15 @@ const PromoCodesPage: React.FC = () => {
       )}
 
       {/* Promo Codes List */}
-      <div className="grid gap-4">
+      <div className="space-y-4">
         {loading ? (
           <div className="text-center py-8">Loading promo codes...</div>
         ) : promoCodes.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            No promo codes found. Create your first promo code!
-          </div>
+          <Card>
+            <CardContent className="p-6 text-center text-muted-foreground">
+              No promo codes found. Create your first promo code to get started.
+            </CardContent>
+          </Card>
         ) : (
           promoCodes.map((promoCode) => (
             <Card key={promoCode._id}>
@@ -607,19 +660,32 @@ const PromoCodesPage: React.FC = () => {
                       <div>
                         <p className="text-muted-foreground">Valid Until</p>
                         <p className="font-medium">
-                          {new Date(promoCode.validUntil).toLocaleDateString()}
+                          {(promoCode.validUntil || (promoCode as any).endDate) && !isNaN(new Date(promoCode.validUntil || (promoCode as any).endDate).getTime())
+                            ? new Date(promoCode.validUntil || (promoCode as any).endDate).toLocaleDateString()
+                            : 'N/A'}
                         </p>
                       </div>
                       <div>
                         <p className="text-muted-foreground">Created</p>
                         <p className="font-medium">
-                          {new Date(promoCode.createdAt).toLocaleDateString()}
+                          {promoCode.createdAt && !isNaN(new Date(promoCode.createdAt).getTime())
+                            ? new Date(promoCode.createdAt).toLocaleDateString()
+                            : 'N/A'}
                         </p>
                       </div>
                     </div>
                   </div>
                   
                   <div className="flex space-x-2">
+                    <Button
+                      variant={promoCode.isActive ? "outline" : "default"}
+                      size="sm"
+                      onClick={() => handleToggleActive(promoCode)}
+                      className={!promoCode.isActive ? "bg-emerald-600 hover:bg-emerald-700 text-white" : ""}
+                    >
+                      <Power className="w-4 h-4 mr-2" />
+                      {promoCode.isActive ? 'Deactivate' : 'Activate'}
+                    </Button>
                     <Button
                       variant="outline"
                       size="sm"
@@ -648,4 +714,4 @@ const PromoCodesPage: React.FC = () => {
   );
 };
 
-export default PromoCodesPage; 
+export default PromoCodes; 

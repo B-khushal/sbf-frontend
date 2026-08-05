@@ -18,9 +18,8 @@ export const SeasonalCampaignHomeSection: React.FC = () => {
   const navigate = useNavigate();
   const { activeCampaigns } = useSeasonalCampaign();
 
-  // Filter campaigns that should be shown on homepage and are active
   const homepageCampaigns = activeCampaigns.filter(
-    (c) => c.enabled && c.navigation?.showInHomepage && c.slug !== 'valentine' && c.slug !== 'valentines-week'
+    (c) => (c.enabled || c.isActive) && (c.navigation?.showInHomepage !== false) && c.slug !== 'valentine' && c.slug !== 'valentines-week'
   );
 
   if (homepageCampaigns.length === 0) return null;

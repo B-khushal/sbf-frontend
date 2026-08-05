@@ -224,7 +224,7 @@ const ProductApproval: React.FC = () => {
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell>₹{product.price.toFixed(2)}</TableCell>
+                        <TableCell>₹{Number(product.price || 0).toFixed(2)}</TableCell>
                         <TableCell>
                           <Badge variant={product.countInStock > 10 ? "default" : "destructive"}>
                             {product.countInStock}

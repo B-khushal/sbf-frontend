@@ -35,6 +35,7 @@ export interface SeasonalCampaign {
   name: string;
   slug: string;
   enabled: boolean;
+  isActive?: boolean;
   revenue?: number;
   general: {
     campaignName: string;

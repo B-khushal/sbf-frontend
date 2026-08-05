@@ -370,6 +370,91 @@ const ValentineProductDetailsPage: React.FC = () => {
               <p className="text-rose-200/70 text-sm leading-relaxed">{product.description}</p>
             </div>
 
+            {/* Valentine Delivery Options Card */}
+            <div className="p-4 rounded-3xl bg-gradient-to-br from-rose-950/90 via-purple-950/70 to-slate-950 border border-rose-500/30 text-white space-y-3 shadow-xl">
+              <div className="flex items-center justify-between border-b border-rose-500/20 pb-2.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">🚚</span>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-rose-200 font-serif">Available Delivery Options</h4>
+                </div>
+                <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                  Active Rates
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                {/* 1. Same Day Delivery */}
+                <div className="p-2.5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">🚚</span>
+                    <div>
+                      <p className="font-bold text-white">Same Day Delivery</p>
+                      <p className="text-[10px] text-rose-200/60">Cutoff 6:00 PM</p>
+                    </div>
+                  </div>
+                  <span className="font-extrabold text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded-md border border-emerald-500/30">
+                    ₹0 (FREE)
+                  </span>
+                </div>
+
+                {/* 2. Midnight Delivery */}
+                <div className="p-2.5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">🌙</span>
+                    <div>
+                      <p className="font-bold text-white">Midnight Delivery</p>
+                      <p className="text-[10px] text-rose-200/60">Cutoff 8:00 PM</p>
+                    </div>
+                  </div>
+                  <span className="font-extrabold text-amber-300 bg-amber-500/20 px-2 py-0.5 rounded-md border border-amber-500/30">
+                    +₹200
+                  </span>
+                </div>
+
+                {/* 3. Fixed Time Delivery */}
+                <div className="p-2.5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">⏰</span>
+                    <div>
+                      <p className="font-bold text-white">Fixed Time Delivery</p>
+                      <p className="text-[10px] text-rose-200/60">Select Time Slot</p>
+                    </div>
+                  </div>
+                  <span className="font-extrabold text-amber-300 bg-amber-500/20 px-2 py-0.5 rounded-md border border-amber-500/30">
+                    +₹150
+                  </span>
+                </div>
+
+                {/* 4. Surprise Delivery */}
+                <div className="p-2.5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">🎁</span>
+                    <div>
+                      <p className="font-bold text-white">Surprise Delivery</p>
+                      <p className="text-[10px] text-rose-200/60">Discreet Delivery</p>
+                    </div>
+                  </div>
+                  <span className="font-extrabold text-amber-300 bg-amber-500/20 px-2 py-0.5 rounded-md border border-amber-500/30">
+                    +₹100
+                  </span>
+                </div>
+
+                {/* 5. Anonymous Delivery */}
+                <div className="sm:col-span-2 p-2.5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">🕵️</span>
+                    <div>
+                      <p className="font-bold text-white">Anonymous Delivery</p>
+                      <p className="text-[10px] text-rose-200/60">Sender Name Hidden on Package Tag</p>
+                    </div>
+                  </div>
+                  <span className="font-extrabold text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded-md border border-emerald-500/30">
+                    FREE
+                  </span>
+                </div>
+              </div>
+            </div>
+
             {/* Customizations Section */}
             <div className="space-y-4 pt-4 border-t border-rose-950/40">
               <h3 className="text-xs font-bold uppercase text-rose-300/80 tracking-wider flex items-center gap-1.5">

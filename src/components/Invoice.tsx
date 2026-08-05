@@ -68,13 +68,15 @@ const Invoice: React.FC<InvoiceProps> = ({ order, isAdmin = false }) => {
   const items = order.items || [];
 
   // Helper function to format currency
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number | string | undefined | null) => {
     const currencyCode = order.currency || 'INR';
+    const num = Number(amount);
+    const safeAmount = isNaN(num) ? 0 : num;
     return new Intl.NumberFormat(currencyCode === 'INR' ? 'en-IN' : 'en-US', {
       style: 'currency',
       currency: currencyCode,
       minimumFractionDigits: 2,
-    }).format(amount);
+    }).format(safeAmount);
   };
 
   // Safe date formatting helper
@@ -91,15 +93,19 @@ const Invoice: React.FC<InvoiceProps> = ({ order, isAdmin = false }) => {
   };
 
   // Pricing calculations
-  const itemsSubtotal = order.subtotal || items.reduce((sum: number, item: any) => {
-    return sum + ((item.finalPrice || item.price || 0) * item.quantity);
+  const rawSub = Number(order.subtotal);
+  const itemsSubtotal = !isNaN(rawSub) && rawSub > 0 ? rawSub : items.reduce((sum: number, item: any) => {
+    const p = Number(item.finalPrice || item.price || 0);
+    const q = Number(item.quantity || 1);
+    return sum + ((isNaN(p) ? 0 : p) * (isNaN(q) ? 1 : q));
   }, 0);
 
-  const deliveryFee = order.deliveryFee || order.shippingFee || shipping.deliveryFee || 0;
-  const promoDiscount = order.promoCode?.discount || order.discountAmount || 0;
+  const deliveryFee = Number(order.deliveryFee || order.shippingFee || shipping.deliveryFee || 0) || 0;
+  const promoDiscount = Number(order.promoCode?.discount || order.discountAmount || 0) || 0;
   const hasDeliveryFee = deliveryFee > 0;
   const hasPromo = promoDiscount > 0;
-  const grandTotal = order.totalAmount || order.total || (itemsSubtotal + deliveryFee - promoDiscount);
+  const rawTotal = Number(order.totalAmount || order.total);
+  const grandTotal = !isNaN(rawTotal) && rawTotal > 0 ? rawTotal : (itemsSubtotal + deliveryFee - promoDiscount);
 
   return (
     <div className="invoice-container">

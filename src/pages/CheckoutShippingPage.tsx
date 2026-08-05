@@ -28,6 +28,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { getUserProfile, updateUserProfile, SavedAddress } from '@/services/authService';
 import { calculateDeliveryFee } from '@/services/orderService';
+import api from '@/services/api';
 
 // Animation variants
 const containerVariants = {
@@ -310,6 +311,34 @@ const CheckoutShippingPage = () => {
     standardFee: number;
   } | null>(null);
 
+  // Fetch Valentine delivery settings
+  const [valDeliverySettings, setValDeliverySettings] = useState<{
+    sameDayEnabled?: boolean; sameDayCharge?: number; sameDayCutoff?: string;
+    midnightEnabled?: boolean; midnightCharge?: number; midnightCutoff?: string;
+    fixedTimeEnabled?: boolean; fixedTimeCharge?: number;
+    surpriseEnabled?: boolean; surpriseCharge?: number;
+    anonymousEnabled?: boolean; anonymousCharge?: number;
+  }>({});
+
+  useEffect(() => {
+    const fetchValSettings = async () => {
+      try {
+        const res = await api.get('/valentine/settings');
+        if (res.data?.delivery) {
+          setValDeliverySettings(res.data.delivery);
+        }
+      } catch (err) {
+        console.error('Failed to fetch valentine delivery settings:', err);
+      }
+    };
+    fetchValSettings();
+  }, []);
+
+  const midnightCharge = valDeliverySettings.midnightCharge ?? 200;
+  const fixedTimeCharge = valDeliverySettings.fixedTimeCharge ?? 150;
+  const surpriseCharge = valDeliverySettings.surpriseCharge ?? 100;
+  const anonymousCharge = valDeliverySettings.anonymousCharge ?? 0;
+
   // Fetch dynamic delivery fee
   useEffect(() => {
     const fetchDeliveryFee = async () => {
@@ -328,8 +357,25 @@ const CheckoutShippingPage = () => {
     fetchDeliveryFee();
   }, [subtotal, selectedTimeSlot, formData.email, formData.phone]);
 
-  const deliveryFee = deliveryCalculation?.deliveryCharge ?? (selectedTimeSlot === 'midnight' ? 300 : 150);
+  const baseSlotFee = selectedTimeSlot === 'midnight' 
+    ? midnightCharge 
+    : (selectedTimeSlot === 'fixed' || selectedTimeSlot === 'fixed_time' ? fixedTimeCharge : 0);
+
+  const surpriseFee = surpriseDelivery ? surpriseCharge : 0;
+  const anonymousFee = anonymousGift ? anonymousCharge : 0;
+
+  const deliveryFee = (deliveryCalculation?.deliveryCharge ?? baseSlotFee) + surpriseFee + anonymousFee;
   const hasMidnightFee = selectedTimeSlot === 'midnight';
+
+  // Check if selected date is valid for Valentine items
+  const isDateInvalidForValentine = React.useMemo(() => {
+    if (!hasValentine) return false;
+    const month = selectedDate.getMonth(); // 1 = Feb
+    const dateNum = selectedDate.getDate();
+    return !(month === 1 && dateNum >= 8 && dateNum <= 15);
+  }, [hasValentine, selectedDate]);
+
+  const isContinueDisabled = isDateInvalidForValentine || !selectedTimeSlot;
 
   // Load promo code discount from localStorage if available
   const [appliedPromoCode, setAppliedPromoCode] = useState<{
@@ -425,83 +471,110 @@ const CheckoutShippingPage = () => {
   };
 
   const handleSavedAddressSelect = (address: SavedAddress) => {
-    if (address.deliveryOption === 'self') {
-      setFormData({
-        ...formData,
-        firstName: address.firstName,
-        lastName: address.lastName,
-        address: address.address,
-        apartment: address.apartment || '',
-        city: address.city,
-        state: address.state,
-        zipCode: address.zipCode,
-        phone: address.phone,
-        email: address.email,
-        notes: address.notes || '',
+    const activeOption = (address.deliveryOption as 'self' | 'gift') || 'self';
+
+    // 1. Restore map location if present
+    if (address.latitude && address.longitude && address.formattedAddress) {
+      setDeliveryLocation({
+        latitude: address.latitude,
+        longitude: address.longitude,
+        formattedAddress: address.formattedAddress,
+        city: address.city || (activeOption === 'gift' ? address.receiverCity : address.city) || 'Hyderabad',
+        state: address.state || (activeOption === 'gift' ? address.receiverState : address.state) || 'Telangana',
+        country: address.country || 'India',
+        pincode: address.zipCode || address.receiverZipCode || address.pincode || '',
+        recipientName: activeOption === 'gift' 
+          ? `${address.receiverFirstName || ''} ${address.receiverLastName || ''}`.trim()
+          : `${address.firstName || ''} ${address.lastName || ''}`.trim(),
+        phone: activeOption === 'gift' ? (address.receiverPhone || address.phone) : address.phone,
+        houseNo: address.houseNo || address.apartment || address.receiverApartment || '',
+        apartment: address.apartment || address.receiverApartment || '',
+        floor: address.floor || '',
+        landmark: address.landmark || '',
+        deliveryInstructions: address.deliveryInstructions || address.deliverySpecialInstructions || address.notes || '',
       });
-      setSelectedSenderPin({
-        code: address.zipCode,
-        area: '',
-        city: address.city,
-        state: address.state,
-      });
-      setSenderPinValidation({ isValid: true, message: '' });
     } else {
-      setFormData({
-        ...formData,
-        firstName: address.firstName,
-        lastName: address.lastName,
-        phone: address.phone,
-        email: address.email,
-        receiverFirstName: address.receiverFirstName,
-        receiverLastName: address.receiverLastName,
-        receiverAddress: address.receiverAddress,
-        receiverApartment: address.receiverApartment || '',
-        receiverCity: address.receiverCity,
-        receiverState: address.receiverState,
-        receiverZipCode: address.receiverZipCode,
-        receiverPhone: address.receiverPhone,
-        receiverEmail: address.receiverEmail || '',
-      });
-      setSelectedReceiverPin({
-        code: address.receiverZipCode,
-        area: '',
-        city: address.receiverCity,
-        state: address.receiverState,
-      });
-      setReceiverPinValidation({ isValid: true, message: '' });
-      
+      setDeliveryLocation(null);
     }
-    
-    // Switch to the correct delivery option if needed
-    setDeliveryOption(address.deliveryOption);
+
+    // 2. Populate manual form data for both self & gift options
+    setFormData(prev => ({
+      ...prev,
+      firstName: address.firstName || prev.firstName || '',
+      lastName: address.lastName || prev.lastName || '',
+      address: address.address || address.formattedAddress || prev.address || '',
+      apartment: address.apartment || address.houseNo || prev.apartment || '',
+      city: address.city || 'Hyderabad',
+      state: address.state || 'Telangana',
+      zipCode: address.zipCode || address.pincode || prev.zipCode || '',
+      phone: address.phone || prev.phone || '',
+      email: address.email || prev.email || '',
+      notes: address.notes || address.deliveryInstructions || '',
+      
+      receiverFirstName: address.receiverFirstName || prev.receiverFirstName || '',
+      receiverLastName: address.receiverLastName || prev.receiverLastName || '',
+      receiverAddress: address.receiverAddress || address.formattedAddress || prev.receiverAddress || '',
+      receiverApartment: address.receiverApartment || address.houseNo || prev.receiverApartment || '',
+      receiverCity: address.receiverCity || 'Hyderabad',
+      receiverState: address.receiverState || 'Telangana',
+      receiverZipCode: address.receiverZipCode || address.pincode || prev.receiverZipCode || '',
+      receiverPhone: address.receiverPhone || prev.receiverPhone || '',
+      receiverEmail: address.receiverEmail || prev.receiverEmail || '',
+    }));
+
+    // 3. Update Pincode Validation
+    const activeZip = activeOption === 'self' 
+      ? (address.zipCode || address.pincode || '') 
+      : (address.receiverZipCode || address.pincode || '');
+      
+    if (activeZip) {
+      if (activeOption === 'self') {
+        setSelectedSenderPin({
+          code: activeZip,
+          area: address.landmark || '',
+          city: address.city || 'Hyderabad',
+          state: address.state || 'Telangana'
+        });
+        setSenderPinValidation({ isValid: true, message: '' });
+      } else {
+        setSelectedReceiverPin({
+          code: activeZip,
+          area: address.landmark || '',
+          city: address.receiverCity || 'Hyderabad',
+          state: address.receiverState || 'Telangana'
+        });
+        setReceiverPinValidation({ isValid: true, message: '' });
+      }
+    }
+
+    // 4. Restore messages & dropdown state
+    setDeliveryOption(activeOption);
     setCardMessage(address.cardMessage || address.giftMessage || '');
-    setDeliverySpecialInstructions(address.deliverySpecialInstructions || address.notes || '');
+    setDeliverySpecialInstructions(address.deliverySpecialInstructions || address.deliveryInstructions || address.notes || '');
     setIsSavedAddressesOpen(false);
     
     toast({
-      title: "Address loaded",
-      description: "Your saved address has been applied",
+      title: "Saved Address Applied",
+      description: `Loaded ${activeOption === 'gift' ? 'Gift' : 'Self'} address for ${address.firstName || 'User'}.`,
     });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!selectedTimeSlot) {
+    if (hasValentine && isDateInvalidForValentine) {
       toast({
-        title: "Please select a delivery time",
-        description: "You need to select a delivery time slot to continue",
+        title: "Invalid Delivery Date",
+        description: "Valentine Special products can only be delivered during Valentine's Week (8 Feb - 15 Feb). Please select a date between Feb 8 and Feb 15.",
         variant: "destructive"
       });
       return;
     }
-    
-    // Check if delivery location has been pinned
-    if (!deliveryLocation || !deliveryLocation.latitude || !deliveryLocation.longitude) {
+
+    if (!selectedTimeSlot) {
       toast({
-        title: "No Location Selected",
-        description: "Please select a delivery location using the MapmyIndia location picker.",
+        title: "Please select a delivery time",
+        description: "You need to select a delivery time slot to continue",
         variant: "destructive"
       });
       return;
@@ -517,6 +590,31 @@ const CheckoutShippingPage = () => {
         });
         return;
       }
+      if (!formData.address || !formData.address.trim()) {
+        toast({
+          title: "Missing delivery address",
+          description: "Please enter your street / delivery address.",
+          variant: "destructive"
+        });
+        return;
+      }
+      if (!formData.zipCode || !formData.zipCode.trim()) {
+        toast({
+          title: "Missing pincode",
+          description: "Please enter a valid 6-digit delivery pincode.",
+          variant: "destructive"
+        });
+        return;
+      }
+      const isServiceable = SERVICEABLE_PINCODES.some(pin => pin.code === formData.zipCode.trim());
+      if (!isServiceable) {
+        toast({
+          title: "Outside Delivery Area",
+          description: `SBFlorist currently does not deliver to PIN code (${formData.zipCode}). Please enter a serviceable pincode in Hyderabad.`,
+          variant: "destructive"
+        });
+        return;
+      }
     } else {
       if (!formData.firstName || !formData.lastName || !formData.phone ||
           !formData.receiverFirstName || !formData.receiverLastName || 
@@ -528,7 +626,41 @@ const CheckoutShippingPage = () => {
         });
         return;
       }
+      if (!formData.receiverAddress || !formData.receiverAddress.trim()) {
+        toast({
+          title: "Missing receiver address",
+          description: "Please enter receiver's delivery address.",
+          variant: "destructive"
+        });
+        return;
+      }
+      if (!formData.receiverZipCode || !formData.receiverZipCode.trim()) {
+        toast({
+          title: "Missing receiver pincode",
+          description: "Please enter a valid 6-digit receiver pincode.",
+          variant: "destructive"
+        });
+        return;
+      }
+      const isServiceable = SERVICEABLE_PINCODES.some(pin => pin.code === formData.receiverZipCode.trim());
+      if (!isServiceable) {
+        toast({
+          title: "Outside Delivery Area",
+          description: `SBFlorist currently does not deliver to PIN code (${formData.receiverZipCode}). Please enter a serviceable pincode in Hyderabad.`,
+          variant: "destructive"
+        });
+        return;
+      }
     }
+
+    const activeAddress = deliveryOption === 'self' ? formData.address : formData.receiverAddress;
+    const activeApartment = deliveryOption === 'self' ? formData.apartment : formData.receiverApartment;
+    const activeCity = deliveryOption === 'self' ? (formData.city || 'Hyderabad') : (formData.receiverCity || 'Hyderabad');
+    const activeState = deliveryOption === 'self' ? (formData.state || 'Telangana') : (formData.receiverState || 'Telangana');
+    const activeZipCode = deliveryOption === 'self' ? formData.zipCode : formData.receiverZipCode;
+
+    const formattedAddr = deliveryLocation?.formattedAddress || 
+      `${activeApartment ? activeApartment + ', ' : ''}${activeAddress}, ${activeCity}, ${activeState} - ${activeZipCode}`.trim();
 
     // Save shipping information
     const shippingInfo = {
@@ -539,23 +671,23 @@ const CheckoutShippingPage = () => {
       isFirstOrderFreeDelivery: deliveryCalculation?.isFirstOrderFreeDelivery ?? false,
       selectedDate: selectedDate.toISOString(),
       cardMessage: cardMessage,
-      deliverySpecialInstructions: deliveryLocation.deliveryInstructions || deliverySpecialInstructions,
+      deliverySpecialInstructions: deliveryLocation?.deliveryInstructions || deliverySpecialInstructions,
       giftMessage: cardMessage, // legacy compatibility
-      notes: deliveryLocation.deliveryInstructions || deliverySpecialInstructions, // legacy compatibility
+      notes: deliveryLocation?.deliveryInstructions || deliverySpecialInstructions, // legacy compatibility
       greetingCard: hasValentine ? greetingCard : 'none',
       surpriseDelivery: hasValentine ? surpriseDelivery : false,
       anonymousGift: hasValentine ? anonymousGift : false,
 
-      // Mappls location details
-      latitude: deliveryLocation.latitude,
-      longitude: deliveryLocation.longitude,
-      formattedAddress: deliveryLocation.formattedAddress,
-      country: deliveryLocation.country || 'India',
-      pincode: deliveryLocation.pincode,
-      landmark: deliveryLocation.landmark,
-      houseNo: deliveryLocation.houseNo,
-      floor: deliveryLocation.floor,
-      deliveryInstructions: deliveryLocation.deliveryInstructions,
+      // Location details (use map location if set, otherwise manual address & default Hyderabad coords)
+      latitude: deliveryLocation?.latitude || 17.3912,
+      longitude: deliveryLocation?.longitude || 78.4326,
+      formattedAddress: formattedAddr,
+      country: deliveryLocation?.country || 'India',
+      pincode: activeZipCode,
+      landmark: deliveryLocation?.landmark || '',
+      houseNo: deliveryLocation?.houseNo || activeApartment || '',
+      floor: deliveryLocation?.floor || '',
+      deliveryInstructions: deliveryLocation?.deliveryInstructions || deliverySpecialInstructions,
     };
 
     localStorage.setItem('shippingInfo', JSON.stringify(shippingInfo));
@@ -574,9 +706,9 @@ const CheckoutShippingPage = () => {
           zipCode: deliveryOption === 'self' ? formData.zipCode : formData.receiverZipCode,
           phone: deliveryOption === 'self' ? formData.phone : formData.receiverPhone,
           email: deliveryOption === 'self' ? formData.email : formData.receiverEmail,
-          notes: deliveryLocation.deliveryInstructions || deliverySpecialInstructions,
+          notes: deliveryLocation?.deliveryInstructions || deliverySpecialInstructions,
           cardMessage: cardMessage,
-          deliverySpecialInstructions: deliveryLocation.deliveryInstructions || deliverySpecialInstructions,
+          deliverySpecialInstructions: deliveryLocation?.deliveryInstructions || deliverySpecialInstructions,
           deliveryOption,
           isDefault: savedAddresses.length === 0,
           giftMessage: cardMessage,
@@ -591,15 +723,15 @@ const CheckoutShippingPage = () => {
           receiverZipCode: formData.receiverZipCode,
           
           // Mappls fields
-          latitude: deliveryLocation.latitude,
-          longitude: deliveryLocation.longitude,
-          formattedAddress: deliveryLocation.formattedAddress,
-          country: deliveryLocation.country || 'India',
-          pincode: deliveryLocation.pincode,
-          landmark: deliveryLocation.landmark,
-          houseNo: deliveryLocation.houseNo,
-          floor: deliveryLocation.floor,
-          deliveryInstructions: deliveryLocation.deliveryInstructions,
+          latitude: deliveryLocation?.latitude || 17.3912,
+          longitude: deliveryLocation?.longitude || 78.4326,
+          formattedAddress: formattedAddr,
+          country: deliveryLocation?.country || 'India',
+          pincode: activeZipCode,
+          landmark: deliveryLocation?.landmark || '',
+          houseNo: deliveryLocation?.houseNo || activeApartment || '',
+          floor: deliveryLocation?.floor || '',
+          deliveryInstructions: deliveryLocation?.deliveryInstructions || deliverySpecialInstructions,
         };
 
         const updatedAddresses = [...savedAddresses, newAddress];
@@ -665,7 +797,6 @@ const CheckoutShippingPage = () => {
 
   const activePinValidation = deliveryOption === 'self' ? senderPinValidation : receiverPinValidation;
   const selectedDeliveryPin = deliveryOption === 'self' ? selectedSenderPin : selectedReceiverPin;
-  const isContinueDisabled = !selectedDeliveryPin?.code || !activePinValidation.isValid;
 
   return (
     <div className={cn(
@@ -949,26 +1080,138 @@ const CheckoutShippingPage = () => {
                       </div>
                       
                       {deliveryOption === 'self' && (
-                        <div className="space-y-4">
-                          {deliveryLocation ? (
-                            <LocationPreview
-                              location={deliveryLocation}
-                              onChangeLocation={() => setIsPickingLocation(true)}
-                            />
-                          ) : (
-                            <div className="p-6 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl flex flex-col items-center justify-center text-center bg-slate-50/50 dark:bg-slate-900/10">
-                              <MapPin className="h-10 w-10 text-emerald-500 mb-3 animate-pulse" />
-                              <h4 className="font-semibold text-slate-800 dark:text-slate-200">No Delivery Location Selected</h4>
-                              <p className="text-xs text-slate-500 mt-1 mb-4">Please pinpoint your delivery address on the MapmyIndia map.</p>
-                              <Button
-                                type="button"
-                                onClick={() => setIsPickingLocation(true)}
-                                className="rounded-xl h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
-                              >
-                                Select Delivery Location
-                              </Button>
+                        <div className="space-y-4 pt-3 border-t border-slate-200/80">
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-base font-semibold text-slate-800 flex items-center gap-2">
+                              <Home className="h-4 w-4 text-emerald-600" />
+                              Delivery Address
+                            </h3>
+                            <span className="text-xs text-slate-500 font-medium">Hyderabad Delivery Area</span>
+                          </div>
+
+                          {/* Manual Address Input Fields */}
+                          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div className="space-y-2">
+                              <label htmlFor="apartment" className="block text-sm font-medium">
+                                House / Flat No. & Building (optional)
+                              </label>
+                              <Input
+                                id="apartment"
+                                name="apartment"
+                                value={formData.apartment}
+                                onChange={handleInputChange}
+                                placeholder="e.g. Flat 302, Sai Heights"
+                                className={inputClassName}
+                              />
                             </div>
-                          )}
+                            
+                            <div className="space-y-2">
+                              <label htmlFor="address" className="block text-sm font-medium">
+                                Street Address / Area / Locality *
+                              </label>
+                              <Input
+                                id="address"
+                                name="address"
+                                value={formData.address}
+                                onChange={handleInputChange}
+                                required
+                                placeholder="e.g. Road No. 12, Banjara Hills"
+                                className={inputClassName}
+                              />
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                            <div className="space-y-2 sm:col-span-1">
+                              <label htmlFor="zipCode" className="block text-sm font-medium">
+                                Pincode *
+                              </label>
+                              <Input
+                                id="zipCode"
+                                name="zipCode"
+                                value={formData.zipCode}
+                                onChange={handleInputChange}
+                                required
+                                maxLength={6}
+                                placeholder="e.g. 500034"
+                                className={inputClassName}
+                              />
+                            </div>
+
+                            <div className="space-y-2 sm:col-span-1">
+                              <label htmlFor="city" className="block text-sm font-medium">
+                                City
+                              </label>
+                              <Input
+                                id="city"
+                                name="city"
+                                value={formData.city}
+                                onChange={handleInputChange}
+                                readOnly
+                                className={cn(inputClassName, "bg-slate-100/70 cursor-not-allowed")}
+                              />
+                            </div>
+
+                            <div className="space-y-2 sm:col-span-1">
+                              <label htmlFor="state" className="block text-sm font-medium">
+                                State
+                              </label>
+                              <Input
+                                id="state"
+                                name="state"
+                                value={formData.state}
+                                onChange={handleInputChange}
+                                readOnly
+                                className={cn(inputClassName, "bg-slate-100/70 cursor-not-allowed")}
+                              />
+                            </div>
+                          </div>
+
+                          {/* Optional MapmyIndia Location Picker */}
+                          <div className="mt-4 pt-2">
+                            {deliveryLocation ? (
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs font-semibold text-emerald-700 flex items-center gap-1">
+                                    <Check className="h-3.5 w-3.5 text-emerald-600" /> Map Coordinates Pinned
+                                  </span>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setDeliveryLocation(null)}
+                                    className="text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 h-7 px-2"
+                                  >
+                                    Remove Map Pin
+                                  </Button>
+                                </div>
+                                <LocationPreview
+                                  location={deliveryLocation}
+                                  onChangeLocation={() => setIsPickingLocation(true)}
+                                />
+                              </div>
+                            ) : (
+                              <div className="p-4 border border-dashed border-slate-300 rounded-2xl bg-slate-50/80 hover:bg-slate-100/80 transition-colors flex flex-col sm:flex-row items-center justify-between gap-3">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-9 h-9 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                                    <MapPin className="h-5 w-5" />
+                                  </div>
+                                  <div>
+                                    <h4 className="text-sm font-semibold text-slate-800">Pin Location on Map (Optional)</h4>
+                                    <p className="text-xs text-slate-500">Want to pinpoint exact GPS coordinates on map?</p>
+                                  </div>
+                                </div>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  onClick={() => setIsPickingLocation(true)}
+                                  className="rounded-xl h-10 border-emerald-500 text-emerald-700 hover:bg-emerald-50 font-semibold text-xs shrink-0 w-full sm:w-auto"
+                                >
+                                  Select on Map
+                                </Button>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       )}
                     </div>
@@ -1013,28 +1256,6 @@ const CheckoutShippingPage = () => {
                           </div>
                         </div>
                         
-                        <div className="space-y-4 pt-2">
-                          {deliveryLocation ? (
-                            <LocationPreview
-                              location={deliveryLocation}
-                              onChangeLocation={() => setIsPickingLocation(true)}
-                            />
-                          ) : (
-                            <div className="p-6 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl flex flex-col items-center justify-center text-center bg-slate-50/50 dark:bg-slate-900/10">
-                              <MapPin className="h-10 w-10 text-emerald-500 mb-3 animate-pulse" />
-                              <h4 className="font-semibold text-slate-800 dark:text-slate-200">No Delivery Location Selected</h4>
-                              <p className="text-xs text-slate-500 mt-1 mb-4">Please pinpoint the recipient's delivery address on the MapmyIndia map.</p>
-                              <Button
-                                type="button"
-                                onClick={() => setIsPickingLocation(true)}
-                                className="rounded-xl h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
-                              >
-                                Select Delivery Location
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                        
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                           <div className="space-y-2">
                             <label htmlFor="receiverPhone" className="block text-sm font-medium">
@@ -1065,6 +1286,140 @@ const CheckoutShippingPage = () => {
                               placeholder="Enter receiver's email"
                               className={inputClassName}
                             />
+                          </div>
+                        </div>
+
+                        {/* Receiver Manual Delivery Address */}
+                        <div className="space-y-4 pt-3 border-t border-slate-200/80">
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-base font-semibold text-slate-800 flex items-center gap-2">
+                              <Home className="h-4 w-4 text-purple-600" />
+                              Receiver's Delivery Address
+                            </h3>
+                            <span className="text-xs text-slate-500 font-medium">Hyderabad Delivery Area</span>
+                          </div>
+
+                          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div className="space-y-2">
+                              <label htmlFor="receiverApartment" className="block text-sm font-medium">
+                                House / Flat No. & Building (optional)
+                              </label>
+                              <Input
+                                id="receiverApartment"
+                                name="receiverApartment"
+                                value={formData.receiverApartment}
+                                onChange={handleInputChange}
+                                placeholder="e.g. Villa 14, Palm Meadows"
+                                className={inputClassName}
+                              />
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <label htmlFor="receiverAddress" className="block text-sm font-medium">
+                                Street Address / Area / Locality *
+                              </label>
+                              <Input
+                                id="receiverAddress"
+                                name="receiverAddress"
+                                value={formData.receiverAddress}
+                                onChange={handleInputChange}
+                                required
+                                placeholder="e.g. Hitec City, Near Cyber Towers"
+                                className={inputClassName}
+                              />
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                            <div className="space-y-2 sm:col-span-1">
+                              <label htmlFor="receiverZipCode" className="block text-sm font-medium">
+                                Pincode *
+                              </label>
+                              <Input
+                                id="receiverZipCode"
+                                name="receiverZipCode"
+                                value={formData.receiverZipCode}
+                                onChange={handleInputChange}
+                                required
+                                maxLength={6}
+                                placeholder="e.g. 500081"
+                                className={inputClassName}
+                              />
+                            </div>
+
+                            <div className="space-y-2 sm:col-span-1">
+                              <label htmlFor="receiverCity" className="block text-sm font-medium">
+                                City
+                              </label>
+                              <Input
+                                id="receiverCity"
+                                name="receiverCity"
+                                value={formData.receiverCity}
+                                onChange={handleInputChange}
+                                readOnly
+                                className={cn(inputClassName, "bg-slate-100/70 cursor-not-allowed")}
+                              />
+                            </div>
+
+                            <div className="space-y-2 sm:col-span-1">
+                              <label htmlFor="receiverState" className="block text-sm font-medium">
+                                State
+                              </label>
+                              <Input
+                                id="receiverState"
+                                name="receiverState"
+                                value={formData.receiverState}
+                                onChange={handleInputChange}
+                                readOnly
+                                className={cn(inputClassName, "bg-slate-100/70 cursor-not-allowed")}
+                              />
+                            </div>
+                          </div>
+
+                          {/* Optional Map Location Section for Receiver */}
+                          <div className="mt-4 pt-2">
+                            {deliveryLocation ? (
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs font-semibold text-purple-700 flex items-center gap-1">
+                                    <Check className="h-3.5 w-3.5 text-purple-600" /> Receiver GPS Location Pinned
+                                  </span>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setDeliveryLocation(null)}
+                                    className="text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 h-7 px-2"
+                                  >
+                                    Remove Map Pin
+                                  </Button>
+                                </div>
+                                <LocationPreview
+                                  location={deliveryLocation}
+                                  onChangeLocation={() => setIsPickingLocation(true)}
+                                />
+                              </div>
+                            ) : (
+                              <div className="p-4 border border-dashed border-slate-300 rounded-2xl bg-purple-50/50 hover:bg-purple-100/50 transition-colors flex flex-col sm:flex-row items-center justify-between gap-3">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-9 h-9 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center shrink-0">
+                                    <MapPin className="h-5 w-5" />
+                                  </div>
+                                  <div>
+                                    <h4 className="text-sm font-semibold text-slate-800">Pin Receiver Location on Map (Optional)</h4>
+                                    <p className="text-xs text-slate-500">Want to pinpoint exact map location for recipient?</p>
+                                  </div>
+                                </div>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  onClick={() => setIsPickingLocation(true)}
+                                  className="rounded-xl h-10 border-purple-500 text-purple-700 hover:bg-purple-50 font-semibold text-xs shrink-0 w-full sm:w-auto"
+                                >
+                                  Select on Map
+                                </Button>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -1108,9 +1463,14 @@ const CheckoutShippingPage = () => {
                                 ? 'border-rose-400 bg-rose-50/70 text-rose-800 font-semibold' 
                                 : 'border-slate-200 hover:bg-slate-50 text-slate-600'
                             )}>
-                              <span className="flex items-center gap-1.5">
-                                🎁 Surprise Delivery
-                              </span>
+                              <div className="flex items-center gap-2">
+                                <span className="flex items-center gap-1.5 font-bold">
+                                  🎁 Surprise Delivery
+                                </span>
+                                <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300">
+                                  +{formatPrice(convertPrice(surpriseCharge))}
+                                </span>
+                              </div>
                               <input
                                 type="checkbox"
                                 checked={surpriseDelivery}
@@ -1118,7 +1478,7 @@ const CheckoutShippingPage = () => {
                                 className="hidden"
                               />
                               <div className={cn(
-                                "w-4 h-4 rounded-md border flex items-center justify-center transition-all",
+                                "w-4 h-4 rounded-md border flex items-center justify-center transition-all ml-2 shrink-0",
                                 surpriseDelivery ? 'bg-rose-500 border-rose-500 text-white' : 'border-slate-300 bg-white'
                               )}>
                                 {surpriseDelivery && <Check className="w-2.5 h-2.5" />}
@@ -1131,9 +1491,14 @@ const CheckoutShippingPage = () => {
                                 ? 'border-rose-400 bg-rose-50/70 text-rose-800 font-semibold' 
                                 : 'border-slate-200 hover:bg-slate-50 text-slate-600'
                             )}>
-                              <span className="flex items-center gap-1.5">
-                                🕵️ Anonymous Sender
-                              </span>
+                              <div className="flex items-center gap-2">
+                                <span className="flex items-center gap-1.5 font-bold">
+                                  🕵️ Anonymous Sender
+                                </span>
+                                <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                  {anonymousCharge > 0 ? `+${formatPrice(convertPrice(anonymousCharge))}` : 'FREE'}
+                                </span>
+                              </div>
                               <input
                                 type="checkbox"
                                 checked={anonymousGift}
@@ -1141,7 +1506,7 @@ const CheckoutShippingPage = () => {
                                 className="hidden"
                               />
                               <div className={cn(
-                                "w-4 h-4 rounded-md border flex items-center justify-center transition-all",
+                                "w-4 h-4 rounded-md border flex items-center justify-center transition-all ml-2 shrink-0",
                                 anonymousGift ? 'bg-rose-500 border-rose-500 text-white' : 'border-slate-300 bg-white'
                               )}>
                                 {anonymousGift && <Check className="w-2.5 h-2.5" />}
@@ -1219,12 +1584,12 @@ const CheckoutShippingPage = () => {
                         onSelectSlot={handleTimeSlotSelect}
                         onSelectDate={setSelectedDate}
                         selectedDate={selectedDate}
+                        surpriseDelivery={surpriseDelivery}
+                        onToggleSurpriseDelivery={setSurpriseDelivery}
+                        anonymousGift={anonymousGift}
+                        onToggleAnonymousGift={setAnonymousGift}
+                        valSettings={valDeliverySettings}
                       />
-                      {hasMidnightFee && (
-                        <Badge variant="secondary" className="mt-2">
-                          Midnight Delivery (+₹300)
-                        </Badge>
-                      )}
                     </div>
                     
                     {/* Save Information Checkbox */}
@@ -1243,6 +1608,15 @@ const CheckoutShippingPage = () => {
                       </label>
                     </div>
                     
+                    {hasValentine && isDateInvalidForValentine && (
+                      <Alert variant="destructive" className="mt-4 rounded-xl border-rose-200 bg-rose-50 text-rose-800">
+                        <AlertDescription className="flex items-center gap-2 font-medium">
+                          <Info className="h-4 w-4 text-rose-600 flex-shrink-0" />
+                          Valentine Special products can only be delivered during Valentine's Week (8 Feb - 15 Feb). Please select a valid delivery date.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
                     {/* Form Actions */}
                     <div className="hidden items-center justify-between border-t pt-4 lg:flex">
                       <Button

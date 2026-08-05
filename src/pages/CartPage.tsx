@@ -11,6 +11,7 @@ import { toast } from '@/hooks/use-toast';
 import ContactModal from '@/components/ui/ContactModal';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import PromoCodeInput from '@/components/PromoCodeInput';
 import { useState, useEffect } from 'react';
 import type { PromoCodeValidationResult } from '@/services/promoCodeService';
@@ -79,15 +80,19 @@ const CartPage: React.FC = () => {
       const displayPrice = addon.discountedPrice && addon.discountedPrice > 0 ? addon.discountedPrice : addon.price;
       const discountVal = addon.discountedPrice && addon.discountedPrice > 0 ? Math.round(((addon.price - addon.discountedPrice) / addon.price) * 100) : 0;
       
+      const addonId = addon._id || (addon as any).id;
+      const gallery = Array.isArray(addon.galleryImages) ? addon.galleryImages : [];
+      const imagesList = [addon.image, ...gallery].filter(Boolean);
+
       const cartItem = {
-        _id: addon._id,
-        id: addon._id,
-        productId: addon._id,
+        _id: addonId,
+        id: addonId,
+        productId: addonId,
         productModel: 'AddonProduct' as const,
         title: addon.name,
         price: displayPrice,
-        image: addon.image,
-        images: [addon.image, ...addon.galleryImages].filter(Boolean),
+        image: addon.image || imagesList[0] || '',
+        images: imagesList.length > 0 ? imagesList : [addon.image || ''],
         quantity: 1,
         category: addon.category,
         discount: discountVal,
@@ -144,7 +149,14 @@ const CartPage: React.FC = () => {
   useEffect(() => {
     const fetchDeliveryFee = async () => {
       try {
-        const result = await calculateDeliveryFee({ subtotal });
+        const userStr = localStorage.getItem('user');
+        const userObj = userStr ? JSON.parse(userStr) : null;
+        const result = await calculateDeliveryFee({
+          subtotal,
+          userId: userObj?.id || userObj?._id,
+          email: userObj?.email,
+          phone: userObj?.phone
+        });
         setDeliveryCalculation(result);
       } catch (err) {
         console.error('Error fetching delivery calculation:', err);

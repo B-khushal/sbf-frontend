@@ -109,16 +109,25 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   
   if (requiredRole && user) {
     if (requiredRole === 'admin') {
+      if (user.role === 'vendor' || Boolean(user.vendorStatus)) {
+        return <Navigate to="/vendor/dashboard" replace />;
+      }
       if (!allowedAdminRoles.includes(user.role)) {
         return <Navigate to="/" replace />;
       }
     } else if (user.role !== requiredRole) {
+      if (user.role === 'vendor' || Boolean(user.vendorStatus)) {
+        return <Navigate to="/vendor/dashboard" replace />;
+      }
       return <Navigate to="/admin" replace />;
     }
   }
 
   // If permission check is required
   if (requiredPermission && user) {
+    if (user.role === 'vendor' || Boolean(user.vendorStatus)) {
+      return <Navigate to="/vendor/dashboard" replace />;
+    }
     if (user.role !== 'platform_admin' && user.role !== 'admin') {
       const hasPerm = user.permissions && user.permissions.includes(requiredPermission);
       if (!hasPerm) {

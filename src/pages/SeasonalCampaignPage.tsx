@@ -252,7 +252,13 @@ const SeasonalCampaignPage: React.FC<SeasonalCampaignPageProps> = ({ slug }) => 
     );
   }
 
-  const { theme, seo, offers, categories, delivery, general, banners } = campaign;
+  const theme = campaign.theme || {};
+  const seo = campaign.seo || {};
+  const offers = campaign.offers || [];
+  const categories = campaign.categories || [];
+  const delivery = campaign.delivery || {};
+  const general = campaign.general || {};
+  const banners = campaign.banners || [];
 
   // Custom colors and styles
   const primaryBg = theme.backgroundGradient || `linear-gradient(to bottom right, ${theme.primaryColor || '#6d28d9'}, ${theme.secondaryColor || '#4f46e5'})`;
@@ -614,12 +620,11 @@ const SeasonalCampaignPage: React.FC<SeasonalCampaignPageProps> = ({ slug }) => 
               </div>
             )}
 
-            {/* Products Grid */}
             {filteredProducts.length === 0 ? (
               <div className="text-center py-16 text-gray-500 border border-dashed rounded-2xl bg-gray-50">
                 <Gift className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-lg">No products available in this category yet.</p>
-                <p className="text-sm text-gray-400 mt-1">Please explore other category filters above.</p>
+                <p className="text-lg font-bold text-gray-700">No products available for this occasion yet (0 Products)</p>
+                <p className="text-sm text-gray-400 mt-1">Admin has not selected products for this campaign. Check back soon or browse our full collection!</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -710,8 +715,8 @@ const SeasonalCampaignPage: React.FC<SeasonalCampaignPageProps> = ({ slug }) => 
               </div>
               <h3 className="font-bold text-gray-800 text-lg mb-2">Same Day Delivery</h3>
               <p className="text-sm text-gray-500">
-                {delivery.sameDayEnabled
-                  ? `Express Same Day Delivery is available for this campaign! Charges: ₹${delivery.sameDayCharge || 0}.`
+                {delivery?.sameDayEnabled
+                  ? `Express Same Day Delivery is available for this campaign! Charges: ₹${delivery?.sameDayCharge || 0}.`
                   : 'Same day delivery cutoff rules apply based on location.'}
               </p>
             </div>
@@ -722,8 +727,8 @@ const SeasonalCampaignPage: React.FC<SeasonalCampaignPageProps> = ({ slug }) => 
               </div>
               <h3 className="font-bold text-gray-800 text-lg mb-2">Midnight Surprise</h3>
               <p className="text-sm text-gray-500">
-                {delivery.midnightEnabled
-                  ? `Surprise your loved ones at midnight! Enabled with a standard service charge of ₹${delivery.midnightCharge || 0}.`
+                {delivery?.midnightEnabled
+                  ? `Surprise your loved ones at midnight! Enabled with a standard service charge of ₹${delivery?.midnightCharge || 0}.`
                   : 'Midnight surprise deliveries available in selected zones.'}
               </p>
             </div>

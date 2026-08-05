@@ -374,22 +374,19 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
   console.log('Shop Categories:', shopCategories);
   console.log('Settings Categories:', settingsCategories);
   
-  const flowerCategories = (shopCategories || settingsCategories)
-    .filter(cat => {
-      const dbMatch = dbCategories.find(
-        c => c.name.toLowerCase() === cat.name.toLowerCase() || c.slug.toLowerCase() === cat.name.toLowerCase()
-      );
-      return dbMatch ? dbMatch.showInShop !== false : true;
-    })
+  const sourceCategories = dbCategories.length > 0 ? dbCategories : (shopCategories || settingsCategories);
+  
+  const flowerCategories = sourceCategories
+    .filter(cat => cat.showInShop === true)
     .map(cat => ({
       name: cat.name,
       description: cat.description,
-      image: cat.image,
-      category: cat.name.toLowerCase().replace(/\s+/g, '-'),
-      featured: cat.order < 3, // First 3 categories are featured
+      image: cat.image || '/images/roses-1.png',
+      category: cat.slug || cat.name.toLowerCase().replace(/\s+/g, '-'),
+      featured: cat.isFeatured || false,
       count: filteredProducts.filter(p => 
         p.category?.toLowerCase() === cat.name.toLowerCase() || 
-        p.categories?.some(productCat => productCat.toLowerCase() === cat.name.toLowerCase())
+        p.categories?.some((productCat: any) => productCat.toLowerCase() === cat.name.toLowerCase())
       ).length
     }));
 
@@ -879,7 +876,7 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
                 mobileFilterOpen ? "max-h-[1200px] opacity-100 translate-y-0 mt-3 mb-4" : "max-h-0 opacity-0 -translate-y-1"
               )}
             >
-              <div className="w-full rounded-2xl bg-white shadow-md border border-gray-200 p-4">
+              <div className="w-full rounded-2xl bg-white shadow-md border border-gray-200 p-4 max-h-[75vh] overflow-y-auto sidebar-scrollable">
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-sky-500 to-pink-500">Filters</h2>
                   <button
@@ -1104,7 +1101,7 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
             
             {/* Filters Sidebar - Desktop Only (>= lg) */}
             <div className="hidden lg:block lg:col-span-1">
-              <div className="bg-white/80 backdrop-blur-md rounded-xl shadow-sm border border-sky-100 p-4 sticky top-24">
+              <div className="bg-white/90 backdrop-blur-md rounded-xl shadow-sm border border-sky-100 p-4 sticky top-24 max-h-[calc(100vh-110px)] overflow-y-auto sidebar-scrollable pr-2">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-sky-500 to-pink-500 flex items-center gap-2">
                     <Filter size={18} />

@@ -202,6 +202,8 @@ const OffersManager = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState<'general' | 'design' | 'triggers' | 'ab'>('general');
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'mobile'>('desktop');
+  const [previewCopied, setPreviewCopied] = useState(false);
+  const [previewDismissed, setPreviewDismissed] = useState(false);
   const [selectedOfferForAnalytics, setSelectedOfferForAnalytics] = useState<Offer | null>(null);
 
   // Form states
@@ -813,6 +815,40 @@ const OffersManager = () => {
                     placeholder="Enter details about your premium coupon discount offer..."
                     className="w-full bg-slate-950/60 border border-slate-800/80 rounded-xl p-3 text-sm focus:outline-none focus:border-amber-400/50"
                   />
+                </div>
+
+                {/* Promo Code & Discount Auto-Sync Banner */}
+                <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-start gap-2.5 text-xs text-amber-300">
+                  <Sparkles className="h-4.5 w-4.5 shrink-0 mt-0.5 text-amber-400 animate-pulse" />
+                  <div>
+                    <span className="font-bold">Checkout Promo Code Auto-Sync:</span> Entering a promo code here (e.g. <span className="font-mono text-yellow-200 uppercase font-black px-1 py-0.5 bg-black/40 rounded">BFF20</span>) automatically activates it for customer checkout with this campaign's discount %, start date, and end date!
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="code_general" className="text-xs text-slate-400">Promo Coupon Code</Label>
+                    <Input
+                      id="code_general"
+                      value={currentOffer.code || ''}
+                      onChange={(e) => setCurrentOffer({ ...currentOffer, code: e.target.value.toUpperCase() })}
+                      placeholder="e.g. BFF20 or SUMMER50"
+                      className="bg-slate-950/60 border-slate-800/80 rounded-xl font-mono uppercase text-amber-300 font-bold tracking-wider"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="discountPercent_general" className="text-xs text-slate-400">Discount Percentage (%)</Label>
+                    <Input
+                      id="discountPercent_general"
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={currentOffer.discountPercent ?? 10}
+                      onChange={(e) => setCurrentOffer({ ...currentOffer, discountPercent: parseInt(e.target.value, 10) || 0 })}
+                      className="bg-slate-950/60 border-slate-800/80 rounded-xl text-yellow-300 font-bold"
+                    />
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1431,90 +1467,132 @@ const OffersManager = () => {
             </div>
 
             {/* Simulating device screen frame */}
-            <div className="bg-slate-950 rounded-[32px] border border-slate-800 p-4 h-[520px] flex items-center justify-center overflow-hidden relative shadow-inner">
+            <div className="bg-slate-950 rounded-[32px] border border-slate-800 p-4 h-[540px] flex items-center justify-center overflow-hidden relative shadow-inner">
               
-              {/* Inner simulation screen */}
-              {previewDevice === 'desktop' ? (
-                /* Desktop layout popup simulator */
+              {previewDismissed ? (
+                <div className="text-center space-y-3 p-6">
+                  <div className="w-12 h-12 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center mx-auto text-amber-400">
+                    <Eye className="h-6 w-6" />
+                  </div>
+                  <p className="text-xs font-semibold text-slate-400">Preview popup was dismissed</p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="border-slate-700 text-slate-200 hover:bg-slate-900 text-xs rounded-xl"
+                    onClick={() => setPreviewDismissed(false)}
+                  >
+                    Re-open Live Preview
+                  </Button>
+                </div>
+              ) : previewDevice === 'desktop' ? (
+                /* Desktop layout popup simulator (2-column card with image) */
                 <div
                   style={{
                     background: currentOffer.background || festivalThemes[currentOffer.theme || 'general']?.gradient || festivalThemes.general.gradient,
                     color: currentOffer.textColor || '#ffffff'
                   }}
-                  className="w-full max-w-[380px] rounded-[24px] border border-white/10 shadow-2xl p-5 overflow-hidden flex flex-col relative font-sans text-left scale-90 sm:scale-100"
+                  className="w-full max-w-[460px] rounded-[24px] border border-white/15 shadow-2xl overflow-hidden flex flex-col sm:flex-row relative font-sans text-left transition-all duration-300 hover:shadow-amber-500/10"
                 >
                   {/* Close button simulator */}
-                  <div className="absolute right-3 top-3 rounded-full p-1 bg-black/10 text-white/70">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPreviewDismissed(true);
+                      toast({ title: "Preview Closed", description: "Click Re-open to restore live preview." });
+                    }}
+                    className="absolute right-3 top-3 z-30 rounded-full p-1.5 bg-black/30 hover:bg-black/50 text-white transition-all cursor-pointer"
+                    title="Simulate close action"
+                  >
                     <X className="h-3.5 w-3.5" />
-                  </div>
+                  </button>
 
-                  <div className="flex gap-1.5 items-center mb-2">
-                    <span className="px-2 py-0.5 text-[8px] font-black uppercase tracking-wider bg-white/90 text-slate-900 rounded-full shadow-sm">
-                      ✨ {currentOffer.badgeText || 'Exclusive Offer'}
-                    </span>
-                  </div>
-
-                  <h3 className="text-xl font-bold tracking-tight leading-tight font-serif text-white">
-                    {currentOffer.title || 'Special Floral Promotion'}
-                  </h3>
-                  {currentOffer.subtitle && (
-                    <h4 className="text-[10px] font-semibold text-yellow-300 uppercase tracking-widest mb-2">
-                      {currentOffer.subtitle}
-                    </h4>
-                  )}
-
-                  <p className="text-xs opacity-80 leading-relaxed mb-4">
-                    {currentOffer.description || 'Provide a compelling description of the premium campaign discounts here.'}
-                  </p>
-
-                  {/* Claim bar simulator */}
-                  <div className="mb-4 bg-black/20 rounded-xl p-2.5 border border-white/5">
-                    <div className="flex justify-between items-center text-[9px] font-bold mb-1">
-                      <span className="text-slate-300">Claim rate</span>
-                      <span className="text-yellow-300">482 claimed today</span>
+                  {/* Desktop Preview Image Column */}
+                  {(currentOffer.imageUrl || currentOffer.image || currentOffer.mobileImageUrl) ? (
+                    <div className="w-full sm:w-5/12 h-36 sm:h-auto overflow-hidden relative shrink-0 bg-slate-900">
+                      <img
+                        src={currentOffer.imageUrl || currentOffer.image || currentOffer.mobileImageUrl}
+                        alt="Offer Preview"
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = 'https://images.unsplash.com/photo-1563241527-3004b7be0ffd?w=600&auto=format&fit=crop&q=80';
+                        }}
+                      />
+                      {currentOffer.badgeText && (
+                        <span className="absolute top-2 left-2 z-10 px-2 py-0.5 text-[8px] font-black uppercase tracking-wider bg-white/90 text-slate-900 rounded-full shadow-sm">
+                          ✨ {currentOffer.badgeText}
+                        </span>
+                      )}
                     </div>
-                    <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-amber-400 to-yellow-300 w-3/4 rounded-full" />
-                    </div>
-                  </div>
-
-                  {/* Coupon simulator */}
-                  {currentOffer.code && (
-                    <div className="mb-4 bg-black/35 rounded-xl p-1.5 flex items-center justify-between border border-white/10">
-                      <span className="font-mono text-xs font-black tracking-widest text-yellow-300 uppercase pl-2">
-                        {currentOffer.code}
-                      </span>
-                      <span className="bg-white text-[9px] font-bold text-slate-900 px-3 py-1.5 rounded-lg uppercase tracking-wider">
-                        Copy Code
-                      </span>
+                  ) : (
+                    <div className="w-full sm:w-5/12 h-32 sm:h-auto bg-black/30 border-r border-white/10 flex flex-col items-center justify-center p-3 text-center shrink-0">
+                      <Sparkles className="h-5 w-5 text-amber-400 mb-1 animate-pulse" />
+                      <span className="text-[9px] font-bold text-white/70">Image Preview</span>
+                      <span className="text-[8px] text-white/40 leading-snug">Upload file or paste link</span>
                     </div>
                   )}
 
-                  {/* Countdown simulator */}
-                  {currentOffer.showCountdown !== false && (
-                    <div className="mb-4 text-center">
-                      <div className="flex gap-1 text-[10px] font-bold text-slate-300 justify-center">
-                        <span className="bg-black/25 px-1.5 py-0.5 rounded">02d</span> :
-                        <span className="bg-black/25 px-1.5 py-0.5 rounded">14h</span> :
-                        <span className="bg-black/25 px-1.5 py-0.5 rounded">45m</span> :
-                        <span className="bg-black/25 px-1.5 py-0.5 rounded">12s</span>
+                  {/* Desktop Preview Content Column */}
+                  <div className="flex-1 p-4 flex flex-col justify-between relative z-10 min-w-0">
+                    <div>
+                      <div className="flex gap-1.5 items-center mb-1.5">
+                        <span className="px-2 py-0.5 text-[8px] font-black uppercase tracking-wider bg-yellow-300 text-slate-950 rounded-full shadow-sm">
+                          {currentOffer.discountPercent ? `${currentOffer.discountPercent}% SPECIAL` : 'SPECIAL OFFER'}
+                        </span>
                       </div>
+
+                      <h3 className="text-base font-extrabold tracking-tight leading-snug font-serif text-white mb-0.5 truncate">
+                        {currentOffer.title || 'Special Floral Promotion'}
+                      </h3>
+                      {currentOffer.subtitle && (
+                        <h4 className="text-[9px] font-bold text-yellow-200 uppercase tracking-wider mb-1.5 truncate">
+                          {currentOffer.subtitle}
+                        </h4>
+                      )}
+
+                      <p className="text-[11px] opacity-85 leading-relaxed mb-3 line-clamp-3">
+                        {currentOffer.description || 'Provide a compelling description of the campaign discounts here.'}
+                      </p>
+
+                      {/* Coupon Pill */}
+                      {currentOffer.code && (
+                        <div className="mb-3 bg-black/40 rounded-xl p-1 flex items-center justify-between border border-white/15">
+                          <span className="font-mono text-xs font-black tracking-widest text-yellow-300 uppercase pl-2 select-all">
+                            {currentOffer.code}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(currentOffer.code || '');
+                              setPreviewCopied(true);
+                              toast({ title: "Code Copied!", description: `Simulated coupon copy: ${currentOffer.code}` });
+                              setTimeout(() => setPreviewCopied(false), 2000);
+                            }}
+                            className={`text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                              previewCopied ? 'bg-emerald-500 text-white' : 'bg-white hover:bg-slate-100 text-slate-900'
+                            }`}
+                          >
+                            {previewCopied ? 'Copied!' : 'Copy Code'}
+                          </button>
+                        </div>
+                      )}
                     </div>
-                  )}
 
-                  <div className="py-2.5 px-4 bg-amber-400 text-slate-950 text-xs font-bold uppercase tracking-wider rounded-xl text-center shadow-md">
-                    {currentOffer.buttonText || 'Explore Collection'}
-                  </div>
-
-                  <div className="flex justify-between border-t border-white/10 pt-3 text-[7px] text-slate-300 font-bold uppercase tracking-wider mt-4">
-                    <span>🚚 Same Day</span>
-                    <span>🌸 Fresh Flowers</span>
-                    <span>🎁 Premium Pack</span>
+                    {/* Interactive CTA Button */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        toast({ title: "CTA Button Clicked", description: `Simulated navigation to ${currentOffer.buttonLink || '/shop'}` });
+                      }}
+                      className="w-full py-2.5 px-3 bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-slate-950 text-xs font-black uppercase tracking-wider rounded-xl text-center shadow-md transition-all cursor-pointer hover:scale-[1.02] active:scale-95"
+                    >
+                      {currentOffer.buttonText || 'Explore Collection'}
+                    </button>
                   </div>
                 </div>
               ) : (
                 /* Mobile bottom sheet layout popup simulator */
-                <div className="w-[280px] h-[450px] bg-slate-900 rounded-[28px] border-4 border-slate-800 overflow-hidden relative flex flex-col justify-end">
+                <div className="w-[280px] h-[460px] bg-slate-900 rounded-[28px] border-4 border-slate-800 overflow-hidden relative flex flex-col justify-end shadow-2xl">
                   
                   {/* Bottom sheet */}
                   <div
@@ -1522,41 +1600,65 @@ const OffersManager = () => {
                       background: currentOffer.background || festivalThemes[currentOffer.theme || 'general']?.gradient || festivalThemes.general.gradient,
                       color: currentOffer.textColor || '#ffffff'
                     }}
-                    className="w-full rounded-t-[20px] p-4 text-left font-sans relative border-t border-white/10"
+                    className="w-full rounded-t-[20px] p-3.5 text-left font-sans relative border-t border-white/10"
                   >
                     {/* Handle */}
-                    <div className="w-10 h-0.5 bg-white/30 rounded-full mx-auto mb-3" />
+                    <div className="w-8 h-1 bg-white/30 rounded-full mx-auto mb-2.5" />
                     
-                    <h3 className="text-base font-bold tracking-tight leading-tight font-serif text-white mb-1">
-                      {currentOffer.title || 'Special Floral Promotion'}
-                    </h3>
-                    
-                    <p className="text-[10px] opacity-80 leading-relaxed mb-3">
-                      {currentOffer.description || 'Provide a compelling description of the premium campaign discounts here.'}
-                    </p>
-
-                    {currentOffer.code && (
-                      <div className="mb-3 bg-black/35 rounded-lg p-1.5 flex items-center justify-between border border-white/10">
-                        <span className="font-mono text-xs font-bold text-yellow-300 uppercase pl-2">
-                          {currentOffer.code}
-                        </span>
-                        <span className="bg-white text-[8px] font-bold text-slate-900 px-2 py-1 rounded uppercase">
-                          Copy
-                        </span>
+                    {/* Mobile Image Banner */}
+                    {(currentOffer.mobileImageUrl || currentOffer.imageUrl || currentOffer.image) && (
+                      <div className="w-full h-24 rounded-xl overflow-hidden mb-2.5 border border-white/10 shadow-inner">
+                        <img
+                          src={currentOffer.mobileImageUrl || currentOffer.imageUrl || currentOffer.image}
+                          alt="Mobile Offer Preview"
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.src = 'https://images.unsplash.com/photo-1563241527-3004b7be0ffd?w=600&auto=format&fit=crop&q=80';
+                          }}
+                        />
                       </div>
                     )}
 
-                    <div className="py-2 px-3 bg-amber-400 text-slate-950 text-xs font-bold uppercase rounded-lg text-center font-sans shadow-md">
+                    <h3 className="text-sm font-bold tracking-tight leading-tight font-serif text-white mb-1 truncate">
+                      {currentOffer.title || 'Special Floral Promotion'}
+                    </h3>
+                    
+                    <p className="text-[10px] opacity-85 leading-relaxed mb-2.5 line-clamp-2">
+                      {currentOffer.description || 'Provide a compelling description of the discounts here.'}
+                    </p>
+
+                    {currentOffer.code && (
+                      <div className="mb-2.5 bg-black/35 rounded-lg p-1 flex items-center justify-between border border-white/10">
+                        <span className="font-mono text-[11px] font-bold text-yellow-300 uppercase pl-1.5">
+                          {currentOffer.code}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(currentOffer.code || '');
+                            setPreviewCopied(true);
+                            toast({ title: "Code Copied!", description: `Simulated coupon copy: ${currentOffer.code}` });
+                            setTimeout(() => setPreviewCopied(false), 2000);
+                          }}
+                          className={`text-[8px] font-bold uppercase tracking-wider px-2 py-1 rounded transition-all cursor-pointer ${
+                            previewCopied ? 'bg-emerald-500 text-white' : 'bg-white text-slate-900'
+                          }`}
+                        >
+                          {previewCopied ? 'Copied' : 'Copy'}
+                        </button>
+                      </div>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        toast({ title: "CTA Button Clicked", description: `Simulated navigation to ${currentOffer.buttonLink || '/shop'}` });
+                      }}
+                      className="w-full py-2 px-3 bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-bold uppercase rounded-lg text-center font-sans shadow-md cursor-pointer transition-all active:scale-95"
+                    >
                       {currentOffer.buttonText || 'Explore Collection'}
-                    </div>
-
-                    <div className="flex justify-between border-t border-white/10 pt-3 text-[7px] text-slate-300 font-bold uppercase tracking-wider mt-3">
-                      <span>🚚 Same Day</span>
-                      <span>🌸 Guaranteed</span>
-                      <span>🎁 Premium Pack</span>
-                    </div>
+                    </button>
                   </div>
-
                 </div>
               )}
             </div>

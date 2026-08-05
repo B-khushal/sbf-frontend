@@ -55,6 +55,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     return now.toISOString();
   };
   const lastNotificationCheck = useRef<string>(get24HoursAgo());
+  const playedSoundNotificationIds = useRef<Set<string>>(new Set());
   const { toast } = useToast();
 
   const MAX_RETRIES = 3;
@@ -117,6 +118,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
         const storedNotifications = localStorage.getItem('admin_notifications');
         if (storedNotifications) {
           const parsedNotifications = JSON.parse(storedNotifications) as NotificationItem[];
+          parsedNotifications.forEach(n => playedSoundNotificationIds.current.add(n.id));
           setNotifications(parsedNotifications);
           console.log('NotificationContext: Loaded notifications from localStorage');
 
@@ -253,22 +255,24 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
               isRead: notification.isRead || false
             };
 
-            // Check if notification already exists
+            // Play sound once per unique notification ID
+            if (enableSounds && isPrivilegedUser() && !playedSoundNotificationIds.current.has(completeNotification.id)) {
+              playedSoundNotificationIds.current.add(completeNotification.id);
+              if (notification.type === 'order' || completeNotification.title.toLowerCase().includes('order')) {
+                try {
+                  setTimeout(() => playNotificationSound(notification.type || 'default'), 100);
+                } catch (soundError) {
+                  console.error('Error playing notification sound:', soundError);
+                }
+              }
+            }
+
+            // Check if notification already exists in state
             setNotifications(prev => {
               const exists = prev.some(n => n.id === completeNotification.id);
               if (!exists) {
                 // Mark this as a new notification for toast display
                 newNotificationIds.current.add(completeNotification.id);
-
-                // Play sound for new notifications (admin only)
-                if (enableSounds && isPrivilegedUser() && (notification.type === 'order' || completeNotification.title.toLowerCase().includes('order'))) {
-                  try {
-                    setTimeout(() => playNotificationSound(notification.type || 'default'), 100);
-                  } catch (soundError) {
-                    console.error('Error playing notification sound:', soundError);
-                  }
-                }
-
                 return [completeNotification, ...prev];
               }
               return prev;
