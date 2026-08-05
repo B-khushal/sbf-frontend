@@ -36,7 +36,8 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
 
   if (!product) return null;
 
-  const isInWishlist = wishlistItems.some(item => item.id === product._id);
+  const prodId = String(product._id || (product as any).id || '');
+  const isInWishlist = wishlistItems.some(item => String(item.id) === prodId || String((item as any).productId) === prodId);
   const discountedPrice = product.discount > 0
     ? product.price - (product.price * product.discount / 100)
     : product.price;
@@ -44,14 +45,8 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
   const handleWishlistToggle = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!user) {
-      toast.error("Please login first to manage your wishlist");
-      navigate('/login');
-      return;
-    }
     
     try {
-      const prodId = String(product._id || product.id || '');
       const prodTitle = product.title || product.name || '';
       const rawPrice = product.price ?? product.costPrice ?? 0;
       const prodPrice = typeof rawPrice === 'number' ? rawPrice : parseFloat(rawPrice || '0');
@@ -70,10 +65,8 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
 
       if (isInWishlist) {
         await removeFromWishlist(prodId);
-        toast.success("Removed from wishlist");
       } else {
         await addToWishlist(wishlistItem);
-        toast.success("Added to wishlist");
       }
     } catch (e) {
       console.error(e);

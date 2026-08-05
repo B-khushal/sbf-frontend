@@ -286,7 +286,8 @@ export const ProductCard = ({ product, onAddToCart }: {
   const [isHeartPounding, setIsHeartPounding] = useState(false);
   const { user } = useAuth();
 
-  const isInWishlist = wishlistItems.some(item => item.id === product._id);
+  const prodId = String(product._id || (product as any).id || '');
+  const isInWishlist = wishlistItems.some(item => String(item.id) === prodId || String((item as any).productId) === prodId);
 
   // Handle main card click - redirect to product details
   const handleCardClick = (e: React.MouseEvent) => {
@@ -377,22 +378,6 @@ export const ProductCard = ({ product, onAddToCart }: {
   const handleWishlistToggle = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-
-    if (!user) {
-      toast.error("Please login first to add items to your wishlist", {
-        description: "You'll be redirected to the login page",
-        duration: 3000,
-      });
-      setTimeout(() => {
-        navigate('/login', {
-          state: {
-            redirect: window.location.pathname,
-            message: "Please login to manage your wishlist"
-          }
-        });
-      }, 1500);
-      return;
-    }
 
     setIsHeartPounding(true);
     setTimeout(() => setIsHeartPounding(false), 500);

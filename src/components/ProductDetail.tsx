@@ -419,6 +419,8 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
   const { user } = useAuth();
   const { addToCart } = useCart();
   const { addItem: addToWishlist, removeItem: removeFromWishlist, items: wishlistItems } = useWishlist();
+  const currentProductId = String(product._id || product.id || '');
+  const isInWishlist = wishlistItems?.some(i => String(i.id) === currentProductId || String((i as any).productId) === currentProductId);
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [isCustomizerExpanded, setIsCustomizerExpanded] = useState(false);
   const [customizations, setCustomizations] = useState<CustomizationData | undefined>();
@@ -879,18 +881,6 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
 
   const handleAddToWishlist = async () => {
     try {
-      // Validate product data
-      if (!product._id || !product.title || typeof product.price !== 'number') {
-        console.error('Invalid product data for wishlist:', product);
-        toast({
-          title: "Error",
-          description: "Invalid product data",
-          type: "error",
-          duration: 3000,
-        });
-        return;
-      }
-
       const prodId = String(product._id || product.id || '');
       const prodTitle = product.title || product.name || '';
       const rawPrice = product.price ?? product.costPrice ?? 0;
@@ -899,8 +889,9 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
       if (!prodId || !prodTitle) {
         toast({
           title: "Invalid product data",
-          description: "Cannot add this product to wishlist",
-          variant: "destructive"
+          description: "Cannot update wishlist for this product",
+          type: "error",
+          duration: 3000,
         });
         return;
       }
@@ -916,37 +907,25 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
         price: prodPrice
       };
 
-      console.log("Adding to wishlist from ProductDetail:", wishlistItem);
+      const isCurrentlyInWishlist = wishlistItems?.some(
+        i => String(i.id) === prodId || String((i as any).productId) === prodId
+      );
 
-      // Use the wishlist hook to add item
-      await addToWishlist(wishlistItem);
-
-    } catch (error) {
-      console.error("Error adding to wishlist:", error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to add to wishlist';
-
-      if (errorMessage.includes('log in')) {
-        toast({
-          title: "Please log in",
-          description: "You need to be logged in to add items to wishlist",
-          type: "login",
-          duration: 4000,
-        });
-      } else if (errorMessage.includes('already in wishlist')) {
-        toast({
-          title: "Already in wishlist",
-          description: "This item is already in your wishlist",
-          type: "info",
-          duration: 3000,
-        });
+      if (isCurrentlyInWishlist) {
+        await removeFromWishlist(prodId);
       } else {
-        toast({
-          title: "Error",
-          description: errorMessage,
-          type: "error",
-          duration: 3000,
-        });
+        await addToWishlist(wishlistItem);
       }
+    } catch (error) {
+      console.error("Error updating wishlist:", error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update wishlist';
+
+      toast({
+        title: "Error",
+        description: errorMessage,
+        type: "error",
+        duration: 3000,
+      });
     }
   };
 
@@ -1893,9 +1872,9 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                 type="button"
                 onClick={handleAddToWishlist}
                 className="h-12 w-12 border border-slate-200 dark:border-slate-800 flex items-center justify-center rounded-xl bg-white dark:bg-slate-950 hover:bg-slate-50 hover:scale-105 active:scale-95 transition-all duration-300 text-slate-700 dark:text-slate-350 shadow-sm"
-                title="Add to wishlist"
+                title={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
               >
-                <Heart size={18} className={cn("transition-colors", wishlistItems?.some(i => i.id === String(product._id)) ? "fill-rose-500 text-rose-500" : "")} />
+                <Heart size={18} className={cn("transition-colors", isInWishlist ? "fill-rose-500 text-rose-500" : "")} />
               </button>
 
               <button
@@ -1982,9 +1961,9 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                   type="button"
                   onClick={handleAddToWishlist}
                   className="h-11 w-11 border border-slate-200 dark:border-slate-800 flex items-center justify-center rounded-xl bg-white dark:bg-slate-950 hover:bg-slate-50 hover:scale-105 active:scale-95 transition-all text-slate-700 dark:text-slate-350 shadow-sm"
-                  title="Add to wishlist"
+                  title={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
                 >
-                  <Heart size={16} className={cn("transition-colors", wishlistItems?.some(i => i.id === String(product._id)) ? "fill-rose-500 text-rose-500" : "")} />
+                  <Heart size={16} className={cn("transition-colors", isInWishlist ? "fill-rose-500 text-rose-500" : "")} />
                 </button>
                 <button
                   type="button"

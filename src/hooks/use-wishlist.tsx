@@ -248,17 +248,6 @@ const useWishlist = () => {
       return;
     }
 
-    // Check if user is authenticated
-    if (!isAuthenticated) {
-      toast({
-        title: "Please log in",
-        description: "You need to be logged in to add items to wishlist",
-        type: "login",
-        duration: 4000,
-      });
-      return;
-    }
-
     setGlobalIsLoading(true);
 
     try {
@@ -290,7 +279,7 @@ const useWishlist = () => {
         }
       } else {
         // Fallback to localStorage for non-authenticated users
-        const exists = globalItems.some(existingItem => existingItem.id === item.id);
+        const exists = globalItems.some(existingItem => String(existingItem.id) === String(item.id));
 
         if (exists) {
           toast({
@@ -341,16 +330,6 @@ const useWishlist = () => {
   };
 
   const removeItem = async (id: string) => {
-    if (!isAuthenticated) {
-      toast({
-        title: "Please log in",
-        description: "You need to be logged in to manage your wishlist",
-        type: "login",
-        duration: 4000,
-      });
-      return;
-    }
-
     setGlobalIsLoading(true);
 
     try {
@@ -381,7 +360,7 @@ const useWishlist = () => {
         }
       } else {
         // Fallback to localStorage for non-authenticated users
-        const newItems = globalItems.filter(item => item.id !== id);
+        const newItems = globalItems.filter(item => String(item.id) !== String(id));
         setGlobalItems(newItems);
         localStorage.setItem('wishlist', JSON.stringify(newItems));
 
@@ -404,16 +383,6 @@ const useWishlist = () => {
   };
 
   const clearWishlist = async () => {
-    if (!isAuthenticated) {
-      toast({
-        title: "Please log in",
-        description: "You need to be logged in to manage your wishlist",
-        type: "login",
-        duration: 4000,
-      });
-      return;
-    }
-
     setGlobalIsLoading(true);
 
     try {
