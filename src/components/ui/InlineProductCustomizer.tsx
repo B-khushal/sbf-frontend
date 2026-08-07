@@ -323,17 +323,20 @@ export function InlineProductCustomizer({
   // Combo items subtotal additions
   const comboTotal = useMemo(() => {
     if (product.category !== 'combos' || !product.comboItems) return baseDiscountedPrice;
-    let total = baseDiscountedPrice;
+    let extra = 0;
     product.comboItems.forEach((item, idx) => {
       const customization = customizations.comboItemCustomizations?.find(c => c.itemIndex === idx);
-      let price = item.price;
-      if (item.customizationOptions.allowVariants && item.customizationOptions.variants && customization?.selectedVariant) {
+      if (item.customizationOptions?.allowVariants && item.customizationOptions?.variants && customization?.selectedVariant) {
         const variant = item.customizationOptions.variants.find(v => v.name === customization.selectedVariant);
-        if (variant) price = variant.price;
+        if (variant && variant.price > item.price) {
+          extra += (variant.price - item.price) * (customization?.quantity || 1);
+        }
       }
-      total += price * (customization?.quantity || 1);
+      if (customization?.quantity && customization.quantity > 1) {
+        extra += item.price * (customization.quantity - 1);
+      }
     });
-    return total;
+    return baseDiscountedPrice + extra;
   }, [product, customizations, baseDiscountedPrice]);
 
   const activeTotalPrice = product.category === 'combos' ? comboTotal : (baseDiscountedPrice + addonsTotal);

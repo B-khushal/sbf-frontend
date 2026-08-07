@@ -259,18 +259,19 @@ const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCar
 };
 
 const getComboMaxPrice = (product: Product) => {
-  if (product.category !== 'combos' || !product.comboItems) return product.price;
-  let total = product.price;
+  if (product.price && product.price > 0) return product.price;
+  if (!product.comboItems || product.comboItems.length === 0) return product.price || 0;
+  let total = 0;
   product.comboItems.forEach(item => {
     if (item.customizationOptions && item.customizationOptions.allowVariants && item.customizationOptions.variants && item.customizationOptions.variants.length > 0) {
       // Use the max variant price
       const maxVariant = item.customizationOptions.variants.reduce((max, v) => v.price > max ? v.price : max, 0);
       total += maxVariant;
     } else {
-      total += item.price;
+      total += item.price || 0;
     }
   });
-  return total;
+  return total || product.price || 0;
 };
 
 export const ProductCard = ({ product, onAddToCart }: {

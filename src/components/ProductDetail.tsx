@@ -224,18 +224,19 @@ const RecommendedProducts: React.FC<{ productId: string; category: string }> = (
 };
 
 const getComboMaxPrice = (product: ProductData) => {
-  if (product.category !== 'combos' || !product.comboItems) return product.price;
-  let total = product.price;
+  if (product.price && product.price > 0) return product.price;
+  if (!product.comboItems || product.comboItems.length === 0) return product.price || 0;
+  let total = 0;
   product.comboItems.forEach(item => {
     if (item.customizationOptions && item.customizationOptions.allowVariants && item.customizationOptions.variants && item.customizationOptions.variants.length > 0) {
       // Use the max variant price
       const maxVariant = item.customizationOptions.variants.reduce((max, v) => v.price > max ? v.price : max, 0);
       total += maxVariant;
     } else {
-      total += item.price;
+      total += item.price || 0;
     }
   });
-  return total;
+  return total || product.price || 0;
 };
 
 const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailProps) => {
@@ -1590,26 +1591,18 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
             {/* 4. Price Section */}
             <div className="py-4 border-y border-slate-200/40 dark:border-slate-800/40">
               <div className="flex items-baseline gap-3">
-                {product.category === 'combos' && product.comboItems && product.comboItems.length > 0 ? (
-                  <span className="text-3xl lg:text-[3rem] font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-                    {formatPrice(convertPrice(getComboMaxPrice(product)))}
+                <motion.span
+                  key={displayDiscountedPrice}
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-3xl lg:text-[3rem] font-bold text-slate-900 dark:text-slate-100 tracking-tight"
+                >
+                  {formatPrice(convertPrice(displayDiscountedPrice))}
+                </motion.span>
+                {product.discount > 0 && (
+                  <span className="text-lg text-slate-400 line-through font-medium">
+                    {formatPrice(convertPrice(displayPrice))}
                   </span>
-                ) : (
-                  <>
-                    <motion.span
-                      key={displayDiscountedPrice}
-                      initial={{ opacity: 0, y: -4 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="text-3xl lg:text-[3rem] font-bold text-slate-900 dark:text-slate-100 tracking-tight"
-                    >
-                      {formatPrice(convertPrice(displayDiscountedPrice))}
-                    </motion.span>
-                    {product.discount > 0 && (
-                      <span className="text-lg text-slate-400 line-through font-medium">
-                        {formatPrice(convertPrice(displayPrice))}
-                      </span>
-                    )}
-                  </>
                 )}
               </div>
 
