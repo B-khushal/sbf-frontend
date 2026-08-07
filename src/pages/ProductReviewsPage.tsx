@@ -222,11 +222,6 @@ const ProductReviewsPage = () => {
       });
     } catch (error) {
       console.error('Failed to load product reviews:', error);
-      toast({
-        title: 'Could Not Load Reviews',
-        description: 'Please refresh and try again.',
-        variant: 'destructive',
-      });
     } finally {
       setLoading(false);
       setLoadingMore(false);

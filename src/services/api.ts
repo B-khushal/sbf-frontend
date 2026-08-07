@@ -122,8 +122,9 @@ api.interceptors.response.use(
       }
     }
     
-    // Only show toast for critical errors, not for every 404 or network issue
-    if (error.response?.status >= 500) {
+    // Only show toast for critical errors, not for background queries or review requests
+    const isReviewRequest = error.config?.url?.includes('/reviews');
+    if (error.response?.status >= 500 && !isReviewRequest) {
       const message = error.response?.data?.message || 'Server error occurred';
       toast({
         variant: "destructive",

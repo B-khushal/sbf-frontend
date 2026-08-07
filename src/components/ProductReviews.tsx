@@ -59,11 +59,6 @@ const ProductReviews = ({ productId, productTitle = 'This arrangement', onReview
       setViewer(response.viewer);
     } catch (error) {
       console.error('Failed to fetch product review preview:', error);
-      toast({
-        title: 'Could Not Load Reviews',
-        description: 'The product reviews are temporarily unavailable.',
-        variant: 'destructive',
-      });
     } finally {
       setLoading(false);
     }

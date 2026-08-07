@@ -531,6 +531,13 @@ const mapBackendToFrontend = (data: BackendProductData): ProductData => {
   // Create a copy to avoid modifying the original
   const mappedData: Partial<ProductData> = { ...data } as any;
 
+  // Ensure numeric price, discount, and costPrice
+  mappedData.price = data.price !== undefined ? Number(data.price) : 0;
+  mappedData.discount = data.discount !== undefined ? Number(data.discount) : 0;
+  if (data.costPrice !== undefined) {
+    mappedData.costPrice = Number(data.costPrice);
+  }
+
   // Map either backend field (isNew or isNewArrival) to frontend isNewArrival
   if ('isNew' in data || 'isNewArrival' in data) {
     mappedData.isNewArrival = Boolean(

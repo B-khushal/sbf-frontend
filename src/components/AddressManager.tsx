@@ -131,15 +131,18 @@ const AddressManager: React.FC = () => {
     }
 
     try {
+      const streetVal = formData.address || (formData as any).street || (formData as any).formattedAddress || '';
+      const zipVal = formData.zipCode || (formData as any).pincode || '';
+
       const normalizedAddress: Address = {
         id: currentAddress?.id || Date.now().toString(),
         firstName: formData.firstName || '',
         lastName: formData.lastName || '',
-        address: formData.address || '',
+        address: streetVal,
         apartment: formData.apartment || '',
-        city: formData.city || '',
-        state: formData.state || '',
-        zipCode: formData.zipCode || '',
+        city: formData.city || 'Hyderabad',
+        state: formData.state || 'Telangana',
+        zipCode: zipVal,
         phone: formData.phone || '',
         email: formData.email || '',
         notes: formData.notes || '',
@@ -155,6 +158,8 @@ const AddressManager: React.FC = () => {
         receiverCity: formData.receiverCity || '',
         receiverState: formData.receiverState || '',
         receiverZipCode: formData.receiverZipCode || '',
+        formattedAddress: streetVal,
+        pincode: zipVal,
       };
       
       if (currentAddress) {
@@ -457,7 +462,7 @@ const AddressManager: React.FC = () => {
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <h4 className="font-medium">
-                          {address.firstName} {address.lastName}
+                          {address.firstName || address.lastName ? `${address.firstName || ''} ${address.lastName || ''}`.trim() : (address as any).fullName || 'Saved Address'}
                         </h4>
                         {address.isDefault && (
                           <Badge variant="outline" className="text-xs">Default</Badge>
@@ -466,12 +471,12 @@ const AddressManager: React.FC = () => {
                           <Badge variant="secondary" className="text-xs">Gift Address</Badge>
                         )}
                       </div>
-                      <p className="text-sm">{address.address}</p>
+                      <p className="text-sm">{address.address || address.formattedAddress || (address as any).street}</p>
                       {address.apartment && <p className="text-sm">{address.apartment}</p>}
                       <p className="text-sm">
-                        {address.city}, {address.state} {address.zipCode}
+                        {address.city}, {address.state} {address.zipCode || address.pincode}
                       </p>
-                      <p className="text-sm">{address.phone}</p>
+                      {address.phone && <p className="text-sm">{address.phone}</p>}
                       
                       {address.deliveryOption === 'gift' && (
                         <div className="mt-2 pt-2 border-t border-dashed">

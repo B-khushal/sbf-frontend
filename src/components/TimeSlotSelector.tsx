@@ -894,8 +894,8 @@ const TimeSlotSelector = ({
           >
             <div className="flex items-center justify-between">
               <span className="text-xl">🚚</span>
-              <span className="text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
-                ₹0 (FREE)
+              <span className="text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300">
+                +{formatPrice(convertPrice(150))}
               </span>
             </div>
             <div className="mt-2.5">
@@ -917,7 +917,7 @@ const TimeSlotSelector = ({
             <div className="flex items-center justify-between">
               <span className="text-xl">🌙</span>
               <span className="text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-300">
-                +{formatPrice(convertPrice(valSettings?.midnightCharge ?? 200))}
+                +{formatPrice(convertPrice(valSettings?.midnightCharge ?? 300))}
               </span>
             </div>
             <div className="mt-2.5">
@@ -1041,8 +1041,8 @@ const TimeSlotSelector = ({
           </div>
         )}
 
-        {/* Special Delivery Upgrades Toggles (Surprise & Anonymous) */}
-        {(onToggleSurpriseDelivery || onToggleAnonymousGift) && (
+        {/* Special Delivery Upgrades Toggles (Surprise & Anonymous) - Only visible when Valentine Mode is ON */}
+        {isValentineEnabled && (onToggleSurpriseDelivery || onToggleAnonymousGift) && (
           <div className="mt-4 pt-4 border-t border-slate-200 space-y-2.5">
             <p className="text-xs font-extrabold uppercase tracking-wider text-rose-800 flex items-center gap-1.5">
               <span>✨</span> Valentine Delivery Upgrades

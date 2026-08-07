@@ -24,6 +24,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { buildProductReviewUrl } from '@/utils/reviewUrls';
 import PinCodeInput from '@/components/ui/PinCodeInput';
 import ProtectedImage from './ui/ProtectedImage';
+import { useValentine } from '@/contexts/ValentineContext';
 
 const MotionProtectedImage = motion(ProtectedImage);
 
@@ -224,19 +225,18 @@ const RecommendedProducts: React.FC<{ productId: string; category: string }> = (
 };
 
 const getComboMaxPrice = (product: ProductData) => {
-  if (product.price && product.price > 0) return product.price;
-  if (!product.comboItems || product.comboItems.length === 0) return product.price || 0;
-  let total = 0;
+  if (product.category !== 'combos' || !product.comboItems) return product.price;
+  let total = product.price;
   product.comboItems.forEach(item => {
     if (item.customizationOptions && item.customizationOptions.allowVariants && item.customizationOptions.variants && item.customizationOptions.variants.length > 0) {
       // Use the max variant price
       const maxVariant = item.customizationOptions.variants.reduce((max, v) => v.price > max ? v.price : max, 0);
       total += maxVariant;
     } else {
-      total += item.price || 0;
+      total += item.price;
     }
   });
-  return total || product.price || 0;
+  return total;
 };
 
 const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailProps) => {
@@ -415,9 +415,21 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
   const [selectedVariant, setSelectedVariant] = useState<PriceVariant | null>(
     product.hasPriceVariants && product.priceVariants?.length ? product.priceVariants[0] : null
   );
+
+  useEffect(() => {
+    setSelectedVariant(
+      product.hasPriceVariants && product.priceVariants?.length ? product.priceVariants[0] : null
+    );
+    setQuantity(1);
+    setSelectedImage(0);
+    setPersonalizationText('');
+    setCustomizations(undefined);
+    setSelectedVariants([]);
+  }, [product._id, product.hasPriceVariants, product.priceVariants]);
   const { toast } = useToast();
   const { formatPrice, convertPrice } = useCurrency();
   const { user } = useAuth();
+  const { isValentineEnabled } = useValentine();
   const { addToCart } = useCart();
   const { addItem: addToWishlist, removeItem: removeFromWishlist, items: wishlistItems } = useWishlist();
   const currentProductId = String(product._id || product.id || '');
@@ -722,11 +734,11 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
   // Calculate prices in base currency (INR)
   const originalPrice = product.price;
   const currentPrice = React.useMemo(() => {
-    if (selectedVariant) {
+    if (product.hasPriceVariants && selectedVariant) {
       return selectedVariant.price;
     }
     return product.price;
-  }, [selectedVariant, product.price]);
+  }, [product.hasPriceVariants, selectedVariant, product.price]);
   const discountedPrice = React.useMemo(() => {
     const basePrice = currentPrice;
     return product.discount ? basePrice * (1 - product.discount / 100) : basePrice;
@@ -980,13 +992,14 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
   };
 
   // Update price display based on selected variant + personalization cost
-  const baseProductPrice = selectedVariant ? selectedVariant.price : product.price;
-  const baseDiscountedPrice = product.discount
-    ? baseProductPrice - (baseProductPrice * product.discount) / 100
+  const baseProductPrice = Number((product.hasPriceVariants && selectedVariant) ? selectedVariant.price : product.price) || 0;
+  const numDiscount = Number(product.discount) || 0;
+  const baseDiscountedPrice = numDiscount
+    ? baseProductPrice - (baseProductPrice * numDiscount) / 100
     : baseProductPrice;
 
-  const displayPrice = baseProductPrice + personalizationCost;
-  const displayDiscountedPrice = baseDiscountedPrice + personalizationCost;
+  const displayPrice = Number(baseProductPrice) + Number(personalizationCost || 0);
+  const displayDiscountedPrice = Number(baseDiscountedPrice) + Number(personalizationCost || 0);
 
   // Price Variants Section
   const renderVariantSelection = () => {
@@ -1591,18 +1604,26 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
             {/* 4. Price Section */}
             <div className="py-4 border-y border-slate-200/40 dark:border-slate-800/40">
               <div className="flex items-baseline gap-3">
-                <motion.span
-                  key={displayDiscountedPrice}
-                  initial={{ opacity: 0, y: -4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-3xl lg:text-[3rem] font-bold text-slate-900 dark:text-slate-100 tracking-tight"
-                >
-                  {formatPrice(convertPrice(displayDiscountedPrice))}
-                </motion.span>
-                {product.discount > 0 && (
-                  <span className="text-lg text-slate-400 line-through font-medium">
-                    {formatPrice(convertPrice(displayPrice))}
+                {product.category === 'combos' && product.comboItems && product.comboItems.length > 0 ? (
+                  <span className="text-3xl lg:text-[3rem] font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+                    {formatPrice(convertPrice(getComboMaxPrice(product)))}
                   </span>
+                ) : (
+                  <>
+                    <motion.span
+                      key={displayDiscountedPrice}
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-3xl lg:text-[3rem] font-bold text-slate-900 dark:text-slate-100 tracking-tight"
+                    >
+                      {formatPrice(convertPrice(displayDiscountedPrice))}
+                    </motion.span>
+                    {product.discount > 0 && (
+                      <span className="text-lg text-slate-400 line-through font-medium">
+                        {formatPrice(convertPrice(displayPrice))}
+                      </span>
+                    )}
+                  </>
                 )}
               </div>
 
@@ -1998,8 +2019,8 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                       <p className="text-[10px] text-slate-400">Cutoff 6:00 PM</p>
                     </div>
                   </div>
-                  <span className="font-extrabold text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded-md border border-emerald-500/30">
-                    ₹0 (FREE)
+                  <span className="font-extrabold text-amber-300 bg-amber-500/20 px-2 py-0.5 rounded-md border border-amber-500/30">
+                    +₹150
                   </span>
                 </div>
 
@@ -2013,7 +2034,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                     </div>
                   </div>
                   <span className="font-extrabold text-amber-300 bg-amber-500/20 px-2 py-0.5 rounded-md border border-amber-500/30">
-                    +₹200
+                    +₹300
                   </span>
                 </div>
 
@@ -2031,33 +2052,38 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                   </span>
                 </div>
 
-                {/* 4. Surprise Delivery */}
-                <div className="p-2.5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-base">🎁</span>
-                    <div>
-                      <p className="font-bold text-white">Surprise Delivery</p>
-                      <p className="text-[10px] text-slate-400">Discreet Delivery</p>
+                {/* Valentine-only delivery services (Surprise & Anonymous) */}
+                {isValentineEnabled && (
+                  <>
+                    {/* 4. Surprise Delivery */}
+                    <div className="p-2.5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base">🎁</span>
+                        <div>
+                          <p className="font-bold text-white">Surprise Delivery</p>
+                          <p className="text-[10px] text-slate-400">Discreet Delivery</p>
+                        </div>
+                      </div>
+                      <span className="font-extrabold text-amber-300 bg-amber-500/20 px-2 py-0.5 rounded-md border border-amber-500/30">
+                        +₹100
+                      </span>
                     </div>
-                  </div>
-                  <span className="font-extrabold text-amber-300 bg-amber-500/20 px-2 py-0.5 rounded-md border border-amber-500/30">
-                    +₹100
-                  </span>
-                </div>
 
-                {/* 5. Anonymous Delivery */}
-                <div className="sm:col-span-2 p-2.5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-base">🕵️</span>
-                    <div>
-                      <p className="font-bold text-white">Anonymous Delivery</p>
-                      <p className="text-[10px] text-slate-400">Sender Name Hidden on Package Tag</p>
+                    {/* 5. Anonymous Delivery */}
+                    <div className="sm:col-span-2 p-2.5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base">🕵️</span>
+                        <div>
+                          <p className="font-bold text-white">Anonymous Delivery</p>
+                          <p className="text-[10px] text-slate-400">Sender Name Hidden on Package Tag</p>
+                        </div>
+                      </div>
+                      <span className="font-extrabold text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded-md border border-emerald-500/30">
+                        FREE
+                      </span>
                     </div>
-                  </div>
-                  <span className="font-extrabold text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded-md border border-emerald-500/30">
-                    FREE
-                  </span>
-                </div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -2297,6 +2323,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                   images: product.images,
                   category: product.category,
                   customizationOptions: product.customizationOptions,
+                  hasPriceVariants: product.hasPriceVariants,
                   comboItems: product.comboItems,
                   comboName: product.comboName,
                   comboDescription: product.comboDescription,

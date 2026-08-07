@@ -29,6 +29,7 @@ import { cn } from '@/lib/utils';
 import { getUserProfile, updateUserProfile, SavedAddress } from '@/services/authService';
 import { calculateDeliveryFee } from '@/services/orderService';
 import api from '@/services/api';
+import FreeDeliveryCelebrationModal from '@/components/ui/FreeDeliveryCelebrationModal';
 
 // Animation variants
 const containerVariants = {
@@ -250,6 +251,8 @@ const CheckoutShippingPage = () => {
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
   const [showOrderSummary, setShowOrderSummary] = useState(false);
   const [isSavedAddressesOpen, setIsSavedAddressesOpen] = useState(false);
+  const [showFreeDeliveryModal, setShowFreeDeliveryModal] = useState(false);
+  const hasShownFreeDeliveryModal = React.useRef(false);
 
   const [selectedDate, setSelectedDate] = useState<Date>(() => {
     try {
@@ -334,7 +337,7 @@ const CheckoutShippingPage = () => {
     fetchValSettings();
   }, []);
 
-  const midnightCharge = valDeliverySettings.midnightCharge ?? 200;
+  const midnightCharge = valDeliverySettings.midnightCharge ?? 300;
   const fixedTimeCharge = valDeliverySettings.fixedTimeCharge ?? 150;
   const surpriseCharge = valDeliverySettings.surpriseCharge ?? 100;
   const anonymousCharge = valDeliverySettings.anonymousCharge ?? 0;
@@ -350,6 +353,10 @@ const CheckoutShippingPage = () => {
           phone: formData.phone || undefined
         });
         setDeliveryCalculation(result);
+        if (result?.isFirstOrderFreeDelivery && selectedTimeSlot && !hasShownFreeDeliveryModal.current) {
+          hasShownFreeDeliveryModal.current = true;
+          setShowFreeDeliveryModal(true);
+        }
       } catch (err) {
         console.error('Error fetching delivery calculation:', err);
       }
@@ -473,36 +480,44 @@ const CheckoutShippingPage = () => {
   const handleSavedAddressSelect = (address: SavedAddress) => {
     const activeOption = (address.deliveryOption as 'self' | 'gift') || 'self';
 
-    // 1. Restore map location if present
-    if (address.latitude && address.longitude && address.formattedAddress) {
-      setDeliveryLocation({
-        latitude: address.latitude,
-        longitude: address.longitude,
-        formattedAddress: address.formattedAddress,
-        city: address.city || (activeOption === 'gift' ? address.receiverCity : address.city) || 'Hyderabad',
-        state: address.state || (activeOption === 'gift' ? address.receiverState : address.state) || 'Telangana',
-        country: address.country || 'India',
-        pincode: address.zipCode || address.receiverZipCode || address.pincode || '',
-        recipientName: activeOption === 'gift' 
-          ? `${address.receiverFirstName || ''} ${address.receiverLastName || ''}`.trim()
-          : `${address.firstName || ''} ${address.lastName || ''}`.trim(),
-        phone: activeOption === 'gift' ? (address.receiverPhone || address.phone) : address.phone,
-        houseNo: address.houseNo || address.apartment || address.receiverApartment || '',
-        apartment: address.apartment || address.receiverApartment || '',
-        floor: address.floor || '',
-        landmark: address.landmark || '',
-        deliveryInstructions: address.deliveryInstructions || address.deliverySpecialInstructions || address.notes || '',
-      });
-    } else {
-      setDeliveryLocation(null);
-    }
+    const effectiveStreet = (activeOption === 'gift' ? address.receiverAddress : address.address)
+      || address.formattedAddress
+      || [address.houseNo, address.apartment, address.landmark].filter(Boolean).join(', ');
+
+    const effectiveCity = (activeOption === 'gift' ? address.receiverCity : address.city) || 'Hyderabad';
+    const effectiveState = (activeOption === 'gift' ? address.receiverState : address.state) || 'Telangana';
+    const effectiveZip = (activeOption === 'gift' ? address.receiverZipCode : address.zipCode) || address.pincode || '';
+    const effectivePhone = (activeOption === 'gift' ? (address.receiverPhone || address.phone) : address.phone) || '';
+    const effectiveName = activeOption === 'gift'
+      ? `${address.receiverFirstName || ''} ${address.receiverLastName || ''}`.trim()
+      : `${address.firstName || ''} ${address.lastName || ''}`.trim();
+
+    const fullFormatted = address.formattedAddress || [effectiveStreet, effectiveCity, effectiveState, effectiveZip].filter(Boolean).join(', ');
+
+    // 1. Always restore map/delivery location so delivery location card displays fully
+    setDeliveryLocation({
+      latitude: address.latitude || 17.3912,
+      longitude: address.longitude || 78.4326,
+      formattedAddress: fullFormatted,
+      city: effectiveCity,
+      state: effectiveState,
+      country: address.country || 'India',
+      pincode: effectiveZip,
+      recipientName: effectiveName,
+      phone: effectivePhone,
+      houseNo: address.houseNo || address.apartment || address.receiverApartment || '',
+      apartment: address.apartment || address.receiverApartment || '',
+      floor: address.floor || '',
+      landmark: address.landmark || '',
+      deliveryInstructions: address.deliveryInstructions || address.deliverySpecialInstructions || address.notes || '',
+    });
 
     // 2. Populate manual form data for both self & gift options
     setFormData(prev => ({
       ...prev,
       firstName: address.firstName || prev.firstName || '',
       lastName: address.lastName || prev.lastName || '',
-      address: address.address || address.formattedAddress || prev.address || '',
+      address: address.address || address.formattedAddress || effectiveStreet || prev.address || '',
       apartment: address.apartment || address.houseNo || prev.apartment || '',
       city: address.city || 'Hyderabad',
       state: address.state || 'Telangana',
@@ -513,7 +528,7 @@ const CheckoutShippingPage = () => {
       
       receiverFirstName: address.receiverFirstName || prev.receiverFirstName || '',
       receiverLastName: address.receiverLastName || prev.receiverLastName || '',
-      receiverAddress: address.receiverAddress || address.formattedAddress || prev.receiverAddress || '',
+      receiverAddress: address.receiverAddress || address.formattedAddress || effectiveStreet || prev.receiverAddress || '',
       receiverApartment: address.receiverApartment || address.houseNo || prev.receiverApartment || '',
       receiverCity: address.receiverCity || 'Hyderabad',
       receiverState: address.receiverState || 'Telangana',
@@ -523,25 +538,23 @@ const CheckoutShippingPage = () => {
     }));
 
     // 3. Update Pincode Validation
-    const activeZip = activeOption === 'self' 
-      ? (address.zipCode || address.pincode || '') 
-      : (address.receiverZipCode || address.pincode || '');
+    const activeZip = effectiveZip;
       
     if (activeZip) {
       if (activeOption === 'self') {
         setSelectedSenderPin({
           code: activeZip,
           area: address.landmark || '',
-          city: address.city || 'Hyderabad',
-          state: address.state || 'Telangana'
+          city: effectiveCity,
+          state: effectiveState
         });
         setSenderPinValidation({ isValid: true, message: '' });
       } else {
         setSelectedReceiverPin({
           code: activeZip,
           area: address.landmark || '',
-          city: address.receiverCity || 'Hyderabad',
-          state: address.receiverState || 'Telangana'
+          city: effectiveCity,
+          state: effectiveState
         });
         setReceiverPinValidation({ isValid: true, message: '' });
       }
@@ -699,7 +712,7 @@ const CheckoutShippingPage = () => {
           id: Date.now().toString(),
           firstName: formData.firstName,
           lastName: formData.lastName,
-          address: deliveryOption === 'self' ? formData.address : formData.receiverAddress,
+          address: (deliveryOption === 'self' ? formData.address : formData.receiverAddress) || formattedAddr || '',
           apartment: deliveryOption === 'self' ? formData.apartment : formData.receiverApartment,
           city: deliveryOption === 'self' ? formData.city : formData.receiverCity,
           state: deliveryOption === 'self' ? formData.state : formData.receiverState,
@@ -716,7 +729,7 @@ const CheckoutShippingPage = () => {
           receiverLastName: formData.receiverLastName,
           receiverEmail: formData.receiverEmail,
           receiverPhone: formData.receiverPhone,
-          receiverAddress: formData.receiverAddress,
+          receiverAddress: formData.receiverAddress || formattedAddr || '',
           receiverApartment: formData.receiverApartment,
           receiverCity: formData.receiverCity,
           receiverState: formData.receiverState,
@@ -768,6 +781,9 @@ const CheckoutShippingPage = () => {
 
   const handleTimeSlotSelect = (slotId: string) => {
     setSelectedTimeSlot(slotId);
+    if (deliveryCalculation?.isFirstOrderFreeDelivery || !user?.id) {
+      setShowFreeDeliveryModal(true);
+    }
   };
 
   const handleFieldFocusCapture = (event: React.FocusEvent<HTMLFormElement>) => {
@@ -825,12 +841,7 @@ const CheckoutShippingPage = () => {
         </div>
       )}
       
-      <motion.div 
-        className="container mx-auto max-w-6xl px-4 py-4 pb-32 sm:px-6 sm:py-6 lg:px-8 lg:py-8 lg:pb-8"
-        initial="hidden"
-        animate="visible"
-        variants={containerVariants}
-      >
+      <div className="container mx-auto max-w-7xl px-4 py-4 pb-32 sm:px-6 sm:py-6 lg:px-8 lg:py-8 lg:pb-8">
         {/* Progress Bar */}
         <motion.div variants={itemVariants} className="mb-8">
           <div className="flex items-center justify-center space-x-4 mb-6">
@@ -860,10 +871,10 @@ const CheckoutShippingPage = () => {
           </div>
         </motion.div>
 
-        {/* Main Content */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
+        {/* Main Content Grid (Order Summary fixed to right on Laptop/PC) */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-start lg:gap-8">
           {/* Left Column - Shipping Form */}
-          <div className="mx-auto w-full max-w-md space-y-6 lg:col-span-2 lg:max-w-none">
+          <div className="mx-auto w-full max-w-md space-y-6 lg:col-span-7 xl:col-span-7 lg:max-w-none">
             {/* Shipping Information */}
             <motion.div variants={itemVariants}>
               <Card className="overflow-visible border-0 bg-white/85 shadow-lg backdrop-blur-sm">
@@ -922,21 +933,17 @@ const CheckoutShippingPage = () => {
                                         )}
                                       </div>
                                       <div className="text-xs text-muted-foreground mt-1">
-                                        {address.deliveryOption === 'self' 
-                                          ? address.address 
-                                          : address.receiverAddress}
-                                        {', '}
-                                        {address.deliveryOption === 'self' 
-                                          ? address.city 
-                                          : address.receiverCity}
-                                        {', '}
-                                        {address.deliveryOption === 'self' 
-                                          ? address.state 
-                                          : address.receiverState}
-                                        {' '}
-                                        {address.deliveryOption === 'self' 
-                                          ? address.zipCode 
-                                          : address.receiverZipCode}
+                                        {(() => {
+                                          const isGift = address.deliveryOption === 'gift';
+                                          const street = (isGift ? address.receiverAddress : address.address)
+                                            || address.formattedAddress
+                                            || [address.houseNo, address.apartment, address.landmark].filter(Boolean).join(', ');
+                                          const city = isGift ? address.receiverCity : address.city;
+                                          const state = isGift ? address.receiverState : address.state;
+                                          const zip = isGift ? (address.receiverZipCode || address.pincode) : (address.zipCode || address.pincode);
+
+                                          return [street, city, state, zip].filter(Boolean).join(', ');
+                                        })()}
                                       </div>
                                       <div className="flex items-center gap-2 mt-2">
                                         <Badge variant="outline" className="text-xs">
@@ -1648,10 +1655,9 @@ const CheckoutShippingPage = () => {
             </motion.div>
           </div>
           
-          {/* Right Column - Order Summary */}
-          <div className="lg:col-span-1">
-            <motion.div variants={itemVariants} className="sticky top-8">
-              <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+          {/* Right Column - Order Summary (Fixed to right side on Laptop & PC) */}
+          <div className="lg:col-span-5 xl:col-span-5 lg:sticky lg:top-24 lg:self-start z-20">
+            <Card className="border-0 shadow-xl bg-white/90 backdrop-blur-md rounded-3xl overflow-hidden">
                 <CardHeader className="lg:hidden">
                   <CardTitle 
                     className="flex items-center justify-between cursor-pointer"
@@ -1831,10 +1837,9 @@ const CheckoutShippingPage = () => {
                   </motion.div>
                 </AnimatePresence>
               </Card>
-            </motion.div>
           </div>
         </div>
-      </motion.div>
+      </div>
 
       <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200 bg-white/95 shadow-lg backdrop-blur lg:hidden">
         <div className="mx-auto w-full max-w-lg px-4 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
@@ -1879,6 +1884,12 @@ const CheckoutShippingPage = () => {
       <div className="hidden lg:block">
         <Footer />
       </div>
+
+      <FreeDeliveryCelebrationModal
+        isOpen={showFreeDeliveryModal}
+        onClose={() => setShowFreeDeliveryModal(false)}
+        savedAmount={150}
+      />
     </div>
   );
 };

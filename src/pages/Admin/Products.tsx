@@ -960,19 +960,18 @@ const AdminProducts: React.FC = () => {
   };
 
   const getComboMaxPrice = (product: Product) => {
-    if (product.price && product.price > 0) return product.price;
-    if (!product.comboItems || product.comboItems.length === 0) return product.price || 0;
-    let total = 0;
+    if (product.category !== 'combos' || !product.comboItems) return product.price;
+    let total = product.price;
     product.comboItems.forEach(item => {
       if (item.customizationOptions && item.customizationOptions.allowVariants && item.customizationOptions.variants && item.customizationOptions.variants.length > 0) {
         // Use the max variant price
         const maxVariant = item.customizationOptions.variants.reduce((max, v) => v.price > max ? v.price : max, 0);
         total += maxVariant;
       } else {
-        total += item.price || 0;
+        total += item.price;
       }
     });
-    return total || product.price || 0;
+    return total;
   };
 
   return (

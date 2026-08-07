@@ -104,6 +104,7 @@ interface InlineProductCustomizerProps {
     images: string[];
     category: string;
     customizationOptions: CustomizationOptions;
+    hasPriceVariants?: boolean;
     comboItems?: ComboItem[];
     comboName?: string;
     comboDescription?: string;
@@ -290,9 +291,10 @@ export function InlineProductCustomizer({
   }, [isOpen, activeTab, product]);
 
   // Calculate pricing
-  const basePrice = selectedVariant ? selectedVariant.price : product.price;
-  const baseDiscountedPrice = product.discount
-    ? basePrice - (basePrice * product.discount) / 100
+  const basePrice = Number((product.hasPriceVariants && selectedVariant) ? selectedVariant.price : product.price) || 0;
+  const numDiscount = Number(product.discount) || 0;
+  const baseDiscountedPrice = numDiscount
+    ? basePrice - (basePrice * numDiscount) / 100
     : basePrice;
 
   // Add-ons total
@@ -323,20 +325,17 @@ export function InlineProductCustomizer({
   // Combo items subtotal additions
   const comboTotal = useMemo(() => {
     if (product.category !== 'combos' || !product.comboItems) return baseDiscountedPrice;
-    let extra = 0;
+    let total = baseDiscountedPrice;
     product.comboItems.forEach((item, idx) => {
       const customization = customizations.comboItemCustomizations?.find(c => c.itemIndex === idx);
-      if (item.customizationOptions?.allowVariants && item.customizationOptions?.variants && customization?.selectedVariant) {
+      let price = item.price;
+      if (item.customizationOptions.allowVariants && item.customizationOptions.variants && customization?.selectedVariant) {
         const variant = item.customizationOptions.variants.find(v => v.name === customization.selectedVariant);
-        if (variant && variant.price > item.price) {
-          extra += (variant.price - item.price) * (customization?.quantity || 1);
-        }
+        if (variant) price = variant.price;
       }
-      if (customization?.quantity && customization.quantity > 1) {
-        extra += item.price * (customization.quantity - 1);
-      }
+      total += price * (customization?.quantity || 1);
     });
-    return baseDiscountedPrice + extra;
+    return total;
   }, [product, customizations, baseDiscountedPrice]);
 
   const activeTotalPrice = product.category === 'combos' ? comboTotal : (baseDiscountedPrice + addonsTotal);
