@@ -15,8 +15,15 @@ const BouquetsPage: React.FC = () => {
   const fetchBouquets = async () => {
     try {
       setLoading(true);
-      const res = await productService.getProductsByCatalogType("bouquet");
-      setProducts(res.products || []);
+      const res = await productService.getAdminProducts();
+      const allProds = res.products || [];
+      const bouquetProducts = allProds.filter((p: any) => {
+        const cat = String(p.category || '').toLowerCase();
+        const catalogType = String(p.catalogType || '').toLowerCase();
+        const isCombo = cat === 'combos' || cat === 'combo products' || catalogType === 'combo' || (p.comboItems && p.comboItems.length > 0);
+        return !isCombo && (catalogType === 'bouquet' || cat.includes('flower') || cat.includes('bouquet'));
+      });
+      setProducts(bouquetProducts);
     } catch (error: any) {
       console.error("Error fetching bouquets:", error);
       toast({

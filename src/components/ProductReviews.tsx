@@ -18,6 +18,7 @@ import ReviewComposer from '@/components/reviews/ReviewComposer';
 import ReviewCard from '@/components/reviews/ReviewCard';
 import ReviewSkeleton from '@/components/reviews/ReviewSkeleton';
 import RatingStars from '@/components/reviews/RatingStars';
+import { getImageUrl } from '@/config';
 
 interface ProductReviewsProps {
   productId: string;
@@ -158,12 +159,14 @@ const ProductReviews = ({ productId, productTitle = 'This arrangement', onReview
                 return;
               }
 
-              if (hasOwnReview && !ownPublishedReview) {
-                openDedicatedReviewPage(viewer?.ownReviews?.[0]?.orderId);
+              const existingReview = ownPublishedReview || (viewer?.ownReviews?.[0] as unknown as Review);
+              if (existingReview) {
+                setActiveReview(existingReview);
+                setIsComposerOpen(true);
                 return;
               }
 
-              setActiveReview(ownPublishedReview || null);
+              setActiveReview(null);
               setIsComposerOpen(true);
             }}
             className="rounded-full bg-slate-900 px-5 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
@@ -275,7 +278,7 @@ const ProductReviews = ({ productId, productTitle = 'This arrangement', onReview
                     className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-100 dark:border-slate-800 dark:bg-slate-900"
                   >
                     <img
-                      src={image.url}
+                      src={getImageUrl(image.url)}
                       alt={image.alt || `${productTitle} review`}
                       className="h-24 w-full object-cover transition hover:scale-105"
                       loading="lazy"

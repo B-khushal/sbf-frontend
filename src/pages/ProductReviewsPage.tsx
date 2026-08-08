@@ -408,8 +408,9 @@ const ProductReviewsPage = () => {
                         }
                         if (hasOwnReview) {
                           const visibleOwnReview = reviews.find((review) => review.user?._id === user.id);
-                          if (visibleOwnReview) {
-                            setEditingReview(visibleOwnReview);
+                          const existingReview = visibleOwnReview || (viewer?.ownReviews?.[0] as unknown as Review);
+                          if (existingReview) {
+                            setEditingReview(existingReview);
                             setIsComposerOpen(true);
                             return;
                           }
@@ -559,7 +560,7 @@ const ProductReviewsPage = () => {
                       className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-100 dark:border-slate-800 dark:bg-slate-900"
                     >
                       <img
-                        src={image.url}
+                        src={getImageUrl(image.url)}
                         alt={image.alt || `${product?.title} review`}
                         className="h-32 w-full object-cover"
                         loading="lazy"

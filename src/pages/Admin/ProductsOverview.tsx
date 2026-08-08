@@ -160,7 +160,7 @@ const ProductsOverview: React.FC = () => {
                 <span className="text-[11px]">Add Plant</span>
               </Button>
             </Link>
-            <Link to="/admin/products/combos">
+            <Link to="/admin/products/new?category=combos">
               <Button variant="secondary" size="sm" className="w-full flex-col h-auto py-2.5 px-2 bg-white/10 hover:bg-white/20 text-white border-0">
                 <Boxes className="h-4 w-4 mb-1 text-blue-400" />
                 <span className="text-[11px]">Create Combo</span>

@@ -122,10 +122,17 @@ export interface ReviewViewerState {
   eligibleOrders: ReviewEligibilityOrder[];
   ownReviews: Array<{
     _id: string;
-    orderId: string;
+    orderId: string | { _id: string; orderNumber?: string };
     status: Review['status'];
     rating: number;
     title: string;
+    comment?: string;
+    qualityRating?: number | null;
+    valueRating?: number | null;
+    deliveryRating?: number | null;
+    pros?: string[];
+    cons?: string[];
+    images?: string[];
     createdAt: string;
     updatedAt?: string;
   }>;

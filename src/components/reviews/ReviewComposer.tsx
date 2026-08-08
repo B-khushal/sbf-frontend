@@ -23,6 +23,7 @@ import {
 } from '@/services/reviewService';
 import RatingStars from './RatingStars';
 import { cn } from '@/lib/utils';
+import { getImageUrl } from '@/config';
 
 interface ReviewComposerProps {
   isOpen: boolean;
@@ -118,7 +119,11 @@ const ReviewComposer = ({
           : defaultReview.orderId._id
       );
     } else {
-      setOrderId(eligibleOrderOptions.find((order) => !order.hasReview)?._id || '');
+      setOrderId(
+        eligibleOrderOptions.find((order) => !order.hasReview)?._id ||
+          eligibleOrderOptions[0]?._id ||
+          ''
+      );
     }
   }, [defaultReview, eligibleOrderOptions, isOpen]);
 
@@ -188,7 +193,18 @@ const ReviewComposer = ({
       return;
     }
 
-    if (!defaultReview && !orderId) {
+    let targetOrderId = orderId;
+    if (!defaultReview && !targetOrderId) {
+      targetOrderId =
+        eligibleOrderOptions.find((order) => !order.hasReview)?._id ||
+        eligibleOrderOptions[0]?._id ||
+        '';
+      if (targetOrderId) {
+        setOrderId(targetOrderId);
+      }
+    }
+
+    if (!defaultReview && !targetOrderId) {
       toast({
         title: 'Delivered Order Required',
         description: 'Please select the delivered order this review belongs to.',
@@ -198,7 +214,7 @@ const ReviewComposer = ({
     }
 
     const payload: CreateReviewData = {
-      orderId: orderId || undefined,
+      orderId: targetOrderId || undefined,
       rating,
       title: title.trim(),
       comment: comment.trim(),
@@ -280,6 +296,15 @@ const ReviewComposer = ({
         {!canSubmitNewReview && !defaultReview && (
           <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-100">
             Reviews are only available for customers with a delivered purchase of this product.
+          </div>
+        )}
+
+        {!defaultReview && eligibleOrderOptions.length === 1 && (
+          <div className="flex items-center justify-between rounded-2xl border border-slate-200/80 bg-slate-50 p-3.5 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-300">
+            <span className="font-medium">Reviewing for Order:</span>
+            <Badge variant="outline" className="font-mono text-xs">
+              {eligibleOrderOptions[0].orderNumber}
+            </Badge>
           </div>
         )}
 
@@ -459,7 +484,7 @@ const ReviewComposer = ({
                   key={url}
                   className="group relative overflow-hidden rounded-3xl border border-slate-200 bg-slate-100 dark:border-slate-800 dark:bg-slate-900"
                 >
-                  <img src={url} alt="Review upload" className="h-36 w-full object-cover" />
+                  <img src={getImageUrl(url)} alt="Review upload" className="h-36 w-full object-cover" />
                   <button
                     type="button"
                     onClick={() => setImageUrls((prev) => prev.filter((item) => item !== url))}

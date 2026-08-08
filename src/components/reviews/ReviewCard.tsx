@@ -16,6 +16,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import RatingStars from './RatingStars';
+import { getImageUrl } from '@/config';
 
 interface ReviewCardProps {
   review: Review;
@@ -346,7 +347,7 @@ const ReviewCard = ({
                     className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900"
                   >
                     <img
-                      src={image}
+                      src={getImageUrl(image)}
                       alt={`${review.title} review image ${index + 1}`}
                       className="h-28 w-full object-cover transition hover:scale-105"
                       loading="lazy"
@@ -397,7 +398,7 @@ const ReviewCard = ({
             </div>
             <div className="flex items-center justify-center">
               <img
-                src={review.images[selectedImage]}
+                src={getImageUrl(review.images[selectedImage])}
                 alt={`${review.title} review image ${selectedImage + 1}`}
                 className="max-h-[72vh] rounded-3xl object-contain"
               />
@@ -416,7 +417,7 @@ const ReviewCard = ({
                   )}
                 >
                   <img
-                    src={image}
+                    src={getImageUrl(image)}
                     alt={`${review.title} thumbnail ${index + 1}`}
                     className="h-20 w-full object-cover"
                   />

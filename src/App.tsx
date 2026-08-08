@@ -75,6 +75,7 @@ const PlantsPage = lazy(() => import("./pages/Admin/PlantsPage"));
 const ChocolatesPage = lazy(() => import("./pages/Admin/ChocolatesPage"));
 const HampersBuilderPage = lazy(() => import("./pages/Admin/HampersBuilderPage"));
 const ComboBuilderPage = lazy(() => import("./pages/Admin/ComboBuilderPage"));
+const CombosCatalogPage = lazy(() => import("./pages/Admin/CombosCatalogPage"));
 const CollectionsPage = lazy(() => import("./pages/Admin/CollectionsPage"));
 const InventoryPage = lazy(() => import("./pages/Admin/InventoryPage"));
 const CatalogSettingsPage = lazy(() => import("./pages/Admin/CatalogSettingsPage"));
@@ -299,7 +300,9 @@ const App = () => {
                               <Route path="plants" element={<PlantsPage />} />
                               <Route path="chocolates" element={<ChocolatesPage />} />
                               <Route path="hampers" element={<HampersBuilderPage />} />
-                              <Route path="combos" element={<ComboBuilderPage />} />
+                              <Route path="combos" element={<CombosCatalogPage />} />
+                              <Route path="combos/builder" element={<Navigate to="/admin/products/new?category=combos" replace />} />
+                              <Route path="combos/new" element={<Navigate to="/admin/products/new?category=combos" replace />} />
                               <Route path="addons" element={<AdminAddonPage />} />
                               <Route path="categories" element={<AdminCategories />} />
                               <Route path="collections" element={<CollectionsPage />} />

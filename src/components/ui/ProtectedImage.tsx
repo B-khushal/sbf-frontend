@@ -1,21 +1,39 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 
 interface ProtectedImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   src: string;
   alt: string;
   className?: string;
+  fallbackSrc?: string;
 }
 
 export const ProtectedImage = React.forwardRef<HTMLImageElement, ProtectedImageProps>(
-  ({ src, alt, className, style, ...props }, ref) => {
+  ({ src, alt, className, style, fallbackSrc = '/images/placeholder.svg', onError, ...props }, ref) => {
+    const [imgSrc, setImgSrc] = useState(src);
+    const [hasError, setHasError] = useState(false);
+
+    React.useEffect(() => {
+      setImgSrc(src);
+      setHasError(false);
+    }, [src]);
+
+    const handleError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+      if (!hasError) {
+        setHasError(true);
+        setImgSrc(fallbackSrc);
+      }
+      if (onError) onError(e);
+    };
+
     return (
       <img
         ref={ref}
-        src={src}
+        src={imgSrc}
         alt={alt}
         className={cn("select-none pointer-events-none", className)}
         onContextMenu={(e) => e.preventDefault()}
+        onError={handleError}
         draggable={false}
         style={{
           WebkitUserSelect: 'none',
@@ -24,7 +42,7 @@ export const ProtectedImage = React.forwardRef<HTMLImageElement, ProtectedImageP
           OUserSelect: 'none',
           userSelect: 'none',
           WebkitTouchCallout: 'none',
-          pointerEvents: 'none', // Prevents mouse click/hover actions on the image element itself
+          pointerEvents: 'none',
           ...style,
         }}
         {...props}

@@ -282,6 +282,22 @@ const ProductForm = () => {
   const [isUploadingFlowerGroup, setIsUploadingFlowerGroup] = useState(false);
   const [isUploadingChocolateGroup, setIsUploadingChocolateGroup] = useState(false);
 
+  // Combo Catalog Products State
+  const [comboCatalogProducts, setComboCatalogProducts] = useState<ProductData[]>([]);
+  const [comboSearchQuery, setComboSearchQuery] = useState("");
+
+  useEffect(() => {
+    const fetchComboCatalog = async () => {
+      try {
+        const res = await productService.getAdminProducts();
+        setComboCatalogProducts(res.products || []);
+      } catch (err) {
+        console.error("Error loading products for combo selector:", err);
+      }
+    };
+    fetchComboCatalog();
+  }, []);
+
   // State for video fields
   const [videoUrlInput, setVideoUrlInput] = useState('');
   const [videoTitleInput, setVideoTitleInput] = useState('');
@@ -757,19 +773,20 @@ const ProductForm = () => {
         priceVariantsCount: processedData.priceVariants?.length || 0
       });
     } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        console.warn(`Product ${id} not found (404). Redirecting to catalog...`);
+        toast({
+          title: "Product Not Found",
+          description: "The product you're trying to edit doesn't exist or has been deleted.",
+          variant: "destructive",
+          duration: 3000,
+        });
+        navigate(getProductsListRoute(), { replace: true });
+        return;
+      }
       console.error('Error fetching product:', error);
       if (axios.isAxiosError(error)) {
-        if (error.response?.status === 404) {
-          toast({
-            title: "Product Not Found",
-            description: "The product you're trying to edit doesn't exist or has been deleted.",
-            variant: "destructive",
-            duration: 5000,
-          });
-          setTimeout(() => {
-            navigate(getProductsListRoute());
-          }, 2000);
-        } else if (error.response?.status === 401) {
+        if (error.response?.status === 401) {
           toast({
             title: "Authentication Error",
             description: "You are not authorized. Please log in again.",
@@ -779,7 +796,7 @@ const ProductForm = () => {
           sessionStorage.removeItem('userData');
           setTimeout(() => {
             navigate('/login');
-          }, 2000);
+          }, 1500);
         } else {
           toast({
             title: "Error",
@@ -875,6 +892,44 @@ const ProductForm = () => {
         if (isEditMode) {
           fetchProductData();
         } else {
+          // Check query parameters for initial product category / type
+          const searchParams = new URLSearchParams(location.search);
+          const rawType = searchParams.get('type') || searchParams.get('category') || searchParams.get('catalogType');
+
+          if (rawType) {
+            const normalized = rawType.toLowerCase();
+            let initialCat = '';
+            let initialCatalogType = '';
+
+            if (normalized === 'combo' || normalized === 'combos') {
+              initialCat = 'combos';
+              initialCatalogType = 'combo';
+            } else if (normalized === 'bouquet' || normalized === 'flowers') {
+              initialCat = 'flowers';
+              initialCatalogType = 'bouquet';
+            } else if (normalized === 'cake' || normalized === 'cakes') {
+              initialCat = 'cakes';
+              initialCatalogType = 'cake';
+            } else if (normalized === 'plant' || normalized === 'plants') {
+              initialCat = 'plants';
+              initialCatalogType = 'plant';
+            } else if (normalized === 'chocolate' || normalized === 'chocolates') {
+              initialCat = 'chocolate';
+              initialCatalogType = 'chocolate';
+            } else if (normalized === 'hamper' || normalized === 'hampers' || normalized === 'baskets') {
+              initialCat = 'baskets';
+              initialCatalogType = 'hamper';
+            } else {
+              initialCat = rawType;
+            }
+
+            setFormData(prev => ({
+              ...prev,
+              category: initialCat || prev.category,
+              catalogType: (initialCatalogType || prev.catalogType) as any
+            }));
+          }
+
           // Fetch dynamic categories and occasions for new product creation too
           Promise.all([
             categoryService.getCategories({ status: 'active' }),
@@ -2298,11 +2353,27 @@ const ProductForm = () => {
                   <SelectValue placeholder="Select primary category" />
                 </SelectTrigger>
                 <SelectContent disablePortal>
-                  {dbCategories.filter(c => !c.parentId).map((category) => (
-                    <SelectItem key={category.slug} value={category.slug}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
+                  {(() => {
+                    const dynamicCats = dbCategories.filter(c => !c.parentId);
+                    const combined = [...dynamicCats];
+                    PRIMARY_CATEGORIES.forEach(pCat => {
+                      if (!combined.some(c => c.slug === pCat.value)) {
+                        combined.push({
+                          _id: pCat.value,
+                          id: pCat.value,
+                          name: pCat.label,
+                          slug: pCat.value,
+                          status: 'active',
+                          parentId: null
+                        } as any);
+                      }
+                    });
+                    return combined.map((category) => (
+                      <SelectItem key={category.slug} value={category.slug}>
+                        {category.name}
+                      </SelectItem>
+                    ));
+                  })()}
                 </SelectContent>
               </Select>
               {errors.category && (
