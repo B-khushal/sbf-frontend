@@ -7,10 +7,10 @@ export interface CustomAxiosInstance extends AxiosInstance {
   batch: (requests: Array<{ method: string, url: string, params?: any }>) => Promise<Array<PromiseSettledResult<any>>>;
 }
 
-// Create an axios instance with base URL and default headers
+// Create an axios instance with base URL and default headers (120s timeout for slow connections)
 const api = axios.create({
   baseURL: API_URL,
-  timeout: 30000, // Increased to 60s to accommodate slower connections
+  timeout: 120000, // 120s (2 minutes) to accommodate slow 2G/3G connections and cold-start backends
   maxRedirects: 0, // Prevent redirect issues
   maxContentLength: 50000000, // 50MB - allow large payloads like base64 images
   maxBodyLength: 50000000, // 50MB - allow large request bodies
@@ -59,8 +59,6 @@ api.interceptors.request.use(
     
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-    } else {
-      // For endpoints that require authentication, requests will fail naturally.
     }
     
     return config;
@@ -70,16 +68,31 @@ api.interceptors.request.use(
   }
 );
 
-// Add a response interceptor to handle errors
+// Add a response interceptor to handle errors & automatic retry on slow network
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    // Handle network errors
+  async (error) => {
+    const config = error.config || {};
+    const isNetworkOrTimeout = error.code === 'ECONNABORTED' || error.message === 'Network Error' || !error.response;
+
+    // Automatic retry for GET requests on slow/unstable connection
+    if (isNetworkOrTimeout && config.method?.toLowerCase() === 'get') {
+      config._retryCount = config._retryCount || 0;
+      if (config._retryCount < 2) {
+        config._retryCount += 1;
+        console.warn(`[Network Retry] Slow internet detected. Retrying ${config.url} (Attempt ${config._retryCount}/2)...`);
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        return api(config);
+      }
+    }
+
+    // Handle network timeouts gracefully
     if (error.code === 'ECONNABORTED') {
+      console.warn("Connection Timeout - Slow internet detected:", config.url);
       toast({
         variant: "destructive",
-        title: "Connection Timeout",
-        description: "Please check your internet connection",
+        title: "Slow Connection",
+        description: "The request is taking longer than expected. Please check your internet connection.",
       });
       return Promise.reject(error);
     }
@@ -114,7 +127,6 @@ api.interceptors.response.use(
       
       // Redirect to login page if not already there
       if (!window.location.pathname.includes('/login')) {
-        // Use programmatic navigation instead of window.location
         if (typeof window !== 'undefined' && window.history) {
           window.history.pushState({}, '', '/login');
           window.dispatchEvent(new PopStateEvent('popstate'));
@@ -137,31 +149,61 @@ api.interceptors.response.use(
   }
 );
 
-// Enhanced API methods with caching
+// Enhanced API methods with caching & stale-while-revalidate fallback for fast page loading on slow internet
 api.getCached = async (url: string, options: { cache?: boolean, cacheTime?: number, params?: any } = {}) => {
-  const { cache = false, cacheTime = 5 * 60 * 1000, params } = options;
-  
-  if (cache) {
-    const cacheKey = `api_cache_${url}_${JSON.stringify(params)}`;
-    const cached = sessionStorage.getItem(cacheKey);
-    const cacheTimeKey = `${cacheKey}_time`;
-    const cachedTime = sessionStorage.getItem(cacheTimeKey);
-    
-    if (cached && cachedTime && (Date.now() - parseInt(cachedTime)) < cacheTime) {
-      return { data: JSON.parse(cached) };
+  const { cache = true, cacheTime = 10 * 60 * 1000, params } = options;
+  const cacheKey = `api_cache_${url}_${JSON.stringify(params || {})}`;
+  const cacheTimeKey = `${cacheKey}_time`;
+
+  const cached = sessionStorage.getItem(cacheKey) || localStorage.getItem(cacheKey);
+  const cachedTime = sessionStorage.getItem(cacheTimeKey) || localStorage.getItem(cacheTimeKey);
+
+  const isFresh = cached && cachedTime && (Date.now() - parseInt(cachedTime, 10)) < cacheTime;
+
+  // If cache is fresh, return immediately so pages open instantly
+  if (cache && isFresh) {
+    try {
+      const parsed = JSON.parse(cached);
+
+      // Silently revalidate in background
+      api.get(url, { params }).then(response => {
+        if (response?.data) {
+          const freshStr = JSON.stringify(response.data);
+          sessionStorage.setItem(cacheKey, freshStr);
+          localStorage.setItem(cacheKey, freshStr);
+          sessionStorage.setItem(cacheTimeKey, Date.now().toString());
+          localStorage.setItem(cacheTimeKey, Date.now().toString());
+        }
+      }).catch(() => {});
+
+      return { data: parsed, isCached: true };
+    } catch (e) {
+      // Fallback to fetch if parse fails
     }
   }
-  
-  const response = await api.get(url, { params });
-  
-  if (cache) {
-    const cacheKey = `api_cache_${url}_${JSON.stringify(params)}`;
-    const cacheTimeKey = `${cacheKey}_time`;
-    sessionStorage.setItem(cacheKey, JSON.stringify(response.data));
-    sessionStorage.setItem(cacheTimeKey, Date.now().toString());
+
+  try {
+    const response = await api.get(url, { params });
+    if (cache && response?.data) {
+      const freshStr = JSON.stringify(response.data);
+      sessionStorage.setItem(cacheKey, freshStr);
+      localStorage.setItem(cacheKey, freshStr);
+      sessionStorage.setItem(cacheTimeKey, Date.now().toString());
+      localStorage.setItem(cacheTimeKey, Date.now().toString());
+    }
+    return response;
+  } catch (error) {
+    // Stale cache fallback: if network is slow/failed, return cached data so the page OPENS!
+    if (cache && cached) {
+      try {
+        console.warn(`[API Cache Fallback] Network failed for ${url}, serving cached data so page opens.`);
+        return { data: JSON.parse(cached), isStale: true };
+      } catch (e) {
+        // Ignore parse error
+      }
+    }
+    throw error;
   }
-  
-  return response;
 };
 
 // Batch requests method

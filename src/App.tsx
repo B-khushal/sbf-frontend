@@ -138,9 +138,11 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
-      retry: 1,
+      gcTime: 15 * 60 * 1000, // 15 minutes (formerly cacheTime)
+      retry: 3, // Retry up to 3 times on slow/flaky internet connections
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000), // Exponential backoff (1s, 2s, 4s, 8s)
       refetchOnWindowFocus: false,
+      refetchOnReconnect: true, // Auto-refetch when internet reconnects
     },
   },
 });

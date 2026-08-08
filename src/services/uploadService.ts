@@ -13,7 +13,7 @@ export const uploadImage = async (
       type: type
     },
     // Uploads can take longer due to network + Cloudinary processing/retries.
-    timeout: 120000,
+    timeout: 300000, // 5 minutes timeout for slow internet connection
   };
   
   try {

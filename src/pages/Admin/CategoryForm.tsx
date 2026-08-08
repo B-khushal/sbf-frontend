@@ -108,7 +108,7 @@ const CategoryForm: React.FC = () => {
       const response = await api.post('/uploads', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         params: { type: 'product' },
-        timeout: 30000 // 1.5 minutes timeout for slow uploads
+        timeout: 300000 // 5 minutes timeout for slow uploads
       });
       
       setImage(response.data.imageUrl);

@@ -393,6 +393,7 @@ const getAuthToken = () => {
 const createAuthConfig = () => {
   const token = getAuthToken();
   return {
+    timeout: 120000, // 120s timeout for slow network connections
     headers: {
       Authorization: token ? `Bearer ${token}` : '',
     }

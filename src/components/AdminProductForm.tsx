@@ -207,7 +207,7 @@ const AdminProductForm: React.FC<Props> = ({
         console.log('📸 Uploading image:', file.name, 'Size:', file.size);
         
         const { data } = await api.post("/uploads", fileData, {
-          timeout: 30000 // 1.5 minutes timeout for slow uploads
+          timeout: 300000 // 5 minutes timeout for slow uploads
         });
         
         if (data && data.imageUrl) {
@@ -876,7 +876,7 @@ const AdminProductForm: React.FC<Props> = ({
                     
                     console.log('🧪 Testing upload with file:', testFile.name);
                     const response = await api.post("/uploads", fileData, {
-                      timeout: 120000 // 2 minutes timeout for slow uploads
+                      timeout: 300000 // 5 minutes timeout for slow uploads
                     });
                     console.log('✅ Test upload successful:', response.data);
                     toast({ title: "Test Upload Success", description: "Upload is working correctly!" });

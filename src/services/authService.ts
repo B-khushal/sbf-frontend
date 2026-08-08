@@ -86,7 +86,7 @@ export const login = async (credentials: LoginCredentials) => {
     console.log("🔍 Sending login request:", credentials);
 
     const response = await api.post("/auth/login", credentials, {
-      timeout: 10000, // ✅ Prevents infinite waiting
+      timeout: 60000, // 60s timeout for slow internet and server cold starts
     });
 
     console.log("✅ Login response:", response.data); // ✅ Debugging
