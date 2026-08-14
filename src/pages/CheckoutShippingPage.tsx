@@ -16,6 +16,7 @@ import MessageCard from '@/components/MessageCard';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import useCart, { useCartSelectors } from '@/hooks/use-cart';
+import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useValentine } from '@/contexts/ValentineContext';
@@ -61,6 +62,7 @@ const mobileActionButtonClassName = 'h-12 min-h-[48px] rounded-xl text-sm font-s
 
 const CheckoutShippingPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { items } = useCart();
   const { subtotal } = useCartSelectors();
   const { toast } = useToast();
