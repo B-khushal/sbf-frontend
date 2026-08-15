@@ -223,7 +223,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
               <button 
                 onClick={() => {
                   onClose();
-                  window.open(`/product/${product._id}`, '_blank');
+                  navigate(`/product/${product._id}`);
                 }}
                 className="w-full text-center text-xs font-semibold text-gray-400 hover:text-primary transition-colors flex items-center justify-center gap-1.5 mt-2"
               >

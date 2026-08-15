@@ -6,7 +6,7 @@ import {
   TrendingUp, DollarSign, Store, LogIn, ChevronDown, 
   MapPin, Phone, Mail, Globe, ArrowRight, Star, Zap,
   Shield, Truck, RefreshCw, Gift, Home, Info, MessageCircle, Package,
-  ShoppingBag
+  ShoppingBag, ArrowLeft
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -142,6 +142,24 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
   const userMenuRef = useRef<HTMLDivElement | null>(null);
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+
+  const isHomePage = pathname === '/';
+
+  const handleBackClick = () => {
+    if (window.history.length > 1 && (window.history.state?.idx ?? 0) > 0) {
+      navigate(-1);
+    } else {
+      if (pathname.includes('/product') || pathname.includes('/valentine-product')) {
+        navigate('/shop');
+      } else if (pathname.includes('/cart') || pathname.includes('/checkout')) {
+        navigate('/shop');
+      } else if (pathname.includes('/category') || pathname.includes('/shop')) {
+        navigate('/');
+      } else {
+        navigate('/');
+      }
+    }
+  };
 
   const [allProducts, setAllProducts] = useState<SearchItem[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
@@ -467,7 +485,52 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
     <>
       {/* Main Navigation */}
       <header className="bg-gradient-to-r from-sky-100/90 via-pink-100/90 to-emerald-100/90 dark:from-sky-950/60 dark:via-pink-950/60 dark:to-emerald-950/60 backdrop-blur-xl border-b border-gray-200/50 sticky top-0 z-nav">
-        <div className="container mx-auto px-3 sm:px-4 lg:px-6">
+        {/* Mobile Internal Page Header (← SBF ... ☰) */}
+        {!isHomePage && (
+          <div className="md:hidden flex items-center justify-between h-14 px-3 sm:px-4 w-full">
+            {/* Left: Back Button + SBF Logo/Text */}
+            <div className="flex items-center gap-2.5 min-w-0">
+              <button
+                type="button"
+                onClick={handleBackClick}
+                className="p-1.5 -ml-1 rounded-full text-slate-800 dark:text-slate-100 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 active:scale-95 transition-all flex items-center justify-center flex-shrink-0"
+                aria-label="Go back"
+              >
+                <ArrowLeft size={22} className="text-slate-800 dark:text-slate-100" />
+              </button>
+              <Link to="/" className="flex items-center gap-1.5 flex-shrink-0 group">
+                {headerSettings?.logo ? (
+                  <img
+                    src={headerSettings.logo}
+                    alt="Spring Blossoms Florist"
+                    className="h-7 w-auto object-contain transition-transform group-hover:scale-105"
+                  />
+                ) : (
+                  <span className="text-xl font-black bg-gradient-to-r from-pink-500 via-purple-600 to-blue-600 bg-clip-text text-transparent tracking-wider">
+                    SBF
+                  </span>
+                )}
+              </Link>
+            </div>
+
+            {/* Right: Menu Button ONLY */}
+            <div className="flex items-center flex-shrink-0">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setMobileMenuOpen(open => !open)}
+                aria-expanded={mobileMenuOpen}
+                aria-controls="mobile-nav-panel"
+                className="h-9 w-9 p-0 text-slate-800 dark:text-slate-100 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 active:scale-95 transition-all"
+              >
+                <Menu size={22} />
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Standard Navigation Bar Container (Desktop/Tablet Always, Mobile Home Only) */}
+        <div className={cn("container mx-auto px-3 sm:px-4 lg:px-6", !isHomePage && "hidden md:block")}>
           {/* Main Navigation Row */}
           <div className="flex items-center justify-between h-16 sm:h-18 lg:h-20">
             

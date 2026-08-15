@@ -96,7 +96,7 @@ const OccasionProductCard = ({
     if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).closest('.dot-indicator')) {
       return;
     }
-    window.open(`/product/${product._id}`, '_blank', 'noopener,noreferrer');
+    navigate(`/product/${product._id}`);
   };
 
   const handleWishlistToggle = async (e: React.MouseEvent) => {

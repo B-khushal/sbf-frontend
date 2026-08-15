@@ -296,7 +296,7 @@ export const ProductCard = ({ product, onAddToCart }: {
       return;
     }
     console.log("Card clicked, navigating to product:", product._id);
-    window.open(`/product/${product._id}`, '_blank', 'noopener,noreferrer');
+    navigate(`/product/${product._id}`);
   };
 
   // Handle add to cart

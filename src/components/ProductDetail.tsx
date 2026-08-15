@@ -1151,11 +1151,12 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
         <div className="absolute bottom-[10%] right-[-10%] w-[800px] h-[800px] rounded-full bg-[radial-gradient(circle_at_center,rgba(236,72,153,0.025)_0%,transparent_70%)] blur-[100px]" />
       </div>
 
-      <div className="max-w-[1440px] mx-auto">
+      <div className="max-w-[1440px] mx-auto pb-32 md:pb-12">
         <div className="grid grid-cols-1 lg:grid-cols-[560px_minmax(0,1fr)] lg:gap-[72px] gap-8 items-start relative">
 
           {/* LEFT SIDE: Immersive Sticky Product Gallery */}
           <div className="lg:sticky lg:top-[120px] lg:self-start w-full relative">
+
             <div className="flex flex-col md:flex-row gap-6 lg:w-full">
 
               {/* 1. Vertical Thumbnail Strip (Desktop) */}
@@ -1997,95 +1998,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
               </div>
             </div>
 
-            {/* Available Delivery Options Card */}
-            <div className="p-4 rounded-3xl bg-slate-900 dark:bg-slate-950 text-white space-y-3 shadow-xl border border-slate-800">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
-                <div className="flex items-center gap-2">
-                  <Truck className="w-4 h-4 text-emerald-400" />
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-200">Available Delivery Services</h4>
-                </div>
-                <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  Active
-                </span>
-              </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                {/* 1. Same Day Delivery */}
-                <div className="p-2.5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-base">🚚</span>
-                    <div>
-                      <p className="font-bold text-white">Same Day Delivery</p>
-                      <p className="text-[10px] text-slate-400">Cutoff 6:00 PM</p>
-                    </div>
-                  </div>
-                  <span className="font-extrabold text-amber-300 bg-amber-500/20 px-2 py-0.5 rounded-md border border-amber-500/30">
-                    +₹150
-                  </span>
-                </div>
-
-                {/* 2. Midnight Delivery */}
-                <div className="p-2.5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-base">🌙</span>
-                    <div>
-                      <p className="font-bold text-white">Midnight Delivery</p>
-                      <p className="text-[10px] text-slate-400">Cutoff 8:00 PM</p>
-                    </div>
-                  </div>
-                  <span className="font-extrabold text-amber-300 bg-amber-500/20 px-2 py-0.5 rounded-md border border-amber-500/30">
-                    +₹300
-                  </span>
-                </div>
-
-                {/* 3. Fixed Time Delivery */}
-                <div className="p-2.5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-base">⏰</span>
-                    <div>
-                      <p className="font-bold text-white">Fixed Time Delivery</p>
-                      <p className="text-[10px] text-slate-400">Select Time Slot</p>
-                    </div>
-                  </div>
-                  <span className="font-extrabold text-amber-300 bg-amber-500/20 px-2 py-0.5 rounded-md border border-amber-500/30">
-                    +₹150
-                  </span>
-                </div>
-
-                {/* Valentine-only delivery services (Surprise & Anonymous) */}
-                {isValentineEnabled && (
-                  <>
-                    {/* 4. Surprise Delivery */}
-                    <div className="p-2.5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-base">🎁</span>
-                        <div>
-                          <p className="font-bold text-white">Surprise Delivery</p>
-                          <p className="text-[10px] text-slate-400">Discreet Delivery</p>
-                        </div>
-                      </div>
-                      <span className="font-extrabold text-amber-300 bg-amber-500/20 px-2 py-0.5 rounded-md border border-amber-500/30">
-                        +₹100
-                      </span>
-                    </div>
-
-                    {/* 5. Anonymous Delivery */}
-                    <div className="sm:col-span-2 p-2.5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-base">🕵️</span>
-                        <div>
-                          <p className="font-bold text-white">Anonymous Delivery</p>
-                          <p className="text-[10px] text-slate-400">Sender Name Hidden on Package Tag</p>
-                        </div>
-                      </div>
-                      <span className="font-extrabold text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded-md border border-emerald-500/30">
-                        FREE
-                      </span>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
 
             {/* Luxury Trust Indicators Grid (Non-sticky details) */}
             <div className="grid grid-cols-2 gap-3 pt-6 border-t border-slate-100 dark:border-slate-900/60 lg:hidden">
@@ -2416,7 +2329,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 80, opacity: 0 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="fixed bottom-0 left-0 right-0 bg-white/85 dark:bg-slate-900/85 backdrop-blur-xl border-t border-slate-200/50 dark:border-slate-800/80 z-40 py-3.5 px-4 shadow-[0_-10px_35px_rgba(0,0,0,0.06)]"
+            className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t border-slate-200/50 dark:border-slate-800/80 z-40 py-3.5 px-4 shadow-[0_-10px_35px_rgba(0,0,0,0.08)] pb-[calc(0.85rem+env(safe-area-inset-bottom))]"
           >
             <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">

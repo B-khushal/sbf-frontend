@@ -140,8 +140,7 @@ const ProductApproval: React.FC = () => {
   };
 
   const viewProduct = (productId: string) => {
-    // Open product in new tab or modal
-    window.open(`/product/${productId}`, '_blank');
+    navigate(`/product/${productId}`);
   };
 
   return (

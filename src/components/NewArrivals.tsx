@@ -403,7 +403,7 @@ const LuxuryProductCard = ({
     if ((e.target as HTMLElement).closest("button")) {
       return;
     }
-    window.open(`/product/${product._id}`, "_blank", "noopener,noreferrer");
+    navigate(`/product/${product._id}`);
   };
 
   // Quick add handler
