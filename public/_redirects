@@ -21,6 +21,10 @@
 # Health check endpoint
 /health      /health           200
 
+# SEO crawlers static files
+/robots.txt  /robots.txt       200
+/sitemap.xml /sitemap.xml      200
+
 # All other routes should be handled by React Router
 /*           /index.html       200
 

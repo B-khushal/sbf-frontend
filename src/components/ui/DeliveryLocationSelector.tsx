@@ -17,10 +17,10 @@ const POPULAR_AREAS = [
   { name: 'Banjara Hills', pincode: '500034' },
   { name: 'Jubilee Hills', pincode: '500033' },
   { name: 'Gachibowli', pincode: '500046' },
-  { name: 'Secunderabad', pincode: '500003' },
-  { name: 'Madhapur', pincode: '500081' },
-  { name: 'Kondapur', pincode: '500084' },
+  { name: 'Secunderabad HO', pincode: '500003' },
   { name: 'Begumpet', pincode: '500016' },
+  { name: 'Madhapur', pincode: '500081' },
+  { name: 'Sainikpuri', pincode: '500094' },
 ];
 
 export const DeliveryLocationSelector: React.FC<DeliveryLocationSelectorProps> = ({
@@ -113,10 +113,10 @@ export const DeliveryLocationSelector: React.FC<DeliveryLocationSelectorProps> =
       setIsSearching(false);
       if (match) {
         saveLocation(match);
-        toast.success(`Delivery location set to ${match.area}, Hyderabad`);
+        toast.success(`Delivery location set to ${match.area}, ${match.city}`);
         setIsOpen(false);
       } else {
-        toast.error('Sorry, we do not deliver to this pincode. We currently only deliver in Hyderabad.');
+        toast.error('Sorry, we do not deliver to this pincode. We currently deliver across Hyderabad & Secunderabad.');
       }
     }, 400);
   };
@@ -125,7 +125,7 @@ export const DeliveryLocationSelector: React.FC<DeliveryLocationSelectorProps> =
     const match = SERVICEABLE_PINCODES.find((item) => item.code === code);
     if (match) {
       saveLocation(match);
-      toast.success(`Delivery location set to ${match.area}, Hyderabad`);
+      toast.success(`Delivery location set to ${match.area}, ${match.city}`);
       setIsOpen(false);
     }
   };
@@ -142,7 +142,8 @@ export const DeliveryLocationSelector: React.FC<DeliveryLocationSelectorProps> =
     ? SERVICEABLE_PINCODES.filter(
         (item) =>
           item.code.includes(searchQuery) ||
-          item.area.toLowerCase().includes(searchQuery.toLowerCase())
+          item.area.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.city.toLowerCase().includes(searchQuery.toLowerCase())
       ).slice(0, 5)
     : [];
 
@@ -155,10 +156,13 @@ export const DeliveryLocationSelector: React.FC<DeliveryLocationSelectorProps> =
     <div className="space-y-4">
       {/* Title section in popup */}
       <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-slate-800">
-        <h3 className="text-sm font-bold text-slate-805 dark:text-slate-200 flex items-center gap-1.5">
-          <MapPin size={16} className="text-primary" />
-          Select Delivery Location
-        </h3>
+        <div>
+          <h3 className="text-sm font-bold text-slate-805 dark:text-slate-200 flex items-center gap-1.5">
+            <MapPin size={16} className="text-primary" />
+            Select Delivery Location
+          </h3>
+          <p className="text-[11px] text-slate-500 mt-0.5">Hyderabad & Secunderabad Twin Cities</p>
+        </div>
         {isMobile && (
           <button 
             onClick={() => setIsOpen(false)} 
@@ -167,6 +171,16 @@ export const DeliveryLocationSelector: React.FC<DeliveryLocationSelectorProps> =
             <X size={16} />
           </button>
         )}
+      </div>
+
+      {/* Delivery Perks Strip */}
+      <div className="rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 p-2.5 border border-emerald-200/50 dark:border-emerald-800/40 text-[11px] text-emerald-900 dark:text-emerald-300 space-y-1">
+        <p className="font-semibold flex items-center gap-1.5">
+          <span>✨</span> Free Delivery on 1st Order for All Users
+        </p>
+        <p className="text-[10px] text-emerald-700 dark:text-emerald-400">
+          Also free on orders ₹999+. Standard, Fixed Slot & Midnight Surprise delivery slots available at checkout.
+        </p>
       </div>
 
       {/* Pincode input form */}
@@ -190,12 +204,12 @@ export const DeliveryLocationSelector: React.FC<DeliveryLocationSelectorProps> =
 
       {/* Search Area */}
       <div className="space-y-1.5">
-        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Search Hyderabad Areas</span>
+        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Search Twin Cities Areas</span>
         <div className="relative">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <Input
             type="text"
-            placeholder="Search area (e.g. Banjara Hills)"
+            placeholder="Search area (e.g. Banjara Hills, Begumpet)"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9 rounded-xl h-9 border-slate-200 dark:border-slate-800 text-xs bg-white dark:bg-slate-900 focus-visible:ring-1 focus-visible:ring-primary"
@@ -217,7 +231,10 @@ export const DeliveryLocationSelector: React.FC<DeliveryLocationSelectorProps> =
                     )}
                   >
                     <div className="min-w-0 pr-2">
-                      <p className="font-bold text-slate-800 dark:text-slate-200">{item.code}</p>
+                      <div className="flex items-center gap-1.5">
+                        <p className="font-bold text-slate-800 dark:text-slate-200">{item.code}</p>
+                        <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">{item.city}</span>
+                      </div>
                       <p className="text-slate-400 dark:text-slate-500 truncate text-[10px]">{item.area}</p>
                     </div>
                     <Check size={12} className={cn("text-primary shrink-0", isSelected ? "opacity-100" : "opacity-0")} />
@@ -233,7 +250,7 @@ export const DeliveryLocationSelector: React.FC<DeliveryLocationSelectorProps> =
 
       {/* Popular Areas */}
       <div className="space-y-2">
-        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Popular Areas</span>
+        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Popular Areas (Hyd & Secunderabad)</span>
         <div className="grid grid-cols-2 gap-2">
           {POPULAR_AREAS.map((area) => {
             const isSelected = selectedLocation?.code === area.pincode;

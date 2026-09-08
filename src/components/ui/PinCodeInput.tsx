@@ -13,33 +13,34 @@ export type ServiceablePinCode = {
 };
 
 const DEFAULT_CITY = 'Hyderabad';
+const CITY_SECUNDERABAD = 'Secunderabad';
 const DEFAULT_STATE = 'Telangana';
 
 // Complete list of serviceable PIN codes based on provided data.
 export const SERVICEABLE_PINCODES: ServiceablePinCode[] = [
   { code: '500001', area: 'Gandhi Bhavan / GPO / Moazzampura, etc.', city: DEFAULT_CITY, state: DEFAULT_STATE },
   { code: '500002', area: 'Moghalpura', city: DEFAULT_CITY, state: DEFAULT_STATE },
-  { code: '500003', area: 'Begumpet Policelines / Secunderabad HO', city: DEFAULT_CITY, state: DEFAULT_STATE },
+  { code: '500003', area: 'Begumpet Policelines / Secunderabad HO', city: CITY_SECUNDERABAD, state: DEFAULT_STATE },
   { code: '500004', area: 'Bazarghat / Khairatabiad HQ', city: DEFAULT_CITY, state: DEFAULT_STATE },
   { code: '500005', area: 'CRP Camp / Masab Tank BO', city: DEFAULT_CITY, state: DEFAULT_STATE },
   { code: '500006', area: 'Karwan Sahu / Mangalhat SO', city: DEFAULT_CITY, state: DEFAULT_STATE },
   { code: '500007', area: 'Adminstrative Buildings / IICT', city: DEFAULT_CITY, state: DEFAULT_STATE },
   { code: '500008', area: 'Golconda / Hyder Shah Kote', city: DEFAULT_CITY, state: DEFAULT_STATE },
-  { code: '500009', area: 'Manovikasnagar / Napier Lines SO', city: DEFAULT_CITY, state: DEFAULT_STATE },
-  { code: '500010', area: 'Bolaram SO', city: DEFAULT_CITY, state: DEFAULT_STATE },
-  { code: '500011', area: 'Bowenpally SO', city: DEFAULT_CITY, state: DEFAULT_STATE },
+  { code: '500009', area: 'Manovikasnagar / Napier Lines SO', city: CITY_SECUNDERABAD, state: DEFAULT_STATE },
+  { code: '500010', area: 'Bolaram SO', city: CITY_SECUNDERABAD, state: DEFAULT_STATE },
+  { code: '500011', area: 'Bowenpally SO', city: CITY_SECUNDERABAD, state: DEFAULT_STATE },
   { code: '500012', area: 'Begumbazar SO / Osmania Gen. Hospital', city: DEFAULT_CITY, state: DEFAULT_STATE },
   { code: '500013', area: 'Amberpet SO / Seminary BO', city: DEFAULT_CITY, state: DEFAULT_STATE },
-  { code: '500015', area: 'Jagannandas / EME Records BO', city: DEFAULT_CITY, state: DEFAULT_STATE },
-  { code: '500016', area: 'Begumpet SO / Prakashnamnagar SO', city: DEFAULT_CITY, state: DEFAULT_STATE },
-  { code: '500017', area: 'Lallaguda / Lallagpt SO', city: DEFAULT_CITY, state: DEFAULT_STATE },
+  { code: '500015', area: 'Jagannandas / EME Records BO', city: CITY_SECUNDERABAD, state: DEFAULT_STATE },
+  { code: '500016', area: 'Begumpet SO / Prakashnamnagar SO', city: CITY_SECUNDERABAD, state: DEFAULT_STATE },
+  { code: '500017', area: 'Lallaguda / Lallagpt SO', city: CITY_SECUNDERABAD, state: DEFAULT_STATE },
   { code: '500018', area: 'Sanath Nagar / Erragadda SO', city: DEFAULT_CITY, state: DEFAULT_STATE },
   { code: '500019', area: 'Lingampalli SO', city: DEFAULT_CITY, state: DEFAULT_STATE },
   { code: '500022', area: 'Central Secretariat SO', city: DEFAULT_CITY, state: DEFAULT_STATE },
   { code: '500023', area: 'Yakutpura SO', city: DEFAULT_CITY, state: DEFAULT_STATE },
   { code: '500024', area: 'Chandanagar / Sahifa SO', city: DEFAULT_CITY, state: DEFAULT_STATE },
-  { code: '500025', area: 'Himmatnagar SO', city: DEFAULT_CITY, state: DEFAULT_STATE },
-  { code: '500026', area: 'Mehrunagar SO', city: DEFAULT_CITY, state: DEFAULT_STATE },
+  { code: '500025', area: 'Himmatnagar SO', city: CITY_SECUNDERABAD, state: DEFAULT_STATE },
+  { code: '500026', area: 'Mehrunagar SO', city: CITY_SECUNDERABAD, state: DEFAULT_STATE },
   { code: '500027', area: 'Barkatpura SO / Nimboliadda SO', city: DEFAULT_CITY, state: DEFAULT_STATE },
   { code: '500028', area: 'Humayunnagar / Shantinagar SO', city: DEFAULT_CITY, state: DEFAULT_STATE },
   { code: '500029', area: 'Himayathnagar / Ramakrishna Mutt SO', city: DEFAULT_CITY, state: DEFAULT_STATE },
@@ -54,7 +55,7 @@ export const SERVICEABLE_PINCODES: ServiceablePinCode[] = [
   { code: '500039', area: 'Bodupal SO / Peerzadiguda BO', city: DEFAULT_CITY, state: DEFAULT_STATE },
   { code: '500040', area: 'Moulsali SO', city: DEFAULT_CITY, state: DEFAULT_STATE },
   { code: '500041', area: 'Raj Bhavan SO', city: DEFAULT_CITY, state: DEFAULT_STATE },
-  { code: '500042', area: 'Ferozguda SO / New Bowenpally', city: DEFAULT_CITY, state: DEFAULT_STATE },
+  { code: '500042', area: 'Ferozguda SO / New Bowenpally', city: CITY_SECUNDERABAD, state: DEFAULT_STATE },
   { code: '500043', area: 'Osmangunj / Sitarambagh / Chudi Bazar', city: DEFAULT_CITY, state: DEFAULT_STATE },
   { code: '500044', area: 'Ambernagar / Vidyanagar SO', city: DEFAULT_CITY, state: DEFAULT_STATE },
   { code: '500045', area: 'Yousufguda SO / AGS Staff Quarters', city: DEFAULT_CITY, state: DEFAULT_STATE },
@@ -67,13 +68,13 @@ export const SERVICEABLE_PINCODES: ServiceablePinCode[] = [
   { code: '500053', area: 'Falaknuma / Uppuguda SO', city: DEFAULT_CITY, state: DEFAULT_STATE },
   { code: '500054', area: 'HMT Township SO', city: DEFAULT_CITY, state: DEFAULT_STATE },
   { code: '500055', area: 'IDA Jeedimetla SO / Kutbullapur BO', city: DEFAULT_CITY, state: DEFAULT_STATE },
-  { code: '500056', area: 'Neredmet SO / Ramakrishna Puram SO', city: DEFAULT_CITY, state: DEFAULT_STATE },
+  { code: '500056', area: 'Neredmet SO / Ramakrishna Puram SO', city: CITY_SECUNDERABAD, state: DEFAULT_STATE },
   { code: '500057', area: 'Vijay Nagar Colony SO', city: DEFAULT_CITY, state: DEFAULT_STATE },
   { code: '500058', area: 'Kanchanbagh SO / Badangpet BO', city: DEFAULT_CITY, state: DEFAULT_STATE },
   { code: '500059', area: 'Saidabad SO / Colony', city: DEFAULT_CITY, state: DEFAULT_STATE },
   { code: '500060', area: 'Dilsukhnagar Colony / P&T Colony', city: DEFAULT_CITY, state: DEFAULT_STATE },
-  { code: '500061', area: 'Sitaphalmandi SO', city: DEFAULT_CITY, state: DEFAULT_STATE },
-  { code: '500062', area: 'ECIL / Dr A S Rao Nagar SO', city: DEFAULT_CITY, state: DEFAULT_STATE },
+  { code: '500061', area: 'Sitaphalmandi SO', city: CITY_SECUNDERABAD, state: DEFAULT_STATE },
+  { code: '500062', area: 'ECIL / Dr A S Rao Nagar SO', city: CITY_SECUNDERABAD, state: DEFAULT_STATE },
   { code: '500063', area: 'LIC Division SO / New MLA Quarters', city: DEFAULT_CITY, state: DEFAULT_STATE },
   { code: '500064', area: 'Bahadurpura SO / Hussainsalam', city: DEFAULT_CITY, state: DEFAULT_STATE },
   { code: '500065', area: 'Shahalinanda SO / Fatehdarwaza', city: DEFAULT_CITY, state: DEFAULT_STATE },
@@ -82,7 +83,7 @@ export const SERVICEABLE_PINCODES: ServiceablePinCode[] = [
   { code: '500068', area: 'GSI Bandlaguda SO / Mansorabad', city: DEFAULT_CITY, state: DEFAULT_STATE },
   { code: '500069', area: 'R.C. Imar SO', city: DEFAULT_CITY, state: DEFAULT_STATE },
   { code: '500070', area: 'Vanasthalipuram SO / Vaidehinagar', city: DEFAULT_CITY, state: DEFAULT_STATE },
-  { code: '500071', area: 'Rail Nilayam SO', city: DEFAULT_CITY, state: DEFAULT_STATE },
+  { code: '500071', area: 'Rail Nilayam SO', city: CITY_SECUNDERABAD, state: DEFAULT_STATE },
   { code: '500072', area: 'Kukatpally SO / Vivekananddnagar', city: DEFAULT_CITY, state: DEFAULT_STATE },
   { code: '500073', area: 'Srinagar Colony SO', city: DEFAULT_CITY, state: DEFAULT_STATE },
   { code: '500074', area: 'LB Nagar SO / Rangareddy District Court', city: DEFAULT_CITY, state: DEFAULT_STATE },
@@ -96,20 +97,20 @@ export const SERVICEABLE_PINCODES: ServiceablePinCode[] = [
   { code: '500084', area: 'Kothaguda SO / Kondapur BO', city: DEFAULT_CITY, state: DEFAULT_STATE },
   { code: '500085', area: 'JNTU Kukatpally SO', city: DEFAULT_CITY, state: DEFAULT_STATE },
   { code: '500086', area: 'Don Bosco Nagar SO (Rajendranagar)', city: DEFAULT_CITY, state: DEFAULT_STATE },
-  { code: '500087', area: 'JJ Nagar Colony SO / Allembylines SO (Jawahar Nagar area)', city: DEFAULT_CITY, state: DEFAULT_STATE },
+  { code: '500087', area: 'JJ Nagar Colony SO / Allembylines SO (Jawahar Nagar area)', city: CITY_SECUNDERABAD, state: DEFAULT_STATE },
   { code: '500089', area: 'Manikonda SO (also covers Manchirevula BO & Narsingi BO)', city: DEFAULT_CITY, state: DEFAULT_STATE },
   { code: '500090', area: 'Nizampet SO / Miyapur BO / Mallampet BO', city: DEFAULT_CITY, state: DEFAULT_STATE },
   { code: '500091', area: 'Hydersnhakote SO (serving Hydershakote, Kapla Nagar Colony, AV Enclave, etc.) and AP Police Academy', city: DEFAULT_CITY, state: DEFAULT_STATE },
   { code: '500092', area: 'Boduppal SO', city: DEFAULT_CITY, state: DEFAULT_STATE },
   { code: '500093', area: 'Vikasnagar SO', city: DEFAULT_CITY, state: DEFAULT_STATE },
-  { code: '500094', area: 'Sainikpuri SO', city: DEFAULT_CITY, state: DEFAULT_STATE },
+  { code: '500094', area: 'Sainikpuri SO', city: CITY_SECUNDERABAD, state: DEFAULT_STATE },
   { code: '500095', area: 'Putlibowli SO and SBI SO', city: DEFAULT_CITY, state: DEFAULT_STATE },
   { code: '500096', area: 'Film Nagar SO', city: DEFAULT_CITY, state: DEFAULT_STATE },
   { code: '500097', area: 'Meerpet SO and Gayathrinagar SO', city: DEFAULT_CITY, state: DEFAULT_STATE },
   { code: '500098', area: 'Medipalli SO', city: DEFAULT_CITY, state: DEFAULT_STATE },
   { code: '500100', area: 'Kompally SO, Doolapalli BO, Pochampally BO', city: DEFAULT_CITY, state: DEFAULT_STATE },
-  { code: '500102', area: 'Rama Krishnapuram SO', city: DEFAULT_CITY, state: DEFAULT_STATE },
-  { code: '500103', area: 'saket, Sainlakpuri', city: DEFAULT_CITY, state: DEFAULT_STATE },
+  { code: '500102', area: 'Rama Krishnapuram SO', city: CITY_SECUNDERABAD, state: DEFAULT_STATE },
+  { code: '500103', area: 'saket, Sainlakpuri', city: CITY_SECUNDERABAD, state: DEFAULT_STATE },
   { code: '500104', area: 'Chitrapuri Colony SO', city: DEFAULT_CITY, state: DEFAULT_STATE },
 ];
 
@@ -351,7 +352,7 @@ const PinCodeInput: React.FC<PinCodeInputProps> = ({
       return;
     }
 
-    invalidateSelection('Select a valid Hyderabad PIN code from the list to continue.');
+    invalidateSelection('Select a valid Hyderabad or Secunderabad PIN code from the list to continue.');
   };
 
   const handleQueryChange = (nextValue: string) => {
@@ -425,7 +426,7 @@ const PinCodeInput: React.FC<PinCodeInputProps> = ({
         <div className="flex flex-col items-center justify-center px-4 py-8 text-center text-sm text-slate-500">
           <Search className="mb-2 h-5 w-5 text-slate-400" />
           <p className="font-medium text-slate-700">No results found</p>
-          <p className="mt-1">Try a different Hyderabad PIN code.</p>
+          <p className="mt-1">Try a different Hyderabad or Secunderabad PIN code.</p>
         </div>
       );
     }
@@ -547,7 +548,7 @@ const PinCodeInput: React.FC<PinCodeInputProps> = ({
             <div className="space-y-4 px-4 pb-5 pt-4">
               <div>
                 <h3 className="text-base font-semibold text-slate-900">Choose delivery pincode</h3>
-                <p className="mt-1 text-sm text-slate-500">Type a Hyderabad PIN code to find your delivery area.</p>
+                <p className="mt-1 text-sm text-slate-500">Type a Hyderabad or Secunderabad PIN code to find your delivery area.</p>
               </div>
 
               <div className="relative">

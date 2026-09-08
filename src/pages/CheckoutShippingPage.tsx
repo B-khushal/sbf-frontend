@@ -105,7 +105,7 @@ const CheckoutShippingPage = () => {
     if (!isServiceable) {
       toast({
         title: "Outside Delivery Area",
-        description: `Unfortunately, SBFlorist does not deliver to the selected PIN code (${location.pincode}) in Hyderabad. Please select a serviceable address.`,
+        description: `Unfortunately, SBFlorist does not deliver to the selected PIN code (${location.pincode}) in Hyderabad or Secunderabad. Please select a serviceable address.`,
         variant: "destructive"
       });
       return;
@@ -625,7 +625,7 @@ const CheckoutShippingPage = () => {
       if (!isServiceable) {
         toast({
           title: "Outside Delivery Area",
-          description: `SBFlorist currently does not deliver to PIN code (${formData.zipCode}). Please enter a serviceable pincode in Hyderabad.`,
+          description: `SBFlorist currently does not deliver to PIN code (${formData.zipCode}). Please enter a serviceable pincode in Hyderabad or Secunderabad.`,
           variant: "destructive"
         });
         return;
@@ -661,7 +661,7 @@ const CheckoutShippingPage = () => {
       if (!isServiceable) {
         toast({
           title: "Outside Delivery Area",
-          description: `SBFlorist currently does not deliver to PIN code (${formData.receiverZipCode}). Please enter a serviceable pincode in Hyderabad.`,
+          description: `SBFlorist currently does not deliver to PIN code (${formData.receiverZipCode}). Please enter a serviceable pincode in Hyderabad or Secunderabad.`,
           variant: "destructive"
         });
         return;

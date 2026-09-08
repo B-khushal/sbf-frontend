@@ -114,6 +114,8 @@ const SeasonalCampaigns = lazy(() => import('./pages/Admin/SeasonalCampaigns'));
 const SeasonalCampaignForm = lazy(() => import('./pages/Admin/SeasonalCampaignForm'));
 const AdminOccasions = lazy(() => import('./pages/Admin/Occasions'));
 const OccasionProductsPage = lazy(() => import('./pages/OccasionProductsPage').then(m => ({ default: m.OccasionProductsPage })));
+const HyderabadDeliveryPage = lazy(() => import('./pages/HyderabadDeliveryPage'));
+const SecunderabadDeliveryPage = lazy(() => import('./pages/SecunderabadDeliveryPage'));
 
 // Valentine Pages
 const ValentineSpecialPage = lazy(() => import('./pages/ValentineSpecialPage'));
@@ -686,6 +688,16 @@ const App = () => {
                             <Route path="/contact" element={
                               <Suspense fallback={<LoadingFallback message="Loading contact..." />}>
                                 <ContactPage />
+                              </Suspense>
+                            } />
+                            <Route path="/flower-delivery-hyderabad" element={
+                              <Suspense fallback={<LoadingFallback message="Loading Hyderabad flower delivery..." />}>
+                                <HyderabadDeliveryPage />
+                              </Suspense>
+                            } />
+                            <Route path="/flower-delivery-secunderabad" element={
+                              <Suspense fallback={<LoadingFallback message="Loading Secunderabad flower delivery..." />}>
+                                <SecunderabadDeliveryPage />
                               </Suspense>
                             } />
                             <Route path="/:slug" element={

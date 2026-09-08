@@ -24,6 +24,7 @@ import { ExitIntentPopup, RecentPurchases } from "../components/valentine/Valent
 import { SeasonalCampaignHomeSection } from "../components/SeasonalCampaignHomeSection";
 import { OccasionsSection } from "../components/OccasionsSection";
 import { HomePageSkeleton } from "../components/HomePageSkeleton";
+import { HomeSeoSection } from "../components/seo/HomeSeoSection";
 
 import api from "../services/api";
 
@@ -219,9 +220,78 @@ const HomePage = () => {
       className="min-h-screen relative"
     >
       <Helmet>
-        <title>Best Florist in Hyderabad - Flower Delivery in Hyderabad | Online Bouquet Shop India | sbflorist.in</title>
-        <meta name="description" content="Best florist in Hyderabad offering flower delivery in Hyderabad, online bouquet shop India, midnight flower delivery, roses for anniversary, send flowers online. Premium flower delivery services." />
-        <meta name="keywords" content="flower delivery Hyderabad, online flower delivery Hyderabad, same day flower delivery Hyderabad, midnight flower delivery Hyderabad, fresh flowers delivery Hyderabad, florist Hyderabad, best florist in Hyderabad, flower shop Hyderabad, online florist Hyderabad, bouquet delivery Hyderabad, rose bouquet delivery Hyderabad, birthday flower delivery Hyderabad, anniversary flower delivery Hyderabad, wedding flowers Hyderabad, flower arrangements Hyderabad, luxury flower delivery Hyderabad, affordable flower delivery Hyderabad, cheap flower delivery Hyderabad, premium flowers Hyderabad, flower bouquet online Hyderabad, send flowers to Hyderabad, Hyderabad flower delivery service, flowers home delivery Hyderabad, express flower delivery Hyderabad, 24 hour flower delivery Hyderabad, flowers near me Hyderabad, red roses delivery Hyderabad, orchid delivery Hyderabad, lily flower delivery Hyderabad, carnation bouquet Hyderabad, mixed flower bouquet Hyderabad, romantic flower delivery Hyderabad, Valentine's Day flowers Hyderabad, Mother's Day flower delivery Hyderabad, congratulations flowers Hyderabad, get well soon flowers Hyderabad, sympathy flowers Hyderabad, flower and cake delivery Hyderabad, flowers and gifts Hyderabad, flower basket delivery Hyderabad, customized bouquet Hyderabad, online bouquet order Hyderabad, florist near Hyderabad airport, flower delivery in Gachibowli, flower delivery in Hitech City, flower delivery in Banjara Hills, flower delivery in Jubilee Hills, flower delivery in Kondapur, flower delivery in Kukatpally, flower delivery in Secunderabad" />
+        <title>Send Flowers to Hyderabad & Secunderabad | Online Cake & Gift Delivery | SB Florist</title>
+        <meta name="description" content="Send fresh flowers, cakes & gifts to Hyderabad & Secunderabad with SB Florist. Free delivery on 1st order & orders ₹999+. Guaranteed same-day & midnight flower delivery across all Twin Cities localities." />
+        <meta name="keywords" content="Send Flowers to Hyderabad, Flower Delivery in Hyderabad, Online Flowers Hyderabad, Same Day Flower Delivery Hyderabad, Fresh Flowers Hyderabad, Online Cakes Hyderabad, Cakes with Flowers Hyderabad, Gifts to Hyderabad, Online Gifts Hyderabad, Birthday Flowers Hyderabad, Anniversary Flowers Hyderabad, Midnight Flower Delivery Hyderabad, Roses to Hyderabad, Bouquets to Hyderabad, Local Florist Hyderabad, Florist in Hyderabad, Flower Delivery in Secunderabad, Send Flowers to Secunderabad, Online Gifts Secunderabad, Same Day Flower Delivery Secunderabad, Fresh Flowers in Secunderabad, Cakes with Flowers Secunderabad, Birthday Gifts Hyderabad, Birthday Gifts Secunderabad, Anniversary Gifts Hyderabad, Anniversary Gifts Secunderabad" />
+        <link rel="canonical" href="https://sbflorist.in/" />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="Send Flowers to Hyderabad & Secunderabad | Online Cake & Gift Delivery | SB Florist" />
+        <meta property="og:description" content="Send fresh flowers, delicious cakes & gifts across Hyderabad & Secunderabad. Enjoy Free Delivery on your 1st order and orders ₹999+. Same-day & midnight surprise delivery." />
+        <meta property="og:url" content="https://sbflorist.in/" />
+        <meta property="og:site_name" content="SB Florist" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Send Flowers to Hyderabad & Secunderabad | SB Florist" />
+        <meta name="twitter:description" content="Fresh flowers, cakes, combos & gifts delivered across Hyderabad & Secunderabad with same-day and midnight delivery options." />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@graph": [
+              {
+                "@type": "Florist",
+                "@id": "https://sbflorist.in/#florist",
+                "name": "SB Florist",
+                "url": "https://sbflorist.in",
+                "logo": "https://sbflorist.in/logo.png",
+                "image": "https://sbflorist.in/logo.png",
+                "description": "Premium local florist offering same-day and midnight flower, cake, and gift delivery across Hyderabad and Secunderabad.",
+                "telephone": "+91 9949683222",
+                "priceRange": "₹₹",
+                "address": {
+                  "@type": "PostalAddress",
+                  "streetAddress": "Door No. 12-2-786/A & B, Najam Centre, Pillar No. 32, Rethi Bowli, Mehdipatnam",
+                  "addressLocality": "Hyderabad",
+                  "addressRegion": "Telangana",
+                  "postalCode": "500028",
+                  "addressCountry": "IN"
+                },
+                "geo": {
+                  "@type": "GeoCoordinates",
+                  "latitude": 17.3912,
+                  "longitude": 78.4326
+                },
+                "openingHoursSpecification": [
+                  {
+                    "@type": "OpeningHoursSpecification",
+                    "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+                    "opens": "09:00",
+                    "closes": "21:00"
+                  }
+                ],
+                "areaServed": [
+                  {
+                    "@type": "City",
+                    "name": "Hyderabad"
+                  },
+                  {
+                    "@type": "City",
+                    "name": "Secunderabad"
+                  }
+                ]
+              },
+              {
+                "@type": "WebSite",
+                "@id": "https://sbflorist.in/#website",
+                "url": "https://sbflorist.in",
+                "name": "SB Florist",
+                "potentialAction": {
+                  "@type": "SearchAction",
+                  "target": "https://sbflorist.in/shop?q={search_term_string}",
+                  "query-input": "required name=search_term_string"
+                }
+              }
+            ]
+          })}
+        </script>
       </Helmet>
 
       {/* Offer Popup */}
@@ -416,6 +486,9 @@ const HomePage = () => {
             return null;
         }
       })}
+
+      {/* SEO Showcase Section */}
+      <HomeSeoSection />
 
       {/* Valentine marketing overlays */}
       {isValentineEnabled && (

@@ -1,0 +1,27 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+Allow: /shop
+Allow: /flower-delivery-hyderabad
+Allow: /flower-delivery-secunderabad
+Allow: /occasions/
+Allow: /about
+Allow: /contact
+Allow: /terms
+Allow: /privacy
+Allow: /shipping
+Allow: /refund-policy
+Allow: /cancellation-policy
+
+# Disallow private user states and administration
+Disallow: /admin/
+Disallow: /vendor/
+Disallow: /checkout/
+Disallow: /cart
+Disallow: /profile
+Disallow: /login
+Disallow: /signup
+Disallow: /forgot-password
+Disallow: /track/
+
+Sitemap: https://sbflorist.in/sitemap.xml

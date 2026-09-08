@@ -205,7 +205,16 @@ const Footer = () => {
                 <Link to="/shipping" className="rounded-xl bg-white border border-gray-100/60 px-3 py-2.5 text-gray-700 text-center hover:bg-pink-50/40">Shipping Policy</Link>
                 <Link to="/refund-policy" className="rounded-xl bg-white border border-gray-100/60 px-3 py-2.5 text-gray-700 text-center hover:bg-pink-50/40">Refund Policy</Link>
                 <Link to="/cancellation-policy" className="rounded-xl bg-white border border-gray-100/60 px-3 py-2.5 text-gray-700 text-center hover:bg-pink-50/40">Cancellation</Link>
-                <Link to="/privacy" className="rounded-xl bg-white border border-gray-100/60 px-3 py-2.5 text-gray-700 text-center hover:bg-pink-50/40">Privacy Policy</Link>
+              </div>
+            </details>
+            <details className="group rounded-2xl border border-gray-100 bg-gray-50/60 p-4 transition-all duration-300 [&_summary::-webkit-details-marker]:hidden">
+              <summary className="cursor-pointer list-none text-sm font-bold text-gray-800 flex items-center justify-between">
+                <span>Twin Cities Delivery Hubs</span>
+                <span className="text-gray-400 group-open:rotate-180 transition-transform duration-300 text-xs">▼</span>
+              </summary>
+              <div className="mt-3 grid grid-cols-1 gap-2 text-xs font-semibold">
+                <Link to="/flower-delivery-hyderabad" className="rounded-xl bg-white border border-rose-150 px-3 py-2.5 text-rose-700 text-center hover:bg-rose-50/40">🌸 Flower Delivery in Hyderabad</Link>
+                <Link to="/flower-delivery-secunderabad" className="rounded-xl bg-white border border-sky-150 px-3 py-2.5 text-sky-700 text-center hover:bg-sky-50/40">💐 Flower Delivery in Secunderabad</Link>
               </div>
             </details>
           </div>
@@ -412,7 +421,7 @@ const Footer = () => {
             </div>
             <div className="min-w-0">
               <p className="font-bold text-sm text-gray-900">Free Delivery</p>
-              <p className="text-xs text-gray-600">On orders above ₹999</p>
+              <p className="text-xs text-gray-600">On 1st order & orders above ₹999</p>
             </div>
           </div>
           <div className="flex items-center gap-4 justify-center sm:justify-start p-4 rounded-xl bg-white/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300">
@@ -540,25 +549,30 @@ const Footer = () => {
         <details className="group border border-gray-200 bg-white/60 backdrop-blur-sm rounded-2xl p-5 transition-all duration-300 [&_summary::-webkit-details-marker]:hidden">
           <summary className="cursor-pointer list-none flex items-center justify-between text-base font-bold text-gray-800">
             <span className="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-              🌸 Flower Delivery Services & Florist Locations in Hyderabad
+              🌸 Flower Delivery Services & Florist Locations in Hyderabad & Secunderabad
             </span>
             <span className="text-primary group-open:rotate-180 transition-transform duration-300 text-sm">▼</span>
           </summary>
           <div className="mt-4 text-xs sm:text-sm text-gray-600 space-y-4 leading-relaxed font-medium">
+            <div className="flex flex-wrap gap-2 pt-1 pb-3">
+              <Link to="/flower-delivery-hyderabad" className="px-3 py-1.5 rounded-lg bg-rose-50 text-rose-700 font-semibold border border-rose-200 hover:bg-rose-100 transition-colors">
+                📍 Flower Delivery in Hyderabad Hub
+              </Link>
+              <Link to="/flower-delivery-secunderabad" className="px-3 py-1.5 rounded-lg bg-sky-50 text-sky-700 font-semibold border border-sky-200 hover:bg-sky-100 transition-colors">
+                📍 Flower Delivery in Secunderabad Hub
+              </Link>
+            </div>
             <p>
-              Looking for the best <strong>florist Hyderabad</strong> has to offer? SB Florist is the <strong>best florist in Hyderabad</strong> and your premier choice for <strong>flower delivery Hyderabad</strong>. We provide <strong>fresh flowers delivery Hyderabad</strong> for every occasion with <strong>online flower delivery Hyderabad</strong>. We specialize in <strong>same day flower delivery Hyderabad</strong> and <strong>midnight flower delivery Hyderabad</strong> to make your celebrations extra special.
+              Looking for the best <strong>florist Hyderabad</strong> or <strong>florist in Secunderabad</strong>? SB Florist is the <strong>best florist in Hyderabad</strong> and your premier choice for <strong>flower delivery in Hyderabad</strong> and <strong>flower delivery in Secunderabad</strong>. We provide <strong>fresh flowers delivery Hyderabad</strong> and <strong>fresh flowers in Secunderabad</strong> for every occasion with <strong>online flower delivery Hyderabad</strong>. We specialize in <strong>same day flower delivery Hyderabad</strong>, <strong>same day flower delivery Secunderabad</strong>, and <strong>midnight flower delivery Hyderabad</strong> to make your celebrations extra special.
             </p>
             <p>
-              As a leading <strong>flower shop Hyderabad</strong>, we are the <strong>online florist Hyderabad</strong> that customers trust. From <strong>bouquet delivery Hyderabad</strong> and <strong>rose bouquet delivery Hyderabad</strong> to <strong>birthday flower delivery Hyderabad</strong>, <strong>anniversary flower delivery Hyderabad</strong>, and <strong>wedding flowers Hyderabad</strong>, our expert team designs breathtaking <strong>flower arrangements Hyderabad</strong>. Whether you need <strong>luxury flower delivery Hyderabad</strong> for a grand occasion or <strong>affordable flower delivery Hyderabad</strong> and <strong>cheap flower delivery Hyderabad</strong>, our <strong>premium flowers Hyderabad</strong> collection has something for everyone.
+              As a leading <strong>flower shop Hyderabad</strong>, we are the <strong>online florist Hyderabad</strong> that customers trust. From <strong>bouquet delivery Hyderabad</strong>, <strong>roses to Hyderabad</strong>, and <strong>bouquets to Hyderabad</strong> to <strong>birthday flowers Hyderabad</strong>, <strong>birthday gifts Hyderabad</strong>, <strong>birthday gifts Secunderabad</strong>, <strong>anniversary flowers Hyderabad</strong>, <strong>anniversary gifts Hyderabad</strong>, <strong>anniversary gifts Secunderabad</strong>, and <strong>wedding flowers Hyderabad</strong>, our expert team designs breathtaking <strong>flower arrangements Hyderabad</strong>.
             </p>
             <p>
-              We offer convenient options like <strong>flower bouquet online Hyderabad</strong>, <strong>send flowers to Hyderabad</strong>, <strong>Hyderabad flower delivery service</strong>, <strong>flowers home delivery Hyderabad</strong>, <strong>express flower delivery Hyderabad</strong>, and <strong>24 hour flower delivery Hyderabad</strong>. Find <strong>flowers near me Hyderabad</strong> easily and order <strong>red roses delivery Hyderabad</strong>, <strong>orchid delivery Hyderabad</strong>, <strong>lily flower delivery Hyderabad</strong>, a lovely <strong>carnation bouquet Hyderabad</strong>, or a <strong>mixed flower bouquet Hyderabad</strong>.
+              We offer convenient options like <strong>flower bouquet online Hyderabad</strong>, <strong>send flowers to Hyderabad</strong>, <strong>send flowers to Secunderabad</strong>, <strong>online gifts Secunderabad</strong>, <strong>cakes with flowers Secunderabad</strong>, and <strong>cakes with flowers Hyderabad</strong>. Find <strong>local florist Hyderabad</strong> easily and order <strong>red roses delivery Hyderabad</strong>, <strong>orchid delivery Hyderabad</strong>, <strong>lily flower delivery Hyderabad</strong>, or delightful gift combos with <strong>first order free delivery</strong> and free shipping on orders above ₹999.
             </p>
             <p>
-              Celebrate special milestones with <strong>romantic flower delivery Hyderabad</strong>, <strong>Valentine's Day flowers Hyderabad</strong>, <strong>Mother's Day flower delivery Hyderabad</strong>, <strong>congratulations flowers Hyderabad</strong>, <strong>get well soon flowers Hyderabad</strong>, and <strong>sympathy flowers Hyderabad</strong>. We also offer <strong>flower and cake delivery Hyderabad</strong>, <strong>flowers and gifts Hyderabad</strong>, and <strong>flower basket delivery Hyderabad</strong>. Customize your order with a <strong>customized bouquet Hyderabad</strong> or complete an <strong>online bouquet order Hyderabad</strong> easily.
-            </p>
-            <p>
-              We deliver to all key areas including finding a <strong>florist near Hyderabad airport</strong> or ordering a prompt <strong>flower delivery in Gachibowli</strong>, <strong>flower delivery in Hitech City</strong>, <strong>flower delivery in Banjara Hills</strong>, <strong>flower delivery in Jubilee Hills</strong>, <strong>flower delivery in Kondapur</strong>, <strong>flower delivery in Kukatpally</strong>, and <strong>flower delivery in Secunderabad</strong>.
+              We deliver to all key areas including finding a <strong>florist near Hyderabad airport</strong> or ordering prompt delivery to <strong>Gachibowli</strong>, <strong>Hitech City</strong>, <strong>Banjara Hills</strong>, <strong>Jubilee Hills</strong>, <strong>Kondapur</strong>, <strong>Kukatpally</strong>, <strong>Begumpet</strong>, <strong>Sainikpuri</strong>, <strong>Marredpally</strong>, <strong>Bowenpally</strong>, and <strong>Secunderabad</strong>.
             </p>
           </div>
         </details>
