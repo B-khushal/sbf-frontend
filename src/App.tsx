@@ -99,6 +99,7 @@ const UserViewPage = lazy(() => import('./pages/Admin/UserViewPage'));
 const UserAddPage = lazy(() => import('./pages/Admin/UserAddPage'));
 const AdminCategories = lazy(() => import('./pages/Admin/Categories'));
 const ProductOrderArrangementPage = lazy(() => import('./pages/Admin/ProductOrderArrangementPage'));
+const SearchAnalyticsPage = lazy(() => import('./pages/Admin/SearchAnalyticsPage'));
 const CategoryForm = lazy(() => import('./pages/Admin/CategoryForm'));
 const CategoryResolver = lazy(() => import('./pages/CategoryResolver'));
 const UserEditPage = lazy(() => import('./pages/Admin/UserEditPage'));
@@ -312,6 +313,7 @@ const App = () => {
                               <Route path="collections" element={<CollectionsPage />} />
                               <Route path="inventory" element={<InventoryPage />} />
                               <Route path="order-arrangement" element={<ProductOrderArrangementPage />} />
+                              <Route path="search-analytics" element={<SearchAnalyticsPage />} />
                               <Route path="reviews" element={<AdminReviews />} />
                               <Route path="settings" element={<CatalogSettingsPage />} />
                             </Route>
@@ -433,6 +435,11 @@ const App = () => {
                             <Route path="analytics" element={
                               <Suspense fallback={<LoadingFallback message="Loading analytics..." />}>
                                 <Analytics />
+                              </Suspense>
+                            } />
+                            <Route path="search-analytics" element={
+                              <Suspense fallback={<LoadingFallback message="Loading search analytics..." />}>
+                                <SearchAnalyticsPage />
                               </Suspense>
                             } />
                             <Route path="promocodes" element={

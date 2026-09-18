@@ -67,6 +67,44 @@ const CATEGORY_ALIAS_MAP: Record<string, string> = {
   "aniversary gifts": "Anniversary Gifts",
 };
 
+const FLOWER_FILTER_OPTIONS = [
+  { label: 'All Flower Types', value: '' },
+  { label: '🌹 Roses', value: 'rose' },
+  { label: '🌸 Lilies', value: 'lily' },
+  { label: '🌺 Orchids', value: 'orchid' },
+  { label: '💐 Carnations', value: 'carnation' },
+  { label: '🌻 Sunflowers', value: 'sunflower' },
+  { label: '🌷 Tulips', value: 'tulip' },
+  { label: '🌼 Gerberas', value: 'gerbera' },
+  { label: '🌿 Daisies', value: 'daisy' },
+  { label: '🪻 Hydrangeas', value: 'hydrangea' },
+  { label: '✨ Mixed Flowers', value: 'mixed' }
+];
+
+const COLOR_FILTER_OPTIONS = [
+  { label: 'All Colors', value: '', dot: 'bg-gradient-to-r from-red-400 via-pink-400 to-yellow-400' },
+  { label: 'Red', value: 'red', dot: 'bg-red-500' },
+  { label: 'Pink', value: 'pink', dot: 'bg-pink-400' },
+  { label: 'White', value: 'white', dot: 'bg-slate-100 border border-gray-300' },
+  { label: 'Yellow', value: 'yellow', dot: 'bg-yellow-400' },
+  { label: 'Purple', value: 'purple', dot: 'bg-purple-500' },
+  { label: 'Peach', value: 'peach', dot: 'bg-orange-300' },
+  { label: 'Orange', value: 'orange', dot: 'bg-orange-500' },
+  { label: 'Blue', value: 'blue', dot: 'bg-blue-500' }
+];
+
+const OCCASION_FILTER_OPTIONS = [
+  { label: 'All Occasions', value: '' },
+  { label: '🎂 Birthday', value: 'birthday' },
+  { label: '💍 Anniversary', value: 'anniversary' },
+  { label: '❤️ Love & Romance', value: 'love' },
+  { label: '👰 Wedding', value: 'wedding' },
+  { label: '🎉 Congratulations', value: 'congratulations' },
+  { label: '🌿 Get Well Soon', value: 'get well' },
+  { label: '🙏 Thank You', value: 'thank you' },
+  { label: '🕊️ Sympathy', value: 'sympathy' }
+];
+
 const FilterSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => {
   const [isOpen, setIsOpen] = useState(true);
   return (
@@ -349,6 +387,11 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
   const [isMobilePriceOpen, setIsMobilePriceOpen] = useState(true);
   const [deliveryOption, setDeliveryOption] = useState("");
   const [occasionFilter, setOccasionFilter] = useState("");
+  const [flowerTypeFilter, setFlowerTypeFilter] = useState("");
+  const [colorFilter, setColorFilter] = useState("");
+  const [inStockOnly, setInStockOnly] = useState(false);
+  const [bestsellerOnly, setBestsellerOnly] = useState(false);
+  const [newArrivalOnly, setNewArrivalOnly] = useState(false);
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -366,6 +409,34 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
     contactModalProduct,
     closeContactModal,
   } = useCart();
+
+  const hasActiveFilters = Boolean(
+    selectedCategory ||
+    flowerTypeFilter ||
+    occasionFilter ||
+    colorFilter ||
+    inStockOnly ||
+    bestsellerOnly ||
+    newArrivalOnly ||
+    deliveryOption ||
+    minPriceFilter > PRICE_FILTER_MIN ||
+    maxPriceFilter < PRICE_FILTER_MAX
+  );
+
+  const handleResetAllFilters = () => {
+    setSelectedCategory("");
+    setMinPriceFilter(PRICE_FILTER_MIN);
+    setMaxPriceFilter(PRICE_FILTER_MAX);
+    setSortBy("custom");
+    setDeliveryOption("");
+    setOccasionFilter("");
+    setFlowerTypeFilter("");
+    setColorFilter("");
+    setInStockOnly(false);
+    setBestsellerOnly(false);
+    setNewArrivalOnly(false);
+    navigate("/shop");
+  };
 
   // Get settings categories
   const { categories: settingsCategories, shopCategories } = useSettings();
@@ -538,7 +609,52 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
 
     // Same Day Delivery filter
     if (deliveryOption === "same-day") {
-      filtered = filtered.filter(product => product.sameDay !== false);
+      filtered = filtered.filter((product: any) => product.sameDay !== false);
+    }
+
+    // Flower Type filter
+    if (flowerTypeFilter) {
+      const ft = flowerTypeFilter.toLowerCase();
+      filtered = filtered.filter((p: any) => {
+        const text = `${p.title || ''} ${p.description || ''} ${(p.categories || []).join(' ')} ${p.category || ''} ${(p.tags || []).map((t: any) => typeof t === 'string' ? t : t.tag || '').join(' ')}`.toLowerCase();
+        return (p.flowerTypes && p.flowerTypes.includes(ft)) || text.includes(ft);
+      });
+    }
+
+    // Occasion filter
+    if (occasionFilter) {
+      const occ = occasionFilter.toLowerCase();
+      filtered = filtered.filter((p: any) => {
+        const text = `${p.title || ''} ${p.description || ''} ${(p.occasions || []).join(' ')} ${(p.categories || []).join(' ')} ${p.category || ''}`.toLowerCase();
+        return (p.occasions && p.occasions.includes(occ)) || text.includes(occ);
+      });
+    }
+
+    // Color filter
+    if (colorFilter) {
+      const col = colorFilter.toLowerCase();
+      filtered = filtered.filter((p: any) => {
+        const text = `${p.title || ''} ${p.description || ''} ${(p.categories || []).join(' ')}`.toLowerCase();
+        return (p.colors && p.colors.includes(col)) || text.includes(col);
+      });
+    }
+
+    // In Stock Only filter
+    if (inStockOnly) {
+      filtered = filtered.filter((p: any) => {
+        const stock = p.stock !== undefined ? p.stock : (p.countInStock || 0);
+        return stock > 0 && p.isAvailable !== false;
+      });
+    }
+
+    // Bestseller filter
+    if (bestsellerOnly) {
+      filtered = filtered.filter((p: any) => p.isBestseller === true);
+    }
+
+    // New Arrival filter
+    if (newArrivalOnly) {
+      filtered = filtered.filter((p: any) => p.isNewArrival === true || p.isNew === true);
     }
 
     // Helper to get product display order for custom sorting
@@ -612,7 +728,7 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
     });
 
     setFilteredProducts(filtered);
-  }, [products, selectedCategoryKey, isParentCategoryRoute, minPriceFilter, maxPriceFilter, sortBy, searchQuery, deliveryOption]);
+  }, [products, selectedCategoryKey, isParentCategoryRoute, minPriceFilter, maxPriceFilter, sortBy, searchQuery, deliveryOption, occasionFilter, flowerTypeFilter, colorFilter, inStockOnly, bestsellerOnly, newArrivalOnly]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-bloom-blue-50 via-bloom-pink-50 to-bloom-green-50">
@@ -1069,6 +1185,126 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
                       </div>
                     )}
                   </div>
+
+                  {/* Flower Type (Mobile) */}
+                  <div className="border border-sky-100 rounded-lg p-4">
+                    <button
+                      onClick={() => setActiveFilterSection(activeFilterSection === "flower" ? null : "flower")}
+                      className="flex items-center justify-between w-full text-left"
+                    >
+                      <h3 className="font-semibold text-sky-700">Flower Type</h3>
+                      <ChevronDown
+                        size={18}
+                        className={cn(
+                          "transition-transform duration-200",
+                          activeFilterSection === "flower" && "rotate-180"
+                        )}
+                      />
+                    </button>
+                    {activeFilterSection === "flower" && (
+                      <div className="mt-3 space-y-1.5 max-h-48 overflow-y-auto">
+                        {FLOWER_FILTER_OPTIONS.map((f) => (
+                          <button
+                            key={f.value}
+                            onClick={() => setFlowerTypeFilter(flowerTypeFilter === f.value ? "" : f.value)}
+                            className={cn(
+                              "w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center justify-between",
+                              flowerTypeFilter === f.value
+                                ? "bg-gradient-to-r from-sky-400 to-pink-500 text-white font-medium"
+                                : "text-gray-700 hover:bg-gray-50"
+                            )}
+                          >
+                            <span>{f.label}</span>
+                            {flowerTypeFilter === f.value && <span>✓</span>}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Color (Mobile) */}
+                  <div className="border border-sky-100 rounded-lg p-4">
+                    <button
+                      onClick={() => setActiveFilterSection(activeFilterSection === "color" ? null : "color")}
+                      className="flex items-center justify-between w-full text-left"
+                    >
+                      <h3 className="font-semibold text-sky-700">Color</h3>
+                      <ChevronDown
+                        size={18}
+                        className={cn(
+                          "transition-transform duration-200",
+                          activeFilterSection === "color" && "rotate-180"
+                        )}
+                      />
+                    </button>
+                    {activeFilterSection === "color" && (
+                      <div className="mt-3 grid grid-cols-3 gap-2">
+                        {COLOR_FILTER_OPTIONS.map((c) => (
+                          <button
+                            key={c.value}
+                            onClick={() => setColorFilter(colorFilter === c.value ? "" : c.value)}
+                            className={cn(
+                              "p-2 rounded-lg text-xs font-medium flex items-center gap-1.5 border transition-all",
+                              colorFilter === c.value
+                                ? "border-pink-500 bg-pink-50 text-pink-700 shadow-xs"
+                                : "border-gray-200 text-gray-700"
+                            )}
+                          >
+                            <span className={`w-3 h-3 rounded-full ${c.dot}`} />
+                            <span className="truncate">{c.label.replace('All Colors', 'All')}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Availability & Features (Mobile) */}
+                  <div className="border border-sky-100 rounded-lg p-4">
+                    <button
+                      onClick={() => setActiveFilterSection(activeFilterSection === "features" ? null : "features")}
+                      className="flex items-center justify-between w-full text-left"
+                    >
+                      <h3 className="font-semibold text-sky-700">Availability & Features</h3>
+                      <ChevronDown
+                        size={18}
+                        className={cn(
+                          "transition-transform duration-200",
+                          activeFilterSection === "features" && "rotate-180"
+                        )}
+                      />
+                    </button>
+                    {activeFilterSection === "features" && (
+                      <div className="mt-3 space-y-2.5">
+                        <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={inStockOnly}
+                            onChange={(e) => setInStockOnly(e.target.checked)}
+                            className="rounded text-primary focus:ring-primary h-4 w-4"
+                          />
+                          <span>In Stock Only</span>
+                        </label>
+                        <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={bestsellerOnly}
+                            onChange={(e) => setBestsellerOnly(e.target.checked)}
+                            className="rounded text-primary focus:ring-primary h-4 w-4"
+                          />
+                          <span>⭐ Best Sellers</span>
+                        </label>
+                        <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={newArrivalOnly}
+                            onChange={(e) => setNewArrivalOnly(e.target.checked)}
+                            className="rounded text-primary focus:ring-primary h-4 w-4"
+                          />
+                          <span>🆕 New Arrivals</span>
+                        </label>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="border-t border-sky-100 mt-4 pt-4 space-y-3">
@@ -1080,13 +1316,8 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
                   </button>
                   <button
                     onClick={() => {
-                      setSelectedCategory("");
-                      setMinPriceFilter(PRICE_FILTER_MIN);
-                      setMaxPriceFilter(PRICE_FILTER_MAX);
-                      setSortBy("newest");
-                      setDeliveryOption("");
-                      setOccasionFilter("");
-                      navigate("/shop");
+                      handleResetAllFilters();
+                      setMobileFilterOpen(false);
                     }}
                     className="w-full py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-all duration-200"
                   >
@@ -1161,6 +1392,93 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
                   ))}
                 </FilterSection>
 
+                <FilterSection title="Flower Type">
+                  <div className="space-y-1">
+                    {FLOWER_FILTER_OPTIONS.map((flower) => (
+                      <button
+                        key={flower.value}
+                        onClick={() => setFlowerTypeFilter(flowerTypeFilter === flower.value ? "" : flower.value)}
+                        className={`w-full text-left px-3 py-1 rounded-md transition-colors text-xs hover:bg-gray-100 flex items-center justify-between ${
+                          flowerTypeFilter === flower.value ? "bg-gradient-to-r from-sky-400 to-pink-500 text-white font-medium" : "text-gray-600"
+                        }`}
+                      >
+                        <span>{flower.label}</span>
+                        {flowerTypeFilter === flower.value && <span>✓</span>}
+                      </button>
+                    ))}
+                  </div>
+                </FilterSection>
+
+                <FilterSection title="Occasion">
+                  <div className="space-y-1 max-h-48 overflow-y-auto">
+                    {OCCASION_FILTER_OPTIONS.map((occ) => (
+                      <button
+                        key={occ.value}
+                        onClick={() => setOccasionFilter(occasionFilter === occ.value ? "" : occ.value)}
+                        className={`w-full text-left px-3 py-1 rounded-md transition-colors text-xs hover:bg-gray-100 flex items-center justify-between ${
+                          occasionFilter === occ.value ? "bg-gradient-to-r from-sky-400 to-pink-500 text-white font-medium" : "text-gray-600"
+                        }`}
+                      >
+                        <span>{occ.label}</span>
+                        {occasionFilter === occ.value && <span>✓</span>}
+                      </button>
+                    ))}
+                  </div>
+                </FilterSection>
+
+                <FilterSection title="Color">
+                  <div className="grid grid-cols-3 gap-1.5 pt-1">
+                    {COLOR_FILTER_OPTIONS.map((c) => (
+                      <button
+                        key={c.value}
+                        onClick={() => setColorFilter(colorFilter === c.value ? "" : c.value)}
+                        className={`px-2 py-1 rounded-md text-xs font-medium flex items-center gap-1.5 transition-all border ${
+                          colorFilter === c.value
+                            ? "border-pink-500 bg-pink-50 text-pink-700 shadow-xs"
+                            : "border-gray-200 hover:border-gray-300 text-gray-700"
+                        }`}
+                      >
+                        <span className={`w-2.5 h-2.5 rounded-full ${c.dot}`} />
+                        <span className="truncate">{c.label.replace('All Colors', 'All')}</span>
+                      </button>
+                    ))}
+                  </div>
+                </FilterSection>
+
+                <FilterSection title="Availability & Features">
+                  <div className="space-y-2 pt-1">
+                    <label className="flex items-center gap-2 text-xs font-medium text-gray-700 cursor-pointer hover:text-primary">
+                      <input
+                        type="checkbox"
+                        checked={inStockOnly}
+                        onChange={(e) => setInStockOnly(e.target.checked)}
+                        className="rounded text-primary focus:ring-primary h-4 w-4"
+                      />
+                      <span>In Stock Only</span>
+                    </label>
+
+                    <label className="flex items-center gap-2 text-xs font-medium text-gray-700 cursor-pointer hover:text-primary">
+                      <input
+                        type="checkbox"
+                        checked={bestsellerOnly}
+                        onChange={(e) => setBestsellerOnly(e.target.checked)}
+                        className="rounded text-primary focus:ring-primary h-4 w-4"
+                      />
+                      <span>⭐ Best Sellers</span>
+                    </label>
+
+                    <label className="flex items-center gap-2 text-xs font-medium text-gray-700 cursor-pointer hover:text-primary">
+                      <input
+                        type="checkbox"
+                        checked={newArrivalOnly}
+                        onChange={(e) => setNewArrivalOnly(e.target.checked)}
+                        className="rounded text-primary focus:ring-primary h-4 w-4"
+                      />
+                      <span>🆕 New Arrivals</span>
+                    </label>
+                  </div>
+                </FilterSection>
+
                 <FilterSection title="Sort By">
                   {["custom", "newest", "price-asc", "price-desc"].map((sortOption) => (
                     <button
@@ -1177,8 +1495,99 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
               </div>
             </div>
 
-            {/* Products Grid */}
+            {/* Products Grid & Active Filter Pills Bar */}
             <div className="lg:col-span-3">
+              {/* Active Filter Chips & View Mode Controls */}
+              <div className="mb-6 flex flex-wrap items-center justify-between gap-3 bg-white/70 backdrop-blur-sm p-3.5 rounded-2xl border border-sky-100/80 shadow-xs">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wider mr-1">
+                    {filteredProducts.length} {filteredProducts.length === 1 ? 'Product' : 'Products'} Found
+                  </span>
+                  {hasActiveFilters && (
+                    <>
+                      {selectedCategory && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-sky-50 text-sky-700 border border-sky-200">
+                          Cat: {selectedCategory}
+                          <button onClick={() => setSelectedCategory("")} className="hover:text-red-500"><X size={12} /></button>
+                        </span>
+                      )}
+                      {flowerTypeFilter && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-pink-50 text-pink-700 border border-pink-200">
+                          Flower: {flowerTypeFilter}
+                          <button onClick={() => setFlowerTypeFilter("")} className="hover:text-red-500"><X size={12} /></button>
+                        </span>
+                      )}
+                      {occasionFilter && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200">
+                          Occasion: {occasionFilter}
+                          <button onClick={() => setOccasionFilter("")} className="hover:text-red-500"><X size={12} /></button>
+                        </span>
+                      )}
+                      {colorFilter && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                          Color: {colorFilter}
+                          <button onClick={() => setColorFilter("")} className="hover:text-red-500"><X size={12} /></button>
+                        </span>
+                      )}
+                      {(minPriceFilter > PRICE_FILTER_MIN || maxPriceFilter < PRICE_FILTER_MAX) && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          ₹{minPriceFilter} - ₹{maxPriceFilter}
+                          <button onClick={() => { setMinPriceFilter(PRICE_FILTER_MIN); setMaxPriceFilter(PRICE_FILTER_MAX); }} className="hover:text-red-500"><X size={12} /></button>
+                        </span>
+                      )}
+                      {deliveryOption === "same-day" && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                          ⚡ Same Day
+                          <button onClick={() => setDeliveryOption("")} className="hover:text-red-500"><X size={12} /></button>
+                        </span>
+                      )}
+                      {inStockOnly && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200">
+                          In Stock
+                          <button onClick={() => setInStockOnly(false)} className="hover:text-red-500"><X size={12} /></button>
+                        </span>
+                      )}
+                      {bestsellerOnly && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-orange-50 text-orange-700 border border-orange-200">
+                          ⭐ Bestseller
+                          <button onClick={() => setBestsellerOnly(false)} className="hover:text-red-500"><X size={12} /></button>
+                        </span>
+                      )}
+                      {newArrivalOnly && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200">
+                          🆕 New
+                          <button onClick={() => setNewArrivalOnly(false)} className="hover:text-red-500"><X size={12} /></button>
+                        </span>
+                      )}
+                      <button
+                        onClick={handleResetAllFilters}
+                        className="text-xs text-red-600 hover:text-red-700 font-semibold hover:underline ml-1"
+                      >
+                        Clear All
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                {/* View mode toggle */}
+                <div className="flex items-center gap-1.5 ml-auto">
+                  <button
+                    onClick={() => setViewMode("grid")}
+                    className={cn("p-1.5 rounded-lg transition-colors", viewMode === "grid" ? "bg-primary text-white" : "text-gray-500 hover:bg-gray-100")}
+                    aria-label="Grid view"
+                  >
+                    <Grid3X3 size={16} />
+                  </button>
+                  <button
+                    onClick={() => setViewMode("list")}
+                    className={cn("p-1.5 rounded-lg transition-colors", viewMode === "list" ? "bg-primary text-white" : "text-gray-500 hover:bg-gray-100")}
+                    aria-label="List view"
+                  >
+                    <List size={16} />
+                  </button>
+                </div>
+              </div>
+
               {isLoading ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                   {[...Array(6)].map((_, i) => (

@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { API_URL } from '@/config';
+export { API_URL };
 
 export interface AddonOption {
   name: string;
@@ -82,6 +83,7 @@ export interface ProductVideo {
 
 export interface OccasionData {
   _id?: string;
+  id?: string;
   name: string;
   slug: string;
   icon: string;
@@ -90,6 +92,7 @@ export interface OccasionData {
   accentColor: string;
   displayOrder: number;
   status: 'active' | 'inactive';
+  isActive?: boolean;
   featured: boolean;
   visibleOnHomepage: boolean;
   seoTitle?: string;
@@ -107,6 +110,15 @@ export interface ProductData {
   price: number;
   costPrice?: number;
   discount: number;
+  displayOrders?: {
+    shop?: number;
+    featured?: number;
+    newArrivals?: number;
+    recommended?: number;
+    occasions?: Record<string, number>;
+    categories?: Record<string, number>;
+    [key: string]: any;
+  };
   category: string;
   subcategory: string;
   categories: string[];
@@ -390,7 +402,7 @@ const getAuthToken = () => {
 };
 
 // Helper function to create config with auth header
-const createAuthConfig = () => {
+export const createAuthConfig = () => {
   const token = getAuthToken();
   return {
     timeout: 120000, // 120s timeout for slow network connections
@@ -843,9 +855,30 @@ class ProductService {
     return response.data;
   }
 
-  async updateSectionProductsOrder(section: string, displayOrders: Record<string, number>, sortBy?: string, sortDirection?: string): Promise<any> {
+  async updateSectionProductsOrder(section: string, displayOrders: Record<string, number>, sortBy?: string, sortDirection?: string, auditMetadata?: any): Promise<any> {
     const config = createAuthConfig();
-    const response = await axios.put(`${API_URL}/products/order/update`, { section, displayOrders, sortBy, sortDirection }, config);
+    const response = await axios.put(`${API_URL}/products/order/update`, { section, displayOrders, sortBy, sortDirection, auditMetadata }, config);
+    return response.data;
+  }
+
+  async bulkReorderProducts(section: string, displayOrders: Record<string, number>, sortBy?: string, sortDirection?: string, auditMetadata?: any): Promise<any> {
+    const config = createAuthConfig();
+    const response = await axios.put(`${API_URL}/products/order/bulk-reorder`, { section, displayOrders, sortBy, sortDirection, auditMetadata }, config);
+    return response.data;
+  }
+
+  async getOrderAuditLogs(section?: string, limit = 25): Promise<any> {
+    const config = createAuthConfig();
+    const response = await axios.get(`${API_URL}/products/order/audit-logs`, {
+      ...config,
+      params: { section, limit }
+    });
+    return response.data;
+  }
+
+  async rollbackOrderChanges(auditLogId: string): Promise<any> {
+    const config = createAuthConfig();
+    const response = await axios.post(`${API_URL}/products/order/rollback`, { auditLogId }, config);
     return response.data;
   }
 

@@ -3,7 +3,7 @@ import { useNavigate, Link, Outlet, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { BarChart, Users, ShoppingBag, Package, Settings, LogOut, Menu, TrendingUp, ChevronLeft, ChevronRight, Tag, Gift, Store, Calendar, CheckCircle, ClipboardList, Activity, MessageSquareText, Heart, Flower2, Sprout, Cake, Cookie, Boxes, FolderTree, Layers, Warehouse, LayoutDashboard, ArrowUpDown } from 'lucide-react';
+import { BarChart, Users, ShoppingBag, Package, Settings, LogOut, Menu, TrendingUp, ChevronLeft, ChevronRight, Tag, Gift, Store, Calendar, CheckCircle, ClipboardList, Activity, MessageSquareText, Heart, Flower2, Sprout, Cake, Cookie, Boxes, FolderTree, Layers, Warehouse, LayoutDashboard, ArrowUpDown, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
@@ -435,6 +435,16 @@ const AdminDashboard: React.FC = () => {
               >
                 <ArrowUpDown className="h-4 w-4 mr-2" />
                 <span className="sidebar-item-text">Order Arrangement</span>
+              </Link>
+              <Link
+                to="/admin/products/search-analytics"
+                className={cn(
+                  "sidebar-item flex items-center py-2 px-3 rounded-md transition-colors",
+                  location.pathname === "/admin/products/search-analytics" || location.pathname === "/admin/search-analytics" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                )}
+              >
+                <Search className="h-4 w-4 mr-2" />
+                <span className="sidebar-item-text">Search Analytics</span>
               </Link>
               <Link
                 to="/admin/product-approval"

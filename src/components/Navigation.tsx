@@ -24,6 +24,7 @@ import { DeliveryLocationSelector } from './ui/DeliveryLocationSelector';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useFloating, offset, flip, shift, autoUpdate } from '@floating-ui/react';
 import { preprocessProductForSearch, createSearchIndex, rankSearchResults, SearchItem } from '@/utils/searchHelper';
+import searchService from '@/services/searchService';
 
 interface NavItem {
   href: string;
@@ -354,8 +355,13 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      saveSearchTerm(searchQuery);
-      navigate(`/shop?search=${encodeURIComponent(searchQuery.trim())}`);
+      const term = searchQuery.trim();
+      saveSearchTerm(term);
+      searchService.trackSearch({
+        query: term,
+        resultsCount: searchResults.length
+      });
+      navigate(`/shop?search=${encodeURIComponent(term)}`);
       setSearchQuery('');
       setShowSuggestions(false);
       setIsSearchFocused(false);
@@ -363,8 +369,14 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
   };
 
   const handleProductClick = (product: SearchItem) => {
-    saveSearchTerm(product.title);
-    navigate(`/product/${product._id}`);
+    const prodTitle = product.title || product.name || 'Product';
+    saveSearchTerm(prodTitle);
+    searchService.trackSearch({
+      query: searchQuery.trim() || prodTitle,
+      clickedProductId: String(product._id || product.id),
+      clickedProductTitle: prodTitle
+    });
+    navigate(`/product/${product._id || product.id}`);
     setSearchQuery('');
     setShowSuggestions(false);
     setIsSearchFocused(false);
@@ -372,6 +384,10 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
 
   const handleQueryClick = (term: string) => {
     saveSearchTerm(term);
+    searchService.trackSearch({
+      query: term,
+      resultsCount: searchResults.length
+    });
     navigate(`/shop?search=${encodeURIComponent(term)}`);
     setSearchQuery('');
     setShowSuggestions(false);
