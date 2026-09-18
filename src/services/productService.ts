@@ -101,6 +101,19 @@ export interface OccasionData {
   updatedAt?: string;
 }
 
+export interface BulkTaxonomyPayload {
+  primaryCategory?: string;
+  changePrimaryCategory?: boolean;
+  subcategory?: string;
+  changeSubcategory?: boolean;
+  clearSubcategory?: boolean;
+  isNewSubcategory?: boolean;
+  additionalCategories?: string[];
+  additionalCategoriesMode?: 'append' | 'replace';
+  changeAdditionalCategories?: boolean;
+  catalogType?: string;
+}
+
 export interface ProductData {
   _id?: string;
   id?: string;
@@ -950,6 +963,15 @@ class ProductService {
     const config = createAuthConfig();
     const response = await axios.post(`${API_URL}/products/admin/bulk-action`, { action, productIds, payload }, config);
     return response.data;
+  }
+
+  async bulkUpdateProductTaxonomy(productIds: string[], payload: BulkTaxonomyPayload): Promise<{
+    success: boolean;
+    action: string;
+    modifiedCount: number;
+    message: string;
+  }> {
+    return this.executeBulkAction('bulk_category_taxonomy', productIds, payload);
   }
 
   async restoreProductVersion(productId: string, versionIndex: number): Promise<any> {

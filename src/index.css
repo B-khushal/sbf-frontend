@@ -212,7 +212,7 @@
     z-index: 40; /* Category menu (below main nav) */
   }
   .z-dropdown {
-    z-index: 60; /* Dropdowns (above nav) */
+    z-index: 150; /* Dropdowns (above nav, sheets, and modals) */
   }
   .z-sheet {
     z-index: 80; /* Sheets/Sidebars */

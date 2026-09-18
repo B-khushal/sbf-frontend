@@ -37,8 +37,11 @@ import {
   ArrowUp,
   ArrowDown,
   MoveUp,
-  MoveDown
+  MoveDown,
+  FolderTree,
+  Tag
 } from "lucide-react";
+import { BulkCategoryModal } from "./BulkCategoryModal";
 
 interface EnterpriseProductTableProps {
   products: ProductData[];
@@ -58,6 +61,7 @@ export const EnterpriseProductTable: React.FC<EnterpriseProductTableProps> = ({
   const navigate = useNavigate();
   const { toast } = useToast();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
   const [isReorderMode, setIsReorderMode] = useState(false);
   const [orderedProducts, setOrderedProducts] = useState<ProductData[]>([]);
@@ -77,6 +81,11 @@ export const EnterpriseProductTable: React.FC<EnterpriseProductTableProps> = ({
     });
     return Array.from(cats);
   }, [products]);
+
+  // Selected product objects for modal operations
+  const selectedProductObjects = useMemo(() => {
+    return products.filter((p) => p._id && selectedIds.includes(p._id));
+  }, [products, selectedIds]);
 
   // Filter & Sort logic
   const filteredProducts = useMemo(() => {
@@ -465,6 +474,14 @@ export const EnterpriseProductTable: React.FC<EnterpriseProductTableProps> = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            <Button
+              size="sm"
+              variant="secondary"
+              className="h-8 text-xs bg-indigo-600 hover:bg-indigo-700 text-white border-0 gap-1.5 font-medium shadow-sm"
+              onClick={() => setIsCategoryModalOpen(true)}
+            >
+              <FolderTree className="h-3.5 w-3.5" /> Category & Taxonomy
+            </Button>
             <Button size="sm" variant="secondary" className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700 text-white border-0" onClick={() => handleBulkAction("publish")}>
               Publish
             </Button>
@@ -662,10 +679,25 @@ export const EnterpriseProductTable: React.FC<EnterpriseProductTableProps> = ({
                     <div>
                       {/* Category Pill & Stock Pill Row */}
                       <div className="flex items-center justify-between gap-1 mb-2">
-                        <span className="bg-[#c084fc] text-purple-950 font-bold text-[11px] capitalize px-3 py-0.5 rounded-full">
-                          {product.category || product.catalogType || "flowers"}
-                        </span>
-                        <span className="bg-[#dcfce7] text-[#166534] font-bold text-[11px] px-3 py-0.5 rounded-full">
+                        <div className="flex items-center gap-1 flex-wrap">
+                          <span className="bg-[#c084fc] text-purple-950 font-bold text-[11px] capitalize px-2.5 py-0.5 rounded-full">
+                            {product.category || product.catalogType || "flowers"}
+                          </span>
+                          {product.subcategory && (
+                            <span className="bg-amber-100 dark:bg-amber-950/40 text-amber-900 dark:text-amber-300 font-semibold text-[10px] px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-800/60">
+                              {product.subcategory}
+                            </span>
+                          )}
+                          {Array.isArray(product.categories) && product.categories.length > 1 && (
+                            <span
+                              className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-semibold text-[9px] px-1.5 py-0.5 rounded-full"
+                              title={product.categories.join(", ")}
+                            >
+                              +{product.categories.length - 1}
+                            </span>
+                          )}
+                        </div>
+                        <span className="bg-[#dcfce7] text-[#166534] font-bold text-[11px] px-2.5 py-0.5 rounded-full shrink-0">
                           {product.countInStock}
                         </span>
                       </div>
@@ -856,9 +888,24 @@ export const EnterpriseProductTable: React.FC<EnterpriseProductTableProps> = ({
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <span className="text-xs text-slate-700 dark:text-slate-300">
-                        {product.category || "General"}
-                      </span>
+                      <div>
+                        <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 block">
+                          {product.category || "General"}
+                        </span>
+                        {product.subcategory && (
+                          <span className="text-[10px] text-amber-700 dark:text-amber-400 font-medium block">
+                            ↳ {product.subcategory}
+                          </span>
+                        )}
+                        {Array.isArray(product.categories) && product.categories.length > 1 && (
+                          <span
+                            className="text-[10px] text-muted-foreground block truncate max-w-[140px]"
+                            title={product.categories.join(", ")}
+                          >
+                            +{product.categories.length - 1} more: {product.categories.slice(1).join(", ")}
+                          </span>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>
                       <div>
@@ -945,6 +992,18 @@ export const EnterpriseProductTable: React.FC<EnterpriseProductTableProps> = ({
         </Table>
       </div>
       )}
+
+      {/* Bulk Taxonomy & Category Management Modal */}
+      <BulkCategoryModal
+        isOpen={isCategoryModalOpen}
+        onClose={() => setIsCategoryModalOpen(false)}
+        selectedProducts={selectedProductObjects}
+        catalogTypeFilter={catalogTypeFilter}
+        onSuccess={() => {
+          setSelectedIds([]);
+          if (onRefresh) onRefresh();
+        }}
+      />
     </div>
   );
 };
