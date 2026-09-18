@@ -43,8 +43,26 @@ const UserViewPage: React.FC = () => {
           <div>
             <strong>Email:</strong> {user.email}
           </div>
-          <div>
-            <strong>Role:</strong> <Badge variant="outline">{user.role}</Badge>
+          <div className="flex items-center gap-2">
+            <strong>Role:</strong>{' '}
+            <Badge 
+              className={
+                user.role === 'admin' ? 'bg-emerald-600 text-white' :
+                user.role === 'marketing_head' ? 'bg-purple-600 text-white' :
+                user.role === 'marketing_team' ? 'bg-indigo-600 text-white' :
+                user.role === 'marketing' ? 'bg-violet-600 text-white' :
+                user.role === 'vendor' ? 'bg-secondary text-secondary-foreground' :
+                'border-slate-300'
+              }
+              variant={user.role === 'vendor' ? 'secondary' : user.role === 'user' ? 'outline' : 'default'}
+            >
+              {user.role === 'marketing_head' ? 'Marketing Head' :
+               user.role === 'marketing_team' ? 'Marketing Team' :
+               user.role === 'marketing' ? 'Marketing' :
+               user.role === 'admin' ? 'Admin' :
+               user.role === 'vendor' ? 'Vendor' :
+               user.role === 'user' ? 'Customer' : user.role}
+            </Badge>
           </div>
           <div>
             <strong>Status:</strong> <Badge variant="outline">{user.status}</Badge>

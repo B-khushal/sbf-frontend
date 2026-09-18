@@ -144,6 +144,14 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 
+  const hasMarketingAccess = Boolean(user && [
+    'marketing_head', 'marketing_team', 'marketing', 'admin', 'platform_admin', 'store_owner', 'store_manager'
+  ].includes(user.role));
+
+  const hasAdminAccess = Boolean(user && [
+    'admin', 'platform_admin', 'store_owner', 'store_manager', 'delivery_manager', 'support_staff', 'inventory_staff', 'finance_staff'
+  ].includes(user.role));
+
   const isHomePage = pathname === '/';
 
   const handleBackClick = () => {
@@ -1107,7 +1115,19 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                                 </div>
                                 <span className="truncate">My Orders</span>
                               </Link>
-                              {user.role === 'admin' && (
+                              {hasMarketingAccess && (
+                                <Link 
+                                  to="/marketing" 
+                                  className="flex items-center w-full px-3 py-3 text-sm text-purple-700 hover:bg-purple-50 rounded-md transition-all duration-200 font-medium group"
+                                  onClick={() => setShowUserMenu(false)}
+                                >
+                                  <div className="flex items-center justify-center w-5 h-5 mr-3 flex-shrink-0 text-purple-600 group-hover:scale-110 transition-transform">
+                                    <TrendingUp className="w-4 h-4" />
+                                  </div>
+                                  <span className="truncate">Marketing Panel</span>
+                                </Link>
+                              )}
+                              {hasAdminAccess && (
                                 <Link 
                                   to="/admin" 
                                   className="flex items-center w-full px-3 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-all duration-200"
@@ -1297,7 +1317,15 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                         </div>
                         <span>My Orders</span>
                       </Link>
-                      {user.role === 'admin' && (
+                      {hasMarketingAccess && (
+                        <Link to="/marketing" onClick={() => setMobileMenuOpen(false)} className={cn('flex items-center gap-3 px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200', pathname.startsWith('/marketing') ? 'bg-purple-100 text-purple-700 font-semibold' : 'text-purple-700 hover:bg-purple-50')}>
+                          <div className="flex items-center justify-center w-5 h-5 text-purple-600">
+                            <TrendingUp size={16} />
+                          </div>
+                          <span>Marketing Panel</span>
+                        </Link>
+                      )}
+                      {hasAdminAccess && (
                         <Link to="/admin" onClick={() => setMobileMenuOpen(false)} className={cn('flex items-center gap-3 px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200', pathname.startsWith('/admin') ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100')}>
                           <div className="flex items-center justify-center w-5 h-5">
                             <Store size={16} />

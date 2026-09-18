@@ -106,18 +106,36 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   // If role check is required and user doesn't have that role
   const allowedAdminRoles = ['platform_admin', 'store_owner', 'store_manager', 'delivery_manager', 'support_staff', 'inventory_staff', 'finance_staff', 'admin'];
+  const allowedMarketingRoles = ['platform_admin', 'store_owner', 'store_manager', 'admin', 'marketing_head', 'marketing_team', 'marketing'];
+  const allowedMarketingHeadRoles = ['platform_admin', 'store_owner', 'admin', 'marketing_head'];
+  
+  const isMarketingOnlyUser = ['marketing_head', 'marketing_team', 'marketing'].includes(user.role);
   
   if (requiredRole && user) {
     if (requiredRole === 'admin') {
       if (user.role === 'vendor' || Boolean(user.vendorStatus)) {
         return <Navigate to="/vendor/dashboard" replace />;
       }
+      if (isMarketingOnlyUser) {
+        return <Navigate to="/marketing" replace />;
+      }
       if (!allowedAdminRoles.includes(user.role)) {
         return <Navigate to="/" replace />;
+      }
+    } else if (requiredRole === 'marketing') {
+      if (!allowedMarketingRoles.includes(user.role)) {
+        return <Navigate to="/login" replace />;
+      }
+    } else if (requiredRole === 'marketing_head') {
+      if (!allowedMarketingHeadRoles.includes(user.role)) {
+        return <Navigate to="/marketing" replace />;
       }
     } else if (user.role !== requiredRole) {
       if (user.role === 'vendor' || Boolean(user.vendorStatus)) {
         return <Navigate to="/vendor/dashboard" replace />;
+      }
+      if (isMarketingOnlyUser) {
+        return <Navigate to="/marketing" replace />;
       }
       return <Navigate to="/admin" replace />;
     }

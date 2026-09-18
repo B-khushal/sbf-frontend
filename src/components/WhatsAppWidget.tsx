@@ -7,8 +7,8 @@ export const WhatsAppWidget: React.FC = () => {
   const { notificationsSettings } = useSettings();
   const [isHovered, setIsHovered] = useState(false);
 
-  // Hidden on admin & vendor panels
-  if (pathname.startsWith('/admin') || pathname.startsWith('/vendor')) {
+  // Hidden on admin, marketing & vendor panels
+  if (pathname.startsWith('/admin') || pathname.startsWith('/vendor') || pathname.startsWith('/marketing')) {
     return null;
   }
 

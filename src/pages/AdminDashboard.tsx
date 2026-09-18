@@ -556,6 +556,13 @@ const AdminDashboard: React.FC = () => {
                 <Heart className="h-4 w-4 mr-2" />
                 <span className="sidebar-item-text">Valentine's</span>
               </Link>
+              <Link 
+                to="/marketing" 
+                className="sidebar-item flex items-center py-2 px-3 rounded-md text-sm transition-colors text-purple-600 dark:text-purple-400 font-semibold hover:bg-purple-50 dark:hover:bg-purple-950/40 border border-purple-200 dark:border-purple-800/40 my-1"
+              >
+                <TrendingUp className="h-4 w-4 mr-2 text-purple-600" />
+                <span className="sidebar-item-text">Marketing Panel ↗</span>
+              </Link>
             </div>
           )}
         </div>

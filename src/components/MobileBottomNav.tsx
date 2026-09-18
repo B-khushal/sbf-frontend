@@ -105,6 +105,7 @@ export const MobileBottomNav = () => {
   const isExcludedPage = 
     pathname.startsWith('/admin') || 
     pathname.startsWith('/vendor') ||
+    pathname.startsWith('/marketing') ||
     pathname.startsWith('/checkout/shipping') ||
     pathname.startsWith('/checkout/payment') ||
     pathname.startsWith('/vendors-consent');

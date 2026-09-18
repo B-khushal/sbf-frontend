@@ -237,8 +237,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Determine redirect destination based on user role
       let redirectTo = '/';
       const allowedAdminRoles = ['platform_admin', 'store_owner', 'store_manager', 'delivery_manager', 'support_staff', 'inventory_staff', 'finance_staff', 'admin'];
+      const allowedMarketingRoles = ['marketing_head', 'marketing_team', 'marketing'];
       if (user.role === 'vendor' || Boolean(user.vendorStatus)) {
         redirectTo = '/vendor/dashboard';
+      } else if (allowedMarketingRoles.includes(user.role)) {
+        redirectTo = '/marketing';
       } else if (allowedAdminRoles.includes(user.role)) {
         redirectTo = '/admin';
       } else {
@@ -283,7 +286,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Determine redirect destination based on user role
       let redirectTo = '/';
       const allowedAdminRoles = ['platform_admin', 'store_owner', 'store_manager', 'delivery_manager', 'support_staff', 'inventory_staff', 'finance_staff', 'admin'];
-      if (allowedAdminRoles.includes(user.role)) {
+      const allowedMarketingRoles = ['marketing_head', 'marketing_team', 'marketing'];
+      if (allowedMarketingRoles.includes(user.role)) {
+        redirectTo = '/marketing';
+      } else if (allowedAdminRoles.includes(user.role)) {
         redirectTo = '/admin';
       } else if (user.role === 'vendor') {
         redirectTo = '/vendor/dashboard';
@@ -374,8 +380,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Determine redirect destination based on user role
       let redirectTo = '/';
       const allowedAdminRoles = ['platform_admin', 'store_owner', 'store_manager', 'delivery_manager', 'support_staff', 'inventory_staff', 'finance_staff', 'admin'];
+      const allowedMarketingRoles = ['marketing_head', 'marketing_team', 'marketing'];
       if (user.role === 'vendor' || Boolean(user.vendorStatus)) {
         redirectTo = '/vendor/dashboard';
+      } else if (allowedMarketingRoles.includes(user.role)) {
+        redirectTo = '/marketing';
       } else if (allowedAdminRoles.includes(user.role)) {
         redirectTo = '/admin';
       } else {

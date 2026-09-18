@@ -50,11 +50,26 @@ const formVariants = {
 const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, signup, socialLogin } = useAuth();
+  const { login, signup, socialLogin, user, isAuthenticated } = useAuth();
   const { toast } = useToast();
   
-  const redirectPath = location.state?.redirect || '/';
+  const fromState = location.state?.from;
+  const fromPath = typeof fromState === 'object' ? fromState.pathname : fromState;
+  const redirectPath = location.state?.redirect || fromPath || '/';
   const redirectMessage = location.state?.message;
+
+  // Auto-redirect if already logged in
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      if (user.role === 'vendor' || Boolean(user.vendorStatus)) {
+        navigate('/vendor/dashboard', { replace: true });
+      } else if (['marketing_head', 'marketing_team', 'marketing'].includes(user.role)) {
+        navigate('/marketing', { replace: true });
+      } else if (['platform_admin', 'store_owner', 'store_manager', 'delivery_manager', 'support_staff', 'inventory_staff', 'finance_staff', 'admin'].includes(user.role)) {
+        navigate('/admin', { replace: true });
+      }
+    }
+  }, [isAuthenticated, user, navigate]);
   
   const [isLoginMode, setIsLoginMode] = useState(!location.state?.signupMode);
   const [email, setEmail] = useState('');
@@ -106,6 +121,11 @@ const LoginPage = () => {
 
         if (result.redirectTo === '/vendor/dashboard') {
           navigate('/vendor/dashboard', { replace: true });
+        } else if (result.redirectTo === '/marketing') {
+          const target = (redirectPath && redirectPath !== '/' && !redirectPath.startsWith('/admin'))
+            ? redirectPath
+            : '/marketing';
+          navigate(target, { replace: true });
         } else {
           const finalPath = (redirectPath && redirectPath !== '/' && !redirectPath.startsWith('/admin'))
             ? redirectPath
@@ -185,7 +205,10 @@ const LoginPage = () => {
           description: "Your account has been created successfully!",
           type: "login"
         });
-        navigate(signupResult.redirectTo || redirectPath);
+        const target = (signupResult.redirectTo === '/marketing' && (!redirectPath || redirectPath === '/' || redirectPath.startsWith('/admin')))
+          ? '/marketing'
+          : (signupResult.redirectTo || redirectPath);
+        navigate(target);
       } else {
         toast({
           title: "Registration failed",
@@ -224,7 +247,10 @@ const LoginPage = () => {
           description: "You have successfully logged in with Google.",
           type: "login"
         });
-        navigate(result.redirectTo || redirectPath);
+        const target = (result.redirectTo === '/marketing' && (!redirectPath || redirectPath === '/' || redirectPath.startsWith('/admin')))
+          ? '/marketing'
+          : (result.redirectTo || redirectPath);
+        navigate(target);
       } else {
         toast({
           title: "Login failed",

@@ -119,7 +119,10 @@ const UserEditPage: React.FC = () => {
                   <SelectValue placeholder="Select role" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="user">User</SelectItem>
+                  <SelectItem value="user">Customer / User</SelectItem>
+                  <SelectItem value="marketing">Marketing</SelectItem>
+                  <SelectItem value="marketing_head">Marketing Head</SelectItem>
+                  <SelectItem value="marketing_team">Marketing Team</SelectItem>
                   <SelectItem value="vendor">Vendor</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
                 </SelectContent>

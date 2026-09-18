@@ -136,6 +136,25 @@ const VendorPayouts = lazy(() => import('./pages/Vendor/VendorPayouts'));
 const VendorSettings = lazy(() => import('./pages/Vendor/VendorSettings'));
 const VendorProfile = lazy(() => import('./pages/Vendor/VendorProfile'));
 
+// Marketing Panel Pages (lazy loaded)
+const MarketingLayout = lazy(() => import('./layouts/MarketingLayout'));
+const MarketingDashboard = lazy(() => import('./pages/Marketing/MarketingDashboard'));
+const LiveVisitorsPage = lazy(() => import('./pages/Marketing/LiveVisitorsPage'));
+const CustomerIntelligencePage = lazy(() => import('./pages/Marketing/CustomerIntelligencePage'));
+const CustomerJourneysPage = lazy(() => import('./pages/Marketing/CustomerJourneysPage'));
+const ConversionFunnelPage = lazy(() => import('./pages/Marketing/ConversionFunnelPage'));
+const ProductAnalyticsPage = lazy(() => import('./pages/Marketing/ProductAnalyticsPage'));
+const SearchIntelligencePage = lazy(() => import('./pages/Marketing/SearchIntelligencePage'));
+const CartIntelligencePage = lazy(() => import('./pages/Marketing/CartIntelligencePage'));
+const CampaignAnalyticsPage = lazy(() => import('./pages/Marketing/CampaignAnalyticsPage'));
+const AudienceSegmentsPage = lazy(() => import('./pages/Marketing/AudienceSegmentsPage'));
+const AttributionPage = lazy(() => import('./pages/Marketing/AttributionPage'));
+const CohortRetentionPage = lazy(() => import('./pages/Marketing/CohortRetentionPage'));
+const MarketingOpportunitiesPage = lazy(() => import('./pages/Marketing/MarketingOpportunitiesPage'));
+const MarketingEventsFeedPage = lazy(() => import('./pages/Marketing/MarketingEventsFeedPage'));
+const MarketingReportsPage = lazy(() => import('./pages/Marketing/MarketingReportsPage'));
+const MarketingSettingsPage = lazy(() => import('./pages/Marketing/MarketingSettingsPage'));
+
 // Optimize QueryClient for better performance
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -536,6 +555,105 @@ const App = () => {
                               <Suspense fallback={<LoadingFallback message="Loading order details..." />}>
                                 <OrderDetailsPage />
                               </Suspense>
+                            } />
+                          </Route>
+
+                          {/* Marketing Intelligence Panel Routes - Protected and Lazy Loaded */}
+                          <Route path="/marketing" element={
+                            <ProtectedRoute requiredRole="marketing">
+                              <Suspense fallback={<LoadingFallback message="Loading Marketing Intelligence Suite..." />}>
+                                <MarketingLayout />
+                              </Suspense>
+                            </ProtectedRoute>
+                          }>
+                            <Route index element={
+                              <Suspense fallback={<LoadingFallback message="Loading executive dashboard..." />}>
+                                <MarketingDashboard />
+                              </Suspense>
+                            } />
+                            <Route path="customers" element={
+                              <Suspense fallback={<LoadingFallback message="Loading customer intelligence..." />}>
+                                <CustomerIntelligencePage />
+                              </Suspense>
+                            } />
+                            <Route path="live-visitors" element={
+                              <Suspense fallback={<LoadingFallback message="Loading live monitor..." />}>
+                                <LiveVisitorsPage />
+                              </Suspense>
+                            } />
+                            <Route path="journeys" element={
+                              <Suspense fallback={<LoadingFallback message="Loading customer journeys..." />}>
+                                <CustomerJourneysPage />
+                              </Suspense>
+                            } />
+                            <Route path="funnel" element={
+                              <Suspense fallback={<LoadingFallback message="Loading conversion funnel..." />}>
+                                <ConversionFunnelPage />
+                              </Suspense>
+                            } />
+                            <Route path="products" element={
+                              <Suspense fallback={<LoadingFallback message="Loading product analytics..." />}>
+                                <ProductAnalyticsPage />
+                              </Suspense>
+                            } />
+                            <Route path="search" element={
+                              <Suspense fallback={<LoadingFallback message="Loading search intelligence..." />}>
+                                <SearchIntelligencePage />
+                              </Suspense>
+                            } />
+                            <Route path="cart-intelligence" element={
+                              <Suspense fallback={<LoadingFallback message="Loading cart intelligence..." />}>
+                                <CartIntelligencePage />
+                              </Suspense>
+                            } />
+                            <Route path="campaigns" element={
+                              <Suspense fallback={<LoadingFallback message="Loading campaign attribution..." />}>
+                                <CampaignAnalyticsPage />
+                              </Suspense>
+                            } />
+                            <Route path="segments" element={
+                              <Suspense fallback={<LoadingFallback message="Loading audience segments..." />}>
+                                <AudienceSegmentsPage />
+                              </Suspense>
+                            } />
+                            <Route path="attribution" element={
+                              <Suspense fallback={<LoadingFallback message="Loading attribution modeling..." />}>
+                                <AttributionPage />
+                              </Suspense>
+                            } />
+                            <Route path="cohorts" element={
+                              <Suspense fallback={<LoadingFallback message="Loading cohort analysis..." />}>
+                                <CohortRetentionPage />
+                              </Suspense>
+                            } />
+                            <Route path="retention" element={
+                              <Suspense fallback={<LoadingFallback message="Loading retention metrics..." />}>
+                                <CohortRetentionPage />
+                              </Suspense>
+                            } />
+                            <Route path="events" element={
+                              <Suspense fallback={<LoadingFallback message="Loading telemetry stream..." />}>
+                                <MarketingEventsFeedPage />
+                              </Suspense>
+                            } />
+                            <Route path="opportunities" element={
+                              <Suspense fallback={<LoadingFallback message="Loading opportunities..." />}>
+                                <MarketingOpportunitiesPage />
+                              </Suspense>
+                            } />
+                            <Route path="reports" element={
+                              <ProtectedRoute requiredRole="marketing_head">
+                                <Suspense fallback={<LoadingFallback message="Loading reports..." />}>
+                                  <MarketingReportsPage />
+                                </Suspense>
+                              </ProtectedRoute>
+                            } />
+                            <Route path="settings" element={
+                              <ProtectedRoute requiredRole="marketing_head">
+                                <Suspense fallback={<LoadingFallback message="Loading marketing settings..." />}>
+                                  <MarketingSettingsPage />
+                                </Suspense>
+                              </ProtectedRoute>
                             } />
                           </Route>
 

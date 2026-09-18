@@ -19,7 +19,7 @@ type User = {
   _id: string;
   name: string;
   email: string;
-  role: 'admin' | 'user' | 'vendor';
+  role: 'admin' | 'user' | 'vendor' | 'marketing' | 'marketing_head' | 'marketing_team' | string;
   status: 'active' | 'inactive';
   lastLogin?: string;
   vendorInfo?: {
@@ -314,7 +314,11 @@ const AdminUsers: React.FC = () => {
       user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (user.vendorInfo?.storeName?.toLowerCase().includes(searchTerm.toLowerCase()));
     
-    const matchesRole = roleFilter === 'all' || user.role === roleFilter;
+    const matchesRole = roleFilter === 'all' 
+      ? true 
+      : roleFilter === 'marketing'
+        ? (user.role === 'marketing' || user.role === 'marketing_head' || user.role === 'marketing_team')
+        : user.role === roleFilter;
     
     const matchesVendorStatus = vendorStatusFilter === 'all' || 
       (user.role === 'vendor' && user.vendorInfo?.status === vendorStatusFilter);
@@ -346,12 +350,15 @@ const AdminUsers: React.FC = () => {
                 />
               </div>
               <Select value={roleFilter} onValueChange={setRoleFilter}>
-                <SelectTrigger className="w-full sm:w-32">
+                <SelectTrigger className="w-full sm:w-40">
                   <SelectValue placeholder="Role" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Roles</SelectItem>
-                  <SelectItem value="user">Users</SelectItem>
+                  <SelectItem value="user">Customers</SelectItem>
+                  <SelectItem value="marketing">Marketing (All)</SelectItem>
+                  <SelectItem value="marketing_head">Marketing Head</SelectItem>
+                  <SelectItem value="marketing_team">Marketing Team</SelectItem>
                   <SelectItem value="vendor">Vendors</SelectItem>
                   <SelectItem value="admin">Admins</SelectItem>
                 </SelectContent>
@@ -374,30 +381,36 @@ const AdminUsers: React.FC = () => {
           </div>
           
           {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-            <div className="text-center p-3 bg-blue-50 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600">
-                {users.filter(u => u.role === 'user').length}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-4">
+            <div className="text-center p-3 bg-blue-50 dark:bg-blue-950/40 rounded-lg">
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                {users.filter(u => u.role === 'user' || !u.role).length}
               </div>
-              <div className="text-sm text-blue-600">Users</div>
+              <div className="text-sm text-blue-600 dark:text-blue-400">Customers</div>
             </div>
-            <div className="text-center p-3 bg-purple-50 rounded-lg">
-              <div className="text-2xl font-bold text-purple-600">
+            <div className="text-center p-3 bg-purple-50 dark:bg-purple-950/40 rounded-lg">
+              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                {users.filter(u => u.role === 'marketing' || u.role === 'marketing_head' || u.role === 'marketing_team').length}
+              </div>
+              <div className="text-sm text-purple-600 dark:text-purple-400">Marketing</div>
+            </div>
+            <div className="text-center p-3 bg-indigo-50 dark:bg-indigo-950/40 rounded-lg">
+              <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
                 {users.filter(u => u.role === 'vendor').length}
               </div>
-              <div className="text-sm text-purple-600">Vendors</div>
+              <div className="text-sm text-indigo-600 dark:text-indigo-400">Vendors</div>
             </div>
-            <div className="text-center p-3 bg-yellow-50 rounded-lg">
-              <div className="text-2xl font-bold text-yellow-600">
+            <div className="text-center p-3 bg-yellow-50 dark:bg-yellow-950/40 rounded-lg">
+              <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
                 {users.filter(u => u.role === 'vendor' && u.vendorInfo?.status === 'pending').length}
               </div>
-              <div className="text-sm text-yellow-600">Pending Approval</div>
+              <div className="text-sm text-yellow-600 dark:text-yellow-400">Pending Approval</div>
             </div>
-            <div className="text-center p-3 bg-green-50 rounded-lg">
-              <div className="text-2xl font-bold text-green-600">
+            <div className="text-center p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-lg">
+              <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
                 {users.filter(u => u.role === 'admin').length}
               </div>
-              <div className="text-sm text-green-600">Admins</div>
+              <div className="text-sm text-emerald-600 dark:text-emerald-400">Admins</div>
             </div>
           </div>
         </CardHeader>
@@ -421,13 +434,19 @@ const AdminUsers: React.FC = () => {
                   <TableCell className="font-medium">{user.name}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>
-                    <Badge variant={
-                      user.role === 'admin' ? "default" : 
-                      user.role === 'vendor' ? "secondary" : 
-                      "outline"
-                    }>
-                      {user.role}
-                    </Badge>
+                    {user.role === 'admin' ? (
+                      <Badge className="bg-emerald-600 hover:bg-emerald-700 text-white border-0">Admin</Badge>
+                    ) : user.role === 'marketing_head' ? (
+                      <Badge className="bg-purple-600 hover:bg-purple-700 text-white border-0">Marketing Head</Badge>
+                    ) : user.role === 'marketing_team' ? (
+                      <Badge className="bg-indigo-600 hover:bg-indigo-700 text-white border-0">Marketing Team</Badge>
+                    ) : user.role === 'marketing' ? (
+                      <Badge className="bg-violet-600 hover:bg-violet-700 text-white border-0">Marketing</Badge>
+                    ) : user.role === 'vendor' ? (
+                      <Badge variant="secondary">Vendor</Badge>
+                    ) : (
+                      <Badge variant="outline">Customer</Badge>
+                    )}
                   </TableCell>
                   <TableCell>
                     <Badge variant={user.status === 'active' ? "success" : "destructive"}>
