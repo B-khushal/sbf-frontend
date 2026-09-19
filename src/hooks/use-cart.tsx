@@ -7,6 +7,7 @@ import {
   type CartItem 
 } from '@/utils/cartManager';
 import * as cartService from '@/services/cartService';
+import { marketingTracker } from '@/services/marketingTracker';
 
 const transformCartItem = (cartItem: any) => ({
   _id: cartItem._id,
@@ -157,6 +158,14 @@ export const useCart = create<CartState>((set, get) => ({
         const userId = getCurrentUserId();
         saveUserCart(newItems, userId);
       }
+
+      marketingTracker.trackAddToCart({
+        id: normalizedItem.productId || normalizedItem.id,
+        title: normalizedItem.title,
+        price: normalizedItem.price,
+        quantity: normalizedItem.quantity,
+        category: normalizedItem.category
+      });
     } catch (error: any) {
       const errMsg = error?.message || error?.response?.data?.message || '';
       if (
@@ -191,6 +200,8 @@ export const useCart = create<CartState>((set, get) => ({
       
       const userId = getCurrentUserId();
       saveUserCart(transformedItems, userId);
+      marketingTracker.trackRemoveFromCart(productId);
+
       
     } catch (error) {
       console.error('Error removing from cart:', error);

@@ -58,10 +58,11 @@ const Invoice: React.FC<InvoiceProps> = ({ order, isAdmin = false }) => {
 
   // Resolve payment details
   const payment = order.paymentDetails || order.payment || {};
-  const paymentMethod = payment.method === 'razorpay' 
-    ? 'Razorpay (Online Payment)' 
-    : (payment.method || 'Online Payment');
-  const paymentStatus = payment.status || 'Completed';
+  const rawMethod = (payment.method || order.paymentMethod || '').toLowerCase();
+  const paymentMethod = (rawMethod === 'cod' || rawMethod === 'cash' || rawMethod === 'razorpay' || rawMethod === 'online' || !rawMethod)
+    ? 'Online Payment (Razorpay)'
+    : (payment.method || 'Online Payment (Razorpay)');
+  const paymentStatus = payment.status || order.paymentStatus || 'Completed';
   const transactionId = payment.razorpayPaymentId || payment.paymentId || payment.transactionId || '';
 
   // Resolve items list

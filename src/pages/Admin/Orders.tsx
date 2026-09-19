@@ -585,7 +585,7 @@ const AdminOrders = () => {
             displayOrderPrice(item.finalPrice, order.currency, order.currencyRate),
             displayOrderPrice(order.totalAmount, order.currency, order.currencyRate),
             order.status,
-            order.paymentDetails.method,
+            (order.paymentDetails?.method && order.paymentDetails.method.toLowerCase() !== 'cod') ? (order.paymentDetails.method.toLowerCase() === 'razorpay' ? 'Online' : order.paymentDetails.method) : 'Online',
             order.priority || 'normal'
           ]);
         });
@@ -1419,7 +1419,7 @@ const AdminOrders = () => {
                               </span>
                             )}
                             <Badge variant="outline" className="text-[9px] uppercase tracking-wider py-0 px-1 font-semibold border-slate-200 dark:border-slate-800 text-slate-400 bg-slate-50/50 mt-1 leading-normal h-4">
-                              {order.paymentDetails.method === 'razorpay' ? 'Online' : order.paymentDetails.method || 'COD'}
+                              {(order.paymentDetails?.method && order.paymentDetails.method.toLowerCase() !== 'cod') ? (order.paymentDetails.method.toLowerCase() === 'razorpay' ? 'Online' : order.paymentDetails.method) : 'Online'}
                             </Badge>
                           </div>
                         </TableCell>

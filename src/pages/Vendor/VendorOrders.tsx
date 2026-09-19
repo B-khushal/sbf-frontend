@@ -279,7 +279,7 @@ const VendorOrders: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline" className="capitalize">
-                          {order.paymentDetails?.method || order.paymentMethod || 'N/A'}
+                          {(order.paymentDetails?.method && order.paymentDetails.method.toLowerCase() !== 'cod') ? (order.paymentDetails.method.toLowerCase() === 'razorpay' ? 'Online' : order.paymentDetails.method) : 'Online'}
                         </Badge>
                       </TableCell>
                       <TableCell>{getStatusBadge(order.status)}</TableCell>

@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { API_URL } from '@/config';
 import { createAuthConfig } from './productService';
+import { marketingTracker } from '@/services/marketingTracker';
 
 export interface SearchQueryParams {
   q?: string;
@@ -89,6 +90,11 @@ export interface SearchAnalyticsResponse {
 
 export const searchService = {
   async search(params: SearchQueryParams): Promise<SearchResponse> {
+    if (params?.q) {
+      try {
+        marketingTracker.trackSearch(params.q);
+      } catch (e) {}
+    }
     const response = await axios.get<SearchResponse>(`${API_URL}/search`, { params });
     return response.data;
   },

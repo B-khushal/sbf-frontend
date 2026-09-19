@@ -20,6 +20,7 @@ import api from '@/services/api';
 import { LocationPreview } from '@/components/location/LocationPreview';
 import { MapplsLocation } from '@/types/location';
 import Invoice from '@/components/Invoice';
+import { marketingTracker } from '@/services/marketingTracker';
 // @ts-ignore
 import html2pdf from 'html2pdf.js';
 
@@ -307,6 +308,13 @@ const CheckoutConfirmationPage = () => {
             setOrder(parsedOrder);
             setIsOrderDataFetched(true);
             console.log('✅ Order state updated successfully');
+
+            marketingTracker.trackPurchase(
+              parsedOrder.id || parsedOrder._id || parsedOrder.orderNumber,
+              parsedOrder.orderNumber,
+              Number(parsedOrder.totalAmount || parsedOrder.finalTotal || 0)
+            );
+            marketingTracker.flush();
 
             // Keep order data available in both storage layers for refreshes and hard redirects.
             if (!localOrder) {
@@ -929,7 +937,7 @@ const CheckoutConfirmationPage = () => {
                   </div>
 
                   <div className="text-xs text-gray-500 text-center">
-                    Payment Method: {order.payment?.method || 'Razorpay'}
+                    Payment Method: {(order.payment?.method && order.payment.method.toLowerCase() !== 'cod') ? (order.payment.method.toLowerCase() === 'razorpay' ? 'Online Payment (Razorpay)' : order.payment.method) : 'Online Payment (Razorpay)'}
                   </div>
                 </CardContent>
               </Card>

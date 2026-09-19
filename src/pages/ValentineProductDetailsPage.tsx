@@ -10,6 +10,7 @@ import { useCurrency } from '@/contexts/CurrencyContext';
 import { useToast } from '@/hooks/use-toast';
 import api from '@/services/api';
 import { trackProductView } from '@/services/activityService';
+import { marketingTracker } from '@/services/marketingTracker';
 
 import FloatingPetals from '@/components/valentine/FloatingPetals';
 import '@/components/valentine/valentine.css';
@@ -85,6 +86,13 @@ const ValentineProductDetailsPage: React.FC = () => {
         product.title,
         `/valentine-product/${product._id}`
       );
+      marketingTracker.trackProductView({
+        id: product._id,
+        title: product.title,
+        price: product.price,
+        category: product.category,
+        occasion: 'Valentine'
+      });
     }
   }, [product]);
 
@@ -172,6 +180,13 @@ const ValentineProductDetailsPage: React.FC = () => {
       };
 
       await addToCart(cartItem);
+
+      marketingTracker.trackAddToCart({
+        id: product._id,
+        title: product.title,
+        price: activePrice,
+        quantity: 1
+      });
       
       toast({
         title: 'Added to Cart ❤️',

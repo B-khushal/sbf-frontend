@@ -13,6 +13,12 @@ export default defineConfig(({ mode }) => ({
     port: 8081,
     // Enable SPA fallback for development
     historyApiFallback: true,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
+    },
   },
   plugins: [
     react(),

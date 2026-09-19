@@ -371,11 +371,14 @@ const CheckoutPaymentPage = () => {
       const custCity = isGift ? (shippingInfo.receiverCity || shippingInfo.city || 'Hyderabad') : (shippingInfo.city || 'Hyderabad');
       const custState = isGift ? (shippingInfo.receiverState || shippingInfo.state || 'Telangana') : (shippingInfo.state || 'Telangana');
       const custZip = isGift ? (shippingInfo.receiverZipCode || shippingInfo.zipCode || '') : (shippingInfo.zipCode || '');
-      const custPhone = isGift ? (shippingInfo.receiverPhone || shippingInfo.phone || '') : (shippingInfo.phone || '');
-      const custEmail = isGift ? (shippingInfo.receiverEmail || shippingInfo.email || '') : (shippingInfo.email || '');
+      const custPhone = (isGift ? (shippingInfo.receiverPhone || shippingInfo.phone) : shippingInfo.phone) || user?.phone || '';
+      const custEmail = (isGift ? (shippingInfo.receiverEmail || shippingInfo.email) : shippingInfo.email) || user?.email || '';
 
       // Prepare order data in correct backend format
       const orderData = {
+        customerName: fullCustName,
+        customerEmail: custEmail,
+        customerPhone: custPhone,
         items: items.map(item => ({
           product: item.productId || item._id,
           productModel: item.productModel || 'Product',
@@ -628,9 +631,9 @@ const CheckoutPaymentPage = () => {
           }
         },
         prefill: {
-          name: `${shippingInfo.firstName} ${shippingInfo.lastName}`,
-          email: shippingInfo.email,
-          contact: shippingInfo.phone
+          name: `${shippingInfo.firstName || ''} ${shippingInfo.lastName || ''}`.trim() || user?.name || 'Customer',
+          email: shippingInfo.email || user?.email || '',
+          contact: shippingInfo.phone || user?.phone || ''
         },
         theme: {
           color: "#3B82F6"

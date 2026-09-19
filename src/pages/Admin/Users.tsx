@@ -1,223 +1,112 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Search, UserPlus, Edit, Trash2, Store, Eye, Filter } from 'lucide-react';
+import { Search, UserPlus, Edit, Trash2, Eye, Users, UserCheck, UserX, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import api from '@/services/api';
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
-import { useCurrency } from '@/contexts/CurrencyContext';
-import { getAllVendors, updateVendorStatus } from '@/services/vendorService';
 import { useNavigate } from 'react-router-dom';
 
-
-type User = {
+type Customer = {
   _id: string;
+  id?: string;
   name: string;
   email: string;
-  role: 'admin' | 'user' | 'vendor' | 'marketing' | 'marketing_head' | 'marketing_team' | string;
-  status: 'active' | 'inactive';
+  role?: string;
+  status: 'active' | 'inactive' | string;
   lastLogin?: string;
-  vendorInfo?: {
-    _id: string;
-    storeName: string;
-    storeDescription: string;
-    status: 'pending' | 'approved' | 'suspended' | 'rejected';
-    verification: {
-      isVerified: boolean;
-    };
-    stats: {
-      totalProducts: number;
-      totalOrders: number;
-    };
-  };
+  createdAt?: string;
+  phone?: string;
 };
 
-const validateEmail = (email: string) => {
-  return email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
-};
+const NON_CUSTOMER_ROLES = ['admin', 'vendor', 'marketing', 'marketing_head', 'marketing_team', 'delivery_partner', 'staff'];
 
 const AdminUsers: React.FC = () => {
-  const [users, setUsers] = useState<User[]>([]);
-  const [vendors, setVendors] = useState<any[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState('all');
-  const [vendorStatusFilter, setVendorStatusFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
   const { toast } = useToast();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isVendorDetailDialogOpen, setIsVendorDetailDialogOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [selectedVendor, setSelectedVendor] = useState<any>(null);
-  const [editForm, setEditForm] = useState({
-    name: '',
-    email: '',
-    role: '',
-    status: ''
-  });
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [newUser, setNewUser] = useState({
-    name: '',
-    email: '',
-    password: '',
-    role: 'user',
-    status: 'active'
-  });
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [updatingVendor, setUpdatingVendor] = useState<string | null>(null);
-  const { formatPrice, convertPrice } = useCurrency();
   const navigate = useNavigate();
 
-  // Trigger refs for contextual positioning
-  const vendorDetailButtonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
-
-  // Fetch users and vendors with better error handling
+  // Fetch customers with filtering to exclude admin/vendor/marketing/staff
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch users
-        const usersResponse = await api.get("/users");
-        const rawUsers = Array.isArray(usersResponse.data) 
-          ? usersResponse.data 
-          : (usersResponse.data?.users || []);
-        console.log("Fetched users:", rawUsers);
+        setIsLoading(true);
+        const res = await api.get("/users?customersOnly=true");
+        const rawUsers = Array.isArray(res.data) 
+          ? res.data 
+          : (res.data?.users || []);
         
-        // Fetch vendors safely
-        let vendorList: any[] = [];
-        try {
-          const vendorsResponse = await getAllVendors();
-          vendorList = vendorsResponse?.vendors || (Array.isArray(vendorsResponse) ? vendorsResponse : []);
-        } catch (vendorErr) {
-          console.warn("Could not fetch vendors list:", vendorErr);
-        }
-        
-        // Merge vendor data with user data
-        const usersWithVendorInfo = rawUsers.map((user: User) => {
-          const vendorInfo = vendorList.find((vendor: any) => {
-            if (!vendor.user) return false;
-            const vendorUserId = typeof vendor.user === 'object' ? (vendor.user._id || vendor.user.id) : vendor.user;
-            return vendorUserId === user._id || vendorUserId === user.id;
-          });
-          
-          return {
-            ...user,
-            _id: user._id || user.id,
-            vendorInfo: vendorInfo ? {
-              _id: vendorInfo._id || vendorInfo.id,
-              storeName: vendorInfo.storeName,
-              storeDescription: vendorInfo.storeDescription,
-              status: vendorInfo.status,
-              verification: vendorInfo.verification,
-              stats: vendorInfo.stats || { totalProducts: 0, totalOrders: 0 }
-            } : undefined
-          };
-        });
-        
-        setUsers(usersWithVendorInfo);
-        setVendors(vendorList);
+        // Filter strictly to customers only
+        const customerList: Customer[] = rawUsers
+          .filter((u: any) => {
+            if (!u) return false;
+            const role = (u.role || '').toLowerCase();
+            return !NON_CUSTOMER_ROLES.includes(role);
+          })
+          .map((u: any) => ({
+            ...u,
+            _id: u._id || u.id
+          }));
+
+        setCustomers(customerList);
       } catch (error: any) {
-        console.error("Error fetching data:", error.response || error);
+        console.error("Error fetching customers:", error.response || error);
         toast({
           title: "Error",
-          description: error.response?.data?.message || "Failed to fetch data",
+          description: error.response?.data?.message || "Failed to fetch customers",
           variant: "destructive",
         });
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchData();
   }, [toast]);
 
-  // Vendor management functions
-  const handleVendorStatusUpdate = async (vendorId: string, newStatus: string) => {
-    try {
-      setUpdatingVendor(vendorId);
-      await updateVendorStatus(vendorId, newStatus);
-      
-      // Update local state
-      setUsers(prev => prev.map(user => {
-        if (user.vendorInfo?._id === vendorId) {
-          return {
-            ...user,
-            vendorInfo: {
-              ...user.vendorInfo,
-              status: newStatus as any
-            }
-          };
-        }
-        return user;
-      }));
-
-      toast({
-        title: "Vendor Status Updated",
-        description: `Vendor status has been updated to ${newStatus}.`,
-      });
-    } catch (error: any) {
-      console.error('Error updating vendor status:', error);
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to update vendor status.",
-        variant: "destructive",
-      });
-    } finally {
-      setUpdatingVendor(null);
-    }
+  const handleEditClick = (customer: Customer) => {
+    navigate(`/admin/users/edit/${customer._id}`);
   };
 
-  const handleVendorDetailClick = (user: User) => {
-    if (user.vendorInfo && vendorDetailButtonRefs.current[user._id]) {
-      vendorDetailButtonRefs.current[user._id]?.scrollIntoView({ block: 'center', behavior: 'smooth' });
-      setSelectedVendor({
-        ...user.vendorInfo,
-        user: { name: user.name, email: user.email }
-      });
-      setIsVendorDetailDialogOpen(true);
-    }
+  const handleViewClick = (customer: Customer) => {
+    navigate(`/admin/users/view/${customer._id}`);
   };
 
-  const handleEditClick = (user: User) => {
-    navigate(`/admin/users/edit/${user._id}`);
-  };
-
-  const handleViewClick = (user: User) => {
-    navigate(`/admin/users/view/${user._id}`);
-  };
-
-  const handleDeleteClick = (userId: string) => {
-    const user = users.find(u => u._id === userId);
-    if (user) {
-      setSelectedUser(user);
-      setSelectedUserId(userId);
+  const handleDeleteClick = (customerId: string) => {
+    const customer = customers.find(u => u._id === customerId);
+    if (customer) {
+      setSelectedCustomer(customer);
       setIsDeleteDialogOpen(true);
     }
   };
 
   const handleDelete = async () => {
-    if (!selectedUser) return;
+    if (!selectedCustomer) return;
     setIsLoading(true);
 
     try {
-      console.log("Attempting to delete user:", selectedUser._id);
-
-      await api.delete(`/users/${selectedUser._id}`);
-
-      setUsers(users.filter(user => user._id !== selectedUser._id));
+      await api.delete(`/users/${selectedCustomer._id}`);
+      setCustomers(prev => prev.filter(c => c._id !== selectedCustomer._id));
       setIsDeleteDialogOpen(false);
-      setSelectedUser(null);
+      setSelectedCustomer(null);
       toast({
         title: "Success",
-        description: "User deleted successfully",
+        description: "Customer deleted successfully",
       });
     } catch (error: any) {
-      console.error("Error deleting user:", error.response || error);
+      console.error("Error deleting customer:", error.response || error);
       toast({
         title: "Error",
-        description: error.response?.data?.message || "Failed to delete user",
+        description: error.response?.data?.message || "Failed to delete customer",
         variant: "destructive",
       });
     } finally {
@@ -225,325 +114,215 @@ const AdminUsers: React.FC = () => {
     }
   };
 
-  const handleAddUser = async () => {
-    // Validation
-    if (!newUser.name.trim()) {
-      toast({
-        title: "Error",
-        description: "Name is required",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!validateEmail(newUser.email)) {
-      toast({
-        title: "Error",
-        description: "Please enter a valid email address",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (newUser.password.length < 6) {
-      toast({
-        title: "Error",
-        description: "Password must be at least 6 characters long",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      console.log("Sending new user data:", newUser);
-
-      const response = await api.post('/users', newUser);
-      
-      console.log("Server response:", response.data);
-      
-      setUsers([...users, response.data]);
-      setIsAddDialogOpen(false);
-      setNewUser({
-        name: '',
-        email: '',
-        password: '',
-        role: 'user',
-        status: 'active'
-      });
-      
-      toast({
-        title: "Success",
-        description: "User added successfully",
-      });
-    } catch (error: any) {
-      console.error("Error adding user:", error);
-      const errorMessage = error.response?.data?.message || 
-                          error.message || 
-                          "Failed to add user";
-      
-      // If unauthorized or forbidden, redirect to login
-      if (error.response?.status === 401 || error.response?.status === 403) {
-        toast({
-          title: "Authentication Error",
-          description: "Please log in again as admin",
-          variant: "destructive",
-        });
-        // Redirect to login or handle auth error
-        return;
-      }
-
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleAddUserClick = () => {
+  const handleAddCustomerClick = () => {
     navigate('/admin/users/add');
   };
 
-  // ✅ Search and Role Filter
-  const filteredUsers = (users || []).filter((user) => {
+  // Search and Status Filter
+  const filteredCustomers = customers.filter((c) => {
     const matchesSearch = 
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (user.vendorInfo?.storeName?.toLowerCase().includes(searchTerm.toLowerCase()));
+      (c.name && c.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (c.email && c.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (c.phone && c.phone.toLowerCase().includes(searchTerm.toLowerCase()));
     
-    const matchesRole = roleFilter === 'all' 
+    const matchesStatus = statusFilter === 'all' 
       ? true 
-      : roleFilter === 'marketing'
-        ? (user.role === 'marketing' || user.role === 'marketing_head' || user.role === 'marketing_team')
-        : user.role === roleFilter;
+      : c.status === statusFilter;
     
-    const matchesVendorStatus = vendorStatusFilter === 'all' || 
-      (user.role === 'vendor' && user.vendorInfo?.status === vendorStatusFilter);
-    
-    return matchesSearch && matchesRole && matchesVendorStatus;
+    return matchesSearch && matchesStatus;
   });
+
+  // Calculate customer-specific KPIs
+  const now = new Date();
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  const activeCount = customers.filter(c => c.status === 'active').length;
+  const inactiveCount = customers.filter(c => c.status === 'inactive').length;
+  const newThisMonthCount = customers.filter(c => c.createdAt && new Date(c.createdAt) >= thirtyDaysAgo).length;
 
   return (
     <div className="space-y-6">
-      <div className="responsive-toolbar">
-        <h1 className="text-2xl sm:text-3xl font-bold">Users</h1>
-        <Button onClick={handleAddUserClick}>
-          <UserPlus className="mr-2 h-4 w-4" /> Add User
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2">
+            <Users className="h-7 w-7 text-primary" />
+            Customers
+          </h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Manage customer accounts, verify profiles, and monitor customer activity
+          </p>
+        </div>
+        <Button onClick={handleAddCustomerClick} className="shadow-sm">
+          <UserPlus className="mr-2 h-4 w-4" /> Add Customer
         </Button>
+      </div>
+
+      {/* Customer Specific KPIs */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <Card className="p-4 bg-blue-50/70 dark:bg-blue-950/30 border-blue-100 dark:border-blue-900/40">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Total Customers</p>
+              <h3 className="text-2xl font-bold text-blue-900 dark:text-blue-200 mt-1">{customers.length}</h3>
+            </div>
+            <Users className="h-8 w-8 text-blue-400/60 dark:text-blue-500/40" />
+          </div>
+        </Card>
+
+        <Card className="p-4 bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-100 dark:border-emerald-900/40">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Active Customers</p>
+              <h3 className="text-2xl font-bold text-emerald-900 dark:text-emerald-200 mt-1">{activeCount}</h3>
+            </div>
+            <UserCheck className="h-8 w-8 text-emerald-400/60 dark:text-emerald-500/40" />
+          </div>
+        </Card>
+
+        <Card className="p-4 bg-violet-50/70 dark:bg-violet-950/30 border-violet-100 dark:border-violet-900/40">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-semibold text-violet-600 dark:text-violet-400 uppercase tracking-wider">New (Last 30 Days)</p>
+              <h3 className="text-2xl font-bold text-violet-900 dark:text-violet-200 mt-1">{newThisMonthCount}</h3>
+            </div>
+            <Calendar className="h-8 w-8 text-violet-400/60 dark:text-violet-500/40" />
+          </div>
+        </Card>
+
+        <Card className="p-4 bg-slate-50/80 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Inactive Accounts</p>
+              <h3 className="text-2xl font-bold text-slate-700 dark:text-slate-300 mt-1">{inactiveCount}</h3>
+            </div>
+            <UserX className="h-8 w-8 text-slate-400/60 dark:text-slate-500/40" />
+          </div>
+        </Card>
       </div>
 
       <Card>
         <CardHeader className="py-4">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between mb-4">
-            <CardTitle>All Users & Vendors</CardTitle>
-            <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-4 sm:items-center w-full lg:w-auto">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <CardTitle className="text-lg">Customer Directory ({filteredCustomers.length})</CardTitle>
+            <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:items-center w-full lg:w-auto">
               <div className="relative w-full sm:w-64">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search users..."
+                  placeholder="Search name, email, phone..."
                   className="pl-8"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <Select value={roleFilter} onValueChange={setRoleFilter}>
-                <SelectTrigger className="w-full sm:w-40">
-                  <SelectValue placeholder="Role" />
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-36">
+                  <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Roles</SelectItem>
-                  <SelectItem value="user">Customers</SelectItem>
-                  <SelectItem value="marketing">Marketing (All)</SelectItem>
-                  <SelectItem value="marketing_head">Marketing Head</SelectItem>
-                  <SelectItem value="marketing_team">Marketing Team</SelectItem>
-                  <SelectItem value="vendor">Vendors</SelectItem>
-                  <SelectItem value="admin">Admins</SelectItem>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="active">Active Only</SelectItem>
+                  <SelectItem value="inactive">Inactive Only</SelectItem>
                 </SelectContent>
               </Select>
-              {roleFilter === 'vendor' && (
-                <Select value={vendorStatusFilter} onValueChange={setVendorStatusFilter}>
-                  <SelectTrigger className="w-full sm:w-40">
-                    <SelectValue placeholder="Vendor Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="approved">Approved</SelectItem>
-                    <SelectItem value="suspended">Suspended</SelectItem>
-                    <SelectItem value="rejected">Rejected</SelectItem>
-                  </SelectContent>
-                </Select>
-              )}
-            </div>
-          </div>
-          
-          {/* Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-4">
-            <div className="text-center p-3 bg-blue-50 dark:bg-blue-950/40 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                {users.filter(u => u.role === 'user' || !u.role).length}
-              </div>
-              <div className="text-sm text-blue-600 dark:text-blue-400">Customers</div>
-            </div>
-            <div className="text-center p-3 bg-purple-50 dark:bg-purple-950/40 rounded-lg">
-              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                {users.filter(u => u.role === 'marketing' || u.role === 'marketing_head' || u.role === 'marketing_team').length}
-              </div>
-              <div className="text-sm text-purple-600 dark:text-purple-400">Marketing</div>
-            </div>
-            <div className="text-center p-3 bg-indigo-50 dark:bg-indigo-950/40 rounded-lg">
-              <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-                {users.filter(u => u.role === 'vendor').length}
-              </div>
-              <div className="text-sm text-indigo-600 dark:text-indigo-400">Vendors</div>
-            </div>
-            <div className="text-center p-3 bg-yellow-50 dark:bg-yellow-950/40 rounded-lg">
-              <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-                {users.filter(u => u.role === 'vendor' && u.vendorInfo?.status === 'pending').length}
-              </div>
-              <div className="text-sm text-yellow-600 dark:text-yellow-400">Pending Approval</div>
-            </div>
-            <div className="text-center p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-lg">
-              <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-                {users.filter(u => u.role === 'admin').length}
-              </div>
-              <div className="text-sm text-emerald-600 dark:text-emerald-400">Admins</div>
             </div>
           </div>
         </CardHeader>
         <CardContent>
           <div className="responsive-table-wrap border-0 rounded-none">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Vendor Info</TableHead>
-                <TableHead>Last Login</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredUsers.map((user) => (
-                <TableRow key={user._id}>
-                  <TableCell className="font-medium">{user.name}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>
-                    {user.role === 'admin' ? (
-                      <Badge className="bg-emerald-600 hover:bg-emerald-700 text-white border-0">Admin</Badge>
-                    ) : user.role === 'marketing_head' ? (
-                      <Badge className="bg-purple-600 hover:bg-purple-700 text-white border-0">Marketing Head</Badge>
-                    ) : user.role === 'marketing_team' ? (
-                      <Badge className="bg-indigo-600 hover:bg-indigo-700 text-white border-0">Marketing Team</Badge>
-                    ) : user.role === 'marketing' ? (
-                      <Badge className="bg-violet-600 hover:bg-violet-700 text-white border-0">Marketing</Badge>
-                    ) : user.role === 'vendor' ? (
-                      <Badge variant="secondary">Vendor</Badge>
-                    ) : (
-                      <Badge variant="outline">Customer</Badge>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={user.status === 'active' ? "success" : "destructive"}>
-                      {user.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {user.role === 'vendor' && user.vendorInfo ? (
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <Store className="h-3 w-3" />
-                          <span className="text-sm font-medium">{user.vendorInfo.storeName}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Badge 
-                            variant={
-                              user.vendorInfo.status === 'approved' ? 'default' :
-                              user.vendorInfo.status === 'pending' ? 'secondary' :
-                              'destructive'
-                            }
-                            className="text-xs"
-                          >
-                            {user.vendorInfo.status}
-                          </Badge>
-                          {user.vendorInfo.verification.isVerified && (
-                            <Badge variant="outline" className="text-xs">
-                              Verified
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {user.vendorInfo.stats.totalProducts} products • {user.vendorInfo.stats.totalOrders} orders
-                        </div>
-                      </div>
-                    ) : user.role === 'vendor' ? (
-                      <span className="text-sm text-muted-foreground">No vendor profile</span>
-                    ) : (
-                      <span className="text-sm text-muted-foreground">-</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-sm">
-                    {user.lastLogin ? user.lastLogin : "N/A"}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="inline-flex flex-wrap justify-end gap-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleViewClick(user)}
-                      disabled={isLoading}
-                      className="touch-action-btn"
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    {user.role === 'vendor' && user.vendorInfo && (
-                      <Button
-                        ref={(el) => vendorDetailButtonRefs.current[user._id] = el}
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleVendorDetailClick(user)}
-                        disabled={isLoading}
-                        className="touch-action-btn"
-                      >
-                        <Store className="h-4 w-4" />
-                      </Button>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleEditClick(user)}
-                      disabled={isLoading}
-                      className="touch-action-btn"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDeleteClick(user._id)}
-                      disabled={isLoading}
-                      className="text-destructive hover:text-destructive touch-action-btn"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {filteredUsers.length === 0 && (
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-6">
-                    No users found
-                  </TableCell>
+                  <TableHead>Customer Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Customer Since</TableHead>
+                  <TableHead>Last Active / Login</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredCustomers.map((customer) => (
+                  <TableRow key={customer._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/50">
+                    <TableCell className="font-medium text-slate-900 dark:text-slate-100">
+                      {customer.name || 'Valued Customer'}
+                    </TableCell>
+                    <TableCell className="text-slate-600 dark:text-slate-300">
+                      {customer.email}
+                    </TableCell>
+                    <TableCell>
+                      <Badge 
+                        variant={customer.status === 'active' ? 'default' : 'secondary'}
+                        className={customer.status === 'active' ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : ''}
+                      >
+                        {customer.status || 'active'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-sm">
+                      {customer.createdAt ? new Date(customer.createdAt).toLocaleDateString('en-IN', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric'
+                      }) : 'Registered'}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-sm">
+                      {customer.lastLogin ? new Date(customer.lastLogin).toLocaleDateString('en-IN', {
+                        day: 'numeric',
+                        month: 'short',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      }) : 'N/A'}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="inline-flex flex-wrap justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleViewClick(customer)}
+                          disabled={isLoading}
+                          title="View Customer Profile"
+                          className="h-8 w-8 p-0"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditClick(customer)}
+                          disabled={isLoading}
+                          title="Edit Customer"
+                          className="h-8 w-8 p-0"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteClick(customer._id)}
+                          disabled={isLoading}
+                          title="Delete Customer"
+                          className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {filteredCustomers.length === 0 && !isLoading && (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                      No customers found matching the criteria.
+                    </TableCell>
+                  </TableRow>
+                )}
+                {isLoading && (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                      Loading customers...
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>
@@ -554,112 +333,15 @@ const AdminUsers: React.FC = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the user
-              account and remove their data from our servers.
+              This action cannot be undone. This will permanently delete the customer account
+              ({selectedCustomer?.name} - {selectedCustomer?.email}) and remove their profile.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} disabled={isLoading}>
-              {isLoading ? "Deleting..." : "Delete"}
+            <AlertDialogAction onClick={handleDelete} disabled={isLoading} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {isLoading ? "Deleting..." : "Delete Customer"}
             </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Vendor Detail Dialog */}
-      <AlertDialog open={isVendorDetailDialogOpen} onOpenChange={setIsVendorDetailDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Vendor Details</AlertDialogTitle>
-            <AlertDialogDescription>
-              {selectedVendor && (
-                <div className="space-y-6">
-                  {/* Status and Actions */}
-                  <div className="flex items-center justify-between p-4 rounded-lg border">
-                    <div className="flex items-center gap-3">
-                      <Badge variant={
-                        selectedVendor.status === 'approved' ? 'default' :
-                        selectedVendor.status === 'pending' ? 'secondary' :
-                        'destructive'
-                      }>
-                        {selectedVendor.status}
-                      </Badge>
-                      {selectedVendor.verification?.isVerified && (
-                        <Badge variant="outline">Verified</Badge>
-                      )}
-                    </div>
-                    <div className="flex gap-2">
-                      {selectedVendor.status === 'pending' && (
-                        <>
-                          <Button
-                            size="sm"
-                            onClick={() => handleVendorStatusUpdate(selectedVendor._id, 'approved')}
-                            disabled={updatingVendor === selectedVendor._id}
-                          >
-                            Approve
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => handleVendorStatusUpdate(selectedVendor._id, 'rejected')}
-                            disabled={updatingVendor === selectedVendor._id}
-                          >
-                            Reject
-                          </Button>
-                        </>
-                      )}
-                      {selectedVendor.status === 'approved' && (
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleVendorStatusUpdate(selectedVendor._id, 'suspended')}
-                          disabled={updatingVendor === selectedVendor._id}
-                        >
-                          Suspend
-                        </Button>
-                      )}
-                      {selectedVendor.status === 'suspended' && (
-                        <Button
-                          size="sm"
-                          onClick={() => handleVendorStatusUpdate(selectedVendor._id, 'approved')}
-                          disabled={updatingVendor === selectedVendor._id}
-                        >
-                          Reactivate
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Store Information */}
-                  <div>
-                    <h3 className="font-semibold mb-3">Store Information</h3>
-                    <div className="space-y-2 text-sm">
-                      <p><strong>Description:</strong> {selectedVendor.storeDescription}</p>
-                      <p><strong>Owner:</strong> {selectedVendor.user?.name} ({selectedVendor.user?.email})</p>
-                    </div>
-                  </div>
-
-                  {/* Statistics */}
-                  <div>
-                    <h3 className="font-semibold mb-3">Statistics</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="p-3 rounded-lg border text-center">
-                        <p className="text-2xl font-bold">{selectedVendor.stats?.totalProducts || 0}</p>
-                        <p className="text-sm text-gray-500">Products</p>
-                      </div>
-                      <div className="p-3 rounded-lg border text-center">
-                        <p className="text-2xl font-bold">{selectedVendor.stats?.totalOrders || 0}</p>
-                        <p className="text-sm text-gray-500">Orders</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Close</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

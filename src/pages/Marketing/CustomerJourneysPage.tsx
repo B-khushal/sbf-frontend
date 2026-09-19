@@ -41,7 +41,12 @@ export const CustomerJourneysPage: React.FC = () => {
     fetchJourneys();
   }, []);
 
+  const NON_CUSTOMER_ROLES = ['admin', 'vendor', 'marketing', 'marketing_head', 'marketing_team', 'delivery_partner', 'staff'];
+
   const filtered = visitors.filter((v) => {
+    if (v.role && NON_CUSTOMER_ROLES.includes(String(v.role).toLowerCase())) {
+      return false;
+    }
     if (!searchTerm) return true;
     const term = searchTerm.toLowerCase();
     return (

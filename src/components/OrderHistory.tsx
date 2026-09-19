@@ -348,7 +348,7 @@ const OrderHistory = () => {
                       Total: {displayOrderPrice(order.totalAmount, order.currency, order.currencyRate)}
                     </p>
                     <p className="text-xs capitalize text-gray-500">
-                      {order.paymentDetails.method} • {(order.paymentDetails as any).status || 'Paid'}
+                      {((order.paymentDetails?.method && order.paymentDetails.method.toLowerCase() !== 'cod') ? (order.paymentDetails.method.toLowerCase() === 'razorpay' ? 'Online Payment' : order.paymentDetails.method) : 'Online Payment')} • {((order.paymentDetails as any)?.status || 'Paid')}
                     </p>
                     <div className="text-xs text-gray-400">Showing in {currency}</div>
                   </div>

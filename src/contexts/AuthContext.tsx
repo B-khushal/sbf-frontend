@@ -9,6 +9,7 @@ import {
   updateUserProfile 
 } from '@/services/authService';
 import { trackActivity } from '@/services/activityService';
+import { marketingTracker } from '@/services/marketingTracker';
 
 // Define types for our authentication context
 type User = {
@@ -234,6 +235,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem('user', JSON.stringify(profileData));
       localStorage.setItem('token', loginResponse.token); // Also store the token separately
       
+      marketingTracker.stitchIdentity(user.id, user.email, user.name);
+      
       // Determine redirect destination based on user role
       let redirectTo = '/';
       const allowedAdminRoles = ['platform_admin', 'store_owner', 'store_manager', 'delivery_manager', 'support_staff', 'inventory_staff', 'finance_staff', 'admin'];
@@ -282,6 +285,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem('isAuthenticated', 'true');
       localStorage.setItem('user', JSON.stringify(profileData));
       localStorage.setItem('token', registerResponse.token); // Also store the token separately
+      
+      marketingTracker.stitchIdentity(user.id, user.email, user.name);
       
       // Determine redirect destination based on user role
       let redirectTo = '/';
@@ -376,6 +381,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem('isAuthenticated', 'true');
       localStorage.setItem('user', JSON.stringify(profileData));
       localStorage.setItem('token', socialLoginResponse.token);
+      
+      marketingTracker.stitchIdentity(user.id, user.email, user.name);
       
       // Determine redirect destination based on user role
       let redirectTo = '/';

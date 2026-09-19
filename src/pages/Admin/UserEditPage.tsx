@@ -97,10 +97,10 @@ const UserEditPage: React.FC = () => {
 
   return (
     <div className="max-w-xl mx-auto p-4">
-      <Button variant="outline" onClick={() => navigate('/admin/users')} className="mb-4">&larr; Back to Users</Button>
+      <Button variant="outline" onClick={() => navigate('/admin/users')} className="mb-4">&larr; Back to Customers</Button>
       <Card>
         <CardHeader>
-          <CardTitle>Edit User</CardTitle>
+          <CardTitle>Edit Customer</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">

@@ -31,6 +31,7 @@ import { getUserProfile, updateUserProfile, SavedAddress } from '@/services/auth
 import { calculateDeliveryFee } from '@/services/orderService';
 import api from '@/services/api';
 import FreeDeliveryCelebrationModal from '@/components/ui/FreeDeliveryCelebrationModal';
+import { marketingTracker } from '@/services/marketingTracker';
 
 // Animation variants
 const containerVariants = {
@@ -271,31 +272,71 @@ const CheckoutShippingPage = () => {
       return new Date();
     }
   });
-  const [formData, setFormData] = useState({
-    // Sender details
-    firstName: '',
-    lastName: '',
-    address: '',
-    apartment: '',
-    city: 'Hyderabad',
-    state: 'Telangana',
-    zipCode: '',
-    phone: '',
-    email: '',
-    notes: '',
-    saveInfo: false,
-    
-    // Receiver details (for gift option)
-    receiverFirstName: '',
-    receiverLastName: '',
-    receiverAddress: '',
-    receiverApartment: '',
-    receiverCity: 'Hyderabad',
-    receiverState: 'Telangana',
-    receiverZipCode: '',
-    receiverPhone: '',
-    receiverEmail: '',
+  const [formData, setFormData] = useState(() => {
+    try {
+      const info = localStorage.getItem('shippingInfo');
+      if (info) {
+        const parsed = JSON.parse(info);
+        return {
+          firstName: parsed.firstName || '',
+          lastName: parsed.lastName || '',
+          address: parsed.address || '',
+          apartment: parsed.apartment || '',
+          city: parsed.city || 'Hyderabad',
+          state: parsed.state || 'Telangana',
+          zipCode: parsed.zipCode || '',
+          phone: parsed.phone || user?.phone || '',
+          email: parsed.email || user?.email || '',
+          notes: parsed.notes || '',
+          saveInfo: !!parsed.saveInfo,
+          receiverFirstName: parsed.receiverFirstName || '',
+          receiverLastName: parsed.receiverLastName || '',
+          receiverAddress: parsed.receiverAddress || '',
+          receiverApartment: parsed.receiverApartment || '',
+          receiverCity: parsed.receiverCity || 'Hyderabad',
+          receiverState: parsed.receiverState || 'Telangana',
+          receiverZipCode: parsed.receiverZipCode || '',
+          receiverPhone: parsed.receiverPhone || '',
+          receiverEmail: parsed.receiverEmail || '',
+        };
+      }
+    } catch {}
+    const names = user?.name ? user.name.split(' ') : ['', ''];
+    return {
+      firstName: names[0] || '',
+      lastName: names.slice(1).join(' ') || '',
+      address: '',
+      apartment: '',
+      city: 'Hyderabad',
+      state: 'Telangana',
+      zipCode: '',
+      phone: user?.phone || '',
+      email: user?.email || '',
+      notes: '',
+      saveInfo: false,
+      receiverFirstName: '',
+      receiverLastName: '',
+      receiverAddress: '',
+      receiverApartment: '',
+      receiverCity: 'Hyderabad',
+      receiverState: 'Telangana',
+      receiverZipCode: '',
+      receiverPhone: '',
+      receiverEmail: '',
+    };
   });
+
+  useEffect(() => {
+    if (user?.email) {
+      setFormData(prev => ({
+        ...prev,
+        email: prev.email || user.email || '',
+        phone: prev.phone || user.phone || '',
+        firstName: prev.firstName || (user.name ? user.name.split(' ')[0] : ''),
+        lastName: prev.lastName || (user.name ? user.name.split(' ').slice(1).join(' ') : '')
+      }));
+    }
+  }, [user]);
 
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
   const [selectedSenderPin, setSelectedSenderPin] = useState<PinCodeSelection | null>(null);
@@ -326,6 +367,7 @@ const CheckoutShippingPage = () => {
   }>({});
 
   useEffect(() => {
+    marketingTracker.trackCheckoutStarted(subtotal);
     const fetchValSettings = async () => {
       try {
         const res = await api.get('/valentine/settings');
@@ -338,6 +380,7 @@ const CheckoutShippingPage = () => {
     };
     fetchValSettings();
   }, []);
+
 
   const midnightCharge = valDeliverySettings.midnightCharge ?? 300;
   const fixedTimeCharge = valDeliverySettings.fixedTimeCharge ?? 150;
@@ -680,6 +723,8 @@ const CheckoutShippingPage = () => {
     // Save shipping information
     const shippingInfo = {
       ...formData,
+      email: formData.email || user?.email || '',
+      phone: formData.phone || user?.phone || '',
       timeSlot: selectedTimeSlot,
       deliveryOption,
       deliveryFee,

@@ -1,3 +1,5 @@
+import { API_URL } from '@/config';
+
 // Spring Blossoms Florist — Non-blocking, Privacy-Conscious Marketing Intelligence Tracker
 
 interface TrackEvent {
@@ -198,7 +200,7 @@ class MarketingTracker {
       events: eventsToSend
     });
 
-    const endpoint = '/api/marketing/events';
+    const endpoint = `${API_URL}/marketing/events`;
 
     try {
       if (navigator.sendBeacon) {
@@ -324,7 +326,7 @@ class MarketingTracker {
   public async stitchIdentity(userId: string, email?: string, name?: string, phone?: string) {
     try {
       if (!this.visitorId) return;
-      await fetch('/api/marketing/stitch-identity', {
+      await fetch(`${API_URL}/marketing/stitch-identity`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

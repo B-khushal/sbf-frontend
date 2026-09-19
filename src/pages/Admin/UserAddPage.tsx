@@ -35,10 +35,10 @@ const UserAddPage: React.FC = () => {
 
   return (
     <div className="max-w-xl mx-auto p-4">
-      <Button variant="outline" onClick={() => navigate('/admin/users')} className="mb-4">&larr; Back to Users</Button>
+      <Button variant="outline" onClick={() => navigate('/admin/users')} className="mb-4">&larr; Back to Customers</Button>
       <Card>
         <CardHeader>
-          <CardTitle>Add New User</CardTitle>
+          <CardTitle>Add New Customer</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -84,7 +84,7 @@ const UserAddPage: React.FC = () => {
             </div>
             <div className="flex gap-2 justify-end">
               <Button variant="outline" type="button" onClick={() => navigate('/admin/users')}>Cancel</Button>
-              <Button type="submit" disabled={saving}>{saving ? 'Adding...' : 'Add User'}</Button>
+              <Button type="submit" disabled={saving}>{saving ? 'Adding...' : 'Add Customer'}</Button>
             </div>
           </form>
         </CardContent>

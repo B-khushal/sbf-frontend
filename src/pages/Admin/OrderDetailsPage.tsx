@@ -1199,7 +1199,11 @@ const OrderDetailsPage: React.FC = () => {
                 <div className="space-y-1.5 text-xs text-slate-500 font-medium">
                   <div className="flex justify-between">
                     <span>Method</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-250 uppercase">{order.paymentDetails.method || 'Online'}</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-250 uppercase">
+                      {order.paymentDetails?.method && order.paymentDetails.method.toLowerCase() !== 'cod'
+                        ? (order.paymentDetails.method.toLowerCase() === 'razorpay' ? 'Online (Razorpay)' : order.paymentDetails.method)
+                        : 'Online (Razorpay)'}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span>Payment Status</span>

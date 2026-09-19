@@ -165,7 +165,7 @@ const toBoardItems = (orders: Order[]): BoardItem[] => {
       customerName,
       customerPhone,
       deliveryAddress,
-      paymentMethod: order.paymentDetails?.method || 'N/A',
+      paymentMethod: (order.paymentDetails?.method && order.paymentDetails.method.toLowerCase() !== 'cod') ? (order.paymentDetails.method.toLowerCase() === 'razorpay' ? 'Online' : order.paymentDetails.method) : 'Online',
       item,
       column: getColumnFromStatus(order.status),
       cardMessage,

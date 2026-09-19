@@ -6,6 +6,7 @@ import useCart from '@/hooks/use-cart';
 import api from '@/services/api';
 import productService, { ProductData } from '@/services/productService';
 import { trackProductView } from '@/services/activityService';
+import { marketingTracker } from '@/services/marketingTracker';
 
 type Product = ProductData & {
   _id: string;
@@ -62,7 +63,14 @@ const ProductPage = () => {
       product.title,
       `/product/${product._id}`
     );
-  }, [product?._id, product?.title]);
+
+    marketingTracker.trackProductView({
+      id: product._id,
+      title: product.title,
+      price: product.price,
+      category: typeof product.category === 'string' ? product.category : (product.category as any)?.name
+    });
+  }, [product?._id, product?.title, product?.price]);
 
   const handleAddToCart = (item: {
     id: string;
@@ -73,13 +81,26 @@ const ProductPage = () => {
     image: string;
     quantity: number;
     selectedVariant?: {
-      label: string;
+      id: string;
+      title: string;
       price: number;
-      stock: number;
     };
-    customizations?: any;
+    cakeFlavour?: string;
+    selectedAddons?: Array<{
+      id: string;
+      title: string;
+      price: number;
+    }>;
+    customizations?: Record<string, any>;
   }) => {
     try {
+      marketingTracker.trackAddToCart({
+        id: item.productId || item.id,
+        title: item.title,
+        price: item.price,
+        quantity: item.quantity
+      });
+
       const cartItem = {
         _id: item.id,
         id: item.id,

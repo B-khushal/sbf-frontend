@@ -60,7 +60,12 @@ export const CustomerIntelligencePage: React.FC = () => {
     fetchCustomers();
   }, []);
 
+  const NON_CUSTOMER_ROLES = ['admin', 'vendor', 'marketing', 'marketing_head', 'marketing_team', 'delivery_partner', 'staff'];
+
   const filteredCustomers = customers.filter((c) => {
+    if (c.role && NON_CUSTOMER_ROLES.includes(String(c.role).toLowerCase())) {
+      return false;
+    }
     if (!searchTerm) return true;
     const term = searchTerm.toLowerCase();
     return (

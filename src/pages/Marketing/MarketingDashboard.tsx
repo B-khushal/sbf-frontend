@@ -79,7 +79,7 @@ export const MarketingDashboard: React.FC = () => {
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-slate-900/60 p-4 rounded-2xl border border-slate-800/80 backdrop-blur-md">
         <div className="flex items-center gap-2 overflow-x-auto pb-1 lg:pb-0">
           <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider mr-1">Period:</span>
-          {['today', 'yesterday', '7d', '30d', '90d'].map((tf) => (
+          {['today', 'yesterday', '7d', '30d', '90d', 'all'].map((tf) => (
             <Button
               key={tf}
               variant="ghost"
@@ -91,9 +91,10 @@ export const MarketingDashboard: React.FC = () => {
                   : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/70'
               }`}
             >
-              {tf === 'today' ? 'Today' : tf === 'yesterday' ? 'Yesterday' : tf === '7d' ? 'Last 7 Days' : tf === '30d' ? 'Last 30 Days' : 'Last 90 Days'}
+              {tf === 'today' ? 'Today' : tf === 'yesterday' ? 'Yesterday' : tf === '7d' ? 'Last 7 Days' : tf === '30d' ? 'Last 30 Days' : tf === '90d' ? 'Last 90 Days' : 'All Time'}
             </Button>
           ))}
+
         </div>
 
         <div className="flex items-center gap-3">
