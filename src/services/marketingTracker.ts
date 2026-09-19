@@ -282,6 +282,30 @@ class MarketingTracker {
     this.flush(); // Flush immediately for cart events
   }
 
+  public trackRemoveFromCart(productId: string, productTitle?: string, cartTotal?: number) {
+    this.enqueueEvent({
+      eventType: 'remove_from_cart',
+      eventCategory: 'Cart',
+      productId,
+      productTitle,
+      cartValue: cartTotal,
+      path: window.location.pathname
+    });
+    this.flush();
+  }
+
+  public trackCheckoutStarted(cartValue?: number) {
+    this.trackCheckoutStep('checkout_started', cartValue);
+  }
+
+  public trackAddressCompleted(cartValue?: number) {
+    this.trackCheckoutStep('address_completed', cartValue);
+  }
+
+  public trackPaymentStarted(cartValue?: number) {
+    this.trackCheckoutStep('payment_started', cartValue);
+  }
+
   public trackCheckoutStep(step: 'checkout_started' | 'address_completed' | 'payment_started', cartValue?: number) {
     this.enqueueEvent({
       eventType: step,

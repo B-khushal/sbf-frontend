@@ -367,7 +367,11 @@ const CheckoutShippingPage = () => {
   }>({});
 
   useEffect(() => {
-    marketingTracker.trackCheckoutStarted(subtotal);
+    try {
+      marketingTracker?.trackCheckoutStarted?.(subtotal);
+    } catch (e) {
+      console.warn('Marketing tracking non-blocking warning:', e);
+    }
     const fetchValSettings = async () => {
       try {
         const res = await api.get('/valentine/settings');
