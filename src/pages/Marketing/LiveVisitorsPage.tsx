@@ -90,18 +90,18 @@ export const LiveVisitorsPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
           <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
-            <Radio className="w-5 h-5 text-emerald-400 animate-pulse" />
-            Live Visitors Monitor
+            <Radio className="w-5 h-5 text-emerald-400 animate-pulse shrink-0" />
+            <span>Live Visitors Monitor</span>
           </h2>
           <p className="text-xs text-slate-400 mt-0.5">
             Real-time active sessions browsing sbflorist.in right now
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3">
           <div className="flex items-center gap-2 text-xs text-slate-300 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl">
             <span className="text-emerald-400 font-bold">{activeCount}</span> Active
             <span className="text-slate-600">|</span>
@@ -126,14 +126,14 @@ export const LiveVisitorsPage: React.FC = () => {
             size="icon"
             onClick={fetchLiveVisitors}
             disabled={loading}
-            className="h-8 w-8 text-slate-400 hover:text-slate-100 bg-slate-900 border border-slate-800 rounded-xl"
+            className="h-8 w-8 text-slate-400 hover:text-slate-100 bg-slate-900 border border-slate-800 rounded-xl shrink-0"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-rose-400' : ''}`} />
           </Button>
         </div>
       </div>
 
-      {/* Live Visitors Table */}
+      {/* Live Visitors Container */}
       <Card className="bg-slate-900/70 border-slate-800/80 shadow-xl overflow-hidden">
         <CardHeader className="pb-3 border-b border-slate-800/80">
           <div className="flex items-center justify-between">
@@ -144,12 +144,67 @@ export const LiveVisitorsPage: React.FC = () => {
               </CardDescription>
             </div>
             <span className="text-xs font-mono text-slate-400">
-              {visitors.length} total tracked
+              {visitors.length} tracked
             </span>
           </div>
         </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
+        <CardContent className="p-3 sm:p-0">
+          {/* Mobile Card Feed (Visible on phones < md) */}
+          <div className="block md:hidden space-y-3">
+            {visitors.length === 0 ? (
+              <div className="p-8 text-center text-xs text-slate-500 bg-slate-900/40 rounded-xl border border-slate-800">
+                {loading ? 'Detecting active live visitors...' : 'No active visitors currently browsing'}
+              </div>
+            ) : (
+              visitors.map((v) => (
+                <div
+                  key={v.sessionId}
+                  className="p-3.5 rounded-xl bg-slate-800/40 border border-slate-700/60 space-y-2.5 hover:border-slate-600 transition-all"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-rose-300 font-bold text-xs">
+                        {v.displayName}
+                      </span>
+                      <span className="capitalize text-[11px] text-slate-400 flex items-center gap-1">
+                        {getDeviceIcon(v.device)}
+                        <span>{v.device}</span>
+                      </span>
+                    </div>
+                    <div>{getStatusBadge(v.status)}</div>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs text-slate-300">
+                    <span className="font-mono text-[11px] text-slate-400 truncate max-w-[200px]" title={v.currentPage}>
+                      {v.currentPage || '/'}
+                    </span>
+                    <span className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-[10px] text-slate-300 font-medium shrink-0">
+                      {v.source}
+                    </span>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-700/50 flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-3 text-slate-400 text-[11px]">
+                      <span>Duration: <strong className="text-slate-200 font-mono">{v.duration}</strong></span>
+                      <span>Score: <strong className="text-rose-400 font-mono">{v.interestScore || 5}</strong></span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleOpenJourney(v.visitorId)}
+                      className="h-7 px-2.5 text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-lg flex items-center gap-1"
+                    >
+                      <GitFork className="w-3.5 h-3.5" />
+                      <span>Timeline</span>
+                    </Button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Desktop & Tablet Table (Hidden on phones < md) */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="border-b border-slate-800 bg-slate-950/50 text-slate-400 uppercase text-[10px] tracking-wider font-semibold">

@@ -47,11 +47,11 @@ export const CartIntelligencePage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
           <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
-            <ShoppingCart className="w-5 h-5 text-amber-400" />
-            Abandoned Cart Intelligence
+            <ShoppingCart className="w-5 h-5 text-amber-400 shrink-0" />
+            <span>Abandoned Cart Intelligence</span>
           </h2>
           <p className="text-xs text-slate-400 mt-0.5">
             Monitor high-intent abandoned carts and discover where buyers leave before purchasing
@@ -63,16 +63,16 @@ export const CartIntelligencePage: React.FC = () => {
           size="icon"
           onClick={fetchCarts}
           disabled={loading}
-          className="h-8 w-8 text-slate-400 hover:text-slate-200 bg-slate-900 border border-slate-800 rounded-lg"
+          className="h-8 w-8 text-slate-400 hover:text-slate-200 bg-slate-900 border border-slate-800 rounded-lg shrink-0 self-start sm:self-auto"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-amber-400' : ''}`} />
         </Button>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         <Card className="bg-slate-900/70 border-slate-800/80 shadow-md">
-          <CardContent className="p-4 space-y-1">
+          <CardContent className="p-3.5 sm:p-4 space-y-1">
             <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
               Abandoned Carts
             </div>
@@ -84,7 +84,7 @@ export const CartIntelligencePage: React.FC = () => {
         </Card>
 
         <Card className="bg-slate-900/70 border-slate-800/80 shadow-md">
-          <CardContent className="p-4 space-y-1">
+          <CardContent className="p-3.5 sm:p-4 space-y-1">
             <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
               Potential Recovery Revenue
             </div>
@@ -96,7 +96,7 @@ export const CartIntelligencePage: React.FC = () => {
         </Card>
 
         <Card className="bg-slate-900/70 border-slate-800/80 shadow-md">
-          <CardContent className="p-4 space-y-1">
+          <CardContent className="p-3.5 sm:p-4 space-y-1">
             <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
               Average Cart Value
             </div>
@@ -108,7 +108,7 @@ export const CartIntelligencePage: React.FC = () => {
         </Card>
       </div>
 
-      {/* Carts Table */}
+      {/* Carts Container */}
       <Card className="bg-slate-900/70 border-slate-800/80 shadow-xl overflow-hidden">
         <CardHeader className="border-b border-slate-800/80 pb-3">
           <CardTitle className="text-sm font-bold text-slate-200">
@@ -118,8 +118,72 @@ export const CartIntelligencePage: React.FC = () => {
             Real-time abandoned cart records with customer stage detection
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
+        <CardContent className="p-3 sm:p-0">
+          {/* Mobile Card Layout (Visible on phones < md) */}
+          <div className="block md:hidden space-y-3">
+            {carts.length === 0 ? (
+              <div className="p-8 text-center text-xs text-slate-500 bg-slate-900/40 rounded-xl border border-slate-800">
+                {loading ? 'Analyzing cart sessions...' : 'No abandoned carts recorded'}
+              </div>
+            ) : (
+              carts.map((cart) => (
+                <div
+                  key={cart.id}
+                  className="p-3.5 rounded-xl bg-slate-800/40 border border-slate-700/60 space-y-2.5 hover:border-slate-600 transition-all"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="font-semibold text-xs text-slate-200">
+                        {cart.customerName || 'Guest Shopper'}
+                      </div>
+                      <div className="text-[10px] font-mono text-slate-400 truncate max-w-[200px]">
+                        {cart.customerEmail || cart.visitorId}
+                      </div>
+                    </div>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/10 text-amber-300 border border-amber-500/20 shrink-0">
+                      {cart.abandonmentStage || 'Cart'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-400">Cart Total:</span>
+                    <span className="font-mono font-bold text-emerald-400 text-sm">
+                      ₹{Number(cart.totalValue).toLocaleString()}
+                    </span>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-700/50 flex items-center justify-between text-[11px] text-slate-400">
+                    <div className="flex items-center gap-3">
+                      <span className="flex items-center gap-1">
+                        {cart.checkoutStarted ? (
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                        ) : (
+                          <XCircle className="w-3.5 h-3.5 text-slate-600" />
+                        )}
+                        <span className="text-[10px]">Checkout</span>
+                      </span>
+
+                      <span className="flex items-center gap-1">
+                        {cart.paymentAttempted ? (
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                        ) : (
+                          <XCircle className="w-3.5 h-3.5 text-slate-600" />
+                        )}
+                        <span className="text-[10px]">Payment</span>
+                      </span>
+                    </div>
+
+                    <span className="font-mono text-[10px] text-slate-400">
+                      {new Date(cart.lastActivityAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Desktop Table (Hidden on phones < md) */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="border-b border-slate-800 bg-slate-950/50 text-slate-400 uppercase text-[10px] tracking-wider font-semibold">

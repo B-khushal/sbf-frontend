@@ -122,18 +122,18 @@ export const MarketingSettingsPage: React.FC = () => {
       </div>
 
       <Tabs defaultValue="weights" className="space-y-4">
-        <TabsList className="bg-slate-900 border border-slate-800 p-1 rounded-xl">
-          <TabsTrigger value="weights" className="text-xs font-semibold data-[state=active]:bg-rose-600 data-[state=active]:text-white rounded-lg">
+        <TabsList className="bg-slate-900 border border-slate-800 p-1 rounded-xl w-full overflow-x-auto flex scrollbar-none">
+          <TabsTrigger value="weights" className="text-xs font-semibold data-[state=active]:bg-rose-600 data-[state=active]:text-white rounded-lg shrink-0">
             Interest Score Weights
           </TabsTrigger>
-          <TabsTrigger value="alerts" className="text-xs font-semibold data-[state=active]:bg-rose-600 data-[state=active]:text-white rounded-lg">
+          <TabsTrigger value="alerts" className="text-xs font-semibold data-[state=active]:bg-rose-600 data-[state=active]:text-white rounded-lg shrink-0">
             Alert Thresholds
           </TabsTrigger>
-          <TabsTrigger value="retention" className="text-xs font-semibold data-[state=active]:bg-rose-600 data-[state=active]:text-white rounded-lg">
+          <TabsTrigger value="retention" className="text-xs font-semibold data-[state=active]:bg-rose-600 data-[state=active]:text-white rounded-lg shrink-0">
             Data Retention &amp; Privacy
           </TabsTrigger>
-          <TabsTrigger value="logs" className="text-xs font-semibold data-[state=active]:bg-rose-600 data-[state=active]:text-white rounded-lg">
-            Marketing Team Activity Log ({logs.length})
+          <TabsTrigger value="logs" className="text-xs font-semibold data-[state=active]:bg-rose-600 data-[state=active]:text-white rounded-lg shrink-0">
+            Activity Log ({logs.length})
           </TabsTrigger>
         </TabsList>
 
@@ -149,7 +149,7 @@ export const MarketingSettingsPage: React.FC = () => {
                 Weights applied to calculate individual Product Interest Scores and Intent Levels
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-6">
+            <CardContent className="p-3 sm:p-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div>
                   <label className="text-xs font-medium text-slate-300 block mb-1">Product Detail View</label>
@@ -257,7 +257,7 @@ export const MarketingSettingsPage: React.FC = () => {
                 Trigger high-priority alerts in Marketing Panel when metrics cross critical thresholds
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-6 space-y-4">
+            <CardContent className="p-3 sm:p-6 space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs font-medium text-slate-300 block mb-1">
@@ -299,7 +299,7 @@ export const MarketingSettingsPage: React.FC = () => {
                 Automated lifecycle pruning to preserve disk space and ensure privacy compliance
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-6 space-y-4 text-xs">
+            <CardContent className="p-3 sm:p-6 space-y-4 text-xs">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="font-medium text-slate-300 block mb-1">Raw Events Retention (Days)</label>

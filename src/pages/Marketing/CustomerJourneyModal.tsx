@@ -99,7 +99,7 @@ export const CustomerJourneyModal: React.FC<CustomerJourneyModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[85vh] bg-slate-900 border-slate-800 text-slate-100 flex flex-col p-6 rounded-2xl shadow-2xl">
+      <DialogContent className="w-[95vw] sm:max-w-2xl max-h-[85vh] bg-slate-900 border-slate-800 text-slate-100 flex flex-col p-4 sm:p-6 rounded-2xl shadow-2xl">
         <DialogHeader className="border-b border-slate-800/80 pb-3 shrink-0">
           <div className="flex items-center justify-between">
             <div>

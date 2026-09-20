@@ -170,7 +170,7 @@ export const CampaignAnalyticsPage: React.FC = () => {
         </Card>
       </div>
 
-      {/* Campaigns Table */}
+      {/* Campaigns Container */}
       <Card className="bg-slate-900/70 border-slate-800/80 shadow-xl overflow-hidden">
         <CardHeader className="border-b border-slate-800/80 pb-3">
           <CardTitle className="text-sm font-bold text-slate-200">
@@ -180,8 +180,64 @@ export const CampaignAnalyticsPage: React.FC = () => {
             Performance indicators calculated with reconciled revenue
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
+        <CardContent className="p-3 sm:p-0">
+          {/* Mobile Campaign Cards (Visible on phones < md) */}
+          <div className="block md:hidden space-y-3">
+            {campaigns.length === 0 ? (
+              <div className="p-8 text-center text-xs text-slate-500 bg-slate-900/40 rounded-xl border border-slate-800">
+                No campaigns tracked yet. Create your first campaign link!
+              </div>
+            ) : (
+              campaigns.map((c) => (
+                <div
+                  key={c.id}
+                  className="p-3.5 rounded-xl bg-slate-800/40 border border-slate-700/60 space-y-2.5 hover:border-slate-600 transition-all"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="font-bold text-xs text-slate-100">{c.name}</div>
+                      <div className="text-[10px] font-mono text-slate-400 mt-0.5 truncate max-w-[200px]">
+                        {c.utmCampaign}
+                      </div>
+                    </div>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-800 text-slate-300 border border-slate-700 shrink-0">
+                      {c.platform}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-xs pt-1">
+                    <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
+                      <div className="text-[10px] text-slate-400">Spend</div>
+                      <div className="font-mono font-bold text-slate-200 mt-0.5">
+                        ₹{Number(c.spend || 0).toLocaleString()}
+                      </div>
+                    </div>
+                    <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
+                      <div className="text-[10px] text-slate-400">Revenue</div>
+                      <div className="font-mono font-bold text-emerald-400 mt-0.5">
+                        ₹{Number(c.revenue || 0).toLocaleString()}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-700/50 flex items-center justify-between text-[11px] text-slate-400">
+                    <div>
+                      Clicks/Sessions: <strong className="text-slate-200 font-mono">{c.clicks || 0} / {c.sessions || 0}</strong>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span>Orders: <strong className="text-emerald-400 font-mono">{c.purchases || 0}</strong></span>
+                      <span className="px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 font-mono font-bold text-[10px] border border-rose-500/30">
+                        {c.roas || 0}x ROAS
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Desktop Table (Hidden on phones < md) */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="border-b border-slate-800 bg-slate-950/50 text-slate-400 uppercase text-[10px] tracking-wider font-semibold">
@@ -242,7 +298,7 @@ export const CampaignAnalyticsPage: React.FC = () => {
 
       {/* Create Campaign Modal */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className="max-w-md bg-slate-900 border-slate-800 text-slate-100 p-6 rounded-2xl shadow-2xl">
+        <DialogContent className="w-[95vw] sm:max-w-md max-h-[90vh] overflow-y-auto bg-slate-900 border-slate-800 text-slate-100 p-4 sm:p-6 rounded-2xl shadow-2xl">
           <DialogHeader>
             <DialogTitle className="text-base font-bold text-slate-100 flex items-center gap-2">
               <Megaphone className="w-4 h-4 text-indigo-400" />
@@ -268,7 +324,7 @@ export const CampaignAnalyticsPage: React.FC = () => {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="text-xs font-semibold text-slate-300 block mb-1">Platform</label>
                 <select
@@ -298,7 +354,7 @@ export const CampaignAnalyticsPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="text-xs font-semibold text-slate-300 block mb-1">Budget (₹)</label>
                 <input
@@ -320,7 +376,7 @@ export const CampaignAnalyticsPage: React.FC = () => {
               </div>
             </div>
 
-            <DialogFooter className="pt-3 border-t border-slate-800">
+            <DialogFooter className="pt-3 border-t border-slate-800 flex flex-row items-center justify-end gap-2">
               <Button type="button" variant="ghost" size="sm" onClick={() => setIsCreateOpen(false)} className="h-8 text-xs text-slate-400">
                 Cancel
               </Button>

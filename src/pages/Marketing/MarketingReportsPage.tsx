@@ -99,15 +99,15 @@ export const MarketingReportsPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-400 font-semibold mr-1">Timeframe:</span>
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+          <span className="text-xs text-slate-400 font-semibold mr-1 shrink-0">Timeframe:</span>
           {['7d', '30d', '90d'].map((tf) => (
             <Button
               key={tf}
               variant="ghost"
               size="sm"
               onClick={() => setTimeframe(tf)}
-              className={`text-xs px-3 h-8 rounded-lg font-medium ${
+              className={`text-xs px-3 h-8 rounded-lg font-medium shrink-0 ${
                 timeframe === tf
                   ? 'bg-rose-600 text-white font-bold'
                   : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
@@ -121,14 +121,14 @@ export const MarketingReportsPage: React.FC = () => {
 
       {/* Security Banner */}
       <Card className="bg-slate-900/60 border-slate-800/80 shadow-md">
-        <CardContent className="p-4 flex items-center justify-between text-xs text-slate-300">
+        <CardContent className="p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-slate-300">
           <div className="flex items-center gap-2.5">
             <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
             <span>
               <strong className="text-slate-100">Audit Trail Enabled:</strong> Every report generation action is logged in the Marketing Activity Log with timestamp and role credentials.
             </span>
           </div>
-          <span className="text-[10px] font-mono text-slate-500 uppercase">
+          <span className="text-[10px] font-mono text-slate-500 uppercase shrink-0">
             Marketing Head Authorization Active
           </span>
         </CardContent>

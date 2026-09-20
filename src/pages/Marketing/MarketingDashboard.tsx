@@ -76,16 +76,16 @@ export const MarketingDashboard: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Top Filter Controls */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-slate-900/60 p-4 rounded-2xl border border-slate-800/80 backdrop-blur-md">
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 lg:pb-0">
-          <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider mr-1">Period:</span>
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4 bg-slate-900/60 p-3 sm:p-4 rounded-2xl border border-slate-800/80 backdrop-blur-md">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 lg:pb-0 scrollbar-none w-full lg:w-auto">
+          <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider mr-1 shrink-0">Period:</span>
           {['today', 'yesterday', '7d', '30d', '90d', 'all'].map((tf) => (
             <Button
               key={tf}
               variant="ghost"
               size="sm"
               onClick={() => setTimeframe(tf)}
-              className={`text-xs px-3 h-8 rounded-lg font-medium transition-all ${
+              className={`text-xs px-2.5 sm:px-3 h-8 rounded-lg font-medium transition-all shrink-0 ${
                 timeframe === tf
                   ? 'bg-rose-600 text-white font-bold shadow-md shadow-rose-950/40 hover:bg-rose-500'
                   : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/70'
@@ -94,14 +94,13 @@ export const MarketingDashboard: React.FC = () => {
               {tf === 'today' ? 'Today' : tf === 'yesterday' ? 'Yesterday' : tf === '7d' ? 'Last 7 Days' : tf === '30d' ? 'Last 30 Days' : tf === '90d' ? 'Last 90 Days' : 'All Time'}
             </Button>
           ))}
-
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3 w-full lg:w-auto">
           <select
             value={deviceFilter}
             onChange={(e) => setDeviceFilter(e.target.value)}
-            className="h-8 bg-slate-800 border border-slate-700 text-xs text-slate-200 rounded-lg px-2.5 outline-none focus:border-rose-500"
+            className="flex-1 sm:flex-none h-8 bg-slate-800 border border-slate-700 text-xs text-slate-200 rounded-lg px-2.5 outline-none focus:border-rose-500 min-w-[110px]"
           >
             <option value="all">All Devices</option>
             <option value="mobile">Mobile</option>
@@ -112,7 +111,7 @@ export const MarketingDashboard: React.FC = () => {
           <select
             value={trafficFilter}
             onChange={(e) => setTrafficFilter(e.target.value)}
-            className="h-8 bg-slate-800 border border-slate-700 text-xs text-slate-200 rounded-lg px-2.5 outline-none focus:border-rose-500"
+            className="flex-1 sm:flex-none h-8 bg-slate-800 border border-slate-700 text-xs text-slate-200 rounded-lg px-2.5 outline-none focus:border-rose-500 min-w-[130px]"
           >
             <option value="all">All Traffic Sources</option>
             <option value="instagram">Instagram</option>
@@ -126,7 +125,7 @@ export const MarketingDashboard: React.FC = () => {
             size="icon"
             onClick={fetchDashboard}
             disabled={loading}
-            className="h-8 w-8 text-slate-400 hover:text-slate-200 hover:bg-slate-800"
+            className="h-8 w-8 text-slate-400 hover:text-slate-200 hover:bg-slate-800 shrink-0"
             title="Refresh analytics"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-rose-400' : ''}`} />
@@ -135,180 +134,180 @@ export const MarketingDashboard: React.FC = () => {
       </div>
 
       {/* Row 1: Executive KPI Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3.5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-2.5 sm:gap-3.5">
         {/* Visitors */}
         <Card className="bg-slate-900/70 border-slate-800/80 shadow-md">
-          <CardContent className="p-4 space-y-1">
+          <CardContent className="p-3 sm:p-4 space-y-1">
             <div className="flex items-center justify-between text-slate-400">
-              <span className="text-[11px] font-semibold uppercase tracking-wider">Total Visitors</span>
-              <Users className="w-4 h-4 text-blue-400" />
+              <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider truncate">Total Visitors</span>
+              <Users className="w-4 h-4 text-blue-400 shrink-0" />
             </div>
-            <div className="text-xl font-bold text-slate-100 font-mono">
+            <div className="text-lg sm:text-xl font-bold text-slate-100 font-mono truncate">
               {loading ? '—' : kpis?.totalVisitors.toLocaleString() || '0'}
             </div>
-            <p className="text-[10px] text-slate-400">Storefront sessions</p>
+            <p className="text-[10px] text-slate-400 truncate">Storefront sessions</p>
           </CardContent>
         </Card>
 
         {/* Unique Visitors */}
         <Card className="bg-slate-900/70 border-slate-800/80 shadow-md">
-          <CardContent className="p-4 space-y-1">
+          <CardContent className="p-3 sm:p-4 space-y-1">
             <div className="flex items-center justify-between text-slate-400">
-              <span className="text-[11px] font-semibold uppercase tracking-wider">Unique Visitors</span>
-              <Sparkles className="w-4 h-4 text-indigo-400" />
+              <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider truncate">Unique Visitors</span>
+              <Sparkles className="w-4 h-4 text-indigo-400 shrink-0" />
             </div>
-            <div className="text-xl font-bold text-slate-100 font-mono">
+            <div className="text-lg sm:text-xl font-bold text-slate-100 font-mono truncate">
               {loading ? '—' : kpis?.uniqueVisitors.toLocaleString() || '0'}
             </div>
-            <p className="text-[10px] text-emerald-400 flex items-center gap-0.5">
-              <ArrowUpRight className="w-3 h-3 inline" /> Unique profiles
+            <p className="text-[10px] text-emerald-400 flex items-center gap-0.5 truncate">
+              <ArrowUpRight className="w-3 h-3 inline shrink-0" /> Unique profiles
             </p>
           </CardContent>
         </Card>
 
         {/* Product Views */}
         <Card className="bg-slate-900/70 border-slate-800/80 shadow-md">
-          <CardContent className="p-4 space-y-1">
+          <CardContent className="p-3 sm:p-4 space-y-1">
             <div className="flex items-center justify-between text-slate-400">
-              <span className="text-[11px] font-semibold uppercase tracking-wider">Product Views</span>
-              <Eye className="w-4 h-4 text-cyan-400" />
+              <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider truncate">Product Views</span>
+              <Eye className="w-4 h-4 text-cyan-400 shrink-0" />
             </div>
-            <div className="text-xl font-bold text-slate-100 font-mono">
+            <div className="text-lg sm:text-xl font-bold text-slate-100 font-mono truncate">
               {loading ? '—' : kpis?.productViews.toLocaleString() || '0'}
             </div>
-            <p className="text-[10px] text-slate-400">Catalog detail views</p>
+            <p className="text-[10px] text-slate-400 truncate">Catalog detail views</p>
           </CardContent>
         </Card>
 
         {/* Engaged Visitors */}
         <Card className="bg-slate-900/70 border-slate-800/80 shadow-md">
-          <CardContent className="p-4 space-y-1">
+          <CardContent className="p-3 sm:p-4 space-y-1">
             <div className="flex items-center justify-between text-slate-400">
-              <span className="text-[11px] font-semibold uppercase tracking-wider">Engaged Visitors</span>
-              <Flame className="w-4 h-4 text-amber-400" />
+              <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider truncate">Engaged Visitors</span>
+              <Flame className="w-4 h-4 text-amber-400 shrink-0" />
             </div>
-            <div className="text-xl font-bold text-slate-100 font-mono">
+            <div className="text-lg sm:text-xl font-bold text-slate-100 font-mono truncate">
               {loading ? '—' : kpis?.engagedVisitors.toLocaleString() || '0'}
             </div>
-            <p className="text-[10px] text-slate-400">&gt;75% scroll or 60s</p>
+            <p className="text-[10px] text-slate-400 truncate">&gt;75% scroll or 60s</p>
           </CardContent>
         </Card>
 
         {/* Add To Cart */}
         <Card className="bg-slate-900/70 border-slate-800/80 shadow-md">
-          <CardContent className="p-4 space-y-1">
+          <CardContent className="p-3 sm:p-4 space-y-1">
             <div className="flex items-center justify-between text-slate-400">
-              <span className="text-[11px] font-semibold uppercase tracking-wider">Added To Cart</span>
-              <ShoppingCart className="w-4 h-4 text-pink-400" />
+              <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider truncate">Added To Cart</span>
+              <ShoppingCart className="w-4 h-4 text-pink-400 shrink-0" />
             </div>
-            <div className="text-xl font-bold text-pink-400 font-mono">
+            <div className="text-lg sm:text-xl font-bold text-pink-400 font-mono truncate">
               {loading ? '—' : kpis?.addToCart.toLocaleString() || '0'}
             </div>
-            <p className="text-[10px] text-slate-400">Cart additions</p>
+            <p className="text-[10px] text-slate-400 truncate">Cart additions</p>
           </CardContent>
         </Card>
 
         {/* Checkout Started */}
         <Card className="bg-slate-900/70 border-slate-800/80 shadow-md">
-          <CardContent className="p-4 space-y-1">
+          <CardContent className="p-3 sm:p-4 space-y-1">
             <div className="flex items-center justify-between text-slate-400">
-              <span className="text-[11px] font-semibold uppercase tracking-wider">Checkouts</span>
-              <CreditCard className="w-4 h-4 text-purple-400" />
+              <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider truncate">Checkouts</span>
+              <CreditCard className="w-4 h-4 text-purple-400 shrink-0" />
             </div>
-            <div className="text-xl font-bold text-purple-400 font-mono">
+            <div className="text-lg sm:text-xl font-bold text-purple-400 font-mono truncate">
               {loading ? '—' : kpis?.checkoutStarted.toLocaleString() || '0'}
             </div>
-            <p className="text-[10px] text-slate-400">Started checkout</p>
+            <p className="text-[10px] text-slate-400 truncate">Started checkout</p>
           </CardContent>
         </Card>
 
         {/* Purchases (Authoritative from Orders) */}
         <Card className="bg-slate-900/70 border-slate-800/80 shadow-md border-emerald-500/20">
-          <CardContent className="p-4 space-y-1">
+          <CardContent className="p-3 sm:p-4 space-y-1">
             <div className="flex items-center justify-between text-slate-400">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-emerald-400">Purchases</span>
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+              <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-emerald-400 truncate">Purchases</span>
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
             </div>
-            <div className="text-xl font-bold text-emerald-400 font-mono">
+            <div className="text-lg sm:text-xl font-bold text-emerald-400 font-mono truncate">
               {loading ? '—' : kpis?.purchases.toLocaleString() || '0'}
             </div>
-            <p className="text-[10px] text-slate-400">Authoritative orders</p>
+            <p className="text-[10px] text-slate-400 truncate">Authoritative orders</p>
           </CardContent>
         </Card>
 
         {/* Conversion Rate */}
         <Card className="bg-slate-900/70 border-slate-800/80 shadow-md">
-          <CardContent className="p-4 space-y-1">
+          <CardContent className="p-3 sm:p-4 space-y-1">
             <div className="flex items-center justify-between text-slate-400">
-              <span className="text-[11px] font-semibold uppercase tracking-wider">Conversion Rate</span>
-              <Percent className="w-4 h-4 text-rose-400" />
+              <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider truncate">Conversion Rate</span>
+              <Percent className="w-4 h-4 text-rose-400 shrink-0" />
             </div>
-            <div className="text-xl font-bold text-rose-400 font-mono">
+            <div className="text-lg sm:text-xl font-bold text-rose-400 font-mono truncate">
               {loading ? '—' : kpis?.conversionRate || '0.00%'}
             </div>
-            <p className="text-[10px] text-slate-400">Purchases / Visitors</p>
+            <p className="text-[10px] text-slate-400 truncate">Purchases / Visitors</p>
           </CardContent>
         </Card>
 
         {/* Total Attributed Revenue */}
         <Card className="bg-slate-900/70 border-slate-800/80 shadow-md border-rose-500/20">
-          <CardContent className="p-4 space-y-1">
+          <CardContent className="p-3 sm:p-4 space-y-1">
             <div className="flex items-center justify-between text-slate-400">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-rose-400">Revenue</span>
-              <TrendingUp className="w-4 h-4 text-rose-400" />
+              <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-rose-400 truncate">Revenue</span>
+              <TrendingUp className="w-4 h-4 text-rose-400 shrink-0" />
             </div>
-            <div className="text-xl font-bold text-slate-100 font-mono">
+            <div className="text-lg sm:text-xl font-bold text-slate-100 font-mono truncate">
               {loading ? '—' : `₹${kpis?.revenue.toLocaleString() || '0'}`}
             </div>
-            <p className="text-[10px] text-slate-400">Authoritative revenue</p>
+            <p className="text-[10px] text-slate-400 truncate">Authoritative revenue</p>
           </CardContent>
         </Card>
 
         {/* Average Order Value */}
         <Card className="bg-slate-900/70 border-slate-800/80 shadow-md">
-          <CardContent className="p-4 space-y-1">
+          <CardContent className="p-3 sm:p-4 space-y-1">
             <div className="flex items-center justify-between text-slate-400">
-              <span className="text-[11px] font-semibold uppercase tracking-wider">AOV</span>
-              <ShoppingBag className="w-4 h-4 text-amber-400" />
+              <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider truncate">AOV</span>
+              <ShoppingBag className="w-4 h-4 text-amber-400 shrink-0" />
             </div>
-            <div className="text-xl font-bold text-slate-100 font-mono">
+            <div className="text-lg sm:text-xl font-bold text-slate-100 font-mono truncate">
               {loading ? '—' : `₹${kpis?.aov.toLocaleString() || '0'}`}
             </div>
-            <p className="text-[10px] text-slate-400">Revenue / Orders</p>
+            <p className="text-[10px] text-slate-400 truncate">Revenue / Orders</p>
           </CardContent>
         </Card>
 
         {/* Cart Abandonment */}
         <Card className="bg-slate-900/70 border-slate-800/80 shadow-md">
-          <CardContent className="p-4 space-y-1">
+          <CardContent className="p-3 sm:p-4 space-y-1">
             <div className="flex items-center justify-between text-slate-400">
-              <span className="text-[11px] font-semibold uppercase tracking-wider">Abandonment</span>
-              <AlertTriangle className="w-4 h-4 text-amber-400" />
+              <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider truncate">Abandonment</span>
+              <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
             </div>
-            <div className="text-xl font-bold text-amber-400 font-mono">
+            <div className="text-lg sm:text-xl font-bold text-amber-400 font-mono truncate">
               {loading ? '—' : kpis?.cartAbandonment || '0%'}
             </div>
-            <p className="text-[10px] text-slate-400">Carts not converted</p>
+            <p className="text-[10px] text-slate-400 truncate">Carts not converted</p>
           </CardContent>
         </Card>
 
         {/* Returning Visitors */}
         <Card className="bg-slate-900/70 border-slate-800/80 shadow-md">
-          <CardContent className="p-4 space-y-1">
+          <CardContent className="p-3 sm:p-4 space-y-1">
             <div className="flex items-center justify-between text-slate-400">
-              <span className="text-[11px] font-semibold uppercase tracking-wider">Returning Visitors</span>
-              <RotateCcw className="w-4 h-4 text-teal-400" />
+              <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider truncate">Returning Visitors</span>
+              <RotateCcw className="w-4 h-4 text-teal-400 shrink-0" />
             </div>
-            <div className="text-xl font-bold text-teal-400 font-mono">
+            <div className="text-lg sm:text-xl font-bold text-teal-400 font-mono truncate">
               {loading ? '—' : kpis?.returningVisitors.toLocaleString() || '0'}
             </div>
-            <p className="text-[10px] text-slate-400">&gt;1 session</p>
+            <p className="text-[10px] text-slate-400 truncate">&gt;1 session</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Row 2: Charts & Visuals */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Revenue & Visitors Daily Trend (Area Chart) */}
         <Card className="lg:col-span-2 bg-slate-900/70 border-slate-800/80 shadow-md">
           <CardHeader className="pb-2">
@@ -328,10 +327,10 @@ export const MarketingDashboard: React.FC = () => {
             </div>
           </CardHeader>
           <CardContent className="pt-2">
-            <div className="h-[280px] w-full">
+            <div className="h-[240px] sm:h-[280px] w-full">
               {data?.dailyTrend && data.dailyTrend.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={data.dailyTrend} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
+                  <AreaChart data={data.dailyTrend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <defs>
                       <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.4} />
@@ -445,7 +444,7 @@ export const MarketingDashboard: React.FC = () => {
       </div>
 
       {/* Row 3: Conversion Funnel & Opportunities */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* 6-Stage Conversion Funnel Summary */}
         <Card className="lg:col-span-2 bg-slate-900/70 border-slate-800/80 shadow-md">
           <CardHeader className="pb-2">
@@ -472,12 +471,12 @@ export const MarketingDashboard: React.FC = () => {
               {data?.funnel.map((step, idx) => (
                 <div
                   key={step.stage}
-                  className="bg-slate-800/50 border border-slate-700/60 p-3 rounded-xl flex flex-col justify-between text-center relative overflow-hidden group hover:border-slate-600 transition-all"
+                  className="bg-slate-800/50 border border-slate-700/60 p-2.5 sm:p-3 rounded-xl flex flex-col justify-between text-center relative overflow-hidden group hover:border-slate-600 transition-all"
                 >
-                  <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide truncate">
+                  <div className="text-[10px] sm:text-[11px] font-semibold text-slate-400 uppercase tracking-wide truncate">
                     {step.stage}
                   </div>
-                  <div className="text-lg font-bold text-slate-100 font-mono my-1">
+                  <div className="text-base sm:text-lg font-bold text-slate-100 font-mono my-1">
                     {step.count.toLocaleString()}
                   </div>
                   <div className="text-[10px] text-slate-400">
@@ -544,7 +543,7 @@ export const MarketingDashboard: React.FC = () => {
       </div>
 
       {/* Row 4: Top Products, Top Searches & Campaigns */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
         {/* Top Viewed Products */}
         <Card className="bg-slate-900/70 border-slate-800/80 shadow-md">
           <CardHeader className="pb-2">

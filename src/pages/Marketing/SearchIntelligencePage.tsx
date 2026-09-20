@@ -55,14 +55,14 @@ export const SearchIntelligencePage: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
           {['7d', '30d', '90d'].map((tf) => (
             <Button
               key={tf}
               variant="ghost"
               size="sm"
               onClick={() => setTimeframe(tf)}
-              className={`text-xs px-3 h-8 rounded-lg font-medium ${
+              className={`text-xs px-3 h-8 rounded-lg font-medium shrink-0 ${
                 timeframe === tf
                   ? 'bg-cyan-600 text-white font-bold'
                   : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
@@ -76,7 +76,7 @@ export const SearchIntelligencePage: React.FC = () => {
             size="icon"
             onClick={fetchSearchData}
             disabled={loading}
-            className="h-8 w-8 text-slate-400 hover:text-slate-200 bg-slate-900 border border-slate-800 rounded-lg"
+            className="h-8 w-8 text-slate-400 hover:text-slate-200 bg-slate-900 border border-slate-800 rounded-lg shrink-0"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-cyan-400' : ''}`} />
           </Button>

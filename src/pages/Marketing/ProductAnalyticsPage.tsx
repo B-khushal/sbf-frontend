@@ -63,14 +63,14 @@ export const ProductAnalyticsPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
           {['7d', '30d', '90d'].map((tf) => (
             <Button
               key={tf}
               variant="ghost"
               size="sm"
               onClick={() => setTimeframe(tf)}
-              className={`text-xs px-3 h-8 rounded-lg font-medium ${
+              className={`text-xs px-3 h-8 rounded-lg font-medium shrink-0 ${
                 timeframe === tf
                   ? 'bg-rose-600 text-white font-bold'
                   : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
@@ -84,7 +84,7 @@ export const ProductAnalyticsPage: React.FC = () => {
             size="icon"
             onClick={fetchData}
             disabled={loading}
-            className="h-8 w-8 text-slate-400 hover:text-slate-200 bg-slate-900 border border-slate-800 rounded-lg"
+            className="h-8 w-8 text-slate-400 hover:text-slate-200 bg-slate-900 border border-slate-800 rounded-lg shrink-0"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-rose-400' : ''}`} />
           </Button>
@@ -117,8 +117,59 @@ export const ProductAnalyticsPage: React.FC = () => {
           </div>
 
           <Card className="bg-slate-900/70 border-slate-800/80 shadow-xl overflow-hidden">
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
+            <CardContent className="p-3 sm:p-0">
+              {/* Mobile Product Cards (< md) */}
+              <div className="block md:hidden space-y-3">
+                {filteredProducts.length === 0 ? (
+                  <div className="p-8 text-center text-xs text-slate-500 bg-slate-900/40 rounded-xl border border-slate-800">
+                    {loading ? 'Analyzing product engagement...' : 'No product data found'}
+                  </div>
+                ) : (
+                  filteredProducts.map((p) => (
+                    <div
+                      key={p.productId}
+                      className="p-3.5 rounded-xl bg-slate-800/40 border border-slate-700/60 space-y-2.5 hover:border-slate-600 transition-all"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="font-bold text-xs text-slate-100 truncate">{p.title}</div>
+                          <div className="text-[10px] font-mono text-slate-400 mt-0.5">₹{Number(p.price).toLocaleString()}</div>
+                        </div>
+                        <span className="inline-flex items-center gap-1 font-mono font-bold text-[10px] px-1.5 py-0.5 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20 shrink-0">
+                          <Flame className="w-3 h-3 text-rose-400" />
+                          {p.interestScore}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-2 text-xs">
+                        <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800 text-center">
+                          <div className="text-[10px] text-slate-400">Views</div>
+                          <div className="font-mono font-bold text-slate-100 mt-0.5">{p.views}</div>
+                        </div>
+                        <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800 text-center">
+                          <div className="text-[10px] text-slate-400">Cart Adds</div>
+                          <div className="font-mono font-bold text-pink-400 mt-0.5">{p.cartAdds}</div>
+                        </div>
+                        <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800 text-center">
+                          <div className="text-[10px] text-slate-400">Purchases</div>
+                          <div className="font-mono font-bold text-emerald-400 mt-0.5">{p.purchases}</div>
+                        </div>
+                      </div>
+
+                      <div className="pt-2 border-t border-slate-700/50 flex items-center justify-between text-[11px] text-slate-400">
+                        <div className="flex items-center gap-3">
+                          <span>Cart Rate: <strong className="text-slate-200 font-mono">{p.addToCartRate}</strong></span>
+                          <span>Conv: <strong className="text-emerald-400 font-mono">{p.conversionRate}</strong></span>
+                        </div>
+                        <span className="font-mono font-bold text-slate-100">₹{Number(p.revenue || 0).toLocaleString()}</span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Desktop Table (>= md) */}
+              <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-left border-collapse text-xs">
                   <thead>
                     <tr className="border-b border-slate-800 bg-slate-950/50 text-slate-400 uppercase text-[10px] tracking-wider font-semibold">

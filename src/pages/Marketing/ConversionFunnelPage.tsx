@@ -55,14 +55,14 @@ export const ConversionFunnelPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
           {['today', '7d', '30d', '90d'].map((tf) => (
             <Button
               key={tf}
               variant="ghost"
               size="sm"
               onClick={() => setTimeframe(tf)}
-              className={`text-xs px-3 h-8 rounded-lg font-medium ${
+              className={`text-xs px-3 h-8 rounded-lg font-medium shrink-0 ${
                 timeframe === tf
                   ? 'bg-purple-600 text-white font-bold shadow-md'
                   : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
@@ -76,7 +76,7 @@ export const ConversionFunnelPage: React.FC = () => {
             size="icon"
             onClick={fetchFunnel}
             disabled={loading}
-            className="h-8 w-8 text-slate-400 hover:text-slate-200 bg-slate-900 border border-slate-800 rounded-lg"
+            className="h-8 w-8 text-slate-400 hover:text-slate-200 bg-slate-900 border border-slate-800 rounded-lg shrink-0"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-purple-400' : ''}`} />
           </Button>
@@ -124,21 +124,21 @@ export const ConversionFunnelPage: React.FC = () => {
             Stage volume and sequential drop-off percentages
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-6 space-y-4">
+        <CardContent className="p-3 sm:p-6 space-y-3 sm:space-y-4">
           {stages.map((stage, idx) => {
             const baseCount = stages[0]?.count || 1;
             const widthPercent = Math.max(12, Math.round((stage.count / baseCount) * 100));
 
             return (
               <div key={stage.id} className="space-y-2">
-                <div className="flex items-center justify-between text-xs">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-0 text-xs">
                   <span className="font-bold text-slate-200 flex items-center gap-2">
                     <span className="w-5 h-5 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-mono text-[10px] text-purple-400">
                       {idx + 1}
                     </span>
                     {stage.name}
                   </span>
-                  <div className="flex items-center gap-4 font-mono text-xs">
+                  <div className="flex items-center gap-2 sm:gap-4 font-mono text-xs">
                     <span className="font-bold text-slate-100">{stage.count.toLocaleString()}</span>
                     {idx > 0 && (
                       <span className="text-amber-400 text-[11px]">
@@ -149,13 +149,13 @@ export const ConversionFunnelPage: React.FC = () => {
                 </div>
 
                 {/* Progress Bar */}
-                <div className="w-full h-8 bg-slate-800/60 rounded-xl overflow-hidden p-1 flex items-center">
+                <div className="w-full h-6 sm:h-8 bg-slate-800/60 rounded-xl overflow-hidden p-0.5 sm:p-1 flex items-center">
                   <div
-                    className="h-full rounded-lg bg-gradient-to-r from-purple-600 via-pink-600 to-rose-500 transition-all duration-700 flex items-center px-3"
+                    className="h-full rounded-lg bg-gradient-to-r from-purple-600 via-pink-600 to-rose-500 transition-all duration-700 flex items-center px-1.5 sm:px-3 min-w-[40px]"
                     style={{ width: `${widthPercent}%` }}
                   >
-                    <span className="text-[10px] font-bold text-white font-mono whitespace-nowrap">
-                      {widthPercent}% of initial
+                    <span className="text-[9px] sm:text-[10px] font-bold text-white font-mono whitespace-nowrap">
+                      {widthPercent}%
                     </span>
                   </div>
                 </div>

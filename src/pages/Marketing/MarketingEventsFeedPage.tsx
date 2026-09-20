@@ -87,14 +87,14 @@ export const MarketingEventsFeedPage: React.FC = () => {
       </div>
 
       {/* Category Filter Chips */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1">
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
         {categories.map((cat) => (
           <Button
             key={cat}
             variant="ghost"
             size="sm"
             onClick={() => setSelectedCategory(cat)}
-            className={`text-xs px-3 h-8 rounded-lg font-medium transition-all ${
+            className={`text-xs px-3 h-8 rounded-lg font-medium transition-all shrink-0 ${
               selectedCategory === cat
                 ? 'bg-rose-600 text-white font-bold'
                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/80 bg-slate-900 border border-slate-800'
