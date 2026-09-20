@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
 import AdminNavbar from '@/components/AdminNavbar';
-import { Truck, Map, DollarSign, Sliders, UserCheck, ChevronDown, ChevronUp, Scroll, Shield, Clock, Megaphone, Percent } from 'lucide-react';
+import { Truck, Map, DollarSign, Sliders, UserCheck, ChevronDown, ChevronUp, Scroll, Shield, Clock, Megaphone, Percent, BellRing } from 'lucide-react';
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -846,6 +846,35 @@ const AdminDashboard: React.FC = () => {
             )}
           </div>
         )}
+        <Link 
+          to="/admin/notifications/fcm" 
+          className={cn(
+            "sidebar-item relative group transition-all",
+            location.pathname.startsWith("/admin/notifications/fcm") || location.pathname === "/admin/fcm-notifications"
+              ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium shadow-sm shadow-indigo-500/20" 
+              : "",
+            isCollapsed ? "sidebar-item-collapsed" : "sidebar-item-expanded"
+          )}
+          title={isCollapsed ? 'FCM Notifications Test' : ''}
+        >
+          <div className="sidebar-item-icon relative">
+            <BellRing className={cn(
+              "h-4 w-4",
+              location.pathname.startsWith("/admin/notifications/fcm") || location.pathname === "/admin/fcm-notifications"
+                ? "text-white"
+                : "text-indigo-500"
+            )} />
+            <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+          </div>
+          {!isCollapsed && (
+            <div className="flex items-center justify-between flex-1 ml-1">
+              <span className="sidebar-item-text">FCM Notifications</span>
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">
+                TEST
+              </span>
+            </div>
+          )}
+        </Link>
         <Link 
           to="/admin/settings" 
           className={cn(

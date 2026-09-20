@@ -87,6 +87,7 @@ const AdminVendorManagement = lazy(() => import("./pages/Admin/VendorManagement"
 const AdminVendorDetailsPage = lazy(() => import("./pages/Admin/VendorDetailsPage"));
 const OrderDetailsPage = lazy(() => import("./pages/Admin/OrderDetailsPage"));
 const AdminSettingsPage = lazy(() => import("./pages/AdminSettingsPage"));
+const FCMNotificationTestPage = lazy(() => import("./pages/Admin/FCMNotificationTestPage"));
 const Analytics = lazy(() => import("./pages/Admin/Analytics"));
 const PromoCodes = lazy(() => import("./pages/Admin/PromoCodes"));
 const OffersManager = lazy(() => import("./pages/Admin/OffersManager"));
@@ -494,6 +495,16 @@ const App = () => {
                             <Route path="settings" element={
                               <Suspense fallback={<LoadingFallback message="Loading settings..." />}>
                                 <AdminSettingsPage />
+                              </Suspense>
+                            } />
+                            <Route path="notifications/fcm" element={
+                              <Suspense fallback={<LoadingFallback message="Loading FCM notifications..." />}>
+                                <FCMNotificationTestPage />
+                              </Suspense>
+                            } />
+                            <Route path="fcm-notifications" element={
+                              <Suspense fallback={<LoadingFallback message="Loading FCM notifications..." />}>
+                                <FCMNotificationTestPage />
                               </Suspense>
                             } />
                             <Route path="delivery-partners" element={
