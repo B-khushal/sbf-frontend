@@ -384,6 +384,13 @@ const LuxuryProductCard = ({
 
   const isInWishlist = wishlistItems.some((item) => item.id === product._id);
 
+  const isOutOfStock = Boolean(
+    product.isOutOfStock === true ||
+    product.isAvailable === false ||
+    (typeof product.stock === 'number' && product.stock <= 0) ||
+    (typeof (product as any).countInStock === 'number' && (product as any).countInStock <= 0)
+  );
+
   // Spotlight light reflection tracking
   const handleSpotlightMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -410,6 +417,11 @@ const LuxuryProductCard = ({
   const handleQuickAdd = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
+    if (isOutOfStock) {
+      toast.error("This product is currently out of stock");
+      return;
+    }
 
     if (!user) {
       toast.error("Please login first to add items to your cart", {
@@ -572,6 +584,12 @@ const LuxuryProductCard = ({
 
         {/* Minimal Badges Bar */}
         <div className="absolute top-4 left-4 z-20 flex flex-wrap gap-1.5 max-w-[70%]">
+          {isOutOfStock ? (
+            <span className="text-[8px] sm:text-[9px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-full border shadow-lg bg-stone-900/90 text-white border-white/20 backdrop-blur-md flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse" />
+              Out of Stock
+            </span>
+          ) : null}
           {badges.map((badge, i) => (
             <span
               key={i}
@@ -611,6 +629,7 @@ const LuxuryProductCard = ({
           alt={product.title}
           className={cn(
             "absolute inset-0 w-full h-full object-cover transition-transform duration-[1000ms] ease-out-expo group-hover:scale-105",
+            isOutOfStock && "grayscale-[20%] opacity-90",
             product.images.length > 1 && "group-hover:opacity-0"
           )}
           onLoad={() => setIsImageLoaded(true)}
@@ -622,7 +641,10 @@ const LuxuryProductCard = ({
           <ProtectedImage
             src={getImageUrl(product.images[1])}
             alt={product.title}
-            className="absolute inset-0 w-full h-full object-cover transition-all duration-[1000ms] ease-out-expo opacity-0 group-hover:opacity-100 group-hover:scale-105"
+            className={cn(
+              "absolute inset-0 w-full h-full object-cover transition-all duration-[1000ms] ease-out-expo opacity-0 group-hover:opacity-100 group-hover:scale-105",
+              isOutOfStock && "grayscale-[20%] opacity-90"
+            )}
             loading="lazy"
           />
         )}
@@ -674,8 +696,17 @@ const LuxuryProductCard = ({
             )}
           </div>
 
-          {/* Action Button: Customizable or Quick Add */}
-          {product.isCustomizable ? (
+          {/* Action Button: Customizable, Out of Stock, or Quick Add */}
+          {isOutOfStock ? (
+            <Button
+              variant="outline"
+              size="sm"
+              disabled
+              className="w-full h-10 text-xs font-semibold rounded-xl bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 border border-stone-200 dark:border-stone-700 cursor-not-allowed flex items-center justify-center gap-2 opacity-90 shadow-none pointer-events-none"
+            >
+              Out of Stock
+            </Button>
+          ) : product.isCustomizable ? (
             <Button
               variant="outline"
               size="sm"

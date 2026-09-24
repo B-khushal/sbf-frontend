@@ -617,11 +617,55 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
               {headerSettings?.navigationItems
                 ?.filter(item => item.enabled)
                 ?.sort((a, b) => a.order - b.order)
-                ?.map((item) => (
-                <NavLink key={item.href} to={item.href} active={pathname === item.href}>
-                  {item.label}
-                </NavLink>
-              ))}
+                ?.map((item) => {
+                  if (item.href === '/shop') {
+                    return (
+                      <div key={item.href} className="relative group">
+                        <NavLink to={item.href} active={pathname === '/shop' || pathname.startsWith('/shop/')}>
+                          <span className="flex items-center gap-1">
+                            {item.label}
+                            <ChevronDown size={13} className="text-gray-400 group-hover:text-primary transition-transform duration-200 group-hover:rotate-180" />
+                          </span>
+                        </NavLink>
+                        {/* Dropdown Menu */}
+                        <div className="absolute top-full left-0 pt-2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50 min-w-[210px]">
+                          <div className="bg-white rounded-xl shadow-xl border border-gray-100 p-2 overflow-hidden">
+                            <Link
+                              to="/shop"
+                              className={cn(
+                                "flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors",
+                                pathname === '/shop' ? "bg-primary/10 text-primary font-medium" : "text-gray-700 hover:bg-gray-50"
+                              )}
+                            >
+                              <Package size={15} className="text-gray-400" />
+                              <span>All Products</span>
+                            </Link>
+                            <Link
+                              to="/shop/budget-friendly"
+                              className={cn(
+                                "flex items-center justify-between px-3 py-2 text-sm rounded-lg transition-colors mt-0.5",
+                                pathname === '/shop/budget-friendly' ? "bg-amber-50 text-amber-900 font-medium" : "text-gray-700 hover:bg-amber-50/60"
+                              )}
+                            >
+                              <div className="flex items-center gap-2">
+                                <Sparkles size={15} className="text-amber-500" />
+                                <span>Budget Friendly</span>
+                              </div>
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-200">
+                                ≤ ₹1k
+                              </span>
+                            </Link>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+                  return (
+                    <NavLink key={item.href} to={item.href} active={pathname === item.href}>
+                      {item.label}
+                    </NavLink>
+                  );
+                })}
               {isValentineEnabled && (
                 <NavLink to="/valentine-special" active={pathname === '/valentine-special'} className="text-rose-600 hover:text-rose-700 font-bold flex items-center gap-1">
                   Valentine's <Heart size={14} className="text-rose-500 fill-rose-500 animate-pulse inline" />
@@ -1285,20 +1329,39 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                       ?.filter(item => item.enabled)
                       ?.sort((a,b) => a.order - b.order)
                       ?.map((item) => (
-                        <Link
-                          key={item.href}
-                          to={item.href}
-                          onClick={() => setMobileMenuOpen(false)}
-                          className={cn(
-                            'flex items-center gap-3 px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200',
-                            pathname === item.href ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100'
+                        <React.Fragment key={item.href}>
+                          <Link
+                            to={item.href}
+                            onClick={() => setMobileMenuOpen(false)}
+                            className={cn(
+                              'flex items-center gap-3 px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200',
+                              pathname === item.href ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100'
+                            )}
+                          >
+                            <div className="flex items-center justify-center w-5 h-5">
+                              {getNavIcon(item.href, item.label)}
+                            </div>
+                            <span>{item.label}</span>
+                          </Link>
+                          {item.href === '/shop' && (
+                            <Link
+                              to="/shop/budget-friendly"
+                              onClick={() => setMobileMenuOpen(false)}
+                              className={cn(
+                                'flex items-center justify-between pl-11 pr-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200',
+                                pathname === '/shop/budget-friendly' ? 'bg-amber-50 text-amber-900 font-semibold' : 'text-gray-600 hover:bg-gray-50'
+                              )}
+                            >
+                              <div className="flex items-center gap-2">
+                                <Sparkles size={14} className="text-amber-500" />
+                                <span>Budget Friendly</span>
+                              </div>
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-200">
+                                Under ₹1k
+                              </span>
+                            </Link>
                           )}
-                        >
-                          <div className="flex items-center justify-center w-5 h-5">
-                            {getNavIcon(item.href, item.label)}
-                          </div>
-                          <span>{item.label}</span>
-                        </Link>
+                        </React.Fragment>
                     ))}
                   </nav>
 

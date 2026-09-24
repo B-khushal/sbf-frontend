@@ -8,6 +8,7 @@ export const PRIMARY_CATEGORIES = [
   { value: "plants", label: "Plants" },
   { value: "sympathy", label: "Sympathy" },
   { value: "occasions", label: "Occasions" },
+  { value: "budget-friendly", label: "Budget Friendly" },
 ] as const;
 
 export type CategoryOption = {
@@ -209,6 +210,14 @@ export const CATEGORY_NAV_ITEMS: CategoryNavItem[] = [
       { value: "housewarming", label: "Housewarming", path: "/shop/housewarming" },
       { value: "congratulations", label: "Congratulations", path: "/shop/congratulations" },
     ],
+  },
+  {
+    name: "✨ Budget Friendly",
+    path: "/shop/budget-friendly",
+    emoji: "✨",
+    description: "Thoughtful gifts under ₹1,000",
+    popular: true,
+    subcategories: [],
   },
 ];
 

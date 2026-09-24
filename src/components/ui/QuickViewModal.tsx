@@ -38,6 +38,14 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
 
   const prodId = String(product._id || (product as any).id || '');
   const isInWishlist = wishlistItems.some(item => String(item.id) === prodId || String((item as any).productId) === prodId);
+
+  const isOutOfStock = Boolean(
+    product.isOutOfStock === true ||
+    product.isAvailable === false ||
+    (typeof product.stock === 'number' && product.stock <= 0) ||
+    (typeof (product as any).countInStock === 'number' && (product as any).countInStock <= 0)
+  );
+
   const discountedPrice = product.discount > 0
     ? product.price - (product.price * product.discount / 100)
     : product.price;
@@ -75,6 +83,11 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
   };
 
   const handleAddToCart = () => {
+    if (isOutOfStock) {
+      toast.error("This item is currently out of stock");
+      return;
+    }
+
     if (!user) {
       toast.error("Please login first to add items to your cart");
       navigate('/login', { state: { redirect: window.location.pathname } });
@@ -121,13 +134,23 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
               <ProtectedImage
                 src={getImageUrl(product.images?.[activeImageIndex]) || '/images/placeholder.svg'}
                 alt={product.title}
-                className="w-full h-full object-cover"
+                className={cn(
+                  "w-full h-full object-cover",
+                  isOutOfStock && "grayscale-[20%] opacity-90"
+                )}
               />
-              {product.discount > 0 && (
+              {isOutOfStock ? (
+                <div className="absolute top-4 left-4 z-20 backdrop-blur-md bg-stone-900/85 text-white border border-white/20 px-3 py-1 rounded-full flex items-center gap-1.5 shadow-lg">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse" />
+                  <span className="text-[10px] font-bold tracking-widest uppercase text-stone-100">
+                    Out of Stock
+                  </span>
+                </div>
+              ) : product.discount > 0 ? (
                 <span className="absolute top-4 left-4 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">
                   -{product.discount}% OFF
                 </span>
-              )}
+              ) : null}
             </div>
             
             {/* Thumbnails */}
@@ -199,13 +222,22 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
             <div className="mt-8 space-y-3">
               <div className="flex gap-3">
                 {/* Add to Cart Button */}
-                <Button 
-                  onClick={handleAddToCart}
-                  className="flex-1 bg-primary text-white hover:bg-primary/95 hover:shadow-lg transition-all h-12 rounded-xl text-base font-bold flex items-center justify-center gap-2"
-                >
-                  <ShoppingBag size={18} />
-                  Add to Cart
-                </Button>
+                {isOutOfStock ? (
+                  <Button 
+                    disabled
+                    className="flex-1 bg-stone-100 dark:bg-stone-800 text-stone-400 dark:text-stone-500 border border-stone-200 dark:border-stone-700 h-12 rounded-xl text-base font-bold flex items-center justify-center gap-2 cursor-not-allowed opacity-90 shadow-none pointer-events-none"
+                  >
+                    Out of Stock
+                  </Button>
+                ) : (
+                  <Button 
+                    onClick={handleAddToCart}
+                    className="flex-1 bg-primary text-white hover:bg-primary/95 hover:shadow-lg transition-all h-12 rounded-xl text-base font-bold flex items-center justify-center gap-2"
+                  >
+                    <ShoppingBag size={18} />
+                    Add to Cart
+                  </Button>
+                )}
                 
                 {/* Wishlist Button */}
                 <Button

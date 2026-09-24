@@ -836,6 +836,7 @@ const App = () => {
                                 <SecunderabadDeliveryPage />
                               </Suspense>
                             } />
+                            <Route path="/budget-friendly" element={<Navigate to="/shop/budget-friendly" replace />} />
                             <Route path="/:slug" element={
                               <Suspense fallback={<LoadingFallback message="Loading celebration gifts..." />}>
                                 <OccasionProductsPage />

@@ -16,6 +16,9 @@ import { PRIMARY_CATEGORIES, matchesCategoryGroup, normalizeCategoryKey, normali
 import { preprocessProductForSearch, createSearchIndex, rankSearchResults } from "@/utils/searchHelper";
 
 const CATEGORY_SLUG_MAP: Record<string, string> = {
+  "budget-friendly": "Budget Friendly",
+  "budget-friendly-flowers": "Budget Friendly",
+  "under-1000": "Budget Friendly",
   "chocolate-baskets": "Chocolate Baskets",
   "chocolate-bouquets": "Chocolate Bouquets",
   "chocolate-gift-sets": "Chocolate Gift Sets",
@@ -356,6 +359,27 @@ const normalizeCategoryValue = (value?: string | null): string => {
   return normalizeCategoryLabel(trimmed) || trimmed;
 };
 
+export const getProductSellingPrice = (product: any): number => {
+  if (!product) return 0;
+  if (product.category === 'combos' && product.comboItems && product.comboItems.length > 0) {
+    let total = Number(product.price) || 0;
+    product.comboItems.forEach((item: any) => {
+      if (item.customizationOptions?.allowVariants && item.customizationOptions?.variants?.length > 0) {
+        const maxVariant = item.customizationOptions.variants.reduce((max: number, v: any) => v.price > max ? v.price : max, 0);
+        total += maxVariant;
+      } else {
+        total += (Number(item.price) || 0);
+      }
+    });
+    return total;
+  }
+  const basePrice = Number(product.price) || 0;
+  if (product.discount && Number(product.discount) > 0) {
+    return Math.round(basePrice * (1 - Number(product.discount) / 100));
+  }
+  return basePrice;
+};
+
 interface ShopPageProps {
   resolvedCategory?: any;
 }
@@ -377,8 +401,13 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
   const normalizedQueryCategoryKey = normalizeCategoryKey(queryCategory);
   const selectedCategoryKey = resolvedCategory ? resolvedCategory.slug : (normalizedPathCategoryKey || normalizedQueryCategoryKey);
   const isParentCategoryRoute = resolvedCategory ? !resolvedCategory.parentId : PRIMARY_CATEGORIES.some((category) => category.value === selectedCategoryKey);
+  const isBudgetFriendlyCategory =
+    selectedCategoryKey === "budget-friendly" ||
+    normalizeCategoryKey(selectedCategory) === "budget-friendly" ||
+    normalizeCategoryKey(pathCategory) === "budget-friendly" ||
+    normalizeCategoryKey(queryCategory) === "budget-friendly";
   
-  const [selectedCategory, setSelectedCategory] = useState(category);
+  const [selectedCategory, setSelectedCategory] = useState(isBudgetFriendlyCategory ? "Budget Friendly" : category);
   const [sortBy, setSortBy] = useState("custom");
   const [viewMode, setViewMode] = useState("grid");
   const [minPriceFilter, setMinPriceFilter] = useState(PRICE_FILTER_MIN);
@@ -455,10 +484,15 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
       image: cat.image || '/images/roses-1.png',
       category: cat.slug || cat.name.toLowerCase().replace(/\s+/g, '-'),
       featured: cat.isFeatured || false,
-      count: filteredProducts.filter(p => 
-        p.category?.toLowerCase() === cat.name.toLowerCase() || 
-        p.categories?.some((productCat: any) => productCat.toLowerCase() === cat.name.toLowerCase())
-      ).length
+      count: (cat.slug === 'budget-friendly' || cat.name?.toLowerCase() === 'budget friendly')
+        ? products.filter(p => {
+            const sp = getProductSellingPrice(p);
+            return sp > 0 && sp <= 1000 && p.isAvailable !== false && !p.hidden;
+          }).length
+        : filteredProducts.filter(p => 
+            p.category?.toLowerCase() === cat.name.toLowerCase() || 
+            p.categories?.some((productCat: any) => productCat.toLowerCase() === cat.name.toLowerCase())
+          ).length
     }));
 
   // Handle category click with same-tab navigation
@@ -520,6 +554,16 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
           );
           return dbMatch ? dbMatch.showInShop !== false : true;
         });
+
+        // Ensure active DB categories that have showInShop !== false are included
+        dbCats.forEach(dbCat => {
+          if (dbCat.showInShop !== false && dbCat.status === 'active') {
+            const alreadyExists = filteredShopCategories.some(c => c.toLowerCase() === dbCat.name.toLowerCase() || c.toLowerCase() === dbCat.slug.toLowerCase());
+            if (!alreadyExists) {
+              filteredShopCategories.push(dbCat.name);
+            }
+          }
+        });
         setCategories(filteredShopCategories);
         
       } catch (error) {
@@ -535,10 +579,12 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
   useEffect(() => {
     if (resolvedCategory) {
       setSelectedCategory(resolvedCategory.name);
+    } else if (isBudgetFriendlyCategory) {
+      setSelectedCategory("Budget Friendly");
     } else {
       setSelectedCategory(category);
     }
-  }, [category, pathCategory, queryCategory, resolvedCategory]);
+  }, [category, pathCategory, queryCategory, resolvedCategory, isBudgetFriendlyCategory]);
 
   // Load wishlist from localStorage on component mount
   useEffect(() => {
@@ -585,6 +631,12 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
     // Filter by category - support slug/space variants and parent category groups.
     if (selectedCategoryKey) {
       filtered = filtered.filter(product => {
+        if (selectedCategoryKey === 'budget-friendly' || normalizeCategoryKey(selectedCategory) === 'budget-friendly') {
+          const finalPrice = getProductSellingPrice(product);
+          const isAvailable = product.isAvailable !== false && !product.hidden;
+          return isAvailable && finalPrice > 0 && finalPrice <= 1000;
+        }
+
         if (isParentCategoryRoute) {
           return matchesCategoryGroup(product.category, selectedCategoryKey, product.categories, product.subcategory);
         }
@@ -603,7 +655,7 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
 
     // Numeric INR price filtering for dual-range slider.
     filtered = filtered.filter(product => {
-      const productPriceInINR = Number(product.price) || 0;
+      const productPriceInINR = getProductSellingPrice(product);
       return productPriceInINR >= minPriceFilter && productPriceInINR <= maxPriceFilter;
     });
 
@@ -733,9 +785,23 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-bloom-blue-50 via-bloom-pink-50 to-bloom-green-50">
       <Helmet>
-        <title>Shop Online Flowers - Same Day & Midnight Delivery in Hyderabad | Spring Blossoms</title>
-        <meta name="description" content="Browse our beautiful collections of fresh flowers, bouquets, cakes, and gifts. Order online for express same day and midnight delivery in Hyderabad." />
-        <meta name="keywords" content="flower delivery Hyderabad, online flower delivery Hyderabad, same day flower delivery Hyderabad, midnight flower delivery Hyderabad, fresh flowers delivery Hyderabad, florist Hyderabad, best florist in Hyderabad, flower shop Hyderabad, online florist Hyderabad, bouquet delivery Hyderabad, rose bouquet delivery Hyderabad, birthday flower delivery Hyderabad, anniversary flower delivery Hyderabad, wedding flowers Hyderabad, flower arrangements Hyderabad, luxury flower delivery Hyderabad, affordable flower delivery Hyderabad, cheap flower delivery Hyderabad, premium flowers Hyderabad, flower bouquet online Hyderabad, send flowers to Hyderabad, Hyderabad flower delivery service, flowers home delivery Hyderabad, express flower delivery Hyderabad, 24 hour flower delivery Hyderabad, flowers near me Hyderabad, red roses delivery Hyderabad, orchid delivery Hyderabad, lily flower delivery Hyderabad, carnation bouquet Hyderabad, mixed flower bouquet Hyderabad, romantic flower delivery Hyderabad, Valentine's Day flowers Hyderabad, Mother's Day flower delivery Hyderabad, congratulations flowers Hyderabad, get well soon flowers Hyderabad, sympathy flowers Hyderabad, flower and cake delivery Hyderabad, flowers and gifts Hyderabad, flower basket delivery Hyderabad, customized bouquet Hyderabad, online bouquet order Hyderabad, florist near Hyderabad airport, flower delivery in Gachibowli, flower delivery in Hitech City, flower delivery in Banjara Hills, flower delivery in Jubilee Hills, flower delivery in Kondapur, flower delivery in Kukatpally, flower delivery in Secunderabad" />
+        {isBudgetFriendlyCategory ? (
+          <>
+            <title>Budget Friendly Flowers & Gifts Under ₹1,000 | Spring Blossoms Florist</title>
+            <meta name="description" content="Shop beautiful budget-friendly flowers, bouquets and gifts under ₹1,000 from Spring Blossoms Florist. Elegant gifting options at thoughtful prices." />
+            <meta name="keywords" content="budget friendly flowers, flowers under 1000, affordable flower delivery Hyderabad, budget bouquets, gifts under 1000, Spring Blossoms Florist" />
+            <link rel="canonical" href="https://sbflorist.in/shop/budget-friendly" />
+            <meta property="og:title" content="Budget Friendly Flowers & Gifts Under ₹1,000 | Spring Blossoms Florist" />
+            <meta property="og:description" content="Shop beautiful budget-friendly flowers, bouquets and gifts under ₹1,000 from Spring Blossoms Florist. Elegant gifting options at thoughtful prices." />
+            <meta property="og:url" content="https://sbflorist.in/shop/budget-friendly" />
+          </>
+        ) : (
+          <>
+            <title>Shop Online Flowers - Same Day & Midnight Delivery in Hyderabad | Spring Blossoms</title>
+            <meta name="description" content="Browse our beautiful collections of fresh flowers, bouquets, cakes, and gifts. Order online for express same day and midnight delivery in Hyderabad." />
+            <meta name="keywords" content="flower delivery Hyderabad, online flower delivery Hyderabad, same day flower delivery Hyderabad, midnight flower delivery Hyderabad, fresh flowers delivery Hyderabad, florist Hyderabad, best florist in Hyderabad, flower shop Hyderabad, online florist Hyderabad, bouquet delivery Hyderabad, rose bouquet delivery Hyderabad, birthday flower delivery Hyderabad, anniversary flower delivery Hyderabad, wedding flowers Hyderabad, flower arrangements Hyderabad, luxury flower delivery Hyderabad, affordable flower delivery Hyderabad, cheap flower delivery Hyderabad, premium flowers Hyderabad, flower bouquet online Hyderabad, send flowers to Hyderabad, Hyderabad flower delivery service, flowers home delivery Hyderabad, express flower delivery Hyderabad, 24 hour flower delivery Hyderabad, flowers near me Hyderabad, red roses delivery Hyderabad, orchid delivery Hyderabad, lily flower delivery Hyderabad, carnation bouquet Hyderabad, mixed flower bouquet Hyderabad, romantic flower delivery Hyderabad, Valentine's Day flowers Hyderabad, Mother's Day flower delivery Hyderabad, congratulations flowers Hyderabad, get well soon flowers Hyderabad, sympathy flowers Hyderabad, flower and cake delivery Hyderabad, flowers and gifts Hyderabad, flower basket delivery Hyderabad, customized bouquet Hyderabad, online bouquet order Hyderabad, florist near Hyderabad airport, flower delivery in Gachibowli, flower delivery in Hitech City, flower delivery in Banjara Hills, flower delivery in Jubilee Hills, flower delivery in Kondapur, flower delivery in Kukatpally, flower delivery in Secunderabad" />
+          </>
+        )}
       </Helmet>
       <main className="pt-20">
         <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -813,28 +879,76 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
 
           {/* Category Header - Show when a category is selected */}
           {selectedCategory && !searchQuery && (
-            <div className="mb-12">
-              <div className="text-center">
-                <div className="inline-flex items-center gap-2 text-sm text-gray-600 mb-4">
-                  <button 
-                    onClick={() => navigate('/shop')}
-                    className="hover:text-primary transition-colors"
-                  >
-                    Shop
-                  </button>
-                  <span>›</span>
-                  <span className="text-gray-800 font-medium">
-                    {selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)}
-                  </span>
+            isBudgetFriendlyCategory ? (
+              <div className="mb-10 sm:mb-12 relative overflow-hidden rounded-3xl bg-gradient-to-br from-rose-50/70 via-sky-50/50 to-emerald-50/60 border border-bloom-pink-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.03)] px-6 py-10 sm:py-12 text-center">
+                <div className="absolute top-0 right-0 -mt-8 -mr-8 w-40 h-40 bg-pink-200/30 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-40 h-40 bg-sky-200/30 rounded-full blur-3xl pointer-events-none" />
+                
+                <div className="relative z-10 max-w-3xl mx-auto">
+                  {/* Breadcrumbs */}
+                  <div className="inline-flex items-center gap-2 text-xs sm:text-sm text-gray-500 mb-4">
+                    <button 
+                      onClick={() => navigate('/shop')}
+                      className="hover:text-primary transition-colors font-medium"
+                    >
+                      Shop
+                    </button>
+                    <span>›</span>
+                    <span className="text-gray-800 font-semibold">
+                      Budget Friendly
+                    </span>
+                  </div>
+
+                  {/* Positioning Tagline Badge */}
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/90 border border-bloom-pink-200/70 shadow-xs mb-4">
+                    <Sparkles className="w-3.5 h-3.5 text-pink-500" />
+                    <span className="text-[11px] sm:text-xs font-semibold tracking-wider uppercase text-gray-700">
+                      Affordable • Elegant • Thoughtfully Designed
+                    </span>
+                  </div>
+
+                  {/* Main Title */}
+                  <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 tracking-tight mb-3">
+                    Budget Friendly
+                  </h1>
+
+                  {/* Subtitle */}
+                  <p className="text-sm sm:text-base lg:text-lg text-gray-600 leading-relaxed font-normal max-w-xl mx-auto">
+                    Beautiful flowers, thoughtful gifts, effortless expressions — all under ₹1,000.
+                  </p>
+
+                  {/* Subtle Brand Watermark */}
+                  <div className="mt-4 flex items-center justify-center gap-2 text-xs text-muted-foreground/70 font-serif italic">
+                    <span>Spring Blossoms Florist</span>
+                    <span>•</span>
+                    <span>A Reason To Express</span>
+                  </div>
                 </div>
-                <h1 className="text-3xl md:text-4xl font-black text-gray-800 mb-4">
-                  {selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)} Collection - Flower Delivery in Hyderabad
-                </h1>
-                <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                  Discover our beautiful selection of {selectedCategory.toLowerCase()} carefully curated for your special moments
-                </p>
               </div>
-            </div>
+            ) : (
+              <div className="mb-12">
+                <div className="text-center">
+                  <div className="inline-flex items-center gap-2 text-sm text-gray-600 mb-4">
+                    <button 
+                      onClick={() => navigate('/shop')}
+                      className="hover:text-primary transition-colors"
+                    >
+                      Shop
+                    </button>
+                    <span>›</span>
+                    <span className="text-gray-800 font-medium">
+                      {selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)}
+                    </span>
+                  </div>
+                  <h1 className="text-3xl md:text-4xl font-black text-gray-800 mb-4">
+                    {selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)} Collection - Flower Delivery in Hyderabad
+                  </h1>
+                  <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                    Discover our beautiful selection of {selectedCategory.toLowerCase()} carefully curated for your special moments
+                  </p>
+                </div>
+              </div>
+            )
           )}
 
           {/* Main Content: Mobile Horizontal Dropdown Filters + Product Grid */}
@@ -1070,6 +1184,7 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
                       <div className="mt-3 space-y-2 max-h-48 overflow-y-auto">
                         {(() => {
                           const predefined = [
+                            { label: 'Budget Friendly (≤ ₹1,000)', value: 'budget-friendly' },
                             { label: 'Bouquets', value: 'bouquets' },
                             { label: 'Baskets', value: 'baskets' },
                             { label: 'Roses', value: 'roses' },
@@ -1353,17 +1468,32 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
                 </div>
 
                 <FilterSection title="Category">
-                  {categories.map((cat) => (
-                    <button
-                      key={cat}
-                      onClick={() => setSelectedCategory(cat)}
-                      className={`w-full text-left px-3 py-1 rounded-md transition-colors text-xs hover:bg-gray-100 ${
-                        selectedCategory === cat ? "bg-gradient-to-r from-sky-400 to-pink-500 text-white font-medium" : "text-gray-600"
-                      }`}
-                    >
-                      {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                    </button>
-                  ))}
+                  {categories.map((cat) => {
+                    const isSelected = selectedCategory.toLowerCase() === cat.toLowerCase() || 
+                      ((cat.toLowerCase() === 'budget friendly' || cat.toLowerCase() === 'budget-friendly') && isBudgetFriendlyCategory);
+                    return (
+                      <button
+                        key={cat}
+                        onClick={() => {
+                          if (cat.toLowerCase() === 'budget friendly' || cat.toLowerCase() === 'budget-friendly') {
+                            navigate('/shop/budget-friendly');
+                          } else {
+                            setSelectedCategory(cat);
+                          }
+                        }}
+                        className={`w-full text-left px-3 py-1.5 rounded-md transition-colors text-xs hover:bg-gray-100 flex items-center justify-between ${
+                          isSelected ? "bg-gradient-to-r from-sky-400 to-pink-500 text-white font-medium" : "text-gray-600"
+                        }`}
+                      >
+                        <span>{cat.charAt(0).toUpperCase() + cat.slice(1)}</span>
+                        {(cat.toLowerCase() === 'budget friendly' || cat.toLowerCase() === 'budget-friendly') && (
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${isSelected ? 'bg-white/20 text-white' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}`}>
+                            ≤ ₹1k
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </FilterSection>
 
                 <PriceRangeFilterCard
@@ -1599,11 +1729,34 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
                   ))}
                 </div>
               ) : filteredProducts.length === 0 ? (
-                <div className="text-center py-16">
-                  <ShoppingBag size={48} className="mx-auto text-gray-400 mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-800">No products found</h3>
-                  <p className="text-gray-500 mt-2">Try adjusting your filters or search query.</p>
-                </div>
+                isBudgetFriendlyCategory ? (
+                  <div className="text-center py-16 px-4 bg-white/70 backdrop-blur-md rounded-3xl border border-bloom-pink-100 shadow-sm max-w-lg mx-auto my-8">
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-sky-100 via-pink-100 to-rose-100 flex items-center justify-center mx-auto mb-4 text-2xl shadow-inner">
+                      🌸
+                    </div>
+                    <span className="text-xs uppercase tracking-widest text-primary font-bold px-3 py-1 bg-primary/10 rounded-full">
+                      Affordable Gifting
+                    </span>
+                    <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mt-4 mb-2">
+                      More Beautiful Choices Coming Soon
+                    </h3>
+                    <p className="text-gray-600 text-sm sm:text-base max-w-md mx-auto mb-6 leading-relaxed">
+                      We're curating more thoughtful gifts at prices you'll love.
+                    </p>
+                    <button
+                      onClick={() => navigate('/shop')}
+                      className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-gradient-to-r from-sky-400 via-pink-500 to-rose-500 text-white text-sm font-semibold hover:shadow-md transition-all active:scale-95"
+                    >
+                      Continue Shopping →
+                    </button>
+                  </div>
+                ) : (
+                  <div className="text-center py-16">
+                    <ShoppingBag size={48} className="mx-auto text-gray-400 mb-4" />
+                    <h3 className="text-xl font-semibold text-gray-800">No products found</h3>
+                    <p className="text-gray-500 mt-2">Try adjusting your filters or search query.</p>
+                  </div>
+                )
               ) : (
                 <ProductGrid 
                   products={filteredProducts} 

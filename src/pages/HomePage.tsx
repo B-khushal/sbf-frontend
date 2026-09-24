@@ -25,6 +25,7 @@ import { SeasonalCampaignHomeSection } from "../components/SeasonalCampaignHomeS
 import { OccasionsSection } from "../components/OccasionsSection";
 import { HomePageSkeleton } from "../components/HomePageSkeleton";
 import { HomeSeoSection } from "../components/seo/HomeSeoSection";
+import { BudgetFriendlySection } from "../components/BudgetFriendlySection";
 
 import api from "../services/api";
 
@@ -175,6 +176,29 @@ const HomePage = () => {
         sections.splice(idx + 1, 0, whyChooseUsSection);
       } else {
         sections.push(whyChooseUsSection);
+      }
+    }
+
+    // Inject BudgetFriendly if not already configured in homeSections
+    if (!sections.some(s => s.type === 'budget_friendly')) {
+      const featuredIdx = sections.findIndex(s => s.type === 'featured');
+      const budgetSection = {
+        id: 'budget_friendly',
+        type: 'budget_friendly',
+        enabled: true,
+        order: 3.5,
+        title: 'Beautiful Gifts, Thoughtfully Priced',
+        subtitle: 'Discover elegant bouquets and gifts starting from ₹399 — all thoughtfully selected under ₹1,000.',
+        content: {
+          ctaText: 'Explore Budget Friendly →',
+          ctaLink: '/shop/budget-friendly',
+          maxProducts: 8,
+        }
+      };
+      if (featuredIdx !== -1) {
+        sections.splice(featuredIdx + 1, 0, budgetSection);
+      } else {
+        sections.push(budgetSection);
       }
     }
 
@@ -370,6 +394,20 @@ const HomePage = () => {
                   title={section.title || "✨ Featured Collection"}
                   subtitle={section.subtitle || "Explore our most popular floral arrangements"}
                   loading={loading}
+                  onAddToCart={handleAddToCart}
+                />
+              </motion.section>
+            );
+
+          case 'budget_friendly':
+            return (
+              <motion.section
+                key={`budget_friendly-${index}`}
+                variants={itemVariants}
+                className="relative"
+              >
+                <BudgetFriendlySection
+                  section={section as any}
                   onAddToCart={handleAddToCart}
                 />
               </motion.section>

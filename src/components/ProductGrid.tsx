@@ -39,6 +39,10 @@ export type Product = {
   rating?: number;
   numReviews?: number;
   sameDay?: boolean;
+  stock?: number;
+  countInStock?: number;
+  isAvailable?: boolean;
+  isOutOfStock?: boolean;
   customizationOptions?: {
     allowPhotoUpload: boolean;
     allowNumberInput: boolean;
@@ -289,6 +293,13 @@ export const ProductCard = ({ product, onAddToCart }: {
   const prodId = String(product._id || (product as any).id || '');
   const isInWishlist = wishlistItems.some(item => String(item.id) === prodId || String((item as any).productId) === prodId);
 
+  const isOutOfStock = Boolean(
+    product.isOutOfStock === true ||
+    product.isAvailable === false ||
+    (typeof product.stock === 'number' && product.stock <= 0) ||
+    (typeof (product as any).countInStock === 'number' && (product as any).countInStock <= 0)
+  );
+
   // Handle main card click - redirect to product details
   const handleCardClick = (e: React.MouseEvent) => {
     // Only navigate if the click isn't on a button
@@ -303,6 +314,12 @@ export const ProductCard = ({ product, onAddToCart }: {
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
+    if (isOutOfStock) {
+      toast.error("This item is currently out of stock");
+      return;
+    }
+
     console.log("Add to cart clicked:", product.title);
 
     if (!user) {
@@ -370,6 +387,10 @@ export const ProductCard = ({ product, onAddToCart }: {
   const handleCustomizeAndAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (isOutOfStock) {
+      toast.error("This item is currently out of stock");
+      return;
+    }
     console.log("Customize and add to cart clicked:", product.title);
     navigate(`/product/${product._id}?customize=true`);
   };
@@ -438,13 +459,20 @@ export const ProductCard = ({ product, onAddToCart }: {
       >
         {/* Product Image Section */}
         <div className="relative h-[58%] md:h-[62%] lg:h-[58%] xl:h-[58%] w-full overflow-hidden bg-gray-50 flex-shrink-0">
-          {/* See It In Motion Overlay badge */}
-          {product.videos && product.videos.length > 0 && (
+          {/* Out of Stock Floating Badge */}
+          {isOutOfStock ? (
+            <div className="absolute top-3 left-3 z-20 backdrop-blur-md bg-stone-900/85 text-white border border-white/20 px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-lg pointer-events-none">
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse" />
+              <span className="text-[9px] sm:text-[10px] font-bold tracking-widest uppercase text-stone-100">
+                Out of Stock
+              </span>
+            </div>
+          ) : product.videos && product.videos.length > 0 ? (
             <div className="absolute top-3 left-3 z-20 bg-black/60 backdrop-blur-md text-white text-[8px] sm:text-[9px] font-extrabold px-2 py-1 rounded-full flex items-center gap-1 shadow-sm uppercase tracking-wider">
               <Play size={10} className="fill-current text-white animate-pulse" />
               <span>In Motion</span>
             </div>
-          )}
+          ) : null}
           
           {/* Wishlist Button */}
           <button
@@ -484,6 +512,7 @@ export const ProductCard = ({ product, onAddToCart }: {
             alt={product.title}
             className={cn(
               "absolute inset-0 w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-105",
+              isOutOfStock && "grayscale-[20%] opacity-90",
               product.images.length > 1 && "group-hover:opacity-0"
             )}
             onLoad={() => setIsImageLoaded(true)}
@@ -495,7 +524,10 @@ export const ProductCard = ({ product, onAddToCart }: {
             <ProtectedImage
               src={getImageUrl(product.images[1])}
               alt={product.title}
-              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700 opacity-0 group-hover:opacity-100 group-hover:scale-105"
+              className={cn(
+                "absolute inset-0 w-full h-full object-cover transition-opacity duration-700 opacity-0 group-hover:opacity-100 group-hover:scale-105",
+                isOutOfStock && "grayscale-[20%] opacity-90"
+              )}
               loading="lazy"
             />
           )}
@@ -545,7 +577,13 @@ export const ProductCard = ({ product, onAddToCart }: {
 
             {/* Badges/Tags Row - Positioned perfectly below rating and above price */}
             <div className="h-5 md:h-6 flex items-center gap-1.5 overflow-hidden">
-              {product.discount > 0 && (
+              {isOutOfStock && (
+                <span className="text-[8px] sm:text-[9px] font-bold text-stone-700 dark:text-stone-300 bg-stone-100/95 dark:bg-stone-800/80 border border-stone-300/80 dark:border-stone-700 px-1.5 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1 shrink-0">
+                  <span className="w-1 h-1 rounded-full bg-rose-500" />
+                  Out of Stock
+                </span>
+              )}
+              {product.discount > 0 && !isOutOfStock && (
                 <span className="text-[8px] sm:text-[9px] font-extrabold text-red-650 bg-red-50 border border-red-100 px-1.5 py-0.5 rounded-md uppercase tracking-wider">
                   -{product.discount}% OFF
                 </span>
@@ -560,7 +598,7 @@ export const ProductCard = ({ product, onAddToCart }: {
                   NEW
                 </span>
               )}
-              {product.videos && product.videos.length > 0 && (
+              {product.videos && product.videos.length > 0 && !isOutOfStock && (
                 <span className="text-[8px] sm:text-[9px] font-extrabold text-indigo-600 bg-indigo-50 border border-indigo-100 px-1.5 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-0.5">
                   🎥 In Motion
                 </span>
@@ -571,7 +609,7 @@ export const ProductCard = ({ product, onAddToCart }: {
                 </span>
               )}
               {/* Fallback space to keep alignment when no badges exist */}
-              {!(product.discount > 0 || isFeaturedProduct() || isNewProduct() || product.hidden) && (
+              {!(isOutOfStock || product.discount > 0 || isFeaturedProduct() || isNewProduct() || product.hidden) && (
                 <div className="h-5 md:h-6" />
               )}
             </div>
@@ -604,7 +642,16 @@ export const ProductCard = ({ product, onAddToCart }: {
 
             {/* Action Button */}
             <div className="h-8 xs:h-9 md:h-10 flex items-center w-full">
-              {product.isCustomizable ? (
+              {isOutOfStock ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled
+                  className="w-full h-full text-xs sm:text-sm bg-stone-100 dark:bg-stone-800/70 text-stone-500 dark:text-stone-400 font-semibold rounded-xl border border-stone-200/80 dark:border-stone-700/80 cursor-not-allowed flex items-center justify-center gap-1.5 opacity-90 shadow-none pointer-events-none"
+                >
+                  <span>Out of Stock</span>
+                </Button>
+              ) : product.isCustomizable ? (
                 <Button
                   variant="outline"
                   size="sm"

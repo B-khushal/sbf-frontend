@@ -733,6 +733,14 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
 
   // Calculate prices in base currency (INR)
   const originalPrice = product.price;
+
+  const isOutOfStock = Boolean(
+    (product as any).isOutOfStock === true ||
+    product.isAvailable === false ||
+    (typeof (product as any).stock === 'number' && (product as any).stock <= 0) ||
+    (typeof (product as any).countInStock === 'number' && (product as any).countInStock <= 0)
+  );
+
   const currentPrice = React.useMemo(() => {
     if (product.hasPriceVariants && selectedVariant) {
       return selectedVariant.price;
@@ -802,6 +810,15 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
 
   const handleAddToCart = async () => {
     try {
+      if (isOutOfStock) {
+        toast({
+          title: "Product Out of Stock",
+          description: "This arrangement is currently out of stock",
+          type: "warning",
+        });
+        return;
+      }
+
       if (product.hasPriceVariants && !selectedVariant) {
         toast({
           title: "Please select a variant",
@@ -1215,6 +1232,16 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                     {/* Soft ambient background glow inside container for premium look */}
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(236,72,153,0.04)_0%,rgba(14,165,233,0.03)_50%,transparent_100%)] pointer-events-none" />
 
+                    {/* Floating Out of Stock Luxury Badge */}
+                    {isOutOfStock && (
+                      <div className="absolute top-4 left-4 z-20 backdrop-blur-md bg-stone-900/85 text-white border border-white/20 px-3.5 py-1.5 rounded-full flex items-center gap-2 shadow-xl pointer-events-none">
+                        <span className="w-2 h-2 rounded-full bg-rose-400 animate-pulse" />
+                        <span className="text-[11px] sm:text-xs font-bold tracking-widest uppercase text-stone-100">
+                          Out of Stock
+                        </span>
+                      </div>
+                    )}
+
                     <div
                       className={cn(
                         "relative w-full h-full flex items-center justify-center",
@@ -1254,7 +1281,10 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                               src={imageUrl}
                               alt={product.title}
                               onLoad={() => setIsImageLoading(false)}
-                              className="w-full h-full object-cover rounded-[28px] transition-transform duration-700 ease-out"
+                              className={cn(
+                                "w-full h-full object-cover rounded-[28px] transition-transform duration-700 ease-out",
+                                isOutOfStock && "grayscale-[20%] opacity-90"
+                              )}
                               style={{
                                 transform: isHovered && !isMobile
                                   ? `scale(1.08) translate(${mousePos.x * 12}px, ${mousePos.y * 12}px)`
@@ -1630,13 +1660,26 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
 
               {/* Availability Indicator */}
               <div className="mt-2.5 flex items-center gap-2">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                </span>
-                <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                  {product.countInStock > 0 ? 'In Stock • Handcrafted & Dispatched Today' : 'Out of Stock • Reserve by Contacting Us'}
-                </span>
+                {isOutOfStock ? (
+                  <>
+                    <span className="relative flex h-2 w-2">
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-stone-400"></span>
+                    </span>
+                    <span className="text-xs font-semibold text-stone-500 dark:text-stone-400">
+                      Currently Out of Stock • Reserve by Contacting Us
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                      {product.countInStock > 0 ? 'In Stock • Handcrafted & Dispatched Today' : 'Out of Stock • Reserve by Contacting Us'}
+                    </span>
+                  </>
+                )}
               </div>
             </div>
 
@@ -1861,7 +1904,15 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
 
             {/* 10. Normal CTA Buttons (Only visible on mobile/tablet) */}
             <div className="flex gap-3 lg:hidden">
-              {product.isCustomizable ? (
+              {isOutOfStock ? (
+                <Button
+                  type="button"
+                  disabled
+                  className="flex-1 h-12 rounded-xl bg-stone-100 dark:bg-stone-800 text-stone-400 dark:text-stone-500 font-semibold cursor-not-allowed border border-stone-200 dark:border-stone-700 flex items-center justify-center gap-2 opacity-90 shadow-none pointer-events-none"
+                >
+                  Out of Stock
+                </Button>
+              ) : product.isCustomizable ? (
                 <Button
                   type="button"
                   className="flex-1 h-12 rounded-xl bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 text-white font-bold hover:shadow-[0_10px_30px_rgba(0,0,0,0.12)] hover:scale-[1.01] transition-all duration-300 dark:from-white dark:to-slate-100 dark:text-slate-900 border-none"
@@ -1935,7 +1986,15 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
               </div>
 
               <div className="flex gap-2">
-                {product.isCustomizable ? (
+                {isOutOfStock ? (
+                  <Button
+                    type="button"
+                    disabled
+                    className="flex-1 h-11 rounded-xl bg-stone-100 dark:bg-stone-800 text-stone-400 dark:text-stone-500 font-semibold cursor-not-allowed border border-stone-200 dark:border-stone-700 flex items-center justify-center gap-2 opacity-90 shadow-none pointer-events-none"
+                  >
+                    Currently Out of Stock
+                  </Button>
+                ) : product.isCustomizable ? (
                   <Button
                     type="button"
                     className="flex-1 h-11 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 font-bold hover:shadow-md transition-all border-none"

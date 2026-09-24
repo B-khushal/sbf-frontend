@@ -19,6 +19,8 @@ const EMOJI_MAPPING: { [key: string]: string } = {
   plants: '🌿',
   sympathy: '💙',
   occasions: '🎉',
+  'budget-friendly': '✨',
+  'budget friendly': '✨',
 };
 const DEFAULT_EMOJI = '🌸';
 
