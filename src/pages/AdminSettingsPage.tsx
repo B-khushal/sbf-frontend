@@ -64,6 +64,7 @@ const TABS = [
   { id: "mobile-banners", label: "Mobile Banner", icon: Smartphone, desc: "Upload and schedule mobile-only delivery / offer banners" },
   { id: "promo-banners", label: "Promo Banners", icon: Layers, desc: "Add/edit/delete twin promotional banners displayed alongside hero slider" },
   { id: "bento-banners", label: "Curated Banners", icon: LayoutGrid, desc: "Add/edit/delete Curated Occasion Bento Banners" },
+  { id: "budget-friendly", label: "Budget Friendly", icon: Sparkles, desc: "Edit homepage budget-friendly banner, badge, subtitle, limits & CTA" },
   { id: "sections", label: "Section Builder", icon: Layers, desc: "Order and customize homepage collections & banners" },
   { id: "categories", label: "Category Details", icon: LayoutGrid, desc: "Manage catalog hierarchy, slugs, priority themes" },
   { id: "shop-categories", label: "Shop Categories", icon: LayoutGrid, desc: "Manage categories displayed in the shop catalog" },
@@ -1046,6 +1047,27 @@ const AdminSettingsPage = () => {
             }
           });
         }
+        if (!loadedSections.some((s: any) => s.type === 'budget_friendly')) {
+          loadedSections.push({
+            id: 'budget_friendly',
+            type: 'budget_friendly',
+            enabled: true,
+            order: 3.5,
+            title: 'Beautiful Gifts, Thoughtfully Priced',
+            subtitle: 'Discover elegant bouquets and gifts starting from ₹399 — all thoughtfully selected under ₹1,000.',
+            visibility: { desktop: true, tablet: true, mobile: true },
+            styling: { background: '', padding: 'py-14 sm:py-20', spacing: 'mb-0', animation: 'fadeIn' },
+            content: {
+              tagline: 'Affordable • Elegant • Thoughtfully Designed',
+              showTagline: true,
+              taglineIcon: 'Sparkles',
+              ctaText: 'Explore Budget Friendly',
+              ctaLink: '/shop/budget-friendly',
+              showCta: true,
+              maxProducts: 8,
+            }
+          });
+        }
 
         // Clean default nested fields
         const cleaned = {
@@ -1058,6 +1080,21 @@ const AdminSettingsPage = () => {
             }
             if (sec.type === 'whychooseus' && (!sec.content || !sec.content.items || sec.content.items.length === 0)) {
               return { ...sec, content: { ...sec.content, items: defaultTrustItems } };
+            }
+            if (sec.type === 'budget_friendly') {
+              return {
+                ...sec,
+                content: {
+                  tagline: 'Affordable • Elegant • Thoughtfully Designed',
+                  showTagline: true,
+                  taglineIcon: 'Sparkles',
+                  ctaText: 'Explore Budget Friendly',
+                  ctaLink: '/shop/budget-friendly',
+                  showCta: true,
+                  maxProducts: 8,
+                  ...(sec.content || {})
+                }
+              };
             }
             if (sec.type === 'social' && (!sec.content || !sec.content.items || sec.content.items.length === 0)) {
               return {
@@ -2410,6 +2447,320 @@ const AdminSettingsPage = () => {
                   );
                 })()}
 
+                {/* BUDGET FRIENDLY SECTION MANAGER */}
+                {activeTab === "budget-friendly" && (() => {
+                  const budgetSec = localSettings.homeSections?.find((s: any) => s.type === 'budget_friendly');
+                  
+                  const initializeBudgetSection = () => {
+                    const newSec = {
+                      id: 'budget_friendly',
+                      type: 'budget_friendly',
+                      enabled: true,
+                      order: 3.5,
+                      title: 'Beautiful Gifts, Thoughtfully Priced',
+                      subtitle: 'Discover elegant bouquets and gifts starting from ₹399 — all thoughtfully selected under ₹1,000.',
+                      visibility: { desktop: true, tablet: true, mobile: true },
+                      styling: { background: '', padding: 'py-14 sm:py-20', spacing: 'mb-0', animation: 'fadeIn' },
+                      content: {
+                        tagline: 'Affordable • Elegant • Thoughtfully Designed',
+                        showTagline: true,
+                        taglineIcon: 'Sparkles',
+                        ctaText: 'Explore Budget Friendly',
+                        ctaLink: '/shop/budget-friendly',
+                        showCta: true,
+                        maxProducts: 8,
+                      }
+                    };
+                    const list = [...(localSettings.homeSections || [])];
+                    list.push(newSec);
+                    updateSettingsState({ ...localSettings, homeSections: list });
+                  };
+
+                  if (!budgetSec) {
+                    return (
+                      <div className="text-center p-12 bg-slate-900/40 rounded-2xl border border-slate-800 space-y-4">
+                        <div className="w-16 h-16 rounded-full bg-pink-500/10 border border-pink-500/20 text-pink-400 flex items-center justify-center mx-auto">
+                          <Sparkles className="h-8 w-8" />
+                        </div>
+                        <div>
+                          <h3 className="text-base font-bold text-slate-100">Budget Friendly Section Not Initialized</h3>
+                          <p className="text-xs text-slate-400 mt-1 max-w-md mx-auto">
+                            The budget-friendly homepage section is currently not in your homepage modules list. Click below to add and configure it.
+                          </p>
+                        </div>
+                        <Button
+                          onClick={initializeBudgetSection}
+                          className="bg-pink-600 hover:bg-pink-700 text-white font-bold text-xs"
+                        >
+                          <Plus className="h-4 w-4 mr-1.5" /> Initialize Budget Friendly Section
+                        </Button>
+                      </div>
+                    );
+                  }
+
+                  const updateBudgetSection = (fields: any) => {
+                    const copy = localSettings.homeSections.map((s: any) =>
+                      s.type === 'budget_friendly' ? { ...s, ...fields } : s
+                    );
+                    updateSettingsState({ ...localSettings, homeSections: copy });
+                  };
+
+                  const updateBudgetContent = (contentFields: any) => {
+                    const currentContent = budgetSec.content || {};
+                    const copy = localSettings.homeSections.map((s: any) =>
+                      s.type === 'budget_friendly' ? { ...s, content: { ...currentContent, ...contentFields } } : s
+                    );
+                    updateSettingsState({ ...localSettings, homeSections: copy });
+                  };
+
+                  const tagline = budgetSec.content?.tagline !== undefined ? budgetSec.content.tagline : "Affordable • Elegant • Thoughtfully Designed";
+                  const showTagline = budgetSec.content?.showTagline !== false;
+                  const taglineIcon = budgetSec.content?.taglineIcon || "Sparkles";
+                  const ctaText = budgetSec.content?.ctaText || "Explore Budget Friendly";
+                  const ctaLink = budgetSec.content?.ctaLink || "/shop/budget-friendly";
+                  const showCta = budgetSec.content?.showCta !== false;
+                  const maxProducts = budgetSec.content?.maxProducts || 8;
+
+                  return (
+                    <div className="space-y-6">
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                          <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2">
+                            <Sparkles className="h-5 w-5 text-pink-400" />
+                            Budget Friendly Showcase Manager
+                          </h2>
+                          <p className="text-xs text-slate-400">
+                            Configure the homepage Budget Friendly collection showcase, header badges, subtitle, max products, and call-to-action buttons.
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3 bg-slate-900/80 px-3.5 py-1.5 rounded-xl border border-slate-800">
+                          <span className="text-xs font-semibold text-slate-300">Section Enabled</span>
+                          <Switch
+                            checked={budgetSec.enabled}
+                            onCheckedChange={(checked) => updateBudgetSection({ enabled: checked })}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Live Visual Preview Card */}
+                      <Card className="bg-gradient-to-br from-slate-900/90 via-slate-950 to-pink-950/20 border-pink-500/30 overflow-hidden shadow-xl">
+                        <CardHeader className="pb-2 border-b border-slate-800/80">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-pink-400 uppercase tracking-wider flex items-center gap-1.5">
+                              <Eye className="h-3.5 w-3.5" /> Live Section Preview
+                            </span>
+                            <Badge className={budgetSec.enabled ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]" : "bg-red-500/20 text-red-400 border-red-500/30 text-[10px]"}>
+                              {budgetSec.enabled ? "Visible on Homepage" : "Disabled (Hidden)"}
+                            </Badge>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="p-6">
+                          <div className="p-6 rounded-2xl bg-gradient-to-b from-stone-50 via-amber-50/30 to-white text-slate-900 shadow-inner">
+                            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                              <div className="max-w-2xl">
+                                {showTagline && (
+                                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-100/90 border border-rose-200 text-slate-800 text-xs font-medium tracking-wide mb-3">
+                                    <Sparkles className="w-3.5 h-3.5 text-pink-600" />
+                                    <span>{tagline || "Affordable • Elegant • Thoughtfully Designed"}</span>
+                                  </div>
+                                )}
+                                <h3 className="text-xl sm:text-2xl font-serif font-bold text-gray-900 tracking-tight">
+                                  {budgetSec.title || "Beautiful Gifts, Thoughtfully Priced"}
+                                </h3>
+                                <p className="mt-1.5 text-xs sm:text-sm text-gray-600">
+                                  {budgetSec.subtitle || "Discover elegant bouquets and gifts starting from ₹399 — all thoughtfully selected under ₹1,000."}
+                                </p>
+                              </div>
+                              {showCta && (
+                                <div className="shrink-0">
+                                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gray-900 text-white text-xs font-medium shadow-sm">
+                                    <span>{ctaText || "Explore Budget Friendly"}</span>
+                                    <ArrowRight className="w-3.5 h-3.5" />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                            <div className="mt-4 pt-3 border-t border-slate-200/60 flex items-center justify-between text-[11px] text-gray-500">
+                              <span>Showing up to <strong>{maxProducts}</strong> products under ₹1,000</span>
+                              <span>Target Link: <code className="text-pink-600 font-mono">{ctaLink}</code></span>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Header & Tagline Configuration */}
+                        <Card className="bg-slate-800/40 border-slate-800">
+                          <CardHeader className="pb-3 border-b border-slate-800">
+                            <CardTitle className="text-sm font-bold text-slate-200 flex items-center gap-2">
+                              <Sparkles className="h-4 w-4 text-pink-400" />
+                              Header & Eyebrow Badge
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="p-4 space-y-4">
+                            <div>
+                              <Label className="text-xs text-slate-300 font-semibold">Section Heading Title</Label>
+                              <Input
+                                value={budgetSec.title || ""}
+                                onChange={(e) => updateBudgetSection({ title: e.target.value })}
+                                placeholder="e.g. Beautiful Gifts, Thoughtfully Priced"
+                                className="bg-slate-900 border-slate-700 text-slate-200 mt-1"
+                              />
+                            </div>
+
+                            <div>
+                              <Label className="text-xs text-slate-300 font-semibold">Section Subtitle / Description</Label>
+                              <Textarea
+                                value={budgetSec.subtitle || ""}
+                                onChange={(e) => updateBudgetSection({ subtitle: e.target.value })}
+                                placeholder="e.g. Discover elegant bouquets and gifts starting from ₹399 — all thoughtfully selected under ₹1,000."
+                                rows={2}
+                                className="bg-slate-900 border-slate-700 text-slate-200 text-xs mt-1 resize-none"
+                              />
+                            </div>
+
+                            <Separator className="bg-slate-800" />
+
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between">
+                                <Label className="text-xs text-slate-300 font-semibold">Show Eyebrow Tagline Badge</Label>
+                                <Switch
+                                  checked={showTagline}
+                                  onCheckedChange={(checked) => updateBudgetContent({ showTagline: checked })}
+                                />
+                              </div>
+
+                              {showTagline && (
+                                <div className="grid grid-cols-3 gap-3">
+                                  <div className="col-span-2">
+                                    <Label className="text-[11px] text-slate-400">Tagline Text</Label>
+                                    <Input
+                                      value={tagline}
+                                      onChange={(e) => updateBudgetContent({ tagline: e.target.value })}
+                                      placeholder="Affordable • Elegant • Thoughtfully Designed"
+                                      className="bg-slate-900 border-slate-700 text-slate-200 text-xs mt-1"
+                                    />
+                                  </div>
+                                  <div>
+                                    <Label className="text-[11px] text-slate-400">Icon</Label>
+                                    <select
+                                      value={taglineIcon}
+                                      onChange={(e) => updateBudgetContent({ taglineIcon: e.target.value })}
+                                      className="w-full bg-slate-900 border border-slate-700 text-xs text-slate-200 rounded p-2 mt-1 focus:outline-none focus:ring-1 focus:ring-pink-500"
+                                    >
+                                      <option value="Sparkles">✨ Sparkles</option>
+                                      <option value="Heart">💖 Heart</option>
+                                      <option value="Gift">🎁 Gift</option>
+                                      <option value="Star">⭐ Star</option>
+                                    </select>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        {/* CTA & Catalog Configuration */}
+                        <Card className="bg-slate-800/40 border-slate-800">
+                          <CardHeader className="pb-3 border-b border-slate-800">
+                            <CardTitle className="text-sm font-bold text-slate-200 flex items-center gap-2">
+                              <ArrowRight className="h-4 w-4 text-cyan-400" />
+                              CTA Button & Product Grid Settings
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="p-4 space-y-4">
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between">
+                                <Label className="text-xs text-slate-300 font-semibold">Show Call-to-Action (CTA) Button</Label>
+                                <Switch
+                                  checked={showCta}
+                                  onCheckedChange={(checked) => updateBudgetContent({ showCta: checked })}
+                                />
+                              </div>
+
+                              {showCta && (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                  <div>
+                                    <Label className="text-[11px] text-slate-400">Button Label</Label>
+                                    <Input
+                                      value={ctaText}
+                                      onChange={(e) => updateBudgetContent({ ctaText: e.target.value })}
+                                      placeholder="Explore Budget Friendly"
+                                      className="bg-slate-900 border-slate-700 text-slate-200 text-xs mt-1"
+                                    />
+                                  </div>
+                                  <div>
+                                    <Label className="text-[11px] text-slate-400">Target Link URL</Label>
+                                    <Input
+                                      value={ctaLink}
+                                      onChange={(e) => updateBudgetContent({ ctaLink: e.target.value })}
+                                      placeholder="/shop/budget-friendly"
+                                      className="bg-slate-900 border-slate-700 text-slate-200 text-xs mt-1 font-mono"
+                                    />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            <Separator className="bg-slate-800" />
+
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <Label className="text-xs text-slate-300 font-semibold">Max Products on Homepage</Label>
+                                <Input
+                                  type="number"
+                                  min={2}
+                                  max={24}
+                                  value={maxProducts}
+                                  onChange={(e) => updateBudgetContent({ maxProducts: Number(e.target.value) || 8 })}
+                                  className="bg-slate-900 border-slate-700 text-slate-200 text-xs mt-1"
+                                />
+                                <span className="text-[10px] text-slate-500 mt-1 block">Default: 8 items</span>
+                              </div>
+                              <div>
+                                <Label className="text-xs text-slate-300 font-semibold">Section Order Index</Label>
+                                <Input
+                                  type="number"
+                                  step="0.5"
+                                  value={budgetSec.order ?? 3.5}
+                                  onChange={(e) => updateBudgetSection({ order: Number(e.target.value) || 0 })}
+                                  className="bg-slate-900 border-slate-700 text-slate-200 text-xs mt-1"
+                                />
+                                <span className="text-[10px] text-slate-500 mt-1 block">Position in homepage order</span>
+                              </div>
+                            </div>
+
+                            <div>
+                              <Label className="text-[10px] text-slate-400 font-bold block mb-1">Device Visibility</Label>
+                              <div className="flex gap-2">
+                                {["desktop", "tablet", "mobile"].map(d => (
+                                  <button
+                                    key={d}
+                                    type="button"
+                                    onClick={() => {
+                                      const vis = { ...(budgetSec.visibility || { desktop: true, tablet: true, mobile: true }) };
+                                      vis[d] = !vis[d];
+                                      updateBudgetSection({ visibility: vis });
+                                    }}
+                                    className={cn(
+                                      "px-3 py-1.5 rounded-lg text-xs font-bold border capitalize transition-all",
+                                      (budgetSec.visibility?.[d] !== false)
+                                        ? "bg-pink-950/40 text-pink-300 border-pink-800 shadow-sm"
+                                        : "bg-slate-900 text-slate-600 border-slate-800"
+                                    )}
+                                  >
+                                    {d}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 {/* 2. SECTION BUILDER */}
                 {activeTab === "sections" && (
                   <div className="space-y-6">
@@ -2656,6 +3007,118 @@ const AdminSettingsPage = () => {
                                             />
                                           </div>
                                         ))}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {sec.type === 'budget_friendly' && (
+                                    <div className="pt-4 border-t border-slate-800/80 space-y-4">
+                                      <div className="flex items-center justify-between">
+                                        <h4 className="text-xs font-bold text-pink-400 uppercase tracking-wide flex items-center gap-1.5">
+                                          <Sparkles className="h-3.5 w-3.5" />
+                                          Budget Friendly Showcase Settings
+                                        </h4>
+                                        <Button
+                                          type="button"
+                                          size="sm"
+                                          variant="ghost"
+                                          onClick={() => setActiveTab("budget-friendly")}
+                                          className="text-[10px] text-pink-300 hover:text-white hover:bg-pink-900/30 h-6 px-2"
+                                        >
+                                          Open Dedicated Manager <ArrowRight className="h-3 w-3 ml-1" />
+                                        </Button>
+                                      </div>
+                                      
+                                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-900/60 p-4 rounded-lg border border-slate-800">
+                                        <div>
+                                          <Label className="text-[10px] text-slate-400">Eyebrow Tagline</Label>
+                                          <Input
+                                            value={sec.content?.tagline !== undefined ? sec.content.tagline : 'Affordable • Elegant • Thoughtfully Designed'}
+                                            onChange={(e) => {
+                                              const copy = localSettings.homeSections.map((s: any) =>
+                                                s.id === sec.id ? { ...s, content: { ...s.content, tagline: e.target.value } } : s
+                                              );
+                                              updateSettingsState({ ...localSettings, homeSections: copy });
+                                            }}
+                                            placeholder="Tagline text"
+                                            className="bg-slate-800 border-slate-700 text-xs h-8 text-slate-200 mt-1"
+                                          />
+                                        </div>
+
+                                        <div>
+                                          <Label className="text-[10px] text-slate-400">CTA Button Text</Label>
+                                          <Input
+                                            value={sec.content?.ctaText || 'Explore Budget Friendly'}
+                                            onChange={(e) => {
+                                              const copy = localSettings.homeSections.map((s: any) =>
+                                                s.id === sec.id ? { ...s, content: { ...s.content, ctaText: e.target.value } } : s
+                                              );
+                                              updateSettingsState({ ...localSettings, homeSections: copy });
+                                            }}
+                                            placeholder="CTA Text"
+                                            className="bg-slate-800 border-slate-700 text-xs h-8 text-slate-200 mt-1"
+                                          />
+                                        </div>
+
+                                        <div>
+                                          <Label className="text-[10px] text-slate-400">CTA Target Link</Label>
+                                          <Input
+                                            value={sec.content?.ctaLink || '/shop/budget-friendly'}
+                                            onChange={(e) => {
+                                              const copy = localSettings.homeSections.map((s: any) =>
+                                                s.id === sec.id ? { ...s, content: { ...s.content, ctaLink: e.target.value } } : s
+                                              );
+                                              updateSettingsState({ ...localSettings, homeSections: copy });
+                                            }}
+                                            placeholder="/shop/budget-friendly"
+                                            className="bg-slate-800 border-slate-700 text-xs h-8 text-slate-200 mt-1 font-mono"
+                                          />
+                                        </div>
+
+                                        <div className="flex items-center justify-between md:col-span-3 pt-2 border-t border-slate-800">
+                                          <div className="flex items-center gap-3">
+                                            <Switch
+                                              checked={sec.content?.showTagline !== false}
+                                              onCheckedChange={(checked) => {
+                                                const copy = localSettings.homeSections.map((s: any) =>
+                                                  s.id === sec.id ? { ...s, content: { ...s.content, showTagline: checked } } : s
+                                                );
+                                                updateSettingsState({ ...localSettings, homeSections: copy });
+                                              }}
+                                            />
+                                            <span className="text-xs text-slate-300">Show Tagline Badge</span>
+                                          </div>
+
+                                          <div className="flex items-center gap-3">
+                                            <Switch
+                                              checked={sec.content?.showCta !== false}
+                                              onCheckedChange={(checked) => {
+                                                const copy = localSettings.homeSections.map((s: any) =>
+                                                  s.id === sec.id ? { ...s, content: { ...s.content, showCta: checked } } : s
+                                                );
+                                                updateSettingsState({ ...localSettings, homeSections: copy });
+                                              }}
+                                            />
+                                            <span className="text-xs text-slate-300">Show CTA Button</span>
+                                          </div>
+
+                                          <div className="flex items-center gap-2">
+                                            <Label className="text-xs text-slate-400">Max Products:</Label>
+                                            <Input
+                                              type="number"
+                                              min="2"
+                                              max="24"
+                                              value={sec.content?.maxProducts || 8}
+                                              onChange={(e) => {
+                                                const copy = localSettings.homeSections.map((s: any) =>
+                                                  s.id === sec.id ? { ...s, content: { ...s.content, maxProducts: Number(e.target.value) || 8 } } : s
+                                                );
+                                                updateSettingsState({ ...localSettings, homeSections: copy });
+                                              }}
+                                              className="bg-slate-800 border-slate-700 text-xs h-7 w-16 text-slate-200"
+                                            />
+                                          </div>
+                                        </div>
                                       </div>
                                     </div>
                                   )}

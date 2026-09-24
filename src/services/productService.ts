@@ -137,6 +137,9 @@ export interface ProductData {
   categories: string[];
   occasionIds?: string[];
   countInStock: number;
+  stock?: number;
+  isAvailable?: boolean;
+  isOutOfStock?: boolean;
   images: string[];
   image?: string;
   details: string[];

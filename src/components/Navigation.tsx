@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
@@ -133,7 +133,20 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
   const { items } = cartHook;
   
   // Debug cart state log removed
-  const { headerSettings, loading: settingsLoading } = useSettings();
+  const { headerSettings, shopCategories, categories: settingsCategories, loading: settingsLoading } = useSettings();
+  const activeShopCategories = useMemo(() => {
+    const list = shopCategories || settingsCategories || [];
+    return list.filter((c: any) => c.showInShop === true && c.status !== 'inactive' && c.enabled !== false && !c.parentId);
+  }, [shopCategories, settingsCategories]);
+
+  // Featured collections excluding special quick-link categories like budget-friendly
+  const curatedShopCollections = useMemo(() => {
+    return activeShopCategories.filter((c: any) => {
+      const name = (c.name || '').toLowerCase().trim();
+      const slug = (c.slug || '').toLowerCase().trim();
+      return name !== 'budget friendly' && slug !== 'budget-friendly' && name !== 'budget-friendly' && name !== 'all' && slug !== 'all';
+    });
+  }, [activeShopCategories]);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -618,48 +631,155 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                 ?.filter(item => item.enabled)
                 ?.sort((a, b) => a.order - b.order)
                 ?.map((item) => {
-                  if (item.href === '/shop') {
-                    return (
-                      <div key={item.href} className="relative group">
-                        <NavLink to={item.href} active={pathname === '/shop' || pathname.startsWith('/shop/')}>
-                          <span className="flex items-center gap-1">
-                            {item.label}
-                            <ChevronDown size={13} className="text-gray-400 group-hover:text-primary transition-transform duration-200 group-hover:rotate-180" />
-                          </span>
-                        </NavLink>
-                        {/* Dropdown Menu */}
-                        <div className="absolute top-full left-0 pt-2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50 min-w-[210px]">
-                          <div className="bg-white rounded-xl shadow-xl border border-gray-100 p-2 overflow-hidden">
-                            <Link
-                              to="/shop"
-                              className={cn(
-                                "flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors",
-                                pathname === '/shop' ? "bg-primary/10 text-primary font-medium" : "text-gray-700 hover:bg-gray-50"
-                              )}
-                            >
-                              <Package size={15} className="text-gray-400" />
-                              <span>All Products</span>
-                            </Link>
-                            <Link
-                              to="/shop/budget-friendly"
-                              className={cn(
-                                "flex items-center justify-between px-3 py-2 text-sm rounded-lg transition-colors mt-0.5",
-                                pathname === '/shop/budget-friendly' ? "bg-amber-50 text-amber-900 font-medium" : "text-gray-700 hover:bg-amber-50/60"
-                              )}
-                            >
-                              <div className="flex items-center gap-2">
-                                <Sparkles size={15} className="text-amber-500" />
-                                <span>Budget Friendly</span>
+                    if (item.href === '/shop') {
+                      return (
+                        <div key={item.href} className="relative group">
+                          <NavLink 
+                            to="/shop" 
+                            active={pathname === '/shop' || pathname.startsWith('/shop/')}
+                            className="flex items-center gap-1.5 font-semibold text-[14px]"
+                          >
+                            <span>{item.label}</span>
+                            <ChevronDown 
+                              size={14} 
+                              className="text-gray-400 group-hover:text-primary transition-transform duration-300 group-hover:rotate-180" 
+                            />
+                          </NavLink>
+
+                          {/* Luxury Glassmorphic Dropdown Menu */}
+                          <div className="absolute top-full left-0 pt-2 opacity-0 translate-y-1.5 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all duration-200 ease-out z-50 w-[360px] sm:w-[390px]">
+                            <div className="bg-white/95 backdrop-blur-2xl rounded-2xl shadow-[0_20px_60px_-15px_rgba(244,63,94,0.15),0_10px_30px_-5px_rgba(0,0,0,0.08)] p-3 border border-pink-100/70 overflow-hidden">
+                              
+                              {/* Top Tier Highlight Options */}
+                              <div className="space-y-1.5">
+                                {/* All Products */}
+                                <Link
+                                  to="/shop"
+                                  className={cn(
+                                    "group/item flex items-center justify-between p-2.5 rounded-xl transition-all duration-200",
+                                    pathname === '/shop'
+                                      ? "bg-rose-50 text-rose-700 shadow-xs ring-1 ring-rose-200/60"
+                                      : "hover:bg-gradient-to-r hover:from-rose-50/70 hover:to-purple-50/40 text-gray-800"
+                                  )}
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <div className={cn(
+                                      "w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 group-hover/item:scale-105",
+                                      pathname === '/shop'
+                                        ? "bg-rose-500 text-white shadow-sm"
+                                        : "bg-rose-100/80 text-rose-600 group-hover/item:bg-rose-500 group-hover/item:text-white"
+                                    )}>
+                                      <ShoppingBag size={17} />
+                                    </div>
+                                    <div>
+                                      <div className="text-sm font-semibold flex items-center gap-1.5 leading-tight text-gray-900 group-hover/item:text-rose-600 transition-colors">
+                                        <span>All Products</span>
+                                      </div>
+                                      <div className="text-[11px] text-gray-400 font-normal">
+                                        Explore full handcrafted bouquets & gifts
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <ArrowRight size={14} className="text-gray-300 group-hover/item:text-rose-500 group-hover/item:translate-x-0.5 transition-all duration-200" />
+                                </Link>
+
+                                {/* Budget Friendly */}
+                                <Link
+                                  to="/shop/budget-friendly"
+                                  className={cn(
+                                    "group/item flex items-center justify-between p-2.5 rounded-xl transition-all duration-200",
+                                    pathname === '/shop/budget-friendly'
+                                      ? "bg-amber-50 text-amber-900 shadow-xs ring-1 ring-amber-200/70"
+                                      : "hover:bg-gradient-to-r hover:from-amber-50/80 hover:to-orange-50/40 text-gray-800"
+                                  )}
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <div className={cn(
+                                      "w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 group-hover/item:scale-105",
+                                      pathname === '/shop/budget-friendly'
+                                        ? "bg-amber-500 text-white shadow-sm"
+                                        : "bg-amber-100 text-amber-700 group-hover/item:bg-amber-500 group-hover/item:text-white"
+                                    )}>
+                                      <Sparkles size={17} />
+                                    </div>
+                                    <div>
+                                      <div className="text-sm font-semibold flex items-center gap-1.5 leading-tight text-gray-900 group-hover/item:text-amber-800 transition-colors">
+                                        <span>Budget Friendly</span>
+                                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-900 border border-amber-300">
+                                          ≤ ₹1k
+                                        </span>
+                                      </div>
+                                      <div className="text-[11px] text-gray-400 font-normal">
+                                        Pocket-friendly fresh flower arrangements
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <ArrowRight size={14} className="text-gray-300 group-hover/item:text-amber-600 group-hover/item:translate-x-0.5 transition-all duration-200" />
+                                </Link>
                               </div>
-                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-200">
-                                ≤ ₹1k
-                              </span>
-                            </Link>
+
+                              {/* Curated Categories / Collections */}
+                              {curatedShopCollections.length > 0 && (
+                                <div className="mt-2.5 pt-2.5 border-t border-gray-100">
+                                  <div className="px-2.5 pb-1.5 flex items-center justify-between">
+                                    <span className="text-[10px] font-bold tracking-wider uppercase text-gray-400">
+                                      Featured Collections
+                                    </span>
+                                    <span className="text-[10px] font-medium text-rose-500">
+                                      {curatedShopCollections.length} Categories
+                                    </span>
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-1 max-h-52 overflow-y-auto pr-0.5 scrollbar-thin">
+                                    {curatedShopCollections.map((cat: any) => {
+                                      const catSlug = cat.slug || cat.name.toLowerCase().replace(/\s+/g, '-');
+                                      const catUrl = `/shop/${catSlug}`;
+                                      const isCurrentCat = pathname === catUrl;
+                                      return (
+                                        <Link
+                                          key={cat.id || cat._id || catSlug}
+                                          to={catUrl}
+                                          className={cn(
+                                            "group/cat flex items-center justify-between px-2.5 py-2 text-xs font-medium rounded-lg transition-all duration-150",
+                                            isCurrentCat
+                                              ? "bg-primary/10 text-primary font-semibold"
+                                              : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                                          )}
+                                        >
+                                          <div className="flex items-center gap-1.5 truncate">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-rose-400 group-hover/cat:scale-125 transition-transform" />
+                                            <span className="truncate">{cat.name}</span>
+                                          </div>
+                                          {cat.productCount !== undefined && cat.productCount > 0 && (
+                                            <span className="text-[10px] font-semibold px-1 py-0.2 rounded bg-gray-100 text-gray-500 ml-1 shrink-0">
+                                              {cat.productCount}
+                                            </span>
+                                          )}
+                                        </Link>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Bottom Assurance Banner */}
+                              <div className="mt-2.5 pt-2 border-t border-gray-100/80">
+                                <div className="bg-gradient-to-r from-rose-50/70 via-purple-50/50 to-pink-50/70 rounded-xl px-2.5 py-1.5 flex items-center justify-between text-[11px] text-gray-600 border border-rose-100/50">
+                                  <div className="flex items-center gap-1.5 text-rose-700 font-medium">
+                                    <Truck size={13} className="text-rose-500" />
+                                    <span>Same-Day Delivery</span>
+                                  </div>
+                                  <div className="flex items-center gap-1 text-emerald-700 font-medium">
+                                    <Shield size={13} className="text-emerald-500" />
+                                    <span>100% Freshness</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  }
+                      );
+                    }
                   return (
                     <NavLink key={item.href} to={item.href} active={pathname === item.href}>
                       {item.label}
@@ -1344,22 +1464,45 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                             <span>{item.label}</span>
                           </Link>
                           {item.href === '/shop' && (
-                            <Link
-                              to="/shop/budget-friendly"
-                              onClick={() => setMobileMenuOpen(false)}
-                              className={cn(
-                                'flex items-center justify-between pl-11 pr-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200',
-                                pathname === '/shop/budget-friendly' ? 'bg-amber-50 text-amber-900 font-semibold' : 'text-gray-600 hover:bg-gray-50'
-                              )}
-                            >
-                              <div className="flex items-center gap-2">
-                                <Sparkles size={14} className="text-amber-500" />
-                                <span>Budget Friendly</span>
-                              </div>
-                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-200">
-                                Under ₹1k
-                              </span>
-                            </Link>
+                            <div className="pl-6 space-y-0.5 border-l-2 border-gray-100 ml-5 my-1">
+                              <Link
+                                to="/shop/budget-friendly"
+                                onClick={() => setMobileMenuOpen(false)}
+                                className={cn(
+                                  'flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200',
+                                  pathname === '/shop/budget-friendly' ? 'bg-amber-50 text-amber-900 font-semibold' : 'text-gray-600 hover:bg-gray-50'
+                                )}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <Sparkles size={14} className="text-amber-500" />
+                                  <span>Budget Friendly</span>
+                                </div>
+                                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-200">
+                                  Under ₹1k
+                                </span>
+                              </Link>
+                              {curatedShopCollections.map((cat: any) => {
+                                const catSlug = cat.slug || cat.name.toLowerCase().replace(/\s+/g, '-');
+                                const catUrl = `/shop/${catSlug}`;
+                                const isCurrentCat = pathname === catUrl;
+                                return (
+                                  <Link
+                                    key={cat.id || cat._id || catSlug}
+                                    to={catUrl}
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className={cn(
+                                      'flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200',
+                                      isCurrentCat ? 'bg-primary/10 text-primary font-semibold' : 'text-gray-600 hover:bg-gray-50'
+                                    )}
+                                  >
+                                    <span>{cat.name}</span>
+                                    {cat.productCount !== undefined && cat.productCount > 0 && (
+                                      <span className="text-xs text-gray-400">{cat.productCount}</span>
+                                    )}
+                                  </Link>
+                                );
+                              })}
+                            </div>
                           )}
                         </React.Fragment>
                     ))}

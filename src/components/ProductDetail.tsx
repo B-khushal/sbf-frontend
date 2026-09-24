@@ -736,7 +736,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
 
   const isOutOfStock = Boolean(
     (product as any).isOutOfStock === true ||
-    product.isAvailable === false ||
+    (product as any).isAvailable === false ||
     (typeof (product as any).stock === 'number' && (product as any).stock <= 0) ||
     (typeof (product as any).countInStock === 'number' && (product as any).countInStock <= 0)
   );

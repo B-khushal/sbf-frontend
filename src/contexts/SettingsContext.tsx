@@ -52,6 +52,8 @@ interface Category {
   slug?: string;
   priority?: number;
   featured?: boolean;
+  isFeatured?: boolean;
+  showInShop?: boolean;
   colorTheme?: string;
   parentId?: string | null;
   mobileOrder?: number;

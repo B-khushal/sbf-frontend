@@ -9,14 +9,38 @@ interface BudgetFriendlySectionProps {
   section?: {
     title?: string;
     subtitle?: string;
+    styling?: {
+      background?: string;
+      padding?: string;
+      spacing?: string;
+      animation?: string;
+    };
     content?: {
+      tagline?: string;
+      showTagline?: boolean;
+      taglineIcon?: string;
       ctaText?: string;
       ctaLink?: string;
+      showCta?: boolean;
       maxProducts?: number;
     };
   };
   onAddToCart?: (item: any, quantity: number) => boolean;
 }
+
+const renderTaglineIcon = (iconName?: string) => {
+  switch (iconName) {
+    case 'Heart':
+      return <HeartHandshake className="w-3.5 h-3.5 text-rose-600" />;
+    case 'Gift':
+      return <Sparkles className="w-3.5 h-3.5 text-amber-600" />;
+    case 'Star':
+      return <Sparkles className="w-3.5 h-3.5 text-yellow-500" />;
+    case 'Sparkles':
+    default:
+      return <Sparkles className="w-3.5 h-3.5 text-bloom-pink-600" />;
+  }
+};
 
 export const BudgetFriendlySection: React.FC<BudgetFriendlySectionProps> = ({
   section,
@@ -29,9 +53,15 @@ export const BudgetFriendlySection: React.FC<BudgetFriendlySectionProps> = ({
   const subtitle =
     section?.subtitle ||
     "Discover elegant bouquets and gifts starting from ₹399 — all thoughtfully selected under ₹1,000.";
+  const tagline = section?.content?.tagline !== undefined ? section.content.tagline : "Affordable • Elegant • Thoughtfully Designed";
+  const showTagline = section?.content?.showTagline !== false && Boolean(tagline);
+  const taglineIcon = section?.content?.taglineIcon || "Sparkles";
   const ctaText = section?.content?.ctaText || "Explore Budget Friendly";
   const ctaLink = section?.content?.ctaLink || "/shop/budget-friendly";
+  const showCta = section?.content?.showCta !== false && Boolean(ctaText);
   const maxProducts = section?.content?.maxProducts || 8;
+  const customBackground = section?.styling?.background;
+  const customPadding = section?.styling?.padding || "py-14 sm:py-20";
 
   useEffect(() => {
     let isMounted = true;
@@ -79,7 +109,9 @@ export const BudgetFriendlySection: React.FC<BudgetFriendlySectionProps> = ({
   }
 
   return (
-    <section className="relative py-14 sm:py-20 bg-gradient-to-b from-stone-50/60 via-amber-50/20 to-white overflow-hidden">
+    <section 
+      className={`relative ${customPadding} ${customBackground || 'bg-gradient-to-b from-stone-50/60 via-amber-50/20 to-white'} overflow-hidden`}
+    >
       {/* Subtle luxury ambient backdrops */}
       <div className="absolute top-0 right-1/4 w-96 h-96 bg-rose-100/40 rounded-full blur-3xl pointer-events-none -translate-y-1/2" />
       <div className="absolute bottom-0 left-1/4 w-80 h-80 bg-amber-100/30 rounded-full blur-3xl pointer-events-none translate-y-1/2" />
@@ -89,10 +121,12 @@ export const BudgetFriendlySection: React.FC<BudgetFriendlySectionProps> = ({
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 sm:mb-12 gap-5">
           <div className="max-w-2xl">
             {/* Tagline / Eyebrow */}
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-100/80 border border-rose-200/60 text-bloom-dark text-xs sm:text-sm font-medium tracking-wide mb-3">
-              <Sparkles className="w-3.5 h-3.5 text-bloom-pink-600" />
-              <span>Affordable • Elegant • Thoughtfully Designed</span>
-            </div>
+            {showTagline && (
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-100/80 border border-rose-200/60 text-bloom-dark text-xs sm:text-sm font-medium tracking-wide mb-3 shadow-sm">
+                {renderTaglineIcon(taglineIcon)}
+                <span>{tagline}</span>
+              </div>
+            )}
 
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-gray-900 tracking-tight leading-tight">
               {title}
@@ -103,15 +137,17 @@ export const BudgetFriendlySection: React.FC<BudgetFriendlySectionProps> = ({
           </div>
 
           {/* Desktop CTA */}
-          <div className="hidden md:flex items-center shrink-0">
-            <Link
-              to={ctaLink}
-              className="group inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gray-900 text-white hover:bg-black text-sm font-medium transition-all duration-200 shadow-sm hover:shadow hover:gap-3"
-            >
-              <span>{ctaText}</span>
-              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
-            </Link>
-          </div>
+          {showCta && (
+            <div className="hidden md:flex items-center shrink-0">
+              <Link
+                to={ctaLink}
+                className="group inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gray-900 text-white hover:bg-black text-sm font-medium transition-all duration-200 shadow-sm hover:shadow hover:gap-3"
+              >
+                <span>{ctaText}</span>
+                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+              </Link>
+            </div>
+          )}
         </div>
 
         {/* Product Grid */}
@@ -134,15 +170,17 @@ export const BudgetFriendlySection: React.FC<BudgetFriendlySectionProps> = ({
         )}
 
         {/* Mobile CTA */}
-        <div className="mt-8 text-center md:hidden">
-          <Link
-            to={ctaLink}
-            className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3 rounded-full bg-gray-900 text-white hover:bg-black text-sm font-medium transition-all duration-200 shadow-sm"
-          >
-            <span>{ctaText}</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
+        {showCta && (
+          <div className="mt-8 text-center md:hidden">
+            <Link
+              to={ctaLink}
+              className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3 rounded-full bg-gray-900 text-white hover:bg-black text-sm font-medium transition-all duration-200 shadow-sm"
+            >
+              <span>{ctaText}</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        )}
       </div>
     </section>
   );

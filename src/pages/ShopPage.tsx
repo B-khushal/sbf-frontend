@@ -403,7 +403,7 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
   const isParentCategoryRoute = resolvedCategory ? !resolvedCategory.parentId : PRIMARY_CATEGORIES.some((category) => category.value === selectedCategoryKey);
   const isBudgetFriendlyCategory =
     selectedCategoryKey === "budget-friendly" ||
-    normalizeCategoryKey(selectedCategory) === "budget-friendly" ||
+    normalizeCategoryKey(category) === "budget-friendly" ||
     normalizeCategoryKey(pathCategory) === "budget-friendly" ||
     normalizeCategoryKey(queryCategory) === "budget-friendly";
   
@@ -477,21 +477,21 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
   const sourceCategories = dbCategories.length > 0 ? dbCategories : (shopCategories || settingsCategories);
   
   const flowerCategories = sourceCategories
-    .filter(cat => cat.showInShop === true)
-    .map(cat => ({
+    .filter((cat: any) => cat.showInShop === true)
+    .map((cat: any) => ({
       name: cat.name,
       description: cat.description,
       image: cat.image || '/images/roses-1.png',
-      category: cat.slug || cat.name.toLowerCase().replace(/\s+/g, '-'),
-      featured: cat.isFeatured || false,
+      category: cat.slug || cat.name?.toLowerCase().replace(/\s+/g, '-'),
+      featured: cat.isFeatured || cat.featured || false,
       count: (cat.slug === 'budget-friendly' || cat.name?.toLowerCase() === 'budget friendly')
-        ? products.filter(p => {
+        ? products.filter((p: any) => {
             const sp = getProductSellingPrice(p);
             return sp > 0 && sp <= 1000 && p.isAvailable !== false && !p.hidden;
           }).length
-        : filteredProducts.filter(p => 
-            p.category?.toLowerCase() === cat.name.toLowerCase() || 
-            p.categories?.some((productCat: any) => productCat.toLowerCase() === cat.name.toLowerCase())
+        : filteredProducts.filter((p: any) => 
+            p.category?.toLowerCase() === cat.name?.toLowerCase() || 
+            p.categories?.some((productCat: any) => productCat.toLowerCase() === cat.name?.toLowerCase())
           ).length
     }));
 
@@ -547,24 +547,19 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
           finalCategories = uniqueCategories;
         }
 
-        // Filter out categories that are toggled off in the database
-        const filteredShopCategories = finalCategories.filter((catName) => {
-          const dbMatch = dbCats.find(
-            (c) => c.name.toLowerCase() === catName.toLowerCase() || c.slug.toLowerCase() === catName.toLowerCase()
-          );
-          return dbMatch ? dbMatch.showInShop !== false : true;
-        });
+        // Only include active categories that are toggled ON for shop (showInShop === true)
+        let filteredShopCategories: string[] = [];
+        if (dbCats.length > 0) {
+          filteredShopCategories = dbCats
+            .filter((c) => c.showInShop === true && c.status === 'active')
+            .map((c) => c.name);
+        } else {
+          filteredShopCategories = (shopCategories || settingsCategories || [])
+            .filter((c: any) => c.showInShop === true && c.status !== 'inactive')
+            .map((c: any) => c.name);
+        }
 
-        // Ensure active DB categories that have showInShop !== false are included
-        dbCats.forEach(dbCat => {
-          if (dbCat.showInShop !== false && dbCat.status === 'active') {
-            const alreadyExists = filteredShopCategories.some(c => c.toLowerCase() === dbCat.name.toLowerCase() || c.toLowerCase() === dbCat.slug.toLowerCase());
-            if (!alreadyExists) {
-              filteredShopCategories.push(dbCat.name);
-            }
-          }
-        });
-        setCategories(filteredShopCategories);
+        setCategories(filteredShopCategories.length > 0 ? filteredShopCategories : uniqueCategories);
         
       } catch (error) {
         console.error("❌ Error fetching data:", error);
@@ -1182,44 +1177,36 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
                     </button>
                     {activeFilterSection === "category" && (
                       <div className="mt-3 space-y-2 max-h-48 overflow-y-auto">
-                        {(() => {
-                          const predefined = [
-                            { label: 'Budget Friendly (≤ ₹1,000)', value: 'budget-friendly' },
-                            { label: 'Bouquets', value: 'bouquets' },
-                            { label: 'Baskets', value: 'baskets' },
-                            { label: 'Roses', value: 'roses' },
-                            { label: 'Birthday', value: 'birthday' },
-                            { label: 'Anniversary', value: 'anniversary' },
-                          ];
-                          const filteredPredefined = predefined.filter(option => {
-                            const dbMatch = dbCategories.find(
-                              c => c.name.toLowerCase() === option.value.toLowerCase() || c.slug.toLowerCase() === option.value.toLowerCase()
-                            );
-                            return dbMatch ? dbMatch.showInShop !== false : true;
-                          });
-                          const predefinedValues = new Set(filteredPredefined.map(p => p.value));
-                          const dynamicCategories = categories
-                            .slice(0, 10)
-                            .filter(cat => !predefinedValues.has(cat.toLowerCase()))
-                            .map(cat => ({
-                              label: cat.charAt(0).toUpperCase() + cat.slice(1),
-                              value: cat.toLowerCase()
-                            }));
-
-                          return [...filteredPredefined, ...dynamicCategories].map(option => (
-                            <label key={option.value} className="flex items-center gap-3 cursor-pointer group">
-                              <input
-                                type="radio"
-                                name="category"
-                                value={option.value}
-                                checked={selectedCategory === option.value}
-                                onChange={(e) => setSelectedCategory(e.target.value)}
-                                className="w-5 h-5 cursor-pointer"
-                              />
-                              <span className="text-gray-700 group-hover:text-pink-600 transition-colors">{option.label}</span>
+                        {flowerCategories.map(option => {
+                          const isSelected = selectedCategory.toLowerCase() === option.name.toLowerCase() || 
+                            ((option.category === 'budget-friendly' || option.name.toLowerCase() === 'budget friendly') && isBudgetFriendlyCategory);
+                          return (
+                            <label key={option.category} className="flex items-center justify-between cursor-pointer group py-1">
+                              <div className="flex items-center gap-3">
+                                <input
+                                  type="radio"
+                                  name="category"
+                                  value={option.name}
+                                  checked={isSelected}
+                                  onChange={() => {
+                                    if (option.category === 'budget-friendly' || option.name.toLowerCase() === 'budget friendly') {
+                                      navigate('/shop/budget-friendly');
+                                    } else {
+                                      setSelectedCategory(option.name);
+                                    }
+                                  }}
+                                  className="w-4 h-4 cursor-pointer text-pink-600 focus:ring-pink-500"
+                                />
+                                <span className={`text-sm transition-colors ${isSelected ? "text-pink-600 font-semibold" : "text-gray-700 group-hover:text-pink-600"}`}>
+                                  {option.name}
+                                </span>
+                              </div>
+                              {option.count > 0 && (
+                                <span className="text-xs text-gray-400">({option.count})</span>
+                              )}
                             </label>
-                          ));
-                        })()}
+                          );
+                        })}
                       </div>
                     )}
                   </div>

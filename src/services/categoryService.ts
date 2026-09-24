@@ -15,6 +15,9 @@ export interface Category {
   parentId?: string | null;
   productCount?: number;
   showInShop?: boolean;
+  isFeatured?: boolean;
+  featured?: boolean;
+  enabled?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
