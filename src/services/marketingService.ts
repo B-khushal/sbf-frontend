@@ -55,6 +55,27 @@ export interface LiveVisitor {
   interestLevel: string;
 }
 
+export interface ReportColumn {
+  key: string;
+  label: string;
+  type: 'text' | 'number' | 'currency' | 'date' | 'badge';
+}
+
+export interface ReportResponse {
+  success: boolean;
+  reportType: string;
+  reportTitle: string;
+  reportDescription: string;
+  category: string;
+  timeframe: string;
+  range: { start: string; end: string };
+  columns: ReportColumn[];
+  summary: Record<string, any>;
+  rows: Array<Record<string, any>>;
+  chartData: Array<Record<string, any>>;
+  totalRows: number;
+}
+
 export const marketingService = {
   // 1. Dashboard
   getDashboardOverview: async (params: { timeframe?: string; startDate?: string; endDate?: string }) => {
@@ -207,9 +228,62 @@ export const marketingService = {
     return res.data;
   },
 
-  // 15. Reports Export
-  exportReportUrl: (reportType: string, timeframe: string = '30d') => {
+  // 15. Reports & Analytics Engine
+  getReportData: async (params: {
+    reportType: string;
+    timeframe?: string;
+    startDate?: string;
+    endDate?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<ReportResponse> => {
+    const res = await axios.get<ReportResponse>(`${API_URL}/marketing/reports/data`, {
+      ...getAuthHeaders(),
+      params
+    });
+    return res.data;
+  },
+
+  downloadReport: async (params: {
+    reportType: string;
+    timeframe?: string;
+    startDate?: string;
+    endDate?: string;
+    format?: 'csv' | 'json';
+  }) => {
+    const format = params.format || 'csv';
+    const res = await axios.get(`${API_URL}/marketing/reports/export`, {
+      ...getAuthHeaders(),
+      params,
+      responseType: 'blob'
+    });
+
+    const disposition = res.headers['content-disposition'];
+    let filename = `sbf_${params.reportType}_${params.timeframe || 'period'}.${format}`;
+    if (disposition) {
+      const match = disposition.match(/filename="?([^";]+)"?/);
+      if (match && match[1]) filename = match[1];
+    }
+
+    const blob = new Blob([res.data], {
+      type: format === 'json' ? 'application/json' : 'text/csv;charset=utf-8;'
+    });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  },
+
+  exportReportUrl: (reportType: string, timeframe: string = '30d', format: string = 'csv', startDate?: string, endDate?: string) => {
     const token = localStorage.getItem('token') || '';
-    return `${API_URL}/marketing/reports/export?reportType=${reportType}&timeframe=${timeframe}&token=${token}`;
+    let url = `${API_URL}/marketing/reports/export?reportType=${reportType}&timeframe=${timeframe}&format=${format}&token=${token}`;
+    if (startDate) url += `&startDate=${encodeURIComponent(startDate)}`;
+    if (endDate) url += `&endDate=${encodeURIComponent(endDate)}`;
+    return url;
   }
 };
