@@ -17,15 +17,16 @@ import {
 import { useNavigate } from "react-router-dom";
 
 const QUICK_FILTER_PRESETS = [
-  { id: "all", label: "All Bouquets" },
+  { id: "all", label: "All Flower Products" },
+  { id: "anniversary", label: "Anniversary" },
+  { id: "birthday", label: "Birthday" },
+  { id: "baskets", label: "Flower Baskets & Stands" },
   { id: "roses", label: "Roses" },
   { id: "lilies", label: "Lilies" },
   { id: "orchids", label: "Orchids" },
   { id: "carnation", label: "Carnations" },
-  { id: "tulips", label: "Tulips" },
-  { id: "box", label: "Box Arrangements" },
-  { id: "hand", label: "Hand Bouquets" },
-  { id: "baskets", label: "Flower Baskets" },
+  { id: "sympathy", label: "Sympathy" },
+  { id: "chocolate", label: "Chocolate Bouquets" },
 ];
 
 const BouquetsPage: React.FC = () => {
@@ -40,31 +41,75 @@ const BouquetsPage: React.FC = () => {
       setLoading(true);
       const res = await productService.getAdminProducts();
       const allProds = res.products || [];
-      const bouquetProducts = allProds.filter((p: any) => {
+
+      // Filter: Show all flower & bouquet products (including anniversary, birthdays, sympathy, baskets)
+      // Exclude only the distinct categories that have their own dedicated admin management pages:
+      // Cakes, Plants, standalone Chocolates, Combos, Addons, and standalone Hampers.
+      const flowerProducts = allProds.filter((p: any) => {
         const cat = String(p.category || "").toLowerCase();
         const catalogType = String(p.catalogType || "").toLowerCase();
+        const subcat = String(p.subcategory || "").toLowerCase();
+        const title = String(p.title || p.name || "").toLowerCase();
+
+        // 1. Exclude Cakes (managed under /admin/products/cakes)
+        const isCake =
+          catalogType === "cake" || cat === "cakes" || cat.includes("cake");
+        if (isCake) return false;
+
+        // 2. Exclude Plants (managed under /admin/products/plants)
+        const isPlant =
+          catalogType === "plant" || cat === "plants" || cat.includes("plant");
+        if (isPlant) return false;
+
+        // 3. Exclude standalone Chocolates (keep chocolate bouquets, baskets, and floral gifts)
+        const isBouquetOrBasket =
+          cat.includes("bouquet") ||
+          subcat.includes("bouquet") ||
+          title.includes("bouquet") ||
+          cat.includes("basket") ||
+          subcat.includes("basket") ||
+          title.includes("basket") ||
+          cat.includes("flower") ||
+          subcat.includes("flower") ||
+          title.includes("flower");
+
+        const isPureChocolate =
+          (catalogType === "chocolate" ||
+            cat === "chocolates" ||
+            cat.includes("chocolate") ||
+            cat.includes("confectionery")) &&
+          !isBouquetOrBasket;
+        if (isPureChocolate) return false;
+
+        // 4. Exclude Combos (managed under /admin/products/combos)
         const isCombo =
           cat === "combos" ||
           cat === "combo products" ||
           catalogType === "combo" ||
           (p.comboItems && p.comboItems.length > 0);
-        return (
-          !isCombo &&
-          (catalogType === "bouquet" ||
-            cat.includes("flower") ||
-            cat.includes("bouquet") ||
-            cat.includes("rose") ||
-            cat.includes("lily") ||
-            cat.includes("orchid"))
-        );
+        if (isCombo) return false;
+
+        // 5. Exclude Addons (managed under /admin/products/addons)
+        const isAddon =
+          catalogType === "addon" || cat === "addons" || cat === "add-on";
+        if (isAddon) return false;
+
+        // 6. Exclude standalone Hampers (managed under /admin/products/hampers unless floral/basket)
+        const isHamper =
+          catalogType === "hamper" ||
+          (cat.includes("hamper") && !isBouquetOrBasket);
+        if (isHamper) return false;
+
+        return true;
       });
-      setProducts(bouquetProducts);
+
+      setProducts(flowerProducts);
     } catch (error: any) {
-      console.error("Error fetching bouquets:", error);
+      console.error("Error fetching flower products:", error);
       toast({
         variant: "destructive",
-        title: "Error Loading Bouquets",
-        description: error.message || "Failed to load bouquet products.",
+        title: "Error Loading Products",
+        description: error.message || "Failed to load flower products.",
       });
     } finally {
       setLoading(false);
@@ -87,7 +132,7 @@ const BouquetsPage: React.FC = () => {
       if (Array.isArray(p.categories) && p.categories.length > 1) {
         multiCategoryCount++;
       }
-      if ((p.countInStock || 0) > 0) {
+      if ((p.countInStock || 0) > 0 || (p.stock || 0) > 0) {
         inStockCount++;
       }
     });
@@ -109,15 +154,26 @@ const BouquetsPage: React.FC = () => {
       const count = products.filter((p) => {
         const cat = (p.category || "").toLowerCase();
         const subcat = (p.subcategory || "").toLowerCase();
-        const title = (p.title || "").toLowerCase();
+        const title = (p.title || (p as any).name || "").toLowerCase();
         const cats = Array.isArray(p.categories)
-          ? p.categories.map((c) => c.toLowerCase()).join(" ")
+          ? p.categories.map((c: any) => (typeof c === "string" ? c : c?.name || "")).join(" ").toLowerCase()
           : "";
+        const occs = Array.isArray((p as any).occasions)
+          ? (p as any).occasions.map((o: any) => (typeof o === "string" ? o : o?.name || "")).join(" ").toLowerCase()
+          : "";
+
+        if (preset.id === "baskets") {
+          return cat.includes("basket") || subcat.includes("basket") || title.includes("basket") || title.includes("stand") || title.includes("wreath");
+        }
+        if (preset.id === "chocolate") {
+          return cat.includes("chocolate") || subcat.includes("chocolate") || title.includes("chocolate") || title.includes("ferrero");
+        }
         return (
           cat.includes(q) ||
           subcat.includes(q) ||
           title.includes(q) ||
-          cats.includes(q)
+          cats.includes(q) ||
+          occs.includes(q)
         );
       }).length;
       counts[preset.id] = count;
@@ -132,15 +188,26 @@ const BouquetsPage: React.FC = () => {
     return products.filter((p) => {
       const cat = (p.category || "").toLowerCase();
       const subcat = (p.subcategory || "").toLowerCase();
-      const title = (p.title || "").toLowerCase();
+      const title = (p.title || (p as any).name || "").toLowerCase();
       const cats = Array.isArray(p.categories)
-        ? p.categories.map((c) => c.toLowerCase()).join(" ")
+        ? p.categories.map((c: any) => (typeof c === "string" ? c : c?.name || "")).join(" ").toLowerCase()
         : "";
+      const occs = Array.isArray((p as any).occasions)
+        ? (p as any).occasions.map((o: any) => (typeof o === "string" ? o : o?.name || "")).join(" ").toLowerCase()
+        : "";
+
+      if (activeTab === "baskets") {
+        return cat.includes("basket") || subcat.includes("basket") || title.includes("basket") || title.includes("stand") || title.includes("wreath");
+      }
+      if (activeTab === "chocolate") {
+        return cat.includes("chocolate") || subcat.includes("chocolate") || title.includes("chocolate") || title.includes("ferrero");
+      }
       return (
         cat.includes(q) ||
         subcat.includes(q) ||
         title.includes(q) ||
-        cats.includes(q)
+        cats.includes(q) ||
+        occs.includes(q)
       );
     });
   }, [products, activeTab]);
@@ -156,14 +223,14 @@ const BouquetsPage: React.FC = () => {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-                Bouquets Catalog & Taxonomy
+                Flower Products & Bouquets Catalog
               </h1>
               <Badge className="bg-pink-100 text-pink-700 dark:bg-pink-950/50 dark:text-pink-300 font-semibold text-[11px] border border-pink-200 dark:border-pink-800">
                 {products.length} Products
               </Badge>
             </div>
             <p className="text-xs text-muted-foreground">
-              Manage fresh flower bouquets, assign subcategories, and batch update store taxonomy.
+              Manage all fresh flowers, bouquets, anniversary, birthday, sympathy, and basket arrangements in one place.
             </p>
           </div>
         </div>
@@ -194,7 +261,7 @@ const BouquetsPage: React.FC = () => {
             <FolderTree className="h-4 w-4" />
           </div>
           <div>
-            <p className="text-[11px] text-muted-foreground font-medium">Total Bouquets</p>
+            <p className="text-[11px] text-muted-foreground font-medium">Total Products</p>
             <p className="text-base font-bold text-slate-900 dark:text-slate-100">{stats.total}</p>
           </div>
         </div>
@@ -267,7 +334,7 @@ const BouquetsPage: React.FC = () => {
       <EnterpriseProductTable
         products={displayedProducts}
         loading={loading}
-        catalogTypeFilter="bouquet"
+        catalogTypeFilter="all"
         onRefresh={fetchBouquets}
         onEditProduct={(product) => navigate(`/admin/products/edit/${product._id}`)}
       />
