@@ -252,13 +252,19 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
     > = [];
 
     // 1. Add all images
-    if (product.images && product.images.length > 0) {
-      product.images.forEach((img, idx) => {
-        items.push({
-          type: 'image',
-          url: img,
-          index: idx
-        });
+    const rawImages = (product.images && product.images.length > 0)
+      ? product.images
+      : ((product as any).image ? [(product as any).image] : ((product as any).details?.images || []));
+
+    if (rawImages && rawImages.length > 0) {
+      rawImages.forEach((img: string, idx: number) => {
+        if (img && typeof img === 'string') {
+          items.push({
+            type: 'image',
+            url: img,
+            index: idx
+          });
+        }
       });
     }
 
@@ -756,7 +762,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
   const currentGalleryItem = galleryItems[selectedImage];
   const imageUrl = currentGalleryItem?.type === 'image'
     ? getProductImageUrl(currentGalleryItem.url, 800, false)
-    : getVideoPosterUrl(currentGalleryItem?.video?.url || '');
+    : (currentGalleryItem ? getVideoPosterUrl(currentGalleryItem?.video?.url || '') : getProductImageUrl(undefined, 800, false));
 
   // Image Navigation
   const prevImage = () => {

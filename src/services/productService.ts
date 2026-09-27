@@ -209,7 +209,6 @@ export interface ProductData {
   catalogType?: 'bouquet' | 'plant' | 'cake' | 'chocolate' | 'hamper' | 'combo' | 'addon' | 'custom';
   sku?: string;
   status?: 'published' | 'draft' | 'hidden' | 'archived' | 'scheduled';
-  costPrice?: number;
   barcode?: string;
   allowBackorders?: boolean;
   warehouseLocation?: string;
@@ -657,6 +656,21 @@ const mapBackendToFrontend = (data: BackendProductData): ProductData => {
     );
   } else {
     mappedData.careInstructions = [];
+  }
+
+  // Fallback for category, subcategory, categories, and images from details if missing
+  const detailsObj = (data.details && typeof data.details === 'object' && !Array.isArray(data.details)) ? (data.details as any) : {};
+  if ((!mappedData.categories || mappedData.categories.length === 0) && Array.isArray(detailsObj.categories) && detailsObj.categories.length > 0) {
+    mappedData.categories = detailsObj.categories;
+  }
+  if (!mappedData.category && detailsObj.category) {
+    mappedData.category = detailsObj.category;
+  }
+  if (!mappedData.subcategory && detailsObj.subcategory) {
+    mappedData.subcategory = detailsObj.subcategory;
+  }
+  if ((!mappedData.images || mappedData.images.length === 0) && Array.isArray(detailsObj.images) && detailsObj.images.length > 0) {
+    mappedData.images = detailsObj.images;
   }
 
   mappedData.sameDay = data.sameDay !== undefined ? Boolean(data.sameDay) : true;

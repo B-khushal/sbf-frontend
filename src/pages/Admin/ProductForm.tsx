@@ -18,7 +18,7 @@ import api from '../../services/api';
 import axios from 'axios'; // Keep for axios.isAxiosError
 import ProductFeaturesToggle from '@/components/ui/ProductFeaturesToggle';
 import { getImageUrl } from '@/config';
-import { PRIMARY_CATEGORIES, getAdditionalCategoryOptions, getSubcategoryOptions, normalizeCategoryKey } from '@/utils/categoryTaxonomy';
+import { PRIMARY_CATEGORIES, CATEGORY_SUBCATEGORIES, getAdditionalCategoryOptions, getSubcategoryOptions, normalizeCategoryKey } from '@/utils/categoryTaxonomy';
 import categoryService, { Category } from '@/services/categoryService';
 import { useSeasonalCampaign } from '@/contexts/SeasonalCampaignContext';
 import { cn } from '@/lib/utils';
@@ -259,15 +259,34 @@ const ProductForm = () => {
   const [dbOccasions, setDbOccasions] = useState<OccasionData[]>([]);
 
   const getSubcategories = (parentSlug: string) => {
-    const parent = dbCategories.find(c => c.slug === parentSlug);
-    if (!parent) return [];
-    const parentIdStr = parent._id || parent.id;
-    return dbCategories.filter(c => {
-      const parentId = c.parentId as string | { _id?: string; id?: string } | null | undefined;
-      if (!parentId) return false;
-      const childParentId = typeof parentId === 'object' ? (parentId._id || parentId.id) : parentId;
-      return childParentId === parentIdStr;
+    const parent = dbCategories.find(c => c.slug === parentSlug || c.name.toLowerCase() === (parentSlug || '').toLowerCase());
+    const parentIdStr = parent ? (parent._id || parent.id) : null;
+    const dynamicSubs = parentIdStr
+      ? dbCategories.filter(c => {
+          const parentId = c.parentId as string | { _id?: string; id?: string } | null | undefined;
+          if (!parentId) return false;
+          const childParentId = typeof parentId === 'object' ? (parentId._id || parentId.id) : parentId;
+          return childParentId === parentIdStr;
+        })
+      : [];
+
+    const staticSubs = (CATEGORY_SUBCATEGORIES as Record<string, Array<{ value: string; label: string }>>)[parentSlug] || [];
+    const combined = [...dynamicSubs];
+
+    staticSubs.forEach(s => {
+      if (!combined.some(c => c.slug === s.value)) {
+        combined.push({
+          _id: s.value,
+          id: s.value,
+          name: s.label,
+          slug: s.value,
+          status: 'active',
+          parentId: parentIdStr
+        } as any);
+      }
     });
+
+    return combined;
   };
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -622,27 +641,52 @@ const ProductForm = () => {
 
       const data = await productService.getProductById(id);
       
-      // Ensure categories is an array
-      if (!data.categories) {
-        data.categories = [];
+      // Fallback for categories array if empty
+      const rawCategories = (Array.isArray(data.categories) && data.categories.length > 0)
+        ? data.categories
+        : (Array.isArray((data as any).details?.categories) && (data as any).details.categories.length > 0
+          ? (data as any).details.categories
+          : []);
+
+      // Normalize all categories to slugs
+      data.categories = rawCategories.map((item: string) => {
+        const matched = cats.find(c => c.slug === item || c.name.toLowerCase() === (item || '').toLowerCase());
+        return matched ? matched.slug : item;
+      });
+
+      // Normalize primary category
+      if (!data.category && (data as any).details?.category) {
+        data.category = (data as any).details.category;
+      }
+      if (data.category) {
+        const matchedCat = cats.find(c => c.slug === data.category || c.name.toLowerCase() === data.category.toLowerCase());
+        if (matchedCat) {
+          data.category = matchedCat.slug;
+        }
+      }
+
+      // Normalize subcategory
+      if (!data.subcategory && (data as any).details?.subcategory) {
+        data.subcategory = (data as any).details.subcategory;
+      }
+      if (data.subcategory) {
+        const matchedSub = cats.find(c => c.slug === data.subcategory || c.name.toLowerCase() === data.subcategory.toLowerCase());
+        if (matchedSub) {
+          data.subcategory = matchedSub.slug;
+        }
       }
 
       if (!data.subcategory) {
-        const parent = cats.find(c => c.slug === data.category);
-        let subcategories: Category[] = [];
-        if (parent) {
-          const parentIdStr = parent._id || parent.id;
-          subcategories = cats.filter(c => {
-            const parentId = c.parentId as string | { _id?: string; id?: string } | null | undefined;
-            if (!parentId) return false;
-            const childParentId = typeof parentId === 'object' ? (parentId._id || parentId.id) : parentId;
-            return childParentId === parentIdStr;
-          });
-        }
+        const availableSubs = getSubcategories(data.category);
         const existingMatch = (data.categories || []).find((item) =>
-          subcategories.some((subcategory) => subcategory.slug === item)
+          availableSubs.some((subcategory) => subcategory.slug === item)
         );
         data.subcategory = existingMatch || '';
+      }
+
+      // Fallback for images
+      if ((!data.images || data.images.length === 0) && Array.isArray((data as any).details?.images) && (data as any).details.images.length > 0) {
+        data.images = (data as any).details.images;
       }
       
       // Ensure customization options are properly set
@@ -2368,6 +2412,21 @@ const ProductForm = () => {
                         } as any);
                       }
                     });
+                    if (formData.category && !combined.some(c => c.slug === formData.category)) {
+                      const matched = dbCategories.find(c => c.slug === formData.category);
+                      if (matched) {
+                        combined.push(matched);
+                      } else {
+                        combined.push({
+                          _id: formData.category,
+                          id: formData.category,
+                          name: formData.category.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+                          slug: formData.category,
+                          status: 'active',
+                          parentId: null
+                        } as any);
+                      }
+                    }
                     return combined.map((category) => (
                       <SelectItem key={category.slug} value={category.slug}>
                         {category.name}
@@ -2393,11 +2452,29 @@ const ProductForm = () => {
                     <SelectValue placeholder="Select subcategory" />
                   </SelectTrigger>
                   <SelectContent disablePortal>
-                    {getSubcategories(formData.category).map((subcategory) => (
-                      <SelectItem key={subcategory.slug} value={subcategory.slug}>
-                        {subcategory.name}
-                      </SelectItem>
-                    ))}
+                    {(() => {
+                      const subs = getSubcategories(formData.category);
+                      if (formData.subcategory && !subs.some(s => s.slug === formData.subcategory)) {
+                        const matched = dbCategories.find(c => c.slug === formData.subcategory);
+                        if (matched) {
+                          subs.push(matched);
+                        } else {
+                          subs.push({
+                            _id: formData.subcategory,
+                            id: formData.subcategory,
+                            name: formData.subcategory.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+                            slug: formData.subcategory,
+                            status: 'active',
+                            parentId: null
+                          } as any);
+                        }
+                      }
+                      return subs.map((subcategory) => (
+                        <SelectItem key={subcategory.slug} value={subcategory.slug}>
+                          {subcategory.name}
+                        </SelectItem>
+                      ));
+                    })()}
                   </SelectContent>
                 </Select>
                 {errors.subcategory && (
