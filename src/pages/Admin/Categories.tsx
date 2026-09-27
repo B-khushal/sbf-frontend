@@ -86,9 +86,12 @@ const AdminCategories: React.FC = () => {
       if (parentFilter === 'parents') {
         result = result.filter(c => !c.parentId);
       } else if (parentFilter === 'children') {
-        result = result.filter(c => c.parentId);
+        result = result.filter(c => !!c.parentId);
       } else {
-        result = result.filter(c => c.parentId?._id === parentFilter || c.parentId === parentFilter);
+        result = result.filter(c => {
+          const pId = typeof c.parentId === 'object' && c.parentId !== null ? (c.parentId._id || c.parentId.id) : c.parentId;
+          return pId === parentFilter;
+        });
       }
     }
 
@@ -499,7 +502,7 @@ const AdminCategories: React.FC = () => {
                           <TableCell>
                             {category.parentId ? (
                               <Badge variant="outline" className="text-xs bg-gray-50 text-gray-700">
-                                {category.parentId.name || 'Subcategory'}
+                                {(typeof category.parentId === 'object' && category.parentId !== null ? category.parentId.name : null) || 'Subcategory'}
                               </Badge>
                             ) : (
                               <Badge variant="secondary" className="text-xs bg-primary/10 text-primary border-primary/20">
@@ -520,13 +523,15 @@ const AdminCategories: React.FC = () => {
                           </TableCell>
                           <TableCell className="text-center">
                             <Switch
-                              checked={category.showInShop !== false}
+                              checked={category.showInShop === true}
                               onCheckedChange={async (checked) => {
                                 try {
+                                  setCategories(prev => prev.map(c => (c._id === id || c.id === id) ? { ...c, showInShop: checked, isFeatured: checked } : c));
                                   await categoryService.updateCategory(id, { showInShop: checked });
                                   toast({ title: 'Success', description: 'Shop display updated successfully' });
                                   fetchCategories();
                                 } catch (err) {
+                                  setCategories(prev => prev.map(c => (c._id === id || c.id === id) ? { ...c, showInShop: !checked, isFeatured: !checked } : c));
                                   toast({ variant: 'destructive', title: 'Error', description: 'Failed to update shop display' });
                                 }
                               }}

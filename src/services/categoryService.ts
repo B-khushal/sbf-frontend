@@ -1,5 +1,12 @@
 import api from './api';
 
+export interface CategoryParent {
+  _id?: string;
+  id?: string;
+  name?: string;
+  slug?: string;
+}
+
 export interface Category {
   _id?: string;
   id?: string;
@@ -12,7 +19,7 @@ export interface Category {
   categoryUrl: string;
   status: 'active' | 'inactive';
   sortOrder: number;
-  parentId?: string | null;
+  parentId?: string | CategoryParent | null;
   productCount?: number;
   showInShop?: boolean;
   isFeatured?: boolean;

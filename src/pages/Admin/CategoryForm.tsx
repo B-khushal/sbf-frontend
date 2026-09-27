@@ -56,8 +56,14 @@ const CategoryForm: React.FC = () => {
             setSeoDescription(cat.seoDescription || '');
             setStatus(cat.status);
             setSortOrder(cat.sortOrder);
-            setParentId(cat.parentId?._id || cat.parentId || 'null');
-            setShowInShop(cat.showInShop !== undefined ? cat.showInShop : true);
+            let parentIdVal = 'null';
+            if (typeof cat.parentId === 'string' && cat.parentId.trim()) {
+              parentIdVal = cat.parentId.trim();
+            } else if (cat.parentId && typeof cat.parentId === 'object') {
+              parentIdVal = cat.parentId._id || cat.parentId.id || 'null';
+            }
+            setParentId(parentIdVal);
+            setShowInShop(cat.showInShop !== undefined ? Boolean(cat.showInShop) : (cat.isFeatured !== undefined ? Boolean(cat.isFeatured) : true));
           }
         }
       } catch (err) {
