@@ -966,10 +966,15 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
   };
 
   const handleShare = async () => {
+    const currentOrigin = typeof window !== 'undefined' ? window.location.origin : '';
+    const isRenderOrLocal = !currentOrigin || currentOrigin.includes('onrender.com') || currentOrigin.includes('localhost') || currentOrigin.includes('127.0.0.1');
+    const targetBase = isRenderOrLocal ? 'https://sbflorist.in' : currentOrigin;
+    const shareUrl = `${targetBase}/product/${(product as any).slug || product._id || product.id || ''}`;
+
     const shareData = {
       title: `${product.title} - SBF Florist`,
       text: `Check out this beautiful ${product.title} from SBF Florist! ${formatPrice(convertPrice(discountedPrice))}`,
-      url: window.location.href,
+      url: shareUrl,
     };
 
     try {
@@ -984,7 +989,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
         });
       } else {
         // Fallback: Copy to clipboard
-        await navigator.clipboard.writeText(`${shareData.title}\n${shareData.text}\n${shareData.url}`);
+        await navigator.clipboard.writeText(`${shareData.title}\n${shareData.text}\n${shareUrl}`);
         toast({
           title: "Link copied",
           description: "Product link copied to clipboard!",
@@ -996,7 +1001,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
       console.error("Error sharing:", error);
       // Final fallback: Copy URL only
       try {
-        await navigator.clipboard.writeText(window.location.href);
+        await navigator.clipboard.writeText(shareUrl);
         toast({
           title: "Link copied",
           description: "Product link copied to clipboard!",
@@ -1095,8 +1100,10 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
 
   // Generate SEO schema markup dynamically
   const schemaMarkup = React.useMemo(() => {
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://sbflorist.in';
-    const productUrl = `${baseUrl}/product/${product._id}`;
+    const currentOrigin = typeof window !== 'undefined' ? window.location.origin : '';
+    const isRenderOrLocal = !currentOrigin || currentOrigin.includes('onrender.com') || currentOrigin.includes('localhost') || currentOrigin.includes('127.0.0.1');
+    const baseUrl = isRenderOrLocal ? 'https://sbflorist.in' : currentOrigin;
+    const productUrl = `${baseUrl}/product/${(product as any).slug || product._id}`;
     
     const imageList = product.images ? product.images.map(img => getImageUrl(img)) : [];
     
