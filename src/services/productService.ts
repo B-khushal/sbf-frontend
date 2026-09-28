@@ -1005,7 +1005,67 @@ class ProductService {
     );
     return response.data;
   }
+
+  async exportProductCatalog(options: {
+    type?: 'all' | 'categories' | 'products';
+    categoryIds?: string[];
+    productIds?: string[];
+  }): Promise<{
+    blob: Blob;
+    filename: string;
+    totalCount: number;
+    completeCount: number;
+    warningCount: number;
+    warnings: Array<{ productId: string; productName: string; issue: string }>;
+  }> {
+    const config = createAuthConfig();
+    const params: Record<string, string> = {};
+    if (options.type) params.type = options.type;
+    if (options.categoryIds && options.categoryIds.length > 0) {
+      params.categoryIds = options.categoryIds.join(',');
+    }
+    if (options.productIds && options.productIds.length > 0) {
+      params.productIds = options.productIds.join(',');
+    }
+
+    const response = await axios.get(`${API_URL}/admin/products/export`, {
+      ...config,
+      params,
+      responseType: 'blob'
+    });
+
+    let filename = `sbf-product-catalog-${new Date().toISOString().split('T')[0]}.csv`;
+    const disposition = response.headers['content-disposition'];
+    if (disposition && disposition.includes('filename=')) {
+      const match = disposition.match(/filename="?([^";]+)"?/);
+      if (match && match[1]) {
+        filename = match[1];
+      }
+    }
+
+    const totalCount = parseInt(response.headers['x-export-total'] || '0', 10);
+    const completeCount = parseInt(response.headers['x-export-complete'] || '0', 10);
+    const warningCount = parseInt(response.headers['x-export-warnings-count'] || '0', 10);
+    let warnings = [];
+    if (response.headers['x-export-warnings']) {
+      try {
+        warnings = JSON.parse(decodeURIComponent(response.headers['x-export-warnings']));
+      } catch (e) {
+        console.warn('Could not parse export warnings header', e);
+      }
+    }
+
+    return {
+      blob: response.data,
+      filename,
+      totalCount,
+      completeCount,
+      warningCount,
+      warnings
+    };
+  }
 }
+
 
 export default new ProductService();
 

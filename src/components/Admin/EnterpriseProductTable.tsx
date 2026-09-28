@@ -42,6 +42,7 @@ import {
   Tag
 } from "lucide-react";
 import { BulkCategoryModal } from "./BulkCategoryModal";
+import ProductCatalogExportModal from "./ProductCatalogExportModal";
 
 interface EnterpriseProductTableProps {
   products: ProductData[];
@@ -62,6 +63,7 @@ export const EnterpriseProductTable: React.FC<EnterpriseProductTableProps> = ({
   const { toast } = useToast();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
   const [isReorderMode, setIsReorderMode] = useState(false);
   const [orderedProducts, setOrderedProducts] = useState<ProductData[]>([]);
@@ -342,29 +344,9 @@ export const EnterpriseProductTable: React.FC<EnterpriseProductTableProps> = ({
     }
   };
 
-  // Export CSV
+  // Export CSV (opens standardized 8-column Meta Catalog Export Dialog)
   const handleExportCSV = () => {
-    const headers = ["Title", "SKU", "CatalogType", "Category", "Price", "Discount", "Stock", "Status", "Rating"];
-    const rows = filteredProducts.map((p) => [
-      `"${p.title.replace(/"/g, '""')}"`,
-      `"${p.sku || ""}"`,
-      `"${p.catalogType || "bouquet"}"`,
-      `"${p.category || ""}"`,
-      p.price,
-      p.discount || 0,
-      p.countInStock,
-      p.hidden ? "Hidden" : "Published",
-      p.rating || 0,
-    ]);
-
-    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `catalog_export_${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    setIsExportModalOpen(true);
   };
 
   return (
@@ -458,8 +440,18 @@ export const EnterpriseProductTable: React.FC<EnterpriseProductTableProps> = ({
                 <List className="h-3.5 w-3.5" /> Table
               </Button>
             </div>
-            <Button variant="outline" size="sm" onClick={handleExportCSV} className="h-9 text-xs gap-1.5">
-              <Download className="h-3.5 w-3.5" /> Export CSV
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsExportModalOpen(true)}
+              className="h-9 text-xs gap-1.5 border-pink-200 bg-pink-50/50 hover:bg-pink-100/60 text-pink-700 hover:text-pink-800 font-semibold shadow-xs"
+            >
+              <Download className="h-3.5 w-3.5" /> Export Catalog
+              {selectedIds.length > 0 && (
+                <Badge className="ml-1 bg-pink-600 text-white text-[10px] px-1.5 py-0 h-4">
+                  {selectedIds.length}
+                </Badge>
+              )}
             </Button>
           </div>
         </CardContent>
@@ -474,6 +466,14 @@ export const EnterpriseProductTable: React.FC<EnterpriseProductTableProps> = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            <Button
+              size="sm"
+              variant="secondary"
+              className="h-8 text-xs bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700 text-white border-0 gap-1.5 font-semibold shadow-sm"
+              onClick={() => setIsExportModalOpen(true)}
+            >
+              <Download className="h-3.5 w-3.5" /> Export Selected ({selectedIds.length})
+            </Button>
             <Button
               size="sm"
               variant="secondary"
@@ -1003,6 +1003,15 @@ export const EnterpriseProductTable: React.FC<EnterpriseProductTableProps> = ({
           setSelectedIds([]);
           if (onRefresh) onRefresh();
         }}
+      />
+
+      {/* Product Catalog CSV Export Modal */}
+      <ProductCatalogExportModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        selectedProductIds={selectedIds}
+        products={products}
+        categories={uniqueCategories}
       />
     </div>
   );

@@ -7,7 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Edit, Trash2, Eye, EyeOff, AlertTriangle, Package, Search, Filter, X, Heart, GripVertical, ChevronUp, ChevronDown, LayoutGrid, List } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, EyeOff, AlertTriangle, Package, Search, Filter, X, Heart, GripVertical, ChevronUp, ChevronDown, LayoutGrid, List, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import api from "@/services/api";
@@ -16,6 +16,8 @@ import productService, { ProductData, OccasionData } from "@/services/productSer
 import { getImageUrl } from "@/config";
 import { useSeasonalCampaign } from "@/contexts/SeasonalCampaignContext";
 import { useValentine } from "@/contexts/ValentineContext";
+import ProductCatalogExportModal from "@/components/Admin/ProductCatalogExportModal";
+
 
 type Product = ProductData & {
   _id: string;
@@ -73,6 +75,7 @@ const AdminProducts: React.FC = () => {
 
   // Valentine's Selection and Dialog states
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
+  const [showExportModal, setShowExportModal] = useState(false);
   const [showCategoryDialog, setShowCategoryDialog] = useState(false);
   const [showDateDialog, setShowDateDialog] = useState(false);
   const [showOccasionDialog, setShowOccasionDialog] = useState(false);
@@ -977,11 +980,30 @@ const AdminProducts: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="responsive-toolbar">
-        <h1 className="text-2xl sm:text-3xl font-bold">Products Management</h1>
-        <Button onClick={() => navigate('/admin/products/new')}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add New Product
-        </Button>
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold">Products Management</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">Manage catalog products, pricing, inventory and marketing exports</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <Button
+            variant="outline"
+            onClick={() => setShowExportModal(true)}
+            className="border-pink-200 bg-pink-50/50 hover:bg-pink-100/60 text-pink-700 hover:text-pink-800 font-semibold shadow-xs"
+          >
+            <Download className="mr-2 h-4 w-4 text-pink-600" />
+            Export Catalog
+            {selectedProductIds.length > 0 && (
+              <Badge className="ml-2 bg-pink-600 text-white hover:bg-pink-700 text-[10px] px-1.5 py-0">
+                {selectedProductIds.length}
+              </Badge>
+            )}
+          </Button>
+
+          <Button onClick={() => navigate('/admin/products/new')}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add New Product
+          </Button>
+        </div>
       </div>
 
       {/* Sticky Display Order Management Navbar Controls */}
@@ -1722,7 +1744,33 @@ const AdminProducts: React.FC = () => {
       ) : (
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-          <CardTitle>Products ({filteredProducts.length})</CardTitle>
+          <div className="flex flex-wrap items-center gap-3">
+            <CardTitle>Products ({filteredProducts.length})</CardTitle>
+            {selectedProductIds.length > 0 && (
+              <div className="flex items-center gap-2">
+                <Badge className="bg-pink-100 text-pink-800 border-pink-200 text-xs">
+                  {selectedProductIds.length} selected
+                </Badge>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowExportModal(true)}
+                  className="h-7 text-xs border-pink-300 text-pink-700 hover:bg-pink-50"
+                >
+                  <Download className="mr-1.5 h-3.5 w-3.5 text-pink-600" />
+                  Export Selected ({selectedProductIds.length})
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setSelectedProductIds([])}
+                  className="h-7 text-xs text-gray-500 hover:text-gray-700"
+                >
+                  Clear Selection
+                </Button>
+              </div>
+            )}
+          </div>
           <div className="flex items-center gap-2">
             <Button
               variant={viewMode === 'table' ? 'default' : 'outline'}
@@ -2235,8 +2283,18 @@ const AdminProducts: React.FC = () => {
         </CardContent>
       </Card>
       )}
+
+      {/* Product Catalog CSV Export Modal */}
+      <ProductCatalogExportModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        selectedProductIds={selectedProductIds}
+        products={products}
+        categories={categories}
+      />
     </div>
   );
 };
 
 export default AdminProducts;
+
