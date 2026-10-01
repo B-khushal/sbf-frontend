@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { updateUserProfile } from '@/services/authService';
+import { fixEmailTypo } from '@/utils/emailUtils';
 import OrderHistory from '@/components/OrderHistory';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
@@ -222,9 +223,10 @@ const ProfilePage: React.FC = () => {
     setIsUpdating(true);
     
     try {
+      const cleanEmail = fixEmailTypo(formData.email);
       const profileData = {
         name: formData.name,
-        email: formData.email,
+        email: cleanEmail,
       };
       
       if (formData.currentPassword && formData.newPassword) {
@@ -379,6 +381,7 @@ const ProfilePage: React.FC = () => {
                         type="email"
                         value={formData.email}
                         onChange={handleChange}
+                        onBlur={() => setFormData(prev => ({ ...prev, email: fixEmailTypo(prev.email) }))}
                         disabled={!isEditing}
                         className="pl-10 h-12 border-gray-200 focus:border-bloom-blue-400 focus:ring-bloom-blue-400/20 disabled:bg-gray-50"
                         placeholder="Enter your email"

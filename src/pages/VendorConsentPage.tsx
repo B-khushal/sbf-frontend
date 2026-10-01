@@ -10,6 +10,7 @@ import { Store, User, Mail, Phone, MapPin, Eraser, Check } from 'lucide-react';
 import SignatureCanvas from 'react-signature-canvas';
 import { useNavigate } from 'react-router-dom';
 import api from '@/services/api';
+import { fixEmailTypo } from '@/utils/emailUtils';
 
 const VendorConsentPage: React.FC = () => {
     const { toast } = useToast();
@@ -65,9 +66,11 @@ const VendorConsentPage: React.FC = () => {
         setLoading(true);
         try {
             const signatureImage = sigCanvas.current?.getCanvas().toDataURL('image/png');
+            const cleanEmail = fixEmailTypo(formData.email);
+            setFormData(prev => ({ ...prev, email: cleanEmail }));
 
             const payload = {
-                vendorDetails: formData,
+                vendorDetails: { ...formData, email: cleanEmail },
                 consentAccepted,
                 signatureImage
             };
@@ -201,7 +204,17 @@ const VendorConsentPage: React.FC = () => {
                                     <Label htmlFor="email">Email Address <span className="text-red-500">*</span></Label>
                                     <div className="relative">
                                         <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                                        <Input id="email" name="email" type="email" value={formData.email} onChange={handleInputChange} className="pl-10" placeholder="contact@doeflowers.com" required />
+                                        <Input 
+                                            id="email" 
+                                            name="email" 
+                                            type="email" 
+                                            value={formData.email} 
+                                            onChange={handleInputChange} 
+                                            onBlur={() => setFormData(prev => ({ ...prev, email: fixEmailTypo(prev.email) }))}
+                                            className="pl-10" 
+                                            placeholder="contact@doeflowers.com" 
+                                            required 
+                                        />
                                     </div>
                                 </div>
 

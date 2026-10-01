@@ -32,6 +32,7 @@ import { calculateDeliveryFee } from '@/services/orderService';
 import api from '@/services/api';
 import FreeDeliveryCelebrationModal from '@/components/ui/FreeDeliveryCelebrationModal';
 import { marketingTracker } from '@/services/marketingTracker';
+import { fixEmailTypo } from '@/utils/emailUtils';
 
 // Animation variants
 const containerVariants = {
@@ -413,9 +414,10 @@ const CheckoutShippingPage = () => {
     fetchDeliveryFee();
   }, [subtotal, selectedTimeSlot, formData.email, formData.phone]);
 
+  const isFixedSlot = ['fixed', 'fixed_time', 'morning', 'afternoon', 'late_afternoon', 'evening'].includes(selectedTimeSlot || '');
   const baseSlotFee = selectedTimeSlot === 'midnight' 
     ? midnightCharge 
-    : (selectedTimeSlot === 'fixed' || selectedTimeSlot === 'fixed_time' ? fixedTimeCharge : 0);
+    : (isFixedSlot ? fixedTimeCharge : 0);
 
   const surpriseFee = surpriseDelivery ? surpriseCharge : 0;
   const anonymousFee = anonymousGift ? anonymousCharge : 0;
@@ -725,11 +727,21 @@ const CheckoutShippingPage = () => {
       `${activeApartment ? activeApartment + ', ' : ''}${activeAddress}, ${activeCity}, ${activeState} - ${activeZipCode}`.trim();
 
     // Save shipping information
+    const cleanCustomerEmail = fixEmailTypo(formData.email || user?.email || '');
+    const cleanReceiverEmail = fixEmailTypo(formData.receiverEmail || '');
+
     const shippingInfo = {
       ...formData,
-      email: formData.email || user?.email || '',
+      email: cleanCustomerEmail,
+      receiverEmail: cleanReceiverEmail,
       phone: formData.phone || user?.phone || '',
       timeSlot: selectedTimeSlot,
+      selectedTimeSlot: selectedTimeSlot,
+      deliveryType: selectedTimeSlot === 'midnight' 
+        ? 'Midnight Delivery' 
+        : (['morning', 'afternoon', 'late_afternoon', 'evening'].includes(selectedTimeSlot || '') 
+            ? 'Fixed Time Delivery' 
+            : (isSameDay(selectedDate, new Date()) ? 'Same Day Standard Delivery' : 'Standard Delivery')),
       deliveryOption,
       deliveryFee,
       isFirstOrderFreeDelivery: deliveryCalculation?.isFirstOrderFreeDelivery ?? false,
@@ -769,7 +781,7 @@ const CheckoutShippingPage = () => {
           state: deliveryOption === 'self' ? formData.state : formData.receiverState,
           zipCode: deliveryOption === 'self' ? formData.zipCode : formData.receiverZipCode,
           phone: deliveryOption === 'self' ? formData.phone : formData.receiverPhone,
-          email: deliveryOption === 'self' ? formData.email : formData.receiverEmail,
+          email: deliveryOption === 'self' ? cleanCustomerEmail : cleanReceiverEmail,
           notes: deliveryLocation?.deliveryInstructions || deliverySpecialInstructions,
           cardMessage: cardMessage,
           deliverySpecialInstructions: deliveryLocation?.deliveryInstructions || deliverySpecialInstructions,
@@ -778,7 +790,7 @@ const CheckoutShippingPage = () => {
           giftMessage: cardMessage,
           receiverFirstName: formData.receiverFirstName,
           receiverLastName: formData.receiverLastName,
-          receiverEmail: formData.receiverEmail,
+          receiverEmail: cleanReceiverEmail,
           receiverPhone: formData.receiverPhone,
           receiverAddress: formData.receiverAddress || formattedAddr || '',
           receiverApartment: formData.receiverApartment,
@@ -1131,6 +1143,7 @@ const CheckoutShippingPage = () => {
                             type="email"
                             value={formData.email}
                             onChange={handleInputChange}
+                            onBlur={() => setFormData(prev => ({ ...prev, email: fixEmailTypo(prev.email) }))}
                             placeholder="Enter email address"
                             className={inputClassName}
                           />
@@ -1341,6 +1354,7 @@ const CheckoutShippingPage = () => {
                               type="email"
                               value={formData.receiverEmail}
                               onChange={handleInputChange}
+                              onBlur={() => setFormData(prev => ({ ...prev, receiverEmail: fixEmailTypo(prev.receiverEmail) }))}
                               placeholder="Enter receiver's email"
                               className={inputClassName}
                             />
@@ -1834,7 +1848,11 @@ const CheckoutShippingPage = () => {
 
                          <div className="flex justify-between text-sm">
                           <span>
-                            {selectedTimeSlot === 'midnight' ? 'Midnight Delivery Fee' : 'Standard Delivery Fee'}
+                            {selectedTimeSlot === 'midnight' 
+                              ? 'Midnight Delivery Fee' 
+                              : isFixedSlot 
+                              ? 'Fixed Time Slot Fee' 
+                              : 'Standard Delivery Fee'}
                           </span>
                           <span className="font-semibold text-right">
                             {deliveryCalculation?.isFirstOrderFreeDelivery ? (

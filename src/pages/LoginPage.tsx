@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
 import Modal from '@/components/ui/Modal';
 import GoogleSignInButton from '@/components/ui/GoogleSignInButton';
+import { fixEmailTypo } from '@/utils/emailUtils';
 
 // Animation variants
 const containerVariants = {
@@ -98,7 +99,10 @@ const LoginPage = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password) {
+    const cleanEmail = fixEmailTypo(email);
+    setEmail(cleanEmail);
+
+    if (!cleanEmail || !password) {
       toast({
         title: "Error",
         description: "Please enter both email and password",
@@ -110,7 +114,7 @@ const LoginPage = () => {
     setIsLoading(true);
     
     try {
-      const result = await login(email, password);
+      const result = await login(cleanEmail, password);
       
       if (result.success) {
         toast({
@@ -192,9 +196,11 @@ const LoginPage = () => {
     
     try {
       setIsLoading(true);
+      const cleanEmail = fixEmailTypo(email);
+      setEmail(cleanEmail);
       const signupResult = await signup({
         name: name,
-        email: email,
+        email: cleanEmail,
         password: password,
         confirmPassword: confirmPassword
       });
@@ -511,6 +517,7 @@ const LoginPage = () => {
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
+                            onBlur={(e) => setEmail(fixEmailTypo(e.target.value))}
                             className="pl-10 h-12 border-gray-200 focus:border-bloom-blue-400 focus:ring-bloom-blue-400/20"
                             placeholder="Enter your email"
                             required
@@ -609,6 +616,7 @@ const LoginPage = () => {
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
+                            onBlur={(e) => setEmail(fixEmailTypo(e.target.value))}
                             className="pl-10 h-12 border-gray-200 focus:border-bloom-pink-400 focus:ring-bloom-pink-400/20"
                             placeholder="Enter your email"
                             required

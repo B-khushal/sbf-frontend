@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import PinCodeInput from '@/components/ui/PinCodeInput';
 import { getUserProfile, updateUserProfile, SavedAddress } from '@/services/authService';
+import { fixEmailTypo } from '@/utils/emailUtils';
 
 type Address = SavedAddress;
 
@@ -357,6 +358,7 @@ const AddressManager: React.FC = () => {
             type="email"
             value={formData.email || ''}
             onChange={handleInputChange}
+            onBlur={() => setFormData(prev => ({ ...prev, email: fixEmailTypo(prev.email || '') }))}
           />
         </div>
       </div>

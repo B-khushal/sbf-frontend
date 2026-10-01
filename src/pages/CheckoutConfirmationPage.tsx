@@ -69,6 +69,18 @@ const DEFAULT_TIME_SLOTS: { [key: string]: TimeSlot } = {
     time: '9:00 AM - 9:00 PM',
     available: true
   },
+  'standard': {
+    id: 'standard',
+    label: 'Standard Delivery',
+    time: '9:00 AM - 9:00 PM',
+    available: true
+  },
+  'midnight': {
+    id: 'midnight',
+    label: 'Midnight Delivery',
+    time: '11:30 PM - 12:30 AM',
+    available: true
+  },
   'morning': {
     id: 'morning',
     label: 'Morning',

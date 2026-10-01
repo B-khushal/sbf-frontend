@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { MapPin, Phone, Mail, Clock, Info, Send, MessageCircle, Sparkles, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { submitContactForm, openWhatsApp, openEmail, callPhone, openGoogleMaps } from '@/services/contactService';
+import { fixEmailTypo } from '@/utils/emailUtils';
 
 // Animation variants
 const containerVariants = {
@@ -77,7 +78,10 @@ const ContactPage: React.FC = () => {
     e.preventDefault();
     
     // Validation
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.message) {
+    const cleanEmail = fixEmailTypo(formData.email);
+    formData.email = cleanEmail;
+
+    if (!formData.firstName || !formData.lastName || !cleanEmail || !formData.message) {
       toast({
         title: "Missing Information",
         description: "Please fill in all fields",
@@ -88,7 +92,7 @@ const ContactPage: React.FC = () => {
 
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
+    if (!emailRegex.test(cleanEmail)) {
       toast({
         title: "Invalid Email",
         description: "Please enter a valid email address",
@@ -290,6 +294,7 @@ Sent from Spring Blossoms Florist Website`;
                       placeholder="your.email@example.com" 
                       value={formData.email}
                       onChange={handleInputChange}
+                      onBlur={() => setFormData(prev => ({ ...prev, email: fixEmailTypo(prev.email) }))}
                       className="h-12 rounded-2xl border-2 border-gray-200 focus:border-primary transition-all"
                       required 
                     />

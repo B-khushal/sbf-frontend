@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Mail, ArrowLeft } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
+import { fixEmailTypo } from '@/utils/emailUtils';
 
 const ForgotPasswordPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -18,11 +19,13 @@ const ForgotPasswordPage: React.FC = () => {
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const cleanEmail = fixEmailTypo(email);
+    setEmail(cleanEmail);
     setIsLoading(true);
     
     try {
       // This would be replaced with an actual API call in production
-      console.log('Password reset requested for:', email);
+      console.log('Password reset requested for:', cleanEmail);
       
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -72,6 +75,7 @@ const ForgotPasswordPage: React.FC = () => {
                       placeholder="Email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                      onBlur={(e) => setEmail(fixEmailTypo(e.target.value))}
                       className="pl-10"
                       required
                     />

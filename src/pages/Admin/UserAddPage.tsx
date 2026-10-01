@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { fixEmailTypo } from '@/utils/emailUtils';
 
 const UserAddPage: React.FC = () => {
   const navigate = useNavigate();
@@ -24,7 +25,9 @@ const UserAddPage: React.FC = () => {
     e.preventDefault();
     setSaving(true);
     try {
-      await api.post('/users', form);
+      const cleanForm = { ...form, email: fixEmailTypo(form.email) };
+      setForm(cleanForm);
+      await api.post('/users', cleanForm);
       navigate('/admin/users');
     } catch (error) {
       // handle error
@@ -48,7 +51,15 @@ const UserAddPage: React.FC = () => {
             </div>
             <div>
               <Label htmlFor="email">Email</Label>
-              <Input id="email" name="email" type="email" value={form.email} onChange={handleChange} required />
+              <Input 
+                id="email" 
+                name="email" 
+                type="email" 
+                value={form.email} 
+                onChange={handleChange} 
+                onBlur={(e) => setForm(prev => ({ ...prev, email: fixEmailTypo(e.target.value) }))}
+                required 
+              />
             </div>
             <div>
               <Label htmlFor="password">Password</Label>

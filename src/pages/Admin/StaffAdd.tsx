@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import api from '@/services/api';
 import { ChevronLeft, UserPlus } from 'lucide-react';
+import { fixEmailTypo } from '@/utils/emailUtils';
 
 interface Zone {
   _id: string;
@@ -76,9 +77,13 @@ const StaffAdd: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
+    const cleanEmail = fixEmailTypo(newStaff.email);
+    setNewStaff(prev => ({ ...prev, email: cleanEmail }));
+
     try {
       const payload = {
         ...newStaff,
+        email: cleanEmail,
         assigned_store: newStaff.assigned_store === 'none' ? '' : newStaff.assigned_store,
         assigned_zone: newStaff.assigned_zone === 'none' ? '' : newStaff.assigned_zone,
       };
@@ -138,6 +143,7 @@ const StaffAdd: React.FC = () => {
                 type="email" 
                 value={newStaff.email} 
                 onChange={e => setNewStaff({...newStaff, email: e.target.value})} 
+                onBlur={e => setNewStaff(prev => ({ ...prev, email: fixEmailTypo(e.target.value) }))}
                 placeholder="johndoe@sbflorist.in"
                 required 
               />

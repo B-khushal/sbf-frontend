@@ -23,6 +23,7 @@ import { useSettings } from '@/contexts/SettingsContext';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { toast } from 'sonner';
+import { fixEmailTypo } from '@/utils/emailUtils';
 import api from '@/services/api';
 
 const Footer = () => {
@@ -89,9 +90,11 @@ const Footer = () => {
 
   const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const cleanEmail = fixEmailTypo(email);
+    setEmail(cleanEmail);
 
     try {
-      const response = await api.post('/newsletter/subscribe', { email });
+      const response = await api.post('/newsletter/subscribe', { email: cleanEmail });
 
       if (response.data.success) {
         toast.success("Thanks for subscribing!", {
@@ -271,6 +274,7 @@ const Footer = () => {
                   className="bg-white/10 border-white/20 text-white placeholder:text-white/60 w-full sm:w-[280px] lg:w-[300px] min-w-0 h-12 text-base"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  onBlur={(e) => setEmail(fixEmailTypo(e.target.value))}
                   required
                 />
                 <Button type="submit" variant="secondary" className="bg-white text-primary hover:bg-white/90 w-full sm:w-auto whitespace-nowrap px-6 py-3 h-12 text-base font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300">

@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Trash2 } from 'lucide-react';
+import { fixEmailTypo } from '@/utils/emailUtils';
 
 const UserEditPage: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -54,7 +55,9 @@ const UserEditPage: React.FC = () => {
     e.preventDefault();
     setSaving(true);
     try {
-      await api.put(`/users/${userId}`, form);
+      const cleanForm = { ...form, email: fixEmailTypo(form.email) };
+      setForm(cleanForm);
+      await api.put(`/users/${userId}`, cleanForm);
       toast({
         title: "Success",
         description: "User updated successfully",
@@ -110,7 +113,15 @@ const UserEditPage: React.FC = () => {
             </div>
             <div>
               <Label htmlFor="email">Email</Label>
-              <Input id="email" name="email" type="email" value={form.email} onChange={handleChange} required />
+              <Input 
+                id="email" 
+                name="email" 
+                type="email" 
+                value={form.email} 
+                onChange={handleChange} 
+                onBlur={(e) => setForm(prev => ({ ...prev, email: fixEmailTypo(e.target.value) }))}
+                required 
+              />
             </div>
             <div>
               <Label htmlFor="role">Role</Label>

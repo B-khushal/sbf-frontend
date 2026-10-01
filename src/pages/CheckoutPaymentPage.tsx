@@ -212,15 +212,16 @@ const CheckoutPaymentPage = () => {
     if (savedShippingInfo) {
       const parsedInfo = JSON.parse(savedShippingInfo);
       
-      // Ensure deliveryFee is set correctly
-      if (!parsedInfo.isFirstOrderFreeDelivery) {
-        if (parsedInfo.timeSlot === 'midnight' && (!parsedInfo.deliveryFee || parsedInfo.deliveryFee !== 300)) {
+      // Ensure deliveryFee has a fallback only if missing
+      if (!parsedInfo.isFirstOrderFreeDelivery && (parsedInfo.deliveryFee === undefined || parsedInfo.deliveryFee === null)) {
+        if (parsedInfo.timeSlot === 'midnight') {
           parsedInfo.deliveryFee = 300;
-          localStorage.setItem('shippingInfo', JSON.stringify(parsedInfo));
-        } else if (parsedInfo.timeSlot !== 'midnight' && (!parsedInfo.deliveryFee || parsedInfo.deliveryFee !== 150)) {
+        } else if (['morning', 'afternoon', 'late_afternoon', 'evening'].includes(parsedInfo.timeSlot)) {
+          parsedInfo.deliveryFee = 300;
+        } else {
           parsedInfo.deliveryFee = 150;
-          localStorage.setItem('shippingInfo', JSON.stringify(parsedInfo));
         }
+        localStorage.setItem('shippingInfo', JSON.stringify(parsedInfo));
       }
       
       setShippingInfo(parsedInfo);
@@ -408,7 +409,13 @@ const CheckoutPaymentPage = () => {
            deliverySpecialInstructions: shippingInfo.deliverySpecialInstructions || shippingInfo.notes || '',
            deliveryDate: shippingInfo.selectedDate ? new Date(shippingInfo.selectedDate) : new Date(),
            timeSlot: shippingInfo.selectedTimeSlot || shippingInfo.timeSlot || '',
-           deliveryType: shippingInfo.deliveryType || (shippingInfo.selectedTimeSlot === 'midnight' ? 'Midnight Delivery' : 'Standard Delivery'),
+           deliveryType: shippingInfo.deliveryType || (
+             (shippingInfo.selectedTimeSlot || shippingInfo.timeSlot) === 'midnight' 
+               ? 'Midnight Delivery' 
+               : (['morning', 'afternoon', 'late_afternoon', 'evening'].includes(shippingInfo.selectedTimeSlot || shippingInfo.timeSlot || '') 
+                   ? 'Fixed Time Delivery' 
+                   : 'Standard Delivery')
+           ),
            surpriseDelivery: !!shippingInfo.surpriseDelivery,
            anonymousGift: !!shippingInfo.anonymousGift,
            
@@ -885,6 +892,8 @@ const CheckoutPaymentPage = () => {
   const formatTimeSlot = (timeSlot: string) => {
     const timeSlots: { [key: string]: string } = {
       'same_day': '9:00 AM - 9:00 PM',
+      'standard': '9:00 AM - 9:00 PM',
+      'midnight': '11:30 PM - 12:30 AM',
       'morning': '9:00 AM - 12:00 PM',
       'afternoon': '12:00 PM - 3:00 PM',
       'late_afternoon': '3:00 PM - 6:00 PM',
@@ -1100,8 +1109,13 @@ const CheckoutPaymentPage = () => {
                                 <p className="text-sm">{formatTimeSlot(shippingInfo.timeSlot)}</p>
                               </div>
                               {shippingInfo.timeSlot === 'midnight' && (
-                                <Badge variant="secondary" className="mt-1">
+                                <Badge variant="secondary" className="mt-1 bg-purple-100 text-purple-800 border-purple-200">
                                   Midnight Delivery (+₹300)
+                                </Badge>
+                              )}
+                              {['morning', 'afternoon', 'late_afternoon', 'evening'].includes(shippingInfo.timeSlot) && (
+                                <Badge variant="secondary" className="mt-1 bg-amber-100 text-amber-800 border-amber-200">
+                                  Fixed Time Slot (+₹150)
                                 </Badge>
                               )}
                             </div>

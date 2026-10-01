@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
+import { fixEmailTypo } from '@/utils/emailUtils';
 
 interface StaffMember {
   _id: string;
@@ -127,7 +128,9 @@ const StaffList: React.FC = () => {
     e.preventDefault();
     if (!selectedStaff) return;
     try {
-      await api.put(`/staff/${selectedStaff._id}`, editForm);
+      const cleanForm = { ...editForm, email: fixEmailTypo(editForm.email) };
+      setEditForm(cleanForm);
+      await api.put(`/staff/${selectedStaff._id}`, cleanForm);
       toast({ title: 'Success', description: 'Employee profile updated' });
       setIsEditDialogOpen(false);
       fetchStaffData();
@@ -463,7 +466,14 @@ const StaffList: React.FC = () => {
             </div>
             <div>
               <Label htmlFor="edit-email">Email Address</Label>
-              <Input id="edit-email" type="email" value={editForm.email} onChange={e => setEditForm({...editForm, email: e.target.value})} required />
+              <Input 
+                id="edit-email" 
+                type="email" 
+                value={editForm.email} 
+                onChange={e => setEditForm({...editForm, email: e.target.value})} 
+                onBlur={e => setEditForm(prev => ({ ...prev, email: fixEmailTypo(e.target.value) }))}
+                required 
+              />
             </div>
             <div>
               <Label htmlFor="edit-phone">Phone Number</Label>

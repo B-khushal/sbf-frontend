@@ -275,28 +275,15 @@ const TimeSlotSelector = ({
   }, [date]);
 
   const activeTimeSlots = useMemo(() => {
-    // If all items in the cart are toggled to sameDay, show only the 9-9 delivery slot
-    const onlySameDay = items.length > 0 && items.every(item => item.sameDay === true);
-
-    if (onlySameDay && isToday) {
-      return [
-        {
-          id: 'same_day',
-          label: 'Same-Day Standard',
-          time: '9:00 AM - 9:00 PM',
-          available: true
-        }
-      ];
-    }
     return timeSlots;
-  }, [isToday, timeSlots, items]);
+  }, [timeSlots]);
 
-  // Auto-select slot if there is only one option (like same-day standard)
+  // Set default slot to same_day on initial mount if not selected yet
   useEffect(() => {
-    if (activeTimeSlots.length === 1 && selectedSlot !== activeTimeSlots[0].id) {
-      onSelectSlot(activeTimeSlots[0].id);
+    if (!selectedSlot) {
+      onSelectSlot('same_day');
     }
-  }, [activeTimeSlots, selectedSlot, onSelectSlot]);
+  }, [selectedSlot, onSelectSlot]);
   
   // Keep the delivery window stable for this component instance.
   const today = useMemo(() => startOfDay(new Date()), []);
@@ -685,34 +672,33 @@ const TimeSlotSelector = ({
 
     // If it's today, apply time restrictions based on slot
     if (isToday) {
+      const utcTime = now.getTime() + now.getTimezoneOffset() * 60000;
+      const istTime = new Date(utcTime + 5.5 * 3600000);
+      const currentHour = istTime.getHours() + (istTime.getMinutes() / 60);
+
       if (slot.id === 'same_day') {
-        return true;
+        return currentHour < 18; // 6 PM cutoff for same day
       }
-      const currentHour = now.getHours();
+      if (slot.id === 'midnight') {
+        return currentHour < 20; // 8 PM cutoff for midnight
+      }
       
       // Parse the start time from the slot.time string
-      // Assuming format like "9:00 AM - 12:00 PM"
-      const timeRange = slot.time.split(' - ')[0]; // Get "9:00 AM"
-      const [hourStr, minuteStr] = timeRange.split(':'); // Get "9" and "00 AM"
+      // Format: "9:00 AM - 12:00 PM", "12:00 PM - 3:00 PM", etc.
+      const timeRange = slot.time.split(' - ')[0]; // e.g. "9:00 AM"
+      const [hourStr, minuteStr] = timeRange.split(':');
       let hour = parseInt(hourStr, 10);
       const isPM = minuteStr.includes('PM') && hour !== 12;
       const isAM = minuteStr.includes('AM') && hour === 12;
       
-      // Convert to 24-hour format
       if (isPM) {
         hour += 12;
       } else if (isAM) {
         hour = 0;
       }
       
-      // Apply different notice periods based on slot
-      if (slot.id === 'morning') {
-        // Morning slot needs 5 hours notice
-        return (hour - currentHour) >= 5;
-      } else {
-        // Other slots need only 30 minutes notice
-        return (hour - currentHour) >= 0.5;
-      }
+      // Slot must start in the future with at least 15 min buffer
+      return (hour - currentHour) >= 0.25;
     }
 
     // For future dates, all slots are available
@@ -730,7 +716,6 @@ const TimeSlotSelector = ({
       return null;
     }
 
-    // Check if it's today
     const now = new Date();
     const isToday = (
       date.getDate() === now.getDate() &&
@@ -739,33 +724,32 @@ const TimeSlotSelector = ({
     );
 
     if (isToday) {
+      const utcTime = now.getTime() + now.getTimezoneOffset() * 60000;
+      const istTime = new Date(utcTime + 5.5 * 3600000);
+      const currentHour = istTime.getHours() + (istTime.getMinutes() / 60);
+
       if (slot.id === 'same_day') {
-        return null;
+        return currentHour >= 18 ? 'Cutoff passed (6:00 PM)' : null;
       }
-      const currentHour = now.getHours();
+
+      if (slot.id === 'midnight') {
+        return currentHour >= 20 ? 'Cutoff passed (8:00 PM)' : null;
+      }
       
-      // Parse the start time
       const timeRange = slot.time.split(' - ')[0];
       const [hourStr, minuteStr] = timeRange.split(':');
       let hour = parseInt(hourStr, 10);
       const isPM = minuteStr.includes('PM') && hour !== 12;
       const isAM = minuteStr.includes('AM') && hour === 12;
       
-      // Convert to 24-hour format
-      if (isPM) {
-        hour += 12;
-      } else if (isAM) {
-        hour = 0;
-      }
+      if (isPM) hour += 12;
+      else if (isAM) hour = 0;
       
-      if (slot.id === 'morning') {
-        if ((hour - currentHour) < 5) {
-          return 'Need 5+ hours notice';
-        }
-      } else {
-        if ((hour - currentHour) < 0.5) {
-          return 'Need 30+ minutes notice';
-        }
+      if (hour <= currentHour) {
+        return 'Time passed for today';
+      }
+      if ((hour - currentHour) < 0.25) {
+        return 'Need 15+ minutes notice';
       }
     }
     
@@ -883,6 +867,7 @@ const TimeSlotSelector = ({
         {/* 3 Main Delivery Service Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {/* 1. Same Day Delivery */}
+          {/* 1. Same Day Delivery / Standard Delivery */}
           <div 
             onClick={() => onSelectSlot('same_day')}
             className={cn(
@@ -894,13 +879,13 @@ const TimeSlotSelector = ({
           >
             <div className="flex items-center justify-between">
               <span className="text-xl">🚚</span>
-              <span className="text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300">
-                +{formatPrice(convertPrice(150))}
+              <span className="text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                {isToday ? `+${formatPrice(convertPrice(150))}` : 'Standard'}
               </span>
             </div>
             <div className="mt-2.5">
-              <p className="font-bold text-sm">Same Day Standard</p>
-              <p className="text-[11px] text-slate-500">9 AM - 9 PM • Cutoff 6:00 PM</p>
+              <p className="font-bold text-sm">{isToday ? 'Same Day Standard' : 'Standard Delivery'}</p>
+              <p className="text-[11px] text-slate-500">{isToday ? '9 AM - 9 PM • Cutoff 6:00 PM' : '9 AM - 9 PM • All Day Delivery'}</p>
             </div>
           </div>
 
@@ -922,15 +907,17 @@ const TimeSlotSelector = ({
             </div>
             <div className="mt-2.5">
               <p className="font-bold text-sm">Midnight Delivery</p>
-              <p className="text-[11px] text-slate-500">11:30 PM - 12:30 AM • Cutoff 8 PM</p>
+              <p className="text-[11px] text-slate-500">{isToday ? '11:30 PM - 12:30 AM • Cutoff 8 PM' : '11:30 PM - 12:30 AM • Night Delivery'}</p>
             </div>
           </div>
 
           {/* 3. Fixed Time Slot */}
           <div 
             onClick={() => {
-              if (!['morning', 'afternoon', 'late_afternoon', 'evening'].includes(selectedSlot || '')) {
-                onSelectSlot('morning');
+              const fixedSlots = ['morning', 'afternoon', 'late_afternoon', 'evening'];
+              if (!fixedSlots.includes(selectedSlot || '')) {
+                const firstAvailable = activeTimeSlots.find(s => isSlotAvailable(s))?.id || 'evening';
+                onSelectSlot(firstAvailable);
               }
             }}
             className={cn(

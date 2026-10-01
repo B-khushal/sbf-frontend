@@ -10,6 +10,7 @@ import {
 } from '@/services/authService';
 import { trackActivity } from '@/services/activityService';
 import { marketingTracker } from '@/services/marketingTracker';
+import { normalizeEmail } from '@/utils/emailUtils';
 
 // Define types for our authentication context
 type User = {
@@ -210,7 +211,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      const loginResponse = await loginService({ email, password });
+      const cleanEmail = normalizeEmail(email);
+      const loginResponse = await loginService({ email: cleanEmail, password });
       
       // After successful login, get the fresh user profile
       const profileData = await getUserProfile({ force: true });
@@ -264,7 +266,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signup = async (data: SignupData) => {
     try {
       setIsLoading(true);
-      const registerResponse = await registerService(data);
+      const cleanData = { ...data, email: normalizeEmail(data.email) };
+      const registerResponse = await registerService(cleanData);
       const profileData = await getUserProfile();
 
       const user = {

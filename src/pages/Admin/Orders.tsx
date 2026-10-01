@@ -1,46 +1,46 @@
-import React, { useEffect, useState } from 'react';
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow
-} from '@/components/ui/table';
-import {
-  Card, CardContent, CardHeader, CardTitle
-} from '@/components/ui/card';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { 
-  Search, Eye, Download, Calendar, Clock, AlertTriangle, Filter, X, 
-  ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Copy, Check, 
-  Phone, MessageSquare, List, Grid, ChevronDown, Sparkles, AlertCircle, 
-  ArrowUpDown, ExternalLink, Mail, ShieldAlert, Truck, Loader2, Package
-} from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import {
+  Search, Filter, Calendar, RefreshCw, Phone, MessageSquare,
+  Eye, Download, CheckCircle2, Clock, AlertTriangle, Truck,
+  Package, ChevronRight, X, Copy, ExternalLink, Sparkles,
+  MapPin, Check, Ban, FileText, ChevronDown, User, Heart,
+  ArrowRight, ShieldCheck, Mail, AlertCircle, ChefHat, CheckCheck, XCircle
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import api from '@/services/api';
 import { Order } from '@/services/orderService';
 import { sendOrderReviewEmail } from '@/services/reviewService';
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
-} from '@/components/ui/select';
-import {
   Popover, PopoverContent, PopoverTrigger
 } from '@/components/ui/popover';
-import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import {
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter
+} from '@/components/ui/dialog';
+import {
+  Tooltip, TooltipContent, TooltipProvider, TooltipTrigger
+} from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
+import { format, isToday, isTomorrow, parseISO } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
 
-interface ExtendedOrder extends Order {
-  deliveryHighlight?: {
-    type: 'today' | 'tomorrow' | 'soon' | 'upcoming' | 'overdue';
-    urgency: 'critical' | 'high' | 'medium' | 'low';
-    message: string;
-    color: string;
-    bgColor: string;
-    textColor: string;
-  };
-  priority?: 'critical' | 'high' | 'medium' | 'low';
+// Period Tab Types
+type PeriodTab = 'today' | 'tomorrow' | 'past' | 'custom';
+
+// Status Types for Operational Filter Bar
+type StatusFilterType = 'all' | 'preparing' | 'ready' | 'out_for_delivery' | 'delivered' | 'cancelled';
+
+interface StatusCounts {
+  total: number;
+  preparing: number;
+  ready: number;
+  out_for_delivery: number;
+  delivered: number;
+  cancelled: number;
+  totalRevenue: number;
 }
 
 interface PaginationInfo {
@@ -57,1720 +57,1762 @@ interface PaginationInfo {
   remainingItems: number;
 }
 
-const STATUS_CONFIG: Record<string, { label: string; bg: string; border: string; text: string; glow: string; icon: React.ReactNode }> = {
+// Operational Status Display Configuration (WCAG Conscious)
+const STATUS_CONFIG: Record<string, {
+  label: string;
+  pillBg: string;
+  pillBorder: string;
+  pillText: string;
+  dotColor: string;
+  icon: React.ReactNode;
+  category: 'preparing' | 'ready' | 'out_for_delivery' | 'delivered' | 'cancelled';
+}> = {
+  // Preparing states
   order_placed: {
     label: 'Order Placed',
-    bg: 'bg-blue-50/70 dark:bg-blue-950/20 backdrop-blur-sm',
-    border: 'border-blue-200/60 dark:border-blue-900/40',
-    text: 'text-blue-700 dark:text-blue-400',
-    glow: 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]',
-    icon: <span className="h-1.5 w-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
+    pillBg: 'bg-amber-50 dark:bg-amber-950/40',
+    pillBorder: 'border-amber-200 dark:border-amber-800/60',
+    pillText: 'text-amber-800 dark:text-amber-300',
+    dotColor: 'bg-amber-500',
+    icon: <Clock className="w-3.5 h-3.5 text-amber-600" />,
+    category: 'preparing'
   },
   received: {
-    label: 'Received',
-    bg: 'bg-purple-50/70 dark:bg-purple-950/20 backdrop-blur-sm',
-    border: 'border-purple-200/60 dark:border-purple-900/40',
-    text: 'text-purple-700 dark:text-purple-400',
-    glow: 'bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.5)]',
-    icon: <span className="h-1.5 w-1.5 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.5)]" />
+    label: 'Order Received',
+    pillBg: 'bg-amber-50 dark:bg-amber-950/40',
+    pillBorder: 'border-amber-200 dark:border-amber-800/60',
+    pillText: 'text-amber-800 dark:text-amber-300',
+    dotColor: 'bg-amber-500',
+    icon: <Sparkles className="w-3.5 h-3.5 text-amber-600" />,
+    category: 'preparing'
   },
   being_made: {
-    label: 'Being Made',
-    bg: 'bg-amber-50/70 dark:bg-amber-950/20 backdrop-blur-sm',
-    border: 'border-amber-200/60 dark:border-amber-800/40',
-    text: 'text-amber-700 dark:text-amber-400',
-    glow: 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]',
-    icon: <span className="h-1.5 w-1.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)] animate-pulse" />
-  },
-  out_for_delivery: {
-    label: 'Out for Delivery',
-    bg: 'bg-indigo-50/70 dark:bg-indigo-950/20 backdrop-blur-sm',
-    border: 'border-indigo-200/60 dark:border-indigo-800/40',
-    text: 'text-indigo-700 dark:text-indigo-400',
-    glow: 'bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]',
-    icon: <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)] animate-bounce" />
-  },
-  delivered: {
-    label: 'Delivered',
-    bg: 'bg-emerald-50/70 dark:bg-emerald-950/20 backdrop-blur-sm',
-    border: 'border-emerald-200/60 dark:border-emerald-800/40',
-    text: 'text-emerald-700 dark:text-emerald-400',
-    glow: 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]',
-    icon: <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-  },
-  cancelled: {
-    label: 'Cancelled',
-    bg: 'bg-rose-50/70 dark:bg-rose-950/20 backdrop-blur-sm',
-    border: 'border-rose-200/60 dark:border-rose-900/40',
-    text: 'text-rose-700 dark:text-rose-400',
-    glow: 'bg-rose-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]',
-    icon: <span className="h-1.5 w-1.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
+    label: 'Preparing',
+    pillBg: 'bg-amber-50 dark:bg-amber-950/40',
+    pillBorder: 'border-amber-200 dark:border-amber-800/60',
+    pillText: 'text-amber-800 dark:text-amber-300',
+    dotColor: 'bg-amber-500',
+    icon: <ChefHat className="w-3.5 h-3.5 text-amber-600" />,
+    category: 'preparing'
   },
   pending: {
-    label: 'Pending',
-    bg: 'bg-slate-50/70 dark:bg-slate-900/20 backdrop-blur-sm',
-    border: 'border-slate-200/60 dark:border-slate-800/40',
-    text: 'text-slate-700 dark:text-slate-400',
-    glow: 'bg-slate-500',
-    icon: <span className="h-1.5 w-1.5 rounded-full bg-slate-500" />
+    label: 'Preparing',
+    pillBg: 'bg-amber-50 dark:bg-amber-950/40',
+    pillBorder: 'border-amber-200 dark:border-amber-800/60',
+    pillText: 'text-amber-800 dark:text-amber-300',
+    dotColor: 'bg-amber-500',
+    icon: <Clock className="w-3.5 h-3.5 text-amber-600" />,
+    category: 'preparing'
   },
   processing: {
-    label: 'Processing',
-    bg: 'bg-amber-50/70 dark:bg-amber-950/20 backdrop-blur-sm',
-    border: 'border-amber-200/60 dark:border-amber-800/40',
-    text: 'text-amber-700 dark:text-amber-400',
-    glow: 'bg-amber-500',
-    icon: <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+    label: 'Preparing',
+    pillBg: 'bg-amber-50 dark:bg-amber-950/40',
+    pillBorder: 'border-amber-200 dark:border-amber-800/60',
+    pillText: 'text-amber-800 dark:text-amber-300',
+    dotColor: 'bg-amber-500',
+    icon: <ChefHat className="w-3.5 h-3.5 text-amber-600" />,
+    category: 'preparing'
+  },
+  // Ready states
+  ready: {
+    label: 'Ready for Delivery',
+    pillBg: 'bg-blue-50 dark:bg-blue-950/40',
+    pillBorder: 'border-blue-200 dark:border-blue-800/60',
+    pillText: 'text-blue-800 dark:text-blue-300',
+    dotColor: 'bg-blue-600',
+    icon: <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />,
+    category: 'ready'
+  },
+  // Out for Delivery
+  out_for_delivery: {
+    label: 'Out for Delivery',
+    pillBg: 'bg-indigo-50 dark:bg-indigo-950/40',
+    pillBorder: 'border-indigo-200 dark:border-indigo-800/60',
+    pillText: 'text-indigo-800 dark:text-indigo-300',
+    dotColor: 'bg-indigo-600',
+    icon: <Truck className="w-3.5 h-3.5 text-indigo-600" />,
+    category: 'out_for_delivery'
+  },
+  // Delivered states
+  delivered: {
+    label: 'Delivered',
+    pillBg: 'bg-emerald-50 dark:bg-emerald-950/40',
+    pillBorder: 'border-emerald-200 dark:border-emerald-800/60',
+    pillText: 'text-emerald-800 dark:text-emerald-300',
+    dotColor: 'bg-emerald-600',
+    icon: <CheckCheck className="w-3.5 h-3.5 text-emerald-600" />,
+    category: 'delivered'
   },
   completed: {
-    label: 'Completed',
-    bg: 'bg-emerald-50/70 dark:bg-emerald-950/20 backdrop-blur-sm',
-    border: 'border-emerald-200/60 dark:border-emerald-800/40',
-    text: 'text-emerald-700 dark:text-emerald-400',
-    glow: 'bg-emerald-500',
-    icon: <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+    label: 'Delivered',
+    pillBg: 'bg-emerald-50 dark:bg-emerald-950/40',
+    pillBorder: 'border-emerald-200 dark:border-emerald-800/60',
+    pillText: 'text-emerald-800 dark:text-emerald-300',
+    dotColor: 'bg-emerald-600',
+    icon: <CheckCheck className="w-3.5 h-3.5 text-emerald-600" />,
+    category: 'delivered'
+  },
+  // Cancelled states
+  cancelled: {
+    label: 'Cancelled',
+    pillBg: 'bg-rose-50 dark:bg-rose-950/40',
+    pillBorder: 'border-rose-200 dark:border-rose-800/60',
+    pillText: 'text-rose-800 dark:text-rose-300',
+    dotColor: 'bg-rose-600',
+    icon: <XCircle className="w-3.5 h-3.5 text-rose-600" />,
+    category: 'cancelled'
   }
 };
 
 const getStatusConfig = (status: string) => {
-  return STATUS_CONFIG[status] || STATUS_CONFIG.pending;
-};
-
-const renderLocationNavLinks = (lat?: number, lng?: number, fallbackLat?: number, fallbackLng?: number) => {
-  const defaultLat = 17.3912;
-  const defaultLng = 78.4326;
-  
-  let finalLat = lat;
-  let finalLng = lng;
-  
-  if (!finalLat || finalLat === defaultLat) {
-    if (fallbackLat && fallbackLat !== defaultLat) {
-      finalLat = fallbackLat;
-      finalLng = fallbackLng;
-    }
-  }
-  
-  if (!finalLat) finalLat = lat || fallbackLat || defaultLat;
-  if (!finalLng) finalLng = lng || fallbackLng || defaultLng;
-
-  return (
-    <div className="flex items-center gap-1.5 mt-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800/60 rounded-lg p-1.5 w-max select-none">
-      <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">🗺️ Nav:</span>
-      <a
-        href={`https://mappls.com/@${finalLat},${finalLng}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={(e) => e.stopPropagation()}
-        className="inline-flex items-center gap-0.5 text-[10px] font-bold text-emerald-650 dark:text-emerald-400 hover:underline"
-      >
-        Mappls
-      </a>
-      <span className="text-slate-300 dark:text-slate-700">|</span>
-      <a
-        href={`https://www.google.com/maps/search/?api=1&query=${finalLat},${finalLng}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={(e) => e.stopPropagation()}
-        className="inline-flex items-center gap-0.5 text-[10px] font-bold text-blue-650 dark:text-blue-400 hover:underline"
-      >
-        G Maps
-      </a>
-    </div>
-  );
+  const s = (status || '').toLowerCase().trim();
+  return STATUS_CONFIG[s] || {
+    label: status ? status.replace(/_/g, ' ') : 'Pending',
+    pillBg: 'bg-slate-100 dark:bg-slate-800',
+    pillBorder: 'border-slate-200 dark:border-slate-700',
+    pillText: 'text-slate-800 dark:text-slate-200',
+    dotColor: 'bg-slate-500',
+    icon: <Clock className="w-3.5 h-3.5 text-slate-500" />,
+    category: 'preparing' as const
+  };
 };
 
 // Formats messy raw database slot strings beautifully
-const formatTimeSlot = (slot: string) => {
-  if (!slot) return 'N/A';
-  
+const formatTimeSlot = (slot?: string | null) => {
+  if (!slot) return 'Flexible Delivery';
   const lower = slot.toLowerCase().trim();
-  if (lower === 'morning') return '9:00 AM – 12:00 PM';
-  if (lower === 'afternoon') return '12:00 PM – 4:00 PM';
-  if (lower === 'evening') return '4:00 PM – 8:00 PM';
-  if (lower === 'midnight') return '12:00 AM – 6:00 AM';
+  if (lower === 'same_day' || lower === 'sameday') return 'Same-Day Delivery';
+  if (lower === 'morning') return 'Morning (9:00 AM – 12:00 PM)';
+  if (lower === 'afternoon') return 'Afternoon (12:00 PM – 4:00 PM)';
+  if (lower === 'evening') return 'Evening (4:00 PM – 8:00 PM)';
+  if (lower === 'midnight') return 'Midnight (11:30 PM – 12:30 AM)';
   
   // slot_H_H patterns e.g., slot_16_18
   const slotMatch = slot.match(/slot_(\d+)_(\d+)/i);
   if (slotMatch) {
     const start = parseInt(slotMatch[1], 10);
     const end = parseInt(slotMatch[2], 10);
-    const formatHour = (h: number) => {
+    const formatH = (h: number) => {
       const suffix = h >= 12 ? 'PM' : 'AM';
-      const displayHour = h % 12 === 0 ? 12 : h % 12;
-      return `${displayHour}:00 ${suffix}`;
+      const dh = h % 12 === 0 ? 12 : h % 12;
+      return `${dh}:00 ${suffix}`;
     };
-    return `${formatHour(start)} – ${formatHour(end)}`;
+    return `${formatH(start)} – ${formatH(end)}`;
   }
-  
-  // standard hour range e.g., 4-6, 16-18
-  const rangeMatch = slot.match(/(\d+)\s*-\s*(\d+)/);
-  if (rangeMatch) {
-    const start = parseInt(rangeMatch[1], 10);
-    const end = parseInt(rangeMatch[2], 10);
-    
-    const formatHourGuess = (h: number) => {
-      let finalHour = h;
-      let suffix = 'AM';
-      if (h >= 12) {
-        suffix = 'PM';
-        finalHour = h > 12 ? h - 12 : 12;
-      } else {
-        if (h >= 1 && h <= 8) {
-          suffix = 'PM';
-        }
-      }
-      return `${finalHour}:00 ${suffix}`;
-    };
-    return `${formatHourGuess(start)} – ${formatHourGuess(end)}`;
-  }
-  
-  return slot.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  return slot.replace(/_/g, ' ');
 };
 
-const AdminOrders = () => {
-  const [orders, setOrders] = useState<ExtendedOrder[]>([]);
-  const [upcomingDeliveries, setUpcomingDeliveries] = useState<any>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedStatus, setSelectedStatus] = useState('all');
-  const [highlight3Days, setHighlight3Days] = useState(true);
-  const [firstOrderFilter, setFirstOrderFilter] = useState('all');
+// Format delivery date with human-readable relative context
+const formatDeliveryDate = (dateStr?: string | null) => {
+  if (!dateStr) return 'Not scheduled';
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    if (isToday(d)) return `Today, ${format(d, 'hh:mm a')}`;
+    if (isTomorrow(d)) return `Tomorrow, ${format(d, 'hh:mm a')}`;
+    return format(d, 'dd MMM yyyy, hh:mm a');
+  } catch (e) {
+    return dateStr;
+  }
+};
+
+// Quick safe phone cleaner for tel: and WhatsApp
+const cleanPhoneNumber = (phone?: string | null) => {
+  if (!phone) return '';
+  const digits = phone.replace(/[^0-9]/g, '');
+  if (digits.length === 10) return `91${digits}`;
+  return digits;
+};
+
+export const AdminOrders: React.FC = () => {
+  const { toast } = useToast();
+  const { formatPrice, convertPrice, currency } = useCurrency();
+
+  // Navigation Period Tab
+  const [activePeriod, setActivePeriod] = useState<PeriodTab>('today');
   
-  // Pagination states
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  // Secondary Status Filter
+  const [selectedStatus, setSelectedStatus] = useState<StatusFilterType>('all');
+  
+  // Search state with debouncing
+  const [searchInput, setSearchInput] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  // Orders data and loading
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [statusCounts, setStatusCounts] = useState<StatusCounts>({
+    total: 0,
+    preparing: 0,
+    ready: 0,
+    out_for_delivery: 0,
+    delivered: 0,
+    cancelled: 0,
+    totalRevenue: 0
+  });
+
+  // Pagination
   const [paginationInfo, setPaginationInfo] = useState<PaginationInfo | null>(null);
 
-  // View state: 'table' or 'cards' (defaults to stored choice or 'table')
-  const [viewMode, setViewMode] = useState<'table' | 'cards'>(() => {
-    return (localStorage.getItem('sbf_orders_view_mode') as 'table' | 'cards') || 'table';
-  });
+  // Custom Date Range Modal state
+  const [isCustomRangeOpen, setIsCustomRangeOpen] = useState(false);
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
+  const [appliedCustomRange, setAppliedCustomRange] = useState<{ start: string; end: string } | null>(null);
 
-  // Keep track of which cards are expanded for item previews
-  const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
+  // Filter Drawer / Popover state
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [filterDeliveryType, setFilterDeliveryType] = useState('all');
+  const [filterPaymentStatus, setFilterPaymentStatus] = useState('all');
+  const [filterMinAmount, setFilterMinAmount] = useState('');
+  const [filterMaxAmount, setFilterMaxAmount] = useState('');
 
-  // Copied tracking
+  // Order Details Drawer state
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  // Order update pending state
+  const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
   const [copiedOrderId, setCopiedOrderId] = useState<string | null>(null);
-  const [emailSendingOrderId, setEmailSendingOrderId] = useState<string | null>(null);
 
-  const { toast } = useToast();
-  const {
-    formatPrice, convertPrice, currency, setCurrency
-  } = useCurrency();
+  // Dynamic Dates for Navigation Tabs
+  const now = new Date();
+  const todayFormatted = format(now, 'dd MMM yyyy');
+  const tomorrowDate = new Date(now);
+  tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+  const tomorrowFormatted = format(tomorrowDate, 'dd MMM yyyy');
 
-  // Enhanced date filtering states
-  const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
-    from: undefined,
-    to: undefined,
-  });
-  
-  const [deliveryDateRange, setDeliveryDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
-    from: undefined,
-    to: undefined,
-  });
+  // Debounce search input
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchInput.trim());
+    }, 350);
+    return () => clearTimeout(handler);
+  }, [searchInput]);
 
-  const navigate = useNavigate();
+  // Fetch orders when period, status, search, or custom range changes
+  useEffect(() => {
+    fetchOrdersData();
+  }, [activePeriod, selectedStatus, debouncedSearch, appliedCustomRange, filterDeliveryType, filterPaymentStatus]);
 
-  // Save view mode in storage
-  const handleViewModeChange = (mode: 'table' | 'cards') => {
-    setViewMode(mode);
-    localStorage.setItem('sbf_orders_view_mode', mode);
+  const fetchOrdersData = async (isManualRefresh = false) => {
+    try {
+      if (isManualRefresh) setIsRefreshing(true);
+      else setIsLoading(true);
+
+      const params = new URLSearchParams();
+      params.append('period', activePeriod);
+
+      if (selectedStatus !== 'all') {
+        params.append('status', selectedStatus);
+      }
+
+      if (debouncedSearch) {
+        params.append('search', debouncedSearch);
+      }
+
+      if (activePeriod === 'custom' && appliedCustomRange) {
+        if (appliedCustomRange.start) params.append('dateFrom', appliedCustomRange.start);
+        if (appliedCustomRange.end) params.append('dateTo', appliedCustomRange.end);
+      }
+
+      const response = await api.get(`/orders?${params.toString()}`);
+
+      if (response.data?.success) {
+        let fetchedOrders = response.data.orders || [];
+
+        // Apply secondary client filters if set
+        if (filterDeliveryType !== 'all') {
+          fetchedOrders = fetchedOrders.filter((o: Order) => {
+            const slot = (o.deliverySlot || o.shippingDetails?.timeSlot || '').toLowerCase();
+            return slot.includes(filterDeliveryType.toLowerCase());
+          });
+        }
+
+        if (filterPaymentStatus !== 'all') {
+          fetchedOrders = fetchedOrders.filter((o: Order) => {
+            const pStatus = (o.paymentStatus || o.paymentDetails?.status || '').toLowerCase();
+            return pStatus === filterPaymentStatus.toLowerCase();
+          });
+        }
+
+        if (filterMinAmount) {
+          const min = parseFloat(filterMinAmount);
+          if (!isNaN(min)) {
+            fetchedOrders = fetchedOrders.filter((o: Order) => (o.totalAmount || o.finalTotal || 0) >= min);
+          }
+        }
+
+        if (filterMaxAmount) {
+          const max = parseFloat(filterMaxAmount);
+          if (!isNaN(max)) {
+            fetchedOrders = fetchedOrders.filter((o: Order) => (o.totalAmount || o.finalTotal || 0) <= max);
+          }
+        }
+
+        setOrders(fetchedOrders);
+        if (response.data.statusCounts) {
+          setStatusCounts(response.data.statusCounts);
+        }
+        setPaginationInfo(response.data.pagination || null);
+      }
+    } catch (error) {
+      console.error('Failed to fetch orders:', error);
+      toast({
+        title: 'Error loading orders',
+        description: 'Could not connect to the orders service. Please retry.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
   };
 
-  const handleCopyId = (id: string, orderNo: string, e: React.MouseEvent) => {
+  // 1-Click Status Advance Handler
+  const handleUpdateStatus = async (orderId: string, nextStatus: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    try {
+      setUpdatingOrderId(orderId);
+      const res = await api.put(`/orders/${orderId}/status`, { status: nextStatus });
+      if (res.data) {
+        // Optimistic UI update
+        setOrders(prev =>
+          prev.map(o => (o._id === orderId ? { ...o, status: nextStatus as any, orderStatus: nextStatus } : o))
+        );
+        if (selectedOrder && selectedOrder._id === orderId) {
+          setSelectedOrder(prev => (prev ? { ...prev, status: nextStatus as any, orderStatus: nextStatus } : null));
+        }
+
+        const config = getStatusConfig(nextStatus);
+        toast({
+          title: `Status Updated`,
+          description: `Order successfully marked as "${config.label}".`
+        });
+
+        // Refresh counts in background
+        fetchOrdersData();
+      }
+    } catch (err: any) {
+      console.error('Failed to update status:', err);
+      toast({
+        title: 'Update failed',
+        description: err.response?.data?.message || 'Could not update order status.',
+        variant: 'destructive'
+      });
+    } finally {
+      setUpdatingOrderId(null);
+    }
+  };
+
+  // Copy Order ID with Feedback
+  const handleCopyOrderId = (orderNumber: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    navigator.clipboard.writeText(id);
-    setCopiedOrderId(id);
+    navigator.clipboard.writeText(orderNumber);
+    setCopiedOrderId(orderNumber);
     toast({
-      title: "Copied!",
-      description: `Order ID for ${orderNo} copied to clipboard.`,
+      title: 'Copied to clipboard',
+      description: `Order #${orderNumber} copied.`
     });
     setTimeout(() => setCopiedOrderId(null), 2000);
   };
 
-  const toggleExpandCard = (orderId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setExpandedCards(prev => ({
-      ...prev,
-      [orderId]: !prev[orderId]
-    }));
+  // Open Details Drawer
+  const handleOpenDrawer = (order: Order, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setSelectedOrder(order);
+    setIsDrawerOpen(true);
   };
 
-  // Helper function to format price with specific currency
-  const formatPriceWithCurrency = (amount: number, targetCurrency: string) => {
-    return new Intl.NumberFormat(targetCurrency === 'INR' ? 'en-IN' : 'en-US', {
-      style: 'currency',
-      currency: targetCurrency,
-      minimumFractionDigits: 2,
-    }).format(amount);
-  };
-
-  // Helper function to handle currency display based on order's original currency
-  const displayOrderPrice = (amount: number, orderCurrency?: string, orderRate?: number) => {
-    let finalAmount = amount;
-    
-    if (orderCurrency && orderCurrency !== currency) {
-      if (orderCurrency === 'INR' && currency !== 'INR') {
-        finalAmount = convertPrice(amount);
-      } else if (orderCurrency !== 'INR' && currency === 'INR') {
-        if (orderRate) {
-          finalAmount = amount / orderRate;
-        } else {
-          finalAmount = amount / 0.01199; // Fallback
-        }
-      } else if (orderCurrency !== 'INR' && currency !== 'INR') {
-        if (orderRate) {
-          const amountInINR = amount / orderRate;
-          finalAmount = convertPrice(amountInINR);
-        }
-      }
-    } else if (!orderCurrency) {
-      finalAmount = convertPrice(amount);
-    }
-    
-    return formatPriceWithCurrency(finalAmount, currency);
-  };
-
-  const currencies = [
-    { code: 'INR', symbol: '₹' },
-    { code: 'USD', symbol: '$' },
-    { code: 'AED', symbol: 'AED' },
-    { code: 'EUR', symbol: '€' },
-    { code: 'GBP', symbol: '£' },
-  ];
-
-  // Force refresh when currency changes to update displayed prices
-  useEffect(() => {
-    if (orders.length > 0) {
-      setOrders(prev => [...prev]);
-    }
-  }, [currency]);
-
-  useEffect(() => {
-    fetchOrders();
-    fetchUpcomingDeliveries();
-  }, [selectedStatus, dateRange, deliveryDateRange, searchTerm, highlight3Days, currentPage, pageSize, firstOrderFilter]);
-
-  // Reset to first page when filters change
-  useEffect(() => {
-    if (currentPage !== 1) {
-      setCurrentPage(1);
-    }
-  }, [selectedStatus, dateRange, deliveryDateRange, searchTerm]);
-
-  const handleCurrencyChange = (newCurrency: string) => {
-    setCurrency(newCurrency as any);
-  };
-
-  const fetchOrders = async () => {
-    try {
-      setIsLoading(true);
-      const params = new URLSearchParams();
-      
-      params.append('page', currentPage.toString());
-      params.append('limit', pageSize.toString());
-      
-      if (selectedStatus !== 'all') params.append('status', selectedStatus);
-      if (searchTerm) params.append('search', searchTerm);
-      if (dateRange.from) params.append('dateFrom', dateRange.from.toISOString());
-      if (dateRange.to) params.append('dateTo', dateRange.to.toISOString());
-      if (deliveryDateRange.from) params.append('deliveryDateFrom', deliveryDateRange.from.toISOString());
-      if (deliveryDateRange.to) params.append('deliveryDateTo', deliveryDateRange.to.toISOString());
-      if (highlight3Days) params.append('highlight3Days', 'true');
-      if (firstOrderFilter === 'applied') params.append('firstOrderFreeDelivery', 'true');
-      if (firstOrderFilter === 'standard') params.append('firstOrderFreeDelivery', 'false');
-
-      const response = await api.get(`/orders?${params.toString()}`);
-      
-      if (response.data.success) {
-        setOrders(response.data.orders || []);
-        setPaginationInfo(response.data.pagination);
-      } else {
-        setOrders(response.data || []);
-        setPaginationInfo(null);
-      }
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch orders. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const fetchUpcomingDeliveries = async () => {
-    try {
-      const response = await api.get('/orders/upcoming-deliveries?days=7');
-      if (response.data.success) {
-        setUpcomingDeliveries(response.data);
-      }
-    } catch (error) {
-      console.error('Error fetching upcoming deliveries:', error);
-    }
-  };
-
-  const handleViewDetails = (orderId: string) => {
-    navigate(`/admin/orders/${orderId}`);
-  };
-
-  const handleSendReviewEmail = async (orderId: string, orderNumber: string) => {
-    try {
-      setEmailSendingOrderId(orderId);
-      const response = await sendOrderReviewEmail(orderId);
-
-      toast({
-        title: "Review Email Sent",
-        description:
-          response.summary?.productCount
-            ? `Sent review request for ${response.summary.productCount} product${response.summary.productCount > 1 ? 's' : ''} in order ${orderNumber}.`
-            : `Review request email sent for order ${orderNumber}.`,
-      });
-    } catch (error: any) {
-      console.error('Error sending review request email:', error);
-      toast({
-        title: "Email Failed",
-        description: error.response?.data?.message || "Could not send the review request email.",
-        variant: "destructive",
-      });
-    } finally {
-      setEmailSendingOrderId(null);
-    }
-  };
-
-  const handleStatusUpdate = async (orderId: string, newStatus: Order['status']) => {
-    try {
-      const response = await api.put(`/orders/${orderId}/status`, { status: newStatus });
-      
-      if (response.data) {
-        setOrders(orders.map(order =>
-          order._id === orderId ? { ...order, status: newStatus } : order
-        ));
-        
-        toast({
-          title: "Success",
-          description: `Order status updated to "${getStatusConfig(newStatus).label}" successfully.`,
-        });
-        
-        if (newStatus === 'delivered') {
-          toast({
-            title: "🎉 Order Delivered!",
-            description: "Delivery confirmation email with invoice has been sent to the customer.",
-          });
-        }
-        
-        fetchUpcomingDeliveries();
-      }
-    } catch (error) {
-      console.error('Error updating order status:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update order status. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const testDeliveryEmail = async () => {
-    if (!orders.length) {
-      toast({
-        title: "No Orders",
-        description: "No orders available to test email.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const firstOrder = orders[0];
-    try {
-      toast({
-        title: "Testing Email",
-        description: `Testing delivery email for order ${firstOrder.orderNumber}...`,
-      });
-
-      const response = await api.post('/orders/test-delivery-email', { 
-        orderId: firstOrder._id 
-      });
-
-      if (response.data.success) {
-        toast({
-          title: "✅ Email Test Successful",
-          description: `Test email sent to ${response.data.customerEmail}`,
-        });
-      } else {
-        toast({
-          title: "❌ Email Test Failed",
-          description: response.data.message || "Failed to send test email",
-          variant: "destructive",
-        });
-      }
-    } catch (error: any) {
-      console.error('Error testing delivery email:', error);
-      toast({
-        title: "❌ Email Test Failed",
-        description: error.response?.data?.message || "Failed to send test email",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const clearFilters = () => {
-    setDateRange({ from: undefined, to: undefined });
-    setDeliveryDateRange({ from: undefined, to: undefined });
-    setSearchTerm('');
-    setSelectedStatus('all');
-    setFirstOrderFilter('all');
-    setCurrentPage(1);
-  };
-
-  const handlePageSizeChange = (newSize: string) => {
-    setPageSize(parseInt(newSize));
-    setCurrentPage(1);
-  };
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
-  const generatePageNumbers = () => {
-    if (!paginationInfo) return [];
-    
-    const { currentPage, totalPages } = paginationInfo;
-    const pages = [];
-    const showPages = 5;
-    
-    let startPage = Math.max(1, currentPage - Math.floor(showPages / 2));
-    let endPage = Math.min(totalPages, startPage + showPages - 1);
-    
-    if (endPage - startPage + 1 < showPages) {
-      startPage = Math.max(1, endPage - showPages + 1);
-    }
-    
-    for (let i = startPage; i <= endPage; i++) {
-      pages.push(i);
-    }
-    
-    return pages;
-  };
-
-  const exportToCSV = () => {
-    try {
-      const headers = [
-        'Order Number', 'Order Date', 'Customer Name', 'Email', 'Phone',
-        'Address', 'City', 'State', 'Zip Code', 'Delivery Date', 'Time Slot',
-        'Product Name', 'Quantity', 'Price', 'Final Price', 'Total Amount', 
-        'Status', 'Payment Method', 'Priority'
-      ];
-
-      const rows = [headers];
-      orders.forEach(order => {
-        order.items.forEach(item => {
-          rows.push([
-            order.orderNumber,
-            formatDate(order.createdAt),
-            order.shippingDetails.fullName,
-            order.shippingDetails.email,
-            order.shippingDetails.phone,
-            order.shippingDetails.address,
-            order.shippingDetails.city,
-            order.shippingDetails.state,
-            order.shippingDetails.zipCode,
-            order.shippingDetails.deliveryDate ? formatDate(order.shippingDetails.deliveryDate) : '',
-            order.shippingDetails.timeSlot || '',
-            item.product?.title || item.title || 'N/A',
-            item.quantity.toString(),
-            displayOrderPrice(item.price, order.currency, order.currencyRate),
-            displayOrderPrice(item.finalPrice, order.currency, order.currencyRate),
-            displayOrderPrice(order.totalAmount, order.currency, order.currencyRate),
-            order.status,
-            (order.paymentDetails?.method && order.paymentDetails.method.toLowerCase() !== 'cod') ? (order.paymentDetails.method.toLowerCase() === 'razorpay' ? 'Online' : order.paymentDetails.method) : 'Online',
-            order.priority || 'normal'
-          ]);
-        });
-      });
-
-      const csvContent = rows
-        .map(row =>
-          row.map(cell => {
-            const cellStr = String(cell);
-            return cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')
-              ? `"${cellStr.replace(/"/g, '""')}"`
-              : cellStr;
-          }).join(',')
-        ).join('\n');
-
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `orders-${new Date().toISOString().split('T')[0]}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-
-      toast({
-        title: "Success",
-        description: "Orders exported successfully.",
-      });
-    } catch (error) {
-      console.error('Error exporting to CSV:', error);
-      toast({
-        title: "Error",
-        description: "Failed to export orders. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+  // Download Invoice
+  const handleDownloadInvoice = (orderId: string, orderNumber: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    window.open(`/api/orders/${orderId}/invoice`, '_blank');
+    toast({
+      title: 'Downloading Invoice',
+      description: `Invoice for order #${orderNumber} is opening.`
     });
   };
 
-  const getPriorityIcon = (priority?: string) => {
-    switch (priority) {
-      case 'critical': 
-        return (
-          <div className="flex items-center gap-1 bg-rose-50 text-rose-700 dark:bg-rose-950/30 dark:text-rose-400 border border-rose-200 dark:border-rose-900/40 px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-wider animate-pulse">
-            <ShieldAlert className="h-3.5 w-3.5" />
-            <span>Urgent</span>
-          </div>
-        );
-      case 'high': 
-        return (
-          <div className="flex items-center gap-1 bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400 border border-amber-200 dark:border-amber-900/40 px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-wider">
-            <Clock className="h-3.5 w-3.5" />
-            <span>High</span>
-          </div>
-        );
-      case 'medium': 
-        return (
-          <div className="flex items-center gap-1 bg-sky-50 text-sky-700 dark:bg-sky-950/30 dark:text-sky-400 border border-sky-200 dark:border-sky-900/40 px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-wider">
-            <Calendar className="h-3.5 w-3.5" />
-            <span>Medium</span>
-          </div>
-        );
-      default: 
-        return null;
+  // Apply Custom Date Range
+  const handleApplyCustomRange = () => {
+    if (!customStartDate) {
+      toast({
+        title: 'Start date required',
+        description: 'Please select a starting date.',
+        variant: 'destructive'
+      });
+      return;
     }
+    setAppliedCustomRange({
+      start: customStartDate,
+      end: customEndDate || customStartDate
+    });
+    setActivePeriod('custom');
+    setIsCustomRangeOpen(false);
   };
 
-  const getWhatsAppLink = (phone: string, name: string, orderNumber: string) => {
-    const cleanPhone = phone.replace(/\D/g, '');
-    const phoneWithCC = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
-    const message = encodeURIComponent(`Hello ${name}, this is Spring Blossoms Florist. We are reaching out regarding your order #${orderNumber}.`);
-    return `https://wa.me/${phoneWithCC}?text=${message}`;
+  // Reset Filters
+  const handleResetFilters = () => {
+    setFilterDeliveryType('all');
+    setFilterPaymentStatus('all');
+    setFilterMinAmount('');
+    setFilterMaxAmount('');
+    setIsFilterOpen(false);
   };
 
-  const renderUpcomingDeliveries = () => {
-    if (!upcomingDeliveries) return null;
+  // Active filter count for badge
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (filterDeliveryType !== 'all') count++;
+    if (filterPaymentStatus !== 'all') count++;
+    if (filterMinAmount || filterMaxAmount) count++;
+    return count;
+  }, [filterDeliveryType, filterPaymentStatus, filterMinAmount, filterMaxAmount]);
 
-    const { stats } = upcomingDeliveries;
+  // Group Past Orders by Date for Requirement 13
+  const pastOrdersGrouped = useMemo(() => {
+    if (activePeriod !== 'past') return null;
+    const groups: Record<string, Order[]> = {};
+    orders.forEach(order => {
+      const d = order.deliveryDate ? new Date(order.deliveryDate) : new Date(order.createdAt);
+      const dateKey = !isNaN(d.getTime()) ? format(d, 'dd MMMM yyyy') : 'Earlier Deliveries';
+      if (!groups[dateKey]) groups[dateKey] = [];
+      groups[dateKey].push(order);
+    });
+    return groups;
+  }, [orders, activePeriod]);
 
-    const statItems = [
-      { 
-        label: 'Today', 
-        value: stats.today, 
-        desc: 'Urgent deliveries', 
-        border: 'border-l-rose-500', 
-        text: 'text-rose-600 dark:text-rose-400',
-        bg: 'from-rose-50/20 to-transparent dark:from-rose-950/10',
-        icon: <AlertTriangle className="h-6 w-6 text-rose-500" />
-      },
-      { 
-        label: 'Tomorrow', 
-        value: stats.tomorrow, 
-        desc: 'High priority schedule', 
-        border: 'border-l-amber-500', 
-        text: 'text-amber-600 dark:text-amber-400',
-        bg: 'from-amber-50/20 to-transparent dark:from-amber-950/10',
-        icon: <Clock className="h-6 w-6 text-amber-500" />
-      },
-      { 
-        label: 'Next 3 Days', 
-        value: stats.next3Days, 
-        desc: 'Mid priority pipeline', 
-        border: 'border-l-sky-500', 
-        text: 'text-sky-600 dark:text-sky-400',
-        bg: 'from-sky-50/20 to-transparent dark:from-sky-950/10',
-        icon: <Calendar className="h-6 w-6 text-sky-500" />
-      },
-      { 
-        label: 'This Week', 
-        value: stats.total, 
-        desc: 'Total active load', 
-        border: 'border-l-emerald-500', 
-        text: 'text-emerald-600 dark:text-emerald-400',
-        bg: 'from-emerald-50/20 to-transparent dark:from-emerald-950/10',
-        icon: <Sparkles className="h-6 w-6 text-emerald-500" />
-      }
-    ];
+  // Determine Primary Context-Aware Action for Order Card
+  const renderCardAction = (order: Order) => {
+    const rawStatus = (order.status || (order as any).orderStatus || 'pending').toLowerCase();
+    const config = getStatusConfig(rawStatus);
+    const isBusy = updatingOrderId === order._id;
 
-    return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {statItems.map((item, idx) => (
-          <motion.div
-            key={item.label}
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: idx * 0.05 }}
-            whileHover={{ y: -3, transition: { duration: 0.2 } }}
-            className={cn(
-              "bg-white dark:bg-slate-900 border-l-4 border-y border-r border-slate-100 dark:border-slate-800/80 rounded-xl p-4 shadow-sm flex items-center justify-between bg-gradient-to-br",
-              item.border,
-              item.bg
-            )}
-          >
-            <div className="space-y-1">
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">{item.label}</p>
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-2xl font-bold text-slate-900 dark:text-white">{item.value}</span>
-                <span className="text-xs text-slate-400">orders</span>
-              </div>
-              <p className="text-[10px] text-slate-400 font-medium">{item.desc}</p>
-            </div>
-            <div className="p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800/40">
-              {item.icon}
-            </div>
-          </motion.div>
-        ))}
-      </div>
-    );
-  };
-
-  const renderActiveFilters = () => {
-    const hasSearch = searchTerm !== '';
-    const hasStatus = selectedStatus !== 'all';
-    const hasOrderDate = dateRange.from !== undefined;
-    const hasDeliveryDate = deliveryDateRange.from !== undefined;
-    const hasFirstOrder = firstOrderFilter !== 'all';
-
-    if (!hasSearch && !hasStatus && !hasOrderDate && !hasDeliveryDate && !hasFirstOrder) return null;
-
-    return (
-      <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800/50">
-        <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mr-1">Active Filters:</span>
-        
-        {hasSearch && (
-          <Badge variant="secondary" className="gap-1.5 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 py-1 pl-2.5 pr-1.5 border border-slate-100 dark:border-slate-700/55 rounded-lg">
-            <span className="font-semibold">Search:</span> "{searchTerm}"
-            <Button size="icon" variant="ghost" className="h-4 w-4 p-0 hover:bg-slate-200 dark:hover:bg-slate-700 rounded" onClick={() => setSearchTerm('')}>
-              <X className="h-3 w-3" />
-            </Button>
-          </Badge>
-        )}
-
-        {hasStatus && (
-          <Badge variant="secondary" className="gap-1.5 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 py-1 pl-2.5 pr-1.5 border border-slate-100 dark:border-slate-700/55 rounded-lg">
-            <span className="font-semibold">Status:</span> {getStatusConfig(selectedStatus).label}
-            <Button size="icon" variant="ghost" className="h-4 w-4 p-0 hover:bg-slate-200 dark:hover:bg-slate-700 rounded" onClick={() => setSelectedStatus('all')}>
-              <X className="h-3 w-3" />
-            </Button>
-          </Badge>
-        )}
-
-        {hasOrderDate && (
-          <Badge variant="secondary" className="gap-1.5 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 py-1 pl-2.5 pr-1.5 border border-slate-100 dark:border-slate-700/55 rounded-lg">
-            <span className="font-semibold">Order Placed:</span> {format(dateRange.from!, "MMM d")} - {dateRange.to ? format(dateRange.to, "MMM d") : '...' }
-            <Button size="icon" variant="ghost" className="h-4 w-4 p-0 hover:bg-slate-200 dark:hover:bg-slate-700 rounded" onClick={() => setDateRange({ from: undefined, to: undefined })}>
-              <X className="h-3 w-3" />
-            </Button>
-          </Badge>
-        )}
-
-        {hasDeliveryDate && (
-          <Badge variant="secondary" className="gap-1.5 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 py-1 pl-2.5 pr-1.5 border border-slate-100 dark:border-slate-700/55 rounded-lg">
-            <span className="font-semibold">Delivery Date:</span> {format(deliveryDateRange.from!, "MMM d")} - {deliveryDateRange.to ? format(deliveryDateRange.to, "MMM d") : '...' }
-            <Button size="icon" variant="ghost" className="h-4 w-4 p-0 hover:bg-slate-200 dark:hover:bg-slate-700 rounded" onClick={() => setDeliveryDateRange({ from: undefined, to: undefined })}>
-              <X className="h-3 w-3" />
-            </Button>
-          </Badge>
-        )}
-
-        {hasFirstOrder && (
-          <Badge variant="secondary" className="gap-1.5 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 py-1 pl-2.5 pr-1.5 border border-slate-100 dark:border-slate-700/55 rounded-lg">
-            <span className="font-semibold">Delivery Charge:</span> {firstOrderFilter === 'applied' ? 'First Order Free' : 'Standard Charge'}
-            <Button size="icon" variant="ghost" className="h-4 w-4 p-0 hover:bg-slate-200 dark:hover:bg-slate-700 rounded" onClick={() => setFirstOrderFilter('all')}>
-              <X className="h-3.5 w-3.5 text-slate-400" />
-            </Button>
-          </Badge>
-        )}
-
-        <Button variant="ghost" size="sm" onClick={clearFilters} className="h-7 px-2.5 text-xs text-rose-500 hover:text-rose-600 font-semibold hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-lg">
-          Clear all filters
+    if (config.category === 'preparing') {
+      return (
+        <Button
+          size="sm"
+          disabled={isBusy}
+          onClick={(e) => handleUpdateStatus(order._id, 'ready', e)}
+          className="bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs h-8 px-3 rounded-lg shadow-sm transition-all"
+        >
+          {isBusy ? <RefreshCw className="w-3 h-3 animate-spin mr-1" /> : <CheckCircle2 className="w-3.5 h-3.5 mr-1" />}
+          Mark Ready
         </Button>
-      </div>
-    );
-  };
+      );
+    }
 
-  const renderPaginationControls = () => {
-    if (!paginationInfo) return null;
+    if (config.category === 'ready') {
+      return (
+        <Button
+          size="sm"
+          disabled={isBusy}
+          onClick={(e) => handleUpdateStatus(order._id, 'out_for_delivery', e)}
+          className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-xs h-8 px-3 rounded-lg shadow-sm transition-all"
+        >
+          {isBusy ? <RefreshCw className="w-3 h-3 animate-spin mr-1" /> : <Truck className="w-3.5 h-3.5 mr-1" />}
+          Out for Delivery
+        </Button>
+      );
+    }
 
-    const {
-      currentPage: current,
-      totalPages,
-      hasNextPage,
-      hasPrevPage,
-      startIndex,
-      endIndex,
-      totalItems
-    } = paginationInfo;
+    if (config.category === 'out_for_delivery') {
+      return (
+        <Button
+          size="sm"
+          disabled={isBusy}
+          onClick={(e) => handleUpdateStatus(order._id, 'delivered', e)}
+          className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs h-8 px-3 rounded-lg shadow-sm transition-all"
+        >
+          {isBusy ? <RefreshCw className="w-3 h-3 animate-spin mr-1" /> : <CheckCheck className="w-3.5 h-3.5 mr-1" />}
+          Mark Delivered
+        </Button>
+      );
+    }
 
-    const pageNumbers = generatePageNumbers();
+    if (config.category === 'delivered') {
+      return (
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={(e) => handleDownloadInvoice(order._id, order.orderNumber, e)}
+          className="border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium text-xs h-8 px-3 rounded-lg"
+        >
+          <FileText className="w-3.5 h-3.5 mr-1 text-slate-500" />
+          Invoice
+        </Button>
+      );
+    }
 
     return (
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between mt-6 px-4 py-3 bg-slate-50 dark:bg-slate-900/60 rounded-xl border border-slate-100 dark:border-slate-800/80">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-          <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-            Showing <span className="font-semibold text-slate-700 dark:text-slate-200">{startIndex}-{endIndex}</span> of <span className="font-semibold text-slate-700 dark:text-slate-200">{totalItems}</span> orders
-          </div>
-          <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
-            <SelectTrigger className="w-full sm:w-36 h-8 text-xs bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 rounded-lg">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {pageSizeOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value.toString()} className="text-xs">
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-1.5 self-center lg:self-auto">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handlePageChange(1)}
-            disabled={!hasPrevPage}
-            className="h-8 w-8 p-0 border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
-          >
-            <ChevronsLeft className="h-4 w-4" />
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handlePageChange(current - 1)}
-            disabled={!hasPrevPage}
-            className="h-8 w-8 p-0 border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-
-          {pageNumbers.map((pageNum) => (
-            <Button
-              key={pageNum}
-              variant={pageNum === current ? "default" : "outline"}
-              size="sm"
-              onClick={() => handlePageChange(pageNum)}
-              className={cn(
-                "h-8 w-8 p-0 rounded-lg text-xs font-semibold",
-                pageNum === current 
-                  ? "bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 border-transparent" 
-                  : "border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800"
-              )}
-            >
-              {pageNum}
-            </Button>
-          ))}
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handlePageChange(current + 1)}
-            disabled={!hasNextPage}
-            className="h-8 w-8 p-0 border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handlePageChange(totalPages)}
-            disabled={!hasNextPage}
-            className="h-8 w-8 p-0 border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
-          >
-            <ChevronsRight className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-    );
-  };
-
-  const renderStatusDropdown = (orderId: string, currentStatus: string) => {
-    const statusCfg = getStatusConfig(currentStatus);
-    return (
-      <Select
-        value={currentStatus}
-        onValueChange={(value) => handleStatusUpdate(orderId, value as Order['status'])}
+      <Button
+        size="sm"
+        variant="ghost"
+        onClick={(e) => handleOpenDrawer(order, e)}
+        className="text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-xs h-8 px-3 rounded-lg"
       >
-        <SelectTrigger className="border-0 p-0 h-auto w-auto bg-transparent focus:ring-0 focus:ring-offset-0">
-          <div className={cn(
-            "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-200 cursor-pointer shadow-sm hover:scale-[1.03]",
-            statusCfg.bg,
-            statusCfg.border,
-            statusCfg.text
-          )}>
-            {statusCfg.icon}
-            <span>{statusCfg.label}</span>
-            <ChevronDown className="h-3 w-3 opacity-60 ml-0.5" />
-          </div>
-        </SelectTrigger>
-        <SelectContent align="end" className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-xl">
-          <SelectItem value="order_placed" className="text-xs">Order Placed</SelectItem>
-          <SelectItem value="received" className="text-xs">Received</SelectItem>
-          <SelectItem value="being_made" className="text-xs">Being Made</SelectItem>
-          <SelectItem value="out_for_delivery" className="text-xs">Out for Delivery</SelectItem>
-          <SelectItem value="delivered" className="text-xs">Delivered</SelectItem>
-          <SelectItem value="cancelled" className="text-xs">Cancelled</SelectItem>
-        </SelectContent>
-      </Select>
+        <AlertCircle className="w-3.5 h-3.5 mr-1" />
+        View Reason
+      </Button>
     );
   };
-
-  const pageSizeOptions = [
-    { value: 10, label: '10 per page' },
-    { value: 20, label: '20 per page' },
-    { value: 50, label: '50 per page' },
-    { value: 100, label: '100 per page' },
-  ];
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 py-4">
-      {/* Page Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-slate-100 dark:border-slate-800 pb-5">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-            <span>💐</span> Order Center
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 font-medium">
-            Manage your boutique floral orders, track schedules, and handle customer communication.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Currency Switcher */}
-          <Select value={currency} onValueChange={handleCurrencyChange}>
-            <SelectTrigger className="w-24 h-9 text-xs bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-xl">
-              <SelectValue placeholder="Currency" />
-            </SelectTrigger>
-            <SelectContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-xl">
-              {currencies.map((curr) => (
-                <SelectItem key={curr.code} value={curr.code} className="text-xs">
-                  {curr.code} ({curr.symbol})
-                </SelectItem>
+    <TooltipProvider delayDuration={200}>
+      <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 pb-20 text-slate-900 dark:text-slate-100">
+        
+        {/* ========================================================
+            1. PAGE HEADER (Clean, Compact, Operations-Focused)
+           ======================================================== */}
+        <header className="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 shadow-xs">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+              
+              {/* Left Title & Subtitle */}
+              <div>
+                <div className="flex items-center gap-2.5">
+                  <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
+                    Orders
+                  </h1>
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                    Live Operations
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  Manage deliveries, fulfillment, and order status
+                </p>
+              </div>
+
+              {/* Right Action Controls: Search, Filters, Date Range, Refresh */}
+              <div className="flex items-center gap-2 flex-wrap">
+                
+                {/* Search Bar */}
+                <div className="relative min-w-[200px] sm:min-w-[260px] flex-1 sm:flex-initial">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Input
+                    type="text"
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    placeholder="Search by ID, customer, product..."
+                    className="pl-9 pr-8 h-9 text-xs rounded-xl bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 focus-visible:ring-emerald-500"
+                  />
+                  {searchInput && (
+                    <button
+                      onClick={() => setSearchInput('')}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Filter Popover Button */}
+                <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={cn(
+                        "h-9 px-3 text-xs rounded-xl border-slate-200 dark:border-slate-700 relative font-medium",
+                        activeFilterCount > 0 && "border-emerald-500 bg-emerald-50/50 text-emerald-700 dark:bg-emerald-950/30"
+                      )}
+                    >
+                      <Filter className="w-3.5 h-3.5 mr-1.5 text-slate-500" />
+                      Filters
+                      {activeFilterCount > 0 && (
+                        <span className="ml-1.5 w-4 h-4 rounded-full bg-emerald-600 text-white text-[10px] font-bold flex items-center justify-center">
+                          {activeFilterCount}
+                        </span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent align="end" className="w-80 p-4 rounded-2xl shadow-xl border-slate-200 dark:border-slate-800">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                        <span className="font-semibold text-sm">Filter Orders</span>
+                        {activeFilterCount > 0 && (
+                          <button
+                            onClick={handleResetFilters}
+                            className="text-xs text-rose-600 hover:underline font-medium"
+                          >
+                            Reset
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Delivery Slot Filter */}
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-slate-600 dark:text-slate-300">Delivery Type</label>
+                        <select
+                          value={filterDeliveryType}
+                          onChange={(e) => setFilterDeliveryType(e.target.value)}
+                          className="w-full text-xs h-8 px-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
+                        >
+                          <option value="all">All Delivery Slots</option>
+                          <option value="same_day">Same-Day Delivery</option>
+                          <option value="midnight">Midnight Delivery</option>
+                          <option value="morning">Morning Delivery</option>
+                          <option value="evening">Evening Delivery</option>
+                        </select>
+                      </div>
+
+                      {/* Payment Status Filter */}
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-slate-600 dark:text-slate-300">Payment Status</label>
+                        <select
+                          value={filterPaymentStatus}
+                          onChange={(e) => setFilterPaymentStatus(e.target.value)}
+                          className="w-full text-xs h-8 px-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
+                        >
+                          <option value="all">All Payment Statuses</option>
+                          <option value="completed">Completed / Paid</option>
+                          <option value="pending">Pending</option>
+                          <option value="refunded">Refunded</option>
+                        </select>
+                      </div>
+
+                      {/* Amount Range */}
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-slate-600 dark:text-slate-300">Order Value (₹)</label>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="number"
+                            placeholder="Min"
+                            value={filterMinAmount}
+                            onChange={(e) => setFilterMinAmount(e.target.value)}
+                            className="h-8 text-xs rounded-lg"
+                          />
+                          <span className="text-slate-400 text-xs">–</span>
+                          <Input
+                            type="number"
+                            placeholder="Max"
+                            value={filterMaxAmount}
+                            onChange={(e) => setFilterMaxAmount(e.target.value)}
+                            className="h-8 text-xs rounded-lg"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="pt-2 flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={handleResetFilters}
+                          className="w-1/2 text-xs h-8 rounded-lg"
+                        >
+                          Clear
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => setIsFilterOpen(false)}
+                          className="w-1/2 text-xs h-8 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white"
+                        >
+                          Apply Filters
+                        </Button>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+
+                {/* Custom Date Range Picker Button */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsCustomRangeOpen(true)}
+                  className={cn(
+                    "h-9 px-3 text-xs rounded-xl border-slate-200 dark:border-slate-700 font-medium",
+                    activePeriod === 'custom' && "border-emerald-500 bg-emerald-50/50 text-emerald-700 dark:bg-emerald-950/30"
+                  )}
+                >
+                  <Calendar className="w-3.5 h-3.5 mr-1.5 text-slate-500" />
+                  {activePeriod === 'custom' && appliedCustomRange
+                    ? `${format(new Date(appliedCustomRange.start), 'dd MMM')} – ${format(new Date(appliedCustomRange.end), 'dd MMM')}`
+                    : 'Date Range'}
+                </Button>
+
+                {/* Refresh Button */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fetchOrdersData(true)}
+                      disabled={isRefreshing}
+                      className="h-9 w-9 p-0 rounded-xl border-slate-200 dark:border-slate-700"
+                    >
+                      <RefreshCw className={cn("w-3.5 h-3.5 text-slate-600 dark:text-slate-300", isRefreshing && "animate-spin")} />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Refresh live orders</TooltipContent>
+                </Tooltip>
+              </div>
+
+            </div>
+          </div>
+        </header>
+
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-5 space-y-5">
+
+          {/* ========================================================
+              2. DATE / ORDER PERIOD NAVIGATION (Segmented Bar)
+             ======================================================== */}
+          <div className="bg-white dark:bg-slate-900 p-1.5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
+            <nav className="flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth" aria-label="Order Period Tabs">
+              
+              {/* Tab 1: Today's Orders */}
+              <button
+                onClick={() => {
+                  setActivePeriod('today');
+                  setSelectedStatus('all');
+                }}
+                className={cn(
+                  "flex-1 min-w-[170px] sm:min-w-[190px] py-2.5 px-4 rounded-xl text-left transition-all relative flex flex-col justify-center",
+                  activePeriod === 'today'
+                    ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-950 dark:text-emerald-100 shadow-xs border border-emerald-200/80 dark:border-emerald-800/60"
+                    : "hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-600 dark:text-slate-400"
+                )}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                    Today's Orders
+                  </span>
+                  {activePeriod === 'today' && (
+                    <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
+                  )}
+                </div>
+                <span className="text-sm font-semibold text-slate-900 dark:text-slate-100 mt-0.5">
+                  {todayFormatted}
+                </span>
+              </button>
+
+              {/* Tab 2: Tomorrow's Orders */}
+              <button
+                onClick={() => {
+                  setActivePeriod('tomorrow');
+                  setSelectedStatus('all');
+                }}
+                className={cn(
+                  "flex-1 min-w-[170px] sm:min-w-[190px] py-2.5 px-4 rounded-xl text-left transition-all relative flex flex-col justify-center",
+                  activePeriod === 'tomorrow'
+                    ? "bg-blue-50 dark:bg-blue-950/40 text-blue-950 dark:text-blue-100 shadow-xs border border-blue-200/80 dark:border-blue-800/60"
+                    : "hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-600 dark:text-slate-400"
+                )}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-blue-400">
+                    Tomorrow
+                  </span>
+                  {activePeriod === 'tomorrow' && (
+                    <span className="w-2 h-2 rounded-full bg-blue-600" />
+                  )}
+                </div>
+                <span className="text-sm font-semibold text-slate-900 dark:text-slate-100 mt-0.5">
+                  {tomorrowFormatted}
+                </span>
+              </button>
+
+              {/* Tab 3: Past Orders */}
+              <button
+                onClick={() => {
+                  setActivePeriod('past');
+                  setSelectedStatus('all');
+                }}
+                className={cn(
+                  "flex-1 min-w-[170px] sm:min-w-[190px] py-2.5 px-4 rounded-xl text-left transition-all relative flex flex-col justify-center",
+                  activePeriod === 'past'
+                    ? "bg-purple-50 dark:bg-purple-950/40 text-purple-950 dark:text-purple-100 shadow-xs border border-purple-200/80 dark:border-purple-800/60"
+                    : "hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-600 dark:text-slate-400"
+                )}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-purple-700 dark:text-purple-400">
+                    Past Orders
+                  </span>
+                  {activePeriod === 'past' && (
+                    <span className="w-2 h-2 rounded-full bg-purple-600" />
+                  )}
+                </div>
+                <span className="text-sm font-semibold text-slate-900 dark:text-slate-100 mt-0.5">
+                  Previous deliveries
+                </span>
+              </button>
+
+              {/* Tab 4: Custom Range */}
+              <button
+                onClick={() => setIsCustomRangeOpen(true)}
+                className={cn(
+                  "flex-1 min-w-[170px] sm:min-w-[190px] py-2.5 px-4 rounded-xl text-left transition-all relative flex flex-col justify-center",
+                  activePeriod === 'custom'
+                    ? "bg-amber-50 dark:bg-amber-950/40 text-amber-950 dark:text-amber-100 shadow-xs border border-amber-200/80 dark:border-amber-800/60"
+                    : "hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-600 dark:text-slate-400"
+                )}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+                    Custom Range
+                  </span>
+                  {activePeriod === 'custom' && (
+                    <span className="w-2 h-2 rounded-full bg-amber-600" />
+                  )}
+                </div>
+                <span className="text-sm font-semibold text-slate-900 dark:text-slate-100 mt-0.5 truncate">
+                  {appliedCustomRange ? `${appliedCustomRange.start} → ${appliedCustomRange.end}` : 'Select dates...'}
+                </span>
+              </button>
+
+            </nav>
+          </div>
+
+          {/* ========================================================
+              3. ORDER SUMMARY STATISTICS CARDS (Compact, High-Contrast)
+             ======================================================== */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            
+            {/* Total Orders Card */}
+            <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-3.5 shadow-xs flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Total Orders</span>
+                <span className="p-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                  <Package className="w-3.5 h-3.5" />
+                </span>
+              </div>
+              <div className="mt-2 flex items-baseline justify-between">
+                <span className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
+                  {statusCounts.total}
+                </span>
+                <span className="text-[11px] font-semibold text-slate-400">100%</span>
+              </div>
+            </div>
+
+            {/* Preparing Card */}
+            <div className="bg-white dark:bg-slate-900 border border-amber-200/70 dark:border-amber-900/40 rounded-xl p-3.5 shadow-xs flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-amber-800 dark:text-amber-300">Preparing</span>
+                <span className="p-1 rounded-md bg-amber-50 dark:bg-amber-950/50 text-amber-600">
+                  <ChefHat className="w-3.5 h-3.5" />
+                </span>
+              </div>
+              <div className="mt-2 flex items-baseline justify-between">
+                <span className="text-2xl font-bold tracking-tight text-amber-900 dark:text-amber-200">
+                  {statusCounts.preparing}
+                </span>
+                <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+              </div>
+            </div>
+
+            {/* Ready Card */}
+            <div className="bg-white dark:bg-slate-900 border border-blue-200/70 dark:border-blue-900/40 rounded-xl p-3.5 shadow-xs flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-blue-800 dark:text-blue-300">Ready</span>
+                <span className="p-1 rounded-md bg-blue-50 dark:bg-blue-950/50 text-blue-600">
+                  <Sparkles className="w-3.5 h-3.5" />
+                </span>
+              </div>
+              <div className="mt-2 flex items-baseline justify-between">
+                <span className="text-2xl font-bold tracking-tight text-blue-900 dark:text-blue-200">
+                  {statusCounts.ready}
+                </span>
+                <span className="w-2 h-2 rounded-full bg-blue-600" />
+              </div>
+            </div>
+
+            {/* Out for Delivery Card */}
+            <div className="bg-white dark:bg-slate-900 border border-indigo-200/70 dark:border-indigo-900/40 rounded-xl p-3.5 shadow-xs flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-indigo-800 dark:text-indigo-300">Out for Delivery</span>
+                <span className="p-1 rounded-md bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600">
+                  <Truck className="w-3.5 h-3.5" />
+                </span>
+              </div>
+              <div className="mt-2 flex items-baseline justify-between">
+                <span className="text-2xl font-bold tracking-tight text-indigo-900 dark:text-indigo-200">
+                  {statusCounts.out_for_delivery}
+                </span>
+                <span className="w-2 h-2 rounded-full bg-indigo-600" />
+              </div>
+            </div>
+
+            {/* Delivered Card */}
+            <div className="bg-white dark:bg-slate-900 border border-emerald-200/70 dark:border-emerald-900/40 rounded-xl p-3.5 shadow-xs flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-emerald-800 dark:text-emerald-300">Delivered</span>
+                <span className="p-1 rounded-md bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600">
+                  <CheckCheck className="w-3.5 h-3.5" />
+                </span>
+              </div>
+              <div className="mt-2 flex items-baseline justify-between">
+                <span className="text-2xl font-bold tracking-tight text-emerald-900 dark:text-emerald-200">
+                  {statusCounts.delivered}
+                </span>
+                <span className="w-2 h-2 rounded-full bg-emerald-600" />
+              </div>
+            </div>
+
+            {/* Cancelled Card */}
+            <div className="bg-white dark:bg-slate-900 border border-rose-200/70 dark:border-rose-900/40 rounded-xl p-3.5 shadow-xs flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-rose-800 dark:text-rose-300">Cancelled</span>
+                <span className="p-1 rounded-md bg-rose-50 dark:bg-rose-950/50 text-rose-600">
+                  <XCircle className="w-3.5 h-3.5" />
+                </span>
+              </div>
+              <div className="mt-2 flex items-baseline justify-between">
+                <span className="text-2xl font-bold tracking-tight text-rose-900 dark:text-rose-200">
+                  {statusCounts.cancelled}
+                </span>
+                <span className="w-2 h-2 rounded-full bg-rose-600" />
+              </div>
+            </div>
+
+          </div>
+
+          {/* ========================================================
+              4. ORDER STATUS FILTERS (Secondary Filter Bar with Counts)
+             ======================================================== */}
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
+            
+            <button
+              onClick={() => setSelectedStatus('all')}
+              className={cn(
+                "px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5",
+                selectedStatus === 'all'
+                  ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-xs"
+                  : "bg-white dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100"
+              )}
+            >
+              All Orders
+              <span className={cn("px-1.5 py-0.2 rounded-full text-[10px]", selectedStatus === 'all' ? "bg-white/20 text-white dark:bg-slate-900/20 dark:text-slate-900" : "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300")}>
+                {statusCounts.total}
+              </span>
+            </button>
+
+            <button
+              onClick={() => setSelectedStatus('preparing')}
+              className={cn(
+                "px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5",
+                selectedStatus === 'preparing'
+                  ? "bg-amber-600 text-white shadow-xs"
+                  : "bg-white dark:bg-slate-800/80 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/50 hover:bg-amber-50"
+              )}
+            >
+              <span className="w-2 h-2 rounded-full bg-amber-400" />
+              Preparing
+              <span className={cn("px-1.5 py-0.2 rounded-full text-[10px]", selectedStatus === 'preparing' ? "bg-white/20 text-white" : "bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300")}>
+                {statusCounts.preparing}
+              </span>
+            </button>
+
+            <button
+              onClick={() => setSelectedStatus('ready')}
+              className={cn(
+                "px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5",
+                selectedStatus === 'ready'
+                  ? "bg-blue-600 text-white shadow-xs"
+                  : "bg-white dark:bg-slate-800/80 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50 hover:bg-blue-50"
+              )}
+            >
+              <span className="w-2 h-2 rounded-full bg-blue-400" />
+              Ready
+              <span className={cn("px-1.5 py-0.2 rounded-full text-[10px]", selectedStatus === 'ready' ? "bg-white/20 text-white" : "bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300")}>
+                {statusCounts.ready}
+              </span>
+            </button>
+
+            <button
+              onClick={() => setSelectedStatus('out_for_delivery')}
+              className={cn(
+                "px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5",
+                selectedStatus === 'out_for_delivery'
+                  ? "bg-indigo-600 text-white shadow-xs"
+                  : "bg-white dark:bg-slate-800/80 text-indigo-800 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/50 hover:bg-indigo-50"
+              )}
+            >
+              <span className="w-2 h-2 rounded-full bg-indigo-400" />
+              Out for Delivery
+              <span className={cn("px-1.5 py-0.2 rounded-full text-[10px]", selectedStatus === 'out_for_delivery' ? "bg-white/20 text-white" : "bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300")}>
+                {statusCounts.out_for_delivery}
+              </span>
+            </button>
+
+            <button
+              onClick={() => setSelectedStatus('delivered')}
+              className={cn(
+                "px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5",
+                selectedStatus === 'delivered'
+                  ? "bg-emerald-600 text-white shadow-xs"
+                  : "bg-white dark:bg-slate-800/80 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50 hover:bg-emerald-50"
+              )}
+            >
+              <span className="w-2 h-2 rounded-full bg-emerald-400" />
+              Delivered
+              <span className={cn("px-1.5 py-0.2 rounded-full text-[10px]", selectedStatus === 'delivered' ? "bg-white/20 text-white" : "bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300")}>
+                {statusCounts.delivered}
+              </span>
+            </button>
+
+            <button
+              onClick={() => setSelectedStatus('cancelled')}
+              className={cn(
+                "px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5",
+                selectedStatus === 'cancelled'
+                  ? "bg-rose-600 text-white shadow-xs"
+                  : "bg-white dark:bg-slate-800/80 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800/50 hover:bg-rose-50"
+              )}
+            >
+              <span className="w-2 h-2 rounded-full bg-rose-400" />
+              Cancelled
+              <span className={cn("px-1.5 py-0.2 rounded-full text-[10px]", selectedStatus === 'cancelled' ? "bg-white/20 text-white" : "bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300")}>
+                {statusCounts.cancelled}
+              </span>
+            </button>
+
+          </div>
+
+          {/* ========================================================
+              5. MAIN ORDER LAYOUT / GRID & CARDS
+             ======================================================== */}
+          {isLoading ? (
+            /* 17. SKELETON LOADING STATE */
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                <div key={i} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 overflow-hidden shadow-xs animate-pulse">
+                  <div className="w-full h-44 bg-slate-200 dark:bg-slate-800" />
+                  <div className="p-4 space-y-3">
+                    <div className="flex justify-between items-center">
+                      <div className="h-4 w-24 bg-slate-200 dark:bg-slate-800 rounded" />
+                      <div className="h-4 w-16 bg-slate-200 dark:bg-slate-800 rounded" />
+                    </div>
+                    <div className="h-4 w-3/4 bg-slate-200 dark:bg-slate-800 rounded" />
+                    <div className="h-3 w-1/2 bg-slate-200 dark:bg-slate-800 rounded" />
+                    <div className="h-10 w-full bg-slate-100 dark:bg-slate-800/60 rounded-xl" />
+                    <div className="h-8 w-full bg-slate-200 dark:bg-slate-800 rounded-lg pt-2" />
+                  </div>
+                </div>
               ))}
-            </SelectContent>
-          </Select>
-          
-          <Button onClick={exportToCSV} variant="outline" size="sm" className="h-9 gap-2 text-xs border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 bg-white dark:bg-slate-900 font-semibold text-slate-700 dark:text-slate-300">
-            <Download className="h-4 w-4" />
-            Export CSV
-          </Button>
+            </div>
+          ) : orders.length === 0 ? (
+            /* 16. BEAUTIFUL EMPTY STATES */
+            <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-12 text-center max-w-lg mx-auto shadow-xs my-8">
+              <div className="w-16 h-16 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto mb-4">
+                {activePeriod === 'today' ? <Sparkles className="w-8 h-8" /> : <Calendar className="w-8 h-8" />}
+              </div>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+                {activePeriod === 'today' ? "No orders for today" : activePeriod === 'tomorrow' ? "No orders for tomorrow yet" : "No orders found"}
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-xs mx-auto">
+                {activePeriod === 'today'
+                  ? "You're all caught up. New orders will appear here automatically."
+                  : activePeriod === 'tomorrow'
+                  ? "Tomorrow's scheduled deliveries will appear here as customers place orders."
+                  : "Try clearing search filters or selecting a different date range."}
+              </p>
+              <div className="mt-6 flex items-center justify-center gap-2">
+                {activePeriod === 'today' && (
+                  <Button
+                    size="sm"
+                    onClick={() => setActivePeriod('tomorrow')}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs h-9 rounded-xl shadow-xs"
+                  >
+                    View Tomorrow's Orders
+                    <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
+                  </Button>
+                )}
+                {activePeriod !== 'today' && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setActivePeriod('today');
+                      setSelectedStatus('all');
+                      setSearchInput('');
+                    }}
+                    className="text-xs h-9 rounded-xl border-slate-200 dark:border-slate-700"
+                  >
+                    Back to Today's Orders
+                  </Button>
+                )}
+              </div>
+            </div>
+          ) : activePeriod === 'past' && pastOrdersGrouped ? (
+            /* 13. PAST ORDERS WITH DATE GROUPING */
+            <div className="space-y-8">
+              {Object.entries(pastOrdersGrouped).map(([dateLabel, groupOrders]) => (
+                <section key={dateLabel} className="space-y-4">
+                  <div className="flex items-center gap-3 border-b border-slate-200/70 dark:border-slate-800 pb-2">
+                    <Calendar className="w-4 h-4 text-purple-600" />
+                    <h2 className="text-sm font-bold text-slate-800 dark:text-slate-200 tracking-tight">
+                      {dateLabel}
+                    </h2>
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                      {groupOrders.length} {groupOrders.length === 1 ? 'order' : 'orders'}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                    {groupOrders.map(order => renderOrderCard(order))}
+                  </div>
+                </section>
+              ))}
+            </div>
+          ) : (
+            /* NORMAL RESPONSIVE GRID (Today, Tomorrow, Custom) */
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              {orders.map(order => renderOrderCard(order))}
+            </div>
+          )}
 
-          <Button 
-            onClick={testDeliveryEmail} 
-            variant="outline"
-            size="sm"
-            className="h-9 gap-2 text-xs border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 bg-white dark:bg-slate-900 font-semibold text-slate-700 dark:text-slate-300"
-            disabled={!orders.length}
-          >
-            <Mail className="h-4 w-4 text-blue-500" />
-            Test Email
-          </Button>
-        </div>
-      </div>
+        </main>
 
-      {/* Upcoming Deliveries Dashboard */}
-      {renderUpcomingDeliveries()}
+        {/* ========================================================
+            10. ORDER DETAILS DRAWER / FULL-SCREEN MODAL
+           ======================================================== */}
+        <AnimatePresence>
+          {isDrawerOpen && selectedOrder && (
+            <div className="fixed inset-0 z-50 overflow-hidden">
+              {/* Backdrop */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setIsDrawerOpen(false)}
+                className="fixed inset-0 bg-slate-950/40 backdrop-blur-xs transition-opacity"
+              />
 
-      {/* Control Card (Filters & Toggles) */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-2xl p-5 shadow-sm space-y-4">
-        {/* Filters Top Row */}
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400 dark:text-slate-500" />
-            <Input
-              placeholder="Search by ID, name, email..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 h-9 text-xs bg-slate-50/50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 rounded-xl focus-visible:ring-1 focus-visible:ring-slate-300 dark:focus-visible:ring-slate-700"
-            />
-            {searchTerm && (
-              <Button size="icon" variant="ghost" className="absolute right-1 top-1.5 h-6.5 w-6.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md" onClick={() => setSearchTerm('')}>
-                <X className="h-3.5 w-3.5 text-slate-400" />
+              {/* Drawer Container (Desktop slide from right, Mobile full-screen) */}
+              <div className="fixed inset-y-0 right-0 max-w-full flex pl-0 sm:pl-10">
+                <motion.div
+                  initial={{ x: '100%' }}
+                  animate={{ x: 0 }}
+                  exit={{ x: '100%' }}
+                  transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                  className="w-screen max-w-xl bg-white dark:bg-slate-900 shadow-2xl flex flex-col h-full overflow-hidden border-l border-slate-200 dark:border-slate-800"
+                >
+                  
+                  {/* Drawer Header */}
+                  <div className="p-5 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-slate-50">
+                          Order #{selectedOrder.orderNumber}
+                        </span>
+                        <button
+                          onClick={(e) => handleCopyOrderId(selectedOrder.orderNumber, e)}
+                          className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                          aria-label="Copy Order Number"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <span className="text-xs text-slate-500 dark:text-slate-400">
+                        Placed on {format(new Date(selectedOrder.createdAt), 'dd MMMM yyyy, hh:mm a')}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {/* Status Badge */}
+                      {(() => {
+                        const rawStatus = (selectedOrder.status || (selectedOrder as any).orderStatus || 'pending').toLowerCase();
+                        const config = getStatusConfig(rawStatus);
+                        return (
+                          <span className={cn(
+                            "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border",
+                            config.pillBg, config.pillBorder, config.pillText
+                          )}>
+                            <span className={cn("w-2 h-2 rounded-full", config.dotColor)} />
+                            {config.label}
+                          </span>
+                        );
+                      })()}
+
+                      <button
+                        onClick={() => setIsDrawerOpen(false)}
+                        className="p-1.5 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-800 transition"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Drawer Scrollable Body */}
+                  <div className="flex-1 overflow-y-auto p-6 space-y-6">
+
+                    {/* Operational Order Status Progression Steps */}
+                    <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800">
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">
+                        Fulfillment Timeline
+                      </h3>
+                      <div className="flex items-center justify-between text-xs relative">
+                        {[
+                          { key: 'order_placed', label: 'Placed' },
+                          { key: 'being_made', label: 'Preparing' },
+                          { key: 'ready', label: 'Ready' },
+                          { key: 'out_for_delivery', label: 'Out' },
+                          { key: 'delivered', label: 'Delivered' }
+                        ].map((step, idx) => {
+                          const currentStatus = (selectedOrder.status || (selectedOrder as any).orderStatus || '').toLowerCase();
+                          const stepOrder = ['order_placed', 'being_made', 'ready', 'out_for_delivery', 'delivered'];
+                          const currentIdx = stepOrder.indexOf(currentStatus === 'received' || currentStatus === 'pending' ? 'being_made' : currentStatus);
+                          const isDone = currentIdx >= idx;
+                          const isCurrent = currentIdx === idx;
+
+                          return (
+                            <div key={step.key} className="flex flex-col items-center flex-1 text-center relative z-10">
+                              <div className={cn(
+                                "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-all",
+                                isCurrent
+                                  ? "bg-emerald-600 text-white ring-4 ring-emerald-100 dark:ring-emerald-950"
+                                  : isDone
+                                  ? "bg-emerald-500 text-white"
+                                  : "bg-slate-200 dark:bg-slate-800 text-slate-500"
+                              )}>
+                                {isDone ? '✓' : idx + 1}
+                              </div>
+                              <span className={cn(
+                                "text-[11px] font-medium mt-1.5",
+                                isCurrent ? "text-emerald-700 dark:text-emerald-400 font-bold" : isDone ? "text-slate-800 dark:text-slate-200" : "text-slate-400"
+                              )}>
+                                {step.label}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Customer & Recipient Communication Details */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      
+                      {/* Customer Box */}
+                      <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
+                        <div className="flex items-center gap-2 mb-2 text-slate-500">
+                          <User className="w-4 h-4 text-emerald-600" />
+                          <span className="text-xs font-bold uppercase tracking-wider">Ordered By</span>
+                        </div>
+                        <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                          {selectedOrder.shippingDetails?.fullName || selectedOrder.customerName || 'Customer'}
+                        </p>
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          {selectedOrder.shippingDetails?.phone || selectedOrder.customerPhone || 'No phone'}
+                        </p>
+                        <p className="text-xs text-slate-500 truncate mt-0.5">
+                          {selectedOrder.shippingDetails?.email || selectedOrder.customerEmail || 'No email'}
+                        </p>
+                      </div>
+
+                      {/* Recipient Box with Quick Call & WhatsApp */}
+                      <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2 text-slate-500">
+                            <Heart className="w-4 h-4 text-rose-500" />
+                            <span className="text-xs font-bold uppercase tracking-wider">Recipient</span>
+                          </div>
+                        </div>
+                        <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                          {selectedOrder.giftDetails?.recipientName || selectedOrder.shippingDetails?.fullName || selectedOrder.customerName || 'Recipient'}
+                        </p>
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          {selectedOrder.giftDetails?.recipientPhone || selectedOrder.shippingDetails?.phone || selectedOrder.customerPhone || 'N/A'}
+                        </p>
+
+                        {/* Direct Communication Buttons */}
+                        {(() => {
+                          const phone = selectedOrder.giftDetails?.recipientPhone || selectedOrder.shippingDetails?.phone || selectedOrder.customerPhone;
+                          const cleanPhone = cleanPhoneNumber(phone);
+                          const recipientName = selectedOrder.giftDetails?.recipientName || selectedOrder.shippingDetails?.fullName || 'Customer';
+                          const waText = encodeURIComponent(`Hello ${recipientName}, this is Spring Blossoms regarding your flower delivery order #${selectedOrder.orderNumber}.`);
+
+                          return (
+                            <div className="mt-3 flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                              <a
+                                href={`tel:${phone}`}
+                                className="flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 transition"
+                              >
+                                <Phone className="w-3.5 h-3.5" />
+                                Call
+                              </a>
+                              <a
+                                href={`https://wa.me/${cleanPhone}?text=${waText}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition shadow-xs"
+                              >
+                                <MessageSquare className="w-3.5 h-3.5" />
+                                WhatsApp
+                              </a>
+                            </div>
+                          );
+                        })()}
+                      </div>
+
+                    </div>
+
+                    {/* Delivery Address & Map Navigation */}
+                    <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2 text-slate-500">
+                          <MapPin className="w-4 h-4 text-blue-600" />
+                          <span className="text-xs font-bold uppercase tracking-wider">Delivery Details</span>
+                        </div>
+                        <Badge variant="secondary" className="text-[11px] font-medium">
+                          {formatTimeSlot(selectedOrder.deliverySlot || selectedOrder.shippingDetails?.timeSlot)}
+                        </Badge>
+                      </div>
+
+                      <p className="text-xs text-slate-800 dark:text-slate-200 font-medium leading-relaxed">
+                        {selectedOrder.shippingDetails?.address || selectedOrder.shippingAddress?.address || 'Address provided at booking'}
+                      </p>
+                      
+                      <div className="mt-2 flex items-center gap-3 text-xs text-slate-500">
+                        <span>City: <strong className="text-slate-700 dark:text-slate-300">{selectedOrder.shippingDetails?.city || 'Hyderabad'}</strong></span>
+                        <span>Pincode: <strong className="text-slate-700 dark:text-slate-300">{selectedOrder.shippingDetails?.zipCode || selectedOrder.shippingAddress?.zipCode || '500001'}</strong></span>
+                      </div>
+
+                      {/* Map Links */}
+                      {(() => {
+                        const lat = selectedOrder.shippingDetails?.latitude || selectedOrder.giftDetails?.latitude || 17.3912;
+                        const lng = selectedOrder.shippingDetails?.longitude || selectedOrder.giftDetails?.longitude || 78.4326;
+                        return (
+                          <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                            <span className="text-xs text-slate-400 font-medium">Navigation:</span>
+                            <a
+                              href={`https://mappls.com/@${lat},${lng}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 hover:underline"
+                            >
+                              Mappls <ExternalLink className="w-3 h-3" />
+                            </a>
+                            <span className="text-slate-300">|</span>
+                            <a
+                              href={`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:underline"
+                            >
+                              Google Maps <ExternalLink className="w-3 h-3" />
+                            </a>
+                          </div>
+                        );
+                      })()}
+                    </div>
+
+                    {/* Greeting Card Message (Styled Note Card) */}
+                    {(selectedOrder.cardMessage || selectedOrder.giftDetails?.message || selectedOrder.shippingDetails?.cardMessage) && (
+                      <div className="p-4 rounded-2xl bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-900/40 relative">
+                        <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300 text-xs font-bold uppercase tracking-wider mb-1.5">
+                          <Heart className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                          Florist Card Message
+                        </div>
+                        <p className="text-xs italic text-amber-950 dark:text-amber-100 font-serif leading-relaxed">
+                          "{selectedOrder.cardMessage || selectedOrder.giftDetails?.message || selectedOrder.shippingDetails?.cardMessage}"
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Products Ordered List */}
+                    <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">
+                        Products ({selectedOrder.items?.length || 0})
+                      </h3>
+                      <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                        {selectedOrder.items?.map((item: any, idx: number) => {
+                          const img = item.image || item.images?.[0] || item.product?.images?.[0] || 'https://res.cloudinary.com/djtrhfqan/image/upload/v1781883113/sbf-products/migrated-67e91164b949d92932897253-0-1781883111484.jpg';
+                          const name = item.productName || item.title || item.product?.name || item.product?.title || 'Floral Bouquet';
+                          const unitPrice = parseFloat(item.price || item.unitPrice || 0);
+                          const qty = parseInt(item.quantity || item.qty || 1, 10);
+                          const total = unitPrice * qty;
+
+                          return (
+                            <div key={idx} className="py-3 flex items-center justify-between gap-3">
+                              <div className="flex items-center gap-3">
+                                <img
+                                  src={img}
+                                  alt={name}
+                                  className="w-12 h-12 object-cover rounded-xl border border-slate-200 dark:border-slate-800"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).src = 'https://res.cloudinary.com/djtrhfqan/image/upload/v1781883113/sbf-products/migrated-67e91164b949d92932897253-0-1781883111484.jpg';
+                                  }}
+                                />
+                                <div>
+                                  <p className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                                    {name}
+                                  </p>
+                                  <p className="text-[11px] text-slate-500 mt-0.5">
+                                    Qty: <strong>{qty}</strong> × {formatPrice(unitPrice)}
+                                  </p>
+                                </div>
+                              </div>
+                              <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                                {formatPrice(total)}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Payment & Billing Breakdown */}
+                    <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 space-y-2 text-xs">
+                      <div className="flex justify-between text-slate-500">
+                        <span>Subtotal</span>
+                        <span>{formatPrice(parseFloat(String(selectedOrder.subtotal || selectedOrder.totalAmount || 0)))}</span>
+                      </div>
+                      <div className="flex justify-between text-slate-500">
+                        <span>Delivery Fee</span>
+                        <span>{formatPrice(parseFloat(String(selectedOrder.deliveryCharge || selectedOrder.shippingFee || 0)))}</span>
+                      </div>
+                      <div className="flex justify-between text-slate-500">
+                        <span>Payment Method</span>
+                        <span className="font-semibold uppercase text-slate-700 dark:text-slate-300">
+                          {selectedOrder.paymentMethod || selectedOrder.paymentDetails?.method || 'Razorpay'}
+                        </span>
+                      </div>
+                      <div className="border-t border-slate-200 dark:border-slate-800 pt-2 flex justify-between font-bold text-sm text-slate-900 dark:text-slate-100">
+                        <span>Total Paid</span>
+                        <span className="text-emerald-700 dark:text-emerald-400">
+                          {formatPrice(parseFloat(String(selectedOrder.totalAmount || selectedOrder.finalTotal || 0)))}
+                        </span>
+                      </div>
+                    </div>
+
+                  </div>
+
+                  {/* Drawer Footer Actions */}
+                  <div className="p-4 border-t border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-between gap-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => handleDownloadInvoice(selectedOrder._id, selectedOrder.orderNumber, e)}
+                      className="text-xs h-9 rounded-xl border-slate-200 dark:border-slate-700"
+                    >
+                      <Download className="w-3.5 h-3.5 mr-1.5" />
+                      Invoice PDF
+                    </Button>
+
+                    <div className="flex items-center gap-2">
+                      {renderCardAction(selectedOrder)}
+                    </div>
+                  </div>
+
+                </motion.div>
+              </div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* ========================================================
+            12. CUSTOM DATE RANGE PICKER MODAL
+           ======================================================== */}
+        <Dialog open={isCustomRangeOpen} onOpenChange={setIsCustomRangeOpen}>
+          <DialogContent className="sm:max-w-md rounded-3xl p-6">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-bold flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-emerald-600" />
+                Select Custom Date Range
+              </DialogTitle>
+              <DialogDescription className="text-xs text-slate-500">
+                Choose start and end dates to view historical delivery operations.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-600 dark:text-slate-300">Start Date</label>
+                  <Input
+                    type="date"
+                    value={customStartDate}
+                    onChange={(e) => setCustomStartDate(e.target.value)}
+                    className="h-10 text-xs rounded-xl"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-600 dark:text-slate-300">End Date</label>
+                  <Input
+                    type="date"
+                    value={customEndDate}
+                    onChange={(e) => setCustomEndDate(e.target.value)}
+                    className="h-10 text-xs rounded-xl"
+                  />
+                </div>
+              </div>
+
+              {/* Quick Presets */}
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const d = new Date();
+                    const end = format(d, 'yyyy-MM-dd');
+                    d.setDate(d.getDate() - 7);
+                    setCustomStartDate(format(d, 'yyyy-MM-dd'));
+                    setCustomEndDate(end);
+                  }}
+                  className="px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                >
+                  Last 7 Days
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const d = new Date();
+                    const end = format(d, 'yyyy-MM-dd');
+                    d.setDate(d.getDate() - 30);
+                    setCustomStartDate(format(d, 'yyyy-MM-dd'));
+                    setCustomEndDate(end);
+                  }}
+                  className="px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                >
+                  Last 30 Days
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const d = new Date();
+                    const end = format(d, 'yyyy-MM-dd');
+                    const start = format(new Date(d.getFullYear(), d.getMonth(), 1), 'yyyy-MM-dd');
+                    setCustomStartDate(start);
+                    setCustomEndDate(end);
+                  }}
+                  className="px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                >
+                  This Month
+                </button>
+              </div>
+            </div>
+
+            <DialogFooter className="flex gap-2 sm:justify-end">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsCustomRangeOpen(false)}
+                className="text-xs h-9 rounded-xl"
+              >
+                Cancel
               </Button>
+              <Button
+                size="sm"
+                onClick={handleApplyCustomRange}
+                className="text-xs h-9 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white"
+              >
+                Apply Range
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+      </div>
+    </TooltipProvider>
+  );
+
+  // Helper Renderer for Single Order Card (Requirements 5, 6, 7, 8, 9, 20)
+  function renderOrderCard(order: Order) {
+    const rawStatus = (order.status || (order as any).orderStatus || 'pending').toLowerCase();
+    const config = getStatusConfig(rawStatus);
+
+    // Primary Bouquet Product Image
+    const firstItem = order.items?.[0];
+    const bouquetImg = firstItem?.image || firstItem?.images?.[0] || firstItem?.product?.images?.[0] || 'https://res.cloudinary.com/djtrhfqan/image/upload/v1781883113/sbf-products/migrated-67e91164b949d92932897253-0-1781883111484.jpg';
+    const bouquetTitle = firstItem?.productName || firstItem?.title || firstItem?.product?.name || firstItem?.product?.title || 'Florist Special Bouquet';
+    const totalItemsCount = order.items?.reduce((sum, it) => sum + parseInt(it.quantity as any || 1, 10), 0) || 1;
+
+    // Recipient & Customer Info
+    const recipientName = order.giftDetails?.recipientName || order.shippingDetails?.fullName || order.customerName || 'Customer';
+    const purchaserName = order.customerName || order.shippingDetails?.fullName || 'Customer';
+    const isGiftOrder = !!(order.giftDetails?.recipientName && order.giftDetails.recipientName !== purchaserName);
+    const phone = order.giftDetails?.recipientPhone || order.shippingDetails?.phone || order.customerPhone || '';
+    const cleanPhone = cleanPhoneNumber(phone);
+    const city = order.shippingDetails?.city || order.shippingAddress?.city || 'Hyderabad';
+    const landmark = order.shippingDetails?.landmark || order.shippingDetails?.apartment || '';
+    const locationSnippet = landmark ? `${city} • ${landmark}` : city;
+
+    // Delivery Slot & Time
+    const slotFormatted = formatTimeSlot(order.deliverySlot || order.shippingDetails?.timeSlot);
+    const deliveryDateFormatted = formatDeliveryDate(order.deliveryDate || order.shippingDetails?.deliveryDate || order.createdAt);
+
+    // WhatsApp Message
+    const waText = encodeURIComponent(`Hello ${recipientName}, this is Spring Blossoms regarding your flower delivery order #${order.orderNumber}.`);
+
+    return (
+      <div
+        key={order._id}
+        onClick={() => handleOpenDrawer(order)}
+        className="group bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800/80 overflow-hidden shadow-xs hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-200 flex flex-col justify-between cursor-pointer"
+      >
+        {/* ================= CARD TOP: Product Bouquet Image & Badges ================= */}
+        <div>
+          <div className="relative w-full h-48 bg-slate-100 dark:bg-slate-800 overflow-hidden">
+            <img
+              src={bouquetImg}
+              alt={bouquetTitle}
+              loading="lazy"
+              className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-300"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = 'https://res.cloudinary.com/djtrhfqan/image/upload/v1781883113/sbf-products/migrated-67e91164b949d92932897253-0-1781883111484.jpg';
+              }}
+            />
+
+            {/* Top-Right: WCAG Status Badge with Accessible Dot */}
+            <div className="absolute top-2.5 right-2.5">
+              <span className={cn(
+                "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold backdrop-blur-md shadow-xs border",
+                config.pillBg, config.pillBorder, config.pillText
+              )}>
+                <span className={cn("w-2 h-2 rounded-full", config.dotColor)} />
+                {config.label}
+              </span>
+            </div>
+
+            {/* Top-Left: Delivery Slot Pill */}
+            <div className="absolute top-2.5 left-2.5">
+              <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-900/70 text-white backdrop-blur-xs">
+                {slotFormatted}
+              </span>
+            </div>
+          </div>
+
+          {/* ================= CARD BODY: Order Details & Delivery Info ================= */}
+          <div className="p-4 space-y-3">
+            
+            {/* Order # and 1-Click Copy */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
+                  #{order.orderNumber}
+                </span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={(e) => handleCopyOrderId(order.orderNumber, e)}
+                      className="p-1 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition"
+                      aria-label="Copy order number"
+                    >
+                      {copiedOrderId === order.orderNumber ? (
+                        <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      ) : (
+                        <Copy className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>Copy Order Number</TooltipContent>
+                </Tooltip>
+              </div>
+
+              {/* Price */}
+              <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                {formatPrice(parseFloat(String(order.totalAmount || order.finalTotal || 0)))}
+              </span>
+            </div>
+
+            {/* Customer & Recipient */}
+            <div>
+              <p className="text-sm font-bold text-slate-900 dark:text-slate-50 line-clamp-1">
+                {recipientName}
+              </p>
+              {isGiftOrder && (
+                <p className="text-[11px] text-slate-500 line-clamp-1">
+                  From: {purchaserName}
+                </p>
+              )}
+            </div>
+
+            {/* Product Title and Quantity */}
+            <div className="text-xs text-slate-600 dark:text-slate-300 line-clamp-1">
+              <span className="font-semibold text-slate-800 dark:text-slate-200">{bouquetTitle}</span>
+              {totalItemsCount > 1 && (
+                <span className="ml-1 text-[11px] text-slate-500 font-medium">
+                  (+{totalItemsCount - 1} more)
+                </span>
+              )}
+            </div>
+
+            {/* ================= 7. HIGHLY VISIBLE DELIVERY INFO ================= */}
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 space-y-1.5">
+              
+              {/* Delivery Date & Time */}
+              <div className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300">
+                <Truck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <span className="font-semibold truncate">
+                  {deliveryDateFormatted}
+                </span>
+              </div>
+
+              {/* Delivery Location */}
+              <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                <span className="truncate">
+                  {locationSnippet}
+                </span>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+        {/* ================= 9. CARD ACTION BUTTONS ================= */}
+        <div className="p-3 bg-slate-50/70 dark:bg-slate-900/60 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-2">
+          
+          {/* Context-Aware Primary Action */}
+          <div className="flex items-center gap-1.5">
+            {renderCardAction(order)}
+
+            {/* View Order Button */}
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={(e) => handleOpenDrawer(order, e)}
+              className="text-xs h-8 px-2.5 rounded-lg text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+            >
+              View
+            </Button>
+          </div>
+
+          {/* Quick Communication Actions (Compact Icon Buttons with Tooltips) */}
+          <div className="flex items-center gap-1">
+            {phone && (
+              <>
+                {/* Direct Call Button */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <a
+                      href={`tel:${phone}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/40 transition shadow-2xs"
+                      aria-label="Call Recipient"
+                    >
+                      <Phone className="w-3.5 h-3.5" />
+                    </a>
+                  </TooltipTrigger>
+                  <TooltipContent>Call: {phone}</TooltipContent>
+                </Tooltip>
+
+                {/* WhatsApp Button */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <a
+                      href={`https://wa.me/${cleanPhone}?text=${waText}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="p-1.5 rounded-lg border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-600 hover:text-white transition shadow-2xs"
+                      aria-label="Message on WhatsApp"
+                    >
+                      <MessageSquare className="w-3.5 h-3.5" />
+                    </a>
+                  </TooltipTrigger>
+                  <TooltipContent>Chat on WhatsApp</TooltipContent>
+                </Tooltip>
+              </>
             )}
           </div>
 
-          {/* Status Filter */}
-          <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-            <SelectTrigger className="h-9 text-xs bg-slate-50/50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 rounded-xl">
-              <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
-                <Filter className="h-3.5 w-3.5 opacity-60" />
-                <SelectValue placeholder="Filter by status" />
-              </div>
-            </SelectTrigger>
-            <SelectContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-xl">
-              <SelectItem value="all" className="text-xs">All Statuses</SelectItem>
-              <SelectItem value="order_placed" className="text-xs">Order Placed</SelectItem>
-              <SelectItem value="received" className="text-xs">Received</SelectItem>
-              <SelectItem value="being_made" className="text-xs">Being Made</SelectItem>
-              <SelectItem value="out_for_delivery" className="text-xs">Out for Delivery</SelectItem>
-              <SelectItem value="delivered" className="text-xs">Delivered</SelectItem>
-              <SelectItem value="cancelled" className="text-xs">Cancelled</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {/* Order Date Range */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "h-9 justify-start text-left font-normal text-xs bg-slate-50/50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 rounded-xl w-full",
-                  !dateRange.from && !dateRange.to && "text-slate-400 dark:text-slate-500"
-                )}
-              >
-                <Calendar className="mr-2 h-3.5 w-3.5 opacity-60 text-slate-600 dark:text-slate-300" />
-                {dateRange.from && dateRange.to
-                  ? `${format(dateRange.from, "MM/dd")} - ${format(dateRange.to, "MM/dd")}`
-                  : "Order Placed Date"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent side="bottom" align="start" className="w-auto p-0 border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-950 shadow-xl z-dropdown">
-              <CalendarComponent
-                initialFocus
-                mode="range"
-                defaultMonth={dateRange.from}
-                selected={{ from: dateRange.from, to: dateRange.to }}
-                onSelect={(range) => setDateRange({ 
-                  from: range?.from, 
-                  to: range?.to 
-                })}
-                numberOfMonths={2}
-                className="p-3"
-              />
-            </PopoverContent>
-          </Popover>
-
-          {/* Delivery Date Range */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "h-9 justify-start text-left font-normal text-xs bg-slate-50/50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 rounded-xl w-full",
-                  !deliveryDateRange.from && !deliveryDateRange.to && "text-slate-400 dark:text-slate-500"
-                )}
-              >
-                <Calendar className="mr-2 h-3.5 w-3.5 opacity-60 text-slate-600 dark:text-slate-300" />
-                {deliveryDateRange.from && deliveryDateRange.to
-                  ? `${format(deliveryDateRange.from, "MM/dd")} - ${format(deliveryDateRange.to, "MM/dd")}`
-                  : "Delivery Schedule Date"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent side="bottom" align="start" className="w-auto p-0 border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-950 shadow-xl z-dropdown">
-              <CalendarComponent
-                initialFocus
-                mode="range"
-                defaultMonth={deliveryDateRange.from}
-                selected={{ from: deliveryDateRange.from, to: deliveryDateRange.to }}
-                onSelect={(range) => setDeliveryDateRange({ 
-                  from: range?.from, 
-                  to: range?.to 
-                })}
-                numberOfMonths={2}
-                className="p-3"
-              />
-            </PopoverContent>
-          </Popover>
-
-          {/* First Order Free Filter */}
-          <Select value={firstOrderFilter} onValueChange={setFirstOrderFilter}>
-            <SelectTrigger className="h-9 text-xs bg-slate-50/50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 rounded-xl">
-              <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
-                <Truck className="h-3.5 w-3.5 opacity-60" />
-                <SelectValue placeholder="Delivery Fee" />
-              </div>
-            </SelectTrigger>
-            <SelectContent className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 rounded-xl">
-              <SelectItem value="all" className="text-xs">All Delivery Fees</SelectItem>
-              <SelectItem value="applied" className="text-xs">First Order Free</SelectItem>
-              <SelectItem value="standard" className="text-xs">Standard Fee</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
 
-        {/* Filters Action Row & View Toggles */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pt-1">
-          <div className="flex items-center gap-3">
-            <Button
-              variant={highlight3Days ? "default" : "outline"}
-              size="sm"
-              onClick={() => setHighlight3Days(!highlight3Days)}
-              className={cn(
-                "h-8 gap-2 text-xs font-semibold rounded-lg",
-                highlight3Days 
-                  ? "bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200 border-transparent shadow-sm" 
-                  : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 text-slate-700 dark:text-slate-300"
-              )}
-            >
-              <AlertCircle className="h-3.5 w-3.5" />
-              <span>3-Day Highlighting</span>
-            </Button>
-          </div>
-
-          <div className="flex items-center gap-3 justify-between sm:justify-end">
-            <div className="text-xs text-slate-500 font-medium">
-              {paginationInfo ? (
-                <span>
-                  Page <span className="font-semibold text-slate-700 dark:text-slate-200">{paginationInfo.currentPage}</span> of <span className="font-semibold text-slate-700 dark:text-slate-200">{paginationInfo.totalPages}</span>
-                </span>
-              ) : (
-                <span>{orders.length} orders</span>
-              )}
-            </div>
-
-            {/* Layout Toggle */}
-            <div className="bg-slate-100 dark:bg-slate-800/80 p-0.5 rounded-xl flex items-center border border-slate-200/40 dark:border-slate-800/40">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleViewModeChange('table')}
-                className={cn(
-                  "h-7 w-7 rounded-lg p-0 hover:bg-transparent",
-                  viewMode === 'table' 
-                    ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm" 
-                    : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
-                )}
-                title="Table List View"
-              >
-                <List className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleViewModeChange('cards')}
-                className={cn(
-                  "h-7 w-7 rounded-lg p-0 hover:bg-transparent",
-                  viewMode === 'cards' 
-                    ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm" 
-                    : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-400"
-                )}
-                title="Detailed Cards Grid View"
-              >
-                <Grid className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* Active tags */}
-        {renderActiveFilters()}
       </div>
-
-      {/* Main Content Display */}
-      <div>
-        {isLoading ? (
-          /* Loading skeletons */
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-2xl p-5 shadow-sm space-y-4 animate-pulse">
-                <div className="flex justify-between items-center">
-                  <div className="h-4 w-32 bg-slate-100 dark:bg-slate-800 rounded-md"></div>
-                  <div className="h-6 w-24 bg-slate-100 dark:bg-slate-800 rounded-full"></div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <div className="h-3 w-16 bg-slate-100 dark:bg-slate-800 rounded-md"></div>
-                    <div className="h-4 w-40 bg-slate-100 dark:bg-slate-800 rounded-md"></div>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="h-3 w-16 bg-slate-100 dark:bg-slate-800 rounded-md"></div>
-                    <div className="h-4 w-44 bg-slate-100 dark:bg-slate-800 rounded-md"></div>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="h-3 w-16 bg-slate-100 dark:bg-slate-800 rounded-md"></div>
-                    <div className="h-4 w-28 bg-slate-100 dark:bg-slate-800 rounded-md"></div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : orders.length === 0 ? (
-          /* Empty state */
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-12 text-center shadow-sm"
-          >
-            <div className="h-16 w-16 bg-slate-50 dark:bg-slate-800/50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100 dark:border-slate-800">
-              <AlertCircle className="h-8 w-8 text-slate-400" />
-            </div>
-            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">No orders found</h3>
-            <p className="text-sm text-slate-400 dark:text-slate-500 mt-1 max-w-sm mx-auto">
-              There are no orders that match your current search query or filter tags. Try resetting your filters.
-            </p>
-            <Button variant="outline" size="sm" onClick={clearFilters} className="mt-4 border-slate-200 dark:border-slate-800 rounded-xl">
-              Reset Filters
-            </Button>
-          </motion.div>
-        ) : viewMode === 'table' ? (
-          /* Premium Table View with desktop focus, responsive wrapper */
-          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
-            <div className="w-full overflow-x-auto">
-              <Table className="min-w-[65rem]">
-                <TableHeader className="bg-slate-50/75 dark:bg-slate-900/50">
-                  <TableRow className="hover:bg-transparent border-slate-100 dark:border-slate-800">
-                     <TableHead className="w-40 font-bold text-slate-600 dark:text-slate-400 text-xs uppercase tracking-wider h-11">Order</TableHead>
-                    <TableHead className="w-56 font-bold text-slate-600 dark:text-slate-400 text-xs uppercase tracking-wider h-11">Customer</TableHead>
-                    <TableHead className="w-44 font-bold text-slate-600 dark:text-slate-400 text-xs uppercase tracking-wider h-11">Order Placed</TableHead>
-                    <TableHead className="w-60 font-bold text-slate-600 dark:text-slate-400 text-xs uppercase tracking-wider h-11">Delivery Schedule</TableHead>
-                    <TableHead className="w-40 text-right font-bold text-slate-600 dark:text-slate-400 text-xs uppercase tracking-wider h-11">Delivery Fee</TableHead>
-                    <TableHead className="w-44 text-right font-bold text-slate-600 dark:text-slate-400 text-xs uppercase tracking-wider h-11">Amount</TableHead>
-                    <TableHead className="w-44 font-bold text-slate-600 dark:text-slate-400 text-xs uppercase tracking-wider h-11">Status</TableHead>
-                    <TableHead className="w-28 text-right font-bold text-slate-600 dark:text-slate-400 text-xs uppercase tracking-wider h-11">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <AnimatePresence mode="popLayout">
-                    {orders.map((order) => (
-                      <motion.tr
-                        key={order._id}
-                        layout
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className={cn(
-                          "group border-slate-100 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors",
-                          order.deliveryHighlight?.bgColor
-                        )}
-                      >
-                        {/* Order ID & Priority */}
-                        <TableCell className="align-middle font-medium py-3.5">
-                          <div className="flex flex-col gap-1.5">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="font-bold text-slate-900 dark:text-slate-100 text-sm tracking-tight">{order.orderNumber}</span>
-                              {order.isTestOrder && (
-                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                                  🧪 INTERNAL TEST ORDER
-                                </span>
-                              )}
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded"
-                                onClick={(e) => handleCopyId(order._id, order.orderNumber, e)}
-                                title="Copy Database ID"
-                              >
-                                {copiedOrderId === order._id ? (
-                                  <Check className="h-3 w-3 text-emerald-500" />
-                                ) : (
-                                  <Copy className="h-3 w-3" />
-                                )}
-                              </Button>
-                            </div>
-                            <div className="flex flex-wrap gap-1">
-                              {getPriorityIcon(order.priority)}
-                              {order.deliveryHighlight && (
-                                <Badge 
-                                  variant="outline" 
-                                  className={cn("text-[10px] py-0 px-1.5 h-4.5 font-semibold leading-normal capitalize bg-white/90 dark:bg-slate-900/90 border-slate-200 dark:border-slate-700/60 shadow-sm", order.deliveryHighlight.textColor)}
-                                >
-                                  {order.deliveryHighlight.message}
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                        </TableCell>
-
-                        {/* Customer */}
-                        <TableCell className="align-middle py-3.5">
-                          <div className="flex flex-col">
-                            {order.giftDetails && order.giftDetails.recipientName && order.giftDetails.recipientName.trim() !== '' ? (
-                              <>
-                                <Badge variant="outline" className="text-[9px] py-0 px-1.5 font-bold text-emerald-700 bg-emerald-50 border-emerald-250 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-900 w-max mb-1 select-none leading-normal h-4.5">
-                                  🎁 Gift Delivery
-                                </Badge>
-                                <span className="font-bold text-slate-800 dark:text-slate-200 text-sm">{order.giftDetails.recipientName}</span>
-                                <span className="text-xs text-slate-400 dark:text-slate-500 font-medium truncate max-w-[13.5rem] mt-0.5">{order.giftDetails.recipientEmail || 'No Email'}</span>
-                                <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold mt-1">Sender: {order.shippingDetails.fullName}</span>
-                                <div className="flex items-center gap-1.5 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <a 
-                                    href={`tel:${order.giftDetails.recipientPhone}`}
-                                    onClick={(e) => e.stopPropagation()}
-                                    className="inline-flex items-center justify-center h-6 w-6 rounded-md border border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-900 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-850"
-                                    title="Call Recipient"
-                                  >
-                                    <Phone className="h-3 w-3" />
-                                  </a>
-                                  <a 
-                                    href={getWhatsAppLink(order.giftDetails.recipientPhone, order.giftDetails.recipientName, order.orderNumber)}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    onClick={(e) => e.stopPropagation()}
-                                    className="inline-flex items-center justify-center h-6 w-6 rounded-md border border-green-200 dark:border-green-900/30 bg-green-50/50 dark:bg-green-950/20 text-green-600 hover:text-green-700 dark:hover:text-green-400 hover:bg-green-100/40 dark:hover:bg-green-900/30"
-                                    title="WhatsApp Recipient"
-                                  >
-                                    <MessageSquare className="h-3 w-3" />
-                                  </a>
-                                </div>
-                                {renderLocationNavLinks(order.giftDetails?.latitude, order.giftDetails?.longitude, order.shippingDetails?.latitude, order.shippingDetails?.longitude)}
-                              </>
-                            ) : (
-                              <>
-                                <Badge variant="outline" className="text-[9px] py-0 px-1.5 font-bold text-slate-600 bg-slate-50 border-slate-200 dark:bg-slate-950/30 dark:text-slate-400 dark:border-slate-800 w-max mb-1 select-none leading-normal h-4.5">
-                                  Not a Gift
-                                </Badge>
-                                <span className="font-bold text-slate-800 dark:text-slate-200 text-sm">{order.shippingDetails.fullName}</span>
-                                <span className="text-xs text-slate-400 dark:text-slate-500 font-medium truncate max-w-[13.5rem] mt-0.5">{order.shippingDetails.email}</span>
-                                <div className="flex items-center gap-1.5 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <a 
-                                    href={`tel:${order.shippingDetails.phone}`}
-                                    onClick={(e) => e.stopPropagation()}
-                                    className="inline-flex items-center justify-center h-6 w-6 rounded-md border border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-900 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-850"
-                                    title="Call Customer"
-                                  >
-                                    <Phone className="h-3 w-3" />
-                                  </a>
-                                  <a 
-                                    href={getWhatsAppLink(order.shippingDetails.phone, order.shippingDetails.fullName, order.orderNumber)}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    onClick={(e) => e.stopPropagation()}
-                                    className="inline-flex items-center justify-center h-6 w-6 rounded-md border border-green-200 dark:border-green-900/30 bg-green-50/50 dark:bg-green-950/20 text-green-600 hover:text-green-700 dark:hover:text-green-400 hover:bg-green-100/40 dark:hover:bg-green-900/30"
-                                    title="WhatsApp Customer"
-                                  >
-                                    <MessageSquare className="h-3 w-3" />
-                                  </a>
-                                </div>
-                                {renderLocationNavLinks(order.shippingDetails?.latitude, order.shippingDetails?.longitude, order.giftDetails?.latitude, order.giftDetails?.longitude)}
-                              </>
-                            )}
-                          </div>
-                        </TableCell>
-
-                        {/* Order Placed */}
-                        <TableCell className="align-middle py-3.5 text-xs font-semibold text-slate-700 dark:text-slate-300">
-                          {formatDate(order.createdAt)}
-                        </TableCell>
-
-                        {/* Delivery Schedule */}
-                        <TableCell className="align-middle py-3.5">
-                          <div className="flex flex-col space-y-0.5">
-                            {order.shippingDetails.deliveryDate ? (
-                              <>
-                                <span className="font-bold text-slate-800 dark:text-slate-200 text-xs.5 flex items-center gap-1">
-                                  <Calendar className="h-3.5 w-3.5 text-slate-400" />
-                                  {format(new Date(order.shippingDetails.deliveryDate), 'MMMM d, yyyy')}
-                                </span>
-                                <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded w-max mt-1">
-                                  {formatTimeSlot(order.shippingDetails.timeSlot)}
-                                </span>
-                              </>
-                            ) : (
-                              <span className="text-slate-400 text-xs italic">Not scheduled</span>
-                            )}
-                          </div>
-                        </TableCell>
-
-                         {/* Delivery Charge */}
-                        <TableCell className="align-middle text-right py-3.5">
-                          <div className="flex flex-col items-end gap-1">
-                            <span className="font-semibold text-slate-800 dark:text-slate-200 text-xs">
-                              {order.isFirstOrderFreeDelivery ? (
-                                <span className="text-emerald-600 font-extrabold bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-250 dark:border-emerald-900/40 px-1.5 py-0.5 rounded text-[10px] whitespace-nowrap animate-pulse">
-                                  FREE
-                                </span>
-                              ) : (
-                                displayOrderPrice(order.deliveryCharge ?? 150, order.currency, order.currencyRate)
-                              )}
-                            </span>
-                            {order.isFirstOrderFreeDelivery && (
-                              <Badge className="text-[9px] py-0 px-1 font-bold bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 hover:bg-emerald-100 border-transparent shadow-none scale-90 origin-right whitespace-nowrap">
-                                First Order Free
-                              </Badge>
-                            )}
-                          </div>
-                        </TableCell>
-
-                        {/* Total Amount */}
-                        <TableCell className="align-middle text-right py-3.5">
-                          <div className="flex flex-col items-end">
-                            <span className="font-extrabold text-slate-900 dark:text-white text-sm">
-                              {displayOrderPrice(order.totalAmount, order.currency, order.currencyRate)}
-                            </span>
-                            {order.currency && order.currency !== currency && (
-                              <span className="text-[10px] text-slate-400 font-medium">
-                                Orig: {formatPriceWithCurrency(order.totalAmount, order.currency)}
-                              </span>
-                            )}
-                            <Badge variant="outline" className="text-[9px] uppercase tracking-wider py-0 px-1 font-semibold border-slate-200 dark:border-slate-800 text-slate-400 bg-slate-50/50 mt-1 leading-normal h-4">
-                              {(order.paymentDetails?.method && order.paymentDetails.method.toLowerCase() !== 'cod') ? (order.paymentDetails.method.toLowerCase() === 'razorpay' ? 'Online' : order.paymentDetails.method) : 'Online'}
-                            </Badge>
-                          </div>
-                        </TableCell>
-
-                        {/* Status Dropdown */}
-                        <TableCell className="align-middle py-3.5">
-                          {renderStatusDropdown(order._id, order.status)}
-                        </TableCell>
-
-                        {/* Actions */}
-                        <TableCell className="align-middle text-right py-3.5">
-                          <div className="flex justify-end gap-2">
-                            {order.status === 'delivered' ? (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleSendReviewEmail(order._id, order.orderNumber)}
-                                disabled={emailSendingOrderId === order._id}
-                                className="h-8 gap-1.5 text-xs text-rose-700 hover:text-rose-800 dark:text-rose-300 dark:hover:text-rose-200 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg border border-rose-200/70 dark:border-rose-900/30 bg-white dark:bg-slate-900 font-semibold"
-                              >
-                                {emailSendingOrderId === order._id ? (
-                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                ) : (
-                                  <Mail className="h-3.5 w-3.5 text-rose-500" />
-                                )}
-                                Review Email
-                              </Button>
-                            ) : null}
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleViewDetails(order._id)}
-                              className="h-8 gap-1.5 text-xs text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg border border-slate-200/50 dark:border-slate-800 bg-white dark:bg-slate-900 font-semibold"
-                            >
-                              <Eye className="h-3.5 w-3.5 text-slate-500" />
-                              View
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </motion.tr>
-                    ))}
-                  </AnimatePresence>
-                </TableBody>
-              </Table>
-            </div>
-            {/* Pagination */}
-            {renderPaginationControls()}
-          </div>
-        ) : (
-          /* Premium Cards Grid View (extremely responsive, default on mobile/tablet) */
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              <AnimatePresence mode="popLayout">
-                {orders.map((order, idx) => {
-                  const isExpanded = expandedCards[order._id] || false;
-                  const totalItemsQty = order.items.reduce((sum, item) => sum + item.quantity, 0);
-                  const statusCfg = getStatusConfig(order.status);
-
-                  return (
-                    <motion.div
-                      key={order._id}
-                      layout
-                      initial={{ opacity: 0, y: 15 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -15 }}
-                      transition={{ duration: 0.25, delay: idx * 0.02 }}
-                      className={cn(
-                        "bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-850 shadow-sm hover:shadow-md rounded-2xl p-5 flex flex-col relative overflow-hidden transition-all duration-300 hover:border-slate-200/80 dark:hover:border-slate-800/80",
-                        order.deliveryHighlight?.bgColor
-                      )}
-                    >
-                      {/* Left vertical visual marker */}
-                      <div className={cn("absolute left-0 top-0 bottom-0 w-1", statusCfg.glow)} />
-
-                      {/* Header */}
-                      <div className="flex justify-between items-start mb-4">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-1.5">
-                            <span className="font-extrabold text-slate-950 dark:text-white text-base tracking-tight">{order.orderNumber}</span>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-5 w-5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded"
-                              onClick={(e) => handleCopyId(order._id, order.orderNumber, e)}
-                              title="Copy Database ID"
-                            >
-                              {copiedOrderId === order._id ? (
-                                <Check className="h-3 w-3 text-emerald-500" />
-                              ) : (
-                                <Copy className="h-3 w-3" />
-                              )}
-                            </Button>
-                          </div>
-                          <p className="text-[10px] text-slate-400 font-semibold tracking-wide uppercase">Placed {formatDate(order.createdAt)}</p>
-                        </div>
-                        {/* Status Select Badge */}
-                        {renderStatusDropdown(order._id, order.status)}
-                      </div>
-
-                      {/* Highlights */}
-                      <div className="flex flex-wrap gap-1 mb-4">
-                        {getPriorityIcon(order.priority)}
-                        {order.deliveryHighlight && (
-                          <Badge 
-                            variant="outline" 
-                            className={cn("text-[10px] py-0.5 px-2 font-semibold shadow-xs bg-white/80 dark:bg-slate-900/80 border-slate-200 dark:border-slate-800", order.deliveryHighlight.textColor)}
-                          >
-                            {order.deliveryHighlight.message}
-                          </Badge>
-                        )}
-                      </div>
-
-                      {/* Middle Body split info */}
-                      <div className="grid grid-cols-2 gap-4 pb-4 border-b border-slate-100 dark:border-slate-800/50">
-                        {/* Customer */}
-                        <div className="space-y-1">
-                          {order.giftDetails && order.giftDetails.recipientName && order.giftDetails.recipientName.trim() !== '' ? (
-                            <>
-                              <div className="flex justify-between items-center">
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Recipient (Gift)</span>
-                                <Badge variant="outline" className="text-[9px] py-0 px-1 font-bold text-emerald-700 bg-emerald-50 border-emerald-250 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-900 leading-normal h-4">
-                                  Gift
-                                </Badge>
-                              </div>
-                              <p className="text-xs font-bold text-slate-800 dark:text-slate-200 line-clamp-1">{order.giftDetails.recipientName}</p>
-                              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium truncate">{order.giftDetails.recipientEmail || 'No Email'}</p>
-                              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold italic">Sender: {order.shippingDetails.fullName}</p>
-                              
-                              {/* Quick call/WhatsApp */}
-                              <div className="flex items-center gap-1.5 pt-1">
-                                <a 
-                                  href={`tel:${order.giftDetails.recipientPhone}`}
-                                  className="inline-flex items-center justify-center h-6 w-6 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-500 hover:text-slate-800 dark:hover:text-slate-250 hover:bg-slate-50 dark:hover:bg-slate-800"
-                                  title="Call recipient"
-                                >
-                                  <Phone className="h-3 w-3" />
-                                </a>
-                                <a 
-                                  href={getWhatsAppLink(order.giftDetails.recipientPhone, order.giftDetails.recipientName, order.orderNumber)}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center justify-center h-6 w-6 rounded-md border border-green-200 dark:border-green-900/20 bg-green-50/50 dark:bg-green-950/10 text-green-600 hover:text-green-700 dark:hover:text-green-400 hover:bg-green-100/40 dark:hover:bg-green-900/20"
-                                  title="WhatsApp recipient"
-                                >
-                                  <MessageSquare className="h-3 w-3" />
-                                </a>
-                              </div>
-                              {renderLocationNavLinks(order.giftDetails?.latitude, order.giftDetails?.longitude, order.shippingDetails?.latitude, order.shippingDetails?.longitude)}
-                            </>
-                          ) : (
-                            <>
-                              <div className="flex justify-between items-center">
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Customer</span>
-                                <Badge variant="outline" className="text-[9px] py-0 px-1 font-bold text-slate-600 bg-slate-50 border-slate-200 dark:bg-slate-950/30 dark:text-slate-400 dark:border-slate-800 leading-normal h-4">
-                                  Not a Gift
-                                </Badge>
-                              </div>
-                              <p className="text-xs font-bold text-slate-800 dark:text-slate-200 line-clamp-1">{order.shippingDetails.fullName}</p>
-                              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium truncate">{order.shippingDetails.email}</p>
-                              
-                              {/* Quick call/WhatsApp */}
-                              <div className="flex items-center gap-1.5 pt-1">
-                                <a 
-                                  href={`tel:${order.shippingDetails.phone}`}
-                                  className="inline-flex items-center justify-center h-6 w-6 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-500 hover:text-slate-800 dark:hover:text-slate-250 hover:bg-slate-50 dark:hover:bg-slate-800"
-                                  title="Call customer"
-                                >
-                                  <Phone className="h-3 w-3" />
-                                </a>
-                                <a 
-                                  href={getWhatsAppLink(order.shippingDetails.phone, order.shippingDetails.fullName, order.orderNumber)}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center justify-center h-6 w-6 rounded-md border border-green-200 dark:border-green-900/20 bg-green-50/50 dark:bg-green-950/10 text-green-600 hover:text-green-700 dark:hover:text-green-400 hover:bg-green-100/40 dark:hover:bg-green-900/20"
-                                  title="WhatsApp message"
-                                >
-                                  <MessageSquare className="h-3 w-3" />
-                                </a>
-                              </div>
-                              {renderLocationNavLinks(order.shippingDetails?.latitude, order.shippingDetails?.longitude, order.giftDetails?.latitude, order.giftDetails?.longitude)}
-                            </>
-                          )}
-                        </div>
-
-                        {/* Delivery date & slot */}
-                        <div className="space-y-1">
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Delivery Schedule</span>
-                          {order.shippingDetails.deliveryDate ? (
-                            <>
-                              <p className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1">
-                                <Calendar className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                                {format(new Date(order.shippingDetails.deliveryDate), 'MMM d, yyyy')}
-                              </p>
-                              <span className="inline-block text-[10px] font-bold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded mt-1.5">
-                                {formatTimeSlot(order.shippingDetails.timeSlot)}
-                              </span>
-                            </>
-                          ) : (
-                            <p className="text-xs text-slate-400 italic">Not set</p>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Products preview (Collapsible) */}
-                      <div className="py-3.5 border-b border-slate-100 dark:border-slate-800/50">
-                        <button 
-                          onClick={(e) => toggleExpandCard(order._id, e)}
-                          className="w-full flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
-                        >
-                          <span>Products summary ({totalItemsQty} {totalItemsQty === 1 ? 'item' : 'items'})</span>
-                          <div className="flex items-center gap-1">
-                            <span className="text-[9px] normal-case font-semibold text-slate-500 dark:text-slate-400">{isExpanded ? 'Hide details' : 'Show details'}</span>
-                            <ChevronDown className={cn("h-3 w-3 transition-transform duration-200", isExpanded && "transform rotate-180")} />
-                          </div>
-                        </button>
-                        
-                        <div className="space-y-1.5 mt-2">
-                          {!isExpanded ? (
-                            // Compact Preview
-                            <div className="text-xs font-medium text-slate-600 dark:text-slate-300 truncate">
-                              {order.items.map(item => `${item.product?.title || item.title || 'Product'} (x${item.quantity})`).join(', ')}
-                            </div>
-                          ) : (
-                            // Expanded list with images, customizations, prices
-                            <motion.div 
-                              initial={{ opacity: 0, height: 0 }}
-                              animate={{ opacity: 1, height: 'auto' }}
-                              className="space-y-3 pt-1 overflow-hidden"
-                            >
-                              {order.items.map((item, idx) => (
-                                <div key={idx} className="flex gap-2.5 items-start bg-slate-50/50 dark:bg-slate-950/40 p-2 border border-slate-100/50 dark:border-slate-800/60 rounded-xl">
-                                  {/* Product Thumbnail */}
-                                  {item.product?.images && item.product.images.length > 0 ? (
-                                    <img 
-                                      src={item.product.images[0]} 
-                                      alt={item.product.title} 
-                                      className="h-10 w-10 object-cover rounded-lg border border-slate-200/60 dark:border-slate-800"
-                                    />
-                                  ) : (
-                                    <div className="h-10 w-10 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center border border-slate-200/40">
-                                      <Package className="h-5 w-5 text-slate-400" />
-                                    </div>
-                                  )}
-
-                                  {/* Item metadata */}
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{item.product?.title || item.title || 'Floral Arrangement'}</p>
-                                    <div className="flex justify-between items-center text-[10px] text-slate-500 font-semibold mt-0.5">
-                                      <span>Qty: {item.quantity}</span>
-                                      <span>{displayOrderPrice(item.finalPrice || item.price, order.currency, order.currencyRate)}</span>
-                                    </div>
-
-                                    {/* Customizations summary */}
-                                    {item.customizations && (
-                                      <div className="mt-1.5 space-y-1 border-t border-slate-200/30 dark:border-slate-800/30 pt-1">
-                                        {item.customizations.messageCard && (
-                                          <div className="text-[9px] text-amber-700 dark:text-amber-400 bg-amber-50/50 dark:bg-amber-950/15 p-1 rounded font-medium">
-                                            💌 msg: "{item.customizations.messageCard}"
-                                          </div>
-                                        )}
-                                        {item.customizations.photo && (
-                                          <div className="text-[9px] text-blue-700 dark:text-blue-400 font-medium">
-                                            📸 Photo Customization Attached
-                                          </div>
-                                        )}
-                                        {(item.customizations.selectedFlowers?.length > 0 || item.customizations.selectedChocolates?.length > 0) && (
-                                          <div className="text-[9px] text-pink-700 dark:text-pink-400 font-medium">
-                                            🌸 Includes floral/chocolate add-ons
-                                          </div>
-                                        )}
-                                        {item.customizations.isGiftBundle && (
-                                          <div className="text-[9px] text-rose-700 dark:text-rose-400 font-medium bg-rose-50/50 dark:bg-rose-950/20 p-1 rounded">
-                                            🎁 Custom Valentine Gift Box ({item.customizations.giftComponents?.length || 0} items)
-                                          </div>
-                                        )}
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              ))}
-                            </motion.div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Card Footer actions */}
-                      <div className="flex flex-wrap items-center justify-between gap-3 pt-3.5 border-t border-slate-100 dark:border-slate-800/60 mt-auto">
-                        <div className="flex items-center gap-3 text-left shrink-0">
-                          <div>
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Delivery Fee</span>
-                            <span className="text-xs font-semibold text-slate-850 dark:text-slate-200">
-                              {order.isFirstOrderFreeDelivery ? (
-                                <span className="text-emerald-600 font-extrabold bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-250 dark:border-emerald-900/40 px-1.5 py-0.5 rounded text-[9px] whitespace-nowrap">
-                                  FREE
-                                </span>
-                              ) : (
-                                displayOrderPrice(order.deliveryCharge ?? 150, order.currency, order.currencyRate)
-                              )}
-                            </span>
-                          </div>
-                          <div>
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Amount</span>
-                            <span className="text-base font-extrabold text-slate-950 dark:text-white">
-                              {displayOrderPrice(order.totalAmount, order.currency, order.currencyRate)}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="flex flex-wrap items-center gap-2 shrink-0 ml-auto">
-                          {order.status === 'delivered' ? (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleSendReviewEmail(order._id, order.orderNumber)}
-                              disabled={emailSendingOrderId === order._id}
-                              title="Send Review Request Email"
-                              className="h-8 gap-1.5 text-xs text-rose-700 dark:text-rose-300 hover:text-rose-800 dark:hover:text-rose-200 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg border border-rose-200/70 dark:border-rose-900/40 bg-rose-50/50 dark:bg-rose-950/20 font-bold px-2.5 shadow-xs"
-                            >
-                              {emailSendingOrderId === order._id ? (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                              ) : (
-                                <Mail className="h-3.5 w-3.5 text-rose-500" />
-                              )}
-                              <span>Review Email</span>
-                            </Button>
-                          ) : null}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleViewDetails(order._id)}
-                            title="View Order Details"
-                            className="h-8 gap-1.5 text-xs text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 font-bold px-2.5 shadow-xs"
-                          >
-                            <Eye className="h-3.5 w-3.5 text-slate-500" />
-                            <span>Details</span>
-                          </Button>
-                        </div>
-                      </div>
-                    </motion.div>
-
-                  );
-                })}
-              </AnimatePresence>
-            </div>
-            {/* Pagination */}
-            {renderPaginationControls()}
-          </div>
-        )}
-      </div>
-    </div>
-  );
+    );
+  }
 };
 
 export default AdminOrders;
