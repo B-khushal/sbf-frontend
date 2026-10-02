@@ -796,7 +796,7 @@ class ProductService {
     return response.data;
   }
 
-  async getCategoriesWithCounts(): Promise<{ name: string; count: number }[]> {
+  async getCategoriesWithCounts(): Promise<{ name: string; slug?: string; count: number; productCount?: number }[]> {
     const response = await axios.get(`${API_URL}/products/categories-with-counts`);
     return response.data;
   }

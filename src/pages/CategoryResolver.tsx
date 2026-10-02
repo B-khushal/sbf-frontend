@@ -1,5 +1,5 @@
 import React, { useEffect, useState, lazy, Suspense } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import api from '@/services/api';
 import ShopPage from './ShopPage';
 import NotFound from './NotFound';
@@ -9,6 +9,7 @@ import { useSeasonalCampaign } from '@/contexts/SeasonalCampaignContext';
 const SeasonalCampaignPage = lazy(() => import('./SeasonalCampaignPage'));
 
 const CategoryResolver: React.FC = () => {
+  const { categorySlug } = useParams<{ parentCategory?: string; categorySlug?: string }>();
   const location = useLocation();
   const navigate = useNavigate();
   const { activeCampaigns } = useSeasonalCampaign();
@@ -16,7 +17,8 @@ const CategoryResolver: React.FC = () => {
   const [resolvedCategory, setResolvedCategory] = useState<any>(null);
   const [shouldRedirect, setShouldRedirect] = useState<string | null>(null);
   const [error, setError] = useState(false);
-  const normalizedPath = location.pathname.replace(/^\/+|\/+$/g, '').toLowerCase();
+  const currentPath = location.pathname;
+  const normalizedPath = currentPath.replace(/^\/+|\/+$/g, '').toLowerCase();
   
   let campaignSlug = normalizedPath;
   if (normalizedPath.startsWith('occasions/')) {
@@ -34,7 +36,6 @@ const CategoryResolver: React.FC = () => {
         setError(false);
         setResolvedCategory(null);
         setShouldRedirect(null);
-        const currentPath = location.pathname;
 
         // Skip static page routes if caught here by mistake (defensive check)
         const staticRoutes = [
@@ -55,23 +56,53 @@ const CategoryResolver: React.FC = () => {
           return;
         }
 
+        const segments = normalizedPath.split('/').filter(Boolean);
+        const subSlugCandidate = categorySlug || (segments.length === 2 ? segments[1] : null);
+
         const response = await api.get(`/categories/resolve?url=${encodeURIComponent(currentPath)}`);
 
         if (response.data.redirect) {
-          setShouldRedirect(response.data.to);
+          const toUrl = response.data.to;
+          if (toUrl && toUrl.toLowerCase() !== currentPath.toLowerCase()) {
+            setShouldRedirect(toUrl);
+            return;
+          }
+        }
+
+        if (response.data.category) {
+          const category = response.data.category;
+          // If the resolved category has a slug, and this is a multi-segment URL like /flowers/roses,
+          // redirect to the canonical collection route /:slug (e.g. /roses)
+          if (category.slug && segments.length >= 2) {
+            const canonicalPath = `/${category.slug}`;
+            if (canonicalPath.toLowerCase() !== currentPath.toLowerCase()) {
+              setShouldRedirect(canonicalPath);
+              return;
+            }
+          }
+          setResolvedCategory(category);
+        } else if (subSlugCandidate) {
+          // If no direct category returned but subSlugCandidate exists, redirect to /:slug
+          setShouldRedirect(`/${subSlugCandidate}`);
         } else {
-          setResolvedCategory(response.data.category);
+          setError(true);
         }
       } catch (err) {
         console.error('Error resolving category URL:', err);
-        setError(true);
+        const segments = normalizedPath.split('/').filter(Boolean);
+        const subSlugCandidate = categorySlug || (segments.length === 2 ? segments[1] : null);
+        if (subSlugCandidate) {
+          setShouldRedirect(`/${subSlugCandidate}`);
+        } else {
+          setError(true);
+        }
       } finally {
         setLoading(false);
       }
     };
 
     resolveUrl();
-  }, [activeCampaign, location.pathname]);
+  }, [activeCampaign, currentPath, categorySlug, normalizedPath]);
 
   if (loading) {
     return (
@@ -84,7 +115,7 @@ const CategoryResolver: React.FC = () => {
     );
   }
 
-  if (shouldRedirect) {
+  if (shouldRedirect && shouldRedirect.toLowerCase() !== currentPath.toLowerCase()) {
     // Perform browser redirect
     navigate(shouldRedirect, { replace: true });
     return null;

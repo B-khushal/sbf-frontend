@@ -6,12 +6,14 @@ import { ChevronDown, ChevronRight, Sparkles } from 'lucide-react';
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useSettings } from '@/contexts/SettingsContext';
 import productService, { OccasionData } from '@/services/productService';
-import { normalizeCategoryKey } from '@/utils/categoryTaxonomy';
+import { normalizeCategoryKey, CATEGORY_SUBCATEGORIES } from '@/utils/categoryTaxonomy';
 import { useSeasonalCampaign } from '@/contexts/SeasonalCampaignContext';
 
 const EMOJI_MAPPING: { [key: string]: string } = {
   flowers: '🌹',
   chocolate: '🍫',
+  'chocolate-bouquet': '🍫',
+  'chocolate bouquet': '🍫',
   birthday: '🎂',
   anniversary: '💕',
   baskets: '🧺',
@@ -21,6 +23,7 @@ const EMOJI_MAPPING: { [key: string]: string } = {
   occasions: '🎉',
   'budget-friendly': '✨',
   'budget friendly': '✨',
+  vase: '🏺',
 };
 const DEFAULT_EMOJI = '🌸';
 
@@ -65,6 +68,10 @@ const CategoryMenu = () => {
         counts.forEach(item => {
           const normalizedKey = normalizeCategoryKey(item.name);
           countsMap[normalizedKey] = item.count;
+          if (item.slug) {
+            const slugKey = normalizeCategoryKey(item.slug);
+            countsMap[slugKey] = Math.max(countsMap[slugKey] || 0, item.count);
+          }
         });
         setCategoryCounts(countsMap);
         setActiveOccasions(dbOccasions || []);
@@ -91,93 +98,176 @@ const CategoryMenu = () => {
   };
 
   const categories = useMemo(() => {
-    return ((shopCategories || []) as any[])
-      .filter(cat => cat.enabled && !cat.parentId)
-      .sort((a, b) => (a.priority ?? a.sortOrder ?? 0) - (b.priority ?? b.sortOrder ?? 0))
-      .map(parent => {
-        const parentIdStr = parent._id || parent.id;
-        const parentSlug = parent.slug || parent.name.toLowerCase().trim().replace(/\s+/g, '-').replace(/'/g, '');
-        const parentPath = parent.categoryUrl || parent.link || `/${parentSlug}`;
+    // Determine parent categories (active categories without parentId)
+    const parentList = ((shopCategories || []) as any[])
+      .filter(cat => {
+        if (!cat.enabled) return false;
+        const pid = typeof cat.parentId === 'object' && cat.parentId !== null 
+          ? (cat.parentId._id || cat.parentId.id) 
+          : cat.parentId;
+        return !pid || pid === '[object Object]' || pid === 'null' || pid === 'undefined';
+      })
+      .sort((a, b) => (a.priority ?? a.sortOrder ?? 0) - (b.priority ?? b.sortOrder ?? 0));
 
-        let subcats = ((shopCategories || []) as any[])
-          .filter(c => {
-            if (!c.enabled || !c.parentId) return false;
-            const childParentId = typeof c.parentId === 'object' ? (c.parentId._id || c.parentId.id) : c.parentId;
-            return childParentId === parentIdStr;
-          })
-          .sort((a, b) => (a.priority ?? a.sortOrder ?? 0) - (b.priority ?? b.sortOrder ?? 0))
-          .map(sub => {
-            const subSlug = sub.slug || sub.name.toLowerCase().trim().replace(/\s+/g, '-').replace(/'/g, '');
-            const validPath = sub.categoryUrl || sub.link || `/${subSlug}`;
-            const count = getCategoryCount(sub.name) || getCategoryCount(subSlug);
-            return {
-              name: sub.name,
-              path: validPath,
-              count
-            };
-          });
+    return parentList.map(parent => {
+      const parentIdStr = String(parent._id || parent.id || '').trim();
+      const parentSlug = (parent.slug || parent.name.toLowerCase().trim().replace(/\s+/g, '-').replace(/'/g, '')).toLowerCase();
+      const parentPath = parent.categoryUrl || parent.link || `/${parentSlug}`;
 
-        // Dynamically handle Occasions parent category
-        const isOccasions = parent.name.toLowerCase().includes('occasions') || parent.slug?.toLowerCase().includes('occasions');
-        if (isOccasions) {
-          const activeOccasionSlugs = new Set((activeOccasions || []).map(o => o.slug?.toLowerCase()));
-          const activeOccasionNames = new Set((activeOccasions || []).map(o => o.name?.toLowerCase()));
-          
-          const activeCampaignSlugs = new Set((activeCampaigns || []).map(c => c.slug?.toLowerCase()));
-          const activeCampaignNames = new Set((activeCampaigns || []).map(c => c.name?.toLowerCase()));
+      let subcats = ((shopCategories || []) as any[])
+        .filter(c => {
+          if (!c.enabled) return false;
 
-          // Filter static category subcats against active db occasions & active seasonal campaigns
-          if (activeOccasions.length > 0 || (activeCampaigns && activeCampaigns.length > 0)) {
-            subcats = subcats.filter(sub => {
-              const subNameLower = sub.name.toLowerCase().trim();
-              const subSlugLower = sub.name.toLowerCase().trim().replace(/\s+/g, '-').replace(/'/g, '');
-
-              const isDbActive = activeOccasionNames.has(subNameLower) || 
-                                 activeOccasionSlugs.has(subSlugLower) ||
-                                 Array.from(activeOccasionSlugs).some(s => s && (subSlugLower.includes(s) || s.includes(subSlugLower)));
-
-              const isCampaignActive = activeCampaignNames.has(subNameLower) || 
-                                       activeCampaignSlugs.has(subSlugLower) ||
-                                       Array.from(activeCampaignSlugs).some(s => s && (subSlugLower.includes(s) || s.includes(subSlugLower)));
-
-              return isDbActive || isCampaignActive;
-            });
+          let childParentId: string | null = null;
+          if (typeof c.parentId === 'object' && c.parentId !== null) {
+            childParentId = String(c.parentId._id || c.parentId.id || '').trim();
+          } else if (typeof c.parentId === 'string') {
+            const trimmed = c.parentId.trim();
+            if (trimmed && trimmed !== 'null' && trimmed !== 'undefined' && trimmed !== '[object Object]') {
+              childParentId = trimmed;
+            }
           }
 
-          // Append any active campaign subcategories not already present
-          if (activeCampaigns) {
-            const campaignSubcats = activeCampaigns
-              .filter(campaign => campaign.enabled || campaign.isActive)
-              .map(campaign => ({
-                name: campaign.name,
-                path: `/occasions/${campaign.slug}`,
-                count: campaign.productCount || getCategoryCount(campaign.name) || 1
-              }));
-            subcats = [...subcats, ...campaignSubcats];
+          if (childParentId) {
+            if (parentIdStr && childParentId === parentIdStr) return true;
+            if (childParentId.toLowerCase() === parentSlug) return true;
+            if (childParentId.toLowerCase() === parent.name.toLowerCase().trim()) return true;
           }
 
-          // Keep subcategories with valid paths
-          subcats = subcats.filter(sub => sub.count >= 0 && Boolean(sub.path));
-          
-          // Deduplicate by name
-          const seen = new Set<string>();
-          subcats = subcats.filter(sub => {
-            const key = sub.name.toLowerCase().trim();
-            if (seen.has(key)) return false;
-            seen.add(key);
+          // Match by categoryUrl or link prefix: e.g. /flowers/roses or /birthday/birthday-bouquets
+          const childUrl = (c.categoryUrl || c.link || '').toLowerCase();
+          if (childUrl && (childUrl.startsWith(`/${parentSlug}/`) || childUrl.startsWith(`${parentPath.toLowerCase()}/`))) {
             return true;
+          }
+
+          return false;
+        })
+        .sort((a, b) => (a.priority ?? a.sortOrder ?? 0) - (b.priority ?? b.sortOrder ?? 0))
+        .map(sub => {
+          const subSlug = sub.slug || sub.name.toLowerCase().trim().replace(/\s+/g, '-').replace(/'/g, '');
+          let validPath = sub.categoryUrl || sub.link || `/${subSlug}`;
+          // If validPath is a nested parent prefix like /flowers/roses or /birthday/birthday-bouquets,
+          // normalize to canonical collection route /${subSlug}
+          if (
+            validPath.startsWith(`/${parentSlug}/`) || 
+            (validPath.startsWith('/') && validPath.split('/').filter(Boolean).length > 1 && !validPath.startsWith('/shop') && !validPath.startsWith('/occasions'))
+          ) {
+            validPath = `/${subSlug}`;
+          }
+          const count = getCategoryCount(sub.name) || getCategoryCount(subSlug);
+          return {
+            name: sub.name,
+            path: validPath,
+            count
+          };
+        });
+
+      // Dynamically handle Occasions parent category
+      const isOccasions = parent.name.toLowerCase().includes('occasions') || parent.slug?.toLowerCase().includes('occasions');
+      if (isOccasions) {
+        const activeOccasionSlugs = new Set((activeOccasions || []).map(o => o.slug?.toLowerCase()));
+        const activeOccasionNames = new Set((activeOccasions || []).map(o => o.name?.toLowerCase()));
+        
+        const activeCampaignSlugs = new Set((activeCampaigns || []).map(c => c.slug?.toLowerCase()));
+        const activeCampaignNames = new Set((activeCampaigns || []).map(c => c.name?.toLowerCase()));
+
+        // Filter static category subcats against active db occasions & active seasonal campaigns
+        if (activeOccasions.length > 0 || (activeCampaigns && activeCampaigns.length > 0)) {
+          subcats = subcats.filter(sub => {
+            const subNameLower = sub.name.toLowerCase().trim();
+            const subSlugLower = sub.name.toLowerCase().trim().replace(/\s+/g, '-').replace(/'/g, '');
+
+            const isDbActive = activeOccasionNames.has(subNameLower) || 
+                               activeOccasionSlugs.has(subSlugLower) ||
+                               Array.from(activeOccasionSlugs).some(s => s && (subSlugLower.includes(s) || s.includes(subSlugLower)));
+
+            const isCampaignActive = activeCampaignNames.has(subNameLower) || 
+                                     activeCampaignSlugs.has(subSlugLower) ||
+                                     Array.from(activeCampaignSlugs).some(s => s && (subSlugLower.includes(s) || s.includes(subSlugLower)));
+
+            return isDbActive || isCampaignActive;
           });
         }
 
-        return {
-          name: parent.name,
-          path: parentPath,
-          emoji: getEmoji(parent.slug || parent.name),
-          description: parent.description || '',
-          popular: parent.featured || false,
-          subcategories: subcats
-        };
-      });
+        // Append any active campaign subcategories not already present
+        if (activeCampaigns) {
+          const campaignSubcats = activeCampaigns
+            .filter(campaign => campaign.enabled || campaign.isActive)
+            .map(campaign => ({
+              name: campaign.name,
+              path: `/occasions/${campaign.slug}`,
+              count: campaign.productCount || getCategoryCount(campaign.name) || 1
+            }));
+          subcats = [...subcats, ...campaignSubcats];
+        }
+
+        // If no active occasions or campaigns, populate from activeOccasions list
+        if (subcats.length === 0 && activeOccasions.length > 0) {
+          subcats = activeOccasions.map(occ => ({
+            name: occ.name,
+            path: `/${occ.slug}`,
+            count: getCategoryCount(occ.name) || getCategoryCount(occ.slug) || 0
+          }));
+        }
+
+        // Keep subcategories with valid paths
+        subcats = subcats.filter(sub => sub.count >= 0 && Boolean(sub.path));
+        
+        // Deduplicate by name
+        const seen = new Set<string>();
+        subcats = subcats.filter(sub => {
+          const key = sub.name.toLowerCase().trim();
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+      }
+
+      // If category has no subcategories in DB, use curated taxonomy fallback
+      if (subcats.length === 0) {
+        const normKey = normalizeCategoryKey(parent.slug || parent.name);
+        const fallbackItems = CATEGORY_SUBCATEGORIES[normKey] 
+          || CATEGORY_SUBCATEGORIES[parentSlug] 
+          || CATEGORY_SUBCATEGORIES[parent.name.toLowerCase().trim()] 
+          || [];
+
+        if (fallbackItems && fallbackItems.length > 0) {
+          subcats = fallbackItems.map(item => {
+            const count = getCategoryCount(item.label) || getCategoryCount(item.value);
+            let path = `/${item.value}`;
+            if (parentSlug === 'budget-friendly') {
+              if (item.value.startsWith('under-')) {
+                const maxP = item.value.replace('under-', '');
+                path = `/shop?maxPrice=${maxP}`;
+              } else {
+                path = `/shop/budget-friendly`;
+              }
+            } else if (parentSlug === 'vase') {
+              path = `/shop?search=${encodeURIComponent(item.label.toLowerCase())}`;
+            } else if (parentSlug === 'sympathy') {
+              path = `/${item.value}`;
+            } else {
+              path = `/${parentSlug}/${item.value}`;
+            }
+
+            return {
+              name: item.label,
+              path,
+              count
+            };
+          });
+        }
+      }
+
+      return {
+        name: parent.name,
+        path: parentPath,
+        emoji: getEmoji(parent.slug || parent.name),
+        description: parent.description || '',
+        popular: parent.featured || false,
+        subcategories: subcats
+      };
+    });
   }, [shopCategories, categoryCounts, activeCampaigns, activeOccasions]);
 
   useLayoutEffect(() => {
@@ -357,40 +447,54 @@ const CategoryMenu = () => {
                 initial="hidden"
                 animate="visible"
               >
-                {activeCategory.subcategories.map((sub) => (
-                  <motion.div
-                    key={sub.path}
-                    variants={subcategoryVariants}
-                    className="overflow-hidden"
-                  >
+                {activeCategory.subcategories.length > 0 ? (
+                  activeCategory.subcategories.map((sub) => (
+                    <motion.div
+                      key={sub.path}
+                      variants={subcategoryVariants}
+                      className="overflow-hidden"
+                    >
+                      <Link
+                        to={sub.path}
+                        className="flex items-center justify-between px-4 py-3 rounded-xl hover:bg-gradient-to-r hover:from-primary/8 hover:to-secondary/8 transition-all duration-300 group transform hover:scale-[1.02]"
+                        onClick={() => setHoveredCategory(null)}
+                      >
+                        <span className="text-gray-700 group-hover:text-primary font-medium transition-colors duration-200">
+                          {sub.name}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-400 group-hover:text-primary/60 transition-colors duration-200 bg-gray-50 group-hover:bg-primary/10 px-2 py-1 rounded-full">
+                            {isLoadingCounts ? (
+                              <div className="w-4 h-3 flex items-center justify-center">
+                                <div className="w-2 h-2 border border-gray-300 border-t-transparent rounded-full animate-spin"></div>
+                              </div>
+                            ) : (
+                              sub.count
+                            )}
+                          </span>
+                          <motion.div
+                            whileHover={{ x: 2 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                          >
+                            <ChevronRight size={14} className="text-gray-300 group-hover:text-primary transition-colors duration-200" />
+                          </motion.div>
+                        </div>
+                      </Link>
+                    </motion.div>
+                  ))
+                ) : (
+                  <div className="py-4 px-3 text-center">
+                    <p className="text-xs text-gray-400 mb-2">Explore handcrafted collections</p>
                     <Link
-                      to={sub.path}
-                      className="flex items-center justify-between px-4 py-3 rounded-xl hover:bg-gradient-to-r hover:from-primary/8 hover:to-secondary/8 transition-all duration-300 group transform hover:scale-[1.02]"
+                      to={activeCategory.path}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-primary bg-primary/10 hover:bg-primary/20 transition-all duration-200"
                       onClick={() => setHoveredCategory(null)}
                     >
-                      <span className="text-gray-700 group-hover:text-primary font-medium transition-colors duration-200">
-                        {sub.name}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-400 group-hover:text-primary/60 transition-colors duration-200 bg-gray-50 group-hover:bg-primary/10 px-2 py-1 rounded-full">
-                          {isLoadingCounts ? (
-                            <div className="w-4 h-3 flex items-center justify-center">
-                              <div className="w-2 h-2 border border-gray-300 border-t-transparent rounded-full animate-spin"></div>
-                            </div>
-                          ) : (
-                            sub.count
-                          )}
-                        </span>
-                        <motion.div
-                          whileHover={{ x: 2 }}
-                          transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                        >
-                          <ChevronRight size={14} className="text-gray-300 group-hover:text-primary transition-colors duration-200" />
-                        </motion.div>
-                      </div>
+                      <span>Explore All {activeCategory.name}</span>
+                      <ChevronRight size={12} />
                     </Link>
-                  </motion.div>
-                ))}
+                  </div>
+                )}
               </motion.div>
 
               <div className="border-t border-gray-100">

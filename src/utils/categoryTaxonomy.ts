@@ -86,6 +86,24 @@ export const CATEGORY_SUBCATEGORIES: Record<string, Array<{ value: string; label
     { value: "housewarming", label: "Housewarming" },
     { value: "congratulations", label: "Congratulations" },
   ],
+  vase: [
+    { value: "ceramic-vases", label: "Ceramic Vases" },
+    { value: "glass-vases", label: "Glass Vases" },
+    { value: "vase-arrangements", label: "Arrangements in Vase" },
+    { value: "tabletop-vases", label: "Tabletop Vases" },
+  ],
+  "budget-friendly": [
+    { value: "under-499", label: "Gifts Under ₹499" },
+    { value: "under-699", label: "Gifts Under ₹699" },
+    { value: "under-999", label: "Gifts Under ₹999" },
+    { value: "budget-bouquets", label: "Budget Bouquets" },
+  ],
+  "chocolate-bouquet": [
+    { value: "chocolate-baskets", label: "Chocolate Baskets" },
+    { value: "chocolate-bouquets", label: "Chocolate Bouquets" },
+    { value: "chocolate-gift-sets", label: "Chocolate Gift Sets" },
+    { value: "premium-chocolates", label: "Premium Chocolates" },
+  ],
 };
 
 export const CATEGORY_NAV_ITEMS: CategoryNavItem[] = [
