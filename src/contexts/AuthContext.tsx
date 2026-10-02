@@ -13,10 +13,11 @@ import { marketingTracker } from '@/services/marketingTracker';
 import { normalizeEmail } from '@/utils/emailUtils';
 
 // Define types for our authentication context
-type User = {
+export type User = {
   id: string;
   email: string;
   name: string;
+  phone?: string;
   role: string;
   permissions?: string[];
   assigned_store?: any;
@@ -111,6 +112,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             id: profileData._id,
             name: profileData.name,
             email: profileData.email,
+            phone: profileData.phone || '',
             role: profileData.role,
             permissions: profileData.permissions || [],
             assigned_store: profileData.assigned_store || null,
@@ -140,6 +142,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 id: parsedUser._id || parsedUser.id,
                 name: parsedUser.name,
                 email: parsedUser.email,
+                phone: parsedUser.phone || '',
                 role: parsedUser.role,
                 permissions: parsedUser.permissions || [],
                 assigned_store: parsedUser.assigned_store || null,
@@ -221,6 +224,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         id: profileData._id,
         name: profileData.name,
         email: profileData.email,
+        phone: profileData.phone || '',
         role: profileData.role,
         permissions: profileData.permissions || [],
         assigned_store: profileData.assigned_store || null,
@@ -274,6 +278,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         id: profileData._id,
         name: profileData.name,
         email: profileData.email,
+        phone: profileData.phone || '',
         role: profileData.role,
         permissions: profileData.permissions || [],
         assigned_store: profileData.assigned_store || null,
@@ -367,6 +372,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         id: profileData._id,
         name: profileData.name,
         email: profileData.email,
+        phone: profileData.phone || '',
         role: profileData.role,
         permissions: profileData.permissions || [],
         assigned_store: profileData.assigned_store || null,

@@ -33,6 +33,7 @@ import api from '@/services/api';
 import FreeDeliveryCelebrationModal from '@/components/ui/FreeDeliveryCelebrationModal';
 import { marketingTracker } from '@/services/marketingTracker';
 import { fixEmailTypo } from '@/utils/emailUtils';
+import { isSameDay } from 'date-fns';
 
 // Animation variants
 const containerVariants = {
@@ -741,7 +742,7 @@ const CheckoutShippingPage = () => {
         ? 'Midnight Delivery' 
         : (['morning', 'afternoon', 'late_afternoon', 'evening'].includes(selectedTimeSlot || '') 
             ? 'Fixed Time Delivery' 
-            : (isSameDay(selectedDate, new Date()) ? 'Same Day Standard Delivery' : 'Standard Delivery')),
+            : (isSameDay(selectedDate ? new Date(selectedDate) : new Date(), new Date()) ? 'Same Day Standard Delivery' : 'Standard Delivery')),
       deliveryOption,
       deliveryFee,
       isFirstOrderFreeDelivery: deliveryCalculation?.isFirstOrderFreeDelivery ?? false,
