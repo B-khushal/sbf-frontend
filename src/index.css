@@ -602,3 +602,203 @@
 .animate-heart-pulse {
   animation: heart-pulse 0.8s ease-in-out;
 }
+
+/* ==========================================================================
+   MARKETING INTELLIGENCE SUITE — PURE LIGHT THEME ARCHITECTURE
+   ========================================================================== */
+.marketing-panel-light {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+  color-scheme: light !important;
+}
+
+.marketing-panel-light * {
+  border-color: #e2e8f0;
+}
+
+/* Base Surfaces & Cards */
+.marketing-panel-light .bg-slate-950,
+.marketing-panel-light div.bg-slate-950 {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+.marketing-panel-light .bg-slate-900,
+.marketing-panel-light .bg-slate-900\/90,
+.marketing-panel-light .bg-slate-900\/80,
+.marketing-panel-light .bg-slate-900\/70,
+.marketing-panel-light .bg-slate-900\/60,
+.marketing-panel-light .bg-slate-900\/50,
+.marketing-panel-light .bg-slate-900\/40 {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+.marketing-panel-light .bg-slate-800,
+.marketing-panel-light .bg-slate-800\/80,
+.marketing-panel-light .bg-slate-800\/70,
+.marketing-panel-light .bg-slate-800\/60,
+.marketing-panel-light .bg-slate-800\/50,
+.marketing-panel-light .bg-slate-800\/40,
+.marketing-panel-light .bg-slate-800\/30,
+.marketing-panel-light .bg-slate-800\/20 {
+  background-color: #f1f5f9 !important;
+  color: #1e293b !important;
+}
+
+/* Gradient overrides */
+.marketing-panel-light .from-slate-900,
+.marketing-panel-light .from-slate-950 {
+  --tw-gradient-from: #ffffff var(--tw-gradient-from-position) !important;
+}
+
+.marketing-panel-light .to-slate-900,
+.marketing-panel-light .to-slate-950 {
+  --tw-gradient-to: #f8fafc var(--tw-gradient-to-position) !important;
+}
+
+.marketing-panel-light .via-slate-900,
+.marketing-panel-light .via-slate-950 {
+  --tw-gradient-stops: var(--tw-gradient-from), #ffffff var(--tw-gradient-via-position), var(--tw-gradient-to) !important;
+}
+
+/* Borders */
+.marketing-panel-light .border-slate-900,
+.marketing-panel-light .border-slate-800,
+.marketing-panel-light .border-slate-800\/90,
+.marketing-panel-light .border-slate-800\/80,
+.marketing-panel-light .border-slate-800\/70,
+.marketing-panel-light .border-slate-800\/60,
+.marketing-panel-light .border-slate-800\/50,
+.marketing-panel-light .border-slate-800\/40,
+.marketing-panel-light .border-slate-700,
+.marketing-panel-light .border-slate-700\/80,
+.marketing-panel-light .border-slate-700\/60,
+.marketing-panel-light .border-slate-700\/50,
+.marketing-panel-light .border-slate-700\/40 {
+  border-color: #e2e8f0 !important;
+}
+
+/* High Contrast Legible Typography */
+.marketing-panel-light .text-slate-100,
+.marketing-panel-light .text-slate-200 {
+  color: #0f172a !important;
+}
+
+.marketing-panel-light .text-slate-300 {
+  color: #334155 !important;
+}
+
+.marketing-panel-light .text-slate-400 {
+  color: #475569 !important;
+}
+
+.marketing-panel-light .text-slate-500 {
+  color: #64748b !important;
+}
+
+/* Interactive States & Hovers */
+.marketing-panel-light .hover\:bg-slate-800:hover,
+.marketing-panel-light .hover\:bg-slate-800\/80:hover,
+.marketing-panel-light .hover\:bg-slate-800\/70:hover,
+.marketing-panel-light .hover\:bg-slate-800\/60:hover,
+.marketing-panel-light .hover\:bg-slate-800\/50:hover,
+.marketing-panel-light .hover\:bg-slate-700:hover {
+  background-color: #f1f5f9 !important;
+}
+
+.marketing-panel-light .hover\:text-slate-100:hover,
+.marketing-panel-light .hover\:text-slate-200:hover,
+.marketing-panel-light .hover\:text-white:hover {
+  color: #0f172a !important;
+}
+
+/* Form Controls, Inputs, and Select Elements */
+.marketing-panel-light input,
+.marketing-panel-light select,
+.marketing-panel-light textarea {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+.marketing-panel-light input::placeholder,
+.marketing-panel-light textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+.marketing-panel-light select option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+/* Tables in Light Theme */
+.marketing-panel-light table {
+  background-color: #ffffff !important;
+}
+
+.marketing-panel-light th {
+  background-color: #f8fafc !important;
+  color: #475569 !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.marketing-panel-light td {
+  border-bottom: 1px solid #f1f5f9 !important;
+  color: #1e293b !important;
+}
+
+.marketing-panel-light tr:hover td {
+  background-color: #f8fafc !important;
+}
+
+/* Clean Light Pill & Status Badges */
+.marketing-panel-light .bg-emerald-950\/30,
+.marketing-panel-light .bg-emerald-950\/40,
+.marketing-panel-light .bg-emerald-900\/20,
+.marketing-panel-light .bg-emerald-900\/30 {
+  background-color: #ecfdf5 !important;
+  border-color: #a7f3d0 !important;
+  color: #065f46 !important;
+}
+
+.marketing-panel-light .bg-amber-950\/30,
+.marketing-panel-light .bg-amber-950\/40,
+.marketing-panel-light .bg-amber-900\/20 {
+  background-color: #fffbeb !important;
+  border-color: #fde68a !important;
+  color: #92400e !important;
+}
+
+.marketing-panel-light .bg-purple-950\/30,
+.marketing-panel-light .bg-purple-950\/40,
+.marketing-panel-light .bg-purple-900\/20 {
+  background-color: #faf5ff !important;
+  border-color: #e9d5ff !important;
+  color: #6b21a8 !important;
+}
+
+.marketing-panel-light .bg-blue-950\/30,
+.marketing-panel-light .bg-blue-950\/40,
+.marketing-panel-light .bg-blue-900\/20 {
+  background-color: #eff6ff !important;
+  border-color: #bfdbfe !important;
+  color: #1e40af !important;
+}
+
+.marketing-panel-light .bg-rose-950\/30,
+.marketing-panel-light .bg-rose-950\/20,
+.marketing-panel-light .bg-rose-950\/40 {
+  background-color: #fff1f2 !important;
+  border-color: #fecdd3 !important;
+  color: #9f1239 !important;
+}
+
+/* Recharts Tooltip Styling in Light Theme */
+.marketing-panel-light .recharts-default-tooltip {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+  border-radius: 8px !important;
+}

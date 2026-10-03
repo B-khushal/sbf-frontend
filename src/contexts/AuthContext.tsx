@@ -241,7 +241,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem('user', JSON.stringify(profileData));
       localStorage.setItem('token', loginResponse.token); // Also store the token separately
       
-      marketingTracker.stitchIdentity(user.id, user.email, user.name);
+      if (!user.role || user.role === 'customer' || user.role === 'user') {
+        marketingTracker.stitchIdentity(user.id, user.email, user.name);
+      }
       
       // Determine redirect destination based on user role
       let redirectTo = '/';
@@ -294,7 +296,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem('user', JSON.stringify(profileData));
       localStorage.setItem('token', registerResponse.token); // Also store the token separately
       
-      marketingTracker.stitchIdentity(user.id, user.email, user.name);
+      if (!user.role || user.role === 'customer' || user.role === 'user') {
+        marketingTracker.stitchIdentity(user.id, user.email, user.name);
+      }
       
       // Determine redirect destination based on user role
       let redirectTo = '/';
@@ -391,7 +395,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem('user', JSON.stringify(profileData));
       localStorage.setItem('token', socialLoginResponse.token);
       
-      marketingTracker.stitchIdentity(user.id, user.email, user.name);
+      if (!user.role || user.role === 'customer' || user.role === 'user') {
+        marketingTracker.stitchIdentity(user.id, user.email, user.name);
+      }
       
       // Determine redirect destination based on user role
       let redirectTo = '/';

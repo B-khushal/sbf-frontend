@@ -158,9 +158,39 @@ class MarketingTracker {
     }
   }
 
+  private isInternalPath(path?: string): boolean {
+    const p = (path || (typeof window !== 'undefined' ? window.location.pathname : '')).toLowerCase();
+    return p.startsWith('/admin') || p.startsWith('/marketing') || p.startsWith('/vendor') || p.startsWith('/delivery');
+  }
+
+  private isInternalUser(): boolean {
+    try {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const u = JSON.parse(userStr);
+        const role = (u.role || '').toLowerCase();
+        const email = (u.email || '').toLowerCase();
+        const nonCustomerRoles = [
+          'admin', 'platform_admin', 'store_owner', 'store_manager',
+          'delivery_manager', 'support_staff', 'inventory_staff',
+          'finance_staff', 'vendor', 'marketing', 'marketing_head',
+          'marketing_team', 'delivery_partner', 'staff', 'superadmin', 'administrator'
+        ];
+        if (nonCustomerRoles.includes(role)) return true;
+        if (email.includes('admin') || email.endsWith('@sbflorist.in') || email === 'khushalprasad242@gmail.com') return true;
+      }
+    } catch (e) {}
+    return false;
+  }
+
   // Enqueue event and buffer
   public enqueueEvent(event: TrackEvent) {
     try {
+      // Never track internal staff/admin or internal portal routes
+      if (this.isInternalUser() || this.isInternalPath(event.path)) {
+        return;
+      }
+
       const completeEvent: TrackEvent = {
         ...event,
         url: window.location.href,
@@ -187,7 +217,10 @@ class MarketingTracker {
       this.flushTimer = null;
     }
 
-    if (this.eventQueue.length === 0) return;
+    if (this.eventQueue.length === 0 || this.isInternalUser()) {
+      this.eventQueue = [];
+      return;
+    }
 
     const eventsToSend = [...this.eventQueue];
     this.eventQueue = [];
@@ -221,6 +254,7 @@ class MarketingTracker {
 
   private getUserId(): string | null {
     try {
+      if (this.isInternalUser()) return null;
       const userStr = localStorage.getItem('user');
       if (userStr) {
         const u = JSON.parse(userStr);
@@ -349,7 +383,7 @@ class MarketingTracker {
   // Identity Stitching when user logs in or checks out
   public async stitchIdentity(userId: string, email?: string, name?: string, phone?: string) {
     try {
-      if (!this.visitorId) return;
+      if (!this.visitorId || this.isInternalUser()) return;
       await fetch(`${API_URL}/marketing/stitch-identity`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

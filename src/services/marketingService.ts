@@ -29,6 +29,9 @@ export interface DashboardOverviewResponse {
     cartAbandonment: string;
     returningVisitors: number;
     liveNow: number;
+    activeCartPipelineValue?: number;
+    activeCartPipelineCount?: number;
+    totalPipelineValue?: number;
   };
   funnel: Array<{ stage: string; count: number; dropOffRate: string }>;
   trafficSources: Array<{ source: string; sessions: number; percentage: number }>;
@@ -39,20 +42,117 @@ export interface DashboardOverviewResponse {
   opportunities: Array<{ id: string; type: string; title: string; description: string; metric: string; impact: string }>;
 }
 
+export interface LiveVisitorCartItem {
+  productId?: string;
+  title: string;
+  price: number;
+  quantity: number;
+}
+
+export interface LiveVisitorCart {
+  hasCart: boolean;
+  totalValue: number;
+  itemCount: number;
+  checkoutStarted: boolean;
+  items: LiveVisitorCartItem[];
+}
+
+export interface LiveVisitorLatestEvent {
+  eventType?: string;
+  productTitle?: string;
+  productPrice?: number;
+  path?: string;
+  timestamp?: string;
+}
+
 export interface LiveVisitor {
   sessionId: string;
   visitorId: string;
+  userId?: string | null;
   displayName: string;
+  shortId?: string;
+  customerName?: string | null;
+  customerEmail?: string | null;
+  customerPhone?: string | null;
+  registeredUserId?: string | null;
+  isRegisteredCustomer?: boolean;
+  totalOrders?: number;
+  totalCustomerRevenue?: number;
   device: string;
+  browser?: string;
+  os?: string;
+  city?: string;
+  region?: string;
+  country?: string;
   source: string;
+  medium?: string;
   campaign: string;
+  utmSource?: string;
+  utmMedium?: string;
+  utmContent?: string;
   currentPage: string;
+  displayPage?: string;
+  landingPage?: string;
+  resolvedProduct?: { id: string; name: string; price: number; image?: string | null };
   activity: string;
   duration: string;
+  durationSeconds?: number;
+  startedAt?: string;
   lastActiveAt: string;
+  lastActiveAgo?: string;
+  pageViewsCount?: number;
+  cartAddsCount?: number;
+  checkoutsCount?: number;
+  purchasesCount?: number;
   status: 'Active' | 'Idle' | 'Left';
   interestScore: number;
   interestLevel: string;
+  cart?: LiveVisitorCart;
+  latestEvent?: LiveVisitorLatestEvent;
+}
+
+export interface LiveActivityFeedItem {
+  id: string;
+  sessionId: string;
+  visitorId: string;
+  eventType: string;
+  productTitle?: string;
+  productPrice?: number;
+  path?: string;
+  searchQuery?: string;
+  cartValue?: number;
+  timestamp: string;
+  timeAgo?: string;
+  actorName: string;
+  city?: string;
+  device?: string;
+}
+
+export interface LiveVisitorsSummary {
+  activeCount: number;
+  idleCount: number;
+  totalTracked: number;
+  cartCount: number;
+  checkoutCount: number;
+  totalCartValue: number;
+  registeredCount: number;
+  guestCount: number;
+  deviceBreakdown: { mobile: number; desktop: number; tablet: number };
+  sourceBreakdown: Array<{ source: string; count: number }>;
+  topPages: Array<{ path: string; count: number }>;
+  topCities: Array<{ city: string; count: number }>;
+  topSource: string;
+  topPage: string;
+}
+
+export interface LiveVisitorsResponse {
+  success: boolean;
+  timeframe: string;
+  activeCount: number;
+  idleCount: number;
+  summary: LiveVisitorsSummary;
+  visitors: LiveVisitor[];
+  recentActivityFeed: LiveActivityFeedItem[];
 }
 
 export interface ReportColumn {
@@ -87,10 +187,21 @@ export const marketingService = {
   },
 
   // 2. Live Visitors
-  getLiveVisitors: async () => {
-    const res = await axios.get<{ success: boolean; activeCount: number; idleCount: number; visitors: LiveVisitor[] }>(
+  getLiveVisitors: async (params?: {
+    timeframe?: string;
+    stage?: string;
+    device?: string;
+    source?: string;
+    customerType?: string;
+    search?: string;
+    limit?: number;
+  }) => {
+    const res = await axios.get<LiveVisitorsResponse>(
       `${API_URL}/marketing/live-visitors`,
-      getAuthHeaders()
+      {
+        ...getAuthHeaders(),
+        params
+      }
     );
     return res.data;
   },
