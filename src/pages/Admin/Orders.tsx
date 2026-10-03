@@ -28,7 +28,10 @@ import { format, isToday, isTomorrow, parseISO } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Period Tab Types
-type PeriodTab = 'today' | 'tomorrow' | 'past' | 'custom';
+type PeriodTab = 'today' | 'tomorrow' | 'upcoming' | 'past' | 'custom';
+
+// Upcoming Scope Options for Future Scheduled Orders
+type UpcomingScopeType = 'all' | '7d' | '14d' | '30d' | 'beyond_tomorrow';
 
 // Status Types for Operational Filter Bar
 type StatusFilterType = 'all' | 'preparing' | 'ready' | 'out_for_delivery' | 'delivered' | 'cancelled';
@@ -230,6 +233,10 @@ export const AdminOrders: React.FC = () => {
 
   // Navigation Period Tab
   const [activePeriod, setActivePeriod] = useState<PeriodTab>('today');
+
+  // Upcoming Scope Filter State (for advance orders)
+  const [upcomingScope, setUpcomingScope] = useState<UpcomingScopeType>('all');
+  const [upcomingCount, setUpcomingCount] = useState<number>(0);
   
   // Secondary Status Filter
   const [selectedStatus, setSelectedStatus] = useState<StatusFilterType>('all');
@@ -294,7 +301,7 @@ export const AdminOrders: React.FC = () => {
   // Fetch orders when period, status, search, or custom range changes
   useEffect(() => {
     fetchOrdersData();
-  }, [activePeriod, selectedStatus, debouncedSearch, appliedCustomRange, filterDeliveryType, filterPaymentStatus]);
+  }, [activePeriod, selectedStatus, debouncedSearch, appliedCustomRange, filterDeliveryType, filterPaymentStatus, upcomingScope]);
 
   const fetchOrdersData = async (isManualRefresh = false) => {
     try {
@@ -303,6 +310,10 @@ export const AdminOrders: React.FC = () => {
 
       const params = new URLSearchParams();
       params.append('period', activePeriod);
+
+      if (activePeriod === 'upcoming') {
+        params.append('upcomingScope', upcomingScope);
+      }
 
       if (selectedStatus !== 'all') {
         params.append('status', selectedStatus);
@@ -354,6 +365,9 @@ export const AdminOrders: React.FC = () => {
         setOrders(fetchedOrders);
         if (response.data.statusCounts) {
           setStatusCounts(response.data.statusCounts);
+        }
+        if (typeof response.data.upcomingCount === 'number') {
+          setUpcomingCount(response.data.upcomingCount);
         }
         setPaginationInfo(response.data.pagination || null);
       }
@@ -481,6 +495,48 @@ export const AdminOrders: React.FC = () => {
       if (!groups[dateKey]) groups[dateKey] = [];
       groups[dateKey].push(order);
     });
+    return groups;
+  }, [orders, activePeriod]);
+
+  // Group Upcoming Orders chronologically by scheduled delivery date
+  const upcomingOrdersGrouped = useMemo(() => {
+    if (activePeriod !== 'upcoming') return null;
+    const groups: { dateKey: string; dateObj: Date; orders: Order[]; relativeLabel: string }[] = [];
+    const groupMap: Record<string, { dateKey: string; dateObj: Date; orders: Order[]; relativeLabel: string }> = {};
+
+    orders.forEach(order => {
+      const d = order.deliveryDate ? new Date(order.deliveryDate) : null;
+      let dateKey = 'Advance Delivery';
+      let relativeLabel = 'Advance Booking';
+
+      if (d && !isNaN(d.getTime())) {
+        dateKey = format(d, 'EEEE, dd MMMM yyyy');
+
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        const targetStart = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+        const diffDays = Math.round((targetStart.getTime() - todayStart.getTime()) / (1000 * 60 * 60 * 24));
+
+        if (diffDays === 0) relativeLabel = 'Today';
+        else if (diffDays === 1) relativeLabel = 'Tomorrow';
+        else if (diffDays === 2) relativeLabel = 'In 2 days';
+        else if (diffDays === 3) relativeLabel = 'In 3 days';
+        else if (diffDays > 3) relativeLabel = `In ${diffDays} days`;
+        else relativeLabel = 'Past Date';
+      }
+
+      if (!groupMap[dateKey]) {
+        groupMap[dateKey] = {
+          dateKey,
+          dateObj: d && !isNaN(d.getTime()) ? d : new Date(),
+          orders: [],
+          relativeLabel
+        };
+        groups.push(groupMap[dateKey]);
+      }
+      groupMap[dateKey].orders.push(order);
+    });
+
     return groups;
   }, [orders, activePeriod]);
 
@@ -813,7 +869,38 @@ export const AdminOrders: React.FC = () => {
                 </span>
               </button>
 
-              {/* Tab 3: Past Orders */}
+              {/* Tab 3: Upcoming Orders (Advance Bookings) */}
+              <button
+                onClick={() => {
+                  setActivePeriod('upcoming');
+                  setSelectedStatus('all');
+                }}
+                className={cn(
+                  "flex-1 min-w-[170px] sm:min-w-[190px] py-2.5 px-4 rounded-xl text-left transition-all relative flex flex-col justify-center",
+                  activePeriod === 'upcoming'
+                    ? "bg-violet-50 dark:bg-violet-950/40 text-violet-950 dark:text-violet-100 shadow-xs border border-violet-200/80 dark:border-violet-800/60"
+                    : "hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-600 dark:text-slate-400"
+                )}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-violet-700 dark:text-violet-400 flex items-center gap-1.5">
+                    Upcoming
+                    {upcomingCount > 0 && (
+                      <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-violet-100 dark:bg-violet-900/60 text-violet-700 dark:text-violet-300">
+                        {upcomingCount}
+                      </span>
+                    )}
+                  </span>
+                  {activePeriod === 'upcoming' && (
+                    <span className="w-2 h-2 rounded-full bg-violet-600 animate-pulse" />
+                  )}
+                </div>
+                <span className="text-sm font-semibold text-slate-900 dark:text-slate-100 mt-0.5">
+                  Advance Bookings
+                </span>
+              </button>
+
+              {/* Tab 4: Past Orders */}
               <button
                 onClick={() => {
                   setActivePeriod('past');
@@ -839,7 +926,7 @@ export const AdminOrders: React.FC = () => {
                 </span>
               </button>
 
-              {/* Tab 4: Custom Range */}
+              {/* Tab 5: Custom Range */}
               <button
                 onClick={() => setIsCustomRangeOpen(true)}
                 className={cn(
@@ -864,6 +951,56 @@ export const AdminOrders: React.FC = () => {
 
             </nav>
           </div>
+
+          {/* ========================================================
+              UPCOMING ADVANCE BOOKINGS SCOPE SELECTOR (When activePeriod === 'upcoming')
+             ======================================================== */}
+          {activePeriod === 'upcoming' && (
+            <div className="bg-gradient-to-r from-violet-50/90 via-purple-50/60 to-indigo-50/90 dark:from-violet-950/40 dark:via-purple-950/30 dark:to-indigo-950/40 border border-violet-200/80 dark:border-violet-800/60 rounded-2xl p-3.5 sm:p-4 shadow-xs space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-xl bg-violet-600 text-white shadow-xs">
+                    <Calendar className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                      Upcoming Advance Deliveries
+                      <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-violet-100 dark:bg-violet-900/60 text-violet-700 dark:text-violet-300">
+                        {statusCounts.total} scheduled
+                      </span>
+                    </h2>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Sorted by nearest delivery date for floral sourcing and advance kitchen preparation
+                    </p>
+                  </div>
+                </div>
+
+                {/* Scope Filter Pills */}
+                <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+                  {[
+                    { id: 'all', label: 'All Upcoming' },
+                    { id: '7d', label: 'Next 7 Days' },
+                    { id: '14d', label: 'Next 14 Days' },
+                    { id: '30d', label: 'Next 30 Days' },
+                    { id: 'beyond_tomorrow', label: 'Beyond Tomorrow' },
+                  ].map((scope) => (
+                    <button
+                      key={scope.id}
+                      onClick={() => setUpcomingScope(scope.id as UpcomingScopeType)}
+                      className={cn(
+                        "px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all",
+                        upcomingScope === scope.id
+                          ? "bg-violet-600 text-white shadow-xs"
+                          : "bg-white/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800"
+                      )}
+                    >
+                      {scope.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* ========================================================
               3. ORDER SUMMARY STATISTICS CARDS (Compact, High-Contrast)
@@ -1099,13 +1236,21 @@ export const AdminOrders: React.FC = () => {
                 {activePeriod === 'today' ? <Sparkles className="w-8 h-8" /> : <Calendar className="w-8 h-8" />}
               </div>
               <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                {activePeriod === 'today' ? "No orders for today" : activePeriod === 'tomorrow' ? "No orders for tomorrow yet" : "No orders found"}
+                {activePeriod === 'today'
+                  ? "No orders for today"
+                  : activePeriod === 'tomorrow'
+                  ? "No orders for tomorrow yet"
+                  : activePeriod === 'upcoming'
+                  ? "No upcoming scheduled orders"
+                  : "No orders found"}
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-xs mx-auto">
                 {activePeriod === 'today'
                   ? "You're all caught up. New orders will appear here automatically."
                   : activePeriod === 'tomorrow'
                   ? "Tomorrow's scheduled deliveries will appear here as customers place orders."
+                  : activePeriod === 'upcoming'
+                  ? "Advance bookings scheduled for future dates will appear here chronologically."
                   : "Try clearing search filters or selecting a different date range."}
               </p>
               <div className="mt-6 flex items-center justify-center gap-2">
@@ -1151,6 +1296,38 @@ export const AdminOrders: React.FC = () => {
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                     {groupOrders.map(order => renderOrderCard(order))}
+                  </div>
+                </section>
+              ))}
+            </div>
+          ) : activePeriod === 'upcoming' && upcomingOrdersGrouped ? (
+            /* UPCOMING ADVANCE ORDERS WITH CHRONOLOGICAL DATE GROUPING & COUNTDOWN BADGES */
+            <div className="space-y-8">
+              {upcomingOrdersGrouped.map(group => (
+                <section key={group.dateKey} className="space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-violet-200/80 dark:border-violet-900/60 pb-2.5">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-1.5 rounded-lg bg-violet-100 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300">
+                        <Calendar className="w-4 h-4" />
+                      </div>
+                      <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+                        {group.dateKey}
+                      </h2>
+                      <span className={cn(
+                        "text-xs font-bold px-2.5 py-0.5 rounded-full border shadow-2xs",
+                        group.relativeLabel === 'Tomorrow'
+                          ? "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800"
+                          : "bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-950/40 dark:text-violet-300 dark:border-violet-800"
+                      )}>
+                        {group.relativeLabel}
+                      </span>
+                    </div>
+                    <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                      {group.orders.length} {group.orders.length === 1 ? 'delivery' : 'deliveries'} scheduled
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                    {group.orders.map(order => renderOrderCard(order))}
                   </div>
                 </section>
               ))}
@@ -1631,6 +1808,38 @@ export const AdminOrders: React.FC = () => {
     const slotFormatted = formatTimeSlot(order.deliverySlot || order.shippingDetails?.timeSlot);
     const deliveryDateFormatted = formatDeliveryDate(order.deliveryDate || order.shippingDetails?.deliveryDate || order.createdAt);
 
+    // Calculate upcoming countdown if delivery is scheduled in future
+    let upcomingBadge: { text: string; bg: string; textCol: string } | null = null;
+    const rawDeliveryDate = order.deliveryDate || order.shippingDetails?.deliveryDate;
+    if (rawDeliveryDate) {
+      const d = new Date(rawDeliveryDate);
+      if (!isNaN(d.getTime())) {
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        const targetStart = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+        const diffDays = Math.round((targetStart.getTime() - todayStart.getTime()) / (1000 * 60 * 60 * 24));
+        if (diffDays === 1) {
+          upcomingBadge = {
+            text: 'Tomorrow',
+            bg: 'bg-blue-600/90 text-white',
+            textCol: 'text-blue-700 dark:text-blue-300'
+          };
+        } else if (diffDays === 2) {
+          upcomingBadge = {
+            text: 'In 2 days',
+            bg: 'bg-violet-600/90 text-white',
+            textCol: 'text-violet-700 dark:text-violet-300'
+          };
+        } else if (diffDays > 2) {
+          upcomingBadge = {
+            text: `In ${diffDays} days`,
+            bg: 'bg-indigo-600/90 text-white',
+            textCol: 'text-indigo-700 dark:text-indigo-300'
+          };
+        }
+      }
+    }
+
     // WhatsApp Message
     const waText = encodeURIComponent(`Hello ${recipientName}, this is Spring Blossoms regarding your flower delivery order #${order.orderNumber}.`);
 
@@ -1664,11 +1873,20 @@ export const AdminOrders: React.FC = () => {
               </span>
             </div>
 
-            {/* Top-Left: Delivery Slot Pill */}
-            <div className="absolute top-2.5 left-2.5">
+            {/* Top-Left: Delivery Slot Pill & Countdown Badge */}
+            <div className="absolute top-2.5 left-2.5 flex flex-col gap-1 items-start">
               <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-900/70 text-white backdrop-blur-xs">
                 {slotFormatted}
               </span>
+              {upcomingBadge && (
+                <span className={cn(
+                  "inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold shadow-xs backdrop-blur-xs border border-white/20",
+                  upcomingBadge.bg
+                )}>
+                  <Clock className="w-3 h-3" />
+                  {upcomingBadge.text}
+                </span>
+              )}
             </div>
           </div>
 
@@ -1731,11 +1949,21 @@ export const AdminOrders: React.FC = () => {
             <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 space-y-1.5">
               
               {/* Delivery Date & Time */}
-              <div className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300">
-                <Truck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                <span className="font-semibold truncate">
-                  {deliveryDateFormatted}
-                </span>
+              <div className="flex items-center justify-between text-xs text-slate-700 dark:text-slate-300">
+                <div className="flex items-center gap-1.5 truncate">
+                  <Truck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <span className="font-semibold truncate">
+                    {deliveryDateFormatted}
+                  </span>
+                </div>
+                {upcomingBadge && (
+                  <span className={cn(
+                    "shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded border border-violet-200 dark:border-violet-800 bg-violet-50 dark:bg-violet-950/50",
+                    upcomingBadge.textCol
+                  )}>
+                    {upcomingBadge.text}
+                  </span>
+                )}
               </div>
 
               {/* Delivery Location */}
