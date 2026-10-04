@@ -251,6 +251,7 @@ const App = () => {
                               <RefundPolicyPage />
                             </Suspense>
                           } />
+                          <Route path="/returns" element={<Navigate to="/refund-policy" replace />} />
                           <Route path="/cancellation-policy" element={
                             <Suspense fallback={<LoadingFallback />}>
                               <CancellationPolicyPage />
