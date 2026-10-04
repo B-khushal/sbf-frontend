@@ -468,7 +468,7 @@ const OrderHistory = () => {
             </CardContent>
           </Card>
         );
-      })}
+      }))}
     </div>
   );
 };
