@@ -672,7 +672,7 @@ const OrderDetailsPage: React.FC = () => {
             <div>
               <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">Spring Blossoms Florist</h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-0.5">A Reason to Express</p>
-              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mt-0.5">Najam Centre, Pillar No. 32, Rethi Bowli, Mehdipatnam, Hyderabad | GSTIN: 36AABFS1234Z1Z5</p>
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mt-0.5">Najam Centre, Pillar No. 32, Rethi Bowli, Mehdipatnam, Hyderabad</p>
             </div>
           </div>
           <div className="text-left sm:text-right border-t sm:border-t-0 border-slate-100 dark:border-slate-800 pt-3 sm:pt-0 w-full sm:w-auto">
