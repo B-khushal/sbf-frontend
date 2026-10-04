@@ -12,6 +12,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import api from '@/services/api';
+import { API_URL } from '@/config';
 import { Order } from '@/services/orderService';
 import { sendOrderReviewEmail } from '@/services/reviewService';
 import {
@@ -283,6 +284,9 @@ export const AdminOrders: React.FC = () => {
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
   const [copiedOrderId, setCopiedOrderId] = useState<string | null>(null);
 
+  // Invoice downloading state
+  const [downloadingInvoiceId, setDownloadingInvoiceId] = useState<string | null>(null);
+
   // Review email sending state
   const [isSendingReviewEmail, setIsSendingReviewEmail] = useState(false);
   const [sentReviewEmailOrders, setSentReviewEmailOrders] = useState<Set<string>>(new Set());
@@ -444,13 +448,43 @@ export const AdminOrders: React.FC = () => {
   };
 
   // Download Invoice
-  const handleDownloadInvoice = (orderId: string, orderNumber: string, e?: React.MouseEvent) => {
+  const handleDownloadInvoice = async (orderId: string, orderNumber: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    window.open(`/api/orders/${orderId}/invoice`, '_blank');
-    toast({
-      title: 'Downloading Invoice',
-      description: `Invoice for order #${orderNumber} is opening.`
-    });
+    try {
+      setDownloadingInvoiceId(orderId);
+      toast({
+        title: 'Downloading Invoice',
+        description: `Generating invoice PDF for order #${orderNumber}...`
+      });
+
+      const response = await api.get(`/orders/${orderId}/invoice`, {
+        responseType: 'blob'
+      });
+
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `Invoice-${orderNumber}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      setTimeout(() => window.URL.revokeObjectURL(blobUrl), 10000);
+
+      toast({
+        title: 'Invoice Downloaded',
+        description: `Invoice for order #${orderNumber} downloaded successfully.`
+      });
+    } catch (err: any) {
+      console.error('Invoice download failed:', err);
+      // Fallback: If blob download fails, open backend direct URL with auth token
+      const token = localStorage.getItem('token');
+      const directUrl = `${API_URL}/orders/${orderId}/invoice${token ? `?token=${encodeURIComponent(token)}` : ''}`;
+      window.open(directUrl, '_blank');
+    } finally {
+      setDownloadingInvoiceId(null);
+    }
   };
 
   // Send Review Request Email Handler
@@ -648,10 +682,15 @@ export const AdminOrders: React.FC = () => {
           size="sm"
           variant="outline"
           onClick={(e) => handleDownloadInvoice(order._id, order.orderNumber, e)}
-          className="border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium text-xs h-8 px-3 rounded-lg"
+          disabled={downloadingInvoiceId === order._id}
+          className="border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium text-xs h-8 px-3 rounded-lg flex items-center gap-1.5"
         >
-          <FileText className="w-3.5 h-3.5 mr-1 text-slate-500" />
-          Invoice
+          {downloadingInvoiceId === order._id ? (
+            <RefreshCw className="w-3.5 h-3.5 animate-spin text-primary" />
+          ) : (
+            <FileText className="w-3.5 h-3.5 text-slate-500" />
+          )}
+          <span>{downloadingInvoiceId === order._id ? 'Saving...' : 'Invoice'}</span>
         </Button>
       );
     }
@@ -1830,10 +1869,15 @@ export const AdminOrders: React.FC = () => {
                         variant="outline"
                         size="sm"
                         onClick={(e) => handleDownloadInvoice(selectedOrder._id, selectedOrder.orderNumber, e)}
-                        className="text-xs h-9 rounded-xl border-slate-200 dark:border-slate-700"
+                        disabled={downloadingInvoiceId === selectedOrder._id}
+                        className="text-xs h-9 rounded-xl border-slate-200 dark:border-slate-700 font-medium"
                       >
-                        <Download className="w-3.5 h-3.5 mr-1.5" />
-                        Invoice PDF
+                        {downloadingInvoiceId === selectedOrder._id ? (
+                          <RefreshCw className="w-3.5 h-3.5 mr-1.5 animate-spin text-primary" />
+                        ) : (
+                          <Download className="w-3.5 h-3.5 mr-1.5" />
+                        )}
+                        <span>{downloadingInvoiceId === selectedOrder._id ? 'Downloading...' : 'Invoice PDF'}</span>
                       </Button>
 
                       {/* Review Email Button in Drawer Footer */}

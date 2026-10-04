@@ -54,6 +54,7 @@ const CancellationPolicyPage = lazy(() => import("./pages/CancellationPolicyPage
 const CheckoutShippingPage = lazy(() => import("./pages/CheckoutShippingPage"));
 const CheckoutPaymentPage = lazy(() => import("./pages/CheckoutPaymentPage"));
 const CheckoutConfirmationPage = lazy(() => import("./pages/CheckoutConfirmationPage"));
+const InvoiceDownloadRedirect = lazy(() => import("./pages/InvoiceDownloadRedirect"));
 
 // Admin Pages (heavily lazy loaded as they're admin-only)
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
@@ -258,6 +259,18 @@ const App = () => {
                           <Route path="/forgot-password" element={
                             <Suspense fallback={<LoadingFallback />}>
                               <ForgotPasswordPage />
+                            </Suspense>
+                          } />
+
+                          {/* Direct Invoice Download Routes */}
+                          <Route path="/api/orders/:id/invoice" element={
+                            <Suspense fallback={<LoadingFallback message="Loading invoice..." />}>
+                              <InvoiceDownloadRedirect />
+                            </Suspense>
+                          } />
+                          <Route path="/orders/:id/invoice" element={
+                            <Suspense fallback={<LoadingFallback message="Loading invoice..." />}>
+                              <InvoiceDownloadRedirect />
                             </Suspense>
                           } />
 
