@@ -14,6 +14,7 @@ import { ComboItem } from "@/services/productService";
 import { QuickViewModal } from "./ui/QuickViewModal";
 import ProtectedImage from "./ui/ProtectedImage";
 import { ProductCardSkeleton } from "./HomePageSkeleton";
+import { promptLoginForAddToCart } from "@/utils/cartAuthHelper";
 
 
 export type Product = {
@@ -322,22 +323,6 @@ export const ProductCard = ({ product, onAddToCart }: {
 
     console.log("Add to cart clicked:", product.title);
 
-    if (!user) {
-      toast.error("Please login first to add items to your cart", {
-        description: "You'll be redirected to the login page",
-        duration: 3000,
-      });
-      setTimeout(() => {
-        navigate('/login', {
-          state: {
-            redirect: window.location.pathname,
-            message: "Please login to add items to your cart"
-          }
-        });
-      }, 1500);
-      return;
-    }
-
     try {
       const addToCartFunction = onAddToCart || addToCart;
 
@@ -362,6 +347,11 @@ export const ProductCard = ({ product, onAddToCart }: {
         category: product.category,
         description: product.description,
       };
+
+      if (!user) {
+        promptLoginForAddToCart(navigate, cartItem, window.location.pathname + window.location.search);
+        return;
+      }
 
       console.log("Adding to cart:", cartItem);
       addToCartFunction(cartItem, 1);

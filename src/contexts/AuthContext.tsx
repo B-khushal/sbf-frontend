@@ -40,9 +40,11 @@ interface SignupData {
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
+  isAuthLoading: boolean;
+  isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; redirectTo?: string }>;
   signup: (data: SignupData) => Promise<{ success: boolean; redirectTo?: string }>;
-  logout: () => void;
+  logout: (shouldTrack?: boolean) => void;
   socialLogin: (provider: string, credential?: string, agreedToTerms?: boolean) => Promise<{ success: boolean; redirectTo?: string; isNewUser?: boolean }>;
   refreshAuth: () => Promise<void>;
 }
@@ -130,40 +132,47 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           if (localStorage.getItem('user') !== serializedProfile) {
             localStorage.setItem('user', serializedProfile);
           }
-        } catch (fetchError) {
-          console.warn('Failed to fetch user profile, using stored data:', fetchError);
-
-          // Instead of logging out, try to use stored user data
-          const storedUser = localStorage.getItem('user');
-          if (storedUser) {
-            try {
-              const parsedUser = JSON.parse(storedUser);
-              const user = {
-                id: parsedUser._id || parsedUser.id,
-                name: parsedUser.name,
-                email: parsedUser.email,
-                phone: parsedUser.phone || '',
-                role: parsedUser.role,
-                permissions: parsedUser.permissions || [],
-                assigned_store: parsedUser.assigned_store || null,
-                assigned_zone: parsedUser.assigned_zone || null,
-                vendorStatus: parsedUser.vendorStatus,
-                photoURL: parsedUser.photoURL,
-                provider: parsedUser.provider,
-                lastLogin: parsedUser.lastLogin,
-                createdAt: parsedUser.createdAt,
-                token: token,
-              };
-              setUser(user);
-              console.log('Using stored user data as fallback:', user);
-            } catch (parseError) {
-              console.error('Failed to parse stored user data:', parseError);
-              // Only logout if we can't even parse the stored data
-              logout(false);
-            }
-          } else {
-            console.error('No stored user data available, logging out');
+        } catch (fetchError: any) {
+          // If server explicitly returned 401 Unauthorized, the stored token is expired/invalid
+          if (fetchError?.response?.status === 401) {
+            console.info('Session expired or invalid, continuing as guest');
             logout(false);
+            setUser(null);
+          } else {
+            console.warn('Failed to fetch user profile, using stored data:', fetchError);
+
+            // For network/offline errors, try to use stored user data
+            const storedUser = localStorage.getItem('user');
+            if (storedUser) {
+              try {
+                const parsedUser = JSON.parse(storedUser);
+                const user = {
+                  id: parsedUser._id || parsedUser.id,
+                  name: parsedUser.name,
+                  email: parsedUser.email,
+                  phone: parsedUser.phone || '',
+                  role: parsedUser.role,
+                  permissions: parsedUser.permissions || [],
+                  assigned_store: parsedUser.assigned_store || null,
+                  assigned_zone: parsedUser.assigned_zone || null,
+                  vendorStatus: parsedUser.vendorStatus,
+                  photoURL: parsedUser.photoURL,
+                  provider: parsedUser.provider,
+                  lastLogin: parsedUser.lastLogin,
+                  createdAt: parsedUser.createdAt,
+                  token: token,
+                };
+                setUser(user);
+                console.log('Using stored user data as fallback:', user);
+              } catch (parseError) {
+                console.error('Failed to parse stored user data:', parseError);
+                logout(false);
+                setUser(null);
+              }
+            } else {
+              logout(false);
+              setUser(null);
+            }
           }
         }
       } else {
@@ -174,6 +183,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.error('Error checking auth status:', error);
       // Clear potentially corrupted auth data
       logout(false);
+      setUser(null);
     } finally {
       isCheckingAuthRef.current = false;
       setIsLoading(false);
@@ -423,9 +433,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // Create the context value
-  const value = {
+  const value: AuthContextType = {
     user,
     isLoading,
+    isAuthLoading: isLoading,
+    isAuthenticated: Boolean(user),
     login,
     signup,
     logout,

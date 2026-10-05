@@ -187,6 +187,10 @@ const TestModeBanner = () => (
   </div>
 );
 
+const handleGoogleScriptLoadError = () => {
+  console.warn('Google OAuth script failed to load');
+};
+
 const App = () => {
   // Check for order data in sessionStorage and restore it
   useEffect(() => {
@@ -210,9 +214,7 @@ const App = () => {
         <QueryClientProvider client={queryClient}>
         <GoogleOAuthProvider
           clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || "246004709667-1a33cbkt2b2hq2m1foav1b3j4fsvilef.apps.googleusercontent.com"}
-          onScriptLoadError={() => {
-            console.warn('Google OAuth script failed to load');
-          }}
+          onScriptLoadError={handleGoogleScriptLoadError}
         >
           <AuthProvider>
             <CartLoader />
@@ -295,6 +297,7 @@ const App = () => {
                           {/* Auth Routes */}
                           <Route path="/login" element={<LoginPage />} />
                           <Route path="/signup" element={<SignupPage />} />
+                          <Route path="/register" element={<Navigate to="/signup" replace />} />
                           <Route path="/vendors-consent" element={
                             <ProtectedRoute>
                               <VendorConsentPage />
@@ -305,6 +308,16 @@ const App = () => {
                               <Suspense fallback={<LoadingFallback message="Loading profile..." />}>
                                 <ProfilePage />
                               </Suspense>
+                            </ProtectedRoute>
+                          } />
+                          <Route path="/account" element={
+                            <ProtectedRoute>
+                              <Navigate to="/profile" replace />
+                            </ProtectedRoute>
+                          } />
+                          <Route path="/orders" element={
+                            <ProtectedRoute>
+                              <Navigate to="/profile?tab=orders" replace />
                             </ProtectedRoute>
                           } />
 

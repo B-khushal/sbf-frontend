@@ -5,6 +5,8 @@ import { Heart, ArrowLeft, Calendar, MessageSquare, ShieldAlert, Sparkles, Check
 import { Helmet } from 'react-helmet-async';
 
 import { useValentine } from '@/contexts/ValentineContext';
+import { useAuth } from '@/hooks/use-auth';
+import { promptLoginForAddToCart } from '@/utils/cartAuthHelper';
 import useCart from '@/hooks/use-cart';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useToast } from '@/hooks/use-toast';
@@ -25,6 +27,7 @@ const ValentineProductDetailsPage: React.FC = () => {
   const { isValentineEnabled, settings, loading: contextLoading } = useValentine();
   const { formatPrice, convertPrice } = useCurrency();
   const { addToCart } = useCart();
+  const { user } = useAuth();
   const { toast } = useToast();
 
   const [product, setProduct] = useState<ValentineProduct | null>(null);
@@ -178,6 +181,11 @@ const ValentineProductDetailsPage: React.FC = () => {
         availableDates: product.availableDates || [],
         customizations,
       };
+
+      if (!user) {
+        promptLoginForAddToCart(navigate, cartItem, window.location.pathname + window.location.search);
+        return;
+      }
 
       await addToCart(cartItem);
 

@@ -39,7 +39,7 @@ const CategoryResolver: React.FC = () => {
 
         // Skip static page routes if caught here by mistake (defensive check)
         const staticRoutes = [
-          '/about', '/contact', '/login', '/signup', '/profile', '/cart', '/wishlist',
+          '/about', '/contact', '/login', '/signup', '/register', '/profile', '/account', '/orders', '/cart', '/wishlist',
           '/checkout', '/admin', '/vendor', '/terms', '/privacy', '/shipping',
           '/refund-policy', '/cancellation-policy'
         ];

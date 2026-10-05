@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 import Navigation from '@/components/Navigation';
@@ -79,8 +79,22 @@ const fadeInVariants = {
 const ProfilePage: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<'profile' | 'orders' | 'addresses' | 'payments'>('profile');
+  
+  const tabFromQuery = searchParams.get('tab');
+  const validTabs = ['profile', 'orders', 'addresses', 'payments'] as const;
+  const initialTab = (tabFromQuery && validTabs.includes(tabFromQuery as any))
+    ? (tabFromQuery as typeof validTabs[number])
+    : 'profile';
+  const [activeTab, setActiveTab] = useState<'profile' | 'orders' | 'addresses' | 'payments'>(initialTab);
+
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab && validTabs.includes(tab as any)) {
+      setActiveTab(tab as typeof validTabs[number]);
+    }
+  }, [searchParams]);
   
   // Intersection observer for animations
   const [tabsRef, tabsInView] = useInView({
@@ -277,8 +291,7 @@ const ProfilePage: React.FC = () => {
   };
   
   if (!user) {
-    navigate('/login');
-    return null;
+    return <Navigate to="/login" replace />;
   }
 
   const tabData = [

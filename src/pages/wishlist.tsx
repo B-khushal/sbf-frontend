@@ -9,6 +9,7 @@ import useWishlist from "@/hooks/use-wishlist";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import ProtectedImage from "@/components/ui/ProtectedImage";
+import { promptLoginForAddToCart } from "@/utils/cartAuthHelper";
 
 
 interface WishlistItem {
@@ -114,6 +115,11 @@ const WishlistPage = () => {
         isFeatured: false
       };
       
+      if (!user) {
+        promptLoginForAddToCart(navigate, cartItem, '/wishlist');
+        return;
+      }
+
       addToCart(cartItem);
       
       await removeFromWishlist(item.id);

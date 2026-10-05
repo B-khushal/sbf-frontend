@@ -3,8 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Check, Plus, Minus, ShoppingBag, ChevronRight, ChevronDown, Heart, Sparkles } from 'lucide-react';
 import type { ValentineGiftBuilderItem } from '@/types/valentine';
 import { getImageUrl } from '@/config';
+import { useNavigate } from 'react-router-dom';
 import useCart from '@/hooks/use-cart';
+import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
+import { promptLoginForAddToCart } from '@/utils/cartAuthHelper';
 
 interface ValentineGiftBuilderProps {
   items?: ValentineGiftBuilderItem[];
@@ -179,6 +182,8 @@ const ValentineGiftBuilder: React.FC<ValentineGiftBuilderProps> = ({ items = [] 
   const [customMessage, setCustomMessage] = useState('');
   const { addToCart } = useCart();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   // Group items by category
   const grouped = useMemo(() => {
@@ -234,8 +239,7 @@ const ValentineGiftBuilder: React.FC<ValentineGiftBuilderProps> = ({ items = [] 
 
     const firstImage = selectedProducts.find(p => p.item?.image)?.item?.image || DEFAULT_GIFT_ITEMS[0].image;
 
-    // Add as a single gift bundle with component breakdown
-    addToCart({
+    const cartItem = {
       _id: `valentine-gift-${Date.now()}`,
       productId: `valentine-gift-${Date.now()}`,
       title: `Custom Valentine Gift Box (${selectedProducts.length} items)`,
@@ -244,7 +248,7 @@ const ValentineGiftBuilder: React.FC<ValentineGiftBuilderProps> = ({ items = [] 
       images: [firstImage],
       quantity: 1,
       isValentineProduct: true,
-      productType: 'valentine',
+      productType: 'valentine' as const,
       customizations: {
         isGiftBundle: true,
         title: `Custom Valentine Gift Box (${selectedProducts.length} items)`,
@@ -256,7 +260,14 @@ const ValentineGiftBuilder: React.FC<ValentineGiftBuilderProps> = ({ items = [] 
         })),
         customMessage: customMessage || undefined,
       },
-    });
+    };
+
+    if (!user) {
+      promptLoginForAddToCart(navigate, cartItem, window.location.pathname + window.location.search);
+      return;
+    }
+
+    addToCart(cartItem);
 
     toast({
       title: '💝 Custom Gift Box Added to Cart!',

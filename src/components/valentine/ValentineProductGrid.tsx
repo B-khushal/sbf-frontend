@@ -5,6 +5,8 @@ import { useNavigate } from 'react-router-dom';
 import type { ValentineProduct } from '@/types/valentine';
 import { getImageUrl } from '@/config';
 import useCart from '@/hooks/use-cart';
+import { useAuth } from '@/hooks/use-auth';
+import { promptLoginForAddToCart } from '@/utils/cartAuthHelper';
 
 interface ValentineProductGridProps {
   products: ValentineProduct[];
@@ -23,15 +25,23 @@ const ValentineProductGrid: React.FC<ValentineProductGridProps> = ({
 }) => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { user } = useAuth();
 
   const handleAddToCart = (product: ValentineProduct) => {
-    addToCart({
+    const cartItem = {
       _id: product._id,
       title: product.title,
       price: product.price,
       images: product.images,
       quantity: 1,
-    });
+    };
+
+    if (!user) {
+      promptLoginForAddToCart(navigate, cartItem, window.location.pathname + window.location.search);
+      return;
+    }
+
+    addToCart(cartItem);
   };
 
   if (loading) {

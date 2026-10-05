@@ -1,9 +1,10 @@
 import React from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
 
 const VendorProtectedRoute: React.FC = () => {
   const { user, isLoading } = useAuth();
+  const location = useLocation();
 
   if (isLoading) {
     return (
@@ -14,7 +15,7 @@ const VendorProtectedRoute: React.FC = () => {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   if (user.role !== 'vendor' && !user.vendorStatus && user.role !== 'admin' && user.role !== 'platform_admin') {

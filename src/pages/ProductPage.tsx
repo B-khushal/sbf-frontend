@@ -5,6 +5,8 @@ import ProductGrid from '@/components/ProductGrid';
 import useCart from '@/hooks/use-cart';
 import api from '@/services/api';
 import productService, { ProductData } from '@/services/productService';
+import { useAuth } from '@/hooks/use-auth';
+import { promptLoginForAddToCart } from '@/utils/cartAuthHelper';
 import { trackProductView } from '@/services/activityService';
 import { marketingTracker } from '@/services/marketingTracker';
 
@@ -21,6 +23,7 @@ const ProductPage = () => {
   const { 
     addToCart, 
   } = useCart();
+  const { user } = useAuth();
   
   // Use either id or productId parameter
   const actualId = id || productId;
@@ -124,6 +127,11 @@ const ProductPage = () => {
         customizations: item.customizations
       };
       
+      if (!user) {
+        promptLoginForAddToCart(navigate, cartItem, window.location.pathname + window.location.search);
+        return;
+      }
+
       addToCart(cartItem);
       
       // Redirect to cart page after successful addition

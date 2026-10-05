@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import ProtectedImage from './ProtectedImage';
+import { promptLoginForAddToCart } from '@/utils/cartAuthHelper';
 
 import { Product } from '../ProductGrid';
 
@@ -88,12 +89,6 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
       return;
     }
 
-    if (!user) {
-      toast.error("Please login first to add items to your cart");
-      navigate('/login', { state: { redirect: window.location.pathname } });
-      return;
-    }
-
     try {
       const addToCartFunction = onAddToCart || addToCart;
       const cartItem = {
@@ -106,6 +101,12 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
         category: product.category,
         description: product.description,
       };
+
+      if (!user) {
+        promptLoginForAddToCart(navigate, cartItem, window.location.pathname + window.location.search);
+        onClose();
+        return;
+      }
 
       addToCartFunction(cartItem, 1);
       toast.success("🛒 Added to cart!", {

@@ -25,6 +25,7 @@ import { buildProductReviewUrl } from '@/utils/reviewUrls';
 import PinCodeInput from '@/components/ui/PinCodeInput';
 import ProtectedImage from './ui/ProtectedImage';
 import { useValentine } from '@/contexts/ValentineContext';
+import { promptLoginForAddToCart } from '@/utils/cartAuthHelper';
 
 const MotionProtectedImage = motion(ProtectedImage);
 
@@ -2352,6 +2353,12 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                     isFeatured: product.isFeatured,
                     customizations: customizations
                   };
+
+                  if (!user) {
+                    promptLoginForAddToCart(navigate, cartItem, window.location.pathname + window.location.search);
+                    return;
+                  }
+
                   addToCart(cartItem);
                   toast({
                     title: "Added to cart",

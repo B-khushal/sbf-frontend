@@ -104,32 +104,84 @@ api.interceptors.response.use(
         return Promise.resolve({ data: {} });
       }
       
-      console.error('API Response: Authentication error:', {
+      console.warn('API Response: Authentication error (401):', {
         status: error.response?.status,
         message: error.response?.data?.message,
         url: error.config?.url
       });
       
       // Save cart state before clearing auth
-      const userId = JSON.parse(localStorage.getItem('user') || '{}').id;
-      const cartKey = `cart_${userId}`;
-      const savedCart = localStorage.getItem(cartKey);
-      
-      // Clear invalid authentication but preserve cart
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      localStorage.removeItem('isAuthenticated');
-      
-      // Restore cart state if it existed
-      if (savedCart && userId) {
-        localStorage.setItem(cartKey, savedCart);
+      try {
+        const userId = JSON.parse(localStorage.getItem('user') || '{}').id;
+        const cartKey = userId ? `cart_${userId}` : null;
+        const savedCart = cartKey ? localStorage.getItem(cartKey) : null;
+        
+        // Clear invalid authentication tokens
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('isAuthenticated');
+        
+        // Restore cart state if it existed so guest cart is not lost
+        if (savedCart && cartKey) {
+          localStorage.setItem(cartKey, savedCart);
+          // If no anonymous cart exists, migrate saved items to generic 'cart'
+          if (!localStorage.getItem('cart')) {
+            localStorage.setItem('cart', savedCart);
+          }
+        }
+      } catch (storageErr) {
+        console.warn('Error preserving cart on 401:', storageErr);
+      }
+
+      // Notify AuthContext and other listeners of session expiration
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('storageUpdate'));
       }
       
-      // Redirect to login page if not already there
-      if (!window.location.pathname.includes('/login')) {
-        if (typeof window !== 'undefined' && window.history) {
-          window.history.pushState({}, '', '/login');
-          window.dispatchEvent(new PopStateEvent('popstate'));
+      // DO NOT redirect to login if the user is on a public page or if the request is a public/session check.
+      // Unauthenticated visitors browsing public routes (/ , /shop, /product/..., /cart, etc.) must NEVER be forced to /login.
+      if (typeof window !== 'undefined') {
+        const currentPath = window.location.pathname.toLowerCase();
+        
+        const isPublicPage =
+          currentPath === '/' ||
+          currentPath === '' ||
+          currentPath.startsWith('/shop') ||
+          currentPath.startsWith('/product') ||
+          currentPath.startsWith('/about') ||
+          currentPath.startsWith('/contact') ||
+          currentPath.startsWith('/cart') ||
+          currentPath.startsWith('/wishlist') ||
+          currentPath.startsWith('/terms') ||
+          currentPath.startsWith('/shipping') ||
+          currentPath.startsWith('/privacy') ||
+          currentPath.startsWith('/refund-policy') ||
+          currentPath.startsWith('/returns') ||
+          currentPath.startsWith('/cancellation-policy') ||
+          currentPath.startsWith('/login') ||
+          currentPath.startsWith('/signup') ||
+          currentPath.startsWith('/register') ||
+          currentPath.startsWith('/forgot-password') ||
+          currentPath.startsWith('/track') ||
+          currentPath.startsWith('/valentine') ||
+          currentPath.startsWith('/flower-delivery') ||
+          currentPath.startsWith('/budget-friendly');
+
+        // Only redirect to /login if the user is currently on an authentication-required protected route
+        const isProtectedRoute =
+          currentPath.startsWith('/admin') ||
+          currentPath.startsWith('/marketing') ||
+          currentPath.startsWith('/vendor') ||
+          currentPath.startsWith('/profile') ||
+          currentPath.startsWith('/account') ||
+          currentPath.startsWith('/orders') ||
+          currentPath.startsWith('/vendors-consent');
+
+        if (!isPublicPage && isProtectedRoute && !currentPath.includes('/login')) {
+          if (window.history) {
+            window.history.pushState({ from: window.location.pathname }, '', '/login');
+            window.dispatchEvent(new PopStateEvent('popstate'));
+          }
         }
       }
     }

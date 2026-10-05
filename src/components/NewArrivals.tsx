@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { getImageUrl } from "@/config";
 import { QuickViewModal } from "./ui/QuickViewModal";
 import ProtectedImage from "./ui/ProtectedImage";
+import { promptLoginForAddToCart } from "@/utils/cartAuthHelper";
 
 import { Product } from "./ProductGrid";
 
@@ -423,22 +424,6 @@ const LuxuryProductCard = ({
       return;
     }
 
-    if (!user) {
-      toast.error("Please login first to add items to your cart", {
-        description: "You'll be redirected to the login page",
-        duration: 3000,
-      });
-      setTimeout(() => {
-        navigate("/login", {
-          state: {
-            redirect: window.location.pathname,
-            message: "Please login to add items to your cart",
-          },
-        });
-      }, 1500);
-      return;
-    }
-
     try {
       const addToCartFn = onAddToCart || addToCart;
       const discountedPrice = product.discount && product.discount > 0
@@ -455,6 +440,11 @@ const LuxuryProductCard = ({
         category: product.category,
         description: product.description,
       };
+
+      if (!user) {
+        promptLoginForAddToCart(navigate, cartItem, window.location.pathname + window.location.search);
+        return;
+      }
 
       addToCartFn(cartItem, 1);
       toast.success("🛒 Added to cart!", {

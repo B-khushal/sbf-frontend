@@ -15,6 +15,8 @@ import { PromotionalBanners } from "../components/PromotionalBanners";
 import { SocialFeed } from "../components/SocialFeed";
 import { VideoShowcase } from "../components/VideoShowcase";
 import useCart from "../hooks/use-cart";
+import { useAuth } from "../hooks/use-auth";
+import { promptLoginForAddToCart } from "../utils/cartAuthHelper";
 import { useSettings } from "../contexts/SettingsContext";
 import { useOfferPopup } from "../hooks/use-offer-popup";
 import OfferPopup from "../components/ui/OfferPopup";
@@ -87,9 +89,7 @@ const HomePage = () => {
   const [newProducts, setNewProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
-
-
+  const { user } = useAuth();
 
   // Intersection observer hooks for scroll animations
   const [philosophyRef, philosophyInView] = useInView({
@@ -101,7 +101,13 @@ const HomePage = () => {
   // Handle add to cart with proper return type
   const handleAddToCart = (item: any, quantity: number) => {
     try {
-      addToCart({ ...item, quantity });
+      const cartItem = { ...item, quantity };
+      if (!user) {
+        promptLoginForAddToCart(navigate, cartItem, '/');
+        return false;
+      }
+
+      addToCart(cartItem);
 
       // Redirect to cart page after successful addition
       setTimeout(() => {

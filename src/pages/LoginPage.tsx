@@ -11,6 +11,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import Modal from '@/components/ui/Modal';
 import GoogleSignInButton from '@/components/ui/GoogleSignInButton';
 import { fixEmailTypo } from '@/utils/emailUtils';
+import useCart from '@/hooks/use-cart';
+import { getAndClearPendingCartItem, peekPendingCartItem } from '@/utils/cartAuthHelper';
 
 // Animation variants
 const containerVariants = {
@@ -51,26 +53,53 @@ const formVariants = {
 const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, signup, socialLogin, user, isAuthenticated } = useAuth();
+  const { login, signup, socialLogin, user, isAuthenticated, isAuthLoading } = useAuth();
+  const { addToCart } = useCart();
   const { toast } = useToast();
   
   const fromState = location.state?.from;
   const fromPath = typeof fromState === 'object' ? fromState.pathname : fromState;
   const redirectPath = location.state?.redirect || fromPath || '/';
   const redirectMessage = location.state?.message;
+  const [pendingCartProduct] = useState(() => peekPendingCartItem());
+
+  const fulfillPendingCartItem = React.useCallback(async (): Promise<boolean> => {
+    const pendingData = getAndClearPendingCartItem();
+    if (pendingData?.item) {
+      try {
+        await addToCart(pendingData.item);
+        toast({
+          title: "Added to Cart! 🌸",
+          description: `${pendingData.item.title || 'Product'} has been added to your cart.`,
+          duration: 3500,
+        });
+        return true;
+      } catch (err) {
+        console.error('Failed to add pending product to cart upon login:', err);
+      }
+    }
+    return false;
+  }, [addToCart, toast]);
 
   // Auto-redirect if already logged in
   useEffect(() => {
-    if (isAuthenticated && user) {
-      if (user.role === 'vendor' || Boolean(user.vendorStatus)) {
-        navigate('/vendor/dashboard', { replace: true });
-      } else if (['marketing_head', 'marketing_team', 'marketing'].includes(user.role)) {
-        navigate('/marketing', { replace: true });
-      } else if (['platform_admin', 'store_owner', 'store_manager', 'delivery_manager', 'support_staff', 'inventory_staff', 'finance_staff', 'admin'].includes(user.role)) {
-        navigate('/admin', { replace: true });
-      }
+    if (!isAuthLoading && isAuthenticated && user) {
+      fulfillPendingCartItem().then((addedPending) => {
+        if (user.role === 'vendor' || Boolean(user.vendorStatus)) {
+          navigate('/vendor/dashboard', { replace: true });
+        } else if (['marketing_head', 'marketing_team', 'marketing'].includes(user.role)) {
+          navigate('/marketing', { replace: true });
+        } else if (['platform_admin', 'store_owner', 'store_manager', 'delivery_manager', 'support_staff', 'inventory_staff', 'finance_staff', 'admin'].includes(user.role)) {
+          navigate('/admin', { replace: true });
+        } else {
+          const target = addedPending
+            ? '/cart'
+            : (redirectPath && !redirectPath.startsWith('/login') ? redirectPath : '/');
+          navigate(target, { replace: true });
+        }
+      });
     }
-  }, [isAuthenticated, user, navigate]);
+  }, [isAuthLoading, isAuthenticated, user, navigate, redirectPath, fulfillPendingCartItem]);
   
   const [isLoginMode, setIsLoginMode] = useState(!location.state?.signupMode);
   const [email, setEmail] = useState('');
@@ -117,6 +146,7 @@ const LoginPage = () => {
       const result = await login(cleanEmail, password);
       
       if (result.success) {
+        const addedPending = await fulfillPendingCartItem();
         toast({
           title: "Welcome back! 🌸",
           description: "You have successfully logged in.",
@@ -131,9 +161,11 @@ const LoginPage = () => {
             : '/marketing';
           navigate(target, { replace: true });
         } else {
-          const finalPath = (redirectPath && redirectPath !== '/' && !redirectPath.startsWith('/admin'))
-            ? redirectPath
-            : (result.redirectTo || '/');
+          const finalPath = addedPending
+            ? '/cart'
+            : ((redirectPath && redirectPath !== '/' && !redirectPath.startsWith('/admin') && !redirectPath.startsWith('/login'))
+                ? redirectPath
+                : (result.redirectTo || '/'));
           navigate(finalPath, { replace: true });
         }
       } else {
@@ -206,14 +238,17 @@ const LoginPage = () => {
       });
       
       if (signupResult.success) {
+        const addedPending = await fulfillPendingCartItem();
         toast({
           title: "Welcome to Spring Blossoms! 🎉",
           description: "Your account has been created successfully!",
           type: "login"
         });
-        const target = (signupResult.redirectTo === '/marketing' && (!redirectPath || redirectPath === '/' || redirectPath.startsWith('/admin')))
-          ? '/marketing'
-          : (signupResult.redirectTo || redirectPath);
+        const target = addedPending
+          ? '/cart'
+          : ((signupResult.redirectTo === '/marketing' && (!redirectPath || redirectPath === '/' || redirectPath.startsWith('/admin')))
+              ? '/marketing'
+              : (signupResult.redirectTo || redirectPath || '/'));
         navigate(target);
       } else {
         toast({
@@ -234,7 +269,7 @@ const LoginPage = () => {
     }
   };
 
-  const handleGoogleSuccess = async (credentialResponse: any) => {
+  const handleGoogleSuccess = React.useCallback(async (credentialResponse: any) => {
     try {
       setIsLoading(true);
       
@@ -248,14 +283,17 @@ const LoginPage = () => {
       }
       
       if (result.success) {
+        const addedPending = await fulfillPendingCartItem();
         toast({
           title: "Welcome back! 🌸",
           description: "You have successfully logged in with Google.",
           type: "login"
         });
-        const target = (result.redirectTo === '/marketing' && (!redirectPath || redirectPath === '/' || redirectPath.startsWith('/admin')))
-          ? '/marketing'
-          : (result.redirectTo || redirectPath);
+        const target = addedPending
+          ? '/cart'
+          : ((result.redirectTo === '/marketing' && (!redirectPath || redirectPath === '/' || redirectPath.startsWith('/admin')))
+              ? '/marketing'
+              : (result.redirectTo || redirectPath || '/'));
         navigate(target);
       } else {
         toast({
@@ -274,15 +312,11 @@ const LoginPage = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [socialLogin, fulfillPendingCartItem, redirectPath, navigate, toast]);
 
-  const handleGoogleError = () => {
-    toast({
-      title: "Login failed",
-      description: "Google login was cancelled or failed",
-      type: "error"
-    });
-  };
+  const handleGoogleError = React.useCallback(() => {
+    console.warn("Google sign-in could not be completed or was cancelled.");
+  }, []);
 
   const handleTermsAccept = async () => {
     if (!agreedToTerms) {
@@ -300,12 +334,14 @@ const LoginPage = () => {
       
       if (result.success) {
         setShowTermsDialog(false);
+        const addedPending = await fulfillPendingCartItem();
         toast({
           title: "Welcome to Spring Blossoms! 🌸",
           description: "Your account has been created successfully!",
           type: "login"
         });
-        navigate(result.redirectTo || redirectPath);
+        const target = addedPending ? '/cart' : (result.redirectTo || redirectPath || '/');
+        navigate(target);
       } else {
         toast({
           title: "Registration failed",
@@ -459,6 +495,34 @@ const LoginPage = () => {
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 0.2, duration: 0.6 }}
               >
+                {/* Pending Product Banner (if redirected from Add to Cart) */}
+                {pendingCartProduct && (
+                  <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-rose-50 via-pink-50 to-amber-50 border border-pink-200/80 shadow-xs flex items-center gap-3.5">
+                    <div className="w-14 h-14 rounded-xl overflow-hidden bg-white shadow-xs shrink-0 border border-pink-100 flex items-center justify-center">
+                      {pendingCartProduct.image || (pendingCartProduct.images && pendingCartProduct.images[0]) ? (
+                        <img
+                          src={pendingCartProduct.image || (pendingCartProduct.images && pendingCartProduct.images[0])}
+                          alt={pendingCartProduct.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <Sparkles className="w-6 h-6 text-pink-500" />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-rose-600 uppercase tracking-wider">
+                        <Sparkles className="w-3.5 h-3.5 text-rose-500" />
+                        <span>Adding to Cart Upon Login</span>
+                      </div>
+                      <p className="text-sm font-bold text-gray-900 truncate mt-0.5">
+                        {pendingCartProduct.title}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Please sign in or create an account to add this item and proceed.
+                      </p>
+                    </div>
+                  </div>
+                )}
                 {/* Mode Toggle */}
                 <motion.div 
                   className="flex bg-gray-100 rounded-xl p-1 mb-8"
