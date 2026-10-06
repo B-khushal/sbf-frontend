@@ -26,6 +26,7 @@ import PinCodeInput from '@/components/ui/PinCodeInput';
 import ProtectedImage from './ui/ProtectedImage';
 import { useValentine } from '@/contexts/ValentineContext';
 import { promptLoginForAddToCart } from '@/utils/cartAuthHelper';
+import { getProductEffectivePrice } from '@/utils/pricing';
 
 const MotionProtectedImage = motion(ProtectedImage);
 
@@ -755,9 +756,8 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
     return product.price;
   }, [product.hasPriceVariants, selectedVariant, product.price]);
   const discountedPrice = React.useMemo(() => {
-    const basePrice = currentPrice;
-    return product.discount ? basePrice * (1 - product.discount / 100) : basePrice;
-  }, [currentPrice, product.discount]);
+    return getProductEffectivePrice(product, selectedVariant?.price);
+  }, [product, selectedVariant]);
 
   // Handle image URL using utility function with optimization for product detail view
   const currentGalleryItem = galleryItems[selectedImage];
@@ -1022,10 +1022,9 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
 
   // Update price display based on selected variant + personalization cost
   const baseProductPrice = Number((product.hasPriceVariants && selectedVariant) ? selectedVariant.price : product.price) || 0;
-  const numDiscount = Number(product.discount) || 0;
-  const baseDiscountedPrice = numDiscount
-    ? baseProductPrice - (baseProductPrice * numDiscount) / 100
-    : baseProductPrice;
+  const baseDiscountedPrice = React.useMemo(() => {
+    return getProductEffectivePrice(product, selectedVariant?.price);
+  }, [product, selectedVariant]);
 
   const displayPrice = Number(baseProductPrice) + Number(personalizationCost || 0);
   const displayDiscountedPrice = Number(baseDiscountedPrice) + Number(personalizationCost || 0);

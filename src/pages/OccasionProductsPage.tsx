@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import { PRIMARY_CATEGORIES } from '@/utils/categoryTaxonomy';
 import CategoryResolver from './CategoryResolver';
 import { PriceRangeFilterCard, PRICE_FILTER_MIN, PRICE_FILTER_MAX } from './ShopPage';
+import { getProductEffectivePrice } from '@/utils/pricing';
 
 export const OccasionProductsPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -82,7 +83,7 @@ export const OccasionProductsPage: React.FC = () => {
 
     // Filter by price (accounting for currency conversions)
     result = result.filter(p => {
-      const discountedPrice = p.discount > 0 ? Math.round(p.price * (1 - p.discount / 100)) : p.price;
+      const discountedPrice = getProductEffectivePrice(p);
       return discountedPrice >= priceRange[0] && discountedPrice <= priceRange[1];
     });
 
@@ -90,15 +91,15 @@ export const OccasionProductsPage: React.FC = () => {
     switch (sortOption) {
       case 'price-asc':
         result.sort((a, b) => {
-          const priceA = a.discount > 0 ? a.price * (1 - a.discount / 100) : a.price;
-          const priceB = b.discount > 0 ? b.price * (1 - b.discount / 100) : b.price;
+          const priceA = getProductEffectivePrice(a);
+          const priceB = getProductEffectivePrice(b);
           return priceA - priceB;
         });
         break;
       case 'price-desc':
         result.sort((a, b) => {
-          const priceA = a.discount > 0 ? a.price * (1 - a.discount / 100) : a.price;
-          const priceB = b.discount > 0 ? b.price * (1 - b.discount / 100) : b.price;
+          const priceA = getProductEffectivePrice(a);
+          const priceB = getProductEffectivePrice(b);
           return priceB - priceA;
         });
         break;

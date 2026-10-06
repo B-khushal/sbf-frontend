@@ -162,6 +162,8 @@ const initialFormData: ProductData = {
   description: '',
   price: 0,
   discount: 0,
+  discountType: 'percentage',
+  discountPrice: undefined,
   category: '',
   categories: [],
   countInStock: 0,
@@ -806,6 +808,20 @@ const ProductForm = () => {
         occasionIds: Array.isArray(data.occasionIds) ? data.occasionIds : [],
       };
 
+      const rawDiscountType = data.discountType || (data.details && (data.details as any).discountType) || 'percentage';
+      const rawDiscountPrice = data.discountPrice !== undefined ? data.discountPrice : (data.details && (data.details as any).discountPrice !== undefined ? (data.details as any).discountPrice : undefined);
+      const rawDiscount = data.discount !== undefined ? Number(data.discount) : (data.details && (data.details as any).discount !== undefined ? Number((data.details as any).discount) : 0);
+      const activeDiscountType: 'percentage' | 'direct' = (rawDiscountType === 'direct' || rawDiscountType === 'fixed') ? 'direct' : 'percentage';
+      let parsedDiscountPrice = rawDiscountPrice !== undefined && rawDiscountPrice !== null ? Number(rawDiscountPrice) : undefined;
+
+      if (activeDiscountType === 'direct' && (parsedDiscountPrice === undefined || parsedDiscountPrice <= 0) && rawDiscount > 0 && data.price > 0) {
+        parsedDiscountPrice = Number((data.price * (1 - rawDiscount / 100)).toFixed(2));
+      }
+
+      processedData.discount = rawDiscount;
+      processedData.discountType = activeDiscountType;
+      processedData.discountPrice = parsedDiscountPrice;
+
       setFormData(processedData);
       console.log("ProductForm - fetchProductData processedData:", processedData);
       setUploadProgress(new Array(processedData.images.length).fill(100));
@@ -1404,6 +1420,109 @@ const ProductForm = () => {
     }));
   };
 
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newPrice = Math.max(0, parseFloat(e.target.value) || 0);
+    setFormData(prev => {
+      if (prev.discountType === 'direct') {
+        let calculatedPercent = 0;
+        if (newPrice > 0 && prev.discountPrice && prev.discountPrice > 0 && prev.discountPrice < newPrice) {
+          calculatedPercent = Number((((newPrice - prev.discountPrice) / newPrice) * 100).toFixed(2));
+        }
+        return {
+          ...prev,
+          price: newPrice,
+          discount: calculatedPercent,
+        };
+      } else {
+        const calculatedPrice = newPrice > 0 && prev.discount > 0
+          ? Number((newPrice * (1 - prev.discount / 100)).toFixed(2))
+          : newPrice;
+        return {
+          ...prev,
+          price: newPrice,
+          discountPrice: calculatedPrice,
+        };
+      }
+    });
+  };
+
+  const handleDiscountModeChange = (mode: 'percentage' | 'direct') => {
+    setFormData(prev => {
+      let nextDiscountPrice = prev.discountPrice;
+      let nextDiscount = prev.discount;
+
+      if (mode === 'direct') {
+        if (nextDiscountPrice === undefined || nextDiscountPrice === null || nextDiscountPrice <= 0) {
+          if (prev.discount > 0 && prev.price > 0) {
+            nextDiscountPrice = Number((prev.price * (1 - prev.discount / 100)).toFixed(2));
+          } else {
+            nextDiscountPrice = prev.price > 0 ? prev.price : 0;
+          }
+        }
+        if (prev.price > 0 && nextDiscountPrice && nextDiscountPrice < prev.price) {
+          nextDiscount = Number((((prev.price - nextDiscountPrice) / prev.price) * 100).toFixed(2));
+        }
+      } else {
+        // Percentage mode
+        if (prev.price > 0 && prev.discountPrice && prev.discountPrice > 0 && prev.discountPrice < prev.price) {
+          nextDiscount = Number((((prev.price - prev.discountPrice) / prev.price) * 100).toFixed(2));
+        }
+      }
+
+      return {
+        ...prev,
+        discountType: mode,
+        discount: nextDiscount,
+        discountPrice: nextDiscountPrice,
+      };
+    });
+  };
+
+  const handlePercentageChange = (percent: number) => {
+    const clamped = Math.min(100, Math.max(0, percent));
+    setFormData(prev => {
+      const calculatedPrice = prev.price > 0 && clamped > 0
+        ? Number((prev.price * (1 - clamped / 100)).toFixed(2))
+        : prev.price;
+      return {
+        ...prev,
+        discount: clamped,
+        discountPrice: calculatedPrice,
+      };
+    });
+  };
+
+  const handleDirectPriceChange = (directPrice: number) => {
+    const safePrice = Math.max(0, directPrice);
+    setFormData(prev => {
+      let calculatedPercent = 0;
+      if (prev.price > 0 && safePrice > 0 && safePrice < prev.price) {
+        calculatedPercent = Number((((prev.price - safePrice) / prev.price) * 100).toFixed(2));
+      }
+      return {
+        ...prev,
+        discountPrice: safePrice,
+        discount: calculatedPercent,
+      };
+    });
+  };
+
+  const handleFlatDiscountDeduction = (flatAmount: number) => {
+    const safeAmount = Math.max(0, flatAmount);
+    setFormData(prev => {
+      const targetPrice = Math.max(0, prev.price - safeAmount);
+      let calculatedPercent = 0;
+      if (prev.price > 0 && safeAmount > 0) {
+        calculatedPercent = Math.min(100, Number(((safeAmount / prev.price) * 100).toFixed(2)));
+      }
+      return {
+        ...prev,
+        discountPrice: targetPrice,
+        discount: calculatedPercent,
+      };
+    });
+  };
+
   const handleSwitchChange = (name: string) => (checked: boolean) => {
     if (name === 'hasPriceVariants') {
       setFormData(prev => ({
@@ -1597,6 +1716,11 @@ const ProductForm = () => {
       
       const productData = {
         ...formData,
+        discount: Number(formData.discount) || 0,
+        discountType: formData.discountType || 'percentage',
+        discountPrice: formData.discountPrice !== undefined && formData.discountPrice !== null && !isNaN(Number(formData.discountPrice))
+          ? Number(formData.discountPrice)
+          : undefined,
         comboSubcategory: formData.comboSubcategory || '', // <-- ensure it's included
         // Send both keys so backend variants persist consistently.
         isNew: Boolean(formData.isNewArrival),
@@ -2191,16 +2315,19 @@ const ProductForm = () => {
               )}
             </div>
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="price">Price *</Label>
+                <Label htmlFor="price" className="flex items-center gap-1.5 font-medium">
+                  <IndianRupee className="h-4 w-4 text-emerald-600" />
+                  Regular Price (₹) *
+                </Label>
                 <Input
                   id="price"
                   name="price"
                   type="number"
-                  value={formData.price}
-                  onChange={handleInputChange}
-                  placeholder="Enter price"
+                  value={formData.price === 0 ? '' : formData.price}
+                  onChange={handlePriceChange}
+                  placeholder="Enter regular price"
                   min="0"
                   step="0.01"
                 />
@@ -2210,26 +2337,12 @@ const ProductForm = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="discount">Discount (%)</Label>
-                <Input
-                  id="discount"
-                  name="discount"
-                  type="number"
-                  value={formData.discount}
-                  onChange={handleInputChange}
-                  placeholder="Enter discount percentage"
-                  min="0"
-                  max="100"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="countInStock">Stock Quantity *</Label>
+                <Label htmlFor="countInStock" className="font-medium">Stock Quantity *</Label>
                 <Input
                   id="countInStock"
                   name="countInStock"
                   type="number"
-                  value={formData.countInStock}
+                  value={formData.countInStock === 0 ? '' : formData.countInStock}
                   onChange={handleInputChange}
                   placeholder="Enter stock quantity"
                   min="0"
@@ -2238,6 +2351,195 @@ const ProductForm = () => {
                   <p className="text-sm text-red-500">{errors.countInStock}</p>
                 )}
               </div>
+            </div>
+
+            {/* Discount Configuration Card with 2 Options */}
+            <div className="rounded-xl border border-pink-200/80 bg-gradient-to-br from-pink-50/40 via-white to-purple-50/30 p-4 md:p-5 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-pink-100">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-pink-100 text-pink-700 font-bold text-xs">
+                      %
+                    </span>
+                    <h4 className="font-semibold text-slate-800 text-sm md:text-base">Discount Options</h4>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Select discount mode: percentage (%) or direct discounted selling price (₹)
+                  </p>
+                </div>
+
+                {/* 2 Options Segmented Selector */}
+                <div className="inline-flex p-1 bg-slate-200/80 rounded-lg text-xs font-medium self-start sm:self-auto">
+                  <button
+                    type="button"
+                    onClick={() => handleDiscountModeChange('percentage')}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-all font-medium",
+                      formData.discountType !== 'direct'
+                        ? "bg-white text-pink-700 shadow-sm font-semibold"
+                        : "text-slate-600 hover:text-slate-900"
+                    )}
+                  >
+                    <span>Discount as %</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDiscountModeChange('direct')}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-all font-medium",
+                      formData.discountType === 'direct'
+                        ? "bg-white text-pink-700 shadow-sm font-semibold"
+                        : "text-slate-600 hover:text-slate-900"
+                    )}
+                  >
+                    <span>Direct Discount Price</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Option 1: Percentage Discount */}
+              {formData.discountType !== 'direct' ? (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+                    <div className="space-y-2">
+                      <Label htmlFor="discount" className="text-xs font-semibold uppercase tracking-wider text-slate-600 flex items-center justify-between">
+                        <span>Discount Percentage (%)</span>
+                        {formData.discount > 0 && (
+                          <span className="text-pink-600 font-bold lowercase">
+                            {formData.discount}% off
+                          </span>
+                        )}
+                      </Label>
+                      <div className="relative">
+                        <Input
+                          id="discount"
+                          name="discount"
+                          type="number"
+                          value={formData.discount === 0 ? '' : formData.discount}
+                          onChange={(e) => handlePercentageChange(parseFloat(e.target.value) || 0)}
+                          placeholder="e.g. 20"
+                          min="0"
+                          max="100"
+                          step="0.1"
+                          className="pr-8"
+                        />
+                        <span className="absolute right-3 top-2.5 text-xs font-bold text-slate-400">%</span>
+                      </div>
+                      {/* Quick preset buttons */}
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        {[0, 10, 15, 20, 25, 30, 50].map((preset) => (
+                          <button
+                            key={preset}
+                            type="button"
+                            onClick={() => handlePercentageChange(preset)}
+                            className={cn(
+                              "text-[11px] px-2 py-0.5 rounded border transition-colors",
+                              formData.discount === preset
+                                ? "bg-pink-600 text-white border-pink-600 font-bold"
+                                : "bg-white text-slate-600 border-slate-200 hover:border-pink-300 hover:text-pink-600"
+                            )}
+                          >
+                            {preset === 0 ? 'No discount' : `${preset}%`}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Live Calculation Preview */}
+                    <div className="rounded-lg border border-slate-200 bg-white p-3.5 space-y-2 text-xs shadow-sm">
+                      <div className="flex justify-between text-slate-500">
+                        <span>Regular Price:</span>
+                        <span className="font-semibold text-slate-700">₹{formData.price || 0}</span>
+                      </div>
+                      <div className="flex justify-between text-slate-500">
+                        <span>Discount ({formData.discount || 0}%):</span>
+                        <span className="font-semibold text-pink-600">
+                          - ₹{formData.price && formData.discount ? Number(((formData.price * formData.discount) / 100).toFixed(2)) : 0}
+                        </span>
+                      </div>
+                      <Separator className="my-1.5" />
+                      <div className="flex justify-between items-center text-sm font-bold text-slate-900">
+                        <span>Final Selling Price:</span>
+                        <span className="text-base text-emerald-600">
+                          ₹{formData.price ? (formData.discount ? Number((formData.price * (1 - formData.discount / 100)).toFixed(2)) : formData.price) : 0}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                /* Option 2: Direct Discount Price */
+                <div className="space-y-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+                    <div className="space-y-2">
+                      <Label htmlFor="directDiscountPrice" className="text-xs font-semibold uppercase tracking-wider text-slate-600 flex items-center justify-between">
+                        <span>Direct Discount Price (₹)</span>
+                        <span className="text-muted-foreground font-normal text-[11px]">Final price customer pays</span>
+                      </Label>
+                      <div className="relative">
+                        <Input
+                          id="directDiscountPrice"
+                          name="directDiscountPrice"
+                          type="number"
+                          value={formData.discountPrice === undefined || formData.discountPrice === 0 ? '' : formData.discountPrice}
+                          onChange={(e) => handleDirectPriceChange(parseFloat(e.target.value) || 0)}
+                          placeholder={formData.price > 0 ? `e.g. ${Math.round(formData.price * 0.8)}` : "Enter discounted price"}
+                          min="0"
+                          step="0.01"
+                          className="pl-7"
+                        />
+                        <span className="absolute left-2.5 top-2.5 text-xs font-bold text-slate-400">₹</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[11px] text-muted-foreground pt-1">
+                        <span>Quick deduction:</span>
+                        {[50, 100, 200, 500].map(amt => (
+                          <button
+                            key={amt}
+                            type="button"
+                            onClick={() => handleFlatDiscountDeduction(amt)}
+                            className="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-pink-50 hover:text-pink-600 text-slate-700 font-medium border border-slate-200"
+                          >
+                            -₹{amt}
+                          </button>
+                        ))}
+                      </div>
+                      {formData.discountPrice !== undefined && formData.discountPrice >= formData.price && formData.price > 0 && (
+                        <p className="text-xs text-amber-600 font-medium flex items-center gap-1 mt-1">
+                          <AlertCircle className="h-3 w-3" />
+                          Discount price should be less than regular price (₹{formData.price})
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Live Calculation Preview */}
+                    <div className="rounded-lg border border-slate-200 bg-white p-3.5 space-y-2 text-xs shadow-sm">
+                      <div className="flex justify-between text-slate-500">
+                        <span>Regular Price:</span>
+                        <span className="font-semibold text-slate-700">₹{formData.price || 0}</span>
+                      </div>
+                      <div className="flex justify-between text-slate-500">
+                        <span>Discounted Selling Price:</span>
+                        <span className="font-semibold text-emerald-600">
+                          ₹{formData.discountPrice || formData.price || 0}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-slate-500">
+                        <span>Customer Saves:</span>
+                        <span className="font-semibold text-pink-600">
+                          ₹{formData.price && formData.discountPrice && formData.price > formData.discountPrice ? Number((formData.price - formData.discountPrice).toFixed(2)) : 0} ({formData.discount || 0}% OFF)
+                        </span>
+                      </div>
+                      <Separator className="my-1.5" />
+                      <div className="flex justify-between items-center text-sm font-bold text-slate-900">
+                        <span>Final Selling Price:</span>
+                        <span className="text-base text-emerald-600">
+                          ₹{formData.discountPrice || formData.price || 0}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

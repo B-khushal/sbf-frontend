@@ -8,6 +8,7 @@ import { useValentine } from '@/contexts/ValentineContext';
 import { useAuth } from '@/hooks/use-auth';
 import { promptLoginForAddToCart } from '@/utils/cartAuthHelper';
 import useCart from '@/hooks/use-cart';
+import { getProductEffectivePrice } from '@/utils/pricing';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useToast } from '@/hooks/use-toast';
 import api from '@/services/api';
@@ -110,7 +111,7 @@ const ValentineProductDetailsPage: React.FC = () => {
         return override;
       }
     }
-    return product.price;
+    return getProductEffectivePrice(product as any);
   }, [product, selectedDate]);
 
   // Compute Stock state for selected date
@@ -336,7 +337,7 @@ const ValentineProductDetailsPage: React.FC = () => {
                   </span>
                   {product.discount > 0 && (
                     <span className="text-sm text-rose-200/40 line-through font-mono">
-                      {formatPrice(convertPrice(product.price * (1 + product.discount/100)))}
+                      {formatPrice(convertPrice(product.price))}
                     </span>
                   )}
                 </div>

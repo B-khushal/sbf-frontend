@@ -34,6 +34,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { getImageUrl } from '@/config';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import { getProductEffectivePrice } from '@/utils/pricing';
 
 type AddonOption = {
   name: string;
@@ -292,10 +293,7 @@ export function InlineProductCustomizer({
 
   // Calculate pricing
   const basePrice = Number((product.hasPriceVariants && selectedVariant) ? selectedVariant.price : product.price) || 0;
-  const numDiscount = Number(product.discount) || 0;
-  const baseDiscountedPrice = numDiscount
-    ? basePrice - (basePrice * numDiscount) / 100
-    : basePrice;
+  const baseDiscountedPrice = getProductEffectivePrice(product, selectedVariant?.price);
 
   // Add-ons total
   const addonsTotal = useMemo(() => {

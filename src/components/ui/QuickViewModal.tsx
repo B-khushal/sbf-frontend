@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import ProtectedImage from './ProtectedImage';
 import { promptLoginForAddToCart } from '@/utils/cartAuthHelper';
+import { getProductEffectivePrice } from '@/utils/pricing';
 
 import { Product } from '../ProductGrid';
 
@@ -47,9 +48,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
     (typeof (product as any).countInStock === 'number' && (product as any).countInStock <= 0)
   );
 
-  const discountedPrice = product.discount > 0
-    ? product.price - (product.price * product.discount / 100)
-    : product.price;
+  const discountedPrice = getProductEffectivePrice(product);
 
   const handleWishlistToggle = async (e: React.MouseEvent) => {
     e.preventDefault();

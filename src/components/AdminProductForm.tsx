@@ -108,6 +108,8 @@ type Product = {
   category: string;
   price: number;
   discount?: number;
+  discountType?: 'percentage' | 'direct';
+  discountPrice?: number;
   countInStock: number;
   description: string;
   details: string[];
@@ -150,6 +152,8 @@ const AdminProductForm: React.FC<Props> = ({
     category: productData?.category || "",
     price: productData?.price || 0,
     discount: productData?.discount || 0,
+    discountType: (productData as any)?.discountType || 'percentage',
+    discountPrice: (productData as any)?.discountPrice !== undefined ? (productData as any).discountPrice : undefined,
     countInStock: productData?.countInStock || 0,
     description: productData?.description || "",
     details: productData?.details || [],
@@ -407,22 +411,96 @@ const AdminProductForm: React.FC<Props> = ({
           </div>
 
           {/* Price & Discount */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium">Price (INR)</label>
+              <label className="text-sm font-medium">Regular Price (INR) *</label>
               <Input 
                 type="number" 
                 value={formData.price} 
-                onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })} 
+                onChange={(e) => {
+                  const newPrice = Number(e.target.value) || 0;
+                  if (formData.discountType === 'direct') {
+                    const discount = newPrice > 0 && formData.discountPrice && formData.discountPrice < newPrice
+                      ? Number((((newPrice - formData.discountPrice) / newPrice) * 100).toFixed(2))
+                      : 0;
+                    setFormData({ ...formData, price: newPrice, discount });
+                  } else {
+                    setFormData({ ...formData, price: newPrice });
+                  }
+                }} 
               />
             </div>
-            <div>
-              <label className="text-sm font-medium">Discount (%)</label>
-              <Input 
-                type="number" 
-                value={formData.discount} 
-                onChange={(e) => setFormData({ ...formData, discount: Number(e.target.value) })} 
-              />
+
+            {/* Discount with 2 Options */}
+            <div className="rounded-lg border p-3.5 bg-slate-50 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold text-slate-800">Discount Options</span>
+                <div className="inline-flex p-0.5 bg-slate-200 rounded text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, discountType: 'percentage' }))}
+                    className={`px-2.5 py-1 rounded font-medium transition-colors ${
+                      formData.discountType !== 'direct' ? 'bg-white text-pink-700 shadow-sm' : 'text-slate-600'
+                    }`}
+                  >
+                    Discount as %
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const directP = formData.price > 0 && (formData.discount || 0) > 0
+                        ? Number((formData.price * (1 - (formData.discount || 0) / 100)).toFixed(2))
+                        : (formData.discountPrice || formData.price);
+                      setFormData(prev => ({ ...prev, discountType: 'direct', discountPrice: directP }));
+                    }}
+                    className={`px-2.5 py-1 rounded font-medium transition-colors ${
+                      formData.discountType === 'direct' ? 'bg-white text-pink-700 shadow-sm' : 'text-slate-600'
+                    }`}
+                  >
+                    Direct Discount Price
+                  </button>
+                </div>
+              </div>
+
+              {formData.discountType !== 'direct' ? (
+                <div>
+                  <label className="text-xs font-medium text-slate-600">Discount Percentage (%)</label>
+                  <Input 
+                    type="number" 
+                    value={formData.discount || 0} 
+                    onChange={(e) => {
+                      const discount = Math.min(100, Math.max(0, Number(e.target.value) || 0));
+                      const directP = formData.price > 0 && discount > 0
+                        ? Number((formData.price * (1 - discount / 100)).toFixed(2))
+                        : formData.price;
+                      setFormData({ ...formData, discount, discountPrice: directP });
+                    }} 
+                    min={0}
+                    max={100}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Final Price: ₹{formData.price && (formData.discount || 0) > 0 ? Math.round(formData.price * (1 - (formData.discount || 0) / 100)) : formData.price}
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <label className="text-xs font-medium text-slate-600">Direct Discounted Price (INR)</label>
+                  <Input 
+                    type="number" 
+                    value={formData.discountPrice !== undefined ? formData.discountPrice : formData.price} 
+                    onChange={(e) => {
+                      const directP = Math.max(0, Number(e.target.value) || 0);
+                      const discount = formData.price > 0 && directP > 0 && directP < formData.price
+                        ? Number((((formData.price - directP) / formData.price) * 100).toFixed(2))
+                        : 0;
+                      setFormData({ ...formData, discountPrice: directP, discount });
+                    }} 
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Effective Discount: {formData.discount || 0}% OFF (Save ₹{formData.price && formData.discountPrice && formData.price > formData.discountPrice ? formData.price - formData.discountPrice : 0})
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 

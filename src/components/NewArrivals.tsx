@@ -14,6 +14,7 @@ import { getImageUrl } from "@/config";
 import { QuickViewModal } from "./ui/QuickViewModal";
 import ProtectedImage from "./ui/ProtectedImage";
 import { promptLoginForAddToCart } from "@/utils/cartAuthHelper";
+import { getProductEffectivePrice } from "@/utils/pricing";
 
 import { Product } from "./ProductGrid";
 
@@ -426,9 +427,7 @@ const LuxuryProductCard = ({
 
     try {
       const addToCartFn = onAddToCart || addToCart;
-      const discountedPrice = product.discount && product.discount > 0
-        ? Math.round(product.price * (1 - product.discount / 100))
-        : product.price;
+      const discountedPrice = getProductEffectivePrice(product);
 
       const cartItem = {
         _id: product._id,
@@ -673,7 +672,7 @@ const LuxuryProductCard = ({
             {product.discount > 0 ? (
               <>
                 <span className="text-base sm:text-lg font-extrabold text-red-600">
-                  {formatPrice(convertPrice(product.price * (1 - product.discount / 100)))}
+                  {formatPrice(convertPrice(getProductEffectivePrice(product)))}
                 </span>
                 <span className="text-xs text-gray-400 line-through font-normal">
                   {formatPrice(convertPrice(product.price))}

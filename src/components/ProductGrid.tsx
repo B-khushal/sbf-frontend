@@ -15,6 +15,7 @@ import { QuickViewModal } from "./ui/QuickViewModal";
 import ProtectedImage from "./ui/ProtectedImage";
 import { ProductCardSkeleton } from "./HomePageSkeleton";
 import { promptLoginForAddToCart } from "@/utils/cartAuthHelper";
+import { getProductEffectivePrice } from "@/utils/pricing";
 
 
 export type Product = {
@@ -25,6 +26,8 @@ export type Product = {
   price: number;
   costPrice?: number;
   discount: number;
+  discountType?: 'percentage' | 'direct' | string;
+  discountPrice?: number;
   images: string[];
   image?: string;
   category: string;
@@ -327,9 +330,7 @@ export const ProductCard = ({ product, onAddToCart }: {
       const addToCartFunction = onAddToCart || addToCart;
 
       // Calculate discounted price if needed
-      const discountedPrice = product.discount && product.discount > 0
-        ? Math.round(product.price * (1 - product.discount / 100))
-        : product.price;
+      const discountedPrice = getProductEffectivePrice(product);
 
       // Create cart item with proper structure
       const resolvedId = product._id || (product as any).id;
@@ -619,7 +620,7 @@ export const ProductCard = ({ product, onAddToCart }: {
                     "text-sm sm:text-base font-bold",
                     product.discount > 0 ? "text-red-600 font-extrabold" : "text-gray-900"
                   )}>
-                    {formatPrice(convertPrice(product.discount ? product.price * (1 - product.discount / 100) : product.price))}
+                    {formatPrice(convertPrice(getProductEffectivePrice(product)))}
                   </span>
                   {product.discount > 0 && (
                     <span className="text-[10px] sm:text-xs text-gray-400 line-through font-normal">

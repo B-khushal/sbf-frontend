@@ -7,6 +7,7 @@ import { getImageUrl } from '@/config';
 import useCart from '@/hooks/use-cart';
 import { useAuth } from '@/hooks/use-auth';
 import { promptLoginForAddToCart } from '@/utils/cartAuthHelper';
+import { getProductEffectivePrice } from '@/utils/pricing';
 
 interface ValentineProductGridProps {
   products: ValentineProduct[];
@@ -83,9 +84,7 @@ const ValentineProductGrid: React.FC<ValentineProductGridProps> = ({
         {/* Product Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
           {products.map((product, index) => {
-            const discountedPrice = product.discount > 0
-              ? Math.round(product.price * (1 - product.discount / 100))
-              : product.price;
+            const discountedPrice = getProductEffectivePrice(product as any);
 
             return (
               <motion.div

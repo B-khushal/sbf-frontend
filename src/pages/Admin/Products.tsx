@@ -1857,9 +1857,12 @@ const AdminProducts: React.FC = () => {
               </TableHeader>
               <TableBody>
                 {filteredProducts.map((product) => {
-                  const finalPrice = product.discount
-                    ? convertPrice(product.price * (1 - product.discount / 100))
-                    : convertPrice(product.price);
+                  const hasDirect = (product.discountType === 'direct' || product.discountType === 'fixed') && product.discountPrice && product.discountPrice > 0 && product.discountPrice < product.price;
+                  const finalPrice = hasDirect
+                    ? convertPrice(product.discountPrice)
+                    : (product.discount
+                      ? convertPrice(product.price * (1 - product.discount / 100))
+                      : convertPrice(product.price));
 
                   // Construct the proper image URL using utility function with minimal cache busting
                   const imageUrl = getImageUrl(product.images?.[0], { bustCache: false });
@@ -1918,7 +1921,11 @@ const AdminProducts: React.FC = () => {
                           formatPrice(convertPrice(product.price))
                         )}
                       </TableCell>
-                      <TableCell>{product.discount ? `${product.discount}%` : "0%"}</TableCell>
+                      <TableCell>
+                        {hasDirect
+                          ? `₹${product.discountPrice} (${product.discount}%)`
+                          : (product.discount ? `${product.discount}%` : "0%")}
+                      </TableCell>
                       <TableCell className="font-bold text-primary">{formatPrice(finalPrice)}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
@@ -2097,9 +2104,12 @@ const AdminProducts: React.FC = () => {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {filteredProducts.map((product) => {
-                const finalPrice = product.discount
-                  ? convertPrice(product.price * (1 - product.discount / 100))
-                  : convertPrice(product.price);
+                const hasDirect = (product.discountType === 'direct' || product.discountType === 'fixed') && product.discountPrice && product.discountPrice > 0 && product.discountPrice < product.price;
+                const finalPrice = hasDirect
+                  ? convertPrice(product.discountPrice)
+                  : (product.discount
+                    ? convertPrice(product.price * (1 - product.discount / 100))
+                    : convertPrice(product.price));
 
                 // Construct the proper image URL using utility function with minimal cache busting
                 const imageUrl = getImageUrl(product.images?.[0], { bustCache: false });

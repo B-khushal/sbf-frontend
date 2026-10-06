@@ -15,6 +15,7 @@ import ProtectedImage from "./ui/ProtectedImage";
 import productService, { OccasionData, ProductData } from "@/services/productService";
 import { cn } from "@/lib/utils";
 import { ProductCardSkeleton } from "./HomePageSkeleton";
+import { getProductEffectivePrice } from "@/utils/pricing";
 
 // Lucide icon dynamic loader helper
 const OccasionIcon = ({ name, className, style }: { name: string; className?: string; style?: React.CSSProperties }) => {
@@ -153,9 +154,7 @@ const OccasionProductCard = ({
     e.stopPropagation();
 
     const addToCartFn = onAddToCart || addToCart;
-    const discountedPrice = product.discount && product.discount > 0
-      ? Math.round(product.price * (1 - product.discount / 100))
-      : product.price;
+    const discountedPrice = getProductEffectivePrice(product);
 
     const cartItem = {
       _id: product._id,
@@ -177,9 +176,7 @@ const OccasionProductCard = ({
     e.stopPropagation();
 
     const addToCartFn = onAddToCart || addToCart;
-    const discountedPrice = product.discount && product.discount > 0
-      ? Math.round(product.price * (1 - product.discount / 100))
-      : product.price;
+    const discountedPrice = getProductEffectivePrice(product);
 
     const cartItem = {
       _id: product._id,
@@ -196,9 +193,7 @@ const OccasionProductCard = ({
     navigate('/cart');
   };
 
-  const discountedPrice = product.discount && product.discount > 0
-    ? Math.round(product.price * (1 - product.discount / 100))
-    : product.price;
+  const discountedPrice = getProductEffectivePrice(product);
 
   return (
     <>

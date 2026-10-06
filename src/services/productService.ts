@@ -123,6 +123,8 @@ export interface ProductData {
   price: number;
   costPrice?: number;
   discount: number;
+  discountType?: 'percentage' | 'direct' | string;
+  discountPrice?: number;
   displayOrders?: {
     shop?: number;
     featured?: number;

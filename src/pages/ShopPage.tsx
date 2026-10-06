@@ -374,6 +374,14 @@ export const getProductSellingPrice = (product: any): number => {
     return total;
   }
   const basePrice = Number(product.price) || 0;
+  if (
+    (product.discountType === 'direct' || product.discountType === 'fixed') &&
+    typeof product.discountPrice === 'number' &&
+    product.discountPrice > 0 &&
+    product.discountPrice < basePrice
+  ) {
+    return product.discountPrice;
+  }
   if (product.discount && Number(product.discount) > 0) {
     return Math.round(basePrice * (1 - Number(product.discount) / 100));
   }
