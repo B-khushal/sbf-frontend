@@ -83,12 +83,9 @@ const Cart = ({
     });
   }, [isOpen, items, user]);
   
-  // Calculate subtotal with proper discount application
+  // Calculate subtotal using actual item selling prices
   const subtotal = items.reduce((total, item) => {
-    const discountedPrice = item.discount && item.discount > 0 
-      ? item.price - (item.price * item.discount / 100)
-      : item.price;
-    return total + (discountedPrice || 0) * (item.quantity || 0);
+    return total + (Number(item.price) || 0) * (item.quantity || 0);
   }, 0);
 
   const handleRemoveItem = (id: string) => {
@@ -242,9 +239,10 @@ const CartItem = ({
   const { formatPrice, convertPrice } = useCurrency();
   
   // Calculate original price if discount exists
-  const originalPrice = item.discount && item.discount > 0 
-    ? Math.round(item.price / (1 - item.discount / 100))
-    : item.price;
+  const hasDiscount = Boolean(item.originalPrice && Number(item.originalPrice) > Number(item.price));
+  const originalPrice = hasDiscount
+    ? Number(item.originalPrice)
+    : (item.discount && item.discount > 0 ? Math.round(item.price / (1 - item.discount / 100)) : null);
 
   // Calculate total add-ons price
   const addonsPrice = item.customizations ? (
@@ -286,7 +284,7 @@ const CartItem = ({
 
           {/* Price Section */}
           <div className="text-sm text-gray-500 mt-1">
-            {item.discount && item.discount > 0 && (
+            {originalPrice && originalPrice > item.price && (
               <span className="line-through mr-2 text-gray-400">
                 {formatPrice(convertPrice(originalPrice))}
               </span>

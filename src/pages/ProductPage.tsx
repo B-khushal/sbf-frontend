@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ProductDetail from '@/components/ProductDetail';
+import CakeProductDetail from '@/components/cakes/CakeProductDetail';
+import { isCakeProduct } from '@/utils/cakeHelpers';
 import ProductGrid from '@/components/ProductGrid';
 import useCart from '@/hooks/use-cart';
 import api from '@/services/api';
@@ -164,7 +166,19 @@ const ProductPage = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <main className="flex-1">
-        <ProductDetail product={product} onAddToCart={handleAddToCart} onReviewSubmit={fetchProduct} />
+        {isCakeProduct(product) ? (
+          <CakeProductDetail
+            product={product as any}
+            onAddToCart={handleAddToCart}
+            onReviewSubmit={fetchProduct}
+          />
+        ) : (
+          <ProductDetail
+            product={product}
+            onAddToCart={handleAddToCart}
+            onReviewSubmit={fetchProduct}
+          />
+        )}
       </main>
     </div>
   );

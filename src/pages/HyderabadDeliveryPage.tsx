@@ -322,7 +322,7 @@ export const HyderabadDeliveryPage: React.FC = () => {
                 <p className="text-xs text-slate-600 leading-relaxed">
                   Decadent Dutch Truffle, Black Forest, Red Velvet, Pineapple, and Butterscotch cakes made fresh on order. Delivered together with hand-tied blossoms in one flawless delivery.
                 </p>
-                <Link to="/shop?category=Combos" className="inline-flex items-center gap-1 text-xs font-semibold text-amber-600 hover:text-amber-700 mt-3">
+                <Link to="/cakes?category=combos" className="inline-flex items-center gap-1 text-xs font-semibold text-amber-600 hover:text-amber-700 mt-3">
                   Shop Combos <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>

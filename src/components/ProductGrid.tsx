@@ -16,6 +16,7 @@ import ProtectedImage from "./ui/ProtectedImage";
 import { ProductCardSkeleton } from "./HomePageSkeleton";
 import { promptLoginForAddToCart } from "@/utils/cartAuthHelper";
 import { getProductEffectivePrice } from "@/utils/pricing";
+import { marketingTracker } from "@/services/marketingTracker";
 
 
 export type Product = {
@@ -304,6 +305,11 @@ export const ProductCard = ({ product, onAddToCart }: {
     (typeof (product as any).countInStock === 'number' && (product as any).countInStock <= 0)
   );
 
+  const effectivePrice = getProductEffectivePrice(product);
+  const regularPrice = Number(product.price || 0);
+  const hasDiscount = effectivePrice > 0 && regularPrice > effectivePrice;
+  const discountPercentage = hasDiscount ? Math.round(((regularPrice - effectivePrice) / regularPrice) * 100) : 0;
+
   // Handle main card click - redirect to product details
   const handleCardClick = (e: React.MouseEvent) => {
     // Only navigate if the click isn't on a button
@@ -311,6 +317,9 @@ export const ProductCard = ({ product, onAddToCart }: {
       return;
     }
     console.log("Card clicked, navigating to product:", product._id);
+    try {
+      marketingTracker.trackMerchandisingClick(product.category || 'catalog', product._id, product.title || (product as any).name);
+    } catch (_) {}
     navigate(`/product/${product._id}`);
   };
 
@@ -330,7 +339,7 @@ export const ProductCard = ({ product, onAddToCart }: {
       const addToCartFunction = onAddToCart || addToCart;
 
       // Calculate discounted price if needed
-      const discountedPrice = getProductEffectivePrice(product);
+      const discountedPrice = effectivePrice;
 
       // Create cart item with proper structure
       const resolvedId = product._id || (product as any).id;
@@ -342,9 +351,10 @@ export const ProductCard = ({ product, onAddToCart }: {
         title: resolvedTitle,
         name: resolvedTitle,
         price: discountedPrice,
+        originalPrice: regularPrice || discountedPrice,
         images: product.images || ((product as any).image ? [(product as any).image] : []),
         quantity: 1,
-        discount: product.discount || 0,
+        discount: discountPercentage || product.discount || 0,
         category: product.category,
         description: product.description,
       };
@@ -356,6 +366,9 @@ export const ProductCard = ({ product, onAddToCart }: {
 
       console.log("Adding to cart:", cartItem);
       addToCartFunction(cartItem, 1);
+      try {
+        marketingTracker.trackAddToCart({ id: resolvedId, title: resolvedTitle, price: discountedPrice, category: product.category });
+      } catch (_) {}
 
       toast.success("🛒 Added to cart!", {
         description: `${product.title} has been added to your cart`,
@@ -574,9 +587,9 @@ export const ProductCard = ({ product, onAddToCart }: {
                   Out of Stock
                 </span>
               )}
-              {product.discount > 0 && !isOutOfStock && (
+              {hasDiscount && !isOutOfStock && (
                 <span className="text-[8px] sm:text-[9px] font-extrabold text-red-650 bg-red-50 border border-red-100 px-1.5 py-0.5 rounded-md uppercase tracking-wider">
-                  -{product.discount}% OFF
+                  -{discountPercentage}% OFF
                 </span>
               )}
               {isFeaturedProduct() && (
@@ -600,7 +613,7 @@ export const ProductCard = ({ product, onAddToCart }: {
                 </span>
               )}
               {/* Fallback space to keep alignment when no badges exist */}
-              {!(isOutOfStock || product.discount > 0 || isFeaturedProduct() || isNewProduct() || product.hidden) && (
+              {!(isOutOfStock || hasDiscount || isFeaturedProduct() || isNewProduct() || product.hidden) && (
                 <div className="h-5 md:h-6" />
               )}
             </div>
@@ -618,13 +631,13 @@ export const ProductCard = ({ product, onAddToCart }: {
                 <>
                   <span className={cn(
                     "text-sm sm:text-base font-bold",
-                    product.discount > 0 ? "text-red-600 font-extrabold" : "text-gray-900"
+                    hasDiscount ? "text-red-600 font-extrabold" : "text-gray-900"
                   )}>
-                    {formatPrice(convertPrice(getProductEffectivePrice(product)))}
+                    {formatPrice(convertPrice(effectivePrice))}
                   </span>
-                  {product.discount > 0 && (
+                  {hasDiscount && (
                     <span className="text-[10px] sm:text-xs text-gray-400 line-through font-normal">
-                      {formatPrice(convertPrice(product.price))}
+                      {formatPrice(convertPrice(regularPrice))}
                     </span>
                   )}
                 </>

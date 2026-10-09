@@ -506,8 +506,8 @@ const CartPage: React.FC = () => {
                       ? item.images[0]
                       : '/api/placeholder/80/80';
 
-                    const hasDiscount = item.discount > 0 && item.originalPrice && item.originalPrice > item.price;
-                    const displayPrice = hasDiscount ? item.price : item.originalPrice || item.price;
+                    const hasDiscount = Boolean(item.originalPrice && Number(item.originalPrice) > Number(item.price));
+                    const displayPrice = item.price;
                     const originalPrice = hasDiscount ? item.originalPrice : null;
 
                     return (
@@ -572,6 +572,59 @@ const CartPage: React.FC = () => {
                                 • {formatPrice(convertPrice(displayPrice || 0))} each
                               </span>
                             </div>
+
+                            {/* Cake Specific Customization Details */}
+                            {(item.customizations?.cakeWeight || item.customizations?.eggless !== undefined || item.customizations?.cakeMessage || (item.customizations?.addons && item.customizations.addons.length > 0)) && (
+                              <div className="mt-2.5 p-2.5 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-900/40 text-[11px] space-y-1.5">
+                                <div className="flex flex-wrap items-center gap-1.5">
+                                  {(item.customizations?.cakeFlavor || item.customizations?.flavor) && (
+                                    <span className="font-semibold px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 text-[10px] capitalize">
+                                      {item.customizations.cakeFlavor || item.customizations.flavor}
+                                    </span>
+                                  )}
+                                  {item.customizations?.cakeWeight && (
+                                    <span className="font-bold px-2 py-0.5 rounded-md bg-stone-900 text-white dark:bg-white dark:text-stone-900 text-[10px]">
+                                      {item.customizations.cakeWeight}
+                                    </span>
+                                  )}
+                                  {(item.customizations?.cakeShape || item.customizations?.shape) && (
+                                    <span className="px-2 py-0.5 rounded-md bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 font-medium text-[10px] capitalize">
+                                      {item.customizations.cakeShape || item.customizations.shape}
+                                    </span>
+                                  )}
+                                  {item.customizations?.eggless !== undefined && (
+                                    <span className={cn(
+                                      "px-2 py-0.5 rounded-md font-semibold text-[10px] flex items-center gap-1",
+                                      item.customizations.eggless
+                                        ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300/40"
+                                        : "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300/40"
+                                    )}>
+                                      {item.customizations.eggless ? '🍃 100% Eggless' : '🥚 Contains Egg'}
+                                    </span>
+                                  )}
+                                </div>
+
+                                {item.customizations?.cakeMessage && (
+                                  <div className="pt-0.5 text-stone-700 dark:text-stone-300">
+                                    <span className="font-semibold text-amber-800 dark:text-amber-300">Piped Message:</span>{' '}
+                                    <span className="italic font-medium">"{item.customizations.cakeMessage}"</span>
+                                  </div>
+                                )}
+
+                                {item.customizations?.addons && item.customizations.addons.length > 0 && (
+                                  <div className="pt-1 border-t border-amber-200/50 dark:border-amber-900/30">
+                                    <span className="font-semibold text-stone-700 dark:text-stone-300 block mb-1">Included Add-ons:</span>
+                                    <div className="flex flex-wrap gap-1">
+                                      {item.customizations.addons.map((addon: any, idx: number) => (
+                                        <span key={idx} className="bg-white dark:bg-stone-900 px-2 py-0.5 rounded-md border border-amber-200/70 dark:border-stone-800 text-stone-800 dark:text-stone-200 text-[10px] font-medium shadow-2xs">
+                                          + {addon.name || addon.title} ({formatPrice(convertPrice(addon.price))})
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            )}
 
                             {/* Gift Components Details */}
                             {item.customizations?.isGiftBundle && item.customizations?.giftComponents && (

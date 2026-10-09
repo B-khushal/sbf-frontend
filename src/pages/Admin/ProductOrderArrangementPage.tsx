@@ -56,11 +56,28 @@ import {
   ArrowRight,
   Clock,
   PartyPopper,
+  Pin,
+  PinOff,
+  RefreshCw,
+  Eye,
+  BarChart2,
+  Sliders,
 } from "lucide-react";
+import MerchandisingStrategyPanel from "@/components/admin/merchandising/MerchandisingStrategyPanel";
+import MerchandisingPreviewDialog from "@/components/admin/merchandising/MerchandisingPreviewDialog";
+import MerchandisingAnalyticsDialog from "@/components/admin/merchandising/MerchandisingAnalyticsDialog";
+import MerchandisingGlobalSettingsDialog from "@/components/admin/merchandising/MerchandisingGlobalSettingsDialog";
 
 const STANDARD_STOREFRONT_SECTIONS = [
   { value: "shop", label: "🛒 Shop Page (Global Catalog)" },
-  { value: "featured", label: "⭐ Featured Products" },
+  { value: "featured", label: "⭐ Featured Products Collection" },
+  { value: "bestsellers", label: "🏆 Bestsellers (Smart Ranked)" },
+  { value: "category:cakes", label: "🎂 Cakes Category" },
+  { value: "combos", label: "🎁 Cake & Flower Combos" },
+  { value: "category:bouquets", label: "💐 Premium Bouquets" },
+  { value: "category:plants", label: "🪴 Plants Collection" },
+  { value: "category:gifts", label: "🎀 Curated Gifts" },
+  { value: "budget_friendly", label: "🏷️ Budget-Friendly (Under ₹1,000)" },
   { value: "newArrivals", label: "🆕 New Arrivals" },
   { value: "recommended", label: "💡 Recommended Products" },
   { value: "none", label: "✨ Standard Products List" },
@@ -79,6 +96,21 @@ export const ProductOrderArrangementPage: React.FC = () => {
   const [isChanged, setIsChanged] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<"table" | "grid">("table");
+
+  // Merchandising Strategy State
+  const [sectionMode, setSectionMode] = useState<"manual" | "smart" | "smart_rotation" | "personalized">("smart_rotation");
+  const [pinnedProductIds, setPinnedProductIds] = useState<string[]>([]);
+  const [protectedTopCount, setProtectedTopCount] = useState<number>(4);
+  const [rotationFrequency, setRotationFrequency] = useState<string>("daily");
+  const [rotationVersion, setRotationVersion] = useState<number>(1);
+  const [isRotationEnabled, setIsRotationEnabled] = useState<boolean>(true);
+  const [isPersonalizationEnabled, setIsPersonalizationEnabled] = useState<boolean>(true);
+  const [isRotatingNow, setIsRotatingNow] = useState<boolean>(false);
+
+  // Merchandising Dialogs State
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState<boolean>(false);
+  const [isAnalyticsModalOpen, setIsAnalyticsModalOpen] = useState<boolean>(false);
+  const [isGlobalSettingsOpen, setIsGlobalSettingsOpen] = useState<boolean>(false);
 
   // History stack for Undo / Redo
   const [undoStack, setUndoStack] = useState<ProductData[][]>([]);
@@ -168,16 +200,39 @@ export const ProductOrderArrangementPage: React.FC = () => {
     try {
       setLoading(true);
       let loadedProds: ProductData[] = [];
+      let modeVal: any = "smart_rotation";
+      let pinnedVal: string[] = [];
+      let topCountVal: number = 4;
+      let rotFreqVal: string = "daily";
+      let rotVerVal: number = 1;
+      let rotEnabledVal: boolean = true;
+      let persEnabledVal: boolean = true;
+
       if (section === "none") {
         const res: any = await productService.getAllProducts();
         loadedProds = Array.isArray(res) ? res : res?.products || [];
+        modeVal = "manual";
       } else {
         const data = await productService.getSectionProductsForSorting(section);
         loadedProds = data.products || [];
+        modeVal = data.mode || "smart_rotation";
+        pinnedVal = Array.isArray(data.pinnedProductIds) ? data.pinnedProductIds : [];
+        topCountVal = data.protectedTopCount !== undefined ? data.protectedTopCount : 4;
+        rotFreqVal = data.rotationFrequency || "daily";
+        rotVerVal = data.rotationVersion || 1;
+        rotEnabledVal = data.isRotationEnabled !== false;
+        persEnabledVal = data.isPersonalizationEnabled !== false;
       }
 
       setSortSectionProducts(loadedProds);
       setInitialProducts([...loadedProds]);
+      setSectionMode(modeVal);
+      setPinnedProductIds(pinnedVal);
+      setProtectedTopCount(topCountVal);
+      setRotationFrequency(rotFreqVal);
+      setRotationVersion(rotVerVal);
+      setIsRotationEnabled(rotEnabledVal);
+      setIsPersonalizationEnabled(persEnabledVal);
       setIsChanged(false);
       setSelectedIds([]);
       setUndoStack([]);
@@ -481,9 +536,23 @@ export const ProductOrderArrangementPage: React.FC = () => {
 
       await productService.bulkReorderProducts(activeSection, displayOrders, undefined, undefined, auditMetadata);
 
+      // Persist section merchandising rules
+      await productService.updateMerchandisingSettings({
+        section: activeSection,
+        sectionConfig: {
+          mode: sectionMode,
+          pinnedProductIds,
+          protectedTopCount,
+          rotationFrequency,
+          rotationVersion,
+          isRotationEnabled,
+          isPersonalizationEnabled
+        }
+      });
+
       toast({
-        title: "Display Order Saved (Transaction-Safe)",
-        description: `Successfully persisted sequence for ${sortSectionProducts.length} products in section '${activeSectionLabel}'.`,
+        title: "Merchandising Strategy & Order Saved",
+        description: `Successfully persisted ${sectionMode} rules and sequence for ${sortSectionProducts.length} products in section '${activeSectionLabel}'.`,
       });
 
       setInitialProducts([...sortSectionProducts]);
@@ -499,6 +568,57 @@ export const ProductOrderArrangementPage: React.FC = () => {
       });
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  // Merchandising Mode Switcher
+  const handleModeChange = (newMode: "manual" | "smart" | "smart_rotation" | "personalized") => {
+    setSectionMode(newMode);
+    setIsChanged(true);
+    toast({
+      title: "Strategy Mode Selected",
+      description: `Switched to ${newMode}. Review arrangement or click Save to publish.`,
+    });
+  };
+
+  // Pin / Unpin Product to Slot
+  const handleTogglePinProduct = (productId: string) => {
+    let nextPinned: string[];
+    const isCurrentlyPinned = pinnedProductIds.includes(productId);
+    if (isCurrentlyPinned) {
+      nextPinned = pinnedProductIds.filter((id) => id !== productId);
+    } else {
+      nextPinned = [...pinnedProductIds, productId];
+    }
+    setPinnedProductIds(nextPinned);
+    setIsChanged(true);
+    toast({
+      title: isCurrentlyPinned ? "Product Unpinned" : "Product Pinned to Slot",
+      description: isCurrentlyPinned
+        ? "Product released to dynamic section ranking."
+        : "Product pinned to prioritized slot position.",
+    });
+  };
+
+  // Rotate Now: bump rotation seed
+  const handleRotateNow = async () => {
+    try {
+      setIsRotatingNow(true);
+      const res = await productService.bumpRotationVersion(activeSection);
+      setRotationVersion(res.rotationVersion || rotationVersion + 1);
+      toast({
+        title: "Rotation Cycled",
+        description: `Successfully rotated discovery items to version v${res.rotationVersion || rotationVersion + 1}.`,
+      });
+      loadSectionData(activeSection);
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "Rotation Failed",
+        description: err.message || "Failed to cycle rotation version.",
+      });
+    } finally {
+      setIsRotatingNow(false);
     }
   };
 
@@ -787,11 +907,46 @@ export const ProductOrderArrangementPage: React.FC = () => {
               className="bg-[#ec4899] hover:bg-[#db2777] text-white font-bold h-9 px-4 text-xs rounded-xl gap-1.5 shadow-md disabled:opacity-50"
             >
               <Save className="h-4 w-4" />
-              {isSaving ? "Saving..." : `Save Order (${changedItemsSummary.length})`}
+              {isSaving ? "Saving..." : `Save Strategy & Order (${changedItemsSummary.length})`}
             </Button>
           </div>
         </CardContent>
       </Card>
+
+      {/* Product Merchandising & Ordering Strategy Panel */}
+      <MerchandisingStrategyPanel
+        section={activeSection}
+        sectionLabel={activeSectionLabel}
+        mode={sectionMode}
+        onModeChange={handleModeChange}
+        protectedTopCount={protectedTopCount}
+        onProtectedTopCountChange={(cnt) => {
+          setProtectedTopCount(cnt);
+          setIsChanged(true);
+        }}
+        rotationFrequency={rotationFrequency}
+        onRotationFrequencyChange={(freq) => {
+          setRotationFrequency(freq);
+          setIsChanged(true);
+        }}
+        rotationVersion={rotationVersion}
+        isRotationEnabled={isRotationEnabled}
+        onIsRotationEnabledChange={(en) => {
+          setIsRotationEnabled(en);
+          setIsChanged(true);
+        }}
+        isPersonalizationEnabled={isPersonalizationEnabled}
+        onIsPersonalizationEnabledChange={(en) => {
+          setIsPersonalizationEnabled(en);
+          setIsChanged(true);
+        }}
+        pinnedCount={pinnedProductIds.length}
+        onRotateNow={handleRotateNow}
+        isRotatingNow={isRotatingNow}
+        onOpenPreview={() => setIsPreviewModalOpen(true)}
+        onOpenAnalytics={() => setIsAnalyticsModalOpen(true)}
+        onOpenGlobalSettings={() => setIsGlobalSettingsOpen(true)}
+      />
 
       {/* Smart Filters Bar & Quick Select Controls */}
       <Card className="border border-slate-200/80 dark:border-slate-800 shadow-sm rounded-2xl bg-white dark:bg-slate-900">
@@ -1205,6 +1360,21 @@ export const ProductOrderArrangementPage: React.FC = () => {
                             <Badge variant="outline" className="text-[10px] capitalize bg-purple-50 text-purple-900 border-purple-200">
                               📁 {product.category || product.catalogType || "flowers"}
                             </Badge>
+
+                            {/* Merchandising Strategy Zone Badges */}
+                            {pinnedProductIds.includes(product._id!) ? (
+                              <Badge className="bg-amber-500 text-white border-0 text-[10px] font-bold gap-1 py-0.5">
+                                <Pin className="h-2.5 w-2.5 fill-current" /> Pinned
+                              </Badge>
+                            ) : index < (pinnedProductIds.length + protectedTopCount) ? (
+                              <Badge className="bg-purple-600 text-white border-0 text-[10px] font-semibold gap-1 py-0.5">
+                                <ShieldCheck className="h-2.5 w-2.5" /> Top Zone
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-[10px] text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800 gap-1 py-0.5">
+                                <RefreshCw className="h-2.5 w-2.5" /> Rotating
+                              </Badge>
+                            )}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -1222,6 +1392,15 @@ export const ProductOrderArrangementPage: React.FC = () => {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-1">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => handleTogglePinProduct(product._id!)}
+                              className={`h-7 w-7 ${pinnedProductIds.includes(product._id!) ? "text-amber-500 hover:text-amber-600" : "text-slate-400 hover:text-slate-600"}`}
+                              title={pinnedProductIds.includes(product._id!) ? "Unpin product" : "Pin product to fixed slot"}
+                            >
+                              <Pin className={`h-3.5 w-3.5 ${pinnedProductIds.includes(product._id!) ? "fill-amber-500" : ""}`} />
+                            </Button>
                             <Button
                               size="icon"
                               variant="ghost"
@@ -1302,6 +1481,20 @@ export const ProductOrderArrangementPage: React.FC = () => {
                         )}
                       </div>
 
+                      {/* Pin to Slot Button */}
+                      <div
+                        className="absolute top-2.5 right-10 z-10 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-0.5 shadow-sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleTogglePinProduct(product._id!);
+                        }}
+                        title={pinnedProductIds.includes(product._id!) ? "Unpin product" : "Pin product to fixed slot"}
+                      >
+                        <Button size="icon" variant="ghost" className="h-6 w-6 p-0">
+                          <Pin className={`h-3.5 w-3.5 ${pinnedProductIds.includes(product._id!) ? "text-amber-500 fill-amber-500" : "text-slate-400"}`} />
+                        </Button>
+                      </div>
+
                       {/* Checkbox */}
                       <div
                         className="absolute top-2.5 right-2.5 z-10 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-1 shadow-sm"
@@ -1349,9 +1542,21 @@ export const ProductOrderArrangementPage: React.FC = () => {
                           <span className="bg-[#c084fc] text-purple-950 font-bold text-[11px] capitalize px-3 py-0.5 rounded-full">
                             {product.category || product.catalogType || "flowers"}
                           </span>
-                          <span className="bg-[#dcfce7] text-[#166534] font-bold text-[11px] px-3 py-0.5 rounded-full">
-                            {product.countInStock}
-                          </span>
+                          
+                          {/* Merchandising Zone Badge */}
+                          {pinnedProductIds.includes(product._id!) ? (
+                            <Badge className="bg-amber-500 text-white border-0 text-[10px] font-bold gap-1 py-0.5">
+                              <Pin className="h-2.5 w-2.5 fill-current" /> Pinned
+                            </Badge>
+                          ) : index < (pinnedProductIds.length + protectedTopCount) ? (
+                            <Badge className="bg-purple-600 text-white border-0 text-[10px] font-semibold gap-1 py-0.5">
+                              <ShieldCheck className="h-2.5 w-2.5" /> Top Zone
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-[10px] text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800 gap-1 py-0.5">
+                              <RefreshCw className="h-2.5 w-2.5" /> Rotating
+                            </Badge>
+                          )}
                         </div>
 
                         <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 line-clamp-2 leading-snug">
@@ -1716,6 +1921,36 @@ export const ProductOrderArrangementPage: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* MERCHANDISING LIVE SIMULATION PREVIEW DIALOG */}
+      <MerchandisingPreviewDialog
+        isOpen={isPreviewModalOpen}
+        onClose={() => setIsPreviewModalOpen(false)}
+        section={activeSection}
+        sectionLabel={activeSectionLabel}
+        activeMode={sectionMode}
+        protectedTopCount={protectedTopCount}
+        rotationFrequency={rotationFrequency}
+        rotationVersion={rotationVersion}
+        onApplyAndClose={(mode) => {
+          handleModeChange(mode as any);
+        }}
+      />
+
+      {/* MERCHANDISING ANALYTICS DIALOG */}
+      <MerchandisingAnalyticsDialog
+        isOpen={isAnalyticsModalOpen}
+        onClose={() => setIsAnalyticsModalOpen(false)}
+      />
+
+      {/* GLOBAL MERCHANDISING SETTINGS DIALOG */}
+      <MerchandisingGlobalSettingsDialog
+        isOpen={isGlobalSettingsOpen}
+        onClose={() => setIsGlobalSettingsOpen(false)}
+        onSettingsSaved={() => {
+          loadSectionData(activeSection);
+        }}
+      />
     </div>
   );
 };

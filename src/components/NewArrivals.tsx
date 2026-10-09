@@ -428,14 +428,18 @@ const LuxuryProductCard = ({
     try {
       const addToCartFn = onAddToCart || addToCart;
       const discountedPrice = getProductEffectivePrice(product);
+      const regularPrice = Number(product.price || 0);
+      const hasDiscount = discountedPrice > 0 && regularPrice > discountedPrice;
+      const discountPct = hasDiscount ? Math.round(((regularPrice - discountedPrice) / regularPrice) * 100) : (product.discount || 0);
 
       const cartItem = {
         _id: product._id,
         title: product.title,
         price: discountedPrice,
+        originalPrice: regularPrice || discountedPrice,
         images: product.images || [],
         quantity: 1,
-        discount: product.discount || 0,
+        discount: discountPct,
         category: product.category,
         description: product.description,
       };
@@ -516,8 +520,12 @@ const LuxuryProductCard = ({
   // Badges state
   const badges = useMemo(() => {
     const items = [];
-    if (product.discount > 0) {
-      items.push({ text: `-${product.discount}%`, type: "discount" });
+    const effectivePrice = getProductEffectivePrice(product);
+    const regPrice = Number(product.price || 0);
+    const hasDiscount = effectivePrice > 0 && regPrice > effectivePrice;
+    if (hasDiscount) {
+      const pct = Math.round(((regPrice - effectivePrice) / regPrice) * 100);
+      items.push({ text: `-${pct}%`, type: "discount" });
     }
     if (product.featured || product.isFeatured) {
       items.push({ text: "Featured", type: "featured" });
@@ -669,20 +677,25 @@ const LuxuryProductCard = ({
         <div className="mt-4 space-y-3.5">
           {/* Price & Discount */}
           <div className="flex items-baseline gap-2">
-            {product.discount > 0 ? (
-              <>
-                <span className="text-base sm:text-lg font-extrabold text-red-600">
-                  {formatPrice(convertPrice(getProductEffectivePrice(product)))}
+            {(() => {
+              const effPrice = getProductEffectivePrice(product);
+              const regPrice = Number(product.price || 0);
+              const hasDisc = effPrice > 0 && regPrice > effPrice;
+              return hasDisc ? (
+                <>
+                  <span className="text-base sm:text-lg font-extrabold text-red-600">
+                    {formatPrice(convertPrice(effPrice))}
+                  </span>
+                  <span className="text-xs text-gray-400 line-through font-normal">
+                    {formatPrice(convertPrice(regPrice))}
+                  </span>
+                </>
+              ) : (
+                <span className="text-base sm:text-lg font-bold text-gray-900">
+                  {formatPrice(convertPrice(regPrice))}
                 </span>
-                <span className="text-xs text-gray-400 line-through font-normal">
-                  {formatPrice(convertPrice(product.price))}
-                </span>
-              </>
-            ) : (
-              <span className="text-base sm:text-lg font-bold text-gray-900">
-                {formatPrice(convertPrice(product.price))}
-              </span>
-            )}
+              );
+            })()}
           </div>
 
           {/* Action Button: Customizable, Out of Stock, or Quick Add */}

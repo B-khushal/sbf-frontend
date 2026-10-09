@@ -335,16 +335,16 @@ const ValentineProductDetailsPage: React.FC = () => {
                   <span className="text-3xl font-black text-rose-300 font-mono">
                     {formatPrice(convertPrice(activePrice))}
                   </span>
-                  {product.discount > 0 && (
+                  {activePrice < Number(product.price) && (
                     <span className="text-sm text-rose-200/40 line-through font-mono">
                       {formatPrice(convertPrice(product.price))}
                     </span>
                   )}
                 </div>
               </div>
-              {product.discount > 0 && (
+              {activePrice < Number(product.price) && (
                 <div className="bg-rose-600 text-white font-bold text-xs uppercase px-2.5 py-1 rounded-xl shadow-lg shadow-rose-950/20">
-                  Save {product.discount}%
+                  Save {Math.round(((Number(product.price) - activePrice) / Number(product.price)) * 100)}%
                 </div>
               )}
             </div>

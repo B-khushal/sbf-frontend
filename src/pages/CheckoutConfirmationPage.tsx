@@ -658,6 +658,21 @@ const CheckoutConfirmationPage = () => {
                             </div>
                             {item.customizations ? (
                               <div className="space-y-1 mt-1 text-xs">
+                                {item.customizations.cakeWeight && (
+                                  <div className="flex items-center gap-2 text-amber-800 font-semibold">
+                                    🎂 <span>Cake Weight: {item.customizations.cakeWeight} {item.customizations.eggless !== undefined ? `(${item.customizations.eggless ? 'Eggless' : 'Contains Egg'})` : ''}</span>
+                                  </div>
+                                )}
+                                {item.customizations.cakeMessage && (
+                                  <div className="flex items-center gap-2 text-stone-700 italic">
+                                    ✍ <span>Message on Cake: "{item.customizations.cakeMessage}"</span>
+                                  </div>
+                                )}
+                                {item.customizations.addons && item.customizations.addons.length > 0 && (
+                                  <div className="flex items-center gap-2 text-amber-700">
+                                    ✨ <span>Add-ons: {item.customizations.addons.map((a: any) => a.name || a.title).join(', ')}</span>
+                                  </div>
+                                )}
                                 {item.customizations.photo && (
                                   <div className="flex items-center gap-2 text-blue-700">
                                     📸 <span>Photo uploaded</span>
@@ -726,9 +741,7 @@ const CheckoutConfirmationPage = () => {
                         </div>
                         <div className="text-right">
                           <p className="font-semibold">
-                            {displayPrice(((item.discount && item.discount > 0
-                              ? Number(item.price) - (Number(item.price) * item.discount / 100)
-                              : Number(item.price)) || 0) * (item.quantity || 1), order.currency, order.currencyRate)}
+                            {displayPrice(Number(item.price || 0) * (item.quantity || 1), order.currency, order.currencyRate)}
                           </p>
                         </div>
                       </div>

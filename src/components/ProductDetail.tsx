@@ -756,7 +756,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
     return product.price;
   }, [product.hasPriceVariants, selectedVariant, product.price]);
   const discountedPrice = React.useMemo(() => {
-    return getProductEffectivePrice(product, selectedVariant?.price);
+    return getProductEffectivePrice(product, selectedVariant?.price, selectedVariant);
   }, [product, selectedVariant]);
 
   // Handle image URL using utility function with optimization for product detail view
@@ -1023,7 +1023,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
   // Update price display based on selected variant + personalization cost
   const baseProductPrice = Number((product.hasPriceVariants && selectedVariant) ? selectedVariant.price : product.price) || 0;
   const baseDiscountedPrice = React.useMemo(() => {
-    return getProductEffectivePrice(product, selectedVariant?.price);
+    return getProductEffectivePrice(product, selectedVariant?.price, selectedVariant);
   }, [product, selectedVariant]);
 
   const displayPrice = Number(baseProductPrice) + Number(personalizationCost || 0);
@@ -1063,9 +1063,22 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                   >
                     <div className="text-center">
                       <h4 className="font-medium text-gray-900">{variant.label}</h4>
-                      <p className="mt-1 text-lg font-semibold text-primary">
-                        {formatPrice(convertPrice(variant.price))}
-                      </p>
+                      {(() => {
+                        const effP = getProductEffectivePrice(product, variant.price, variant);
+                        const hasVarDisc = effP > 0 && variant.price > effP;
+                        return (
+                          <div className="mt-1">
+                            <p className="text-lg font-semibold text-primary">
+                              {formatPrice(convertPrice(effP))}
+                            </p>
+                            {hasVarDisc && (
+                              <span className="text-xs text-gray-400 line-through">
+                                {formatPrice(convertPrice(variant.price))}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })()}
                       {variant.stock > 0 ? (
                         variant.stock <= 5 && (
                           <Badge variant="outline" className="mt-2 bg-orange-50 text-orange-700">
@@ -1497,9 +1510,9 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                         )}
                       </div>
 
-                      {product.discount > 0 && (
+                      {displayDiscountedPrice < displayPrice && (
                         <span className="absolute bottom-4 right-4 bg-rose-600/90 text-white text-[9px] font-bold tracking-[0.15em] uppercase px-2.5 py-1 rounded shadow-sm z-20">
-                          -{product.discount}% Off
+                          -{Math.round(((displayPrice - displayDiscountedPrice) / displayPrice) * 100)}% Off
                         </span>
                       )}
 
@@ -1662,7 +1675,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                     >
                       {formatPrice(convertPrice(displayDiscountedPrice))}
                     </motion.span>
-                    {product.discount > 0 && (
+                    {displayDiscountedPrice < displayPrice && (
                       <span className="text-lg text-slate-400 line-through font-medium">
                         {formatPrice(convertPrice(displayPrice))}
                       </span>

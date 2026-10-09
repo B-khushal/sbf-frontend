@@ -28,6 +28,7 @@ import { OccasionsSection } from "../components/OccasionsSection";
 import { HomePageSkeleton } from "../components/HomePageSkeleton";
 import { HomeSeoSection } from "../components/seo/HomeSeoSection";
 import { BudgetFriendlySection } from "../components/BudgetFriendlySection";
+import { CakesSection } from "../components/CakesSection";
 
 import api from "../services/api";
 
@@ -205,6 +206,29 @@ const HomePage = () => {
         sections.splice(featuredIdx + 1, 0, budgetSection);
       } else {
         sections.push(budgetSection);
+      }
+    }
+
+    // Inject Cakes section right after featured / budget_friendly
+    if (!sections.some(s => s.type === 'cakes')) {
+      const cakeSection = {
+        id: 'cakes',
+        type: 'cakes',
+        enabled: true,
+        order: 3.6,
+        title: 'Cakes, Made for Every Celebration',
+        subtitle: 'Freshly crafted cakes to make every special moment a little sweeter.',
+      };
+      const budgetIdx = sections.findIndex(s => s.type === 'budget_friendly');
+      if (budgetIdx !== -1) {
+        sections.splice(budgetIdx + 1, 0, cakeSection);
+      } else {
+        const featIdx = sections.findIndex(s => s.type === 'featured');
+        if (featIdx !== -1) {
+          sections.splice(featIdx + 1, 0, cakeSection);
+        } else {
+          sections.push(cakeSection);
+        }
       }
     }
 
@@ -416,6 +440,17 @@ const HomePage = () => {
                   section={section as any}
                   onAddToCart={handleAddToCart}
                 />
+              </motion.section>
+            );
+
+          case 'cakes':
+            return (
+              <motion.section
+                key={`cakes-${index}`}
+                variants={itemVariants}
+                className="relative"
+              >
+                <CakesSection onAddToCart={handleAddToCart} />
               </motion.section>
             );
 

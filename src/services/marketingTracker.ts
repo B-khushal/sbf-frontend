@@ -380,6 +380,27 @@ class MarketingTracker {
     });
   }
 
+  public trackMerchandisingImpression(section: string, productId: string, productTitle?: string, strategy?: string, position?: number) {
+    this.enqueueEvent({
+      eventType: 'impression',
+      eventCategory: 'merchandising',
+      productId,
+      productTitle,
+      metadata: { section, strategy: strategy || 'smart_rotation', position }
+    });
+  }
+
+  public trackMerchandisingClick(section: string, productId: string, productTitle?: string, strategy?: string, position?: number) {
+    this.enqueueEvent({
+      eventType: 'click',
+      eventCategory: 'merchandising',
+      productId,
+      productTitle,
+      metadata: { section, strategy: strategy || 'smart_rotation', position }
+    });
+    this.flush();
+  }
+
   // Identity Stitching when user logs in or checks out
   public async stitchIdentity(userId: string, email?: string, name?: string, phone?: string) {
     try {

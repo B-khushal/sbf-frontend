@@ -29,10 +29,12 @@ const ValentineProductGrid: React.FC<ValentineProductGridProps> = ({
   const { user } = useAuth();
 
   const handleAddToCart = (product: ValentineProduct) => {
+    const effPrice = getProductEffectivePrice(product as any);
     const cartItem = {
       _id: product._id,
       title: product.title,
-      price: product.price,
+      price: effPrice,
+      originalPrice: Number(product.price) || effPrice,
       images: product.images,
       quantity: 1,
     };
@@ -111,9 +113,9 @@ const ValentineProductGrid: React.FC<ValentineProductGridProps> = ({
                   {/* Badges */}
                   {showBadges && (
                     <div className="absolute top-3 left-3 flex flex-col gap-1.5">
-                      {product.discount > 0 && (
+                      {discountedPrice < Number(product.price) && (
                         <span className="px-2 py-1 rounded-lg text-[10px] font-bold uppercase bg-rose-500 text-white shadow-lg">
-                          {product.discount}% OFF
+                          -{Math.round(((Number(product.price) - discountedPrice) / Number(product.price)) * 100)}% OFF
                         </span>
                       )}
                       {product.isValentineExclusive && (
@@ -160,7 +162,7 @@ const ValentineProductGrid: React.FC<ValentineProductGridProps> = ({
                     <span className="text-base md:text-lg font-bold text-white">
                       ₹{discountedPrice}
                     </span>
-                    {product.discount > 0 && (
+                    {discountedPrice < Number(product.price) && (
                       <span className="text-xs text-rose-300/50 line-through">
                         ₹{product.price}
                       </span>

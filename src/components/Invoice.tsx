@@ -451,13 +451,37 @@ const Invoice: React.FC<InvoiceProps> = ({ order, isAdmin = false }) => {
           <tbody>
             {items.map((item: any, idx: number) => {
               const title = item.product?.title || item.title || 'Florist Arrangement';
-              const variantText = item.selectedVariant?.label ? `Variant: ${item.selectedVariant.label}` : 'Premium Arrangement';
+              const cakeSpecs: string[] = [];
+              if (item.customizations?.cakeFlavor || item.customizations?.flavor) {
+                cakeSpecs.push(`Flavor: ${item.customizations.cakeFlavor || item.customizations.flavor}`);
+              }
+              if (item.customizations?.cakeWeight || item.customizations?.weight) {
+                cakeSpecs.push(`Weight: ${item.customizations.cakeWeight || item.customizations.weight}`);
+              }
+              if (item.customizations?.cakeShape || item.customizations?.shape) {
+                cakeSpecs.push(`Shape: ${item.customizations.cakeShape || item.customizations.shape}`);
+              }
+              if (item.customizations?.eggless !== undefined) {
+                cakeSpecs.push(item.customizations.eggless ? '100% Eggless (Veg)' : 'Contains Egg');
+              }
+              const cakeSpecsText = cakeSpecs.length > 0 ? cakeSpecs.join(' • ') : '';
+
+              const variantText = item.selectedVariant?.label
+                ? `Variant: ${item.selectedVariant.label}`
+                : (cakeSpecsText || (item.variantName ? item.variantName : 'Standard'));
               const customText = item.customizations?.messageCard ? `Message Card Included` : '';
+              const cakeMessageText = item.customizations?.cakeMessage ? `Cake Inscription: "${item.customizations.cakeMessage}"` : '';
               return (
                 <tr key={idx}>
                   <td className="col-desc">
                     <div className="product-title">{title}</div>
                     <div className="product-variant">{variantText}</div>
+                    {cakeSpecsText && variantText !== cakeSpecsText && (
+                      <div style={{ fontSize: '9.5px', color: '#92400e', marginTop: '2px', fontWeight: 600 }}>🎂 {cakeSpecsText}</div>
+                    )}
+                    {cakeMessageText && (
+                      <div style={{ fontSize: '9.5px', color: '#047857', marginTop: '2px', fontStyle: 'italic' }}>✍ {cakeMessageText}</div>
+                    )}
                     {customText && <div className="product-custom">✨ {customText}</div>}
                     {item.customizations?.isGiftBundle && item.customizations?.giftComponents && (
                       <div style={{ fontSize: '10px', color: '#be123c', marginTop: '6px' }}>

@@ -747,6 +747,78 @@ const OrderDetailsPage: React.FC = () => {
                         {item.customizations ? (
                           <div className="grid grid-cols-1 gap-2.5 mt-1 text-xs">
                             
+                            {/* Cake Specifications */}
+                            {(item.customizations.cakeWeight || item.customizations.weight || item.customizations.cakeFlavor || item.customizations.flavor || item.customizations.cakeShape || item.customizations.shape || item.customizations.prepTime || item.customizations.occasion || item.customizations.eggless !== undefined) && (
+                              <div className="bg-amber-500/10 dark:bg-amber-950/20 border border-amber-300/40 dark:border-amber-800/40 p-3 rounded-xl space-y-1.5">
+                                <div className="flex items-center gap-1.5 text-amber-900 dark:text-amber-300 font-bold text-[10px] uppercase tracking-wider">
+                                  <span>🎂 Bakery Specification</span>
+                                </div>
+                                <div className="flex flex-wrap items-center gap-2 text-xs">
+                                  {(item.customizations.cakeFlavor || item.customizations.flavor) && (
+                                    <span className="font-semibold px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 text-[10px] capitalize">
+                                      Flavor: {item.customizations.cakeFlavor || item.customizations.flavor}
+                                    </span>
+                                  )}
+                                  {(item.customizations.cakeWeight || item.customizations.weight) && (
+                                    <span className="font-bold px-2 py-0.5 rounded-md bg-stone-900 text-white dark:bg-white dark:text-stone-900 text-[10px]">
+                                      Weight: {item.customizations.cakeWeight || item.customizations.weight}
+                                    </span>
+                                  )}
+                                  {(item.customizations.cakeShape || item.customizations.shape) && (
+                                    <span className="px-2 py-0.5 rounded-md bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 font-medium text-[10px] capitalize">
+                                      Shape: {item.customizations.cakeShape || item.customizations.shape}
+                                    </span>
+                                  )}
+                                  {item.customizations.eggless !== undefined && (
+                                    <Badge variant="outline" className={cn(
+                                      "text-[10px] font-semibold py-0.5 px-2",
+                                      item.customizations.eggless ? "border-emerald-500 text-emerald-700 bg-emerald-50" : "border-amber-500 text-amber-700 bg-amber-50"
+                                    )}>
+                                      {item.customizations.eggless ? '🍃 100% Eggless (Veg)' : '🥚 Contains Egg'}
+                                    </Badge>
+                                  )}
+                                  {item.customizations.prepTime && (
+                                    <span className="px-2 py-0.5 rounded-md bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400 text-[10px]">
+                                      Prep: {item.customizations.prepTime.replace(/-/g, ' ')}
+                                    </span>
+                                  )}
+                                  {item.customizations.occasion && (
+                                    <span className="px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 text-[10px] capitalize">
+                                      Occasion: {item.customizations.occasion}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Message on Cake */}
+                            {item.customizations.cakeMessage && (
+                              <div className="bg-stone-50 dark:bg-stone-900/60 border border-stone-200 dark:border-stone-800 p-3 rounded-xl space-y-1">
+                                <div className="flex items-center gap-1.5 text-stone-700 dark:text-stone-300 font-bold text-[10px] uppercase tracking-wider">
+                                  <span>✍ Piped Cake Message</span>
+                                </div>
+                                <p className="text-xs text-stone-900 dark:text-stone-100 italic font-semibold">
+                                  "{item.customizations.cakeMessage}"
+                                </p>
+                              </div>
+                            )}
+
+                            {/* Cake Add-ons */}
+                            {item.customizations.addons && item.customizations.addons.length > 0 && (
+                              <div className="bg-rose-50/50 dark:bg-rose-950/20 border border-rose-200/40 dark:border-rose-900/40 p-3 rounded-xl space-y-1.5">
+                                <div className="flex items-center gap-1.5 text-rose-800 dark:text-rose-300 font-bold text-[10px] uppercase tracking-wider">
+                                  <span>✨ Cake Add-ons ({item.customizations.addons.length})</span>
+                                </div>
+                                <div className="flex flex-wrap gap-1">
+                                  {item.customizations.addons.map((a: any, idx: number) => (
+                                    <Badge key={idx} variant="outline" className="text-[10px] bg-white/80 dark:bg-stone-900 border-rose-200 text-rose-700 font-semibold py-0.5 px-2">
+                                      + {a.name || a.title} (₹{a.price})
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            
                             {/* Message Card */}
                             {item.customizations.messageCard && (
                               <div className="bg-amber-50/50 dark:bg-amber-950/10 border border-amber-200/40 dark:border-amber-900/20 p-3 rounded-xl space-y-1">

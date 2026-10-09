@@ -317,6 +317,40 @@ const OrderHistory = () => {
                           {displayOrderPrice(item.price, order.currency, order.currencyRate)} ×{' '}
                           {item.quantity}
                         </div>
+
+                        {/* Cake & Customization Details */}
+                        {item.customizations && (
+                          <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs">
+                            {(item.customizations.cakeFlavor || item.customizations.flavor) && (
+                              <span className="px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-medium capitalize">
+                                🍰 {item.customizations.cakeFlavor || item.customizations.flavor}
+                              </span>
+                            )}
+                            {(item.customizations.cakeWeight || item.customizations.weight) && (
+                              <span className="px-2 py-0.5 rounded-md bg-stone-100 text-stone-800 text-[10px] font-bold">
+                                {item.customizations.cakeWeight || item.customizations.weight}
+                              </span>
+                            )}
+                            {(item.customizations.cakeShape || item.customizations.shape) && (
+                              <span className="px-2 py-0.5 rounded-md bg-stone-50 text-stone-700 text-[10px] capitalize">
+                                {item.customizations.cakeShape || item.customizations.shape}
+                              </span>
+                            )}
+                            {item.customizations.eggless !== undefined && (
+                              <span className={cn(
+                                "px-2 py-0.5 rounded-md text-[10px] font-semibold",
+                                item.customizations.eggless ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-amber-50 text-amber-700 border border-amber-200"
+                              )}>
+                                {item.customizations.eggless ? '🍃 100% Eggless' : '🥚 Contains Egg'}
+                              </span>
+                            )}
+                            {item.customizations.cakeMessage && (
+                              <div className="w-full text-xs text-stone-600 italic mt-0.5">
+                                ✍ "{item.customizations.cakeMessage}"
+                              </div>
+                            )}
+                          </div>
+                        )}
                         {isDelivered && item.product?._id ? (
                           <Button
                             variant="outline"

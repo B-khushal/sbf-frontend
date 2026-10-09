@@ -1,5 +1,6 @@
 export const PRIMARY_CATEGORIES = [
   { value: "flowers", label: "Flowers" },
+  { value: "cakes", label: "Cakes" },
   { value: "chocolate", label: "Chocolate" },
   { value: "birthday", label: "Birthday" },
   { value: "anniversary", label: "Anniversary" },
@@ -26,6 +27,15 @@ export type CategoryNavItem = {
 };
 
 export const CATEGORY_SUBCATEGORIES: Record<string, Array<{ value: string; label: string }>> = {
+  cakes: [
+    { value: "chocolate-cake", label: "Chocolate Cakes" },
+    { value: "black-forest", label: "Black Forest" },
+    { value: "red-velvet", label: "Red Velvet" },
+    { value: "fruit-cake", label: "Fruit & Pineapple" },
+    { value: "butterscotch", label: "Butterscotch" },
+    { value: "celebration-cake", label: "Celebration Cakes" },
+    { value: "cake-combos", label: "Cake & Flower Combos" },
+  ],
   flowers: [
     { value: "roses", label: "Roses" },
     { value: "lilies", label: "Lilies" },
@@ -119,6 +129,21 @@ export const CATEGORY_NAV_ITEMS: CategoryNavItem[] = [
       { value: "tulips", label: "Tulips", path: "/shop/tulips" },
       { value: "orchids", label: "Orchids", path: "/shop/orchids" },
       { value: "sunflowers", label: "Sunflowers", path: "/shop/sunflowers" },
+    ],
+  },
+  {
+    name: "🎂 Cakes",
+    path: "/cakes",
+    emoji: "🎂",
+    description: "Freshly crafted celebration cakes",
+    popular: true,
+    subcategories: [
+      { value: "chocolate-cake", label: "Chocolate Cakes", path: "/cakes?category=chocolate" },
+      { value: "red-velvet", label: "Red Velvet", path: "/cakes?category=red-velvet" },
+      { value: "black-forest", label: "Black Forest", path: "/cakes?category=black-forest" },
+      { value: "fruit-cake", label: "Fruit Cakes", path: "/cakes?category=fruit" },
+      { value: "celebration-cake", label: "Celebration Cakes", path: "/cakes?category=premium" },
+      { value: "cake-combos", label: "Cake & Flower Combos", path: "/cakes?category=combos" },
     ],
   },
   {

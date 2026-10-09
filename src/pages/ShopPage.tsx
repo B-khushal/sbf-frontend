@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import ContactModal from "@/components/ui/ContactModal";
 import { PRIMARY_CATEGORIES, matchesCategoryGroup, normalizeCategoryKey, normalizeCategoryLabel } from "@/utils/categoryTaxonomy";
 import { preprocessProductForSearch, createSearchIndex, rankSearchResults } from "@/utils/searchHelper";
+import { getProductEffectivePrice } from "@/utils/pricing";
 
 const CATEGORY_SLUG_MAP: Record<string, string> = {
   "budget-friendly": "Budget Friendly",
@@ -373,19 +374,7 @@ export const getProductSellingPrice = (product: any): number => {
     });
     return total;
   }
-  const basePrice = Number(product.price) || 0;
-  if (
-    (product.discountType === 'direct' || product.discountType === 'fixed') &&
-    typeof product.discountPrice === 'number' &&
-    product.discountPrice > 0 &&
-    product.discountPrice < basePrice
-  ) {
-    return product.discountPrice;
-  }
-  if (product.discount && Number(product.discount) > 0) {
-    return Math.round(basePrice * (1 - Number(product.discount) / 100));
-  }
-  return basePrice;
+  return getProductEffectivePrice(product);
 };
 
 interface ShopPageProps {

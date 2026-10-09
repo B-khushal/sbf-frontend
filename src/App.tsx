@@ -38,6 +38,7 @@ const CartPage = lazy(() => import('./pages/CartPage'));
 const AboutPage = lazy(() => import('./pages/AboutPage'));
 const ContactPage = lazy(() => import('./pages/ContactPage'));
 const WishlistPage = lazy(() => import("./pages/wishlist"));
+const CakesCategoryPage = lazy(() => import("./pages/CakesCategoryPage"));
 
 // Auth Pages (lazy loaded)
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
@@ -861,6 +862,16 @@ const App = () => {
                             <Route path="/flower-delivery-secunderabad" element={
                               <Suspense fallback={<LoadingFallback message="Loading Secunderabad flower delivery..." />}>
                                 <SecunderabadDeliveryPage />
+                              </Suspense>
+                            } />
+                            <Route path="/cakes" element={
+                              <Suspense fallback={<LoadingFallback message="Loading cakes collection..." />}>
+                                <CakesCategoryPage />
+                              </Suspense>
+                            } />
+                            <Route path="/shop/cakes" element={
+                              <Suspense fallback={<LoadingFallback message="Loading cakes collection..." />}>
+                                <CakesCategoryPage />
                               </Suspense>
                             } />
                             <Route path="/budget-friendly" element={<Navigate to="/shop/budget-friendly" replace />} />

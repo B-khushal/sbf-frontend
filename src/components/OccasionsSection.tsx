@@ -155,14 +155,18 @@ const OccasionProductCard = ({
 
     const addToCartFn = onAddToCart || addToCart;
     const discountedPrice = getProductEffectivePrice(product);
+    const regularPrice = Number(product.price || 0);
+    const hasDiscount = discountedPrice > 0 && regularPrice > discountedPrice;
+    const discountPct = hasDiscount ? Math.round(((regularPrice - discountedPrice) / regularPrice) * 100) : (product.discount || 0);
 
     const cartItem = {
       _id: product._id,
       title: product.title,
       price: discountedPrice,
+      originalPrice: regularPrice || discountedPrice,
       images: product.images || [],
       quantity: 1,
-      discount: product.discount || 0,
+      discount: discountPct,
       category: product.category,
       description: product.description,
     };
@@ -177,14 +181,18 @@ const OccasionProductCard = ({
 
     const addToCartFn = onAddToCart || addToCart;
     const discountedPrice = getProductEffectivePrice(product);
+    const regularPrice = Number(product.price || 0);
+    const hasDiscount = discountedPrice > 0 && regularPrice > discountedPrice;
+    const discountPct = hasDiscount ? Math.round(((regularPrice - discountedPrice) / regularPrice) * 100) : (product.discount || 0);
 
     const cartItem = {
       _id: product._id,
       title: product.title,
       price: discountedPrice,
+      originalPrice: regularPrice || discountedPrice,
       images: product.images || [],
       quantity: 1,
-      discount: product.discount || 0,
+      discount: discountPct,
       category: product.category,
       description: product.description,
     };
@@ -229,9 +237,9 @@ const OccasionProductCard = ({
           )}
 
           {/* Discount Badge */}
-          {config.showDiscount !== false && product.discount > 0 && (
+          {config.showDiscount !== false && discountedPrice > 0 && Number(product.price || 0) > discountedPrice && (
             <span className="absolute top-3 left-3 z-20 bg-rose-600 text-white text-[9px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm">
-              {product.discount}% OFF
+              -{Math.round(((Number(product.price) - discountedPrice) / Number(product.price)) * 100)}% OFF
             </span>
           )}
 
@@ -328,7 +336,7 @@ const OccasionProductCard = ({
               <span className="text-sm sm:text-base font-bold text-gray-900">
                 {formatPrice(convertPrice(discountedPrice))}
               </span>
-              {product.discount > 0 && (
+              {discountedPrice > 0 && Number(product.price || 0) > discountedPrice && (
                 <span className="text-[10px] sm:text-xs text-gray-400 line-through">
                   {formatPrice(convertPrice(product.price))}
                 </span>

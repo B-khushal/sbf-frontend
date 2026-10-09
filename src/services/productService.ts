@@ -66,6 +66,8 @@ export interface PriceVariant {
   label: string;
   price: number;
   stock: number;
+  discountPrice?: number;
+  comparePrice?: number;
 }
 
 export interface ProductVideo {
@@ -924,6 +926,52 @@ class ProductService {
     const config = createAuthConfig();
     const response = await axios.post(`${API_URL}/products/order/reset`, { section }, config);
     return response.data;
+  }
+
+  // Merchandising & Smart Product Ordering APIs
+  async getMerchandisingSettings(): Promise<any> {
+    const config = createAuthConfig();
+    const response = await axios.get(`${API_URL}/products/merchandising/settings`, config);
+    return response.data;
+  }
+
+  async updateMerchandisingSettings(settings: { global?: any; section?: string; sectionConfig?: any }): Promise<any> {
+    const config = createAuthConfig();
+    const response = await axios.put(`${API_URL}/products/merchandising/settings`, settings, config);
+    return response.data;
+  }
+
+  async getMerchandisingPreview(
+    section: string,
+    params?: { mode?: string; protectedTopCount?: number; rotationFrequency?: string; rotationVersion?: number }
+  ): Promise<any> {
+    const config = createAuthConfig();
+    const response = await axios.get(`${API_URL}/products/merchandising/preview/${section}`, {
+      ...config,
+      params
+    });
+    return response.data;
+  }
+
+  async bumpRotationVersion(section: string): Promise<any> {
+    const config = createAuthConfig();
+    const response = await axios.post(`${API_URL}/products/merchandising/rotate-now/${section}`, {}, config);
+    return response.data;
+  }
+
+  async getMerchandisingAnalytics(): Promise<any> {
+    const config = createAuthConfig();
+    const response = await axios.get(`${API_URL}/products/merchandising/analytics`, config);
+    return response.data;
+  }
+
+  async trackMerchandisingEvent(eventData: any): Promise<any> {
+    try {
+      const response = await axios.post(`${API_URL}/products/merchandising/track`, eventData);
+      return response.data;
+    } catch (e) {
+      return { success: false };
+    }
   }
 
   // Occasion management APIs

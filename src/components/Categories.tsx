@@ -42,11 +42,44 @@ const pickCategoryIcon = (name: string) => {
   return Flower2;
 };
 
+const getCategoryUrl = (category: any): string => {
+  if (!category) return '/shop';
+
+  const normalizedName = (category.name || '').toLowerCase().trim();
+  const slug = (category.slug || toCategoryQueryValue(category.name || '')).toLowerCase().trim();
+
+  // Explicit route for Cakes collection
+  if (normalizedName === 'cakes' || slug === 'cakes') {
+    return '/cakes';
+  }
+
+  // If a direct categoryUrl or link exists on the category object
+  const directUrl = category.categoryUrl || category.link;
+  if (typeof directUrl === 'string') {
+    const trimmed = directUrl.trim();
+    if (trimmed.startsWith('/')) {
+      if (trimmed.toLowerCase().includes('category=cakes')) {
+        return '/cakes';
+      }
+      return trimmed;
+    }
+  }
+
+  // Default clean slug route e.g. /flowers, /birthday, /anniversary
+  if (slug) {
+    return `/${slug}`;
+  }
+
+  return '/shop';
+};
+
 const CategoryCircleItem = ({ category, index, isVisible }: { category: any; index: number; isVisible: boolean }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
+  const href = getCategoryUrl(category);
+
   return (
     <Link
-      to={`/shop?category=${encodeURIComponent(toCategoryQueryValue(category.name))}`}
+      to={href}
       className="flex flex-col items-center justify-start flex-shrink-0 snap-center select-none group"
       style={{
         opacity: isVisible ? 1 : 0,
@@ -238,10 +271,11 @@ interface CategoryCardProps {
 
 const DesktopCategoryCard = ({ category, isVisible, delay }: CategoryCardProps) => {
   const Icon = pickCategoryIcon(category.name);
+  const href = getCategoryUrl(category);
 
   return (
     <Link
-      to={`/shop?category=${encodeURIComponent(toCategoryQueryValue(category.name))}`}
+      to={href}
       className="group relative block overflow-hidden rounded-2xl bg-white shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100 hover:border-primary/20 transition-all duration-300 ease-out hover:-translate-y-1.5 hover:shadow-[0_15px_30px_rgba(19,14,17,0.08)]"
       style={{
         opacity: isVisible ? 1 : 0,

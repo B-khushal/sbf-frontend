@@ -235,6 +235,18 @@ const initialFormData: ProductData = {
   valentineSlug: '',
   seasonalCampaigns: [],
   campaignSettings: {},
+  cakeAttributes: {
+    flavor: '',
+    weight: '',
+    shape: 'round',
+    eggless: false,
+    prepTime: '',
+    availableSizes: [],
+    occasion: '',
+  },
+  plantAttributes: {},
+  chocolateAttributes: {},
+  hamperAttributes: {},
 };
 
 const ProductForm = () => {
@@ -622,6 +634,7 @@ const ProductForm = () => {
   const [newPriceVariant, setNewPriceVariant] = useState<PriceVariant>({
     label: '',
     price: 0,
+    discountPrice: undefined,
     stock: 0
   });
 
@@ -806,6 +819,18 @@ const ProductForm = () => {
         seasonalCampaigns: Array.isArray(data.seasonalCampaigns) ? data.seasonalCampaigns : [],
         campaignSettings: data.campaignSettings || {},
         occasionIds: Array.isArray(data.occasionIds) ? data.occasionIds : [],
+        cakeAttributes: data.cakeAttributes || (data as any).details?.cakeAttributes || {
+          flavor: '',
+          weight: '',
+          shape: 'round',
+          eggless: false,
+          prepTime: '',
+          availableSizes: [],
+          occasion: '',
+        },
+        plantAttributes: data.plantAttributes || (data as any).details?.plantAttributes || {},
+        chocolateAttributes: data.chocolateAttributes || (data as any).details?.chocolateAttributes || {},
+        hamperAttributes: data.hamperAttributes || (data as any).details?.hamperAttributes || {},
       };
 
       const rawDiscountType = data.discountType || (data.details && (data.details as any).discountType) || 'percentage';
@@ -1782,7 +1807,11 @@ const ProductForm = () => {
         } : undefined,
         seasonalCampaigns: formData.seasonalCampaigns || [],
         campaignSettings: formData.campaignSettings || {},
-        occasionIds: formData.occasionIds || []
+        occasionIds: formData.occasionIds || [],
+        cakeAttributes: formData.cakeAttributes,
+        plantAttributes: formData.plantAttributes,
+        chocolateAttributes: formData.chocolateAttributes,
+        hamperAttributes: formData.hamperAttributes,
       };
       
       if (isEditMode) {
@@ -2154,6 +2183,7 @@ const ProductForm = () => {
     setNewPriceVariant({
       label: '',
       price: 0,
+      discountPrice: undefined,
       stock: 0
     });
 
@@ -2584,7 +2614,7 @@ const ProductForm = () => {
                 {/* Add New Variant */}
                 <div className="space-y-4">
                   <h4 className="font-medium text-gray-900">Add New Variant</h4>
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
                     <div className="space-y-2">
                       <Label>Label</Label>
                       <Input
@@ -2597,9 +2627,20 @@ const ProductForm = () => {
                       <Label>Price (₹)</Label>
                       <Input
                         type="number"
-                        placeholder="Enter price"
-                        value={newPriceVariant.price}
+                        placeholder="Enter regular price"
+                        value={newPriceVariant.price || ''}
                         onChange={(e) => handlePriceVariantChange('price', Number(e.target.value))}
+                        min="0"
+                        step="0.01"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Direct Discount Price (₹)</Label>
+                      <Input
+                        type="number"
+                        placeholder="Optional discount price"
+                        value={newPriceVariant.discountPrice !== undefined ? newPriceVariant.discountPrice : ''}
+                        onChange={(e) => handlePriceVariantChange('discountPrice', e.target.value === '' ? undefined as any : Number(e.target.value))}
                         min="0"
                         step="0.01"
                       />
@@ -2641,6 +2682,11 @@ const ProductForm = () => {
                               <Badge variant="outline" className="bg-purple-50 text-purple-700">
                                 ₹{variant.price}
                               </Badge>
+                              {variant.discountPrice !== undefined && variant.discountPrice !== null && Number(variant.discountPrice) < Number(variant.price) && (
+                                <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-300">
+                                  Pays: ₹{variant.discountPrice}
+                                </Badge>
+                              )}
                             </div>
                             <div className="text-sm text-gray-500">
                               Stock: {variant.stock} units

@@ -236,7 +236,7 @@ export const HomeSeoSection: React.FC = () => {
             <Link to="/shop?category=Bouquets" className="p-3 rounded-xl bg-slate-50 hover:bg-rose-50 hover:text-rose-700 transition-colors border border-slate-100 font-medium text-slate-700 text-center">
               💐 Fresh Hand Bouquets
             </Link>
-            <Link to="/shop?category=Cakes" className="p-3 rounded-xl bg-slate-50 hover:bg-rose-50 hover:text-rose-700 transition-colors border border-slate-100 font-medium text-slate-700 text-center">
+            <Link to="/cakes" className="p-3 rounded-xl bg-slate-50 hover:bg-rose-50 hover:text-rose-700 transition-colors border border-slate-100 font-medium text-slate-700 text-center">
               🎂 Cakes & Combos
             </Link>
             <Link to="/occasions/birthday" className="p-3 rounded-xl bg-slate-50 hover:bg-rose-50 hover:text-rose-700 transition-colors border border-slate-100 font-medium text-slate-700 text-center">

@@ -1784,6 +1784,21 @@ const CheckoutShippingPage = () => {
                             {/* Customization Details */}
                             {item.customizations && (
                               <div className="ml-15 pl-3 border-l-2 border-purple-200 space-y-1">
+                                {(item.customizations.cakeWeight || item.customizations.cakeFlavor || item.customizations.flavor) && (
+                                  <div className="text-xs font-semibold text-amber-900 dark:text-amber-200">
+                                    🎂 {item.customizations.cakeFlavor || item.customizations.flavor ? `${item.customizations.cakeFlavor || item.customizations.flavor} • ` : ''}{item.customizations.cakeWeight || ''} {item.customizations.cakeShape || item.customizations.shape ? `• ${item.customizations.cakeShape || item.customizations.shape}` : ''} {item.customizations.eggless !== undefined ? `• ${item.customizations.eggless ? 'Eggless' : 'Contains Egg'}` : ''}
+                                  </div>
+                                )}
+                                {item.customizations.cakeMessage && (
+                                  <div className="text-xs text-stone-700 dark:text-stone-300 italic">
+                                    Message on Cake: "{item.customizations.cakeMessage}"
+                                  </div>
+                                )}
+                                {item.customizations.addons && item.customizations.addons.length > 0 && (
+                                  <div className="text-xs text-amber-800 dark:text-amber-300">
+                                    ✨ Add-ons: {item.customizations.addons.map((a: any) => a.name || a.title).join(', ')}
+                                  </div>
+                                )}
                                 {item.customizations.number && (
                                   <div className="text-xs text-gray-600">
                                     Number: {item.customizations.number}
