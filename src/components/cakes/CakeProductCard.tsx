@@ -13,6 +13,7 @@ import { QuickViewModal } from "../ui/QuickViewModal";
 import ProtectedImage from "../ui/ProtectedImage";
 import { promptLoginForAddToCart } from "@/utils/cartAuthHelper";
 import { getProductEffectivePrice } from "@/utils/pricing";
+import { formatCakeWeightLabel } from "@/utils/cakeHelpers";
 
 export interface CakeProductCardProps {
   product: any;
@@ -64,7 +65,8 @@ export const CakeProductCard: React.FC<CakeProductCardProps> = ({
         : (activePrice < Number(product.price) ? Number(product.price) : null));
 
   // Weight display (e.g. from cakeAttributes, variant, or availableSizes)
-  const displayWeight = activeVariant?.size || activeVariant?.label || product.cakeAttributes?.weight || product.cakeAttributes?.availableSizes?.[0] || "Standard";
+  const rawWeight = activeVariant?.size || activeVariant?.label || product.cakeAttributes?.weight || product.cakeAttributes?.availableSizes?.[0] || "1/2 kg";
+  const displayWeight = formatCakeWeightLabel(rawWeight);
   const isEggless = product.cakeAttributes?.eggless !== undefined ? Boolean(product.cakeAttributes.eggless) : undefined;
 
   const isOutOfStock = Boolean(
@@ -340,7 +342,7 @@ export const CakeProductCard: React.FC<CakeProductCardProps> = ({
                           : "bg-amber-50/80 text-amber-950 hover:bg-amber-100/90 border border-amber-200/80"
                       )}
                     >
-                      <span>{variant.size || variant.name || variant.label}</span>
+                      <span>{formatCakeWeightLabel(variant.size || variant.name || variant.label)}</span>
                       <span className={cn(
                         "font-extrabold text-[10px]",
                         isSelected ? "text-amber-300" : "text-amber-800"

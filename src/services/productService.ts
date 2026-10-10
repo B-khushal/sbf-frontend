@@ -124,6 +124,7 @@ export interface ProductData {
   description: string;
   price: number;
   costPrice?: number;
+  comparePrice?: number;
   discount: number;
   discountType?: 'percentage' | 'direct' | string;
   discountPrice?: number;

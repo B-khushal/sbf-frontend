@@ -14,6 +14,7 @@ import api from "@/services/api";
 import { useNavigate } from "react-router-dom";
 import productService, { ProductData, OccasionData } from "@/services/productService";
 import { getProductEffectivePrice } from "@/utils/pricing";
+import { formatCakeWeightLabel } from "@/utils/cakeHelpers";
 import { getImageUrl } from "@/config";
 import { useSeasonalCampaign } from "@/contexts/SeasonalCampaignContext";
 import { useValentine } from "@/contexts/ValentineContext";
@@ -2258,7 +2259,7 @@ const AdminProducts: React.FC = () => {
                                   key={vIdx}
                                   className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-950 border border-amber-200/80 shadow-2xs"
                                 >
-                                  <span>{v.label || v.size}:</span>
+                                  <span>{formatCakeWeightLabel(v.label || v.size)}:</span>
                                   <span className="text-emerald-700 font-extrabold">₹{vEff}</span>
                                   {hasVDisc && (
                                     <span className="text-stone-400 line-through text-[9px]">₹{vComp}</span>

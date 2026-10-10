@@ -17,6 +17,7 @@ import { ProductCardSkeleton } from "./HomePageSkeleton";
 import { promptLoginForAddToCart } from "@/utils/cartAuthHelper";
 import { getProductEffectivePrice } from "@/utils/pricing";
 import { marketingTracker } from "@/services/marketingTracker";
+import { formatCakeWeightLabel } from "@/utils/cakeHelpers";
 
 
 export type Product = {
@@ -668,7 +669,7 @@ export const ProductCard = ({ product, onAddToCart }: {
                           : "bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200"
                       )}
                     >
-                      <span>{v.label || v.size}</span>
+                      <span>{formatCakeWeightLabel(v.label || v.size)}</span>
                       <span className={isSel ? "text-amber-300" : "text-amber-800"}>₹{vEff}</span>
                       {hasDisc && (
                         <span className="line-through text-[8px] text-stone-400">₹{vComp}</span>

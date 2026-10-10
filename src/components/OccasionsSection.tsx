@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { Heart, ShoppingBag, Star, ChevronLeft, ChevronRight, Play, Eye, ShoppingCart } from "lucide-react";
+import { Heart, ShoppingBag, Star, ChevronLeft, ChevronRight, Play, Eye, ShoppingCart, Scale, Sparkles } from "lucide-react";
 import * as LucideIcons from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -16,6 +16,7 @@ import productService, { OccasionData, ProductData } from "@/services/productSer
 import { cn } from "@/lib/utils";
 import { ProductCardSkeleton } from "./HomePageSkeleton";
 import { getProductEffectivePrice } from "@/utils/pricing";
+import { formatCakeWeightLabel } from "@/utils/cakeHelpers";
 
 // Lucide icon dynamic loader helper
 const OccasionIcon = ({ name, className, style }: { name: string; className?: string; style?: React.CSSProperties }) => {
@@ -149,59 +150,129 @@ const OccasionProductCard = ({
     }
   };
 
+  const isCake = Boolean(
+    product.catalogType === 'cake' ||
+    (typeof product.category === 'string' && product.category.toLowerCase().includes('cake')) ||
+    (Array.isArray(product.categories) && product.categories.some(c => String(c).toLowerCase().includes('cake'))) ||
+    product.cakeAttributes ||
+    (product.title && product.title.toLowerCase().includes('cake'))
+  );
+
+  const variants = Array.isArray(product.priceVariants) && product.priceVariants.length > 0
+    ? product.priceVariants
+    : [];
+
+  const [selectedVariantIdx, setSelectedVariantIdx] = useState<number>(0);
+  const activeVariant = variants[selectedVariantIdx] || null;
+
+  const baseRawPrice = activeVariant ? Number(activeVariant.price) : Number(product.price || 0);
+  const effectivePrice = activeVariant
+    ? getProductEffectivePrice(product, Number(activeVariant.price), activeVariant)
+    : getProductEffectivePrice(product);
+
+  const activeComparePrice = activeVariant
+    ? (activeVariant.comparePrice && Number(activeVariant.comparePrice) > effectivePrice
+        ? Number(activeVariant.comparePrice)
+        : (effectivePrice < baseRawPrice ? baseRawPrice : null))
+    : (product.comparePrice && Number(product.comparePrice) > effectivePrice
+        ? Number(product.comparePrice)
+        : (effectivePrice < Number(product.price || 0) ? Number(product.price || 0) : null));
+
+  const hasDiscount = effectivePrice > 0 && activeComparePrice !== null && activeComparePrice > effectivePrice;
+  const discountPercentage = hasDiscount
+    ? Math.round(((activeComparePrice - effectivePrice) / activeComparePrice) * 100)
+    : (product.discount || 0);
+
+  const rawWeight = activeVariant?.label || (activeVariant as any)?.size || product.cakeAttributes?.weight || product.cakeAttributes?.availableSizes?.[0] || (isCake ? "1/2 kg" : undefined);
+  const displayWeight = isCake && rawWeight ? formatCakeWeightLabel(rawWeight) : rawWeight;
+  const isEggless = product.cakeAttributes?.eggless !== undefined ? Boolean(product.cakeAttributes.eggless) : undefined;
+
+  const isOutOfStock = Boolean(
+    product.isOutOfStock === true ||
+    product.isAvailable === false ||
+    (typeof product.stock === 'number' && product.stock <= 0) ||
+    (typeof product.countInStock === 'number' && product.countInStock <= 0)
+  );
+
+  const buildCartItem = () => {
+    const prodId = String(product._id || product.id || '');
+    const resolvedTitle = product.title || product.name || 'Product';
+    return {
+      _id: prodId,
+      id: prodId,
+      productId: prodId,
+      title: resolvedTitle,
+      name: resolvedTitle,
+      price: effectivePrice,
+      originalPrice: activeComparePrice || effectivePrice,
+      images: product.images || ((product as any).image ? [(product as any).image] : []),
+      quantity: 1,
+      discount: discountPercentage || product.discount || 0,
+      category: product.category || (isCake ? "cakes" : undefined),
+      description: product.description,
+      selectedVariant: activeVariant
+        ? {
+            id: (activeVariant as any).id || (activeVariant as any)._id,
+            label: (activeVariant as any).size || activeVariant.label || displayWeight,
+            price: effectivePrice,
+            stock: activeVariant.stock || 50,
+          }
+        : isCake && displayWeight
+        ? {
+            label: displayWeight,
+            price: effectivePrice,
+            stock: 50,
+          }
+        : undefined,
+      customizations: isCake
+        ? {
+            cakeWeight: displayWeight,
+            weight: displayWeight,
+            eggless: isEggless,
+            cakeFlavor: product.cakeAttributes?.flavor,
+            flavor: product.cakeAttributes?.flavor,
+            cakeShape: product.cakeAttributes?.shape,
+            shape: product.cakeAttributes?.shape,
+            prepTime: product.cakeAttributes?.prepTime,
+            occasion: product.cakeAttributes?.occasion,
+          }
+        : undefined,
+    };
+  };
+
   const handleAddToCartAction = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
-    const addToCartFn = onAddToCart || addToCart;
-    const discountedPrice = getProductEffectivePrice(product);
-    const regularPrice = Number(product.price || 0);
-    const hasDiscount = discountedPrice > 0 && regularPrice > discountedPrice;
-    const discountPct = hasDiscount ? Math.round(((regularPrice - discountedPrice) / regularPrice) * 100) : (product.discount || 0);
+    if (isOutOfStock) {
+      toast.error("This item is currently out of stock");
+      return;
+    }
 
-    const cartItem = {
-      _id: product._id,
-      title: product.title,
-      price: discountedPrice,
-      originalPrice: regularPrice || discountedPrice,
-      images: product.images || [],
-      quantity: 1,
-      discount: discountPct,
-      category: product.category,
-      description: product.description,
-    };
+    const addToCartFn = onAddToCart || addToCart;
+    const cartItem = buildCartItem();
 
     addToCartFn(cartItem, 1);
-    toast.success("🛒 Added to cart!");
+    toast.success(isCake ? "🎂 Added cake to cart!" : "🛒 Added to cart!", {
+      description: isCake && displayWeight ? `${product.title} (${displayWeight}) added to your celebration order` : undefined,
+    });
   };
 
   const handleBuyNowAction = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
-    const addToCartFn = onAddToCart || addToCart;
-    const discountedPrice = getProductEffectivePrice(product);
-    const regularPrice = Number(product.price || 0);
-    const hasDiscount = discountedPrice > 0 && regularPrice > discountedPrice;
-    const discountPct = hasDiscount ? Math.round(((regularPrice - discountedPrice) / regularPrice) * 100) : (product.discount || 0);
+    if (isOutOfStock) {
+      toast.error("This item is currently out of stock");
+      return;
+    }
 
-    const cartItem = {
-      _id: product._id,
-      title: product.title,
-      price: discountedPrice,
-      originalPrice: regularPrice || discountedPrice,
-      images: product.images || [],
-      quantity: 1,
-      discount: discountPct,
-      category: product.category,
-      description: product.description,
-    };
+    const addToCartFn = onAddToCart || addToCart;
+    const cartItem = buildCartItem();
 
     addToCartFn(cartItem, 1);
     navigate('/cart');
   };
-
-  const discountedPrice = getProductEffectivePrice(product);
 
   return (
     <>
@@ -210,7 +281,7 @@ const OccasionProductCard = ({
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={handleMouseLeave}
         className={cn(
-          "group relative flex flex-col justify-between h-[420px] md:h-[490px] w-full bg-white border border-gray-100 rounded-[18px] overflow-hidden shadow-[0_4px_16px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_28px_rgba(212,175,55,0.08)] hover:-translate-y-1 transition-all duration-300 cursor-pointer select-none",
+          "group relative flex flex-col justify-between min-h-[430px] md:min-h-[500px] h-full w-full bg-white border border-gray-100 rounded-[18px] overflow-hidden shadow-[0_4px_16px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_28px_rgba(212,175,55,0.08)] hover:-translate-y-1 transition-all duration-300 cursor-pointer select-none",
           config.cardStyle === 'bordered' && "border-2 border-slate-200",
           config.cardStyle === 'minimalist' && "border-none shadow-none rounded-none"
         )}
@@ -236,11 +307,39 @@ const OccasionProductCard = ({
             </button>
           )}
 
-          {/* Discount Badge */}
-          {config.showDiscount !== false && discountedPrice > 0 && Number(product.price || 0) > discountedPrice && (
-            <span className="absolute top-3 left-3 z-20 bg-rose-600 text-white text-[9px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm">
-              -{Math.round(((Number(product.price) - discountedPrice) / Number(product.price)) * 100)}% OFF
-            </span>
+          {/* Badges Overlay */}
+          <div className="absolute top-3 left-3 z-20 flex flex-col gap-1 items-start">
+            {isOutOfStock ? (
+              <span className="backdrop-blur-md bg-stone-900/85 text-white border border-white/20 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                Out of Stock
+              </span>
+            ) : (
+              <>
+                {config.showDiscount !== false && hasDiscount && (
+                  <span className="bg-rose-600 text-white text-[9px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm">
+                    -{discountPercentage}% OFF
+                  </span>
+                )}
+                {product.isBestseller && (
+                  <span className="bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-xs text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
+                    <Sparkles className="w-2.5 h-2.5" /> Bestseller
+                  </span>
+                )}
+                {isCake && isEggless && (
+                  <span className="bg-emerald-50/95 backdrop-blur-sm text-emerald-700 border border-emerald-200/80 text-[8px] sm:text-[9px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-xs">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" /> Eggless
+                  </span>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* Floating Weight Pill on Image for Cakes */}
+          {isCake && displayWeight && (
+            <div className="absolute bottom-2.5 left-2.5 z-20 bg-white/95 backdrop-blur-md border border-amber-200/80 text-amber-900 text-[10px] font-extrabold px-2 py-0.5 rounded-lg shadow-xs flex items-center gap-1 max-w-[85%]">
+              <Scale className="w-3 h-3 text-amber-600 shrink-0" />
+              <span className="truncate">{displayWeight}</span>
+            </div>
           )}
 
           {/* Quick View Button Overlay (desktop only) */}
@@ -328,17 +427,65 @@ const OccasionProductCard = ({
                 ⚡ Same Day Delivery
               </span>
             )}
+
+            {/* Selectable Weights for Cakes / Price Variants */}
+            {variants.length > 1 && (
+              <div className="flex flex-wrap gap-1 pt-1" onClick={(e) => e.stopPropagation()}>
+                {variants.slice(0, 4).map((v: any, idx: number) => {
+                  const isSel = idx === selectedVariantIdx;
+                  const vEff = getProductEffectivePrice(product, Number(v.price), v);
+                  const vRaw = Number(v.price || 0);
+                  const vComp = v.comparePrice ? Number(v.comparePrice) : (vEff < vRaw ? vRaw : 0);
+                  const hasDisc = vComp > vEff;
+                  const rawLabel = v.label || (v as any).size || v.name;
+                  const label = isCake ? formatCakeWeightLabel(rawLabel) : rawLabel;
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setSelectedVariantIdx(idx)}
+                      className={cn(
+                        "text-[9px] font-bold px-2 py-0.5 rounded-md transition-all flex items-center gap-1",
+                        isSel
+                          ? "bg-slate-900 text-white shadow-xs"
+                          : "bg-amber-50/80 text-amber-950 hover:bg-amber-100 border border-amber-200/70"
+                      )}
+                    >
+                      <span>{label}</span>
+                      <span className={isSel ? "text-amber-300 font-extrabold" : "text-amber-800 font-extrabold"}>
+                        ₹{vEff}
+                      </span>
+                      {hasDisc && (
+                        <span className="line-through text-[8px] text-slate-400 font-normal">
+                          ₹{vComp}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <div className="mt-3 space-y-2.5">
             {/* Prices */}
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-sm sm:text-base font-bold text-gray-900">
-                {formatPrice(convertPrice(discountedPrice))}
-              </span>
-              {discountedPrice > 0 && Number(product.price || 0) > discountedPrice && (
-                <span className="text-[10px] sm:text-xs text-gray-400 line-through">
-                  {formatPrice(convertPrice(product.price))}
+            <div className="flex items-baseline justify-between gap-1.5">
+              <div className="flex items-baseline gap-1.5">
+                <span className={cn(
+                  "text-sm sm:text-base font-bold",
+                  hasDiscount ? "text-rose-600 font-extrabold" : "text-gray-900"
+                )}>
+                  {formatPrice(convertPrice(effectivePrice))}
+                </span>
+                {hasDiscount && (
+                  <span className="text-[10px] sm:text-xs text-gray-400 line-through">
+                    {formatPrice(convertPrice(activeComparePrice))}
+                  </span>
+                )}
+              </div>
+              {isCake && displayWeight && (
+                <span className="text-[10px] text-amber-800 font-medium truncate max-w-[90px]" title={displayWeight}>
+                  {displayWeight}
                 </span>
               )}
             </div>
@@ -349,6 +496,7 @@ const OccasionProductCard = ({
                 variant="outline"
                 size="sm"
                 onClick={handleAddToCartAction}
+                disabled={isOutOfStock}
                 className="w-full h-8 sm:h-9 text-[10px] sm:text-xs border-slate-200 hover:border-slate-800 rounded-lg text-slate-700 bg-white font-bold flex items-center justify-center gap-1 active:scale-95 transition-all"
               >
                 <ShoppingCart className="h-3 w-3" />
@@ -357,6 +505,7 @@ const OccasionProductCard = ({
               <Button
                 size="sm"
                 onClick={handleBuyNowAction}
+                disabled={isOutOfStock}
                 className="w-full h-8 sm:h-9 text-[10px] sm:text-xs bg-gradient-to-r from-bloom-pink-500 to-rose-500 hover:from-bloom-pink-600 hover:to-rose-600 text-white border-0 rounded-lg font-bold flex items-center justify-center gap-1 active:scale-95 transition-all shadow-[0_2px_6px_rgba(244,63,94,0.15)]"
               >
                 Buy Now
@@ -368,7 +517,12 @@ const OccasionProductCard = ({
 
       {/* Quick View Modal */}
       <QuickViewModal
-        product={product as any}
+        product={{
+          ...product,
+          price: effectivePrice,
+          originalPrice: activeComparePrice || effectivePrice,
+          priceVariants: product.priceVariants,
+        } as any}
         isOpen={isQuickViewOpen}
         onClose={() => setIsQuickViewOpen(false)}
         onAddToCart={onAddToCart}
@@ -624,7 +778,7 @@ export const OccasionsSection = ({ section, onAddToCart }: OccasionsSectionProps
                   {products.map((product) => (
                     <div
                       key={product._id}
-                      className="snap-start flex-shrink-0 w-[calc(50%-8px)] sm:w-[calc(50%-10px)] md:w-[calc(33.33%-10px)] lg:w-[calc(25%-15px)] xl:w-[calc(25%-15px)]"
+                      className="snap-start flex-shrink-0 w-[calc(50%-8px)] sm:w-[calc(50%-10px)] md:w-[calc(33.33%-10px)] lg:w-[calc(25%-15px)] xl:w-[calc(25%-15px)] flex"
                     >
                       <OccasionProductCard
                         product={product}

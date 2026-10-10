@@ -13,11 +13,26 @@ export interface CakeVariantOption {
 }
 
 export const DEFAULT_CAKE_VARIANTS: CakeVariantOption[] = [
-  { label: '½ KG', price: 799, stock: 20, serves: '4–6 People' },
+  { label: '1/2 kg', price: 799, stock: 20, serves: '4–6 People' },
   { label: '1 KG', price: 1299, stock: 20, serves: '8–10 People' },
   { label: '1.5 KG', price: 1799, stock: 15, serves: '12–15 People' },
   { label: '2 KG', price: 2299, stock: 10, serves: '16–20 People' },
 ];
+
+/**
+ * Normalizes cake weight labels so "0.5 kg" or "0.5 Kg" is formatted as "1/2 kg"
+ */
+export const formatCakeWeightLabel = (weight?: string | null): string => {
+  if (!weight) return '1/2 kg';
+  const str = String(weight).trim();
+  return str
+    .replace(/^0\.5\s*kg$/i, '1/2 kg')
+    .replace(/^0\.5kg$/i, '1/2 kg')
+    .replace(/^0\.5$/i, '1/2 kg')
+    .replace(/^½\s*kg$/i, '1/2 kg')
+    .replace(/^½\s*KG$/i, '1/2 kg')
+    .replace(/\b0\.5\s*kg\b/gi, '1/2 kg');
+};
 
 /**
  * Robust dynamic detection for whether a product is in the Cakes category or is a Cake offering.
@@ -77,6 +92,8 @@ export const isCakeProduct = (product: any): boolean => {
  */
 export const getCakeVariants = (product: any): CakeVariantOption[] => {
   const servesMap: Record<string, string> = {
+    '1/2 kg': '4–6 People',
+    '1/2kg': '4–6 People',
     '0.5 kg': '4–6 People',
     '0.5kg': '4–6 People',
     '½ kg': '4–6 People',
@@ -107,7 +124,7 @@ export const getCakeVariants = (product: any): CakeVariantOption[] => {
     if (!label) return '';
     const clean = label.trim().toLowerCase();
     if (servesMap[clean]) return servesMap[clean];
-    if (clean.includes('0.5') || clean.includes('½')) return '4–6 People';
+    if (clean.includes('0.5') || clean.includes('½') || clean.includes('1/2')) return '4–6 People';
     if (clean.includes('1.5')) return '12–15 People';
     if (clean.includes('1')) return '8–10 People';
     if (clean.includes('2.5')) return '20–24 People';
@@ -121,7 +138,8 @@ export const getCakeVariants = (product: any): CakeVariantOption[] => {
   // 1. Explicit priceVariants on product (from product form or DB)
   if (Array.isArray(product?.priceVariants) && product.priceVariants.length > 0) {
     return product.priceVariants.map((v: any, idx: number) => {
-      const label = v.label || v.name || v.size || `Variant ${idx + 1}`;
+      const rawLabel = v.label || v.name || v.size || `Variant ${idx + 1}`;
+      const label = formatCakeWeightLabel(rawLabel);
       return {
         label,
         price: Number(v.price) > 0 ? Number(v.price) : (Number(product.price) || 0),
@@ -135,17 +153,20 @@ export const getCakeVariants = (product: any): CakeVariantOption[] => {
 
   // 2. If availableSizes are configured in cakeAttributes
   if (Array.isArray(product?.cakeAttributes?.availableSizes) && product.cakeAttributes.availableSizes.length > 0) {
-    return product.cakeAttributes.availableSizes.map((size: string) => ({
-      label: size,
-      price: Number(product.price) || 0,
-      stock: Number(product.countInStock !== undefined ? product.countInStock : 20),
-      serves: getServes(size),
-    }));
+    return product.cakeAttributes.availableSizes.map((size: string) => {
+      const label = formatCakeWeightLabel(size);
+      return {
+        label,
+        price: Number(product.price) || 0,
+        stock: Number(product.countInStock !== undefined ? product.countInStock : 20),
+        serves: getServes(label),
+      };
+    });
   }
 
   // 3. If a single weight is configured in cakeAttributes (e.g. "1 Kg")
   if (product?.cakeAttributes?.weight && typeof product.cakeAttributes.weight === 'string' && product.cakeAttributes.weight.trim()) {
-    const w = product.cakeAttributes.weight.trim();
+    const w = formatCakeWeightLabel(product.cakeAttributes.weight.trim());
     return [{
       label: w,
       price: Number(product.price) || 0,
