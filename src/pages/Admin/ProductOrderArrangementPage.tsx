@@ -63,10 +63,10 @@ import {
   BarChart2,
   Sliders,
 } from "lucide-react";
-import MerchandisingStrategyPanel from "@/components/admin/merchandising/MerchandisingStrategyPanel";
-import MerchandisingPreviewDialog from "@/components/admin/merchandising/MerchandisingPreviewDialog";
-import MerchandisingAnalyticsDialog from "@/components/admin/merchandising/MerchandisingAnalyticsDialog";
-import MerchandisingGlobalSettingsDialog from "@/components/admin/merchandising/MerchandisingGlobalSettingsDialog";
+import MerchandisingStrategyPanel from "@/components/Admin/merchandising/MerchandisingStrategyPanel";
+import MerchandisingPreviewDialog from "@/components/Admin/merchandising/MerchandisingPreviewDialog";
+import MerchandisingAnalyticsDialog from "@/components/Admin/merchandising/MerchandisingAnalyticsDialog";
+import MerchandisingGlobalSettingsDialog from "@/components/Admin/merchandising/MerchandisingGlobalSettingsDialog";
 
 const STANDARD_STOREFRONT_SECTIONS = [
   { value: "shop", label: "🛒 Shop Page (Global Catalog)" },
