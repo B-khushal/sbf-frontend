@@ -153,6 +153,9 @@ export interface ProductData {
   isNewArrival: boolean;
   isRecommended?: boolean;
   isFeatured: boolean;
+  isBestseller?: boolean;
+  badge?: string;
+  shortDescription?: string;
   hidden: boolean;
   sameDay?: boolean;
   rating?: number;

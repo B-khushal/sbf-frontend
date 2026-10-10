@@ -99,14 +99,77 @@ const renderCustomizationRows = (customizations: unknown) => {
   }
 
   if (typeof customizations === 'object') {
+    const cust = customizations as Record<string, any>;
+    const isCombo = cust.isCombo || cust.isGiftBundle;
+    const cakeWeight = cust.cakeWeight || cust.weight;
+    const cakeFlavor = cust.cakeFlavor || cust.flavor;
+    const cakeShape = cust.cakeShape || cust.shape;
+    const cakeServes = cust.cakeServes;
+    const eggless = cust.eggless;
+
+    const cakeSpecs: string[] = [];
+    if (cakeWeight) cakeSpecs.push(String(cakeWeight));
+    if (cakeFlavor) cakeSpecs.push(String(cakeFlavor));
+    if (cakeShape) cakeSpecs.push(String(cakeShape));
+    if (cakeServes) cakeSpecs.push(String(cakeServes));
+    if (eggless !== undefined) cakeSpecs.push(eggless ? '100% Eggless (Veg)' : 'Contains Egg');
+
     return (
-      <div className="space-y-1">
-        {Object.entries(customizations as Record<string, unknown>).map(([key, value]) => (
-          <p key={key} className="text-sm font-medium text-orange-950">
-            <span className="font-bold capitalize">{key.replace(/([A-Z])/g, ' $1')}:</span>{' '}
-            {typeof value === 'string' ? value : JSON.stringify(value)}
-          </p>
-        ))}
+      <div className="space-y-1.5 text-xs">
+        {isCombo && (
+          <div className="inline-block bg-rose-100/80 text-rose-800 border border-rose-200 rounded px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider">
+            🎁 Duo Combo Package
+          </div>
+        )}
+        {cakeSpecs.length > 0 && (
+          <div className="font-bold text-amber-950 bg-amber-100/70 border border-amber-200/80 rounded px-2 py-1 flex items-center gap-1.5">
+            <span>🎂</span>
+            <span>{cakeSpecs.join(' • ')}</span>
+          </div>
+        )}
+        {cust.cakeMessage && (
+          <div className="text-emerald-900 bg-emerald-50 border border-emerald-200/70 rounded px-2 py-1 font-semibold italic">
+            ✍ Inscription on Cake: "{cust.cakeMessage}"
+          </div>
+        )}
+        {Array.isArray(cust.giftComponents) && cust.giftComponents.length > 0 && (
+          <div className="bg-rose-50/80 border border-rose-200/60 rounded px-2 py-1 text-rose-900">
+            <span className="font-bold block mb-0.5">📦 Package Contents:</span>
+            {cust.giftComponents.map((comp: any, cIdx: number) => (
+              <div key={cIdx} className="pl-1">
+                • <strong>{comp.category ? `${comp.category}: ` : ''}</strong>{comp.name}
+              </div>
+            ))}
+          </div>
+        )}
+        {Array.isArray(cust.addons) && cust.addons.length > 0 && (
+          <div className="text-amber-900 bg-amber-50/60 border border-amber-200/60 rounded px-2 py-1 font-semibold">
+            ✨ Add-ons: {cust.addons.map((a: any) => a.name || a.title).join(', ')}
+          </div>
+        )}
+        {cust.messageCard && (
+          <div className="text-orange-950 italic">
+            💌 Card: "{cust.messageCard}"
+          </div>
+        )}
+        {cust.number && (
+          <div className="text-blue-900 font-semibold">
+            🔢 Number: {cust.number}
+          </div>
+        )}
+        {cust.personalization && (
+          <div className="text-indigo-900 font-semibold">
+            ✨ {cust.personalization.label || 'Personalization'}: {cust.personalization.value}
+          </div>
+        )}
+        {Object.entries(cust)
+          .filter(([key]) => !['isCombo', 'isGiftBundle', 'cakeWeight', 'weight', 'cakeFlavor', 'flavor', 'cakeShape', 'shape', 'cakeServes', 'eggless', 'cakeMessage', 'giftComponents', 'addons', 'messageCard', 'number', 'personalization', 'customMessage', 'characterCount'].includes(key))
+          .map(([key, value]) => (
+            <p key={key} className="text-sm font-medium text-orange-950">
+              <span className="font-bold capitalize">{key.replace(/([A-Z])/g, ' $1')}:</span>{' '}
+              {typeof value === 'string' ? value : JSON.stringify(value)}
+            </p>
+          ))}
       </div>
     );
   }

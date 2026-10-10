@@ -13,7 +13,7 @@ import productService from '@/services/productService';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, Trash2, ArrowLeft, Upload, Image as ImageIcon, Plus, X, Wand2, Flower2, Gift, Camera, Hash, MessageSquare, IndianRupee, AlertCircle, ChevronDown, ChevronUp, Heart, Film, Play, Link as LinkIcon, Move, FolderTree, Sparkles, CheckCircle } from 'lucide-react';
+import { Loader2, Trash2, ArrowLeft, Upload, Image as ImageIcon, Plus, X, Wand2, Flower2, Gift, Camera, Hash, MessageSquare, IndianRupee, AlertCircle, ChevronDown, ChevronUp, Heart, Film, Play, Link as LinkIcon, Move, FolderTree, Sparkles, CheckCircle, Calculator } from 'lucide-react';
 import api from '../../services/api';
 import axios from 'axios'; // Keep for axios.isAxiosError
 import ProductFeaturesToggle from '@/components/ui/ProductFeaturesToggle';
@@ -22,7 +22,7 @@ import { PRIMARY_CATEGORIES, CATEGORY_SUBCATEGORIES, getAdditionalCategoryOption
 import categoryService, { Category } from '@/services/categoryService';
 import { useSeasonalCampaign } from '@/contexts/SeasonalCampaignContext';
 import { cn } from '@/lib/utils';
-import { CakeFormSection, PlantFormSection, ChocolateFormSection, HamperFormSection } from '@/components/Admin/ProductFormSections';
+import { CakeFormSection, PlantFormSection, ChocolateFormSection, HamperFormSection, ComboFormSection } from '@/components/Admin/ProductFormSections';
 
 type FormErrors = {
   [key in keyof ProductData]?: string;
@@ -2351,6 +2351,55 @@ const ProductForm = () => {
               )}
             </div>
 
+            {/* 💐 Connect Bouquet & 🎂 Cake Combo Section */}
+            {(formData.catalogType === 'combo' ||
+              formData.category === 'combos' ||
+              formData.category?.toLowerCase().includes('combo') ||
+              formData.subcategory?.toLowerCase().includes('combo') ||
+              formData.title?.toLowerCase().includes('combo') ||
+              formData.description?.toLowerCase().includes('combo') ||
+              (Array.isArray(formData.comboAttributes?.comboProducts) && formData.comboAttributes.comboProducts.length > 0)) ? (
+              <div className="pt-1 pb-1">
+                <ComboFormSection formData={formData} setFormData={setFormData} />
+              </div>
+            ) : (
+              <div className="flex items-center justify-between p-3 rounded-xl border border-dashed border-rose-200 bg-rose-50/40 text-xs">
+                <span className="text-slate-600 font-medium flex items-center gap-1.5">
+                  <Gift className="w-4 h-4 text-rose-500" />
+                  Building a Bouquet + Cake Combo package?
+                </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setFormData(prev => ({
+                    ...prev,
+                    catalogType: 'combo',
+                    category: 'combos',
+                    categories: Array.from(new Set([...(prev.categories || []), 'combos']))
+                  }))}
+                  className="h-7 text-xs font-bold text-rose-600 border-rose-300 hover:bg-rose-100 bg-white"
+                >
+                  <Plus className="w-3.5 h-3.5 mr-1" /> Connect Bouquet & Cake
+                </Button>
+              </div>
+            )}
+
+            {/* Calculated Price Notice */}
+            {formData.comboAttributes?.comboProducts && formData.comboAttributes.comboProducts.length >= 2 && (
+              <div className="p-3 rounded-xl bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border border-emerald-200 flex items-center justify-between text-xs text-emerald-900 font-semibold shadow-2xs">
+                <span className="flex items-center gap-2">
+                  <Calculator className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>
+                    Regular Price auto-calculated from {formData.comboAttributes.comboProducts[0]?.name} (₹{formData.comboAttributes.comboProducts[0]?.price}) + {formData.comboAttributes.comboProducts[1]?.name} (₹{formData.comboAttributes.comboProducts[1]?.price})
+                  </span>
+                </span>
+                <Badge className="bg-emerald-600 text-white text-[10px] font-extrabold uppercase shrink-0">
+                  Calculated Both Products
+                </Badge>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="price" className="flex items-center gap-1.5 font-medium">
@@ -3006,7 +3055,7 @@ const ProductForm = () => {
           <ChocolateFormSection formData={formData} setFormData={setFormData} />
         )}
 
-        {(formData.category === 'baskets' || formData.category === 'hampers' || formData.subcategory?.toLowerCase().includes('hamper') || formData.catalogType === 'hamper') && (
+        {(formData.category === 'baskets' || formData.category === 'hampers' || formData.category === 'combos' || formData.category.includes('combo') || formData.subcategory?.toLowerCase().includes('hamper') || formData.subcategory?.toLowerCase().includes('combo') || formData.catalogType === 'hamper' || formData.catalogType === 'combo') && (
           <HamperFormSection formData={formData} setFormData={setFormData} />
         )}
 

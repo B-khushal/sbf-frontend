@@ -20,6 +20,9 @@ interface HamperComponentItem {
   price: number;
   image: string;
   quantity: number;
+  catalogType?: string;
+  priceVariants?: any[];
+  cakeAttributes?: any;
 }
 
 const COMBO_CATEGORIES = [
@@ -54,6 +57,7 @@ const HampersBuilderPage: React.FC = () => {
   const [customPriceOverride, setCustomPriceOverride] = useState<boolean>(false);
   const [selectedComponents, setSelectedComponents] = useState<HamperComponentItem[]>([]);
   const [hamperImage, setHamperImage] = useState("");
+  const [cakeUpgradeAmount, setCakeUpgradeAmount] = useState<number>(450);
 
   // Search filter for available items
   const [searchTerm, setSearchTerm] = useState("");
@@ -88,6 +92,15 @@ const HampersBuilderPage: React.FC = () => {
 
   const addComponentToHamper = (product: ProductData) => {
     const prodImg = product.images?.[0] || (product as any).image || "";
+
+    // If cake has price variants with upgrade difference, suggest it
+    if (product.priceVariants && product.priceVariants.length >= 2) {
+      const diff = Number(product.priceVariants[1].price) - Number(product.priceVariants[0].price);
+      if (diff > 0) {
+        setCakeUpgradeAmount(diff);
+      }
+    }
+
     setSelectedComponents(prev => {
       const existing = prev.find(item => item.id === product._id);
       if (existing) {
@@ -104,6 +117,9 @@ const HampersBuilderPage: React.FC = () => {
           price: product.price || 0,
           image: prodImg,
           quantity: 1,
+          catalogType: product.catalogType,
+          priceVariants: product.priceVariants,
+          cakeAttributes: product.cakeAttributes,
         }
       ];
     });
@@ -169,18 +185,60 @@ const HampersBuilderPage: React.FC = () => {
     try {
       setSaving(true);
       const mainImage = hamperImage || selectedComponents[0]?.image || "";
+
+      const cakeComponent = selectedComponents.find(c =>
+        c.category === 'cakes' ||
+        c.category === 'cake' ||
+        c.catalogType === 'cake' ||
+        c.name.toLowerCase().includes('cake')
+      );
+
+      const halfKgPrice = sellingPrice || totalComponentPrice;
+      const oneKgPrice = halfKgPrice + (cakeUpgradeAmount || 450);
+      const halfKgCompare = totalComponentPrice > halfKgPrice ? totalComponentPrice : Math.round(halfKgPrice * 1.25);
+      const oneKgCompare = halfKgCompare + (cakeUpgradeAmount || 450) + 100;
+
+      const priceVariants = cakeComponent ? [
+        {
+          label: '1/2 kg',
+          title: '1/2 kg Cake + Bouquet',
+          price: halfKgPrice,
+          comparePrice: halfKgCompare,
+          stock: 50,
+          serves: '4–6 People',
+        },
+        {
+          label: '1 kg',
+          title: '1 kg Cake + Bouquet',
+          price: oneKgPrice,
+          comparePrice: oneKgCompare,
+          stock: 50,
+          serves: '8–10 People',
+        }
+      ] : undefined;
+
       const comboProductData: Partial<ProductData> = {
         title: hamperTitle,
         description: hamperDescription || `Exclusive combo hamper package featuring ${selectedComponents.map(c => c.name).join(", ")}.`,
         category: comboCategory,
         categories: [comboCategory, "combos"],
         catalogType: "combo",
-        price: sellingPrice || totalComponentPrice,
+        price: halfKgPrice,
+        comparePrice: halfKgCompare,
         discount: discountPercent,
         images: mainImage ? [mainImage, ...selectedComponents.map(c => c.image).filter(img => img && img !== mainImage)] : selectedComponents.map(c => c.image).filter(Boolean),
         countInStock: 50,
         comboName: hamperTitle,
         comboDescription: hamperDescription,
+        priceVariants,
+        cakeAttributes: cakeComponent ? {
+          weight: '1/2 kg',
+          availableSizes: ['1/2 kg', '1 kg'],
+          flavor: cakeComponent.cakeAttributes?.flavor || cakeComponent.name,
+          eggless: cakeComponent.cakeAttributes?.eggless !== undefined ? cakeComponent.cakeAttributes.eggless : true,
+          occasion: 'celebration',
+          serves: '4–6 People (1/2 kg) / 8–10 People (1 kg)',
+        } : undefined,
         comboAttributes: {
           comboProducts: selectedComponents.map(c => ({
             productId: c.id,
@@ -189,12 +247,15 @@ const HampersBuilderPage: React.FC = () => {
             price: c.price,
             image: c.image,
             quantity: c.quantity,
+            catalogType: c.catalogType,
+            priceVariants: c.priceVariants,
+            cakeAttributes: c.cakeAttributes,
           })),
         }
       };
 
       await productService.createProduct(comboProductData as ProductData);
-      toast({ title: "Combo Product Created! 🎉", description: `${hamperTitle} has been saved to your catalog.` });
+      toast({ title: "Combo Product Created! 🎉", description: `${hamperTitle} has been saved with cake options.` });
       navigate("/admin/products/combos");
     } catch (error: any) {
       console.error("Error creating combo product:", error);
@@ -410,6 +471,47 @@ const HampersBuilderPage: React.FC = () => {
                   />
                 </div>
               </div>
+
+              {/* Connected Cake Options (1/2 kg & 1 kg) */}
+              {selectedComponents.some(c => c.category === 'cakes' || c.category === 'cake' || c.catalogType === 'cake' || c.name.toLowerCase().includes('cake')) && (
+                <div className="p-3.5 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50/50 dark:from-amber-950/40 dark:to-slate-900 border border-amber-200/80 dark:border-amber-800/60 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-bold text-amber-950 dark:text-amber-200 flex items-center gap-1.5">
+                      🎂 Cake Weight Options in Combo
+                    </Label>
+                    <Badge variant="outline" className="text-[10px] bg-amber-100 text-amber-800 border-amber-300 font-bold">
+                      2 Sizes Enabled
+                    </Badge>
+                  </div>
+                  <p className="text-[11px] text-amber-900/80 dark:text-amber-300/80 leading-snug">
+                    Customers can seamlessly pick between <strong>1/2 kg</strong> and <strong>1 kg</strong> cake on the product details page.
+                  </p>
+                  <div className="grid grid-cols-2 gap-2 text-xs pt-0.5">
+                    <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-900 shadow-2xs">
+                      <span className="text-[10px] text-slate-500 font-semibold block">1/2 kg Option (Base)</span>
+                      <strong className="text-slate-900 dark:text-slate-100 text-sm">₹{sellingPrice || totalComponentPrice}</strong>
+                      <span className="text-[10px] text-slate-400 block mt-0.5">Serves 4–6</span>
+                    </div>
+                    <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-900 shadow-2xs">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] text-slate-500 font-semibold">1 kg Option (+₹)</span>
+                      </div>
+                      <div className="flex items-center gap-1 mt-1">
+                        <span className="text-xs font-bold text-slate-400">+</span>
+                        <Input
+                          type="number"
+                          value={cakeUpgradeAmount}
+                          onChange={(e) => setCakeUpgradeAmount(Number(e.target.value))}
+                          className="h-6 text-xs p-1 font-bold text-amber-600 border-slate-200 dark:border-slate-700"
+                        />
+                      </div>
+                      <span className="text-[10px] text-emerald-600 font-bold block mt-1">
+                        Total: ₹{(sellingPrice || totalComponentPrice) + cakeUpgradeAmount}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 

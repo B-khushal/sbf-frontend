@@ -656,85 +656,93 @@ const CheckoutConfirmationPage = () => {
                             <div className="font-semibold text-purple-700 flex items-center gap-2">
                               🎨 Customization Details
                             </div>
-                            {item.customizations ? (
-                              <div className="space-y-1 mt-1 text-xs">
-                                {item.customizations.cakeWeight && (
-                                  <div className="flex items-center gap-2 text-amber-800 font-semibold">
-                                    🎂 <span>Cake Weight: {item.customizations.cakeWeight} {item.customizations.eggless !== undefined ? `(${item.customizations.eggless ? 'Eggless' : 'Contains Egg'})` : ''}</span>
-                                  </div>
-                                )}
-                                {item.customizations.cakeMessage && (
-                                  <div className="flex items-center gap-2 text-stone-700 italic">
-                                    ✍ <span>Message on Cake: "{item.customizations.cakeMessage}"</span>
-                                  </div>
-                                )}
-                                {item.customizations.addons && item.customizations.addons.length > 0 && (
-                                  <div className="flex items-center gap-2 text-amber-700">
-                                    ✨ <span>Add-ons: {item.customizations.addons.map((a: any) => a.name || a.title).join(', ')}</span>
-                                  </div>
-                                )}
-                                {item.customizations.photo && (
-                                  <div className="flex items-center gap-2 text-blue-700">
-                                    📸 <span>Photo uploaded</span>
-                                    <a href={item.customizations.photo} download className="underline ml-2" target="_blank" rel="noopener noreferrer">Download</a>
-                                  </div>
-                                )}
-                                {item.customizations.number && (
-                                  <div className="flex items-center gap-2 text-green-700">
-                                    🔢 <span>Number: {item.customizations.number}</span>
-                                  </div>
-                                )}
-                                {item.customizations.messageCard && (
-                                  <div className="flex items-center gap-2 text-yellow-700">
-                                    ✍ <span>Message: {item.customizations.messageCard}</span>
-                                  </div>
-                                )}
-                                {item.customizations.selectedFlowers && item.customizations.selectedFlowers.length > 0 && (
-                                  <div className="flex items-center gap-2 text-pink-700">
-                                    🌸 <span>
-                                      {item.customizations.selectedFlowers.reduce((total: number, f: any) => total + (f.quantity || 1), 0)} flower add-on(s):
-                                      {item.customizations.selectedFlowers.map((f: any) => `${f.name}${(f.quantity || 1) > 1 ? `×${f.quantity || 1}` : ''}`).join(', ')}
-                                    </span>
-                                  </div>
-                                )}
-                                {item.customizations.selectedChocolates && item.customizations.selectedChocolates.length > 0 && (
-                                  <div className="flex items-center gap-2 text-orange-700">
-                                    🍫 <span>
-                                      {item.customizations.selectedChocolates.reduce((total: number, c: any) => total + (c.quantity || 1), 0)} chocolate add-on(s):
-                                      {item.customizations.selectedChocolates.map((c: any) => `${c.name}${(c.quantity || 1) > 1 ? `×${c.quantity || 1}` : ''}`).join(', ')}
-                                    </span>
-                                  </div>
-                                )}
-                                {item.customizations.isGiftBundle && item.customizations.giftComponents && (
-                                  <div className="text-xs text-rose-600 bg-rose-50/50 border border-rose-100 rounded-lg p-2 space-y-1 mt-1">
-                                    <div className="font-semibold">🎁 Selected items:</div>
-                                    {item.customizations.giftComponents.map((comp: any, idx: number) => (
-                                      <div key={idx} className="text-[11px] text-gray-600 pl-1.5 flex items-center gap-1">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-rose-400 shrink-0" />
-                                        <span className="capitalize font-semibold text-rose-500">{comp.category.replace('_', ' ')}:</span>
-                                        <span className="truncate">{comp.name}</span>
-                                      </div>
-                                    ))}
-                                    {item.customizations.customMessage && (
-                                      <div className="text-[11px] text-gray-500 italic pl-1.5 pt-0.5 border-t border-rose-100/50">
-                                        Card Message: "{item.customizations.customMessage}"
-                                      </div>
-                                    )}
-                                  </div>
-                                )}
-                                {item.customizations.personalization && (
-                                  <div className="text-xs text-slate-700 bg-slate-50/50 border border-slate-200/40 rounded-lg p-2 space-y-1 mt-1.5">
-                                    <div className="font-semibold text-slate-800 flex items-center gap-1">
-                                      <span>✨ Customization:</span>
+                            {item.customizations ? (() => {
+                              const cust = item.customizations as any;
+                              return (
+                                <div className="space-y-1 mt-1 text-xs">
+                                  {(cust.isCombo || cust.giftComponents) && (
+                                    <div className="inline-block text-[10px] bg-rose-50 text-rose-700 border border-rose-200 rounded px-1.5 py-0.5 font-bold uppercase tracking-wide">
+                                      🎁 Duo Combo Package
                                     </div>
-                                    <div className="pl-1 text-slate-600">
-                                      <span className="font-medium text-slate-500">{item.customizations.personalization.label || 'Recipient Name'}:</span>{' '}
-                                      <span className="font-bold text-slate-800">{item.customizations.personalization.value}</span>
+                                  )}
+                                  {(cust.cakeWeight || cust.weight || cust.cakeFlavor || cust.flavor) && (
+                                    <div className="flex items-center gap-2 text-amber-800 font-semibold">
+                                      🎂 <span>{cust.cakeFlavor || cust.flavor ? `${cust.cakeFlavor || cust.flavor} • ` : ''}{cust.cakeWeight || cust.weight || ''} {cust.cakeShape || cust.shape ? `• ${cust.cakeShape || cust.shape} ` : ''}{cust.cakeServes ? `• ${cust.cakeServes} ` : ''}{cust.eggless !== undefined ? `(${cust.eggless ? 'Eggless' : 'Contains Egg'})` : ''}</span>
                                     </div>
-                                  </div>
-                                )}
-                              </div>
-                            ) : (
+                                  )}
+                                  {cust.cakeMessage && (
+                                    <div className="flex items-center gap-2 text-stone-700 italic">
+                                      ✍ <span>Message on Cake: "{cust.cakeMessage}"</span>
+                                    </div>
+                                  )}
+                                  {cust.addons && cust.addons.length > 0 && (
+                                    <div className="flex items-center gap-2 text-amber-700">
+                                      ✨ <span>Add-ons: {cust.addons.map((a: any) => a.name || a.title).join(', ')}</span>
+                                    </div>
+                                  )}
+                                  {cust.photo && (
+                                    <div className="flex items-center gap-2 text-blue-700">
+                                      📸 <span>Photo uploaded</span>
+                                      <a href={cust.photo} download className="underline ml-2" target="_blank" rel="noopener noreferrer">Download</a>
+                                    </div>
+                                  )}
+                                  {cust.number && (
+                                    <div className="flex items-center gap-2 text-green-700">
+                                      🔢 <span>Number: {cust.number}</span>
+                                    </div>
+                                  )}
+                                  {cust.messageCard && (
+                                    <div className="flex items-center gap-2 text-yellow-700">
+                                      ✍ <span>Message: {cust.messageCard}</span>
+                                    </div>
+                                  )}
+                                  {cust.selectedFlowers && cust.selectedFlowers.length > 0 && (
+                                    <div className="flex items-center gap-2 text-pink-700">
+                                      🌸 <span>
+                                        {cust.selectedFlowers.reduce((total: number, f: any) => total + (f.quantity || 1), 0)} flower add-on(s):
+                                        {cust.selectedFlowers.map((f: any) => `${f.name}${(f.quantity || 1) > 1 ? `×${f.quantity || 1}` : ''}`).join(', ')}
+                                      </span>
+                                    </div>
+                                  )}
+                                  {cust.selectedChocolates && cust.selectedChocolates.length > 0 && (
+                                    <div className="flex items-center gap-2 text-orange-700">
+                                      🍫 <span>
+                                        {cust.selectedChocolates.reduce((total: number, c: any) => total + (c.quantity || 1), 0)} chocolate add-on(s):
+                                        {cust.selectedChocolates.map((c: any) => `${c.name}${(c.quantity || 1) > 1 ? `×${c.quantity || 1}` : ''}`).join(', ')}
+                                      </span>
+                                    </div>
+                                  )}
+                                  {cust.isGiftBundle && cust.giftComponents && (
+                                    <div className="text-xs text-rose-600 bg-rose-50/50 border border-rose-100 rounded-lg p-2 space-y-1 mt-1">
+                                      <div className="font-semibold">🎁 Selected items:</div>
+                                      {cust.giftComponents.map((comp: any, idx: number) => (
+                                        <div key={idx} className="text-[11px] text-gray-600 pl-1.5 flex items-center gap-1">
+                                          <span className="w-1.5 h-1.5 rounded-full bg-rose-400 shrink-0" />
+                                          <span className="capitalize font-semibold text-rose-500">{comp.category.replace('_', ' ')}:</span>
+                                          <span className="truncate">{comp.name}</span>
+                                        </div>
+                                      ))}
+                                      {cust.customMessage && (
+                                        <div className="text-[11px] text-gray-500 italic pl-1.5 pt-0.5 border-t border-rose-100/50">
+                                          Card Message: "{cust.customMessage}"
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                  {cust.personalization && (
+                                    <div className="text-xs text-slate-700 bg-slate-50/50 border border-slate-200/40 rounded-lg p-2 space-y-1 mt-1.5">
+                                      <div className="font-semibold text-slate-800 flex items-center gap-1">
+                                        <span>✨ Customization:</span>
+                                      </div>
+                                      <div className="pl-1 text-slate-600">
+                                        <span className="font-medium text-slate-500">{cust.personalization.label || 'Recipient Name'}:</span>{' '}
+                                        <span className="font-bold text-slate-800">{cust.personalization.value}</span>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })() : (
                               <div className="text-xs text-gray-400 mt-1">No customization applied for this order.</div>
                             )}
                           </div>
@@ -814,17 +822,17 @@ const CheckoutConfirmationPage = () => {
                       <div className="text-sm text-gray-600">
                         <p>{getTimeSlot(order.shipping?.timeSlot || '').time}</p>
                         <div className="flex flex-wrap gap-1.5 mt-1.5">
-                          {(order.shipping?.timeSlot === 'midnight' || order.shipping?.deliveryType?.toLowerCase().includes('midnight')) && (
+                          {(order.shipping?.timeSlot === 'midnight' || (order.shipping as any)?.deliveryType?.toLowerCase().includes('midnight')) && (
                             <Badge variant="secondary" className="bg-purple-100 text-purple-800 border-purple-200">
                               🌙 Midnight Delivery
                             </Badge>
                           )}
-                          {(order.shipping?.surpriseDelivery || order.giftDetails?.surpriseDelivery) && (
+                          {((order.shipping as any)?.surpriseDelivery || order.giftDetails?.surpriseDelivery) && (
                             <Badge className="bg-rose-500 text-white font-bold border-0">
                               🎁 Surprise Delivery
                             </Badge>
                           )}
-                          {(order.shipping?.anonymousGift || order.giftDetails?.anonymousGift) && (
+                          {((order.shipping as any)?.anonymousGift || order.giftDetails?.anonymousGift) && (
                             <Badge className="bg-slate-800 text-white font-bold border-0">
                               🕵️ Anonymous Gift
                             </Badge>

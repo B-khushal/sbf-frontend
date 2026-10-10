@@ -451,12 +451,17 @@ const Invoice: React.FC<InvoiceProps> = ({ order, isAdmin = false }) => {
           <tbody>
             {items.map((item: any, idx: number) => {
               const title = item.product?.title || item.title || 'Florist Arrangement';
+              const isCombo = item.catalogType === 'combo' || item.category === 'combos' || item.customizations?.isCombo || Boolean(item.customizations?.isGiftBundle && item.customizations?.giftComponents);
+              
               const cakeSpecs: string[] = [];
               if (item.customizations?.cakeFlavor || item.customizations?.flavor) {
                 cakeSpecs.push(`Flavor: ${item.customizations.cakeFlavor || item.customizations.flavor}`);
               }
               if (item.customizations?.cakeWeight || item.customizations?.weight) {
                 cakeSpecs.push(`Weight: ${item.customizations.cakeWeight || item.customizations.weight}`);
+              }
+              if (item.customizations?.cakeServes) {
+                cakeSpecs.push(item.customizations.cakeServes);
               }
               if (item.customizations?.cakeShape || item.customizations?.shape) {
                 cakeSpecs.push(`Shape: ${item.customizations.cakeShape || item.customizations.shape}`);
@@ -468,26 +473,43 @@ const Invoice: React.FC<InvoiceProps> = ({ order, isAdmin = false }) => {
 
               const variantText = item.selectedVariant?.label
                 ? `Variant: ${item.selectedVariant.label}`
-                : (cakeSpecsText || (item.variantName ? item.variantName : 'Standard'));
+                : (isCombo ? 'Curated Combo Package' : (cakeSpecsText || (item.variantName ? item.variantName : 'Standard')));
               const customText = item.customizations?.messageCard ? `Message Card Included` : '';
               const cakeMessageText = item.customizations?.cakeMessage ? `Cake Inscription: "${item.customizations.cakeMessage}"` : '';
+              
+              const addonsList = Array.isArray(item.customizations?.addons) && item.customizations.addons.length > 0
+                ? item.customizations.addons.map((a: any) => a.name || a.title).join(', ')
+                : '';
+
               return (
                 <tr key={idx}>
                   <td className="col-desc">
-                    <div className="product-title">{title}</div>
+                    <div className="product-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      {title}
+                      {isCombo && (
+                        <span style={{ fontSize: '8.5px', background: '#fdf2f8', color: '#be123c', border: '1px solid #fbcfe8', borderRadius: '4px', padding: '1px 5px', fontWeight: 700, textTransform: 'uppercase' }}>
+                          Duo Combo
+                        </span>
+                      )}
+                    </div>
                     <div className="product-variant">{variantText}</div>
                     {cakeSpecsText && variantText !== cakeSpecsText && (
                       <div style={{ fontSize: '9.5px', color: '#92400e', marginTop: '2px', fontWeight: 600 }}>🎂 {cakeSpecsText}</div>
                     )}
                     {cakeMessageText && (
-                      <div style={{ fontSize: '9.5px', color: '#047857', marginTop: '2px', fontStyle: 'italic' }}>✍ {cakeMessageText}</div>
+                      <div style={{ fontSize: '9.5px', color: '#047857', marginTop: '2px', fontStyle: 'italic', fontWeight: 500 }}>✍ {cakeMessageText}</div>
+                    )}
+                    {addonsList && (
+                      <div style={{ fontSize: '9.5px', color: '#b45309', marginTop: '2px', fontWeight: 600 }}>✨ Add-ons: {addonsList}</div>
                     )}
                     {customText && <div className="product-custom">✨ {customText}</div>}
-                    {item.customizations?.isGiftBundle && item.customizations?.giftComponents && (
-                      <div style={{ fontSize: '10px', color: '#be123c', marginTop: '6px' }}>
-                        <strong>🎁 Included components:</strong>
+                    {isCombo && item.customizations?.giftComponents && (
+                      <div style={{ fontSize: '9.5px', color: '#be123c', marginTop: '5px', background: '#fff1f2', padding: '4px 8px', borderRadius: '4px', border: '1px solid #ffe4e6' }}>
+                        <strong style={{ display: 'block', marginBottom: '2px' }}>🎁 Combo Contents:</strong>
                         {item.customizations.giftComponents.map((comp: any, cIdx: number) => (
-                          <div key={cIdx} style={{ paddingLeft: '6px' }}>• {comp.name}</div>
+                          <div key={cIdx} style={{ paddingLeft: '4px', color: '#475569' }}>
+                            • <strong>{comp.category ? `${comp.category}: ` : ''}</strong>{comp.name}
+                          </div>
                         ))}
                       </div>
                     )}

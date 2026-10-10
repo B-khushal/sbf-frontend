@@ -1819,12 +1819,53 @@ export const AdminOrders: React.FC = () => {
                                   }}
                                 />
                                 <div>
-                                  <p className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                                    {name}
-                                  </p>
+                                  <div className="flex items-center gap-1.5 flex-wrap">
+                                    <p className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                                      {name}
+                                    </p>
+                                    {(item.customizations?.isCombo || item.customizations?.giftComponents) && (
+                                      <span className="text-[9px] bg-rose-50 text-rose-700 border border-rose-200 rounded px-1 py-0.2 font-bold uppercase">
+                                        🎁 Combo
+                                      </span>
+                                    )}
+                                  </div>
                                   <p className="text-[11px] text-slate-500 mt-0.5">
                                     Qty: <strong>{qty}</strong> × {formatPrice(unitPrice)}
+                                    {item.selectedVariant?.label && (
+                                      <span className="text-primary font-medium ml-1">({item.selectedVariant.label})</span>
+                                    )}
                                   </p>
+                                  {/* Customizations Breakdown */}
+                                  {item.customizations && (
+                                    <div className="mt-1 space-y-0.5 text-[11px]">
+                                      {(item.customizations.cakeWeight || item.customizations.weight || item.customizations.cakeFlavor || item.customizations.flavor) && (
+                                        <div className="text-amber-800 dark:text-amber-300 font-medium">
+                                          🎂 {item.customizations.cakeFlavor || item.customizations.flavor ? `${item.customizations.cakeFlavor || item.customizations.flavor} • ` : ''}{item.customizations.cakeWeight || item.customizations.weight || ''} {item.customizations.cakeShape || item.customizations.shape ? `• ${item.customizations.cakeShape || item.customizations.shape}` : ''} {item.customizations.cakeServes ? `• ${item.customizations.cakeServes}` : ''} {item.customizations.eggless !== undefined ? `• ${item.customizations.eggless ? '100% Eggless' : 'Contains Egg'}` : ''}
+                                        </div>
+                                      )}
+                                      {item.customizations.cakeMessage && (
+                                        <div className="text-emerald-700 dark:text-emerald-400 italic">
+                                          ✍ Cake Inscription: "{item.customizations.cakeMessage}"
+                                        </div>
+                                      )}
+                                      {item.customizations.addons && item.customizations.addons.length > 0 && (
+                                        <div className="text-amber-700 dark:text-amber-400">
+                                          ✨ Add-ons: {item.customizations.addons.map((a: any) => a.name || a.title).join(', ')}
+                                        </div>
+                                      )}
+                                      {item.customizations.isGiftBundle && item.customizations.giftComponents && (
+                                        <div className="text-[10px] text-rose-700 dark:text-rose-400 bg-rose-50/60 dark:bg-rose-950/20 p-1.5 rounded-lg border border-rose-100 dark:border-rose-900/40">
+                                          <span className="font-bold">🎁 Contents:</span>{' '}
+                                          {item.customizations.giftComponents.map((c: any) => `${c.category ? c.category + ': ' : ''}${c.name}`).join(' • ')}
+                                        </div>
+                                      )}
+                                      {item.customizations.messageCard && (
+                                        <div className="text-slate-600 dark:text-slate-400 italic">
+                                          💌 Card: "{item.customizations.messageCard}"
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                               <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
@@ -2180,14 +2221,30 @@ export const AdminOrders: React.FC = () => {
             </div>
 
             {/* Product Title and Quantity */}
-            <div className="text-xs text-slate-600 dark:text-slate-300 line-clamp-1">
-              <span className="font-semibold text-slate-800 dark:text-slate-200">{bouquetTitle}</span>
-              {totalItemsCount > 1 && (
-                <span className="ml-1 text-[11px] text-slate-500 font-medium">
-                  (+{totalItemsCount - 1} more)
-                </span>
-              )}
-            </div>
+            {(() => {
+              const hasOrderCake = order.items?.some((i: any) => i.customizations?.cakeWeight || i.customizations?.weight || i.customizations?.cakeFlavor || i.customizations?.cakeMessage || i.product?.category?.toLowerCase?.().includes('cake'));
+              const hasOrderCombo = order.items?.some((i: any) => i.customizations?.isCombo || i.customizations?.isGiftBundle || i.product?.category?.toLowerCase?.().includes('combo') || i.product?.category?.toLowerCase?.().includes('hamper'));
+              return (
+                <div className="text-xs text-slate-600 dark:text-slate-300 flex items-center gap-1.5 flex-wrap">
+                  {hasOrderCombo && (
+                    <span className="text-[10px] bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900 rounded px-1.5 py-0.2 font-bold uppercase tracking-wider shrink-0">
+                      🎁 Combo
+                    </span>
+                  )}
+                  {hasOrderCake && !hasOrderCombo && (
+                    <span className="text-[10px] bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-900 rounded px-1.5 py-0.2 font-bold uppercase tracking-wider shrink-0">
+                      🎂 Cake
+                    </span>
+                  )}
+                  <span className="font-semibold text-slate-800 dark:text-slate-200 truncate">{bouquetTitle}</span>
+                  {totalItemsCount > 1 && (
+                    <span className="text-[11px] text-slate-500 font-medium shrink-0">
+                      (+{totalItemsCount - 1} more)
+                    </span>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* ================= 7. HIGHLY VISIBLE DELIVERY INFO ================= */}
             <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 space-y-1.5">

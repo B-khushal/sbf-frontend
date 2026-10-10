@@ -321,6 +321,11 @@ const OrderHistory = () => {
                         {/* Cake & Customization Details */}
                         {item.customizations && (
                           <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs">
+                            {(item.customizations.isCombo || item.customizations.isGiftBundle || item.customizations.giftComponents) && (
+                              <span className="px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-bold uppercase">
+                                🎁 Duo Combo
+                              </span>
+                            )}
                             {(item.customizations.cakeFlavor || item.customizations.flavor) && (
                               <span className="px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-medium capitalize">
                                 🍰 {item.customizations.cakeFlavor || item.customizations.flavor}
@@ -347,6 +352,26 @@ const OrderHistory = () => {
                             {item.customizations.cakeMessage && (
                               <div className="w-full text-xs text-stone-600 italic mt-0.5">
                                 ✍ "{item.customizations.cakeMessage}"
+                              </div>
+                            )}
+                            {item.customizations.addons && item.customizations.addons.length > 0 && (
+                              <div className="w-full text-xs text-amber-800 dark:text-amber-300 font-medium mt-0.5">
+                                ✨ Add-ons: {item.customizations.addons.map((a: any) => a.name || a.title).join(', ')}
+                              </div>
+                            )}
+                            {item.customizations.giftComponents && (
+                              <div className="w-full text-xs text-rose-700 bg-rose-50/70 border border-rose-100 rounded-lg p-2 mt-1 space-y-0.5">
+                                <span className="font-semibold block text-[11px]">🎁 Package Contents:</span>
+                                {item.customizations.giftComponents.map((comp: any, cIdx: number) => (
+                                  <div key={cIdx} className="text-[11px] text-gray-600 pl-1">
+                                    • <strong className="text-rose-600 capitalize">{comp.category ? `${comp.category}: ` : ''}</strong>{comp.name}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            {item.customizations.messageCard && (
+                              <div className="w-full text-xs text-gray-600 italic mt-0.5">
+                                💌 Message Card: "{item.customizations.messageCard}"
                               </div>
                             )}
                           </div>

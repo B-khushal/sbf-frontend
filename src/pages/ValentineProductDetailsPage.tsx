@@ -22,6 +22,30 @@ import ProtectedImage from '@/components/ui/ProtectedImage';
 
 import type { ValentineProduct } from '@/types/valentine';
 
+export interface ExtendedValentineProduct extends ValentineProduct {
+  dateWisePricing?: Record<string, number>;
+  dateWiseStock?: Record<string, number>;
+  availableDates?: string[];
+  image?: string;
+  careInstructions?: string[];
+  isNewArrival?: boolean;
+  isFeatured?: boolean;
+  isCustomizable?: boolean;
+  customizationOptions?: {
+    allowPhotoUpload?: boolean;
+    allowNumberInput?: boolean;
+    numberInputLabel?: string;
+    allowMessageCard?: boolean;
+    messageCardPrice?: number;
+    addons?: {
+      flowers?: Array<{ name: string; price: number; type: 'flower' }>;
+      chocolates?: Array<{ name: string; price: number; type: 'chocolate' }>;
+    };
+    [key: string]: any;
+  };
+  [key: string]: any;
+}
+
 const ValentineProductDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -31,7 +55,7 @@ const ValentineProductDetailsPage: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const [product, setProduct] = useState<ValentineProduct | null>(null);
+  const [product, setProduct] = useState<ExtendedValentineProduct | null>(null);
   const [productLoading, setProductLoading] = useState(true);
   const [activeImage, setActiveImage] = useState<string>('');
 

@@ -71,7 +71,7 @@ export const getImageUrl = (imagePath: string | undefined, options?: {
   bustCache?: boolean;
 }): string => {
   if (!imagePath || imagePath.trim() === '') {
-    return '/images/placeholder.jpg';
+    return '/placeholder.svg';
   }
   
 
@@ -132,7 +132,7 @@ export const getImageUrl = (imagePath: string | undefined, options?: {
   
   // Check if the imagePath is valid (not just whitespace or invalid characters)
   if (!imagePath || imagePath.trim() === '' || imagePath === 'undefined' || imagePath === 'null') {
-    return '/images/placeholder.jpg';
+    return '/placeholder.svg';
   }
   
   if (imagePath.startsWith('/uploads/')) {

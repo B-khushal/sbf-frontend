@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ProductDetail from '@/components/ProductDetail';
 import CakeProductDetail from '@/components/cakes/CakeProductDetail';
+import ComboProductDetail from '@/components/combos/ComboProductDetail';
 import { isCakeProduct } from '@/utils/cakeHelpers';
+import { isComboProduct } from '@/utils/comboHelpers';
 import ProductGrid from '@/components/ProductGrid';
 import useCart from '@/hooks/use-cart';
 import api from '@/services/api';
@@ -166,7 +168,13 @@ const ProductPage = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <main className="flex-1">
-        {isCakeProduct(product) ? (
+        {isComboProduct(product) ? (
+          <ComboProductDetail
+            product={product as any}
+            onAddToCart={handleAddToCart}
+            onReviewSubmit={fetchProduct}
+          />
+        ) : isCakeProduct(product) ? (
           <CakeProductDetail
             product={product as any}
             onAddToCart={handleAddToCart}

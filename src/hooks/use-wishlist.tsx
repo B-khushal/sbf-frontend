@@ -5,6 +5,7 @@ import * as wishlistService from '@/services/wishlistService';
 
 export type WishlistItem = {
   id: string;
+  productId?: string;
   title: string;
   image: string;
   price: number;

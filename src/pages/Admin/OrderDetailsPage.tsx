@@ -726,7 +726,14 @@ const OrderDetailsPage: React.FC = () => {
                     <div className="flex-1 min-w-0 space-y-1">
                       <div className="flex justify-between items-start gap-4">
                         <div>
-                          <h4 className="text-sm font-bold text-slate-900 dark:text-white">{item.product?.title || item.title || 'Florist Arrangement'}</h4>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h4 className="text-sm font-bold text-slate-900 dark:text-white">{item.product?.title || item.title || 'Florist Arrangement'}</h4>
+                            {(item.customizations?.isCombo || item.customizations?.isGiftBundle) && (
+                              <span className="text-[10px] bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900 rounded-md px-1.5 py-0.5 font-bold uppercase tracking-wider">
+                                🎁 Duo Combo
+                              </span>
+                            )}
+                          </div>
                           <p className="text-[10px] font-mono text-slate-400 dark:text-slate-500 mt-0.5">PID: {item.product?._id || 'N/A'}</p>
                         </div>
                         <div className="text-right">
@@ -894,12 +901,12 @@ const OrderDetailsPage: React.FC = () => {
                               </div>
                             )}
 
-                            {/* Gift Builder Bundle */}
-                            {item.customizations.isGiftBundle && item.customizations.giftComponents && (
+                            {/* Gift Builder / Combo Bundle */}
+                            {(item.customizations.isGiftBundle || item.customizations.isCombo) && item.customizations.giftComponents && (
                               <div className="bg-rose-50/50 dark:bg-rose-950/10 border border-rose-200/40 dark:border-rose-900/20 p-2.5 rounded-xl">
                                 <div className="flex items-center gap-1.5 text-rose-700 dark:text-rose-400 font-bold text-[10px] uppercase tracking-wider mb-1.5">
                                   <span>🎁</span>
-                                  <span>Gift Box Components ({item.customizations.giftComponents.length})</span>
+                                  <span>{item.customizations.isCombo ? 'Duo Combo Package Contents' : 'Gift Box Components'} ({item.customizations.giftComponents.length})</span>
                                 </div>
                                 <div className="space-y-1">
                                   {item.customizations.giftComponents.map((comp: any, idx: number) => (

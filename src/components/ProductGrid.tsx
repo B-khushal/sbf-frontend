@@ -66,6 +66,8 @@ export type Product = {
   comboName?: string;
   comboDescription?: string;
   videos?: any[];
+  priceVariants?: any[];
+  comparePrice?: number;
 };
 
 type ProductGridProps = {

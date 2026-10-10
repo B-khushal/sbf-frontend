@@ -9,7 +9,7 @@ interface ProtectedImageProps extends React.ImgHTMLAttributes<HTMLImageElement> 
 }
 
 export const ProtectedImage = React.forwardRef<HTMLImageElement, ProtectedImageProps>(
-  ({ src, alt, className, style, fallbackSrc = '/images/placeholder.svg', onError, ...props }, ref) => {
+  ({ src, alt, className, style, fallbackSrc = '/placeholder.svg', onError, ...props }, ref) => {
     const [imgSrc, setImgSrc] = useState(src);
     const [hasError, setHasError] = useState(false);
 

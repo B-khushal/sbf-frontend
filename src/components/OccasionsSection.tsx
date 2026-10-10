@@ -320,7 +320,7 @@ const OccasionProductCard = ({
                     -{discountPercentage}% OFF
                   </span>
                 )}
-                {product.isBestseller && (
+                {(product as any).isBestseller && (
                   <span className="bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-xs text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
                     <Sparkles className="w-2.5 h-2.5" /> Bestseller
                   </span>

@@ -130,6 +130,8 @@ declare global {
     cardMessage?: string;
     deliverySpecialInstructions?: string;
     timeSlot: string;
+    selectedTimeSlot?: string;
+    deliveryType?: string;
     deliveryOption?: string;
     deliveryFee?: number;
     selectedDate?: string;
@@ -1237,9 +1239,14 @@ const CheckoutPaymentPage = () => {
                              {/* Customization Details */}
                              {item.customizations && (
                                <div className="ml-15 pl-3 border-l-2 border-purple-200 space-y-1">
-                                 {item.customizations.cakeWeight && (
+                                 {(item.customizations.isCombo || item.customizations.giftComponents) && (
+                                   <div className="inline-block text-[10px] bg-rose-50 text-rose-700 border border-rose-200 rounded px-1.5 py-0.5 font-bold uppercase tracking-wide">
+                                     🎁 Duo Combo Package
+                                   </div>
+                                 )}
+                                 {(item.customizations.cakeWeight || item.customizations.weight || item.customizations.cakeFlavor || item.customizations.flavor) && (
                                    <div className="text-xs font-semibold text-amber-900 dark:text-amber-200">
-                                     🎂 Weight: {item.customizations.cakeWeight} {item.customizations.eggless !== undefined ? `• ${item.customizations.eggless ? 'Eggless' : 'Contains Egg'}` : ''}
+                                     🎂 {item.customizations.cakeFlavor || item.customizations.flavor ? `${item.customizations.cakeFlavor || item.customizations.flavor} • ` : ''}{item.customizations.cakeWeight || item.customizations.weight || ''} {item.customizations.cakeShape || item.customizations.shape ? `• ${item.customizations.cakeShape || item.customizations.shape}` : ''} {item.customizations.cakeServes ? `• ${item.customizations.cakeServes}` : ''} {item.customizations.eggless !== undefined ? `• ${item.customizations.eggless ? 'Eggless' : 'Contains Egg'}` : ''}
                                    </div>
                                  )}
                                  {item.customizations.cakeMessage && (

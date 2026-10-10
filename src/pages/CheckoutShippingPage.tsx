@@ -257,7 +257,17 @@ const CheckoutShippingPage = () => {
   const [showOrderSummary, setShowOrderSummary] = useState(false);
   const [isSavedAddressesOpen, setIsSavedAddressesOpen] = useState(false);
   const [showFreeDeliveryModal, setShowFreeDeliveryModal] = useState(false);
-  const hasShownFreeDeliveryModal = React.useRef(false);
+  const hasShownFreeDeliveryModal = React.useRef<boolean>(
+    typeof window !== 'undefined' && sessionStorage.getItem('sbf_free_delivery_modal_shown') === 'true'
+  );
+
+  const handleCloseFreeDeliveryModal = () => {
+    setShowFreeDeliveryModal(false);
+    hasShownFreeDeliveryModal.current = true;
+    try {
+      sessionStorage.setItem('sbf_free_delivery_modal_shown', 'true');
+    } catch {}
+  };
 
   const [selectedDate, setSelectedDate] = useState<Date>(() => {
     try {
@@ -406,6 +416,9 @@ const CheckoutShippingPage = () => {
         setDeliveryCalculation(result);
         if (result?.isFirstOrderFreeDelivery && selectedTimeSlot && !hasShownFreeDeliveryModal.current) {
           hasShownFreeDeliveryModal.current = true;
+          try {
+            sessionStorage.setItem('sbf_free_delivery_modal_shown', 'true');
+          } catch {}
           setShowFreeDeliveryModal(true);
         }
       } catch (err) {
@@ -845,9 +858,6 @@ const CheckoutShippingPage = () => {
 
   const handleTimeSlotSelect = (slotId: string) => {
     setSelectedTimeSlot(slotId);
-    if (deliveryCalculation?.isFirstOrderFreeDelivery || !user?.id) {
-      setShowFreeDeliveryModal(true);
-    }
   };
 
   const handleFieldFocusCapture = (event: React.FocusEvent<HTMLFormElement>) => {
@@ -1972,7 +1982,7 @@ const CheckoutShippingPage = () => {
 
       <FreeDeliveryCelebrationModal
         isOpen={showFreeDeliveryModal}
-        onClose={() => setShowFreeDeliveryModal(false)}
+        onClose={handleCloseFreeDeliveryModal}
         savedAmount={150}
       />
     </div>

@@ -82,6 +82,10 @@ export interface Order {
     receiverZipCode?: string;
     timeSlot: string;
     deliveryDate: string;
+    deliveryType?: string;
+    surpriseDelivery?: boolean;
+    anonymousGift?: boolean;
+    selectedTimeSlot?: string;
 
     // Mappls fields
     latitude?: number;
@@ -93,6 +97,7 @@ export interface Order {
     houseNo?: string;
     floor?: string;
     deliveryInstructions?: string;
+    [key: string]: any;
   };
   giftDetails?: any;
   items: Array<{
@@ -113,6 +118,11 @@ export interface Order {
       giftComponents?: any[];
       customMessage?: string;
       personalization?: any;
+      cakeWeight?: string;
+      eggless?: boolean;
+      cakeMessage?: string;
+      addons?: any[];
+      [key: string]: any;
     } | null;
     product: {
       name: string;

@@ -160,6 +160,7 @@ export interface ValentineProduct {
   _id: string;
   title: string;
   images: string[];
+  image?: string;
   price: number;
   discount: number;
   category: string;
@@ -170,6 +171,26 @@ export interface ValentineProduct {
   valentineCategory: string;
   rating: number;
   numReviews: number;
+  dateWisePricing?: Record<string, number>;
+  dateWiseStock?: Record<string, number>;
+  availableDates?: string[];
+  careInstructions?: string[];
+  isNewArrival?: boolean;
+  isFeatured?: boolean;
+  isCustomizable?: boolean;
+  customizationOptions?: {
+    allowPhotoUpload?: boolean;
+    allowNumberInput?: boolean;
+    numberInputLabel?: string;
+    allowMessageCard?: boolean;
+    messageCardPrice?: number;
+    addons?: {
+      flowers?: Array<{ name: string; price: number; type: 'flower' }>;
+      chocolates?: Array<{ name: string; price: number; type: 'chocolate' }>;
+    };
+    [key: string]: any;
+  };
+  [key: string]: any;
 }
 
 export interface ValentineAnalytics {

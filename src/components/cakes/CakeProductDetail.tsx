@@ -47,6 +47,9 @@ interface CakeProductDetailProps {
   product: ProductData & {
     _id: string;
     countInStock?: number;
+    badge?: string;
+    isBestseller?: boolean;
+    shortDescription?: string;
   };
   onAddToCart: (item: any) => void;
   onReviewSubmit: () => void;
@@ -362,8 +365,8 @@ export const CakeProductDetail: React.FC<CakeProductDetailProps> = ({
 
   const careList = Array.isArray(product.careInstructions)
     ? product.careInstructions
-    : (typeof product.careInstructions === 'string' && product.careInstructions.trim()
-      ? product.careInstructions.split('\n').filter(Boolean)
+    : (typeof (product.careInstructions as any) === 'string' && (product.careInstructions as any).trim()
+      ? (product.careInstructions as any).split('\n').filter(Boolean)
       : []);
 
   const hasCakeSpecs = Boolean(
