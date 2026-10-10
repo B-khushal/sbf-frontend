@@ -264,10 +264,34 @@ export const CATEGORY_NAV_ITEMS: CategoryNavItem[] = [
   },
 ];
 
+const CATEGORY_ALIASES: Record<string, string[]> = {
+  "chocolate-cake": ["chocolate-cakes", "chocolate-cake"],
+  "chocolate-cakes": ["chocolate-cake", "chocolate-cakes"],
+  "black-forest": ["black-forest-cakes", "black-forest-cake", "black-forest"],
+  "black-forest-cakes": ["black-forest", "black-forest-cake", "black-forest-cakes"],
+  "red-velvet": ["red-velvet-cakes", "red-velvet-cake", "red-velvet"],
+  "red-velvet-cakes": ["red-velvet", "red-velvet-cake", "red-velvet-cakes"],
+  "fruit-cake": ["fruit-cakes", "fruit-cake", "fruit-and-pineapple"],
+  "fruit-cakes": ["fruit-cake", "fruit-cakes", "fruit-and-pineapple"],
+  "celebration-cake": ["celebration-cakes", "celebration-cake"],
+  "celebration-cakes": ["celebration-cake", "celebration-cakes"],
+  "cake-combos": ["cake-combos", "cake-flower-combos", "flower-cake-combos"],
+  "cake-flower-combos": ["cake-combos", "cake-flower-combos", "flower-cake-combos"],
+  "flower-cake-combos": ["cake-combos", "cake-flower-combos", "flower-cake-combos"],
+  "birthday-cakes": ["birthday-cake", "birthday-cakes"],
+  "birthday-cake": ["birthday-cakes", "birthday-cake"],
+};
+
 const CATEGORY_GROUPS: Record<string, string[]> = Object.fromEntries(
   Object.entries(CATEGORY_SUBCATEGORIES).map(([group, subcategories]) => [
     group,
-    [group, ...subcategories.map((subcategory) => subcategory.value)],
+    [
+      group,
+      ...subcategories.flatMap((subcategory) => [
+        subcategory.value,
+        ...(CATEGORY_ALIASES[subcategory.value] || []),
+      ]),
+    ],
   ])
 );
 
@@ -300,12 +324,26 @@ export const getCategoryMatchKeys = (value?: string | null): string[] => {
 
   const matches = new Set<string>([key]);
 
-  Object.entries(CATEGORY_GROUPS).forEach(([groupKey, categoryKeys]) => {
-    if (groupKey === key || categoryKeys.includes(key)) {
-      matches.add(groupKey);
-      categoryKeys.forEach((categoryKey) => matches.add(categoryKey));
-    }
-  });
+  if (CATEGORY_ALIASES[key]) {
+    CATEGORY_ALIASES[key].forEach((a) => matches.add(a));
+  }
+
+  // Singular / plural heuristic
+  if (key.endsWith('s')) {
+    matches.add(key.slice(0, -1));
+  } else {
+    matches.add(`${key}s`);
+  }
+
+  // If the key is a parent group (e.g., 'cakes', 'flowers', 'combos'), include its subcategories
+  if (CATEGORY_GROUPS[key]) {
+    CATEGORY_GROUPS[key].forEach((categoryKey) => {
+      matches.add(categoryKey);
+      if (CATEGORY_ALIASES[categoryKey]) {
+        CATEGORY_ALIASES[categoryKey].forEach((a) => matches.add(a));
+      }
+    });
+  }
 
   return Array.from(matches);
 };

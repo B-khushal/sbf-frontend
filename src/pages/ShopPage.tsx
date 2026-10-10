@@ -61,6 +61,19 @@ const CATEGORY_SLUG_MAP: Record<string, string> = {
   "fathers-day": "Father's Day",
   "new-year": "New Year",
   "raksha-bandhan": "Raksha Bandhan",
+  "chocolate-cake": "Chocolate Cakes",
+  "chocolate-cakes": "Chocolate Cakes",
+  "black-forest": "Black Forest",
+  "black-forest-cakes": "Black Forest",
+  "red-velvet": "Red Velvet",
+  "red-velvet-cakes": "Red Velvet",
+  "fruit-cake": "Fruit Cakes",
+  "fruit-cakes": "Fruit Cakes",
+  "butterscotch": "Butterscotch",
+  "celebration-cake": "Celebration Cakes",
+  "celebration-cakes": "Celebration Cakes",
+  "cake-combos": "Cake & Flower Combos",
+  "cake-flower-combos": "Cake & Flower Combos",
   // Add more as needed
 };
 
@@ -641,7 +654,11 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
           .map((value) => normalizeCategoryKey(value))
           .filter(Boolean);
 
-        return exactMatches.includes(selectedCategoryKey);
+        return exactMatches.some((matchKey) => {
+          if (matchKey === selectedCategoryKey) return true;
+          if (matchKey === `${selectedCategoryKey}s` || `${matchKey}s` === selectedCategoryKey) return true;
+          return matchesCategoryGroup(matchKey, selectedCategoryKey);
+        });
       });
     }
 

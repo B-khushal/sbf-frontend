@@ -107,7 +107,7 @@ const CategoryMenu = () => {
           : cat.parentId;
         return !pid || pid === '[object Object]' || pid === 'null' || pid === 'undefined';
       })
-      .sort((a, b) => (a.priority ?? a.sortOrder ?? 0) - (b.priority ?? b.sortOrder ?? 0));
+      .sort((a, b) => (a.priority ?? a.sortOrder ?? a.order ?? a.displayOrder ?? 0) - (b.priority ?? b.sortOrder ?? b.order ?? b.displayOrder ?? 0));
 
     return parentList.map(parent => {
       const parentIdStr = String(parent._id || parent.id || '').trim();
@@ -142,7 +142,7 @@ const CategoryMenu = () => {
 
           return false;
         })
-        .sort((a, b) => (a.priority ?? a.sortOrder ?? 0) - (b.priority ?? b.sortOrder ?? 0))
+        .sort((a, b) => (a.priority ?? a.sortOrder ?? a.order ?? a.displayOrder ?? 0) - (b.priority ?? b.sortOrder ?? b.order ?? b.displayOrder ?? 0))
         .map(sub => {
           const subSlug = sub.slug || sub.name.toLowerCase().trim().replace(/\s+/g, '-').replace(/'/g, '');
           let validPath = sub.categoryUrl || sub.link || `/${subSlug}`;
@@ -154,7 +154,13 @@ const CategoryMenu = () => {
           ) {
             validPath = `/${subSlug}`;
           }
-          const count = getCategoryCount(sub.name) || getCategoryCount(subSlug);
+          const normSlug = normalizeCategoryKey(sub.slug || subSlug);
+          const normName = normalizeCategoryKey(sub.name);
+          const count = categoryCounts[normSlug] !== undefined
+            ? categoryCounts[normSlug]
+            : (categoryCounts[normName] !== undefined
+                ? categoryCounts[normName]
+                : (getCategoryCount(sub.name) || getCategoryCount(subSlug) || 0));
           return {
             name: sub.name,
             path: validPath,

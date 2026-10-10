@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { Heart, ShoppingBag, Star, ArrowRight, Sparkles, Wand2, ChevronLeft, ChevronRight, Play } from "lucide-react";
+import { Heart, ShoppingBag, Star, ArrowRight, Sparkles, Wand2, ChevronLeft, ChevronRight, Play, Scale } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -229,7 +229,7 @@ const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCar
           </button>
           <div
             ref={scrollRef}
-            className="flex gap-4 overflow-x-auto pb-4 scrollbar-none scroll-smooth"
+            className="flex gap-4 overflow-x-auto pb-4 scrollbar-none scroll-smooth items-stretch"
             style={{
               scrollBehavior: 'smooth',
               scrollSnapType: 'x mandatory'
@@ -237,7 +237,7 @@ const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCar
           >
             {circularProducts.map((product, index) => (
               <div
-                className="min-w-[220px] max-w-xs flex-shrink-0 scroll-snap-align-start"
+                className="min-w-[220px] max-w-xs flex-shrink-0 scroll-snap-align-start flex flex-col"
                 key={`${product._id}-${index}`}
               >
                 <ProductCard product={product} onAddToCart={onAddToCart} />
@@ -255,7 +255,7 @@ const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCar
         </div>
       ) : (
         <div className={cn(
-          "grid gap-3 sm:gap-4 md:gap-5 lg:gap-6 xl:gap-6 2xl:gap-7 animate-fade-in",
+          "grid gap-3 sm:gap-4 md:gap-5 lg:gap-6 xl:gap-6 2xl:gap-7 animate-fade-in items-stretch",
           shopView 
             ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-3" 
             : "grid-cols-2 md:grid-cols-3 lg:grid-cols-4",
@@ -329,6 +329,16 @@ export const ProductCard = ({ product, onAddToCart }: {
 
   const hasDiscount = effectivePrice > 0 && regularPrice > effectivePrice;
   const discountPercentage = hasDiscount ? Math.round(((regularPrice - effectivePrice) / regularPrice) * 100) : 0;
+
+  const isCakeProduct = Boolean(
+    product.category === 'cakes' ||
+    (Array.isArray(product.categories) && product.categories.some((c: string) => typeof c === 'string' && c.toLowerCase().includes('cake'))) ||
+    product.cakeAttributes?.flavor ||
+    product.cakeAttributes?.weight ||
+    (Array.isArray(product.cakeAttributes?.availableSizes) && product.cakeAttributes.availableSizes.length > 0)
+  );
+  const rawWeight = activeVariant?.size || activeVariant?.label || product.cakeAttributes?.weight || product.cakeAttributes?.availableSizes?.[0] || (variants[0]?.size || variants[0]?.label);
+  const displayWeight = (isCakeProduct || variants.length > 0) && rawWeight ? formatCakeWeightLabel(rawWeight) : null;
 
   // Handle main card click - redirect to product details
   const handleCardClick = (e: React.MouseEvent) => {
@@ -482,13 +492,13 @@ export const ProductCard = ({ product, onAddToCart }: {
     <>
       <div
         className={cn(
-          "group relative bg-white rounded-2xl border border-gray-100/80 hover:border-bloom-pink-300/40 overflow-hidden shadow-[0_4px_16px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_24px_rgba(236,72,153,0.06)] transition-all duration-300 cursor-pointer flex flex-col h-[390px] xs:h-[420px] md:h-[620px] lg:h-[560px] xl:h-[560px]",
+          "group relative bg-white rounded-2xl border border-gray-100/80 hover:border-bloom-pink-300/40 overflow-hidden shadow-[0_4px_16px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_24px_rgba(236,72,153,0.06)] transition-all duration-300 cursor-pointer flex flex-col h-full justify-between",
           product.hidden ? 'opacity-75 border-2 border-orange-200' : ''
         )}
         onClick={handleCardClick}
       >
         {/* Product Image Section */}
-        <div className="relative h-[58%] md:h-[62%] lg:h-[58%] xl:h-[58%] w-full overflow-hidden bg-gray-50 flex-shrink-0">
+        <div className="relative aspect-square w-full overflow-hidden bg-gray-50 flex-shrink-0">
           {/* Out of Stock Floating Badge */}
           {isOutOfStock ? (
             <div className="absolute top-3 left-3 z-20 backdrop-blur-md bg-stone-900/85 text-white border border-white/20 px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-lg pointer-events-none">
@@ -503,6 +513,14 @@ export const ProductCard = ({ product, onAddToCart }: {
               <span>In Motion</span>
             </div>
           ) : null}
+
+          {/* Cake Weight Badge */}
+          {displayWeight && (
+            <div className="absolute bottom-2.5 left-2.5 z-20 bg-white/95 backdrop-blur-md border border-amber-200/70 text-amber-900 text-[9px] sm:text-[10px] font-extrabold px-2 py-0.5 rounded-lg shadow-xs flex items-center gap-1 max-w-[85%] pointer-events-none">
+              <Scale className="w-3 h-3 text-amber-600 shrink-0" />
+              <span className="truncate">{displayWeight}</span>
+            </div>
+          )}
           
           {/* Wishlist Button */}
           <button
@@ -569,11 +587,11 @@ export const ProductCard = ({ product, onAddToCart }: {
         </div>
 
         {/* Product Details Section */}
-        <div className="h-[40%] md:h-[32%] p-3 xs:p-3.5 md:p-4 flex flex-col justify-between bg-white">
-          {/* Info Section (Title, Rating, Badges) */}
-          <div className="space-y-1.5 xs:space-y-2 md:space-y-2.5">
+        <div className="flex-1 p-3 xs:p-3.5 md:p-4 flex flex-col justify-between bg-white min-h-0">
+          {/* Info Section (Title, Rating, Badges, Variants) */}
+          <div className="space-y-1.5 xs:space-y-2">
             {/* Title container with exact height of 2 lines */}
-            <div className="h-9 md:h-10 flex items-start overflow-hidden">
+            <div className="min-h-[2.25rem] md:min-h-[2.5rem] flex items-start overflow-hidden">
               <h3 className="font-semibold text-xs sm:text-sm text-gray-800 leading-tight line-clamp-2 group-hover:text-bloom-pink-600 transition-colors">
                 {product.title}
               </h3>
@@ -651,7 +669,7 @@ export const ProductCard = ({ product, onAddToCart }: {
             </div>
 
             {/* Variant selector pills for cakes & hampers with individual prices */}
-            {variants.length > 1 && (
+            {variants.length > 1 ? (
               <div className="flex flex-wrap gap-1 py-1" onClick={(e) => e.stopPropagation()}>
                 {variants.slice(0, 3).map((v: any, idx: number) => {
                   const isSel = idx === selectedVariantIdx;
@@ -680,11 +698,17 @@ export const ProductCard = ({ product, onAddToCart }: {
                   );
                 })}
               </div>
-            )}
+            ) : isCakeProduct && displayWeight ? (
+              <div className="flex flex-wrap gap-1 py-1">
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 flex items-center gap-1">
+                  <span>{displayWeight}</span>
+                </span>
+              </div>
+            ) : null}
           </div>
 
           {/* Pricing & CTA Section */}
-          <div className="space-y-2 md:space-y-2.5">
+          <div className="mt-auto pt-2 space-y-2 md:space-y-2.5 shrink-0">
             {/* Price section with prominent styling */}
             <div className="h-5 md:h-6 flex items-baseline gap-1.5">
               {product.category === 'combos' && product.comboItems && product.comboItems.length > 0 ? (
@@ -709,7 +733,7 @@ export const ProductCard = ({ product, onAddToCart }: {
             </div>
 
             {/* Action Button */}
-            <div className="h-8 xs:h-9 md:h-10 flex items-center w-full">
+            <div className="h-8 xs:h-9 md:h-10 flex items-center w-full shrink-0">
               {isOutOfStock ? (
                 <Button
                   variant="outline"
