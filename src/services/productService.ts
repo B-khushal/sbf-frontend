@@ -470,10 +470,19 @@ const prepareProductData = (productData: ProductData): BackendProductData => {
   
   // Process price variants for backend
   if (productData.hasPriceVariants && Array.isArray(productData.priceVariants)) {
-    cleanData.priceVariants = productData.priceVariants.map(variant => ({
-      label: String(variant.label),
-      price: Number(variant.price),
-      stock: Number(variant.stock)
+    cleanData.priceVariants = productData.priceVariants.map((variant: any) => ({
+      id: variant.id || variant._id || undefined,
+      label: String(variant.label || variant.name || variant.size || 'Standard'),
+      name: String(variant.name || variant.label || variant.size || 'Standard'),
+      size: String(variant.size || variant.label || variant.name || 'Standard'),
+      price: Number(variant.price || 0),
+      stock: Number(variant.stock !== undefined ? variant.stock : 20),
+      discountPrice: (variant.discountPrice !== undefined && variant.discountPrice !== null && variant.discountPrice !== '')
+        ? Number(variant.discountPrice)
+        : undefined,
+      comparePrice: (variant.comparePrice !== undefined && variant.comparePrice !== null && variant.comparePrice !== '')
+        ? Number(variant.comparePrice)
+        : undefined,
     }));
   } else {
     cleanData.priceVariants = [];
@@ -690,10 +699,19 @@ const mapBackendToFrontend = (data: BackendProductData): ProductData => {
   }
   
   if (Array.isArray(data.priceVariants)) {
-    mappedData.priceVariants = data.priceVariants.map(variant => ({
-      label: String(variant.label),
-      price: Number(variant.price),
-      stock: Number(variant.stock)
+    mappedData.priceVariants = data.priceVariants.map((variant: any) => ({
+      id: variant.id || variant._id || undefined,
+      label: String(variant.label || variant.name || variant.size || 'Standard'),
+      name: String(variant.name || variant.label || variant.size || 'Standard'),
+      size: String(variant.size || variant.label || variant.name || 'Standard'),
+      price: Number(variant.price || 0),
+      stock: Number(variant.stock !== undefined ? variant.stock : 20),
+      discountPrice: (variant.discountPrice !== undefined && variant.discountPrice !== null && variant.discountPrice !== '')
+        ? Number(variant.discountPrice)
+        : undefined,
+      comparePrice: (variant.comparePrice !== undefined && variant.comparePrice !== null && variant.comparePrice !== '')
+        ? Number(variant.comparePrice)
+        : undefined,
     }));
   } else {
     mappedData.priceVariants = [];

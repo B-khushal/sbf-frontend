@@ -152,9 +152,15 @@ const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/quicktime'];
 
 interface PriceVariant {
+  id?: string;
+  _id?: string;
   label: string;
+  name?: string;
+  size?: string;
   price: number;
   stock: number;
+  discountPrice?: number;
+  comparePrice?: number;
 }
 
 const initialFormData: ProductData = {

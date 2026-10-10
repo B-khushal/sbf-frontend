@@ -55,9 +55,13 @@ export const CakeProductCard: React.FC<CakeProductCardProps> = ({
   const activePrice = activeVariant
     ? getProductEffectivePrice(product, Number(activeVariant.price), activeVariant)
     : getProductEffectivePrice(product);
-  const activeComparePrice = activeVariant?.comparePrice
-    ? Number(activeVariant.comparePrice)
-    : (activePrice < baseRawPrice ? baseRawPrice : (product.comparePrice ? Number(product.comparePrice) : null));
+  const activeComparePrice = activeVariant
+    ? (activeVariant.comparePrice && Number(activeVariant.comparePrice) > activePrice
+        ? Number(activeVariant.comparePrice)
+        : (activePrice < baseRawPrice ? baseRawPrice : null))
+    : (product.comparePrice && Number(product.comparePrice) > activePrice
+        ? Number(product.comparePrice)
+        : (activePrice < Number(product.price) ? Number(product.price) : null));
 
   // Weight display (e.g. from cakeAttributes, variant, or availableSizes)
   const displayWeight = activeVariant?.size || activeVariant?.label || product.cakeAttributes?.weight || product.cakeAttributes?.availableSizes?.[0] || "Standard";
@@ -317,22 +321,37 @@ export const CakeProductCard: React.FC<CakeProductCardProps> = ({
 
             {/* Selectable Weights if multiple variants exist */}
             {variants.length > 1 && (
-              <div className="flex flex-wrap gap-1 pt-1" onClick={(e) => e.stopPropagation()}>
+              <div className="flex flex-wrap gap-1.5 pt-1.5" onClick={(e) => e.stopPropagation()}>
                 {variants.slice(0, 4).map((variant: any, idx: number) => {
                   const isSelected = idx === selectedVariantIdx;
+                  const vEff = getProductEffectivePrice(product, Number(variant.price), variant);
+                  const vRaw = Number(variant.price || 0);
+                  const vComp = variant.comparePrice ? Number(variant.comparePrice) : (vEff < vRaw ? vRaw : 0);
+                  const hasDisc = vComp > vEff;
                   return (
                     <button
                       key={idx}
                       type="button"
                       onClick={() => setSelectedVariantIdx(idx)}
                       className={cn(
-                        "text-[9px] font-bold px-2 py-0.5 rounded-md transition-all",
+                        "text-[9px] font-bold px-2 py-1 rounded-lg transition-all flex items-center gap-1.5 shadow-2xs",
                         isSelected
-                          ? "bg-amber-600 text-white shadow-2xs"
-                          : "bg-slate-100 text-slate-600 hover:bg-amber-50 hover:text-amber-700 border border-slate-200/60"
+                          ? "bg-stone-900 text-white ring-1 ring-stone-900 shadow-sm"
+                          : "bg-amber-50/80 text-amber-950 hover:bg-amber-100/90 border border-amber-200/80"
                       )}
                     >
-                      {variant.size || variant.name || variant.label}
+                      <span>{variant.size || variant.name || variant.label}</span>
+                      <span className={cn(
+                        "font-extrabold text-[10px]",
+                        isSelected ? "text-amber-300" : "text-amber-800"
+                      )}>
+                        ₹{vEff}
+                      </span>
+                      {hasDisc && (
+                        <span className="line-through text-[8px] font-normal text-stone-400">
+                          ₹{vComp}
+                        </span>
+                      )}
                     </button>
                   );
                 })}

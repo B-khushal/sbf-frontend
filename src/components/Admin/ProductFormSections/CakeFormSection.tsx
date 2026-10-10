@@ -244,10 +244,14 @@ const CakeFormSection: React.FC<CakeFormSectionProps> = ({ formData, setFormData
       };
 
       // Keep base product price in sync if index === 0 or main price is not set
-      if (index === 0 && field === 'price' && typeof updatedVal === 'number' && updatedVal > 0) {
-        next.price = updatedVal;
-        if (next.discountType === 'percentage' && next.discount > 0) {
-          next.discountPrice = Number((updatedVal * (1 - next.discount / 100)).toFixed(2));
+      if (index === 0) {
+        if (field === 'price' && typeof updatedVal === 'number' && updatedVal > 0) {
+          next.price = updatedVal;
+          if (next.discountType === 'percentage' && next.discount > 0) {
+            next.discountPrice = Number((updatedVal * (1 - next.discount / 100)).toFixed(2));
+          }
+        } else if (field === 'discountPrice') {
+          next.discountPrice = typeof updatedVal === 'number' && updatedVal > 0 ? updatedVal : undefined;
         }
       }
 

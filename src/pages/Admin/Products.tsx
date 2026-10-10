@@ -13,6 +13,7 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import api from "@/services/api";
 import { useNavigate } from "react-router-dom";
 import productService, { ProductData, OccasionData } from "@/services/productService";
+import { getProductEffectivePrice } from "@/utils/pricing";
 import { getImageUrl } from "@/config";
 import { useSeasonalCampaign } from "@/contexts/SeasonalCampaignContext";
 import { useValentine } from "@/contexts/ValentineContext";
@@ -1857,12 +1858,22 @@ const AdminProducts: React.FC = () => {
               </TableHeader>
               <TableBody>
                 {filteredProducts.map((product) => {
+                  const variants = Array.isArray(product.priceVariants) && product.priceVariants.length > 0 ? product.priceVariants : [];
+                  const baseVar = variants[0];
+                  const baseVarEff = baseVar ? getProductEffectivePrice(product, Number(baseVar.price), baseVar) : getProductEffectivePrice(product);
+                  const baseVarReg = baseVar ? Number(baseVar.comparePrice || baseVar.price || 0) : Number(product.price || 0);
+                  const hasBaseVarDiscount = baseVarReg > baseVarEff && baseVarEff > 0;
+                  const baseVarDiscDiff = baseVarReg - baseVarEff;
+                  const baseVarDiscPct = hasBaseVarDiscount ? Math.round((baseVarDiscDiff / baseVarReg) * 100) : 0;
+
                   const hasDirect = (product.discountType === 'direct' || product.discountType === 'fixed') && product.discountPrice && product.discountPrice > 0 && product.discountPrice < product.price;
-                  const finalPrice = hasDirect
-                    ? convertPrice(product.discountPrice)
-                    : (product.discount
-                      ? convertPrice(product.price * (1 - product.discount / 100))
-                      : convertPrice(product.price));
+                  const finalPrice = variants.length > 0
+                    ? convertPrice(baseVarEff)
+                    : (hasDirect
+                      ? convertPrice(product.discountPrice)
+                      : (product.discount
+                        ? convertPrice(product.price * (1 - product.discount / 100))
+                        : convertPrice(product.price)));
 
                   // Construct the proper image URL using utility function with minimal cache busting
                   const imageUrl = getImageUrl(product.images?.[0], { bustCache: false });
@@ -1914,19 +1925,44 @@ const AdminProducts: React.FC = () => {
                           }
                         </div>
                       </TableCell>
-                      <TableCell className={product.discount > 0 ? "text-red-600 font-bold" : "text-black font-bold"}>
+                      <TableCell className={product.discount > 0 || hasBaseVarDiscount ? "text-emerald-700 font-bold" : "text-black font-bold"}>
                         {product.category === 'combos' && product.comboItems && product.comboItems.length > 0 ? (
                           formatPrice(convertPrice(getComboMaxPrice(product)))
+                        ) : variants.length > 0 ? (
+                          <div className="flex flex-col">
+                            <span className="text-[10px] text-muted-foreground font-normal">Base:</span>
+                            <span>{formatPrice(convertPrice(baseVarReg))}</span>
+                          </div>
                         ) : (
                           formatPrice(convertPrice(product.price))
                         )}
                       </TableCell>
                       <TableCell>
-                        {hasDirect
-                          ? `₹${product.discountPrice} (${product.discount}%)`
-                          : (product.discount ? `${product.discount}%` : "0%")}
+                        {variants.length > 0 ? (
+                          <div className="flex flex-col gap-0.5">
+                            <Badge variant="outline" className="w-fit text-[10px] border-amber-300 bg-amber-50 text-amber-900 font-bold">
+                              {variants.length} Variants
+                            </Badge>
+                            {hasBaseVarDiscount ? (
+                              <span className="text-[11px] font-bold text-emerald-700">-{baseVarDiscPct}%</span>
+                            ) : (
+                              <span className="text-[11px] text-muted-foreground">Standard</span>
+                            )}
+                          </div>
+                        ) : hasDirect ? (
+                          `₹${product.discountPrice} (${product.discount}%)`
+                        ) : (product.discount ? `${product.discount}%` : "0%")}
                       </TableCell>
-                      <TableCell className="font-bold text-primary">{formatPrice(finalPrice)}</TableCell>
+                      <TableCell className="font-bold text-primary">
+                        {variants.length > 0 ? (
+                          <div className="flex flex-col">
+                            <span className="text-[10px] text-slate-400 font-normal">From</span>
+                            <span className="text-emerald-700">{formatPrice(finalPrice)}</span>
+                          </div>
+                        ) : (
+                          formatPrice(finalPrice)
+                        )}
+                      </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           {getStockBadge(product.countInStock)}
@@ -2104,12 +2140,22 @@ const AdminProducts: React.FC = () => {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {filteredProducts.map((product) => {
+                const variants = Array.isArray(product.priceVariants) && product.priceVariants.length > 0 ? product.priceVariants : [];
+                const baseVar = variants[0];
+                const baseVarEff = baseVar ? getProductEffectivePrice(product, Number(baseVar.price), baseVar) : getProductEffectivePrice(product);
+                const baseVarReg = baseVar ? Number(baseVar.comparePrice || baseVar.price || 0) : Number(product.price || 0);
+                const hasBaseVarDiscount = baseVarReg > baseVarEff && baseVarEff > 0;
+                const baseVarDiscDiff = baseVarReg - baseVarEff;
+                const baseVarDiscPct = hasBaseVarDiscount ? Math.round((baseVarDiscDiff / baseVarReg) * 100) : 0;
+
                 const hasDirect = (product.discountType === 'direct' || product.discountType === 'fixed') && product.discountPrice && product.discountPrice > 0 && product.discountPrice < product.price;
-                const finalPrice = hasDirect
-                  ? convertPrice(product.discountPrice)
-                  : (product.discount
-                    ? convertPrice(product.price * (1 - product.discount / 100))
-                    : convertPrice(product.price));
+                const finalPrice = variants.length > 0
+                  ? convertPrice(baseVarEff)
+                  : (hasDirect
+                    ? convertPrice(product.discountPrice)
+                    : (product.discount
+                      ? convertPrice(product.price * (1 - product.discount / 100))
+                      : convertPrice(product.price)));
 
                 // Construct the proper image URL using utility function with minimal cache busting
                 const imageUrl = getImageUrl(product.images?.[0], { bustCache: false });
@@ -2141,12 +2187,10 @@ const AdminProducts: React.FC = () => {
                             } else {
                               target.style.display = 'none';
                               const parent = target.parentElement;
-                              if (parent && !parent.querySelector('.fallback-icon')) {
                                 const fallback = document.createElement('div');
                                 fallback.className = 'fallback-icon absolute inset-0 flex items-center justify-center bg-gray-100';
                                 fallback.innerHTML = '<svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>';
                                 parent.appendChild(fallback);
-                              }
                             }
                           }}
                         />
@@ -2189,27 +2233,86 @@ const AdminProducts: React.FC = () => {
                             <Badge variant="default" className="bg-primary text-[9px] py-0 px-1 truncate max-w-full">
                               {product.category}
                             </Badge>
+                            {variants.length > 0 && (
+                              <Badge variant="outline" className="text-[9px] py-0 px-1 border-amber-300 bg-amber-50 text-amber-900 font-bold">
+                                {variants.length} Sizes
+                              </Badge>
+                            )}
                           </div>
                           {getStockBadge(product.countInStock)}
                         </div>
-                        <h4 className="font-semibold text-xs sm:text-sm text-slate-800 line-clamp-2 min-h-[40px] leading-tight" title={product.title}>
+                        <h4 className="font-semibold text-xs sm:text-sm text-slate-800 line-clamp-2 min-h-[36px] leading-tight" title={product.title}>
                           {product.title}
                         </h4>
+
+                        {/* Variants Breakdown Pills for Cakes & Hampers */}
+                        {variants.length > 0 && (
+                          <div className="flex flex-wrap gap-1 pt-1 pb-0.5">
+                            {variants.map((v: any, vIdx: number) => {
+                              const vEff = getProductEffectivePrice(product, Number(v.price), v);
+                              const vRaw = Number(v.price || 0);
+                              const vComp = v.comparePrice ? Number(v.comparePrice) : (vEff < vRaw ? vRaw : 0);
+                              const hasVDisc = vComp > vEff;
+                              return (
+                                <span
+                                  key={vIdx}
+                                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-950 border border-amber-200/80 shadow-2xs"
+                                >
+                                  <span>{v.label || v.size}:</span>
+                                  <span className="text-emerald-700 font-extrabold">₹{vEff}</span>
+                                  {hasVDisc && (
+                                    <span className="text-stone-400 line-through text-[9px]">₹{vComp}</span>
+                                  )}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        {/* Hamper Items Summary Badge */}
+                        {(product as any).hamperAttributes?.hamperItems?.length > 0 && (
+                          <div className="flex flex-wrap gap-1 pt-1">
+                            <Badge variant="outline" className="text-[10px] bg-violet-50 text-violet-700 border-violet-200 py-0.5 px-1.5 font-medium">
+                              🎁 {(product as any).hamperAttributes.hamperItems.length} Hamper Items Included
+                            </Badge>
+                          </div>
+                        )}
                       </div>
 
-                      <div className="pt-2 border-t mt-2 flex flex-col gap-2">
-                        <div className="flex items-baseline gap-1.5">
-                          <span className="text-sm font-bold text-primary">
-                            {formatPrice(finalPrice)}
-                          </span>
-                          {product.discount > 0 && (
+                      <div className="pt-2 border-t mt-2 flex flex-col gap-1.5">
+                        <div className="flex items-baseline gap-1.5 flex-wrap">
+                          {variants.length > 0 ? (
                             <>
-                              <span className="text-xs text-muted-foreground line-through">
-                                {formatPrice(convertPrice(product.price))}
+                              <span className="text-xs font-semibold text-slate-500">From</span>
+                              <span className="text-sm font-bold text-emerald-700">
+                                {formatPrice(finalPrice)}
                               </span>
-                              <span className="text-[10px] font-bold text-red-500 bg-red-50 px-1 rounded">
-                                -{product.discount}%
+                              {hasBaseVarDiscount && (
+                                <>
+                                  <span className="text-xs text-muted-foreground line-through">
+                                    {formatPrice(convertPrice(baseVarReg))}
+                                  </span>
+                                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1 rounded">
+                                    Save ₹{baseVarDiscDiff} ({baseVarDiscPct}% OFF)
+                                  </span>
+                                </>
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              <span className="text-sm font-bold text-primary">
+                                {formatPrice(finalPrice)}
                               </span>
+                              {product.discount > 0 && (
+                                <>
+                                  <span className="text-xs text-muted-foreground line-through">
+                                    {formatPrice(convertPrice(product.price))}
+                                  </span>
+                                  <span className="text-[10px] font-bold text-red-500 bg-red-50 px-1 rounded">
+                                    -{product.discount}%
+                                  </span>
+                                </>
+                              )}
                             </>
                           )}
                         </div>

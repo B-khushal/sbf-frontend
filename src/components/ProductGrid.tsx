@@ -305,8 +305,25 @@ export const ProductCard = ({ product, onAddToCart }: {
     (typeof (product as any).countInStock === 'number' && (product as any).countInStock <= 0)
   );
 
-  const effectivePrice = getProductEffectivePrice(product);
-  const regularPrice = Number(product.price || 0);
+  const variants = Array.isArray(product.priceVariants) && product.priceVariants.length > 0
+    ? product.priceVariants
+    : [];
+  const [selectedVariantIdx, setSelectedVariantIdx] = useState<number>(0);
+  const activeVariant = variants[selectedVariantIdx] || null;
+
+  const baseRawPrice = activeVariant ? Number(activeVariant.price) : Number(product.price || 0);
+  const effectivePrice = activeVariant
+    ? getProductEffectivePrice(product, Number(activeVariant.price), activeVariant)
+    : getProductEffectivePrice(product);
+
+  const regularPrice = activeVariant
+    ? (activeVariant.comparePrice && Number(activeVariant.comparePrice) > effectivePrice
+        ? Number(activeVariant.comparePrice)
+        : (effectivePrice < baseRawPrice ? baseRawPrice : baseRawPrice))
+    : (product.comparePrice && Number(product.comparePrice) > effectivePrice
+        ? Number(product.comparePrice)
+        : (effectivePrice < Number(product.price) ? Number(product.price) : effectivePrice));
+
   const hasDiscount = effectivePrice > 0 && regularPrice > effectivePrice;
   const discountPercentage = hasDiscount ? Math.round(((regularPrice - effectivePrice) / regularPrice) * 100) : 0;
 
@@ -357,6 +374,12 @@ export const ProductCard = ({ product, onAddToCart }: {
         discount: discountPercentage || product.discount || 0,
         category: product.category,
         description: product.description,
+        selectedVariant: activeVariant ? {
+          id: activeVariant.id || activeVariant._id,
+          label: activeVariant.label || activeVariant.name || activeVariant.size || 'Standard',
+          price: discountedPrice,
+          stock: activeVariant.stock || 50
+        } : undefined
       };
 
       if (!user) {
@@ -612,11 +635,49 @@ export const ProductCard = ({ product, onAddToCart }: {
                   Hidden
                 </span>
               )}
+              {/* Hamper contents badge */}
+              {(product as any).hamperAttributes?.hamperItems?.length > 0 && (
+                <span className="text-[8px] sm:text-[9px] font-bold text-violet-700 bg-violet-50 border border-violet-200 px-1.5 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1">
+                  🎁 {(product as any).hamperAttributes.hamperItems.length} Hamper Items
+                </span>
+              )}
               {/* Fallback space to keep alignment when no badges exist */}
-              {!(isOutOfStock || hasDiscount || isFeaturedProduct() || isNewProduct() || product.hidden) && (
+              {!(isOutOfStock || hasDiscount || isFeaturedProduct() || isNewProduct() || product.hidden || (product as any).hamperAttributes?.hamperItems?.length) && (
                 <div className="h-5 md:h-6" />
               )}
             </div>
+
+            {/* Variant selector pills for cakes & hampers with individual prices */}
+            {variants.length > 1 && (
+              <div className="flex flex-wrap gap-1 py-1" onClick={(e) => e.stopPropagation()}>
+                {variants.slice(0, 3).map((v: any, idx: number) => {
+                  const isSel = idx === selectedVariantIdx;
+                  const vEff = getProductEffectivePrice(product, Number(v.price), v);
+                  const vRaw = Number(v.price || 0);
+                  const vComp = v.comparePrice ? Number(v.comparePrice) : (vEff < vRaw ? vRaw : 0);
+                  const hasDisc = vComp > vEff;
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setSelectedVariantIdx(idx)}
+                      className={cn(
+                        "text-[9px] font-bold px-1.5 py-0.5 rounded transition-all flex items-center gap-1",
+                        isSel
+                          ? "bg-stone-900 text-white shadow-2xs"
+                          : "bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200"
+                      )}
+                    >
+                      <span>{v.label || v.size}</span>
+                      <span className={isSel ? "text-amber-300" : "text-amber-800"}>₹{vEff}</span>
+                      {hasDisc && (
+                        <span className="line-through text-[8px] text-stone-400">₹{vComp}</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Pricing & CTA Section */}

@@ -12,6 +12,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { useToast } from "@/hooks/use-toast";
 import { getImageUrl } from "@/config";
 import productService, { ProductData } from "@/services/productService";
+import { getProductEffectivePrice } from "@/utils/pricing";
 import {
   Search,
   Filter,
@@ -595,6 +596,13 @@ export const EnterpriseProductTable: React.FC<EnterpriseProductTableProps> = ({
           ) : (
             productsToDisplay.map((product, index) => {
               const isSelected = selectedIds.includes(product._id!);
+              const variants = Array.isArray(product.priceVariants) && product.priceVariants.length > 0 ? product.priceVariants : [];
+              const baseVar = variants[0];
+              const baseVarEff = baseVar ? getProductEffectivePrice(product, Number(baseVar.price), baseVar) : getProductEffectivePrice(product);
+              const baseVarReg = baseVar ? Number(baseVar.comparePrice || baseVar.price || 0) : Number(product.price || 0);
+              const hasBaseVarDiscount = baseVarReg > baseVarEff && baseVarEff > 0;
+              const baseVarDiscDiff = baseVarReg - baseVarEff;
+              const baseVarDiscPct = hasBaseVarDiscount ? Math.round((baseVarDiscDiff / baseVarReg) * 100) : 0;
 
               return (
                 <Card
@@ -707,12 +715,78 @@ export const EnterpriseProductTable: React.FC<EnterpriseProductTableProps> = ({
                         {product.title}
                       </h3>
 
+                      {/* Variants Breakdown Pills for Cakes & Hampers */}
+                      {variants.length > 0 && (
+                        <div className="flex flex-wrap gap-1 pt-1.5 pb-0.5">
+                          {variants.map((v: any, vIdx: number) => {
+                            const vEff = getProductEffectivePrice(product, Number(v.price), v);
+                            const vRaw = Number(v.price || 0);
+                            const vComp = v.comparePrice ? Number(v.comparePrice) : (vEff < vRaw ? vRaw : 0);
+                            const hasVDisc = vComp > vEff;
+                            return (
+                              <span
+                                key={vIdx}
+                                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 dark:bg-amber-950/40 text-amber-950 dark:text-amber-200 border border-amber-200 dark:border-amber-800/60 shadow-2xs"
+                              >
+                                <span>{v.label || v.size}:</span>
+                                <span className="text-emerald-700 dark:text-emerald-400 font-extrabold">₹{vEff}</span>
+                                {hasVDisc && (
+                                  <span className="text-stone-400 line-through text-[9px]">₹{vComp}</span>
+                                )}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {/* Hamper Items Summary Badge */}
+                      {(product as any).hamperAttributes?.hamperItems?.length > 0 && (
+                        <div className="flex flex-wrap gap-1 pt-1">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-violet-50 text-violet-700 border border-violet-200">
+                            🎁 {(product as any).hamperAttributes.hamperItems.length} Hamper Items Included
+                          </span>
+                        </div>
+                      )}
+
                       <div className="w-full h-[1px] bg-slate-100 dark:bg-slate-800 my-2" />
 
-                      {/* Formatted Price */}
-                      <p className="font-bold text-base text-[#d946ef]">
-                        ₹{product.price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-                      </p>
+                      {/* Formatted Price with Variants and Discounts */}
+                      <div className="flex items-baseline gap-1.5 flex-wrap">
+                        {variants.length > 0 ? (
+                          <>
+                            <span className="text-xs font-semibold text-slate-500">From</span>
+                            <span className="font-extrabold text-base text-emerald-700 dark:text-emerald-400">
+                              ₹{baseVarEff.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                            </span>
+                            {hasBaseVarDiscount && (
+                              <>
+                                <span className="text-xs text-slate-400 line-through">
+                                  ₹{baseVarReg.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                                </span>
+                                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded-md">
+                                  Save ₹{baseVarDiscDiff} ({baseVarDiscPct}% OFF)
+                                </span>
+                              </>
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            <span className="font-extrabold text-base text-[#d946ef]">
+                              ₹{baseVarEff.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                            </span>
+                            {hasBaseVarDiscount && (
+                              <>
+                                <span className="text-xs text-slate-400 line-through">
+                                  ₹{baseVarReg.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                                </span>
+                                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded-md">
+                                  -{baseVarDiscPct}% OFF
+                                </span>
+                              </>
+                            )}
+                          </>
+                        )}
+                      </div>
 
                       <div className="w-full h-[1px] bg-slate-100 dark:bg-slate-800 my-2" />
 
@@ -851,6 +925,13 @@ export const EnterpriseProductTable: React.FC<EnterpriseProductTableProps> = ({
             ) : (
               filteredProducts.map((product) => {
                 const isSelected = selectedIds.includes(product._id!);
+                const variants = Array.isArray(product.priceVariants) && product.priceVariants.length > 0 ? product.priceVariants : [];
+                const baseVar = variants[0];
+                const baseVarEff = baseVar ? getProductEffectivePrice(product, Number(baseVar.price), baseVar) : getProductEffectivePrice(product);
+                const baseVarReg = baseVar ? Number(baseVar.comparePrice || baseVar.price || 0) : Number(product.price || 0);
+                const hasBaseVarDiscount = baseVarReg > baseVarEff && baseVarEff > 0;
+                const baseVarDiscDiff = baseVarReg - baseVarEff;
+                const baseVarDiscPct = hasBaseVarDiscount ? Math.round((baseVarDiscDiff / baseVarReg) * 100) : 0;
                 const isLowStock = (product.countInStock || 0) > 0 && (product.countInStock || 0) <= 5;
                 const isOutOfStock = (product.countInStock || 0) <= 0;
 
@@ -909,10 +990,25 @@ export const EnterpriseProductTable: React.FC<EnterpriseProductTableProps> = ({
                     </TableCell>
                     <TableCell>
                       <div>
-                        <span className="font-bold text-xs">₹{product.price}</span>
-                        {product.discount ? (
-                          <span className="text-[10px] text-emerald-600 block">-{product.discount}% OFF</span>
-                        ) : null}
+                        {variants.length > 0 ? (
+                          <>
+                            <span className="text-[10px] text-muted-foreground block">From</span>
+                            <span className="font-bold text-xs text-emerald-700">₹{baseVarEff}</span>
+                            {hasBaseVarDiscount && (
+                              <span className="text-[10px] text-muted-foreground line-through block">₹{baseVarReg} (-{baseVarDiscPct}%)</span>
+                            )}
+                            <Badge variant="outline" className="text-[9px] mt-0.5 border-amber-300 bg-amber-50 text-amber-900">
+                              {variants.length} Sizes
+                            </Badge>
+                          </>
+                        ) : (
+                          <>
+                            <span className="font-bold text-xs">₹{baseVarEff}</span>
+                            {hasBaseVarDiscount ? (
+                              <span className="text-[10px] text-emerald-600 block">-{baseVarDiscPct}% OFF</span>
+                            ) : null}
+                          </>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell>

@@ -196,12 +196,14 @@ export const CakeProductDetail: React.FC<CakeProductDetailProps> = ({
   const baseVariantPrice = selectedVariant ? Number(selectedVariant.price) : Number(product.price || 0);
   const effectiveBasePrice = getProductEffectivePrice(product, selectedVariant ? selectedVariant.price : undefined, selectedVariant);
 
-  // Real compare/original price from product record or variant
-  const rawCompare = (selectedVariant?.comparePrice && Number(selectedVariant.comparePrice) > effectiveBasePrice)
-    ? Number(selectedVariant.comparePrice)
-    : ((product.comparePrice && Number(product.comparePrice) > effectiveBasePrice)
-      ? Number(product.comparePrice)
-      : (effectiveBasePrice < baseVariantPrice ? baseVariantPrice : (effectiveBasePrice < Number(product.price) ? Number(product.price) : effectiveBasePrice)));
+  // Real compare/original price strictly from selected variant or product record
+  const rawCompare = selectedVariant
+    ? (selectedVariant.comparePrice && Number(selectedVariant.comparePrice) > effectiveBasePrice
+        ? Number(selectedVariant.comparePrice)
+        : (baseVariantPrice > effectiveBasePrice ? baseVariantPrice : effectiveBasePrice))
+    : (product.comparePrice && Number(product.comparePrice) > effectiveBasePrice
+        ? Number(product.comparePrice)
+        : (effectiveBasePrice < Number(product.price) ? Number(product.price) : effectiveBasePrice));
 
   const discountInfo = getDiscountBreakdown(rawCompare, effectiveBasePrice);
   const hasRealDiscount = discountInfo.hasDiscount && discountInfo.percentage > 0;
