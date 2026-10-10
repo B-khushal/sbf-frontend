@@ -231,16 +231,28 @@ const CakeFormSection: React.FC<CakeFormSectionProps> = ({ formData, setFormData
       [field]: updatedVal,
     };
 
-    setFormData(prev => ({
-      ...prev,
-      hasPriceVariants: currentVariants.length > 0,
-      priceVariants: currentVariants,
-      cakeAttributes: {
-        ...prev.cakeAttributes,
-        availableSizes: currentVariants.map(v => v.label),
-        weight: currentVariants[0]?.label || prev.cakeAttributes?.weight,
+    setFormData(prev => {
+      const next: any = {
+        ...prev,
+        hasPriceVariants: currentVariants.length > 0,
+        priceVariants: currentVariants,
+        cakeAttributes: {
+          ...prev.cakeAttributes,
+          availableSizes: currentVariants.map(v => v.label),
+          weight: currentVariants[0]?.label || prev.cakeAttributes?.weight,
+        }
+      };
+
+      // Keep base product price in sync if index === 0 or main price is not set
+      if (index === 0 && field === 'price' && typeof updatedVal === 'number' && updatedVal > 0) {
+        next.price = updatedVal;
+        if (next.discountType === 'percentage' && next.discount > 0) {
+          next.discountPrice = Number((updatedVal * (1 - next.discount / 100)).toFixed(2));
+        }
       }
-    }));
+
+      return next;
+    });
   };
 
   const handleAddCustomSize = (e: React.FormEvent) => {
@@ -534,15 +546,21 @@ const CakeFormSection: React.FC<CakeFormSectionProps> = ({ formData, setFormData
                           </Label>
                           <div className="relative">
                             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-600 text-xs font-semibold">₹</span>
-                            <Input
-                              type="number"
-                              min="0"
-                              step="1"
-                              value={(variant as any).discountPrice !== undefined && (variant as any).discountPrice !== null ? (variant as any).discountPrice : ''}
-                              onChange={(e) => updateVariant(index, 'discountPrice', e.target.value)}
-                              placeholder={variant.price ? `Auto (₹${getProductEffectivePrice(formData, variant.price, { ...variant, discountPrice: undefined })})` : "Final price"}
-                              className="h-9 pl-7 text-xs font-bold border-emerald-300 focus:border-emerald-500 rounded-lg bg-emerald-50/30 text-emerald-800"
-                            />
+                            {(() => {
+                              const autoPrice = variant.price ? getProductEffectivePrice(formData, variant.price, { ...variant, discountPrice: undefined }) : 0;
+                              const hasAutoDiscount = autoPrice > 0 && autoPrice < variant.price;
+                              return (
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  step="1"
+                                  value={(variant as any).discountPrice !== undefined && (variant as any).discountPrice !== null ? (variant as any).discountPrice : ''}
+                                  onChange={(e) => updateVariant(index, 'discountPrice', e.target.value)}
+                                  placeholder={hasAutoDiscount ? `Auto (₹${autoPrice})` : "Final price (optional)"}
+                                  className="h-9 pl-7 text-xs font-bold border-emerald-300 focus:border-emerald-500 rounded-lg bg-emerald-50/30 text-emerald-800"
+                                />
+                              );
+                            })()}
                           </div>
                         </div>
 
@@ -567,6 +585,7 @@ const CakeFormSection: React.FC<CakeFormSectionProps> = ({ formData, setFormData
                         const eff = getProductEffectivePrice(formData, variant.price, variant);
                         const diff = variant.price - eff;
                         const pct = Math.round((diff / variant.price) * 100);
+                        const hasCustomDiscount = (variant as any).discountPrice !== undefined && (variant as any).discountPrice !== null && (variant as any).discountPrice !== '';
                         return (
                           <div className="flex flex-wrap items-center justify-between gap-2 text-xs pt-2 px-3 py-2 rounded-lg bg-amber-50/70 border border-amber-200/60">
                             <div className="flex items-center gap-2">
@@ -578,7 +597,8 @@ const CakeFormSection: React.FC<CakeFormSectionProps> = ({ formData, setFormData
                             </div>
                             {diff > 0 ? (
                               <Badge className="bg-emerald-600 text-white border-none text-[11px] font-bold px-2 py-0.5 shadow-2xs">
-                                Direct Discount: -₹{diff} ({pct}% OFF)
+                                {hasCustomDiscount ? "Direct Discount: " : "Auto Discount: "}
+                                -₹{diff} ({pct}% OFF)
                               </Badge>
                             ) : (
                               <span className="text-stone-500 text-[11px]">No discount</span>

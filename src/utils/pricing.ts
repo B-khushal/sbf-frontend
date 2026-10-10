@@ -45,15 +45,23 @@ export function getProductEffectivePrice(product: any, selectedVariantPrice?: nu
           Number(v.price) === selectedVariantPrice ||
           Number(v.discountPrice) === selectedVariantPrice
         )
-      : null
+      : (Array.isArray(product.priceVariants) && product.priceVariants.length > 0 && selectedVariantPrice === undefined
+          ? product.priceVariants[0]
+          : null)
   );
 
   if (variant) {
     // Explicit variant direct discount price
     if (variant.discountPrice !== undefined && variant.discountPrice !== null && variant.discountPrice !== '') {
       const vdp = Number(variant.discountPrice);
-      if (!isNaN(vdp) && vdp > 0 && (!variant.price || vdp < Number(variant.price))) {
-        return vdp;
+      if (!isNaN(vdp)) {
+        // If discount price equals or exceeds regular variant price, customer pays regular price (no discount)
+        if (variant.price && vdp >= Number(variant.price)) {
+          return Number(variant.price);
+        }
+        if (vdp > 0) {
+          return vdp;
+        }
       }
     }
     // Variant with comparePrice where price is already the discounted price
@@ -64,9 +72,9 @@ export function getProductEffectivePrice(product: any, selectedVariantPrice?: nu
 
   const basePrice = typeof selectedVariantPrice === 'number' && selectedVariantPrice > 0
     ? selectedVariantPrice
-    : regularPrice;
+    : (variant?.price ? Number(variant.price) : regularPrice);
 
-  // 2. Parse product-level discount properties defensively (numbers, strings, or nested in details)
+  // 2. Parse product-level discount properties defensively
   const rawDiscountType = String(
     product.discountType ??
     product.details?.discountType ??
@@ -74,6 +82,7 @@ export function getProductEffectivePrice(product: any, selectedVariantPrice?: nu
   ).toLowerCase().trim();
 
   const isDirectMode = rawDiscountType === 'direct' || rawDiscountType === 'fixed';
+  const discountPct = Number(product.discount ?? product.details?.discount ?? 0);
 
   const parsedDiscountPrice = (() => {
     const candidates = [
@@ -93,13 +102,22 @@ export function getProductEffectivePrice(product: any, selectedVariantPrice?: nu
 
   const hasValidDirectPrice = !isNaN(parsedDiscountPrice) && parsedDiscountPrice > 0;
 
-  // 3. Apply Direct Discount (exact for base product, proportional for variants)
-  if (hasValidDirectPrice && (isDirectMode || parsedDiscountPrice < (selectedVariantPrice ? basePrice : regularPrice))) {
-    // If evaluating the base product or variant with exact base price
+  // 3. Percentage mode: prioritize the percentage discount set by user
+  if (rawDiscountType === 'percentage') {
+    if (discountPct > 0 && discountPct < 100) {
+      return Math.round(basePrice * (1 - discountPct / 100));
+    }
+    // If discount percentage is 0 in percentage mode, there is NO discount
+    return basePrice;
+  }
+
+  // 4. Direct/Fixed mode: apply explicit direct discount price
+  if (isDirectMode && hasValidDirectPrice) {
+    // Exact match for base product or variant with same price
     if (typeof selectedVariantPrice !== 'number' || Math.abs(basePrice - regularPrice) < 0.01) {
       return parsedDiscountPrice;
     }
-    // If variant has different price, apply direct discount proportionally
+    // Apply proportionally if variant has different price
     if (regularPrice > 0) {
       const directRatio = parsedDiscountPrice / regularPrice;
       return Math.round(basePrice * directRatio);
@@ -107,10 +125,20 @@ export function getProductEffectivePrice(product: any, selectedVariantPrice?: nu
     return parsedDiscountPrice;
   }
 
-  // 4. Apply Percentage Discount
-  const discountPct = Number(product.discount ?? product.details?.discount ?? 0);
+  // 5. Fallback for unclassified / legacy cases
   if (discountPct > 0 && discountPct < 100) {
     return Math.round(basePrice * (1 - discountPct / 100));
+  }
+
+  if (hasValidDirectPrice && parsedDiscountPrice < regularPrice) {
+    if (typeof selectedVariantPrice !== 'number' || Math.abs(basePrice - regularPrice) < 0.01) {
+      return parsedDiscountPrice;
+    }
+    if (regularPrice > 0) {
+      const directRatio = parsedDiscountPrice / regularPrice;
+      return Math.round(basePrice * directRatio);
+    }
+    return parsedDiscountPrice;
   }
 
   return basePrice;
