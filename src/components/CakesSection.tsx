@@ -8,15 +8,35 @@ import { Button } from "@/components/ui/button";
 
 interface CakesSectionProps {
   onAddToCart?: (item: any, quantity: number) => boolean;
+  section?: {
+    title?: string;
+    subtitle?: string;
+    content?: {
+      badgeText?: string;
+      ctaText?: string;
+      ctaLink?: string;
+      showCta?: boolean;
+      itemsCount?: number;
+    };
+    [key: string]: any;
+  };
 }
 
-export const CakesSection: React.FC<CakesSectionProps> = ({ onAddToCart }) => {
+export const CakesSection: React.FC<CakesSectionProps> = ({ onAddToCart, section }) => {
   const navigate = useNavigate();
   const [cakes, setCakes] = useState<any[]>([]);
   const [combos, setCombos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const title = section?.title || "Cakes, Made for Every Celebration";
+  const subtitle = section?.subtitle || "Freshly crafted cakes to make every special moment a little sweeter. Baked to order with pure ingredients and delivered fresh across the city.";
+  const badgeText = section?.content?.badgeText || "NOW SERVING CAKES";
+  const ctaText = section?.content?.ctaText || "EXPLORE CAKES";
+  const ctaLink = section?.content?.ctaLink || "/cakes";
+  const showCta = section?.content?.showCta !== false;
+  const itemsCount = section?.content?.itemsCount || 8;
 
   useEffect(() => {
     let isMounted = true;
@@ -85,21 +105,25 @@ export const CakesSection: React.FC<CakesSectionProps> = ({ onAddToCart }) => {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 md:mb-14">
           <div className="space-y-3">
             {/* Subtle Brand Badge */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-900 text-xs font-bold tracking-wider uppercase">
-              <Cake className="w-3.5 h-3.5 text-amber-600" />
-              <span>NOW SERVING CAKES</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-            </div>
+            {badgeText && (
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-900 text-xs font-bold tracking-wider uppercase">
+                <Cake className="w-3.5 h-3.5 text-amber-600" />
+                <span>{badgeText}</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+              </div>
+            )}
 
             {/* Main Title */}
             <h2 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 tracking-tight font-serif">
-              Cakes, Made for Every Celebration
+              {title}
             </h2>
 
             {/* Supporting Copy */}
-            <p className="text-sm sm:text-base md:text-lg text-slate-600 max-w-2xl font-light">
-              Freshly crafted cakes to make every special moment a little sweeter. Baked to order with pure ingredients and delivered fresh across the city.
-            </p>
+            {subtitle && (
+              <p className="text-sm sm:text-base md:text-lg text-slate-600 max-w-2xl font-light">
+                {subtitle}
+              </p>
+            )}
           </div>
 
           {/* Action Links & Navigation Controls */}
@@ -127,13 +151,15 @@ export const CakesSection: React.FC<CakesSectionProps> = ({ onAddToCart }) => {
             </div>
 
             {/* Premium CTA Link */}
-            <Link
-              to="/cakes"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-800 hover:bg-amber-900 text-white font-bold text-xs sm:text-sm tracking-wide shadow-md transition-all duration-300 hover:shadow-lg group"
-            >
-              <span>EXPLORE CAKES</span>
-              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-            </Link>
+            {showCta && (
+              <Link
+                to={ctaLink}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-800 hover:bg-amber-900 text-white font-bold text-xs sm:text-sm tracking-wide shadow-md transition-all duration-300 hover:shadow-lg group"
+              >
+                <span>{ctaText}</span>
+                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+              </Link>
+            )}
           </div>
         </div>
 
@@ -157,7 +183,7 @@ export const CakesSection: React.FC<CakesSectionProps> = ({ onAddToCart }) => {
                 </div>
               ))
             ) : cakes.length > 0 ? (
-              cakes.slice(0, 8).map((cake) => (
+              cakes.slice(0, itemsCount).map((cake) => (
                 <div
                   key={cake._id || cake.id}
                   className="w-[280px] xs:w-[300px] sm:w-auto shrink-0 snap-start flex flex-col h-full"
@@ -177,40 +203,6 @@ export const CakesSection: React.FC<CakesSectionProps> = ({ onAddToCart }) => {
           </div>
         </div>
 
-        {/* --- SUBSECTION 4: CAKES & MORE / CELEBRATE WITH MORE COMBOS --- */}
-        {combos.length > 0 && (
-          <div className="mt-16 sm:mt-24 pt-12 border-t border-amber-200/50">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8 sm:mb-10">
-              <div>
-                <div className="inline-flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-widest text-rose-600 mb-1.5">
-                  <Gift className="w-3.5 h-3.5" />
-                  <span>Cakes & More</span>
-                </div>
-                <h3 className="text-xl xs:text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight font-serif">
-                  Celebrate With More
-                </h3>
-                <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-xl">
-                  Curated celebration bundles pairing our freshly baked cakes with luxury Dutch roses, Ferrero Rocher chocolates, and gifts.
-                </p>
-              </div>
-
-              <Link
-                to="/cakes?category=combos"
-                className="text-xs font-bold text-rose-700 hover:text-rose-800 flex items-center gap-1 group"
-              >
-                <span>View all combos</span>
-                <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
-              </Link>
-            </div>
-
-            {/* Combos Row / Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-              {combos.slice(0, 4).map((combo) => (
-                <CakeComboCard key={combo._id || combo.id} combo={combo} className="h-full" />
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </section>
   );

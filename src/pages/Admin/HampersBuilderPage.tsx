@@ -12,6 +12,7 @@ import { getImageUrl } from "@/config";
 import api from "@/services/api";
 import { Gift, Plus, Trash2, Save, Search, Check, Sparkles, Image as ImageIcon, Upload, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { formatCakeWeightLabel } from "@/utils/cakeHelpers";
 
 interface HamperComponentItem {
   id: string;
@@ -102,22 +103,31 @@ const HampersBuilderPage: React.FC = () => {
     }
 
     setSelectedComponents(prev => {
-      const existing = prev.find(item => item.id === product._id);
+      const prodId = String(product._id || product.id || '');
+      const existing = prev.find(item => item.id === prodId);
       if (existing) {
         return prev.map(item =>
-          item.id === product._id ? { ...item, quantity: item.quantity + 1 } : item
+          item.id === prodId ? { ...item, quantity: item.quantity + 1 } : item
         );
       }
+
+      const pTitle = (product.title || (product as any).name || '').toLowerCase();
+      const pCat = String(product.category || '').toLowerCase();
+      const isCake = pCat === 'cakes' || pCat === 'cake' || pTitle.includes('cake') || pTitle.includes('velvet') || pTitle.includes('truffle') || Boolean(product.cakeAttributes);
+      const isBouquet = pCat === 'flowers' || pCat === 'bouquets' || pCat === 'lilies' || pCat === 'roses' || pTitle.includes('bouquet') || pTitle.includes('rose') || pTitle.includes('lily') || pTitle.includes('flower');
+
+      const resolvedCatalogType = product.catalogType || (isCake ? 'cake' : (isBouquet ? 'bouquet' : undefined));
+
       return [
         ...prev,
         {
-          id: product._id!,
+          id: prodId,
           name: product.title || (product as any).name || "Item",
           category: product.category || "General",
           price: product.price || 0,
           image: prodImg,
           quantity: 1,
-          catalogType: product.catalogType,
+          catalogType: resolvedCatalogType,
           priceVariants: product.priceVariants,
           cakeAttributes: product.cakeAttributes,
         }
@@ -186,72 +196,173 @@ const HampersBuilderPage: React.FC = () => {
       setSaving(true);
       const mainImage = hamperImage || selectedComponents[0]?.image || "";
 
-      const cakeComponent = selectedComponents.find(c =>
-        c.category === 'cakes' ||
-        c.category === 'cake' ||
-        c.catalogType === 'cake' ||
-        c.name.toLowerCase().includes('cake')
-      );
+      const cakeComponent = selectedComponents.find(c => {
+        const cName = c.name.toLowerCase();
+        const cCat = c.category.toLowerCase();
+        return (
+          cCat === 'cakes' ||
+          cCat === 'cake' ||
+          c.catalogType === 'cake' ||
+          cName.includes('cake') ||
+          cName.includes('velvet') ||
+          cName.includes('truffle') ||
+          cName.includes('forest') ||
+          cName.includes('pastry') ||
+          cName.includes('cheesecake') ||
+          Boolean(c.cakeAttributes && Object.keys(c.cakeAttributes).length > 0)
+        );
+      });
+
+      const bouquetComponent = selectedComponents.find(c => {
+        if (c === cakeComponent) return false;
+        const cName = c.name.toLowerCase();
+        const cCat = c.category.toLowerCase();
+        return (
+          c.catalogType === 'bouquet' ||
+          cCat === 'flowers' ||
+          cCat === 'bouquets' ||
+          cCat === 'lilies' ||
+          cCat === 'roses' ||
+          cName.includes('bouquet') ||
+          cName.includes('flower') ||
+          cName.includes('rose') ||
+          cName.includes('lily') ||
+          cName.includes('lilies') ||
+          cName.includes('bliss') ||
+          cName.includes('carnation') ||
+          cName.includes('orchid') ||
+          cName.includes('bloom')
+        );
+      }) || selectedComponents.find(c => c !== cakeComponent);
+
+      // Inspect cakeComponent's actual variants from product data
+      const cakeRawVariants = (Array.isArray(cakeComponent?.priceVariants) && cakeComponent.priceVariants.length > 0)
+        ? cakeComponent.priceVariants
+        : (Array.isArray(cakeComponent?.cakeAttributes?.availableSizes) && cakeComponent.cakeAttributes.availableSizes.length > 0
+          ? cakeComponent.cakeAttributes.availableSizes.map(sz => ({ label: String(sz) }))
+          : (cakeComponent?.cakeAttributes?.weight ? [{ label: String(cakeComponent.cakeAttributes.weight) }] : null));
+
+      let cakeTargetSizes: string[] = [];
+      if (cakeRawVariants && cakeRawVariants.length > 0) {
+        cakeTargetSizes = Array.from(new Set(cakeRawVariants.map(v => formatCakeWeightLabel(v.label || v.name || v.size)).filter(Boolean)));
+      } else if (cakeComponent) {
+        cakeTargetSizes = ['0.5 Kg', '1 Kg'];
+      }
 
       const halfKgPrice = sellingPrice || totalComponentPrice;
       const oneKgPrice = halfKgPrice + (cakeUpgradeAmount || 450);
       const halfKgCompare = totalComponentPrice > halfKgPrice ? totalComponentPrice : Math.round(halfKgPrice * 1.25);
       const oneKgCompare = halfKgCompare + (cakeUpgradeAmount || 450) + 100;
 
-      const priceVariants = cakeComponent ? [
-        {
-          label: '1/2 kg',
-          title: '1/2 kg Cake + Bouquet',
-          price: halfKgPrice,
-          comparePrice: halfKgCompare,
-          stock: 50,
-          serves: '4–6 People',
-        },
-        {
-          label: '1 kg',
-          title: '1 kg Cake + Bouquet',
-          price: oneKgPrice,
-          comparePrice: oneKgCompare,
-          stock: 50,
-          serves: '8–10 People',
+      let priceVariants: any[] | undefined = undefined;
+      let comboBasePrice = halfKgPrice;
+      let comboBaseCompare = halfKgCompare;
+
+      if (cakeComponent && cakeTargetSizes.length > 0) {
+        if (cakeTargetSizes.length === 1) {
+          // Connected cake only has 1 variant (e.g. Red Velvet 1 Kg)
+          const singleLabel = cakeTargetSizes[0];
+          const isOneKg = singleLabel.toLowerCase().includes('1 kg') || singleLabel.toLowerCase().includes('1kg');
+          comboBasePrice = sellingPrice || totalComponentPrice;
+          comboBaseCompare = totalComponentPrice > comboBasePrice ? totalComponentPrice : Math.round(comboBasePrice * 1.25);
+
+          priceVariants = [
+            {
+              label: singleLabel,
+              title: `${singleLabel} Cake + Bouquet`,
+              price: comboBasePrice,
+              comparePrice: comboBaseCompare,
+              stock: 50,
+              serves: isOneKg ? '8–10 People' : '4–6 People',
+            }
+          ];
+        } else {
+          // Connected cake has 2 or more variants (e.g. Chocolate cake 0.5 Kg and 1 Kg)
+          comboBasePrice = halfKgPrice;
+          comboBaseCompare = halfKgCompare;
+
+          priceVariants = [
+            {
+              label: '0.5 Kg',
+              title: '0.5 Kg Cake + Bouquet',
+              price: halfKgPrice,
+              comparePrice: halfKgCompare,
+              stock: 50,
+              serves: '4–6 People',
+            },
+            {
+              label: '1 Kg',
+              title: '1 Kg Cake + Bouquet',
+              price: oneKgPrice,
+              comparePrice: oneKgCompare,
+              stock: 50,
+              serves: '8–10 People',
+            }
+          ];
         }
-      ] : undefined;
+      }
+
+      const mappedComboProducts = selectedComponents.map(c => {
+        const isCake = c === cakeComponent;
+        const isBouquet = c === bouquetComponent;
+        return {
+          productId: c.id,
+          name: c.name,
+          type: isCake ? 'cake' : isBouquet ? 'bouquet' : (c.category || 'item'),
+          catalogType: isCake ? 'cake' : isBouquet ? 'bouquet' : (c.catalogType || 'item'),
+          price: c.price,
+          image: c.image,
+          quantity: c.quantity || 1,
+          priceVariants: c.priceVariants,
+          cakeAttributes: c.cakeAttributes,
+        };
+      });
+
+      const primaryCakeWeight = cakeTargetSizes.length === 1 ? cakeTargetSizes[0] : '0.5 Kg';
+      const cakeServesText = cakeTargetSizes.length === 1
+        ? (cakeTargetSizes[0].toLowerCase().includes('1 kg') ? '8–10 People (1 Kg)' : '4–6 People (0.5 Kg)')
+        : '4–6 People (0.5 Kg) / 8–10 People (1 Kg)';
 
       const comboProductData: Partial<ProductData> = {
         title: hamperTitle,
         description: hamperDescription || `Exclusive combo hamper package featuring ${selectedComponents.map(c => c.name).join(", ")}.`,
         category: comboCategory,
-        categories: [comboCategory, "combos"],
+        categories: Array.from(new Set([comboCategory, "combos"].filter(Boolean))),
         catalogType: "combo",
-        price: halfKgPrice,
-        comparePrice: halfKgCompare,
+        price: comboBasePrice,
+        comparePrice: comboBaseCompare,
         discount: discountPercent,
         images: mainImage ? [mainImage, ...selectedComponents.map(c => c.image).filter(img => img && img !== mainImage)] : selectedComponents.map(c => c.image).filter(Boolean),
         countInStock: 50,
         comboName: hamperTitle,
         comboDescription: hamperDescription,
+        hasPriceVariants: Boolean(priceVariants && priceVariants.length > 0),
         priceVariants,
         cakeAttributes: cakeComponent ? {
-          weight: '1/2 kg',
-          availableSizes: ['1/2 kg', '1 kg'],
-          flavor: cakeComponent.cakeAttributes?.flavor || cakeComponent.name,
+          weight: primaryCakeWeight,
+          availableSizes: cakeTargetSizes,
+          flavor: cakeComponent.cakeAttributes?.flavor || (cakeComponent.name.toLowerCase().includes('velvet') ? 'Red Velvet' : cakeComponent.name),
           eggless: cakeComponent.cakeAttributes?.eggless !== undefined ? cakeComponent.cakeAttributes.eggless : true,
+          shape: cakeComponent.cakeAttributes?.shape || 'round',
+          prepTime: 'same-day',
           occasion: 'celebration',
-          serves: '4–6 People (1/2 kg) / 8–10 People (1 kg)',
+          serves: cakeServesText,
         } : undefined,
         comboAttributes: {
-          comboProducts: selectedComponents.map(c => ({
-            productId: c.id,
-            name: c.name,
-            type: c.category,
-            price: c.price,
-            image: c.image,
-            quantity: c.quantity,
-            catalogType: c.catalogType,
-            priceVariants: c.priceVariants,
-            cakeAttributes: c.cakeAttributes,
+          comboProducts: mappedComboProducts,
+          stockPolicy: 'hide'
+        },
+        hamperAttributes: {
+          hamperItems: mappedComboProducts.map(p => ({
+            productId: p.productId,
+            name: p.name,
+            type: p.type,
+            price: p.price,
+            image: p.image,
+            quantity: p.quantity,
           })),
-        }
+        },
+        comboItems: mappedComboProducts as any,
       };
 
       await productService.createProduct(comboProductData as ProductData);

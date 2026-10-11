@@ -29,6 +29,7 @@ import productService from '@/services/productService';
 import { getImageUrl } from '@/config';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { formatCakeWeightLabel } from '@/utils/cakeHelpers';
 
 interface ComboFormSectionProps {
   formData: ProductData;
@@ -54,78 +55,287 @@ export const ComboFormSection: React.FC<ComboFormSectionProps> = ({ formData, se
   const [comboBundleDiscount, setComboBundleDiscount] = useState<number>(0);
   const [autoSyncPrices, setAutoSyncPrices] = useState<boolean>(true);
 
+  const isUserModifiedRef = React.useRef(false);
+  const hydratedKeyRef = React.useRef('');
+
+  // Helpers for classifying product types
+  const isCakeProd = (p: any): boolean => {
+    if (!p) return false;
+    const type = String(p.catalogType || p.type || '').toLowerCase();
+    const cat = String(p.category || '').toLowerCase();
+    const sub = String(p.subcategory || '').toLowerCase();
+    const title = String(p.title || p.name || '').toLowerCase();
+
+    return (
+      type === 'cake' ||
+      type === 'cakes' ||
+      cat === 'cake' ||
+      cat === 'cakes' ||
+      cat.includes('cake') ||
+      sub.includes('cake') ||
+      sub.includes('velvet') ||
+      sub.includes('truffle') ||
+      Boolean(p.cakeAttributes && Object.keys(p.cakeAttributes).length > 0) ||
+      title.includes('cake') ||
+      title.includes('truffle') ||
+      title.includes('velvet') ||
+      title.includes('forest') ||
+      title.includes('pastry') ||
+      title.includes('cheesecake') ||
+      title.includes('butterscotch') ||
+      title.includes('pineapple')
+    );
+  };
+
+  const isBouquetProd = (p: any): boolean => {
+    if (!p) return false;
+    if (isCakeProd(p)) return false;
+    const type = String(p.catalogType || p.type || '').toLowerCase();
+    const cat = String(p.category || '').toLowerCase();
+    const sub = String(p.subcategory || '').toLowerCase();
+    const title = String(p.title || p.name || '').toLowerCase();
+
+    return (
+      type === 'bouquet' ||
+      type === 'bouquets' ||
+      type === 'flowers' ||
+      type === 'flower' ||
+      cat === 'flowers' ||
+      cat === 'bouquets' ||
+      cat === 'roses' ||
+      cat === 'lilies' ||
+      cat.includes('flower') ||
+      sub.includes('flower') ||
+      sub.includes('rose') ||
+      sub.includes('lili') ||
+      sub.includes('lily') ||
+      sub.includes('carnation') ||
+      sub.includes('orchid') ||
+      title.includes('bouquet') ||
+      title.includes('rose') ||
+      title.includes('flower') ||
+      title.includes('lily') ||
+      title.includes('lilies') ||
+      title.includes('bliss') ||
+      title.includes('carnation') ||
+      title.includes('orchid') ||
+      title.includes('bloom')
+    );
+  };
+
+  const findInCatalog = (item: any): ProductData | null => {
+    if (!item) return null;
+    const prodId = String(item.productId || item.id || item._id || '').trim();
+    const rawName = String(item.name || item.title || '').trim();
+    const cleanName = rawName.toLowerCase().replace(/[.,;]$/, '').trim();
+
+    // 1. Match by product ID
+    if (prodId && prodId !== 'undefined' && prodId !== 'null') {
+      const matchId = allProducts.find(p => String(p._id || p.id) === prodId);
+      if (matchId) return matchId;
+    }
+
+    if (cleanName) {
+      // 2. Exact title match
+      const exact = allProducts.find(p => (p.title || '').trim().toLowerCase() === cleanName);
+      if (exact) return exact;
+
+      // 3. Substring match
+      const contains = allProducts.find(p => {
+        const pt = (p.title || '').trim().toLowerCase();
+        return (pt.length > 3 && cleanName.includes(pt)) || (cleanName.length > 3 && pt.includes(cleanName));
+      });
+      if (contains) return contains;
+
+      // 4. Token match
+      const words = cleanName.split(/\s+/).filter(w => w.length > 2);
+      if (words.length > 0) {
+        const wordMatch = allProducts.find(p => {
+          const pt = (p.title || '').toLowerCase();
+          return words.every(w => pt.includes(w));
+        });
+        if (wordMatch) return wordMatch;
+      }
+    }
+
+    // 5. Fallback: Synthesize from item
+    if (rawName) {
+      const isCake = isCakeProd(item);
+      return {
+        _id: prodId || `custom_${Date.now()}`,
+        title: rawName,
+        price: Number(item.price) || 0,
+        images: item.image ? [item.image] : [],
+        category: isCake ? 'cakes' : (item.type || item.category || 'flowers'),
+        catalogType: isCake ? 'cake' : 'bouquet',
+        priceVariants: item.priceVariants,
+        cakeAttributes: item.cakeAttributes,
+      } as ProductData;
+    }
+
+    return null;
+  };
+
+  const handleSelectBouquet = (b: ProductData | null) => {
+    isUserModifiedRef.current = true;
+    setSelectedBouquet(b);
+  };
+
+  const handleSelectCake = (c: ProductData | null) => {
+    isUserModifiedRef.current = true;
+    setSelectedCake(c);
+  };
+
   // 1. Fetch catalog products on mount
   useEffect(() => {
+    let isMounted = true;
     const fetchCatalog = async () => {
       try {
         setLoading(true);
         const res = await productService.getAdminProducts();
-        const prods: ProductData[] = res.products || [];
-        setAllProducts(prods);
-
-        // Hydrate from existing formData if already connected
-        const existingComboProds = formData.comboAttributes?.comboProducts || [];
-        if (existingComboProds.length > 0) {
-          const bouquetItem = existingComboProds.find(
-            (p: any) => p.type === 'bouquet' || p.name?.toLowerCase().includes('bouquet') || p.name?.toLowerCase().includes('rose')
-          );
-          const cakeItem = existingComboProds.find(
-            (p: any) => p.type === 'cake' || p.name?.toLowerCase().includes('cake')
-          );
-
-          if (bouquetItem?.productId) {
-            const foundB = prods.find(p => p._id === bouquetItem.productId);
-            if (foundB) setSelectedBouquet(foundB);
-          } else if (bouquetItem) {
-            // Match by name
-            const foundB = prods.find(p => p.title?.toLowerCase() === bouquetItem.name?.toLowerCase());
-            if (foundB) setSelectedBouquet(foundB);
-          }
-
-          if (cakeItem?.productId) {
-            const foundC = prods.find(p => p._id === cakeItem.productId);
-            if (foundC) setSelectedCake(foundC);
-          } else if (cakeItem) {
-            // Match by name
-            const foundC = prods.find(p => p.title?.toLowerCase().includes('cake') && bouquetItem?.name !== p.title);
-            if (foundC) setSelectedCake(foundC);
-          }
-        } else if (formData.description) {
-          // Smart match from description text (e.g., "featuring Timeless Romance – 10 Red Rose Bouquet, chocolate cake")
-          const descLower = formData.description.toLowerCase();
-          const matchBouquet = prods.find(p => {
-            const titleLower = (p.title || '').toLowerCase();
-            return (p.catalogType === 'bouquet' || p.category === 'flowers') && descLower.includes(titleLower);
-          });
-          if (matchBouquet) setSelectedBouquet(matchBouquet);
-
-          const matchCake = prods.find(p => {
-            const titleLower = (p.title || '').toLowerCase();
-            return (p.catalogType === 'cake' || p.category === 'cakes' || titleLower.includes('cake')) && descLower.includes(titleLower);
-          });
-          if (matchCake) setSelectedCake(matchCake);
+        if (isMounted) {
+          const prods: ProductData[] = res.products || [];
+          setAllProducts(prods);
         }
       } catch (err) {
         console.error('Error loading products for combo section:', err);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
     fetchCatalog();
+    return () => { isMounted = false; };
   }, []);
+
+  // 2. Intelligent hydration effect: runs when catalog is loaded and formData is ready
+  useEffect(() => {
+    if (allProducts.length === 0) return;
+
+    const currentKey = `${formData._id || formData.id || 'new'}_${formData.title || ''}_${(formData.comboAttributes?.comboProducts || []).length}`;
+    if (hydratedKeyRef.current === currentKey && (selectedBouquet || selectedCake)) {
+      return;
+    }
+
+    const rawCandidateItems = [
+      ...(formData.comboAttributes?.comboProducts || []),
+      ...((formData as any).hamperAttributes?.hamperItems || []),
+      ...((formData as any).comboItems || [])
+    ];
+
+    let foundBouquet: ProductData | null = selectedBouquet;
+    let foundCake: ProductData | null = selectedCake;
+
+    if (rawCandidateItems.length > 0) {
+      if (!foundCake) {
+        const cakeItem = rawCandidateItems.find(it => isCakeProd(it));
+        if (cakeItem) foundCake = findInCatalog(cakeItem);
+      }
+
+      if (!foundBouquet) {
+        const bouquetItem = rawCandidateItems.find(it => {
+          const id = it.productId || it.id || it._id;
+          return id !== foundCake?._id && id !== foundCake?.id && isBouquetProd(it);
+        });
+        if (bouquetItem) foundBouquet = findInCatalog(bouquetItem);
+      }
+
+      // If exactly 2 items and only one was identified, the other must be the partner
+      if (rawCandidateItems.length === 2) {
+        if (foundCake && !foundBouquet) {
+          const other = rawCandidateItems.find(it => {
+            const id = it.productId || it.id || it._id;
+            return id !== foundCake?._id && id !== foundCake?.id && it.name !== foundCake?.title;
+          });
+          if (other) foundBouquet = findInCatalog(other);
+        } else if (foundBouquet && !foundCake) {
+          const other = rawCandidateItems.find(it => {
+            const id = it.productId || it.id || it._id;
+            return id !== foundBouquet?._id && id !== foundBouquet?.id && it.name !== foundBouquet?.title;
+          });
+          if (other) foundCake = findInCatalog(other);
+        } else if (!foundBouquet && !foundCake) {
+          foundBouquet = findInCatalog(rawCandidateItems[0]);
+          foundCake = findInCatalog(rawCandidateItems[1]);
+        }
+      }
+    }
+
+    // Fallback: Parse description (e.g., "Exclusive combo hamper package featuring Pink Oriental Lily Bliss, Red Velvet.")
+    if ((!foundBouquet || !foundCake) && formData.description) {
+      const desc = formData.description;
+      const featMatch = desc.match(/featuring\s+([^.]+)/i);
+      if (featMatch && featMatch[1]) {
+        const tokens = featMatch[1].split(',').map(s => s.trim().replace(/[.,;]$/, '')).filter(Boolean);
+        for (const token of tokens) {
+          const resolved = findInCatalog({ name: token });
+          if (resolved) {
+            if (isCakeProd(resolved) && !foundCake) {
+              foundCake = resolved;
+            } else if (!foundBouquet && resolved._id !== foundCake?._id) {
+              foundBouquet = resolved;
+            }
+          }
+        }
+      }
+
+      if (!foundBouquet) {
+        foundBouquet = allProducts.find(p => isBouquetProd(p) && desc.toLowerCase().includes((p.title || '').toLowerCase())) || null;
+      }
+      if (!foundCake) {
+        foundCake = allProducts.find(p => isCakeProd(p) && desc.toLowerCase().includes((p.title || '').toLowerCase())) || null;
+      }
+    }
+
+    // Fallback: Parse title (e.g., "lilie bouquet and red velvet cake")
+    if ((!foundBouquet || !foundCake) && formData.title) {
+      const title = formData.title;
+      const parts = title.split(/\s+(?:with|and|&|\+)\s+/i).map(s => s.trim()).filter(Boolean);
+      if (parts.length >= 2) {
+        for (const part of parts) {
+          const resolved = findInCatalog({ name: part });
+          if (resolved) {
+            if (isCakeProd(resolved) && !foundCake) {
+              foundCake = resolved;
+            } else if (!foundBouquet && resolved._id !== foundCake?._id) {
+              foundBouquet = resolved;
+            }
+          }
+        }
+      }
+    }
+
+    if (foundBouquet && !selectedBouquet) setSelectedBouquet(foundBouquet);
+    if (foundCake && !selectedCake) setSelectedCake(foundCake);
+
+    hydratedKeyRef.current = currentKey;
+  }, [
+    allProducts,
+    formData._id,
+    formData.id,
+    formData.title,
+    formData.description,
+    formData.comboAttributes,
+    (formData as any).hamperAttributes,
+    (formData as any).comboItems
+  ]);
 
   // Filter available bouquets from catalog
   const availableBouquets = useMemo(() => {
     return allProducts.filter(p => {
       const type = String(p.catalogType || '').toLowerCase();
       const cat = String(p.category || '').toLowerCase();
-      const title = String(p.title || '').toLowerCase();
+      if (type === 'combo' || cat === 'combos') return false;
 
-      const isBouquet = type === 'bouquet' || cat === 'flowers' || cat === 'bouquets' || title.includes('bouquet') || title.includes('roses') || title.includes('flower');
-      const isNotCombo = type !== 'combo' && cat !== 'combos';
+      const isBouquet = isBouquetProd(p);
+      if (!isBouquet) return false;
 
-      if (!isBouquet || !isNotCombo) return false;
-      if (bouquetSearch && !title.includes(bouquetSearch.toLowerCase())) return false;
+      if (bouquetSearch) {
+        const q = bouquetSearch.toLowerCase().trim();
+        const t = (p.title || '').toLowerCase();
+        const c = cat.toLowerCase();
+        const s = (p.subcategory || '').toLowerCase();
+        return t.includes(q) || c.includes(q) || s.includes(q);
+      }
       return true;
     });
   }, [allProducts, bouquetSearch]);
@@ -135,24 +345,29 @@ export const ComboFormSection: React.FC<ComboFormSectionProps> = ({ formData, se
     return allProducts.filter(p => {
       const type = String(p.catalogType || '').toLowerCase();
       const cat = String(p.category || '').toLowerCase();
-      const title = String(p.title || '').toLowerCase();
+      if (type === 'combo' || cat === 'combos') return false;
 
-      const isCake = type === 'cake' || cat === 'cakes' || cat === 'cake' || title.includes('cake');
-      const isNotCombo = type !== 'combo' && cat !== 'combos';
+      const isCake = isCakeProd(p);
+      if (!isCake) return false;
 
-      if (!isCake || !isNotCombo) return false;
-      if (cakeSearch && !title.includes(cakeSearch.toLowerCase())) return false;
+      if (cakeSearch) {
+        const q = cakeSearch.toLowerCase().trim();
+        const t = (p.title || '').toLowerCase();
+        const c = cat.toLowerCase();
+        const s = (p.subcategory || '').toLowerCase();
+        return t.includes(q) || c.includes(q) || s.includes(q);
+      }
       return true;
     });
   }, [allProducts, cakeSearch]);
 
-  // Extract Cake Variants from the connected cake (just like Photo 1)
+  // Extract Cake Variants from the connected cake
   const connectedCakeVariants = useMemo(() => {
     if (!selectedCake) return [];
 
     if (Array.isArray(selectedCake.priceVariants) && selectedCake.priceVariants.length > 0) {
       return selectedCake.priceVariants.map(v => ({
-        label: v.label,
+        label: formatCakeWeightLabel(v.label || (v as any).name || (v as any).size),
         price: Number(v.price) || Number(selectedCake.price) || 0,
         discountPrice: v.discountPrice !== undefined && v.discountPrice !== null ? Number(v.discountPrice) : undefined,
         comparePrice: v.comparePrice !== undefined ? Number(v.comparePrice) : undefined,
@@ -160,7 +375,27 @@ export const ComboFormSection: React.FC<ComboFormSectionProps> = ({ formData, se
       }));
     }
 
-    // Default if no explicit priceVariants on cake
+    if (Array.isArray(selectedCake.cakeAttributes?.availableSizes) && selectedCake.cakeAttributes.availableSizes.length > 0) {
+      return selectedCake.cakeAttributes.availableSizes.map(sz => ({
+        label: formatCakeWeightLabel(sz),
+        price: Number(selectedCake.price) || 0,
+        discountPrice: selectedCake.discountPrice ? Number(selectedCake.discountPrice) : undefined,
+        comparePrice: selectedCake.comparePrice ? Number(selectedCake.comparePrice) : undefined,
+        stock: 50
+      }));
+    }
+
+    if (selectedCake.cakeAttributes?.weight) {
+      const w = formatCakeWeightLabel(selectedCake.cakeAttributes.weight);
+      return [{
+        label: w,
+        price: Number(selectedCake.price) || 0,
+        discountPrice: selectedCake.discountPrice ? Number(selectedCake.discountPrice) : undefined,
+        comparePrice: selectedCake.comparePrice ? Number(selectedCake.comparePrice) : undefined,
+        stock: 50
+      }];
+    }
+
     const baseP = Number(selectedCake.price) || 699;
     return [
       {
@@ -178,28 +413,47 @@ export const ComboFormSection: React.FC<ComboFormSectionProps> = ({ formData, se
     ];
   }, [selectedCake]);
 
-  // Find 0.5 Kg and 1 Kg cake entries
+  const isSingleVariantCake = connectedCakeVariants.length === 1;
+  const singleCakeVariant = isSingleVariantCake ? connectedCakeVariants[0] : null;
+
+  // Find 0.5 Kg and 1 Kg cake entries (if cake has multiple variants)
   const cake05Variant = useMemo(() => {
+    if (isSingleVariantCake) return null;
     return connectedCakeVariants.find(v => {
       const l = v.label.toLowerCase();
       return l.includes('0.5') || l.includes('1/2') || l.includes('½');
     }) || connectedCakeVariants[0] || null;
-  }, [connectedCakeVariants]);
+  }, [connectedCakeVariants, isSingleVariantCake]);
 
   const cake1KgVariant = useMemo(() => {
+    if (isSingleVariantCake) return null;
     return connectedCakeVariants.find(v => {
       const l = v.label.toLowerCase();
       return (l.includes('1 kg') || l.includes('1kg') || l === '1 kg') && !l.includes('0.5') && !l.includes('1/2');
     }) || connectedCakeVariants[1] || null;
-  }, [connectedCakeVariants]);
+  }, [connectedCakeVariants, isSingleVariantCake]);
 
-  // 2. Calculate Combined Prices (Photo 2)
+  // Calculate Combined Prices
   const calculations = useMemo(() => {
     const bouquetRegular = selectedBouquet ? Number(selectedBouquet.price || 0) : 0;
     const bouquetSelling = selectedBouquet
       ? Number(selectedBouquet.discountPrice || selectedBouquet.price || 0)
       : 0;
 
+    // Single variant calculations (e.g. Red Velvet 1 Kg)
+    const singleCakeRegular = singleCakeVariant
+      ? Number(singleCakeVariant.price || selectedCake?.price || 0)
+      : 0;
+    const singleCakeSelling = singleCakeVariant?.discountPrice !== undefined
+      ? Number(singleCakeVariant.discountPrice)
+      : singleCakeRegular;
+
+    const totalSingleRegular = bouquetRegular + singleCakeRegular;
+    const totalSingleSelling = Math.max(0, (bouquetSelling + singleCakeSelling) - comboBundleDiscount);
+    const totalSingleSavings = totalSingleRegular > totalSingleSelling ? totalSingleRegular - totalSingleSelling : 0;
+    const totalSingleDiscountPct = totalSingleRegular > 0 ? Math.round((totalSingleSavings / totalSingleRegular) * 100) : 0;
+
+    // Multi-variant calculations (0.5 Kg & 1 Kg)
     const cake05Regular = cake05Variant ? Number(cake05Variant.price || 0) : (selectedCake ? Number(selectedCake.price || 0) : 0);
     const cake05Selling = cake05Variant?.discountPrice !== undefined
       ? Number(cake05Variant.discountPrice)
@@ -227,6 +481,12 @@ export const ComboFormSection: React.FC<ComboFormSectionProps> = ({ formData, se
     return {
       bouquetRegular,
       bouquetSelling,
+      singleCakeRegular,
+      singleCakeSelling,
+      totalSingleRegular,
+      totalSingleSelling,
+      totalSingleSavings,
+      totalSingleDiscountPct,
       cake05Regular,
       cake05Selling,
       cake1KgRegular,
@@ -240,84 +500,130 @@ export const ComboFormSection: React.FC<ComboFormSectionProps> = ({ formData, se
       total1KgSavings,
       total1KgDiscountPct,
     };
-  }, [selectedBouquet, selectedCake, cake05Variant, cake1KgVariant, comboBundleDiscount]);
+  }, [
+    selectedBouquet,
+    selectedCake,
+    singleCakeVariant,
+    cake05Variant,
+    cake1KgVariant,
+    comboBundleDiscount
+  ]);
 
   // 3. Auto-sync calculated prices into Photo 2's formData
   useEffect(() => {
     if (!autoSyncPrices || !selectedBouquet || !selectedCake) return;
 
-    // Generate combo priceVariants for 0.5 Kg and 1 Kg
-    const newPriceVariants: PriceVariant[] = [
-      {
-        label: '0.5 Kg',
-        price: calculations.total05Regular,
-        discountPrice: calculations.total05Savings > 0 ? calculations.total05Selling : undefined,
-        stock: Math.min(Number(selectedBouquet.countInStock || 50), Number(selectedCake.countInStock || 50)),
-      },
-      {
-        label: '1 Kg',
-        price: calculations.total1KgRegular,
-        discountPrice: calculations.total1KgSavings > 0 ? calculations.total1KgSelling : undefined,
-        stock: Math.min(Number(selectedBouquet.countInStock || 50), Number(selectedCake.countInStock || 50)),
-      }
-    ];
+    // Build combo priceVariants matching connected cake's actual variants
+    const newPriceVariants: PriceVariant[] = isSingleVariantCake && singleCakeVariant
+      ? [
+          {
+            label: singleCakeVariant.label,
+            price: calculations.totalSingleRegular,
+            discountPrice: calculations.totalSingleSavings > 0 ? calculations.totalSingleSelling : undefined,
+            stock: Math.min(Number(selectedBouquet.countInStock || 50), Number(selectedCake.countInStock || 50)),
+          }
+        ]
+      : [
+          {
+            label: '0.5 Kg',
+            price: calculations.total05Regular,
+            discountPrice: calculations.total05Savings > 0 ? calculations.total05Selling : undefined,
+            stock: Math.min(Number(selectedBouquet.countInStock || 50), Number(selectedCake.countInStock || 50)),
+          },
+          {
+            label: '1 Kg',
+            price: calculations.total1KgRegular,
+            discountPrice: calculations.total1KgSavings > 0 ? calculations.total1KgSelling : undefined,
+            stock: Math.min(Number(selectedBouquet.countInStock || 50), Number(selectedCake.countInStock || 50)),
+          }
+        ];
 
     const bouquetImg = selectedBouquet.images?.[0] || selectedBouquet.image || '';
     const cakeImg = selectedCake.images?.[0] || selectedCake.image || '';
 
-    setFormData(prev => ({
-      ...prev,
-      catalogType: 'combo',
-      category: prev.category || 'combos',
-      categories: Array.from(new Set([...(prev.categories || []), 'combos', prev.category].filter(Boolean))),
-      // Sync Photo 2's Regular Price & Discount
-      price: calculations.total05Regular,
-      discountPrice: calculations.total05Savings > 0 ? calculations.total05Selling : undefined,
-      discount: calculations.total05DiscountPct,
-      discountType: calculations.total05Savings > 0 ? 'direct' : prev.discountType,
-      hasPriceVariants: true,
-      priceVariants: newPriceVariants,
-      // Connect cake attributes from the selected cake
-      cakeAttributes: {
-        flavor: selectedCake.cakeAttributes?.flavor || (selectedCake.title?.toLowerCase().includes('chocolate') ? 'Chocolate' : 'Artisan Flavor'),
-        eggless: selectedCake.cakeAttributes?.eggless !== undefined ? selectedCake.cakeAttributes.eggless : true,
-        shape: selectedCake.cakeAttributes?.shape || 'round',
-        prepTime: selectedCake.cakeAttributes?.prepTime || 'same-day',
-        availableSizes: ['0.5 Kg', '1 Kg'],
-        occasion: selectedCake.cakeAttributes?.occasion || 'celebration',
-      },
-      // Store in comboAttributes.comboProducts
-      comboAttributes: {
-        comboProducts: [
-          {
-            productId: selectedBouquet._id,
-            name: selectedBouquet.title,
-            type: 'bouquet',
-            price: calculations.bouquetRegular,
-            image: bouquetImg,
-            quantity: 1,
-            catalogType: 'bouquet',
-          },
-          {
-            productId: selectedCake._id,
-            name: selectedCake.title,
-            type: 'cake',
-            price: calculations.cake05Regular,
-            image: cakeImg,
-            quantity: 1,
-            catalogType: 'cake',
-            priceVariants: connectedCakeVariants,
-            cakeAttributes: selectedCake.cakeAttributes,
-          }
-        ]
-      }
-    }));
+    // Preserve any extra items that were in combo
+    const existingOthers = (formData.comboAttributes?.comboProducts || []).filter(
+      p => String(p.productId) !== String(selectedBouquet._id || selectedBouquet.id) &&
+           String(p.productId) !== String(selectedCake._id || selectedCake.id) &&
+           p.name !== selectedBouquet.title &&
+           p.name !== selectedCake.title
+    );
+
+    const primaryRegularPrice = isSingleVariantCake ? calculations.totalSingleRegular : calculations.total05Regular;
+    const primarySellingPrice = isSingleVariantCake ? calculations.totalSingleSelling : calculations.total05Selling;
+    const primarySavings = isSingleVariantCake ? calculations.totalSingleSavings : calculations.total05Savings;
+    const primaryDiscountPct = isSingleVariantCake ? calculations.totalSingleDiscountPct : calculations.total05DiscountPct;
+
+    const primaryWeight = isSingleVariantCake && singleCakeVariant ? singleCakeVariant.label : '0.5 Kg';
+    const primarySizes = isSingleVariantCake && singleCakeVariant ? [singleCakeVariant.label] : ['0.5 Kg', '1 Kg'];
+    const primaryServes = isSingleVariantCake && singleCakeVariant
+      ? (singleCakeVariant.label.toLowerCase().includes('1 kg') ? '8–10 People (1 Kg)' : '4–6 People')
+      : '4–6 People (0.5 Kg) / 8–10 People (1 Kg)';
+
+    setFormData(prev => {
+      const isInitial = !isUserModifiedRef.current && (prev.price > 0 || (Array.isArray(prev.priceVariants) && prev.priceVariants.length > 0));
+      const finalPrice = isInitial && prev.price > 0 ? prev.price : primaryRegularPrice;
+      const finalDiscountPrice = isInitial && prev.discountPrice !== undefined ? prev.discountPrice : (primarySavings > 0 ? primarySellingPrice : undefined);
+      const finalDiscount = isInitial && prev.discount !== undefined ? prev.discount : primaryDiscountPct;
+      const finalPriceVariants = isInitial && prev.priceVariants && prev.priceVariants.length > 0 ? prev.priceVariants : newPriceVariants;
+
+      return {
+        ...prev,
+        catalogType: 'combo',
+        category: prev.category || 'combos',
+        categories: Array.from(new Set([...(prev.categories || []), 'combos', prev.category].filter(Boolean))),
+        price: finalPrice,
+        discountPrice: finalDiscountPrice,
+        discount: finalDiscount,
+        discountType: finalDiscountPrice ? 'direct' : prev.discountType,
+        hasPriceVariants: true,
+        priceVariants: finalPriceVariants,
+        cakeAttributes: {
+          flavor: selectedCake.cakeAttributes?.flavor || (selectedCake.title?.toLowerCase().includes('velvet') ? 'Red Velvet' : selectedCake.title?.toLowerCase().includes('chocolate') ? 'Chocolate' : 'Artisan Flavor'),
+          eggless: selectedCake.cakeAttributes?.eggless !== undefined ? selectedCake.cakeAttributes.eggless : true,
+          shape: selectedCake.cakeAttributes?.shape || 'round',
+          prepTime: selectedCake.cakeAttributes?.prepTime || 'same-day',
+          availableSizes: primarySizes,
+          weight: primaryWeight,
+          occasion: selectedCake.cakeAttributes?.occasion || 'celebration',
+          serves: primaryServes,
+        },
+        comboAttributes: {
+          comboProducts: [
+            {
+              productId: selectedBouquet._id || selectedBouquet.id,
+              name: selectedBouquet.title,
+              type: 'bouquet',
+              price: calculations.bouquetRegular,
+              image: bouquetImg,
+              quantity: 1,
+              catalogType: 'bouquet',
+            },
+            {
+              productId: selectedCake._id || selectedCake.id,
+              name: selectedCake.title,
+              type: 'cake',
+              price: isSingleVariantCake ? calculations.singleCakeRegular : calculations.cake05Regular,
+              image: cakeImg,
+              quantity: 1,
+              catalogType: 'cake',
+              priceVariants: connectedCakeVariants,
+              cakeAttributes: selectedCake.cakeAttributes,
+            },
+            ...existingOthers
+          ],
+          stockPolicy: 'hide'
+        }
+      };
+    });
   }, [
     selectedBouquet?._id,
     selectedCake?._id,
     calculations,
     autoSyncPrices,
-    connectedCakeVariants
+    connectedCakeVariants,
+    isSingleVariantCake,
+    singleCakeVariant
   ]);
 
   // Auto-Fill Title and Description based on connected products
@@ -424,7 +730,7 @@ export const ComboFormSection: React.FC<ComboFormSectionProps> = ({ formData, se
                   type="button"
                   variant="ghost"
                   size="sm"
-                  onClick={() => setSelectedBouquet(null)}
+                  onClick={() => handleSelectBouquet(null)}
                   className="h-8 w-8 text-rose-500 hover:text-rose-700 hover:bg-rose-100/60 p-0 rounded-lg"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -456,7 +762,7 @@ export const ComboFormSection: React.FC<ComboFormSectionProps> = ({ formData, se
                         <div
                           key={b._id}
                           onClick={() => {
-                            setSelectedBouquet(b);
+                            handleSelectBouquet(b);
                             setIsBouquetDropdownOpen(false);
                             setBouquetSearch('');
                           }}
@@ -530,52 +836,52 @@ export const ComboFormSection: React.FC<ComboFormSectionProps> = ({ formData, se
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => setSelectedCake(null)}
+                    onClick={() => handleSelectCake(null)}
                     className="h-8 w-8 text-rose-500 hover:text-rose-700 hover:bg-rose-100/60 p-0 rounded-lg"
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
 
-                {/* CONFIGURED CAKE VARIANTS EXTRACTED FROM CAKE PRODUCT (PHOTO 1) */}
+                {/* CONFIGURED CAKE VARIANTS EXTRACTED FROM CAKE PRODUCT */}
                 <div className="p-3 rounded-xl bg-amber-100/50 dark:bg-amber-950/30 border border-amber-200 text-xs space-y-2">
-                  <span className="font-black text-[11px] uppercase tracking-wider text-amber-900 dark:text-amber-200 flex items-center gap-1">
-                    <Sparkles className="w-3 h-3 text-amber-600" />
-                    Cake Variants Taken from {selectedCake.title}:
-                  </span>
+                  <div className="flex items-center justify-between">
+                    <span className="font-black text-[11px] uppercase tracking-wider text-amber-900 dark:text-amber-200 flex items-center gap-1">
+                      <Sparkles className="w-3 h-3 text-amber-600" />
+                      Cake Variants Taken from {selectedCake.title}:
+                    </span>
+                    {isSingleVariantCake && (
+                      <Badge variant="outline" className="text-[10px] bg-amber-200/50 text-amber-900 border-amber-300">
+                        Single Variant Component
+                      </Badge>
+                    )}
+                  </div>
 
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    {/* 0.5 Kg Variant Preview */}
-                    <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-amber-200 shadow-2xs space-y-0.5">
-                      <div className="flex items-center justify-between">
-                        <strong className="text-slate-900 dark:text-slate-100 font-bold">0.5 Kg (Base)</strong>
-                        <span className="text-[10px] text-slate-400">4-6 People</span>
-                      </div>
-                      <p className="text-xs font-black text-amber-700 dark:text-amber-300">
-                        ₹{calculations.cake05Regular}
-                        {calculations.cake05Selling < calculations.cake05Regular && (
-                          <span className="text-[11px] font-semibold text-emerald-600 ml-1.5">
-                            (Disc: ₹{calculations.cake05Selling})
-                          </span>
-                        )}
-                      </p>
-                    </div>
-
-                    {/* 1 Kg Variant Preview */}
-                    <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-amber-200 shadow-2xs space-y-0.5">
-                      <div className="flex items-center justify-between">
-                        <strong className="text-slate-900 dark:text-slate-100 font-bold">1 Kg</strong>
-                        <span className="text-[10px] text-slate-400">8-10 People</span>
-                      </div>
-                      <p className="text-xs font-black text-amber-700 dark:text-amber-300">
-                        ₹{calculations.cake1KgRegular}
-                        {calculations.cake1KgSelling < calculations.cake1KgRegular && (
-                          <span className="text-[11px] font-semibold text-emerald-600 ml-1.5">
-                            (Disc: ₹{calculations.cake1KgSelling})
-                          </span>
-                        )}
-                      </p>
-                    </div>
+                  <div className={cn(
+                    "grid gap-2 text-xs",
+                    connectedCakeVariants.length === 1 ? "grid-cols-1" : "grid-cols-2"
+                  )}>
+                    {connectedCakeVariants.map((v, idx) => {
+                      const isOneKg = v.label.toLowerCase().includes('1 kg') || v.label.toLowerCase().includes('1kg');
+                      return (
+                        <div key={idx} className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-amber-200 shadow-2xs space-y-0.5">
+                          <div className="flex items-center justify-between">
+                            <strong className="text-slate-900 dark:text-slate-100 font-bold">{v.label}</strong>
+                            <span className="text-[10px] text-slate-400">
+                              {isOneKg ? '8–10 People' : '4–6 People'}
+                            </span>
+                          </div>
+                          <p className="text-xs font-black text-amber-700 dark:text-amber-300">
+                            ₹{v.price}
+                            {v.discountPrice && v.discountPrice < v.price && (
+                              <span className="text-[11px] font-semibold text-emerald-600 ml-1.5">
+                                (Disc: ₹{v.discountPrice})
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -605,7 +911,7 @@ export const ComboFormSection: React.FC<ComboFormSectionProps> = ({ formData, se
                         <div
                           key={c._id}
                           onClick={() => {
-                            setSelectedCake(c);
+                            handleSelectCake(c);
                             setIsCakeDropdownOpen(false);
                             setCakeSearch('');
                           }}
@@ -635,6 +941,43 @@ export const ComboFormSection: React.FC<ComboFormSectionProps> = ({ formData, se
           </div>
 
         </div>
+
+        {/* Additional Connected Products (e.g. from 3+ item hampers) */}
+        {(() => {
+          const others = (formData.comboAttributes?.comboProducts || []).filter(
+            p => String(p.productId) !== String(selectedBouquet?._id || selectedBouquet?.id) &&
+                 String(p.productId) !== String(selectedCake?._id || selectedCake?.id) &&
+                 p.name !== selectedBouquet?.title &&
+                 p.name !== selectedCake?.title
+          );
+          if (others.length === 0) return null;
+          return (
+            <div className="rounded-xl border border-rose-200 bg-white/70 dark:bg-slate-900 p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                  <Layers className="w-3.5 h-3.5 text-rose-500" />
+                  Additional Hamper Inclusions ({others.length}):
+                </span>
+                <Badge variant="outline" className="text-[10px] text-rose-600 border-rose-200">
+                  Included in Combo
+                </Badge>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                {others.map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-2.5 p-2 rounded-lg bg-rose-50/50 dark:bg-slate-800 border border-rose-100">
+                    {item.image && (
+                      <img src={getImageUrl(item.image)} alt={item.name} className="w-8 h-8 rounded-md object-cover border border-rose-200 shrink-0" />
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{item.name}</p>
+                      <p className="text-[10px] text-slate-500">₹{item.price} • Qty: {item.quantity || 1}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
 
         <Separator className="bg-rose-200/60" />
 
@@ -673,80 +1016,129 @@ export const ComboFormSection: React.FC<ComboFormSectionProps> = ({ formData, se
               </div>
             </div>
 
-            {/* Price Breakdown Cards for 0.5 Kg and 1 Kg */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
-              
-              {/* Card A: 0.5 Kg Combined Calculation */}
-              <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-slate-800 shadow-2xs space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-black uppercase text-emerald-900 dark:text-emerald-200 flex items-center gap-1.5">
-                    <span>💐 Bouquet + 🎂 0.5 Kg Cake</span>
-                    <Badge variant="outline" className="text-[10px] border-emerald-400 text-emerald-700">Base Combo</Badge>
-                  </span>
-                  <span className="text-[11px] text-slate-400">Serves 4–6</span>
-                </div>
-
-                <div className="space-y-1.5 text-xs text-slate-600 dark:text-slate-300">
-                  <div className="flex justify-between">
-                    <span>Bouquet ({selectedBouquet.title}):</span>
-                    <span className="font-semibold text-slate-800 dark:text-slate-200">₹{calculations.bouquetRegular}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Cake 0.5 Kg ({selectedCake.title}):</span>
-                    <span className="font-semibold text-slate-800 dark:text-slate-200">₹{calculations.cake05Regular}</span>
-                  </div>
-                  <div className="border-t border-dashed border-slate-200 dark:border-slate-700 pt-1.5 flex justify-between font-bold text-slate-900 dark:text-slate-100">
-                    <span>Photo 2 Regular Price:</span>
-                    <span className="text-sm font-black text-emerald-700 dark:text-emerald-400">
-                      ₹{calculations.total05Regular}
+            {/* Price Breakdown Cards: Adaptive for Single vs Multi Variant Cakes */}
+            <div className={cn(
+              "grid gap-4 pt-1",
+              isSingleVariantCake && singleCakeVariant ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2"
+            )}>
+              {isSingleVariantCake && singleCakeVariant ? (
+                /* Single Variant Card (e.g. Red Velvet 1 Kg) */
+                <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border-2 border-emerald-300 dark:border-slate-800 shadow-xs space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black uppercase text-emerald-900 dark:text-emerald-200 flex items-center gap-1.5">
+                      <span>💐 Bouquet + 🎂 {singleCakeVariant.label} Cake</span>
+                      <Badge className="bg-emerald-600 text-white text-[10px] font-bold">
+                        Single Variant Signature Combo
+                      </Badge>
+                    </span>
+                    <span className="text-[11px] text-slate-400 font-semibold">
+                      {singleCakeVariant.label.toLowerCase().includes('1 kg') ? 'Serves 8–10' : 'Serves 4–6'}
                     </span>
                   </div>
-                  <div className="flex justify-between font-extrabold text-xs text-rose-600">
-                    <span>Final Selling Price:</span>
-                    <span>₹{calculations.total05Selling}</span>
+
+                  <div className="space-y-1.5 text-xs text-slate-600 dark:text-slate-300">
+                    <div className="flex justify-between">
+                      <span>Bouquet ({selectedBouquet.title}):</span>
+                      <span className="font-semibold text-slate-800 dark:text-slate-200">₹{calculations.bouquetRegular}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Cake {singleCakeVariant.label} ({selectedCake.title}):</span>
+                      <span className="font-semibold text-slate-800 dark:text-slate-200">₹{calculations.singleCakeRegular}</span>
+                    </div>
+                    <div className="border-t border-dashed border-slate-200 dark:border-slate-700 pt-1.5 flex justify-between font-bold text-slate-900 dark:text-slate-100">
+                      <span>Regular Combined Price:</span>
+                      <span className="text-sm font-black text-emerald-700 dark:text-emerald-400">
+                        ₹{calculations.totalSingleRegular}
+                      </span>
+                    </div>
+                    <div className="flex justify-between font-extrabold text-xs text-rose-600">
+                      <span>Final Selling Price:</span>
+                      <span>₹{calculations.totalSingleSelling}</span>
+                    </div>
+                    {calculations.totalSingleSavings > 0 && (
+                      <div className="flex justify-between font-bold text-[11px] text-emerald-600">
+                        <span>Customer Savings:</span>
+                        <span>₹{calculations.totalSingleSavings} ({calculations.totalSingleDiscountPct}% OFF)</span>
+                      </div>
+                    )}
                   </div>
                 </div>
-              </div>
+              ) : (
+                <>
+                  {/* Card A: 0.5 Kg Combined Calculation */}
+                  <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-slate-800 shadow-2xs space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-black uppercase text-emerald-900 dark:text-emerald-200 flex items-center gap-1.5">
+                        <span>💐 Bouquet + 🎂 0.5 Kg Cake</span>
+                        <Badge variant="outline" className="text-[10px] border-emerald-400 text-emerald-700">Base Combo</Badge>
+                      </span>
+                      <span className="text-[11px] text-slate-400">Serves 4–6</span>
+                    </div>
 
-              {/* Card B: 1 Kg Combined Calculation */}
-              <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-slate-800 shadow-2xs space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-black uppercase text-emerald-900 dark:text-emerald-200 flex items-center gap-1.5">
-                    <span>💐 Bouquet + 🎂 1 Kg Cake</span>
-                    <Badge variant="outline" className="text-[10px] border-amber-400 text-amber-700">1 Kg Upgrade</Badge>
-                  </span>
-                  <span className="text-[11px] text-slate-400">Serves 8–10</span>
-                </div>
+                    <div className="space-y-1.5 text-xs text-slate-600 dark:text-slate-300">
+                      <div className="flex justify-between">
+                        <span>Bouquet ({selectedBouquet.title}):</span>
+                        <span className="font-semibold text-slate-800 dark:text-slate-200">₹{calculations.bouquetRegular}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Cake 0.5 Kg ({selectedCake.title}):</span>
+                        <span className="font-semibold text-slate-800 dark:text-slate-200">₹{calculations.cake05Regular}</span>
+                      </div>
+                      <div className="border-t border-dashed border-slate-200 dark:border-slate-700 pt-1.5 flex justify-between font-bold text-slate-900 dark:text-slate-100">
+                        <span>Photo 2 Regular Price:</span>
+                        <span className="text-sm font-black text-emerald-700 dark:text-emerald-400">
+                          ₹{calculations.total05Regular}
+                        </span>
+                      </div>
+                      <div className="flex justify-between font-extrabold text-xs text-rose-600">
+                        <span>Final Selling Price:</span>
+                        <span>₹{calculations.total05Selling}</span>
+                      </div>
+                    </div>
+                  </div>
 
-                <div className="space-y-1.5 text-xs text-slate-600 dark:text-slate-300">
-                  <div className="flex justify-between">
-                    <span>Bouquet ({selectedBouquet.title}):</span>
-                    <span className="font-semibold text-slate-800 dark:text-slate-200">₹{calculations.bouquetRegular}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Cake 1 Kg ({selectedCake.title}):</span>
-                    <span className="font-semibold text-slate-800 dark:text-slate-200">₹{calculations.cake1KgRegular}</span>
-                  </div>
-                  <div className="border-t border-dashed border-slate-200 dark:border-slate-700 pt-1.5 flex justify-between font-bold text-slate-900 dark:text-slate-100">
-                    <span>1 Kg Variant Regular Price:</span>
-                    <span className="text-sm font-black text-emerald-700 dark:text-emerald-400">
-                      ₹{calculations.total1KgRegular}
-                    </span>
-                  </div>
-                  <div className="flex justify-between font-extrabold text-xs text-rose-600">
-                    <span>Final Selling Price:</span>
-                    <span>₹{calculations.total1KgSelling}</span>
-                  </div>
-                </div>
-              </div>
+                  {/* Card B: 1 Kg Combined Calculation */}
+                  <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-slate-800 shadow-2xs space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-black uppercase text-emerald-900 dark:text-emerald-200 flex items-center gap-1.5">
+                        <span>💐 Bouquet + 🎂 1 Kg Cake</span>
+                        <Badge variant="outline" className="text-[10px] border-amber-400 text-amber-700">1 Kg Upgrade</Badge>
+                      </span>
+                      <span className="text-[11px] text-slate-400">Serves 8–10</span>
+                    </div>
 
+                    <div className="space-y-1.5 text-xs text-slate-600 dark:text-slate-300">
+                      <div className="flex justify-between">
+                        <span>Bouquet ({selectedBouquet.title}):</span>
+                        <span className="font-semibold text-slate-800 dark:text-slate-200">₹{calculations.bouquetRegular}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Cake 1 Kg ({selectedCake.title}):</span>
+                        <span className="font-semibold text-slate-800 dark:text-slate-200">₹{calculations.cake1KgRegular}</span>
+                      </div>
+                      <div className="border-t border-dashed border-slate-200 dark:border-slate-700 pt-1.5 flex justify-between font-bold text-slate-900 dark:text-slate-100">
+                        <span>1 Kg Variant Regular Price:</span>
+                        <span className="text-sm font-black text-emerald-700 dark:text-emerald-400">
+                          ₹{calculations.total1KgRegular}
+                        </span>
+                      </div>
+                      <div className="flex justify-between font-extrabold text-xs text-rose-600">
+                        <span>Final Selling Price:</span>
+                        <span>₹{calculations.total1KgSelling}</span>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Confirmation Note */}
             <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-100/60 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200 text-xs font-semibold">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
               <span>
-                Both 0.5 Kg and 1 Kg options are now connected with calculated pricing. Customers will be able to toggle between them on the product page.
+                {isSingleVariantCake && singleCakeVariant
+                  ? `The combo variant has been aligned strictly with ${selectedCake.title}'s single ${singleCakeVariant.label} size. Calculated pricing is synced with the form.`
+                  : `Both 0.5 Kg and 1 Kg options are connected with calculated pricing. Customers will be able to toggle between them on the product page.`}
               </span>
             </div>
           </div>

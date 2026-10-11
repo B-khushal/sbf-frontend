@@ -253,6 +253,7 @@ const initialFormData: ProductData = {
   plantAttributes: {},
   chocolateAttributes: {},
   hamperAttributes: {},
+  comboAttributes: { comboProducts: [] },
 };
 
 const ProductForm = () => {
@@ -643,6 +644,7 @@ const ProductForm = () => {
     discountPrice: undefined,
     stock: 0
   });
+  const [forceShowCakeSection, setForceShowCakeSection] = useState(false);
 
   const fetchProductData = async () => {
     try {
@@ -746,24 +748,60 @@ const ProductForm = () => {
         data.customizationOptions.addons.chocolates = [];
       }
       
-      // Defensive patch for price variants
-      if (typeof data.hasPriceVariants !== 'boolean') data.hasPriceVariants = false;
-      if (!Array.isArray(data.priceVariants)) data.priceVariants = [];
-      
+      // Defensive patch for price variants: extract from data.priceVariants, details, or availableSizes
+      const rawPriceVariants = (Array.isArray(data.priceVariants) && data.priceVariants.length > 0)
+        ? data.priceVariants
+        : ((Array.isArray((data as any).details?.priceVariants) && (data as any).details.priceVariants.length > 0)
+          ? (data as any).details.priceVariants
+          : []);
+
+      const hasVariantData = Boolean(
+        data.hasPriceVariants ||
+        rawPriceVariants.length > 0 ||
+        (Array.isArray(data.cakeAttributes?.availableSizes) && data.cakeAttributes.availableSizes.length > 0) ||
+        (Array.isArray((data as any).details?.cakeAttributes?.availableSizes) && (data as any).details.cakeAttributes.availableSizes.length > 0)
+      );
+
+      // If price variants are empty but cake has available sizes, pre-synthesize them
+      let effectivePriceVariants = rawPriceVariants;
+      if (effectivePriceVariants.length === 0) {
+        const sizes = data.cakeAttributes?.availableSizes || (data as any).details?.cakeAttributes?.availableSizes;
+        if (Array.isArray(sizes) && sizes.length > 0) {
+          const defaultPrice = Number(data.price) || 0;
+          const defaultStock = Number(data.countInStock !== undefined ? data.countInStock : 20);
+          effectivePriceVariants = sizes.map(size => {
+            let suggestedPrice = defaultPrice;
+            const clean = String(size).toLowerCase();
+            if (clean.includes('0.5') || clean.includes('½') || clean.includes('1/2')) {
+              suggestedPrice = defaultPrice > 0 ? Math.round(defaultPrice * 0.7) : defaultPrice;
+            } else if (clean.includes('1.5')) {
+              suggestedPrice = defaultPrice > 0 ? Math.round(defaultPrice * 1.45) : defaultPrice;
+            } else if (clean.includes('2')) {
+              suggestedPrice = defaultPrice > 0 ? Math.round(defaultPrice * 1.85) : defaultPrice;
+            }
+            return {
+              label: size,
+              price: suggestedPrice,
+              stock: defaultStock
+            };
+          });
+        }
+      }
+
       console.log('Fetched product data:', {
         title: data.title,
         isCustomizable: data.isCustomizable,
-        hasPriceVariants: data.hasPriceVariants,
-        priceVariants: data.priceVariants,
-        priceVariantsCount: data.priceVariants?.length || 0,
+        hasPriceVariants: hasVariantData,
+        priceVariants: effectivePriceVariants,
+        priceVariantsCount: effectivePriceVariants.length,
         customizationOptions: data.customizationOptions
       });
       
       // Ensure all required fields are properly set
       const processedData = {
         ...data,
-        hasPriceVariants: Boolean(data.hasPriceVariants),
-        priceVariants: Array.isArray(data.priceVariants) ? data.priceVariants : [],
+        hasPriceVariants: hasVariantData,
+        priceVariants: effectivePriceVariants,
         categories: Array.isArray(data.categories) ? data.categories : [],
         subcategory: data.subcategory || '',
         details: Array.isArray(data.details) ? data.details : [],
@@ -837,6 +875,26 @@ const ProductForm = () => {
         plantAttributes: data.plantAttributes || (data as any).details?.plantAttributes || {},
         chocolateAttributes: data.chocolateAttributes || (data as any).details?.chocolateAttributes || {},
         hamperAttributes: data.hamperAttributes || (data as any).details?.hamperAttributes || {},
+        comboAttributes: (data.comboAttributes && Array.isArray(data.comboAttributes.comboProducts))
+          ? data.comboAttributes
+          : ((data as any).details?.comboAttributes && Array.isArray((data as any).details.comboAttributes.comboProducts))
+            ? (data as any).details.comboAttributes
+            : {
+                comboProducts: [
+                  ...((data.hamperAttributes?.hamperItems || (data as any).details?.hamperAttributes?.hamperItems || [])),
+                  ...((data.comboItems || []))
+                ].map((item: any) => ({
+                  productId: item.productId || item.id || item._id,
+                  name: item.name || item.title || 'Item',
+                  type: item.type || item.category || 'item',
+                  catalogType: item.catalogType || item.type,
+                  price: Number(item.price) || 0,
+                  image: item.image || '',
+                  quantity: Number(item.quantity) || 1,
+                  priceVariants: item.priceVariants,
+                  cakeAttributes: item.cakeAttributes,
+                }))
+              },
       };
 
       const rawDiscountType = data.discountType || (data.details && (data.details as any).discountType) || 'percentage';
@@ -1759,7 +1817,7 @@ const ProductForm = () => {
         isFeatured: Boolean(formData.isFeatured),
         hidden: Boolean(formData.hidden),
         isCustomizable: Boolean(formData.isCustomizable),
-        hasPriceVariants: Boolean(formData.hasPriceVariants),
+        hasPriceVariants: Boolean(formData.hasPriceVariants || (Array.isArray(formData.priceVariants) && formData.priceVariants.length > 0)),
         priceVariants: formData.priceVariants || [],
         subcategory: formData.subcategory || '',
         categories: formData.categories || [],
@@ -1814,10 +1872,23 @@ const ProductForm = () => {
         seasonalCampaigns: formData.seasonalCampaigns || [],
         campaignSettings: formData.campaignSettings || {},
         occasionIds: formData.occasionIds || [],
-        cakeAttributes: formData.cakeAttributes,
+        cakeAttributes: formData.cakeAttributes ? {
+          ...formData.cakeAttributes,
+          availableSizes: Array.isArray(formData.priceVariants) && formData.priceVariants.length > 0
+            ? formData.priceVariants.map(v => v.label || v.size || v.name)
+            : (formData.cakeAttributes.availableSizes || [])
+        } : formData.cakeAttributes,
         plantAttributes: formData.plantAttributes,
         chocolateAttributes: formData.chocolateAttributes,
         hamperAttributes: formData.hamperAttributes,
+        comboAttributes: formData.comboAttributes,
+        catalogType: formData.catalogType || (
+          formData.category === 'combos' ||
+          formData.category?.toLowerCase().includes('combo') ||
+          (Array.isArray(formData.comboAttributes?.comboProducts) && formData.comboAttributes.comboProducts.length > 0)
+            ? 'combo'
+            : undefined
+        ),
       };
       
       if (isEditMode) {
@@ -2356,9 +2427,12 @@ const ProductForm = () => {
               formData.category === 'combos' ||
               formData.category?.toLowerCase().includes('combo') ||
               formData.subcategory?.toLowerCase().includes('combo') ||
+              formData.categories?.some(c => String(c).toLowerCase().includes('combo')) ||
               formData.title?.toLowerCase().includes('combo') ||
               formData.description?.toLowerCase().includes('combo') ||
-              (Array.isArray(formData.comboAttributes?.comboProducts) && formData.comboAttributes.comboProducts.length > 0)) ? (
+              (Array.isArray(formData.comboAttributes?.comboProducts) && formData.comboAttributes.comboProducts.length > 0) ||
+              (Array.isArray((formData as any).hamperAttributes?.hamperItems) && (formData as any).hamperAttributes.hamperItems.length > 0) ||
+              (Array.isArray((formData as any).comboItems) && (formData as any).comboItems.length > 0)) ? (
               <div className="pt-1 pb-1">
                 <ComboFormSection formData={formData} setFormData={setFormData} />
               </div>
@@ -3043,8 +3117,46 @@ const ProductForm = () => {
         </Card>
 
         {/* Specialized Domain Product Forms (Cakes, Plants, Chocolates, Hampers) */}
-        {(formData.category === 'cakes' || formData.category === 'cake' || formData.subcategory?.toLowerCase().includes('cake') || formData.catalogType === 'cake') && (
+        {(Boolean(
+          formData.category === 'cakes' ||
+          formData.category === 'cake' ||
+          formData.catalogType === 'cake' ||
+          formData.subcategory?.toLowerCase().includes('cake') ||
+          formData.categories?.some(c => String(c).toLowerCase().includes('cake')) ||
+          formData.title?.toLowerCase().includes('cake') ||
+          formData.description?.toLowerCase().includes('cake') ||
+          (formData.cakeAttributes && Object.keys(formData.cakeAttributes).some(k => {
+            const val = (formData.cakeAttributes as any)[k];
+            return val !== undefined && val !== '' && val !== null && (!Array.isArray(val) || val.length > 0);
+          })) ||
+          (Array.isArray(formData.comboAttributes?.comboProducts) && formData.comboAttributes.comboProducts.some((p: any) =>
+            p.type === 'cake' || p.catalogType === 'cake' || String(p.name || '').toLowerCase().includes('cake')
+          )) ||
+          (Array.isArray((formData as any).hamperAttributes?.hamperItems) && (formData as any).hamperAttributes.hamperItems.some((item: any) =>
+            item.type === 'cake' || item.catalogType === 'cake' || String(item.name || '').toLowerCase().includes('cake')
+          )) ||
+          (Array.isArray(formData.priceVariants) && formData.priceVariants.some((v: any) =>
+            /(\d+(\.\d+)?\s*(kg|gm|pound|tier|inch)|½|1\/2)/i.test(v.label || v.size || '')
+          )) ||
+          forceShowCakeSection
+        )) ? (
           <CakeFormSection formData={formData} setFormData={setFormData} />
+        ) : (
+          <div className="flex items-center justify-between p-3.5 rounded-xl border border-dashed border-amber-300 bg-amber-50/50 text-xs">
+            <span className="text-amber-900 font-medium flex items-center gap-2">
+              <span className="text-base">🎂</span>
+              Does this product include Cake specifications or weight variants (0.5 Kg, 1 Kg)?
+            </span>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setForceShowCakeSection(true)}
+              className="h-7 text-xs font-bold text-amber-800 border-amber-300 hover:bg-amber-100 bg-white"
+            >
+              <Plus className="w-3.5 h-3.5 mr-1" /> Add Cake Weight Variants
+            </Button>
+          </div>
         )}
 
         {(formData.category === 'plants' || formData.category === 'plant' || formData.subcategory?.toLowerCase().includes('plant') || formData.catalogType === 'plant') && (

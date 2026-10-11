@@ -132,6 +132,41 @@ const AdminProducts: React.FC = () => {
     return 0;
   };
 
+  // Helper to resolve and sort cake and product price variants with fallback
+  const resolveProductVariants = (prod: any) => {
+    let list: any[] = [];
+    if (Array.isArray(prod.priceVariants) && prod.priceVariants.length > 0) {
+      list = prod.priceVariants;
+    } else if (Array.isArray(prod.details?.priceVariants) && prod.details.priceVariants.length > 0) {
+      list = prod.details.priceVariants;
+    } else if (Array.isArray(prod.cakeAttributes?.availableSizes) && prod.cakeAttributes.availableSizes.length > 0) {
+      const baseP = Number(prod.price || 0);
+      list = prod.cakeAttributes.availableSizes.map((sz: string) => {
+        let p = baseP;
+        const clean = String(sz).toLowerCase();
+        if (clean.includes('0.5') || clean.includes('½') || clean.includes('1/2')) p = baseP > 0 ? Math.round(baseP * 0.7) : baseP;
+        else if (clean.includes('1.5')) p = baseP > 0 ? Math.round(baseP * 1.45) : baseP;
+        else if (clean.includes('2')) p = baseP > 0 ? Math.round(baseP * 1.85) : baseP;
+        return {
+          label: sz,
+          size: sz,
+          price: p,
+          comparePrice: baseP > p ? baseP : undefined,
+          stock: prod.countInStock || 20,
+        };
+      });
+    } else if (Array.isArray(prod.comboAttributes?.comboProducts)) {
+      const cakeComp = prod.comboAttributes.comboProducts.find((cp: any) =>
+        cp.type === 'cake' || cp.catalogType === 'cake' || String(cp.name || '').toLowerCase().includes('cake')
+      );
+      if (cakeComp && Array.isArray(cakeComp.priceVariants) && cakeComp.priceVariants.length > 0) {
+        list = cakeComp.priceVariants;
+      }
+    }
+
+    return [...list].sort((a, b) => Number(a.price || 0) - Number(b.price || 0));
+  };
+
   const setProductDisplayOrder = (product: any, section: string, order: number) => {
     if (!product.displayOrders) {
       product.displayOrders = {};
@@ -1859,7 +1894,7 @@ const AdminProducts: React.FC = () => {
               </TableHeader>
               <TableBody>
                 {filteredProducts.map((product) => {
-                  const variants = Array.isArray(product.priceVariants) && product.priceVariants.length > 0 ? product.priceVariants : [];
+                  const variants = resolveProductVariants(product);
                   const baseVar = variants[0];
                   const baseVarEff = baseVar ? getProductEffectivePrice(product, Number(baseVar.price), baseVar) : getProductEffectivePrice(product);
                   const baseVarReg = baseVar ? Number(baseVar.comparePrice || baseVar.price || 0) : Number(product.price || 0);
@@ -2141,7 +2176,7 @@ const AdminProducts: React.FC = () => {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {filteredProducts.map((product) => {
-                const variants = Array.isArray(product.priceVariants) && product.priceVariants.length > 0 ? product.priceVariants : [];
+                const variants = resolveProductVariants(product);
                 const baseVar = variants[0];
                 const baseVarEff = baseVar ? getProductEffectivePrice(product, Number(baseVar.price), baseVar) : getProductEffectivePrice(product);
                 const baseVarReg = baseVar ? Number(baseVar.comparePrice || baseVar.price || 0) : Number(product.price || 0);
@@ -2248,7 +2283,7 @@ const AdminProducts: React.FC = () => {
 
                         {/* Variants Breakdown Pills for Cakes & Hampers */}
                         {variants.length > 0 && (
-                          <div className="flex flex-wrap gap-1 pt-1 pb-0.5">
+                          <div className="flex flex-wrap gap-1.5 pt-1.5 pb-0.5">
                             {variants.map((v: any, vIdx: number) => {
                               const vEff = getProductEffectivePrice(product, Number(v.price), v);
                               const vRaw = Number(v.price || 0);
@@ -2257,12 +2292,12 @@ const AdminProducts: React.FC = () => {
                               return (
                                 <span
                                   key={vIdx}
-                                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-950 border border-amber-200/80 shadow-2xs"
+                                  className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10.5px] font-semibold bg-amber-50 text-amber-950 border border-amber-300 shadow-2xs hover:border-amber-400 hover:bg-amber-100/60 transition-all"
                                 >
-                                  <span>{formatCakeWeightLabel(v.label || v.size)}:</span>
+                                  <span className="font-bold text-amber-900">{formatCakeWeightLabel(v.label || v.size)}:</span>
                                   <span className="text-emerald-700 font-extrabold">₹{vEff}</span>
                                   {hasVDisc && (
-                                    <span className="text-stone-400 line-through text-[9px]">₹{vComp}</span>
+                                    <span className="text-stone-400 line-through text-[9.5px]">₹{vComp}</span>
                                   )}
                                 </span>
                               );

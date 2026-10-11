@@ -2,18 +2,47 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { Heart, Sparkles, Gift, ArrowRight, Eye, CheckCircle2 } from "lucide-react";
+import { Heart, Sparkles, Gift, ArrowRight, CheckCircle2, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import useWishlist from "@/hooks/use-wishlist";
 import { getImageUrl } from "@/config";
 import ProtectedImage from "../ui/ProtectedImage";
+import { extractComboComponents } from "@/utils/comboHelpers";
 
 export interface CakeComboCardProps {
   combo: any;
   className?: string;
 }
+
+// Clean helper to shorten component titles into elegant concise tags
+const formatComboComponentName = (name: string, type?: string): string => {
+  if (!name) return type === "cake" ? "Artisan Cake" : "Fresh Flowers";
+  let clean = name.trim();
+
+  // Strip brand / collection prefixes separated by dashes, e.g. "Timeless Romance – 10 Red Rose Bouquet"
+  if (clean.includes("–")) {
+    const parts = clean.split("–");
+    if (parts[1] && parts[1].trim()) {
+      clean = parts[1].trim();
+    }
+  } else if (clean.includes("-") && !clean.toLowerCase().includes("cake-")) {
+    const parts = clean.split("-");
+    if (parts[1] && parts[1].trim()) {
+      clean = parts[1].trim();
+    }
+  }
+
+  // Capitalize first letter
+  clean = clean.charAt(0).toUpperCase() + clean.slice(1);
+
+  // If cake component doesn't mention cake
+  if (type === "cake" && !clean.toLowerCase().includes("cake")) {
+    clean = `${clean} Cake`;
+  }
+
+  return clean;
+};
 
 export const CakeComboCard: React.FC<CakeComboCardProps> = ({ combo, className }) => {
   const { formatPrice, convertPrice } = useCurrency();
@@ -31,14 +60,20 @@ export const CakeComboCard: React.FC<CakeComboCardProps> = ({ combo, className }
   const comparePrice = combo.comparePrice ? Number(combo.comparePrice) : null;
   const savings = comparePrice && comparePrice > price ? comparePrice - price : null;
 
-  const tagline = combo.details?.tagline || "Perfect for Birthdays & Anniversaries";
+  const tagline = combo.details?.tagline || "Celebration Flowers & Cake";
   const imageSrc = (Array.isArray(combo.images) && combo.images[0]) || combo.image || "/placeholder.svg";
 
-  // Combo item pills/breakdown
-  const comboProducts = combo.comboAttributes?.comboProducts || [
-    { name: "Artisan Cake", type: "cake" },
-    { name: "Fresh Flowers", type: "bouquet" }
-  ];
+  // Combo item pills/breakdown extracted dynamically
+  const extracted = extractComboComponents(combo);
+  const comboProducts =
+    extracted.allComponents.length > 0
+      ? extracted.allComponents
+      : Array.isArray(combo.comboAttributes?.comboProducts) && combo.comboAttributes.comboProducts.length > 0
+      ? combo.comboAttributes.comboProducts
+      : [
+          { name: "Artisan Cake", type: "cake" },
+          { name: "Fresh Flowers", type: "bouquet" },
+        ];
 
   const handleCardClick = () => {
     navigate(`/product/${comboId}`);
@@ -71,37 +106,50 @@ export const CakeComboCard: React.FC<CakeComboCardProps> = ({ combo, className }
     <div
       onClick={handleCardClick}
       className={cn(
-        "group relative bg-gradient-to-b from-white via-rose-50/20 to-amber-50/30 rounded-3xl border border-rose-200/60 hover:border-rose-300 overflow-hidden shadow-[0_6px_24px_rgba(244,63,94,0.06)] hover:shadow-[0_16px_36px_rgba(244,63,94,0.12)] transition-all duration-300 cursor-pointer flex flex-col h-full justify-between",
+        "group relative bg-white rounded-2xl border border-rose-100/80 hover:border-rose-300/80 overflow-hidden shadow-[0_4px_20px_rgba(244,63,94,0.04)] hover:shadow-[0_12px_28px_rgba(244,63,94,0.12)] transition-all duration-300 cursor-pointer flex flex-col h-full justify-between",
         className
       )}
     >
-      {/* Luxury Top Header Badge */}
-      <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 bg-white/95 backdrop-blur-md border border-rose-200/80 px-2.5 py-1 rounded-full shadow-xs">
-        <Gift className="w-3.5 h-3.5 text-rose-500" />
-        <span className="text-[10px] font-extrabold uppercase tracking-wider text-rose-900">
-          Celebration Combo
-        </span>
-      </div>
+      {/* Product Image Section */}
+      <div className="relative aspect-square w-full overflow-hidden bg-gradient-to-br from-rose-50/50 via-amber-50/20 to-white flex-shrink-0">
+        {/* Badges Overlay */}
+        <div className="absolute top-2.5 left-2.5 z-20 flex flex-col gap-1 items-start">
+          <span className="backdrop-blur-md bg-white/95 text-rose-900 border border-rose-200/80 text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-2xs flex items-center gap-1">
+            <Gift className="w-2.5 h-2.5 text-rose-500" />
+            COMBO
+          </span>
 
-      {/* Wishlist Button */}
-      <button
-        onClick={handleWishlistToggle}
-        aria-label="Add to wishlist"
-        className={cn(
-          "absolute top-3 right-3 z-20 p-2 rounded-full bg-white/90 backdrop-blur-sm shadow-sm transition-all duration-300 hover:bg-white hover:scale-110 active:scale-95",
-          isHeartPounding && "scale-125"
-        )}
-      >
-        <Heart
-          className={cn(
-            "h-4 w-4 transition-colors duration-200",
-            isInWishlist ? "fill-rose-500 stroke-rose-500" : "stroke-slate-600 hover:stroke-rose-500"
+          {savings && (
+            <span className="bg-rose-600 text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-xs flex items-center gap-1">
+              <Sparkles className="w-2.5 h-2.5" /> SAVE {formatPrice(convertPrice(savings))}
+            </span>
           )}
-        />
-      </button>
+        </div>
 
-      {/* Image Section */}
-      <div className="relative aspect-square sm:aspect-[4/3] w-full overflow-hidden bg-slate-100 flex-shrink-0">
+        {/* Pairing Highlight Badge */}
+        <div className="absolute bottom-2.5 left-2.5 z-20 bg-white/95 backdrop-blur-md border border-rose-200/70 text-rose-950 text-[10px] font-extrabold px-2 py-0.5 rounded-lg shadow-2xs flex items-center gap-1 max-w-[85%]">
+          <Sparkles className="w-2.5 h-2.5 text-rose-600 shrink-0" />
+          <span className="truncate">Double Celebration Set</span>
+        </div>
+
+        {/* Wishlist Button */}
+        <button
+          onClick={handleWishlistToggle}
+          aria-label="Add to wishlist"
+          className={cn(
+            "absolute top-2.5 right-2.5 z-20 p-2 rounded-full bg-white/90 backdrop-blur-sm shadow-xs transition-all duration-300 hover:bg-white hover:scale-110 active:scale-95",
+            isHeartPounding && "scale-125"
+          )}
+        >
+          <Heart
+            className={cn(
+              "h-4 w-4 transition-colors duration-200",
+              isInWishlist ? "fill-rose-500 stroke-rose-500" : "stroke-slate-600 hover:stroke-rose-500"
+            )}
+          />
+        </button>
+
+        {/* Product Image */}
         <ProtectedImage
           src={getImageUrl(imageSrc) || "/placeholder.svg"}
           alt={combo.name || combo.title}
@@ -110,68 +158,82 @@ export const CakeComboCard: React.FC<CakeComboCardProps> = ({ combo, className }
           loading="lazy"
         />
 
-        {savings && (
-          <div className="absolute bottom-3 left-3 z-20 bg-rose-600 text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded-full shadow-md flex items-center gap-1">
-            <Sparkles className="w-2.5 h-2.5" /> SAVE {formatPrice(convertPrice(savings))}
-          </div>
-        )}
-
         {!isImageLoaded && (
-          <div className="absolute inset-0 bg-gradient-to-br from-rose-50 to-amber-50 animate-pulse" />
+          <div className="absolute inset-0 bg-gradient-to-br from-rose-50 via-amber-50 to-rose-100 animate-pulse" />
         )}
       </div>
 
       {/* Content Section */}
-      <div className="p-4 flex flex-col justify-between flex-1 bg-white/80">
-        <div className="space-y-2">
+      <div className="p-3 xs:p-3.5 sm:p-4 flex flex-col justify-between flex-1 bg-white">
+        <div className="space-y-1.5 flex flex-col">
           {/* Tagline */}
-          <div className="flex items-center gap-1.5 text-[11px] font-bold text-rose-600 tracking-wide">
-            <Sparkles className="w-3 h-3 text-rose-500" />
-            <span>{tagline}</span>
+          <div className="flex items-center gap-1 text-[10px] font-bold text-rose-600 tracking-wide line-clamp-1">
+            <Sparkles className="w-2.5 h-2.5 text-rose-500 shrink-0" />
+            <span className="truncate">{tagline}</span>
           </div>
 
-          {/* Title */}
-          <h3 className="font-extrabold text-sm sm:text-base text-slate-900 leading-snug line-clamp-2 group-hover:text-rose-700 transition-colors">
+          {/* Title - Consistent 2-line height */}
+          <h3 className="font-bold text-xs sm:text-sm text-slate-800 line-clamp-2 min-h-[2.25rem] sm:min-h-[2.5rem] leading-snug group-hover:text-rose-700 transition-colors">
             {combo.name || combo.title}
           </h3>
 
-          {/* Combo Items Included Pills */}
-          <div className="flex flex-wrap gap-1.5 pt-1">
-            {comboProducts.slice(0, 3).map((item: any, idx: number) => (
+          {/* Combo Items Included Pills - Fixed height row */}
+          <div className="flex flex-wrap gap-1.5 pt-0.5 min-h-[1.75rem] items-center">
+            {comboProducts.slice(0, 2).map((item: any, idx: number) => (
               <span
                 key={idx}
-                className="inline-flex items-center gap-1 text-[10px] font-semibold bg-rose-50/80 text-rose-900 border border-rose-200/60 px-2 py-0.5 rounded-md"
+                className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-semibold bg-rose-50/90 text-rose-900 border border-rose-200/70 px-2 py-0.5 rounded-md truncate max-w-[150px]"
+                title={item.name}
               >
-                <CheckCircle2 className="w-2.5 h-2.5 text-rose-500" />
-                {item.name}
+                <CheckCircle2 className="w-2.5 h-2.5 text-rose-500 shrink-0" />
+                <span className="truncate">{formatComboComponentName(item.name, item.type)}</span>
               </span>
             ))}
           </div>
+
+          {/* Micro Trust Strip (Rating & Delivery) */}
+          <div className="flex items-center gap-2 pt-0.5">
+            <div className="flex items-center text-amber-500 bg-amber-50/80 px-1.5 py-0.5 rounded text-[10px] font-bold">
+              <Star className="w-2.5 h-2.5 fill-current mr-0.5" />
+              <span>{(combo.rating || 4.9).toFixed(1)}</span>
+              <span className="text-slate-400 font-normal ml-1">({combo.reviewCount || 24})</span>
+            </div>
+            <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
+              ⚡ Same Day Handover
+            </span>
+          </div>
         </div>
 
-        {/* Pricing & CTA */}
-        <div className="pt-3 mt-auto border-t border-rose-100/80 flex items-center justify-between">
-          <div>
-            <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-              Combo Price
-            </div>
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-base sm:text-lg font-black text-slate-900">
+        {/* Pricing & CTA - Bottom Section */}
+        <div className="pt-2.5 mt-auto border-t border-rose-100/80 space-y-2">
+          <div className="flex items-baseline justify-between gap-2">
+            <div className="flex items-baseline gap-1.5 shrink-0">
+              <span className="text-sm sm:text-base font-extrabold text-slate-900">
                 {formatPrice(convertPrice(price))}
               </span>
               {comparePrice && comparePrice > price && (
-                <span className="text-xs text-slate-400 line-through">
+                <span className="text-[10px] sm:text-xs text-slate-400 line-through">
                   {formatPrice(convertPrice(comparePrice))}
                 </span>
               )}
             </div>
+
+            {savings ? (
+              <span className="text-[10px] text-rose-600 font-bold bg-rose-50 px-1.5 py-0.5 rounded">
+                Save {formatPrice(convertPrice(savings))}
+              </span>
+            ) : (
+              <span className="text-[10px] text-slate-500 font-medium">Combo Price</span>
+            )}
           </div>
 
+          {/* Luxury Full-Width Action Button (Never overlaps or clips) */}
           <Button
             size="sm"
-            className="bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white font-bold text-xs rounded-xl shadow-xs px-3.5 py-2 gap-1 group/btn shrink-0"
+            className="w-full h-8 xs:h-9 text-xs font-bold rounded-xl transition-all duration-300 gap-1.5 shadow-xs shrink-0 bg-gradient-to-r from-rose-600 via-rose-700 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white hover:shadow-md group/btn"
           >
-            <span>VIEW COMBO</span>
+            <Gift className="w-3.5 h-3.5" />
+            <span>View Combo Set</span>
             <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover/btn:translate-x-0.5" />
           </Button>
         </div>

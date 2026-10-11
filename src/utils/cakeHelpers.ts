@@ -20,22 +20,40 @@ export const DEFAULT_CAKE_VARIANTS: CakeVariantOption[] = [
 ];
 
 /**
- * Normalizes cake weight labels so "0.5 kg" or "0.5 Kg" is formatted as "1/2 kg"
+ * Normalizes cake weight labels to clean, premium display format (e.g. "0.5 Kg", "1 Kg")
  */
 export const formatCakeWeightLabel = (weight?: string | null): string => {
-  if (!weight) return '1/2 kg';
+  if (!weight) return '0.5 Kg';
   const str = String(weight).trim();
-  return str
-    .replace(/^0\.5\s*kg$/i, '1/2 kg')
-    .replace(/^0\.5kg$/i, '1/2 kg')
-    .replace(/^0\.5$/i, '1/2 kg')
-    .replace(/^½\s*kg$/i, '1/2 kg')
-    .replace(/^½\s*KG$/i, '1/2 kg')
-    .replace(/\b0\.5\s*kg\b/gi, '1/2 kg');
+  if (/^0\.5\s*kg$/i.test(str) || /^0\.5kg$/i.test(str) || /^½\s*kg$/i.test(str) || /^1\/2\s*kg$/i.test(str) || /^0\.5$/i.test(str)) {
+    return '0.5 Kg';
+  }
+  if (/^1\s*kg$/i.test(str) || /^1kg$/i.test(str) || /^1\.0\s*kg$/i.test(str)) {
+    return '1 Kg';
+  }
+  if (/^1\.5\s*kg$/i.test(str) || /^1\.5kg$/i.test(str)) {
+    return '1.5 Kg';
+  }
+  if (/^2\s*kg$/i.test(str) || /^2kg$/i.test(str) || /^2\.0\s*kg$/i.test(str)) {
+    return '2 Kg';
+  }
+  if (/^2\.5\s*kg$/i.test(str) || /^2\.5kg$/i.test(str)) {
+    return '2.5 Kg';
+  }
+  if (/^3\s*kg$/i.test(str) || /^3kg$/i.test(str)) {
+    return '3 Kg';
+  }
+  if (/^4\s*kg$/i.test(str) || /^4kg$/i.test(str)) {
+    return '4 Kg';
+  }
+  if (/^5\s*kg$/i.test(str) || /^5kg$/i.test(str)) {
+    return '5 Kg';
+  }
+  return str;
 };
 
 /**
- * Robust dynamic detection for whether a product is in the Cakes category or is a Cake offering.
+ * Robust dynamic detection for whether a product is in the Cakes category or is a Cake offering (including combos with cakes).
  */
 export const isCakeProduct = (product: any): boolean => {
   if (!product) return false;
@@ -60,13 +78,13 @@ export const isCakeProduct = (product: any): boolean => {
     if (hasCake) return true;
   }
 
-  // 4. Subcategory check (must not be combos)
+  // 4. Subcategory check
   const subcat = (
     typeof product.subcategory === 'string'
       ? product.subcategory
       : product.subcategory?.name || product.subcategory?.slug || ''
   ).toLowerCase().trim();
-  if ((subcat === 'cakes' || subcat === 'cake') && !cat.includes('combo')) return true;
+  if (subcat === 'cakes' || subcat === 'cake' || subcat.includes('cake')) return true;
 
   // 5. Cake attributes present
   if (
@@ -82,20 +100,38 @@ export const isCakeProduct = (product: any): boolean => {
     return true;
   }
 
+  // 6. Connected Cake in Combo or Hamper
+  if (Array.isArray(product.comboAttributes?.comboProducts)) {
+    const hasCakeInCombo = product.comboAttributes.comboProducts.some((cp: any) =>
+      cp.type === 'cake' || cp.catalogType === 'cake' || String(cp.name || '').toLowerCase().includes('cake')
+    );
+    if (hasCakeInCombo) return true;
+  }
+
+  if (Array.isArray(product.hamperAttributes?.hamperItems)) {
+    const hasCakeInHamper = product.hamperAttributes.hamperItems.some((hi: any) =>
+      hi.type === 'cake' || hi.catalogType === 'cake' || String(hi.name || '').toLowerCase().includes('cake')
+    );
+    if (hasCakeInHamper) return true;
+  }
+
+  // 7. Title or description mentions cake
+  const title = String(product.title || product.name || '').toLowerCase();
+  if (title.includes('cake')) return true;
+
   return false;
 };
 
 /**
- * Returns normalized weight variants for a cake product.
- * Returns ONLY genuine price variants configured in the product form.
- * If no price variants are configured, returns an empty array (no seed/fake variants).
+ * Returns normalized weight variants for a cake or cake-combo product.
+ * Falls back safely to availableSizes, combo components, or details.priceVariants.
  */
 export const getCakeVariants = (product: any): CakeVariantOption[] => {
   const servesMap: Record<string, string> = {
-    '1/2 kg': '4–6 People',
-    '1/2kg': '4–6 People',
     '0.5 kg': '4–6 People',
     '0.5kg': '4–6 People',
+    '1/2 kg': '4–6 People',
+    '1/2kg': '4–6 People',
     '½ kg': '4–6 People',
     '1 kg': '8–10 People',
     '1kg': '8–10 People',
@@ -115,9 +151,6 @@ export const getCakeVariants = (product: any): CakeVariantOption[] => {
     '8 inch': '8–12 People',
     '10 inch': '14–18 People',
     '12 inch': '20–26 People',
-    '6 piece': '6 Servings',
-    '12 piece': '12 Servings',
-    '24 piece': '24 Servings',
   };
 
   const getServes = (label: string): string => {
@@ -135,9 +168,54 @@ export const getCakeVariants = (product: any): CakeVariantOption[] => {
     return '';
   };
 
+  let rawList: any[] = [];
+
   // 1. Explicit priceVariants on product (from product form or DB)
   if (Array.isArray(product?.priceVariants) && product.priceVariants.length > 0) {
-    return product.priceVariants.map((v: any, idx: number) => {
+    rawList = product.priceVariants;
+  }
+  // 2. details.priceVariants
+  else if (Array.isArray(product?.details?.priceVariants) && product.details.priceVariants.length > 0) {
+    rawList = product.details.priceVariants;
+  }
+  // 3. cakeAttributes.availableSizes
+  else if (Array.isArray(product?.cakeAttributes?.availableSizes) && product.cakeAttributes.availableSizes.length > 0) {
+    const baseP = Number(product.price || 0);
+    rawList = product.cakeAttributes.availableSizes.map((sz: string) => {
+      let p = baseP;
+      const lower = sz.toLowerCase();
+      if (lower.includes('0.5') || lower.includes('½') || lower.includes('1/2')) p = baseP > 0 ? Math.round(baseP * 0.65) : baseP;
+      else if (lower.includes('1.5')) p = baseP > 0 ? Math.round(baseP * 1.45) : baseP;
+      else if (lower.includes('2')) p = baseP > 0 ? Math.round(baseP * 1.9) : baseP;
+      return {
+        label: sz,
+        price: p,
+        comparePrice: baseP > p ? baseP : undefined,
+        stock: Number(product.countInStock !== undefined ? product.countInStock : 20),
+      };
+    });
+  }
+  // 4. comboAttributes.comboProducts containing a cake
+  else if (Array.isArray(product?.comboAttributes?.comboProducts)) {
+    const cakeComp = product.comboAttributes.comboProducts.find((cp: any) =>
+      cp.type === 'cake' || cp.catalogType === 'cake' || String(cp.name || '').toLowerCase().includes('cake')
+    );
+    if (cakeComp) {
+      if (Array.isArray(cakeComp.priceVariants) && cakeComp.priceVariants.length > 0) {
+        rawList = cakeComp.priceVariants;
+      } else if (Array.isArray(cakeComp.cakeAttributes?.availableSizes) && cakeComp.cakeAttributes.availableSizes.length > 0) {
+        rawList = cakeComp.cakeAttributes.availableSizes.map((sz: string) => ({
+          label: sz,
+          price: Number(product?.price || 0),
+          stock: Number(product?.countInStock !== undefined ? product.countInStock : 20),
+        }));
+      }
+    }
+  }
+
+  // If a list was resolved, normalize and sort by price ascending
+  if (rawList.length > 0) {
+    const result: CakeVariantOption[] = rawList.map((v: any, idx: number) => {
       const rawLabel = v.label || v.name || v.size || `Variant ${idx + 1}`;
       const label = formatCakeWeightLabel(rawLabel);
       return {
@@ -149,22 +227,12 @@ export const getCakeVariants = (product: any): CakeVariantOption[] => {
         serves: getServes(label),
       };
     });
+
+    result.sort((a, b) => a.price - b.price);
+    return result;
   }
 
-  // 2. If availableSizes are configured in cakeAttributes
-  if (Array.isArray(product?.cakeAttributes?.availableSizes) && product.cakeAttributes.availableSizes.length > 0) {
-    return product.cakeAttributes.availableSizes.map((size: string) => {
-      const label = formatCakeWeightLabel(size);
-      return {
-        label,
-        price: Number(product.price) || 0,
-        stock: Number(product.countInStock !== undefined ? product.countInStock : 20),
-        serves: getServes(label),
-      };
-    });
-  }
-
-  // 3. If a single weight is configured in cakeAttributes (e.g. "1 Kg")
+  // 5. If a single weight is configured in cakeAttributes (e.g. "1 Kg")
   if (product?.cakeAttributes?.weight && typeof product.cakeAttributes.weight === 'string' && product.cakeAttributes.weight.trim()) {
     const w = formatCakeWeightLabel(product.cakeAttributes.weight.trim());
     return [{
@@ -175,6 +243,5 @@ export const getCakeVariants = (product: any): CakeVariantOption[] => {
     }];
   }
 
-  // Strictly no seed data: return empty array if product form did not configure any sizes/variants
   return [];
 };

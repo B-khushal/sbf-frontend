@@ -25,16 +25,18 @@ const CombosCatalogPage: React.FC = () => {
         const cats = Array.isArray(p.categories) ? p.categories.map((c: string) => String(c).toLowerCase()) : [];
 
         // Exclude bouquets or non-combo items explicitly
-        const isBouquetItem = catalogType === 'bouquet' || title.endsWith('bouquet') || title.includes('luxury bouquet');
-        if (isBouquetItem && catalogType !== 'combo' && cat !== 'combos') {
+        const isBouquetItem = (catalogType === 'bouquet' || title.endsWith('bouquet') || title.includes('luxury bouquet')) && catalogType !== 'combo' && cat !== 'combos';
+        if (isBouquetItem) {
           return false;
         }
 
-        const isComboCat = cat === 'combos' || cat === 'combo products' || cat.includes('combo') || cats.some(c => c === 'combos' || c.includes('combo'));
+        const isComboCat = cat === 'combos' || cat === 'combo products' || cat.includes('combo') || cat.includes('hamper') || cats.some(c => c === 'combos' || c.includes('combo') || c.includes('hamper'));
         const isComboType = catalogType === 'combo';
+        const hasComboAttributes = Array.isArray(p.comboAttributes?.comboProducts) && p.comboAttributes.comboProducts.length > 0;
+        const hasHamperItems = Array.isArray(p.hamperAttributes?.hamperItems) && p.hamperAttributes.hamperItems.length > 0;
         const hasComboItems = Array.isArray(p.comboItems) && p.comboItems.length > 0;
 
-        return (isComboCat || isComboType || hasComboItems) && !isBouquetItem;
+        return isComboCat || isComboType || hasComboAttributes || hasHamperItems || hasComboItems;
       });
 
       console.log(`CombosCatalogPage - Found ${comboProducts.length} combo product(s):`, comboProducts);

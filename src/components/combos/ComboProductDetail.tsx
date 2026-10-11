@@ -189,9 +189,18 @@ export const ComboProductDetail: React.FC<ComboProductDetailProps> = ({
 
   // Individual component value estimation for the bundle proposition
   const bouquetEstimatedValue = bouquet.price > 0 ? bouquet.price : Math.round(selectedVariant.price * 0.58);
-  const cakeEstimatedValue = selectedVariant.label === '1 kg'
-    ? Math.round(selectedVariant.price * 0.58)
-    : Math.round(selectedVariant.price * 0.48);
+  const cakeEstimatedValue = useMemo(() => {
+    if (Array.isArray(cake.priceVariants) && cake.priceVariants.length > 0) {
+      const match = cake.priceVariants.find((v: any) =>
+        String(v.label || v.name || v.size || '').toLowerCase().includes(selectedVariant.label.toLowerCase())
+      );
+      if (match && Number(match.price) > 0) return Number(match.price);
+    }
+    if (cake.price > 0) return cake.price;
+    return selectedVariant.label.toLowerCase().includes('1 kg')
+      ? Math.round(selectedVariant.price * 0.58)
+      : Math.round(selectedVariant.price * 0.48);
+  }, [cake, selectedVariant]);
   const individualCombinedTotal = bouquetEstimatedValue + cakeEstimatedValue;
   const comboBundleDiscount = Math.max(0, individualCombinedTotal - selectedVariant.price);
 
@@ -678,8 +687,11 @@ export const ComboProductDetail: React.FC<ComboProductDetailProps> = ({
                 </span>
               </div>
 
-              {/* Segmented Cards: 1/2 KG and 1 KG */}
-              <div className="grid grid-cols-2 gap-3.5">
+              {/* Segmented Cards: Adaptive for 1 or more variants */}
+              <div className={cn(
+                "grid gap-3.5",
+                cakeVariants.length === 1 ? "grid-cols-1 sm:max-w-xs" : "grid-cols-2"
+              )}>
                 {cakeVariants.map((variant) => {
                   const isSelected = selectedVariant.label === variant.label;
                   const isOneKg = variant.label.includes('1 kg') || variant.label.includes('1kg');
@@ -704,7 +716,7 @@ export const ComboProductDetail: React.FC<ComboProductDetailProps> = ({
                             ? "bg-rose-500 text-white"
                             : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
                         )}>
-                          {isOneKg ? 'Best Value 👑' : 'Most Popular ✨'}
+                          {cakeVariants.length === 1 ? 'Included Signature Size ✨' : (isOneKg ? 'Best Value 👑' : 'Most Popular ✨')}
                         </span>
                         {isSelected && (
                           <div className="w-4 h-4 rounded-full bg-rose-500 text-white flex items-center justify-center">

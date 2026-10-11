@@ -25,8 +25,9 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { getImageUrl } from "@/config";
 import productService, { ProductData, OccasionData } from "@/services/productService";
+import { formatCakeWeightLabel } from "@/utils/cakeHelpers";
+import { getProductEffectivePrice } from "@/utils/pricing";
 import {
   Search,
   Plus,
@@ -71,16 +72,36 @@ import MerchandisingGlobalSettingsDialog from "@/components/Admin/merchandising/
 const STANDARD_STOREFRONT_SECTIONS = [
   { value: "shop", label: "🛒 Shop Page (Global Catalog)" },
   { value: "featured", label: "⭐ Featured Products Collection" },
-  { value: "bestsellers", label: "🏆 Bestsellers (Smart Ranked)" },
-  { value: "category:cakes", label: "🎂 Cakes Category" },
-  { value: "combos", label: "🎁 Cake & Flower Combos" },
-  { value: "category:bouquets", label: "💐 Premium Bouquets" },
-  { value: "category:plants", label: "🪴 Plants Collection" },
-  { value: "category:gifts", label: "🎀 Curated Gifts" },
   { value: "budget_friendly", label: "🏷️ Budget-Friendly (Under ₹1,000)" },
+  { value: "cakes", label: "🎂 Artisan Cakes (Home Section)" },
+  { value: "combos", label: "🎁 Celebration Combos & Hampers" },
+  { value: "bestsellers", label: "🏆 Bestsellers (Smart Ranked)" },
   { value: "newArrivals", label: "🆕 New Arrivals" },
   { value: "recommended", label: "💡 Recommended Products" },
-  { value: "none", label: "✨ Standard Products List" },
+  { value: "none", label: "✨ Standard Catalog (Unsorted)" },
+];
+
+const STANDARD_STOREFRONT_OCCASIONS: Array<{ slug: string; name: string }> = [
+  { slug: "birthday", name: "Birthday Celebrations" },
+  { slug: "anniversary", name: "Anniversary Celebrations" },
+  { slug: "romance", name: "Love & Romance" },
+  { slug: "congratulations", name: "Congratulations" },
+  { slug: "thank-you", name: "Thank You" },
+  { slug: "get-well-soon", name: "Get Well Soon" },
+  { slug: "sympathy", name: "Sympathy & Condolences" },
+  { slug: "housewarming", name: "Housewarming" },
+  { slug: "valentine", name: "Valentine's Day" },
+];
+
+const STANDARD_STOREFRONT_CATEGORIES: string[] = [
+  "bouquets",
+  "cakes",
+  "combos",
+  "chocolate",
+  "plants",
+  "baskets",
+  "vases",
+  "gifts",
 ];
 
 export const ProductOrderArrangementPage: React.FC = () => {
@@ -162,28 +183,55 @@ export const ProductOrderArrangementPage: React.FC = () => {
       const allProds: ProductData[] = Array.isArray(res) ? res : res?.products || [];
       setProducts(allProds);
 
-      // Extract unique categories
-      const catSet = new Set<string>();
+      // Extract unique categories, merged with standard categories
+      const catSet = new Set<string>(STANDARD_STOREFRONT_CATEGORIES);
       allProds.forEach((p) => {
-        if (p.category) catSet.add(p.category);
+        if (p.category) catSet.add(p.category.toLowerCase().trim());
       });
       setCategories(Array.from(catSet));
+
+      // Helper to merge standard occasions with database occasions
+      const mergeOccasions = (raw: any[]) => {
+        const map = new Map<string, OccasionData>();
+        STANDARD_STOREFRONT_OCCASIONS.forEach((so) => {
+          map.set(so.slug, {
+            _id: so.slug,
+            name: so.name,
+            slug: so.slug,
+            isActive: true,
+            status: "active",
+          } as any);
+        });
+        (raw || []).forEach((item: any) => {
+          if (!item || !item.slug) return;
+          const slug = item.slug.toLowerCase().trim();
+          map.set(slug, {
+            ...item,
+            slug,
+            name: item.name || slug,
+          });
+        });
+        return Array.from(map.values());
+      };
 
       // Fetch dynamic occasions for Shop By Occasion ordering
       try {
         const occData = await productService.getAdminOccasions();
         if (Array.isArray(occData) && occData.length > 0) {
-          setOccasions(occData.filter((o: any) => o.isActive !== false && o.status !== "inactive"));
+          const active = occData.filter((o: any) => o.isActive !== false && o.status !== "inactive");
+          setOccasions(mergeOccasions(active));
         } else {
           const publicOccs = await productService.getOccasions();
-          setOccasions(Array.isArray(publicOccs) ? publicOccs : []);
+          setOccasions(mergeOccasions(Array.isArray(publicOccs) ? publicOccs : []));
         }
       } catch (occErr) {
         console.warn("Could not load admin occasions, trying public:", occErr);
         try {
           const publicOccs = await productService.getOccasions();
-          setOccasions(Array.isArray(publicOccs) ? publicOccs : []);
-        } catch (e) {}
+          setOccasions(mergeOccasions(Array.isArray(publicOccs) ? publicOccs : []));
+        } catch (e) {
+          setOccasions(mergeOccasions([]));
+        }
       }
     } catch (error: any) {
       toast({
@@ -754,13 +802,31 @@ export const ProductOrderArrangementPage: React.FC = () => {
   };
 
   const activeSectionLabel = useMemo(() => {
+    if (activeSection === "cakes" || activeSection === "category:cakes") {
+      return "🎂 Artisan Cakes (Home Section)";
+    }
+    if (activeSection === "combos" || activeSection === "category:combos") {
+      return "🎁 Celebration Combos & Hampers";
+    }
+    if (activeSection === "budget_friendly" || activeSection === "budget-friendly") {
+      return "🏷️ Budget-Friendly (Under ₹1,000)";
+    }
+    if (activeSection === "birthday" || activeSection === "occasion:birthday") {
+      return "🎉 Occasion: Birthday Celebrations";
+    }
+    if (activeSection === "anniversary" || activeSection === "occasion:anniversary") {
+      return "🎉 Occasion: Anniversary Celebrations";
+    }
     if (activeSection.startsWith("occasion:")) {
       const slug = activeSection.replace("occasion:", "");
       const found = occasions.find((o) => o.slug === slug);
-      return found ? `🎉 Occasion: ${found.name}` : `🎉 Occasion: ${slug.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")}`;
+      return found
+        ? `🎉 Occasion: ${found.name}`
+        : `🎉 Occasion: ${slug.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")}`;
     }
     if (activeSection.startsWith("category:")) {
-      return `📁 Category: ${activeSection.replace("category:", "")}`;
+      const cat = activeSection.replace("category:", "");
+      return `📁 Category: ${cat.charAt(0).toUpperCase() + cat.slice(1)}`;
     }
     return (
       STANDARD_STOREFRONT_SECTIONS.find((s) => s.value === activeSection)?.label ||
@@ -1562,6 +1628,66 @@ export const ProductOrderArrangementPage: React.FC = () => {
                         <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 line-clamp-2 leading-snug">
                           {product.title}
                         </h3>
+
+                        {/* Variants Breakdown Pills for Cakes & Hampers */}
+                        {(() => {
+                          let list: any[] = [];
+                          if (Array.isArray(product.priceVariants) && product.priceVariants.length > 0) {
+                            list = product.priceVariants;
+                          } else if (Array.isArray(product.details?.priceVariants) && product.details.priceVariants.length > 0) {
+                            list = product.details.priceVariants;
+                          } else if (Array.isArray(product.cakeAttributes?.availableSizes) && product.cakeAttributes.availableSizes.length > 0) {
+                            const baseP = Number(product.price || 0);
+                            list = product.cakeAttributes.availableSizes.map((sz: string) => {
+                              let p = baseP;
+                              const clean = String(sz).toLowerCase();
+                              if (clean.includes('0.5') || clean.includes('½') || clean.includes('1/2')) p = baseP > 0 ? Math.round(baseP * 0.7) : baseP;
+                              else if (clean.includes('1.5')) p = baseP > 0 ? Math.round(baseP * 1.45) : baseP;
+                              else if (clean.includes('2')) p = baseP > 0 ? Math.round(baseP * 1.85) : baseP;
+                              return {
+                                label: sz,
+                                size: sz,
+                                price: p,
+                                comparePrice: baseP > p ? baseP : undefined,
+                                stock: product.countInStock || 20,
+                              };
+                            });
+                          } else if (Array.isArray(product.comboAttributes?.comboProducts)) {
+                            const cakeComp = product.comboAttributes.comboProducts.find((cp: any) =>
+                              cp.type === 'cake' || cp.catalogType === 'cake' || String(cp.name || '').toLowerCase().includes('cake')
+                            );
+                            if (cakeComp && Array.isArray(cakeComp.priceVariants) && cakeComp.priceVariants.length > 0) {
+                              list = cakeComp.priceVariants;
+                            }
+                          }
+                          const sortedVars = [...list].sort((a, b) => Number(a.price || 0) - Number(b.price || 0));
+
+                          if (sortedVars.length > 0) {
+                            return (
+                              <div className="flex flex-wrap gap-1.5 pt-1.5 pb-0.5">
+                                {sortedVars.map((v: any, vIdx: number) => {
+                                  const vEff = getProductEffectivePrice(product, Number(v.price), v);
+                                  const vRaw = Number(v.price || 0);
+                                  const vComp = v.comparePrice ? Number(v.comparePrice) : (vEff < vRaw ? vRaw : 0);
+                                  const hasVDisc = vComp > vEff;
+                                  return (
+                                    <span
+                                      key={vIdx}
+                                      className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10.5px] font-semibold bg-amber-50 dark:bg-amber-950/40 text-amber-950 dark:text-amber-200 border border-amber-300 dark:border-amber-800/80 shadow-2xs hover:border-amber-400 transition-all"
+                                    >
+                                      <span className="font-bold text-amber-900 dark:text-amber-300">{formatCakeWeightLabel(v.label || v.size)}:</span>
+                                      <span className="text-emerald-700 dark:text-emerald-400 font-extrabold">₹{vEff}</span>
+                                      {hasVDisc && (
+                                        <span className="text-stone-400 line-through text-[9.5px]">₹{vComp}</span>
+                                      )}
+                                    </span>
+                                  );
+                                })}
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
 
                         <div className="w-full h-[1px] bg-slate-100 dark:bg-slate-800 my-2" />
 

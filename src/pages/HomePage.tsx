@@ -29,6 +29,7 @@ import { HomePageSkeleton } from "../components/HomePageSkeleton";
 import { HomeSeoSection } from "../components/seo/HomeSeoSection";
 import { BudgetFriendlySection } from "../components/BudgetFriendlySection";
 import { CakesSection } from "../components/CakesSection";
+import { CombosSection } from "../components/CombosSection";
 
 import api from "../services/api";
 
@@ -217,7 +218,14 @@ const HomePage = () => {
         enabled: true,
         order: 3.6,
         title: 'Cakes, Made for Every Celebration',
-        subtitle: 'Freshly crafted cakes to make every special moment a little sweeter.',
+        subtitle: 'Freshly crafted cakes to make every special moment a little sweeter. Baked to order with pure ingredients and delivered fresh across the city.',
+        content: {
+          badgeText: 'NOW SERVING CAKES',
+          ctaText: 'EXPLORE CAKES',
+          ctaLink: '/cakes',
+          showCta: true,
+          itemsCount: 8,
+        }
       };
       const budgetIdx = sections.findIndex(s => s.type === 'budget_friendly');
       if (budgetIdx !== -1) {
@@ -228,6 +236,37 @@ const HomePage = () => {
           sections.splice(featIdx + 1, 0, cakeSection);
         } else {
           sections.push(cakeSection);
+        }
+      }
+    }
+
+    // Inject Combos section right after cakes
+    if (!sections.some(s => s.type === 'combos')) {
+      const comboSection = {
+        id: 'combos',
+        type: 'combos',
+        enabled: true,
+        order: 3.7,
+        title: 'Flowers & Cakes, Curated for Double Joy',
+        subtitle: 'Experience the magic of paired celebrations. Hand-tied fresh Dutch bouquets bundled with gourmet oven-fresh cakes, Belgian chocolates, and personalized greeting notes.',
+        content: {
+          badgeText: 'SBF SIGNATURE COMBOS & HAMPERS',
+          ctaText: 'EXPLORE ALL COMBOS',
+          ctaLink: '/combos',
+          showCta: true,
+          showPills: true,
+          itemsCount: 8,
+        }
+      };
+      const cakeIdx = sections.findIndex(s => s.type === 'cakes');
+      if (cakeIdx !== -1) {
+        sections.splice(cakeIdx + 1, 0, comboSection);
+      } else {
+        const budgetIdx = sections.findIndex(s => s.type === 'budget_friendly');
+        if (budgetIdx !== -1) {
+          sections.splice(budgetIdx + 1, 0, comboSection);
+        } else {
+          sections.push(comboSection);
         }
       }
     }
@@ -450,7 +489,18 @@ const HomePage = () => {
                 variants={itemVariants}
                 className="relative"
               >
-                <CakesSection onAddToCart={handleAddToCart} />
+                <CakesSection section={section as any} onAddToCart={handleAddToCart} />
+              </motion.section>
+            );
+
+          case 'combos':
+            return (
+              <motion.section
+                key={`combos-${index}`}
+                variants={itemVariants}
+                className="relative"
+              >
+                <CombosSection section={section as any} />
               </motion.section>
             );
 

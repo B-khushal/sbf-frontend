@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, TouchSensor } from "@dnd-kit/core";
 import { arrayMove, SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { SortableHandle, SortableItem } from "../components/ui/SortableItem";
@@ -49,7 +50,9 @@ import {
   Mail,
   Terminal,
   Server,
-  ShieldCheck
+  ShieldCheck,
+  Cake,
+  Gift
 } from "lucide-react";
 import api from "../services/api";
 import { uploadImage } from "../services/uploadService";
@@ -762,6 +765,7 @@ const EmailConfigSettingsCard: React.FC = () => {
 };
 
 const AdminSettingsPage = () => {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { refetchSettings } = useSettings();
   
@@ -1068,6 +1072,45 @@ const AdminSettingsPage = () => {
             }
           });
         }
+        if (!loadedSections.some((s: any) => s.type === 'cakes')) {
+          loadedSections.push({
+            id: 'cakes',
+            type: 'cakes',
+            enabled: true,
+            order: 3.6,
+            title: 'Cakes, Made for Every Celebration',
+            subtitle: 'Freshly crafted cakes to make every special moment a little sweeter. Baked to order with pure ingredients and delivered fresh across the city.',
+            visibility: { desktop: true, tablet: true, mobile: true },
+            styling: { background: '', padding: 'py-16 md:py-24', spacing: 'mb-0', animation: 'fadeIn' },
+            content: {
+              badgeText: 'NOW SERVING CAKES',
+              ctaText: 'Explore Cakes',
+              ctaLink: '/cakes',
+              showCta: true,
+              itemsCount: 8,
+            }
+          });
+        }
+        if (!loadedSections.some((s: any) => s.type === 'combos')) {
+          loadedSections.push({
+            id: 'combos',
+            type: 'combos',
+            enabled: true,
+            order: 3.7,
+            title: 'Flowers & Cakes, Curated for Double Joy',
+            subtitle: 'Experience the magic of paired celebrations. Hand-tied fresh Dutch bouquets bundled with gourmet oven-fresh cakes, Belgian chocolates, and personalized greeting notes.',
+            visibility: { desktop: true, tablet: true, mobile: true },
+            styling: { background: '', padding: 'py-16 md:py-24', spacing: 'mb-0', animation: 'fadeIn' },
+            content: {
+              badgeText: 'SBF SIGNATURE COMBOS & HAMPERS',
+              ctaText: 'Explore All Combos',
+              ctaLink: '/combos',
+              showCta: true,
+              showPills: true,
+              itemsCount: 8,
+            }
+          });
+        }
 
         // Clean default nested fields
         const cleaned = {
@@ -1092,6 +1135,33 @@ const AdminSettingsPage = () => {
                   ctaLink: '/shop/budget-friendly',
                   showCta: true,
                   maxProducts: 8,
+                  ...(sec.content || {})
+                }
+              };
+            }
+            if (sec.type === 'cakes') {
+              return {
+                ...sec,
+                content: {
+                  badgeText: 'NOW SERVING CAKES',
+                  ctaText: 'Explore Cakes',
+                  ctaLink: '/cakes',
+                  showCta: true,
+                  itemsCount: 8,
+                  ...(sec.content || {})
+                }
+              };
+            }
+            if (sec.type === 'combos') {
+              return {
+                ...sec,
+                content: {
+                  badgeText: 'SBF SIGNATURE COMBOS & HAMPERS',
+                  ctaText: 'Explore All Combos',
+                  ctaLink: '/combos',
+                  showCta: true,
+                  showPills: true,
+                  itemsCount: 8,
                   ...(sec.content || {})
                 }
               };
@@ -2772,26 +2842,115 @@ const AdminSettingsPage = () => {
                         </h2>
                         <p className="text-xs text-slate-400">Drag & drop modules to create custom page structures</p>
                       </div>
-                      <Button
-                        size="sm"
-                        onClick={() => {
-                          const list = [...(localSettings.homeSections || [])];
-                          list.push({
-                            id: `custom_section_${Date.now()}`,
-                            type: "custom",
-                            title: "Seasonal Offers Banner",
-                            subtitle: "Select collection layouts to place below categories",
-                            enabled: true,
-                            order: list.length,
-                            visibility: { desktop: true, tablet: true, mobile: true },
-                            styling: { background: "", padding: "py-12", spacing: "mb-0", animation: "slide-in" }
-                          });
-                          updateSettingsState({ ...localSettings, homeSections: list });
-                        }}
-                        className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold"
-                      >
-                        <Plus className="h-4 w-4 mr-1" /> Add Section
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <select
+                          className="bg-slate-800 border border-slate-700 text-xs text-slate-200 rounded-lg px-2.5 py-1.5 font-medium cursor-pointer hover:border-cyan-500 transition-colors"
+                          defaultValue=""
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (!val) return;
+                            const list = [...(localSettings.homeSections || [])];
+                            if (val === 'cakes') {
+                              list.push({
+                                id: 'cakes',
+                                type: 'cakes',
+                                title: 'Cakes, Made for Every Celebration',
+                                subtitle: 'Freshly crafted cakes to make every special moment a little sweeter.',
+                                enabled: true,
+                                order: list.length,
+                                visibility: { desktop: true, tablet: true, mobile: true },
+                                styling: { background: '', padding: 'py-16 md:py-24', spacing: 'mb-0', animation: 'fadeIn' },
+                                content: {
+                                  badgeText: 'NOW SERVING CAKES',
+                                  ctaText: 'Explore Cakes',
+                                  ctaLink: '/cakes',
+                                  showCta: true,
+                                  itemsCount: 8,
+                                }
+                              });
+                            } else if (val === 'combos') {
+                              list.push({
+                                id: 'combos',
+                                type: 'combos',
+                                title: 'Flowers & Cakes, Curated for Double Joy',
+                                subtitle: 'Experience the magic of paired celebrations with handcrafted bouquets and gourmet cakes.',
+                                enabled: true,
+                                order: list.length,
+                                visibility: { desktop: true, tablet: true, mobile: true },
+                                styling: { background: '', padding: 'py-16 md:py-24', spacing: 'mb-0', animation: 'fadeIn' },
+                                content: {
+                                  badgeText: 'SBF SIGNATURE COMBOS & HAMPERS',
+                                  ctaText: 'Explore All Combos',
+                                  ctaLink: '/combos',
+                                  showCta: true,
+                                  showPills: true,
+                                  itemsCount: 8,
+                                }
+                              });
+                            } else if (val === 'budget_friendly') {
+                              list.push({
+                                id: 'budget_friendly',
+                                type: 'budget_friendly',
+                                title: 'Beautiful Gifts, Thoughtfully Priced',
+                                subtitle: 'Discover elegant bouquets and gifts starting from ₹399 — all thoughtfully selected under ₹1,000.',
+                                enabled: true,
+                                order: list.length,
+                                visibility: { desktop: true, tablet: true, mobile: true },
+                                styling: { background: '', padding: 'py-14 sm:py-20', spacing: 'mb-0', animation: 'fadeIn' },
+                                content: {
+                                  tagline: 'Affordable • Elegant • Thoughtfully Designed',
+                                  showTagline: true,
+                                  taglineIcon: 'Sparkles',
+                                  ctaText: 'Explore Budget Friendly',
+                                  ctaLink: '/shop/budget-friendly',
+                                  showCta: true,
+                                  maxProducts: 8,
+                                }
+                              });
+                            } else if (val === 'custom') {
+                              list.push({
+                                id: `custom_section_${Date.now()}`,
+                                type: 'custom',
+                                title: 'Seasonal Offers Banner',
+                                subtitle: 'Select collection layouts to place below categories',
+                                enabled: true,
+                                order: list.length,
+                                visibility: { desktop: true, tablet: true, mobile: true },
+                                styling: { background: '', padding: 'py-12', spacing: 'mb-0', animation: 'slide-in' }
+                              });
+                            }
+                            updateSettingsState({ ...localSettings, homeSections: list });
+                            e.target.value = '';
+                          }}
+                        >
+                          <option value="" disabled>+ Add Module Preset...</option>
+                          <option value="cakes">🎂 Cakes Showcase</option>
+                          <option value="combos">🎁 Combos & Hampers</option>
+                          <option value="budget_friendly">🏷️ Budget-Friendly Showcase</option>
+                          <option value="custom">➕ Custom Section</option>
+                        </select>
+
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            const list = [...(localSettings.homeSections || [])];
+                            list.push({
+                              id: `custom_section_${Date.now()}`,
+                              type: "custom",
+                              title: "Seasonal Offers Banner",
+                              subtitle: "Select collection layouts to place below categories",
+                              enabled: true,
+                              order: list.length,
+                              visibility: { desktop: true, tablet: true, mobile: true },
+                              styling: { background: "", padding: "py-12", spacing: "mb-0", animation: "slide-in" }
+                            });
+                            updateSettingsState({ ...localSettings, homeSections: list });
+                          }}
+                          className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold h-8 text-xs"
+                        >
+                          <Plus className="h-3.5 w-3.5 mr-1" /> Add Custom
+                        </Button>
+                      </div>
                     </div>
 
                     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => {
@@ -3112,6 +3271,217 @@ const AdminSettingsPage = () => {
                                               onChange={(e) => {
                                                 const copy = localSettings.homeSections.map((s: any) =>
                                                   s.id === sec.id ? { ...s, content: { ...s.content, maxProducts: Number(e.target.value) || 8 } } : s
+                                                );
+                                                updateSettingsState({ ...localSettings, homeSections: copy });
+                                              }}
+                                              className="bg-slate-800 border-slate-700 text-xs h-7 w-16 text-slate-200"
+                                            />
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {sec.type === 'cakes' && (
+                                    <div className="pt-4 border-t border-slate-800/80 space-y-4">
+                                      <div className="flex items-center justify-between">
+                                        <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wide flex items-center gap-1.5">
+                                          <Cake className="h-3.5 w-3.5" />
+                                          Artisan Cakes Showcase Settings
+                                        </h4>
+                                        <Button
+                                          type="button"
+                                          size="sm"
+                                          variant="ghost"
+                                          onClick={() => navigate('/admin/product-arrangements')}
+                                          className="text-[10px] text-amber-300 hover:text-white hover:bg-amber-900/30 h-6 px-2"
+                                        >
+                                          Manage Cakes Order Arrangement <ArrowRight className="h-3 w-3 ml-1" />
+                                        </Button>
+                                      </div>
+                                      
+                                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-900/60 p-4 rounded-lg border border-slate-800">
+                                        <div>
+                                          <Label className="text-[10px] text-slate-400">Badge Text</Label>
+                                          <Input
+                                            value={sec.content?.badgeText !== undefined ? sec.content.badgeText : 'NOW SERVING CAKES'}
+                                            onChange={(e) => {
+                                              const copy = localSettings.homeSections.map((s: any) =>
+                                                s.id === sec.id ? { ...s, content: { ...s.content, badgeText: e.target.value } } : s
+                                              );
+                                              updateSettingsState({ ...localSettings, homeSections: copy });
+                                            }}
+                                            placeholder="NOW SERVING CAKES"
+                                            className="bg-slate-800 border-slate-700 text-xs h-8 text-slate-200 mt-1"
+                                          />
+                                        </div>
+
+                                        <div>
+                                          <Label className="text-[10px] text-slate-400">CTA Button Text</Label>
+                                          <Input
+                                            value={sec.content?.ctaText || 'EXPLORE CAKES'}
+                                            onChange={(e) => {
+                                              const copy = localSettings.homeSections.map((s: any) =>
+                                                s.id === sec.id ? { ...s, content: { ...s.content, ctaText: e.target.value } } : s
+                                              );
+                                              updateSettingsState({ ...localSettings, homeSections: copy });
+                                            }}
+                                            placeholder="EXPLORE CAKES"
+                                            className="bg-slate-800 border-slate-700 text-xs h-8 text-slate-200 mt-1"
+                                          />
+                                        </div>
+
+                                        <div>
+                                          <Label className="text-[10px] text-slate-400">CTA Target Link</Label>
+                                          <Input
+                                            value={sec.content?.ctaLink || '/cakes'}
+                                            onChange={(e) => {
+                                              const copy = localSettings.homeSections.map((s: any) =>
+                                                s.id === sec.id ? { ...s, content: { ...s.content, ctaLink: e.target.value } } : s
+                                              );
+                                              updateSettingsState({ ...localSettings, homeSections: copy });
+                                            }}
+                                            placeholder="/cakes"
+                                            className="bg-slate-800 border-slate-700 text-xs h-8 text-slate-200 mt-1 font-mono"
+                                          />
+                                        </div>
+
+                                        <div className="flex items-center justify-between md:col-span-3 pt-2 border-t border-slate-800">
+                                          <div className="flex items-center gap-3">
+                                            <Switch
+                                              checked={sec.content?.showCta !== false}
+                                              onCheckedChange={(checked) => {
+                                                const copy = localSettings.homeSections.map((s: any) =>
+                                                  s.id === sec.id ? { ...s, content: { ...s.content, showCta: checked } } : s
+                                                );
+                                                updateSettingsState({ ...localSettings, homeSections: copy });
+                                              }}
+                                            />
+                                            <span className="text-xs text-slate-300">Show CTA Button</span>
+                                          </div>
+
+                                          <div className="flex items-center gap-2">
+                                            <Label className="text-xs text-slate-400">Max Products:</Label>
+                                            <Input
+                                              type="number"
+                                              min="2"
+                                              max="24"
+                                              value={sec.content?.itemsCount || 8}
+                                              onChange={(e) => {
+                                                const copy = localSettings.homeSections.map((s: any) =>
+                                                  s.id === sec.id ? { ...s, content: { ...s.content, itemsCount: Number(e.target.value) || 8 } } : s
+                                                );
+                                                updateSettingsState({ ...localSettings, homeSections: copy });
+                                              }}
+                                              className="bg-slate-800 border-slate-700 text-xs h-7 w-16 text-slate-200"
+                                            />
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {sec.type === 'combos' && (
+                                    <div className="pt-4 border-t border-slate-800/80 space-y-4">
+                                      <div className="flex items-center justify-between">
+                                        <h4 className="text-xs font-bold text-rose-400 uppercase tracking-wide flex items-center gap-1.5">
+                                          <Gift className="h-3.5 w-3.5" />
+                                          Celebration Combos & Hampers Settings
+                                        </h4>
+                                        <Button
+                                          type="button"
+                                          size="sm"
+                                          variant="ghost"
+                                          onClick={() => navigate('/admin/product-arrangements')}
+                                          className="text-[10px] text-rose-300 hover:text-white hover:bg-rose-900/30 h-6 px-2"
+                                        >
+                                          Manage Combos Order Arrangement <ArrowRight className="h-3 w-3 ml-1" />
+                                        </Button>
+                                      </div>
+                                      
+                                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-900/60 p-4 rounded-lg border border-slate-800">
+                                        <div>
+                                          <Label className="text-[10px] text-slate-400">Badge Text</Label>
+                                          <Input
+                                            value={sec.content?.badgeText !== undefined ? sec.content.badgeText : 'SBF SIGNATURE COMBOS & HAMPERS'}
+                                            onChange={(e) => {
+                                              const copy = localSettings.homeSections.map((s: any) =>
+                                                s.id === sec.id ? { ...s, content: { ...s.content, badgeText: e.target.value } } : s
+                                              );
+                                              updateSettingsState({ ...localSettings, homeSections: copy });
+                                            }}
+                                            placeholder="SBF SIGNATURE COMBOS & HAMPERS"
+                                            className="bg-slate-800 border-slate-700 text-xs h-8 text-slate-200 mt-1"
+                                          />
+                                        </div>
+
+                                        <div>
+                                          <Label className="text-[10px] text-slate-400">CTA Button Text</Label>
+                                          <Input
+                                            value={sec.content?.ctaText || 'EXPLORE ALL COMBOS'}
+                                            onChange={(e) => {
+                                              const copy = localSettings.homeSections.map((s: any) =>
+                                                s.id === sec.id ? { ...s, content: { ...s.content, ctaText: e.target.value } } : s
+                                              );
+                                              updateSettingsState({ ...localSettings, homeSections: copy });
+                                            }}
+                                            placeholder="EXPLORE ALL COMBOS"
+                                            className="bg-slate-800 border-slate-700 text-xs h-8 text-slate-200 mt-1"
+                                          />
+                                        </div>
+
+                                        <div>
+                                          <Label className="text-[10px] text-slate-400">CTA Target Link</Label>
+                                          <Input
+                                            value={sec.content?.ctaLink || '/combos'}
+                                            onChange={(e) => {
+                                              const copy = localSettings.homeSections.map((s: any) =>
+                                                s.id === sec.id ? { ...s, content: { ...s.content, ctaLink: e.target.value } } : s
+                                              );
+                                              updateSettingsState({ ...localSettings, homeSections: copy });
+                                            }}
+                                            placeholder="/combos"
+                                            className="bg-slate-800 border-slate-700 text-xs h-8 text-slate-200 mt-1 font-mono"
+                                          />
+                                        </div>
+
+                                        <div className="flex items-center justify-between md:col-span-3 pt-2 border-t border-slate-800">
+                                          <div className="flex items-center gap-3">
+                                            <Switch
+                                              checked={sec.content?.showCta !== false}
+                                              onCheckedChange={(checked) => {
+                                                const copy = localSettings.homeSections.map((s: any) =>
+                                                  s.id === sec.id ? { ...s, content: { ...s.content, showCta: checked } } : s
+                                                );
+                                                updateSettingsState({ ...localSettings, homeSections: copy });
+                                              }}
+                                            />
+                                            <span className="text-xs text-slate-300">Show CTA Button</span>
+                                          </div>
+
+                                          <div className="flex items-center gap-3">
+                                            <Switch
+                                              checked={sec.content?.showPills !== false}
+                                              onCheckedChange={(checked) => {
+                                                const copy = localSettings.homeSections.map((s: any) =>
+                                                  s.id === sec.id ? { ...s, content: { ...s.content, showPills: checked } } : s
+                                                );
+                                                updateSettingsState({ ...localSettings, homeSections: copy });
+                                              }}
+                                            />
+                                            <span className="text-xs text-slate-300">Show Value Highlights Strip</span>
+                                          </div>
+
+                                          <div className="flex items-center gap-2">
+                                            <Label className="text-xs text-slate-400">Max Products:</Label>
+                                            <Input
+                                              type="number"
+                                              min="2"
+                                              max="24"
+                                              value={sec.content?.itemsCount || 8}
+                                              onChange={(e) => {
+                                                const copy = localSettings.homeSections.map((s: any) =>
+                                                  s.id === sec.id ? { ...s, content: { ...s.content, itemsCount: Number(e.target.value) || 8 } } : s
                                                 );
                                                 updateSettingsState({ ...localSettings, homeSections: copy });
                                               }}

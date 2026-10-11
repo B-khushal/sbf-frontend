@@ -39,6 +39,7 @@ const AboutPage = lazy(() => import('./pages/AboutPage'));
 const ContactPage = lazy(() => import('./pages/ContactPage'));
 const WishlistPage = lazy(() => import("./pages/wishlist"));
 const CakesCategoryPage = lazy(() => import("./pages/CakesCategoryPage"));
+const CombosCategoryPage = lazy(() => import("./pages/CombosCategoryPage"));
 
 // Auth Pages (lazy loaded)
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
@@ -872,6 +873,16 @@ const App = () => {
                             <Route path="/shop/cakes" element={
                               <Suspense fallback={<LoadingFallback message="Loading cakes collection..." />}>
                                 <CakesCategoryPage />
+                              </Suspense>
+                            } />
+                            <Route path="/combos" element={
+                              <Suspense fallback={<LoadingFallback message="Loading celebration combos..." />}>
+                                <CombosCategoryPage />
+                              </Suspense>
+                            } />
+                            <Route path="/shop/combos" element={
+                              <Suspense fallback={<LoadingFallback message="Loading celebration combos..." />}>
+                                <CombosCategoryPage />
                               </Suspense>
                             } />
                             <Route path="/budget-friendly" element={<Navigate to="/shop/budget-friendly" replace />} />

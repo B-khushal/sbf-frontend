@@ -104,11 +104,30 @@ const CakeFormSection: React.FC<CakeFormSectionProps> = ({ formData, setFormData
   const attrs = formData.cakeAttributes || {};
   const [customSizeInput, setCustomSizeInput] = useState('');
 
-  // Hydrate priceVariants from availableSizes if priceVariants is empty
+  // Hydrate priceVariants and cakeAttributes with robust two-way syncing & combo inheritance
   useEffect(() => {
     const hasExistingVariants = Array.isArray(formData.priceVariants) && formData.priceVariants.length > 0;
     const hasAvailableSizes = Array.isArray(attrs.availableSizes) && attrs.availableSizes.length > 0;
 
+    // Check if there is a connected cake in combo products
+    const connectedCake = (formData.comboAttributes?.comboProducts || []).find((p: any) =>
+      p.type === 'cake' || p.catalogType === 'cake' || String(p.name || '').toLowerCase().includes('cake')
+    );
+
+    // Case 1: Has priceVariants but availableSizes is missing/empty -> sync availableSizes
+    if (hasExistingVariants && (!hasAvailableSizes || attrs.availableSizes.length === 0)) {
+      setFormData(prev => ({
+        ...prev,
+        cakeAttributes: {
+          ...prev.cakeAttributes,
+          availableSizes: (prev.priceVariants || []).map(v => v.label || v.name || v.size),
+          weight: prev.cakeAttributes?.weight || prev.priceVariants?.[0]?.label || '',
+        }
+      }));
+      return;
+    }
+
+    // Case 2: No priceVariants, but availableSizes configured -> build priceVariants
     if (!hasExistingVariants && hasAvailableSizes) {
       const defaultPrice = Number(formData.price) || 0;
       const defaultStock = Number(formData.countInStock !== undefined ? formData.countInStock : 20);
@@ -116,12 +135,12 @@ const CakeFormSection: React.FC<CakeFormSectionProps> = ({ formData, setFormData
       const hydratedVariants: PriceVariant[] = attrs.availableSizes.map(size => {
         let suggestedPrice = defaultPrice;
         const clean = size.toLowerCase();
-        if (clean.includes('0.5') || clean.includes('½')) {
-          suggestedPrice = defaultPrice > 0 ? Math.round(defaultPrice * 0.65) : defaultPrice;
+        if (clean.includes('0.5') || clean.includes('½') || clean.includes('1/2')) {
+          suggestedPrice = defaultPrice > 0 ? Math.round(defaultPrice * 0.7) : defaultPrice;
         } else if (clean.includes('1.5')) {
           suggestedPrice = defaultPrice > 0 ? Math.round(defaultPrice * 1.45) : defaultPrice;
         } else if (clean.includes('2')) {
-          suggestedPrice = defaultPrice > 0 ? Math.round(defaultPrice * 1.9) : defaultPrice;
+          suggestedPrice = defaultPrice > 0 ? Math.round(defaultPrice * 1.85) : defaultPrice;
         }
 
         return {
@@ -136,8 +155,47 @@ const CakeFormSection: React.FC<CakeFormSectionProps> = ({ formData, setFormData
         hasPriceVariants: true,
         priceVariants: hydratedVariants,
       }));
+      return;
     }
-  }, [attrs.availableSizes, formData.priceVariants, formData.price, formData.countInStock, setFormData]);
+
+    // Case 3: Both empty, but combo has a connected cake -> inherit from connected cake
+    if (!hasExistingVariants && !hasAvailableSizes && connectedCake) {
+      const cakeSizes = connectedCake.cakeAttributes?.availableSizes || (connectedCake.priceVariants || []).map((v: any) => v.label || v.name || v.size);
+      const defaultPrice = Number(formData.price) || 0;
+      const defaultStock = Number(formData.countInStock !== undefined ? formData.countInStock : 20);
+
+      const targetSizes = cakeSizes && cakeSizes.length > 0 ? cakeSizes : ['0.5 Kg', '1 Kg'];
+      const derivedVariants: PriceVariant[] = targetSizes.map((size: string) => {
+        let p = defaultPrice;
+        const clean = size.toLowerCase();
+        if (clean.includes('0.5') || clean.includes('½') || clean.includes('1/2')) {
+          p = defaultPrice > 0 ? Math.round(defaultPrice * 0.7) : defaultPrice;
+        } else if (clean.includes('1.5')) {
+          p = defaultPrice > 0 ? Math.round(defaultPrice * 1.45) : defaultPrice;
+        } else if (clean.includes('2')) {
+          p = defaultPrice > 0 ? Math.round(defaultPrice * 1.85) : defaultPrice;
+        }
+        return {
+          label: size,
+          price: p,
+          stock: defaultStock,
+        };
+      });
+
+      setFormData(prev => ({
+        ...prev,
+        hasPriceVariants: true,
+        priceVariants: derivedVariants,
+        cakeAttributes: {
+          ...prev.cakeAttributes,
+          flavor: prev.cakeAttributes?.flavor || connectedCake.cakeAttributes?.flavor || connectedCake.name || '',
+          eggless: prev.cakeAttributes?.eggless !== undefined ? prev.cakeAttributes.eggless : Boolean(connectedCake.cakeAttributes?.eggless),
+          availableSizes: targetSizes,
+          weight: prev.cakeAttributes?.weight || targetSizes[0] || '0.5 Kg',
+        }
+      }));
+    }
+  }, [attrs.availableSizes, formData.priceVariants, formData.price, formData.countInStock, formData.comboAttributes, setFormData]);
 
   const updateAttr = (field: string, value: any) => {
     setFormData(prev => ({
@@ -155,17 +213,17 @@ const CakeFormSection: React.FC<CakeFormSectionProps> = ({ formData, setFormData
     if (basePrice <= 0) return 0;
 
     const clean = sizeLabel.toLowerCase();
-    if (clean.includes('0.5') || clean.includes('½')) {
-      return Math.round(basePrice * 0.65);
+    if (clean.includes('0.5') || clean.includes('½') || clean.includes('1/2')) {
+      return Math.round(basePrice * 0.7);
     }
     if (clean.includes('1.5')) {
       return Math.round(basePrice * 1.45);
     }
     if (clean.includes('2')) {
-      return Math.round(basePrice * 1.9);
+      return Math.round(basePrice * 1.85);
     }
     if (clean.includes('3')) {
-      return Math.round(basePrice * 2.8);
+      return Math.round(basePrice * 2.7);
     }
     return basePrice;
   };
@@ -217,8 +275,8 @@ const CakeFormSection: React.FC<CakeFormSectionProps> = ({ formData, setFormData
     }));
   };
 
-  // Update a specific field of a variant (label, price, discountPrice, stock)
-  const updateVariant = (index: number, field: 'label' | 'price' | 'discountPrice' | 'stock', value: any) => {
+  // Update a specific field of a variant (label, price, discountPrice, comparePrice, stock)
+  const updateVariant = (index: number, field: 'label' | 'price' | 'discountPrice' | 'comparePrice' | 'stock', value: any) => {
     const currentVariants = Array.isArray(formData.priceVariants) ? [...formData.priceVariants] : [];
     if (!currentVariants[index]) return;
 
@@ -283,6 +341,27 @@ const CakeFormSection: React.FC<CakeFormSectionProps> = ({ formData, setFormData
       </CardHeader>
 
       <CardContent className="pt-6 space-y-6">
+        {/* Combo package indicator */}
+        {(formData.catalogType === 'combo' ||
+          formData.category === 'combos' ||
+          formData.category?.toLowerCase().includes('combo') ||
+          (Array.isArray(formData.comboAttributes?.comboProducts) && formData.comboAttributes.comboProducts.length > 0)) && (
+          <div className="p-3.5 rounded-xl bg-gradient-to-r from-amber-100/80 via-orange-50 to-amber-100/80 border border-amber-300 flex items-center justify-between text-xs text-amber-950 font-medium shadow-xs">
+            <div className="flex items-center gap-2.5">
+              <span className="text-xl">🎂</span>
+              <div>
+                <span className="font-bold text-sm text-amber-950">Combo Package Cake Specifications</span>
+                <p className="text-[11px] text-amber-800">
+                  Weights & variants configured here define the cake size choices (e.g. 0.5 Kg, 1 Kg) and package pricing for customers.
+                </p>
+              </div>
+            </div>
+            <Badge className="bg-amber-600 text-white font-bold text-[10px] shrink-0">
+              Connected in Combo
+            </Badge>
+          </div>
+        )}
+
         {/* Row 1: Flavor + Shape */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="space-y-2">
