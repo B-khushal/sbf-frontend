@@ -28,6 +28,7 @@ import { useToast } from "@/hooks/use-toast";
 import productService, { ProductData, OccasionData } from "@/services/productService";
 import { formatCakeWeightLabel } from "@/utils/cakeHelpers";
 import { getProductEffectivePrice } from "@/utils/pricing";
+import { getImageUrl } from "@/config";
 import {
   Search,
   Plus,

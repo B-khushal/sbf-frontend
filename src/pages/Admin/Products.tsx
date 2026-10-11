@@ -113,22 +113,30 @@ const AdminProducts: React.FC = () => {
     if (!product || !product.displayOrders) return 0;
     const dobj = product.displayOrders;
     if (section === 'featured') return dobj.featured || 0;
-    if (section === 'shop') return dobj.shop || 0;
+    if (section === 'shop' || section === 'none') return dobj.shop || 0;
     if (section === 'newArrivals' || section === 'new') return dobj.newArrivals || 0;
     if (section === 'recommended') return dobj.recommended || 0;
-    
-    if (section === 'valentine' || section === 'valentines-day') return dobj.occasions?.valentine || 0;
-    if (section === 'mothersDay' || section === 'mothers-day') return dobj.occasions?.mothersDay || 0;
-    if (section === 'fathersDay' || section === 'fathers-day') return dobj.occasions?.fathersDay || 0;
-    if (section === 'friendshipDay' || section === 'friendship-day') return dobj.occasions?.friendshipDay || 0;
-    if (section === 'rakhi' || section === 'raksha-bandhan') return dobj.occasions?.rakhi || 0;
-    if (section === 'diwali') return dobj.occasions?.diwali || 0;
-    if (section === 'newYear' || section === 'new-year') return dobj.occasions?.newYear || 0;
+    if (section === 'bestsellers') return dobj.bestsellers || 0;
+    if (section === 'combos' || section === 'category:combos') return dobj.combos || dobj.categories?.combos || 0;
+    if (section === 'cakes' || section === 'category:cakes') return dobj.cakes || dobj.categories?.cakes || 0;
+    if (section === 'budget_friendly' || section === 'budget-friendly') return dobj.budgetFriendly || dobj['budget-friendly'] || 0;
     
     if (section.startsWith('category:')) {
-      const categoryName = section.substring(9).trim();
+      const categoryName = section.substring(9).trim().toLowerCase();
       return dobj.categories?.[categoryName] || 0;
     }
+
+    // Occasion or custom section
+    const occSlug = section.startsWith('occasion:')
+      ? section.substring(9).trim().toLowerCase()
+      : section.trim().toLowerCase();
+    const camel = occSlug.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+    
+    if (dobj.occasions) {
+      if (dobj.occasions[occSlug] !== undefined) return Number(dobj.occasions[occSlug]) || 0;
+      if (dobj.occasions[camel] !== undefined) return Number(dobj.occasions[camel]) || 0;
+    }
+
     return 0;
   };
 
@@ -173,36 +181,33 @@ const AdminProducts: React.FC = () => {
     }
     const dobj = product.displayOrders;
     if (section === 'featured') dobj.featured = order;
-    else if (section === 'shop') dobj.shop = order;
+    else if (section === 'shop' || section === 'none') dobj.shop = order;
     else if (section === 'newArrivals' || section === 'new') dobj.newArrivals = order;
     else if (section === 'recommended') dobj.recommended = order;
-    else if (section === 'valentine' || section === 'valentines-day') {
-      if (!dobj.occasions) dobj.occasions = {};
-      dobj.occasions.valentine = order;
-    } else if (section === 'mothersDay' || section === 'mothers-day') {
-      if (!dobj.occasions) dobj.occasions = {};
-      dobj.occasions.mothersDay = order;
-    } else if (section === 'fathersDay' || section === 'fathers-day') {
-      if (!dobj.occasions) dobj.occasions = {};
-      dobj.occasions.fathersDay = order;
-    } else if (section === 'friendshipDay' || section === 'friendship-day') {
-      if (!dobj.occasions) dobj.occasions = {};
-      dobj.occasions.friendshipDay = order;
-    } else if (section === 'rakhi' || section === 'raksha-bandhan') {
-      if (!dobj.occasions) dobj.occasions = {};
-      dobj.occasions.rakhi = order;
-    } else if (section === 'diwali') {
-      if (!dobj.occasions) dobj.occasions = {};
-      dobj.occasions.diwali = order;
-    } else if (section === 'newYear' || section === 'new-year') {
-      if (!dobj.occasions) dobj.occasions = {};
-      dobj.occasions.newYear = order;
+    else if (section === 'bestsellers') dobj.bestsellers = order;
+    else if (section === 'combos' || section === 'category:combos') {
+      dobj.combos = order;
+      if (!dobj.categories) dobj.categories = {};
+      dobj.categories.combos = order;
+    } else if (section === 'cakes' || section === 'category:cakes') {
+      dobj.cakes = order;
+      if (!dobj.categories) dobj.categories = {};
+      dobj.categories.cakes = order;
+    } else if (section === 'budget_friendly' || section === 'budget-friendly') {
+      dobj.budgetFriendly = order;
+      dobj['budget-friendly'] = order;
     } else if (section.startsWith('category:')) {
-      const categoryName = section.substring(9).trim();
-      if (!dobj.categories) {
-        dobj.categories = {};
-      }
+      const categoryName = section.substring(9).trim().toLowerCase();
+      if (!dobj.categories) dobj.categories = {};
       dobj.categories[categoryName] = order;
+    } else {
+      const occSlug = section.startsWith('occasion:')
+        ? section.substring(9).trim().toLowerCase()
+        : section.trim().toLowerCase();
+      const camel = occSlug.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+      if (!dobj.occasions) dobj.occasions = {};
+      dobj.occasions[occSlug] = order;
+      dobj.occasions[camel] = order;
     }
   };
 
@@ -1049,22 +1054,35 @@ const AdminProducts: React.FC = () => {
           <div className="flex flex-wrap items-center gap-3">
             <span className="text-sm font-semibold text-gray-700">Manage Order For:</span>
             <Select value={activeSection || "none"} onValueChange={(val) => handleSectionChange(val)}>
-              <SelectTrigger className="w-[200px]">
+              <SelectTrigger className="w-[230px]">
                 <SelectValue placeholder="Select Section" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-80">
                 <SelectItem value="none">✨ Standard Products List</SelectItem>
                 <SelectItem value="featured">⭐ Featured Products</SelectItem>
                 <SelectItem value="shop">🛒 Shop Page</SelectItem>
+                <SelectItem value="cakes">🎂 Artisan Cakes (Home)</SelectItem>
+                <SelectItem value="combos">🎁 Celebration Combos</SelectItem>
+                <SelectItem value="budget_friendly">🏷️ Budget-Friendly (Under ₹1,000)</SelectItem>
+                <SelectItem value="bestsellers">🏆 Bestsellers</SelectItem>
                 <SelectItem value="newArrivals">🆕 New Arrivals</SelectItem>
                 <SelectItem value="recommended">💡 Recommended Products</SelectItem>
-                <SelectItem value="valentine">❤️ Valentine's Day</SelectItem>
-                <SelectItem value="mothers-day">👩 Mother's Day</SelectItem>
-                <SelectItem value="fathers-day">👨 Father's Day</SelectItem>
-                <SelectItem value="friendship-day">🤝 Friendship Day</SelectItem>
-                <SelectItem value="raksha-bandhan">📿 Rakhi / Raksha Bandhan</SelectItem>
-                <SelectItem value="diwali">🪔 Diwali</SelectItem>
-                <SelectItem value="new-year">🎆 New Year</SelectItem>
+                
+                <SelectItem value="occasion:birthday">🎂 Birthday Celebrations</SelectItem>
+                <SelectItem value="occasion:anniversary">💍 Anniversary Celebrations</SelectItem>
+                <SelectItem value="occasion:romance">💖 Love & Romance</SelectItem>
+                <SelectItem value="occasion:congratulations">🎉 Congratulations</SelectItem>
+                <SelectItem value="occasion:thank-you">🙏 Thank You</SelectItem>
+                <SelectItem value="occasion:get-well-soon">💐 Get Well Soon</SelectItem>
+                <SelectItem value="occasion:sympathy">🕊️ Sympathy & Condolences</SelectItem>
+                <SelectItem value="occasion:housewarming">🏡 Housewarming</SelectItem>
+                <SelectItem value="occasion:valentine">❤️ Valentine's Day</SelectItem>
+                <SelectItem value="occasion:mothers-day">👩 Mother's Day</SelectItem>
+                <SelectItem value="occasion:fathers-day">👨 Father's Day</SelectItem>
+                <SelectItem value="occasion:friendship-day">🤝 Friendship Day</SelectItem>
+                <SelectItem value="occasion:raksha-bandhan">📿 Raksha Bandhan</SelectItem>
+                <SelectItem value="occasion:diwali">🪔 Diwali</SelectItem>
+                <SelectItem value="occasion:new-year">🎆 New Year</SelectItem>
                 <SelectItem value="all-categories">📂 Category Pages...</SelectItem>
               </SelectContent>
             </Select>
@@ -1588,7 +1606,7 @@ const AdminProducts: React.FC = () => {
           <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b pb-4 gap-4">
             <div>
               <CardTitle className="text-xl flex items-center gap-2">
-                📂 Sorting: <span className="text-pink-600 capitalize">{activeSection.replace('category:', 'Category: ')}</span>
+                📂 Sorting: <span className="text-pink-600 capitalize">{activeSection.replace('category:', 'Category: ').replace('occasion:', 'Occasion: ')}</span>
               </CardTitle>
               <p className="text-xs text-gray-500">Drag handle or use arrows to change sequence. Recalculates automatically.</p>
             </div>
