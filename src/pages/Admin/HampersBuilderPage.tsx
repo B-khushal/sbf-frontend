@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import productService, { ProductData } from "@/services/productService";
 import { getImageUrl } from "@/config";
 import api from "@/services/api";
-import { Gift, Plus, Trash2, Save, Search, Check, Sparkles, Image as ImageIcon, Upload, Loader2 } from "lucide-react";
+import { Gift, Plus, Trash2, Save, Search, Check, Sparkles, Image as ImageIcon, Upload, Loader2, Wand2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { formatCakeWeightLabel } from "@/utils/cakeHelpers";
 
@@ -151,6 +151,109 @@ const HampersBuilderPage: React.FC = () => {
     setSelectedComponents(prev =>
       prev.map(item => (item.id === id ? { ...item, quantity } : item))
     );
+  };
+
+  // Helper to smartly generate title and structured description from combo contents
+  const generateAutoTitleAndDescription = (components: HamperComponentItem[], category: string) => {
+    if (components.length === 0) return { title: "", description: "" };
+
+    const cake = components.find(c => 
+      c.catalogType === 'cake' || 
+      c.category.toLowerCase() === 'cakes' || 
+      c.category.toLowerCase() === 'cake' ||
+      c.name.toLowerCase().includes('cake') ||
+      c.name.toLowerCase().includes('velvet') ||
+      c.name.toLowerCase().includes('truffle') ||
+      c.name.toLowerCase().includes('forest')
+    );
+    const bouquet = components.find(c => 
+      c !== cake && (
+        c.catalogType === 'bouquet' || 
+        c.category.toLowerCase() === 'flowers' || 
+        c.category.toLowerCase() === 'bouquets' ||
+        c.category.toLowerCase() === 'roses' ||
+        c.category.toLowerCase() === 'lilies' ||
+        c.name.toLowerCase().includes('bouquet') ||
+        c.name.toLowerCase().includes('rose') ||
+        c.name.toLowerCase().includes('lily') ||
+        c.name.toLowerCase().includes('carnation') ||
+        c.name.toLowerCase().includes('flower')
+      )
+    );
+    const others = components.filter(c => c !== cake && c !== bouquet);
+
+    let generatedTitle = "";
+    if (bouquet && cake) {
+      if (others.length === 0) {
+        generatedTitle = `${bouquet.name} with ${cake.name}`;
+      } else if (others.length === 1) {
+        generatedTitle = `${bouquet.name} with ${cake.name} & ${others[0].name}`;
+      } else {
+        generatedTitle = `${bouquet.name} with ${cake.name} & Celebration Combo`;
+      }
+    } else if (components.length === 1) {
+      generatedTitle = `${components[0].name} Celebration Combo`;
+    } else if (components.length === 2) {
+      generatedTitle = `${components[0].name} & ${components[1].name}`;
+    } else {
+      generatedTitle = `${components[0].name} & ${components[1].name} Combo`;
+    }
+
+    // Clean up duplicate spaces
+    generatedTitle = generatedTitle.replace(/\s+/g, ' ').trim();
+
+    // Occasion context for description based on selected combo category
+    let occasionContext = "birthdays, anniversaries, and romantic celebrations";
+    if (category === 'birthday-combos') occasionContext = "unforgettable birthday celebrations";
+    else if (category === 'anniversary-combos') occasionContext = "cherished anniversary moments";
+    else if (category === 'romantic-combos') occasionContext = "romantic surprises and expressing your heartfelt love";
+    else if (category === 'special-occasion-combos') occasionContext = "all your special celebrations and milestones";
+
+    // Itemized lines
+    const itemsList = components.map(c => `• ${c.quantity > 1 ? `${c.quantity}x ` : ''}${c.name}`).join('\n');
+
+    const generatedDescription = `Exclusive celebration combo package featuring:\n${itemsList}\n\nHandcrafted with premium fresh flowers and artisanal treats. Perfect for ${occasionContext} with guaranteed same-day delivery across Hyderabad.`;
+
+    return { title: generatedTitle, description: generatedDescription };
+  };
+
+  const handleAutoFillDetails = (options?: { titleOnly?: boolean; descriptionOnly?: boolean }) => {
+    if (selectedComponents.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "No Items Selected",
+        description: "Please add at least 1 item from the catalog on the left first."
+      });
+      return;
+    }
+
+    const { title, description } = generateAutoTitleAndDescription(selectedComponents, comboCategory);
+
+    if (options?.titleOnly) {
+      if (title) setHamperTitle(title);
+      toast({
+        title: "Title Auto-Filled! ✨",
+        description: `Set to "${title}"`
+      });
+      return;
+    }
+
+    if (options?.descriptionOnly) {
+      if (description) setHamperDescription(description);
+      toast({
+        title: "Description Auto-Filled! ✨",
+        description: "Updated with combo contents summary."
+      });
+      return;
+    }
+
+    if (title) setHamperTitle(title);
+    if (description) setHamperDescription(description);
+
+    toast({
+      title: "Title & Description Auto-Filled! ✨",
+      description: `Auto-filled as "${title}"`
+    });
   };
 
   const handleImageFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -401,14 +504,29 @@ const HampersBuilderPage: React.FC = () => {
           </div>
         </div>
 
-        <Button
-          onClick={handleSaveHamper}
-          disabled={saving}
-          className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs gap-1.5 shadow-sm px-5"
-        >
-          <Save className="h-4 w-4" />
-          {saving ? "Saving Combo..." : "Save Combo Product"}
-        </Button>
+        <div className="flex items-center gap-2">
+          {selectedComponents.length > 0 && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => handleAutoFillDetails()}
+              className="text-xs font-semibold gap-1.5 border-emerald-300 text-emerald-700 bg-white hover:bg-emerald-50 dark:border-emerald-800 dark:bg-slate-900 dark:text-emerald-300 shadow-2xs"
+            >
+              <Wand2 className="w-3.5 h-3.5 text-emerald-600" />
+              Auto-Fill Details
+            </Button>
+          )}
+
+          <Button
+            onClick={handleSaveHamper}
+            disabled={saving}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs gap-1.5 shadow-sm px-5"
+          >
+            <Save className="h-4 w-4" />
+            {saving ? "Saving Combo..." : "Save Combo Product"}
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -469,12 +587,39 @@ const HampersBuilderPage: React.FC = () => {
         {/* Center Column: Basic Info & Category Selection */}
         <div className="space-y-4 lg:col-span-1">
           <Card className="border-slate-200/80 dark:border-slate-800 shadow-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold">Combo Basic Info</CardTitle>
+            <CardHeader className="pb-3 flex flex-row items-center justify-between gap-2">
+              <div>
+                <CardTitle className="text-sm font-semibold">Combo Basic Info</CardTitle>
+                <p className="text-[11px] text-muted-foreground">Title, category, description & pricing</p>
+              </div>
+              {selectedComponents.length > 0 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleAutoFillDetails()}
+                  className="h-7 text-xs font-semibold gap-1.5 border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-300 dark:hover:bg-emerald-950/40"
+                  title="Auto-fill Title & Description based on added combo items"
+                >
+                  <Wand2 className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Auto-Fill</span>
+                </Button>
+              )}
             </CardHeader>
             <CardContent className="space-y-3">
               <div>
-                <Label className="text-xs">Combo Title *</Label>
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-semibold">Combo Title *</Label>
+                  {selectedComponents.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => handleAutoFillDetails({ titleOnly: true })}
+                      className="text-[11px] text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 font-medium inline-flex items-center gap-1 hover:underline cursor-pointer"
+                    >
+                      <Sparkles className="w-3 h-3" /> Auto-fill Title
+                    </button>
+                  )}
+                </div>
                 <Input
                   placeholder="e.g. Royal Valentine Rose & Chocolate Combo"
                   value={hamperTitle}
@@ -501,12 +646,23 @@ const HampersBuilderPage: React.FC = () => {
               </div>
 
               <div>
-                <Label className="text-xs">Description</Label>
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-semibold">Description</Label>
+                  {selectedComponents.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => handleAutoFillDetails({ descriptionOnly: true })}
+                      className="text-[11px] text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 font-medium inline-flex items-center gap-1 hover:underline cursor-pointer"
+                    >
+                      <Sparkles className="w-3 h-3" /> Auto-fill Description
+                    </button>
+                  )}
+                </div>
                 <Textarea
                   placeholder="Include a short summary of items contained in this combo..."
                   value={hamperDescription}
                   onChange={e => setHamperDescription(e.target.value)}
-                  className="text-xs mt-1 min-h-[60px]"
+                  className="text-xs mt-1 min-h-[75px]"
                 />
               </div>
 
