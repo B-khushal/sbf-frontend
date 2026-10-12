@@ -536,17 +536,11 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                 <ArrowLeft size={22} className="text-slate-800 dark:text-slate-100" />
               </button>
               <Link to="/" className="flex items-center gap-1.5 flex-shrink-0 group">
-                {headerSettings?.logo ? (
-                  <img
-                    src={headerSettings.logo}
-                    alt="Spring Blossoms Florist"
-                    className="h-7 w-auto object-contain transition-transform group-hover:scale-105"
-                  />
-                ) : (
-                  <span className="text-xl font-black bg-gradient-to-r from-pink-500 via-purple-600 to-blue-600 bg-clip-text text-transparent tracking-wider">
-                    SBF
-                  </span>
-                )}
+                <img
+                  src={headerSettings?.logo || "https://res.cloudinary.com/djtrhfqan/image/upload/v1791793252/logo_final_tp7ymk.png"}
+                  alt="Spring Blossoms Florist"
+                  className="h-8 sm:h-9 w-auto max-w-[140px] object-contain transition-transform group-hover:scale-105"
+                />
               </Link>
             </div>
 
@@ -582,34 +576,28 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                   {/* Desktop Logo */}
                   <div className="hidden lg:block">
                     <img
-                      src={headerSettings.logo || "/api/placeholder/200/60"}
+                      src={headerSettings?.logo || "https://res.cloudinary.com/djtrhfqan/image/upload/v1791793252/logo_final_tp7ymk.png"}
                       alt="Best Florist in Hyderabad - Flower Delivery in Hyderabad | Spring Blossoms Florist"
-                      className="h-12 w-auto xl:h-14 transition-all duration-300 ease-in-out group-hover:scale-105 drop-shadow-sm"
+                      className="h-12 xl:h-14 w-auto object-contain transition-all duration-300 ease-in-out group-hover:scale-105 drop-shadow-sm"
                     />
                   </div>
                   
                   {/* Tablet Logo */}
                   <div className="hidden md:block lg:hidden">
                     <img
-                      src={headerSettings.logo || "/api/placeholder/160/50"}
+                      src={headerSettings?.logo || "https://res.cloudinary.com/djtrhfqan/image/upload/v1791793252/logo_final_tp7ymk.png"}
                       alt="Best Florist in Hyderabad - Flower Delivery in Hyderabad | Spring Blossoms Florist"
-                      className="h-10 w-auto transition-all duration-300 ease-in-out group-hover:scale-105 drop-shadow-sm"
+                      className="h-10 sm:h-11 w-auto object-contain transition-all duration-300 ease-in-out group-hover:scale-105 drop-shadow-sm"
                     />
                   </div>
                   
                   {/* Mobile Logo */}
                   <div className="md:hidden flex items-center">
-                    {headerSettings?.logo ? (
-                      <img
-                        src={headerSettings.logo}
-                        alt="Best Florist in Hyderabad - Flower Delivery in Hyderabad | Spring Blossoms Florist"
-                        className="h-8 w-auto object-contain transition-all duration-300 ease-in-out group-hover:scale-105 drop-shadow-sm"
-                      />
-                    ) : (
-                      <div className="text-xl sm:text-2xl font-black bg-gradient-to-r from-pink-500 via-purple-600 to-blue-600 bg-clip-text text-transparent tracking-wider transition-all duration-300 group-hover:from-blue-600 group-hover:via-pink-500 group-hover:to-purple-600">
-                        SBF
-                      </div>
-                    )}
+                    <img
+                      src={headerSettings?.logo || "https://res.cloudinary.com/djtrhfqan/image/upload/v1791793252/logo_final_tp7ymk.png"}
+                      alt="Best Florist in Hyderabad - Flower Delivery in Hyderabad | Spring Blossoms Florist"
+                      className="h-9 sm:h-10 w-auto object-contain transition-all duration-300 ease-in-out group-hover:scale-105 drop-shadow-sm"
+                    />
                   </div>
                 </Link>
               </motion.div>
@@ -1373,9 +1361,11 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
               <div className="rounded-xl border bg-white shadow-sm">
                 <div className="p-4 border-b flex justify-between items-center">
                   <Link to="/" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2">
-                    <span className="text-2xl font-black bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-                      SBF
-                    </span>
+                    <img
+                      src={headerSettings?.logo || "https://res.cloudinary.com/djtrhfqan/image/upload/v1791793252/logo_final_tp7ymk.png"}
+                      alt="Spring Blossoms Florist"
+                      className="h-9 w-auto max-w-[150px] object-contain"
+                    />
                   </Link>
                   <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)}>
                     <X size={20} />

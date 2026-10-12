@@ -404,12 +404,16 @@ const LoginPage = () => {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3 }}
               >
-                <div className="w-12 h-12 bg-gradient-to-br from-bloom-blue-400 to-bloom-pink-400 rounded-xl flex items-center justify-center">
-                  <Sparkles className="w-6 h-6 text-white" />
-                </div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-bloom-blue-600 to-bloom-pink-600 bg-clip-text text-transparent">
-                  Spring Blossoms
-                </h1>
+                <Link to="/" className="inline-flex items-center space-x-3 group">
+                  <img
+                    src="https://res.cloudinary.com/djtrhfqan/image/upload/v1791793251/logo_f_without_bg_mdrtys.png"
+                    alt="Spring Blossoms"
+                    className="w-12 h-12 object-contain drop-shadow-sm transition-transform group-hover:scale-105"
+                  />
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-bloom-blue-600 to-bloom-pink-600 bg-clip-text text-transparent">
+                    Spring Blossoms
+                  </h1>
+                </Link>
               </motion.div>
               
               <motion.h2 
@@ -476,14 +480,16 @@ const LoginPage = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
               >
-                <div className="flex items-center justify-center space-x-3 mb-4">
-                  <div className="w-10 h-10 bg-gradient-to-br from-bloom-blue-400 to-bloom-pink-400 rounded-xl flex items-center justify-center">
-                    <Sparkles className="w-5 h-5 text-white" />
-                  </div>
+                <Link to="/" className="inline-flex items-center justify-center space-x-3 mb-4 group">
+                  <img
+                    src="https://res.cloudinary.com/djtrhfqan/image/upload/v1791793251/logo_f_without_bg_mdrtys.png"
+                    alt="Spring Blossoms"
+                    className="w-10 h-10 object-contain drop-shadow-sm transition-transform group-hover:scale-105"
+                  />
                   <h1 className="text-2xl font-bold bg-gradient-to-r from-bloom-blue-600 to-bloom-pink-600 bg-clip-text text-transparent">
                     Spring Blossoms
                   </h1>
-                </div>
+                </Link>
                 <p className="text-gray-600 text-sm">
                   Welcome to your magical shopping experience
                 </p>

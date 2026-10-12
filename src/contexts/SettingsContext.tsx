@@ -192,9 +192,9 @@ interface SettingsContextType {
 }
 
 const defaultHeaderSettings: HeaderSettings = {
-  logo: "/placeholder.svg",
-  stickyLogo: "/placeholder.svg",
-  mobileLogo: "/placeholder.svg",
+  logo: "https://res.cloudinary.com/djtrhfqan/image/upload/v1791793252/logo_final_tp7ymk.png",
+  stickyLogo: "https://res.cloudinary.com/djtrhfqan/image/upload/v1791793251/logo_f_without_bg_mdrtys.png",
+  mobileLogo: "https://res.cloudinary.com/djtrhfqan/image/upload/v1791793252/logo_final_tp7ymk.png",
   announcementBar: {
     enabled: true,
     text: 'Use code SBF10 to get an exclusive discount — only on your first order! 🌸',

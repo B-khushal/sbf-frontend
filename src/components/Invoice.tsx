@@ -145,8 +145,10 @@ const Invoice: React.FC<InvoiceProps> = ({ order, isAdmin = false }) => {
         }
 
         .header-logo {
-          font-size: 38px;
-          line-height: 1;
+          width: 54px;
+          height: 54px;
+          object-fit: contain;
+          flex-shrink: 0;
         }
 
         .company-name {
@@ -382,7 +384,11 @@ const Invoice: React.FC<InvoiceProps> = ({ order, isAdmin = false }) => {
       {/* Main Container Content */}
       <div className="invoice-header">
         <div className="header-left">
-          <div className="header-logo">🌸</div>
+          <img
+            src="https://res.cloudinary.com/djtrhfqan/image/upload/v1791793251/logo_f_without_bg_mdrtys.png"
+            alt="Spring Blossoms Florist"
+            className="header-logo"
+          />
           <div>
             <div className="company-name">Spring Blossoms Florist</div>
             <div className="company-tagline">A Reason to Express</div>

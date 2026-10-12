@@ -132,8 +132,12 @@ const Footer = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="md:hidden rounded-t-3xl bg-white border-t border-sky-100 shadow-[0_-10px_30px_rgba(15,23,42,0.06)] px-4 pt-4 pb-4 space-y-4">
           <div className="space-y-2">
-            <Link to="/" className="inline-flex items-center gap-2 text-lg font-bold text-gray-900">
-              <Flower2 className="w-5 h-5 text-primary" />
+            <Link to="/" className="inline-flex items-center gap-2 text-lg font-bold text-gray-900 group">
+              <img
+                src="https://res.cloudinary.com/djtrhfqan/image/upload/v1791793251/logo_f_without_bg_mdrtys.png"
+                alt={footerSettings.companyName}
+                className="w-6 h-6 object-contain drop-shadow-sm transition-transform group-hover:scale-105"
+              />
               {footerSettings.companyName}
             </Link>
             <p className="text-sm text-gray-600 leading-relaxed">Fresh flowers delivered with love 🌸</p>
@@ -290,8 +294,12 @@ const Footer = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-8 xl:gap-12 mb-10 sm:mb-12">
           {/* Brand & Info */}
           <div className="text-center sm:text-left space-y-5 sm:space-y-6">
-            <Link to="/" className="inline-flex items-center gap-3 text-2xl font-bold text-gray-900 hover:text-primary transition-colors duration-300">
-              <Flower2 className="w-7 h-7 text-primary" />
+            <Link to="/" className="inline-flex items-center gap-3 text-2xl font-bold text-gray-900 hover:text-primary transition-colors duration-300 group">
+              <img
+                src="https://res.cloudinary.com/djtrhfqan/image/upload/v1791793251/logo_f_without_bg_mdrtys.png"
+                alt={footerSettings.companyName}
+                className="w-8 h-8 object-contain drop-shadow-sm transition-transform group-hover:scale-105"
+              />
               {footerSettings.companyName}
             </Link>
             <p className="text-gray-600 text-sm leading-relaxed max-w-sm mx-auto sm:mx-0">

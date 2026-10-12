@@ -339,8 +339,7 @@ export const preloadCriticalImages = (): void => {
   // TODO: Add actual image paths when available
   // Images must exist in public/images/ folder
   const criticalImages: string[] = [
-    // '/images/logosbf.png', // Logo - Add when file exists
-    // '/images/1.jpg', // Hero image - Add when file exists
+    '/images/logosbf.png', // Logo
   ];
 
   if (criticalImages.length === 0) {

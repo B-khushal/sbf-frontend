@@ -190,10 +190,10 @@ const AdminDashboard: React.FC = () => {
       <div className={`flex items-center mb-8 ${isCollapsed ? 'justify-center' : ''}`}>
         <Link to="/" className="flex items-center">
           <img
-            src="https://res.cloudinary.com/djtrhfqan/image/upload/v1771960430/sbf-products/image-1771960425724-93003075.png"
+            src={isCollapsed ? "https://res.cloudinary.com/djtrhfqan/image/upload/v1791793251/logo_f_without_bg_mdrtys.png" : "https://res.cloudinary.com/djtrhfqan/image/upload/v1791793252/logo_final_tp7ymk.png"}
             alt="Spring Blossoms Florist Logo"
-            className={`transition-all duration-300 ease-in-out hover:scale-105 ${
-              isCollapsed ? 'h-10 w-10' : 'h-16 w-auto max-w-full'
+            className={`transition-all duration-300 ease-in-out hover:scale-105 object-contain ${
+              isCollapsed ? 'h-10 w-10' : 'h-14 w-auto max-w-full drop-shadow-sm'
             }`}
           />
         </Link>
