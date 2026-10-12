@@ -76,7 +76,7 @@ const VendorLayout: React.FC = () => {
       </nav>
       <div className="p-2">
         <Button
-          onClick={logout}
+          onClick={() => logout()}
           variant="ghost"
           className={cn(
             "w-full text-gray-700 hover:bg-red-100 hover:text-red-800 transition-all duration-200",

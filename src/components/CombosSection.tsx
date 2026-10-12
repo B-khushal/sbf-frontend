@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, ChevronLeft, ChevronRight, Gift, Sparkles, Flower2, Cake, Truck, HeartHandshake } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, Gift, Sparkles, Flower2, Cake } from "lucide-react";
 import api from "@/services/api";
 import { CakeComboCard } from "./cakes/CakeComboCard";
 import { Button } from "@/components/ui/button";
@@ -167,14 +167,6 @@ export const CombosSection: React.FC<CombosSectionProps> = ({ section }) => {
             <span className="inline-flex items-center gap-1.5 bg-white/80 border border-rose-100 px-3 py-1.5 rounded-xl shadow-2xs backdrop-blur-xs">
               <Cake className="w-3.5 h-3.5 text-amber-500" />
               <span>Oven-Fresh Artisan Cakes</span>
-            </span>
-            <span className="inline-flex items-center gap-1.5 bg-white/80 border border-rose-100 px-3 py-1.5 rounded-xl shadow-2xs backdrop-blur-xs">
-              <Truck className="w-3.5 h-3.5 text-emerald-500" />
-              <span>Express 2-3 Hr Delivery</span>
-            </span>
-            <span className="inline-flex items-center gap-1.5 bg-white/80 border border-rose-100 px-3 py-1.5 rounded-xl shadow-2xs backdrop-blur-xs">
-              <HeartHandshake className="w-3.5 h-3.5 text-pink-500" />
-              <span>Free Hand-Written Note</span>
             </span>
           </div>
         )}

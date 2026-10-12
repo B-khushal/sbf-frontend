@@ -42,8 +42,8 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthLoading: boolean;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<{ success: boolean; redirectTo?: string }>;
-  signup: (data: SignupData) => Promise<{ success: boolean; redirectTo?: string }>;
+  login: (email: string, password: string) => Promise<{ success: boolean; redirectTo?: string; message?: string }>;
+  signup: (data: SignupData) => Promise<{ success: boolean; redirectTo?: string; message?: string }>;
   logout: (shouldTrack?: boolean) => void;
   socialLogin: (provider: string, credential?: string, agreedToTerms?: boolean) => Promise<{ success: boolean; redirectTo?: string; isNewUser?: boolean }>;
   refreshAuth: () => Promise<void>;
