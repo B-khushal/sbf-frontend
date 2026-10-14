@@ -911,15 +911,15 @@ class ProductService {
     return response.data;
   }
 
-  async updateSectionProductsOrder(section: string, displayOrders: Record<string, number>, sortBy?: string, sortDirection?: string, auditMetadata?: any): Promise<any> {
+  async updateSectionProductsOrder(section: string, displayOrders: Record<string, number>, sortBy?: string, sortDirection?: string, auditMetadata?: any, mode?: string): Promise<any> {
     const config = createAuthConfig();
-    const response = await axios.put(`${API_URL}/products/order/update`, { section, displayOrders, sortBy, sortDirection, auditMetadata }, config);
+    const response = await axios.put(`${API_URL}/products/order/update`, { section, displayOrders, sortBy, sortDirection, auditMetadata, mode }, config);
     return response.data;
   }
 
-  async bulkReorderProducts(section: string, displayOrders: Record<string, number>, sortBy?: string, sortDirection?: string, auditMetadata?: any): Promise<any> {
+  async bulkReorderProducts(section: string, displayOrders: Record<string, number>, sortBy?: string, sortDirection?: string, auditMetadata?: any, mode?: string): Promise<any> {
     const config = createAuthConfig();
-    const response = await axios.put(`${API_URL}/products/order/bulk-reorder`, { section, displayOrders, sortBy, sortDirection, auditMetadata }, config);
+    const response = await axios.put(`${API_URL}/products/order/bulk-reorder`, { section, displayOrders, sortBy, sortDirection, auditMetadata, mode }, config);
     return response.data;
   }
 

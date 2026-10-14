@@ -119,7 +119,9 @@ const AdminProducts: React.FC = () => {
     if (section === 'bestsellers') return dobj.bestsellers || 0;
     if (section === 'combos' || section === 'category:combos') return dobj.combos || dobj.categories?.combos || 0;
     if (section === 'cakes' || section === 'category:cakes') return dobj.cakes || dobj.categories?.cakes || 0;
-    if (section === 'budget_friendly' || section === 'budget-friendly') return dobj.budgetFriendly || dobj['budget-friendly'] || 0;
+    if (section === 'budget_friendly' || section === 'budget-friendly' || section === 'category:budget-friendly') {
+      return dobj.budgetFriendly || dobj['budget-friendly'] || dobj.budget_friendly || dobj.categories?.['budget-friendly'] || dobj.categories?.budget_friendly || 0;
+    }
     
     if (section.startsWith('category:')) {
       const categoryName = section.substring(9).trim().toLowerCase();
@@ -193,9 +195,13 @@ const AdminProducts: React.FC = () => {
       dobj.cakes = order;
       if (!dobj.categories) dobj.categories = {};
       dobj.categories.cakes = order;
-    } else if (section === 'budget_friendly' || section === 'budget-friendly') {
+    } else if (section === 'budget_friendly' || section === 'budget-friendly' || section === 'category:budget-friendly') {
       dobj.budgetFriendly = order;
       dobj['budget-friendly'] = order;
+      dobj.budget_friendly = order;
+      if (!dobj.categories) dobj.categories = {};
+      dobj.categories['budget-friendly'] = order;
+      dobj.categories.budget_friendly = order;
     } else if (section.startsWith('category:')) {
       const categoryName = section.substring(9).trim().toLowerCase();
       if (!dobj.categories) dobj.categories = {};
@@ -381,7 +387,9 @@ const AdminProducts: React.FC = () => {
         activeSection,
         {},
         sortingPref.sortBy,
-        sortingPref.sortDirection
+        sortingPref.sortDirection,
+        undefined,
+        sortingPref.sortBy === 'custom' ? 'manual' : undefined
       );
       toast({
         title: "Preferences Saved",
@@ -407,8 +415,10 @@ const AdminProducts: React.FC = () => {
       await productService.updateSectionProductsOrder(
         activeSection,
         ordersMap,
-        sortingPref.sortBy,
-        sortingPref.sortDirection
+        sortingPref.sortBy || "custom",
+        sortingPref.sortDirection || "asc",
+        undefined,
+        "manual"
       );
 
       toast({

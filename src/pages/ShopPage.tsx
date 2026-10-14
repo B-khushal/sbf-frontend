@@ -723,6 +723,10 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
       if (!product || !product.displayOrders) return 0;
       const dobj = product.displayOrders;
 
+      if (isBudgetFriendlyCategory || selectedCategoryKey === 'budget-friendly' || selectedCategoryKey === 'budget_friendly') {
+        return dobj.budgetFriendly || dobj['budget-friendly'] || dobj.budget_friendly || dobj.categories?.['budget-friendly'] || dobj.categories?.budget_friendly || 0;
+      }
+
       if (selectedCategoryKey) {
         const catKey = selectedCategoryKey.toLowerCase();
         // 1. Try directly with selectedCategoryKey

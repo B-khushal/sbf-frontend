@@ -314,8 +314,12 @@ export const ProductOrderArrangementPage: React.FC = () => {
       setRedoStack([]);
       setSortSectionProducts(newList);
       setIsChanged(true);
+      const isOccasion = activeSection.startsWith("occasion:") || activeSection === "occasions";
+      if (!isOccasion && sectionMode !== "manual") {
+        setSectionMode("manual");
+      }
     },
-    [sortSectionProducts]
+    [sortSectionProducts, activeSection, sectionMode]
   );
 
   // Undo action
@@ -584,9 +588,9 @@ export const ProductOrderArrangementPage: React.FC = () => {
         })),
       };
 
-      await productService.bulkReorderProducts(activeSection, displayOrders, undefined, undefined, auditMetadata);
-
       const isOccasionScope = activeSection.startsWith("occasion:") || activeSection === "occasions";
+      await productService.bulkReorderProducts(activeSection, displayOrders, undefined, undefined, auditMetadata, isOccasionScope ? "smart_rotation" : sectionMode);
+
       // Persist section merchandising rules
       await productService.updateMerchandisingSettings({
         section: activeSection,
