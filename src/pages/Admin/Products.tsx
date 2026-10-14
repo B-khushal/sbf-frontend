@@ -269,6 +269,21 @@ const AdminProducts: React.FC = () => {
     const isAsc = dir === "asc";
     const sorted = [...list];
     
+    // In custom order arrangement mode, preserve the exact array sequence as arranged
+    if (sortBy === "custom") {
+      return sorted.sort((a, b) => {
+        const orderA = getProductDisplayOrder(a, section);
+        const orderB = getProductDisplayOrder(b, section);
+        const hasA = orderA > 0;
+        const hasB = orderB > 0;
+        if (hasA && hasB) {
+          if (orderA !== orderB) return orderA - orderB;
+        } else if (hasA) return -1;
+        else if (hasB) return 1;
+        return 0;
+      });
+    }
+
     return sorted.sort((a, b) => {
       const orderA = getProductDisplayOrder(a, section);
       const orderB = getProductDisplayOrder(b, section);
@@ -288,10 +303,11 @@ const AdminProducts: React.FC = () => {
           valB = (b.title || "").toLowerCase();
           break;
         case "price":
-          valA = a.price || 0;
-          valB = b.price || 0;
+          valA = getProductEffectivePrice(a) || a.price || 0;
+          valB = getProductEffectivePrice(b) || b.price || 0;
           break;
         case "createdAt":
+        case "date":
           valA = new Date(a.createdAt || 0).getTime();
           valB = new Date(b.createdAt || 0).getTime();
           break;
@@ -304,23 +320,21 @@ const AdminProducts: React.FC = () => {
           valB = b.countInStock || 0;
           break;
         case "bestSelling":
-          valA = a.numReviews || 0;
-          valB = b.numReviews || 0;
+          valA = (a as any).salesCount || (a as any).totalSales || a.numReviews || 0;
+          valB = (b as any).salesCount || (b as any).totalSales || b.numReviews || 0;
           break;
         case "mostViewed":
           valA = a.rating || 0;
           valB = b.rating || 0;
           break;
         default:
-          valA = new Date(a.createdAt || 0).getTime();
-          valB = new Date(b.createdAt || 0).getTime();
-          return valB - valA;
+          return 0;
       }
       
       if (valA < valB) return isAsc ? -1 : 1;
       if (valA > valB) return isAsc ? 1 : -1;
       
-      return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+      return 0;
     });
   };
 

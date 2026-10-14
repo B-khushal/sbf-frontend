@@ -122,7 +122,7 @@ export const ProductOrderArrangementPage: React.FC = () => {
   // Merchandising Strategy State
   const [sectionMode, setSectionMode] = useState<"manual" | "smart" | "smart_rotation" | "personalized">("smart_rotation");
   const [pinnedProductIds, setPinnedProductIds] = useState<string[]>([]);
-  const [protectedTopCount, setProtectedTopCount] = useState<number>(4);
+  const [protectedTopCount, setProtectedTopCount] = useState<number>(0);
   const [rotationFrequency, setRotationFrequency] = useState<string>("daily");
   const [rotationVersion, setRotationVersion] = useState<number>(1);
   const [isRotationEnabled, setIsRotationEnabled] = useState<boolean>(true);
@@ -250,8 +250,9 @@ export const ProductOrderArrangementPage: React.FC = () => {
       setLoading(true);
       let loadedProds: ProductData[] = [];
       let modeVal: any = "smart_rotation";
+      let pinnedVal: string[] = [];
       const isOccasionScope = section.startsWith("occasion:") || section === "occasions";
-      let topCountVal: number = isOccasionScope ? 0 : 4;
+      let topCountVal: number = 0;
       let rotFreqVal: string = isOccasionScope ? "hourly" : "daily";
       let rotVerVal: number = 1;
       let rotEnabledVal: boolean = true;
@@ -265,8 +266,8 @@ export const ProductOrderArrangementPage: React.FC = () => {
         const data = await productService.getSectionProductsForSorting(section);
         loadedProds = data.products || [];
         modeVal = isOccasionScope ? "smart_rotation" : (data.mode || "smart_rotation");
-        pinnedVal = isOccasionScope ? [] : (Array.isArray(data.pinnedProductIds) ? data.pinnedProductIds : []);
-        topCountVal = isOccasionScope ? 0 : (data.protectedTopCount !== undefined ? data.protectedTopCount : 4);
+        pinnedVal = Array.isArray(data.pinnedProductIds) ? data.pinnedProductIds : [];
+        topCountVal = data.protectedTopCount !== undefined ? data.protectedTopCount : 0;
         rotFreqVal = data.rotationFrequency || (isOccasionScope ? "hourly" : "daily");
         rotVerVal = data.rotationVersion || 1;
         rotEnabledVal = data.isRotationEnabled !== false;

@@ -218,9 +218,8 @@ export const MerchandisingStrategyPanel: React.FC<MerchandisingStrategyPanelProp
                   Protected Top Positions:
                 </Label>
                 <Select
-                  value={String(section?.startsWith("occasion:") || section === "occasions" ? 0 : protectedTopCount)}
+                  value={String(protectedTopCount)}
                   onValueChange={(val) => onProtectedTopCountChange(Number(val))}
-                  disabled={section?.startsWith("occasion:") || section === "occasions"}
                 >
                   <SelectTrigger className="w-[120px] h-8 text-xs font-bold bg-white dark:bg-slate-900 rounded-lg">
                     <SelectValue />
@@ -236,7 +235,7 @@ export const MerchandisingStrategyPanel: React.FC<MerchandisingStrategyPanelProp
                     <SelectItem value="12">Top 12</SelectItem>
                   </SelectContent>
                 </Select>
-                {section?.startsWith("occasion:") || section === "occasions" || protectedTopCount === 0 ? (
+                {protectedTopCount === 0 ? (
                   <span className="text-[11px] font-medium text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/40 px-2 py-0.5 rounded border border-purple-200 dark:border-purple-800">
                     All products rotate dynamically (No fixed/top zone)
                   </span>
