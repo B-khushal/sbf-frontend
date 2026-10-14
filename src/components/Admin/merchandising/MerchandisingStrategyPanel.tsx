@@ -218,13 +218,15 @@ export const MerchandisingStrategyPanel: React.FC<MerchandisingStrategyPanelProp
                   Protected Top Positions:
                 </Label>
                 <Select
-                  value={String(protectedTopCount)}
+                  value={String(section?.startsWith("occasion:") || section === "occasions" ? 0 : protectedTopCount)}
                   onValueChange={(val) => onProtectedTopCountChange(Number(val))}
+                  disabled={section?.startsWith("occasion:") || section === "occasions"}
                 >
-                  <SelectTrigger className="w-[80px] h-8 text-xs font-bold bg-white dark:bg-slate-900 rounded-lg">
+                  <SelectTrigger className="w-[120px] h-8 text-xs font-bold bg-white dark:bg-slate-900 rounded-lg">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="0">0 (Rotate All)</SelectItem>
                     <SelectItem value="1">Top 1</SelectItem>
                     <SelectItem value="2">Top 2</SelectItem>
                     <SelectItem value="3">Top 3</SelectItem>
@@ -234,9 +236,15 @@ export const MerchandisingStrategyPanel: React.FC<MerchandisingStrategyPanelProp
                     <SelectItem value="12">Top 12</SelectItem>
                   </SelectContent>
                 </Select>
-                <span className="text-[11px] text-muted-foreground hidden sm:inline">
-                  (Positions 1–{protectedTopCount} locked by smart ranking)
-                </span>
+                {section?.startsWith("occasion:") || section === "occasions" || protectedTopCount === 0 ? (
+                  <span className="text-[11px] font-medium text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/40 px-2 py-0.5 rounded border border-purple-200 dark:border-purple-800">
+                    All products rotate dynamically (No fixed/top zone)
+                  </span>
+                ) : (
+                  <span className="text-[11px] text-muted-foreground hidden sm:inline">
+                    (Positions 1–{protectedTopCount} locked by smart ranking)
+                  </span>
+                )}
               </div>
 
               {/* Rotation Frequency (for Controlled Rotation) */}

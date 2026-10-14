@@ -250,9 +250,9 @@ export const ProductOrderArrangementPage: React.FC = () => {
       setLoading(true);
       let loadedProds: ProductData[] = [];
       let modeVal: any = "smart_rotation";
-      let pinnedVal: string[] = [];
-      let topCountVal: number = 4;
-      let rotFreqVal: string = "daily";
+      const isOccasionScope = section.startsWith("occasion:") || section === "occasions";
+      let topCountVal: number = isOccasionScope ? 0 : 4;
+      let rotFreqVal: string = isOccasionScope ? "hourly" : "daily";
       let rotVerVal: number = 1;
       let rotEnabledVal: boolean = true;
       let persEnabledVal: boolean = true;
@@ -264,10 +264,10 @@ export const ProductOrderArrangementPage: React.FC = () => {
       } else {
         const data = await productService.getSectionProductsForSorting(section);
         loadedProds = data.products || [];
-        modeVal = data.mode || "smart_rotation";
-        pinnedVal = Array.isArray(data.pinnedProductIds) ? data.pinnedProductIds : [];
-        topCountVal = data.protectedTopCount !== undefined ? data.protectedTopCount : 4;
-        rotFreqVal = data.rotationFrequency || "daily";
+        modeVal = isOccasionScope ? "smart_rotation" : (data.mode || "smart_rotation");
+        pinnedVal = isOccasionScope ? [] : (Array.isArray(data.pinnedProductIds) ? data.pinnedProductIds : []);
+        topCountVal = isOccasionScope ? 0 : (data.protectedTopCount !== undefined ? data.protectedTopCount : 4);
+        rotFreqVal = data.rotationFrequency || (isOccasionScope ? "hourly" : "daily");
         rotVerVal = data.rotationVersion || 1;
         rotEnabledVal = data.isRotationEnabled !== false;
         persEnabledVal = data.isPersonalizationEnabled !== false;
@@ -585,13 +585,14 @@ export const ProductOrderArrangementPage: React.FC = () => {
 
       await productService.bulkReorderProducts(activeSection, displayOrders, undefined, undefined, auditMetadata);
 
+      const isOccasionScope = activeSection.startsWith("occasion:") || activeSection === "occasions";
       // Persist section merchandising rules
       await productService.updateMerchandisingSettings({
         section: activeSection,
         sectionConfig: {
-          mode: sectionMode,
-          pinnedProductIds,
-          protectedTopCount,
+          mode: isOccasionScope ? "smart_rotation" : sectionMode,
+          pinnedProductIds: isOccasionScope ? [] : pinnedProductIds,
+          protectedTopCount: isOccasionScope ? 0 : protectedTopCount,
           rotationFrequency,
           rotationVersion,
           isRotationEnabled,
@@ -632,6 +633,13 @@ export const ProductOrderArrangementPage: React.FC = () => {
 
   // Pin / Unpin Product to Slot
   const handleTogglePinProduct = (productId: string) => {
+    if (activeSection.startsWith("occasion:") || activeSection === "occasions") {
+      toast({
+        title: "Occasion Products Fully Rotate",
+        description: "Fixed/pinned products and top zones are disabled for occasions so that all products rotate dynamically.",
+      });
+      return;
+    }
     let nextPinned: string[];
     const isCurrentlyPinned = pinnedProductIds.includes(productId);
     if (isCurrentlyPinned) {
@@ -1433,7 +1441,7 @@ export const ProductOrderArrangementPage: React.FC = () => {
                               <Badge className="bg-amber-500 text-white border-0 text-[10px] font-bold gap-1 py-0.5">
                                 <Pin className="h-2.5 w-2.5 fill-current" /> Pinned
                               </Badge>
-                            ) : index < (pinnedProductIds.length + protectedTopCount) ? (
+                            ) : protectedTopCount > 0 && index < (pinnedProductIds.length + protectedTopCount) ? (
                               <Badge className="bg-purple-600 text-white border-0 text-[10px] font-semibold gap-1 py-0.5">
                                 <ShieldCheck className="h-2.5 w-2.5" /> Top Zone
                               </Badge>
@@ -1459,15 +1467,17 @@ export const ProductOrderArrangementPage: React.FC = () => {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-1">
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              onClick={() => handleTogglePinProduct(product._id!)}
-                              className={`h-7 w-7 ${pinnedProductIds.includes(product._id!) ? "text-amber-500 hover:text-amber-600" : "text-slate-400 hover:text-slate-600"}`}
-                              title={pinnedProductIds.includes(product._id!) ? "Unpin product" : "Pin product to fixed slot"}
-                            >
-                              <Pin className={`h-3.5 w-3.5 ${pinnedProductIds.includes(product._id!) ? "fill-amber-500" : ""}`} />
-                            </Button>
+                            {!(activeSection.startsWith("occasion:") || activeSection === "occasions") && (
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={() => handleTogglePinProduct(product._id!)}
+                                className={`h-7 w-7 ${pinnedProductIds.includes(product._id!) ? "text-amber-500 hover:text-amber-600" : "text-slate-400 hover:text-slate-600"}`}
+                                title={pinnedProductIds.includes(product._id!) ? "Unpin product" : "Pin product to fixed slot"}
+                              >
+                                <Pin className={`h-3.5 w-3.5 ${pinnedProductIds.includes(product._id!) ? "fill-amber-500" : ""}`} />
+                              </Button>
+                            )}
                             <Button
                               size="icon"
                               variant="ghost"
@@ -1548,19 +1558,21 @@ export const ProductOrderArrangementPage: React.FC = () => {
                         )}
                       </div>
 
-                      {/* Pin to Slot Button */}
-                      <div
-                        className="absolute top-2.5 right-10 z-10 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-0.5 shadow-sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleTogglePinProduct(product._id!);
-                        }}
-                        title={pinnedProductIds.includes(product._id!) ? "Unpin product" : "Pin product to fixed slot"}
-                      >
-                        <Button size="icon" variant="ghost" className="h-6 w-6 p-0">
-                          <Pin className={`h-3.5 w-3.5 ${pinnedProductIds.includes(product._id!) ? "text-amber-500 fill-amber-500" : "text-slate-400"}`} />
-                        </Button>
-                      </div>
+                      {/* Pin to Slot Button (disabled on occasions to keep 100% rotating) */}
+                      {!(activeSection.startsWith("occasion:") || activeSection === "occasions") && (
+                        <div
+                          className="absolute top-2.5 right-10 z-10 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-0.5 shadow-sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleTogglePinProduct(product._id!);
+                          }}
+                          title={pinnedProductIds.includes(product._id!) ? "Unpin product" : "Pin product to fixed slot"}
+                        >
+                          <Button size="icon" variant="ghost" className="h-6 w-6 p-0">
+                            <Pin className={`h-3.5 w-3.5 ${pinnedProductIds.includes(product._id!) ? "text-amber-500 fill-amber-500" : "text-slate-400"}`} />
+                          </Button>
+                        </div>
+                      )}
 
                       {/* Checkbox */}
                       <div
@@ -1615,7 +1627,7 @@ export const ProductOrderArrangementPage: React.FC = () => {
                             <Badge className="bg-amber-500 text-white border-0 text-[10px] font-bold gap-1 py-0.5">
                               <Pin className="h-2.5 w-2.5 fill-current" /> Pinned
                             </Badge>
-                          ) : index < (pinnedProductIds.length + protectedTopCount) ? (
+                          ) : protectedTopCount > 0 && index < (pinnedProductIds.length + protectedTopCount) ? (
                             <Badge className="bg-purple-600 text-white border-0 text-[10px] font-semibold gap-1 py-0.5">
                               <ShieldCheck className="h-2.5 w-2.5" /> Top Zone
                             </Badge>
