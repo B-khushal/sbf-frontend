@@ -758,35 +758,14 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
       return dobj.shop || 0;
     };
 
-    // Enhanced sorting logic
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case "price-asc":
-          return a.price - b.price;
-        case "price-desc":
-          return b.price - a.price;
-        case "newest":
-          return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
-        case "custom":
-        default:
-          const orderA = getProductDisplayOrder(a);
-          const orderB = getProductDisplayOrder(b);
-          
-          const hasOrderA = orderA > 0;
-          const hasOrderB = orderB > 0;
-          
-          if (hasOrderA && hasOrderB) {
-            if (orderA !== orderB) return orderA - orderB;
-          } else if (hasOrderA) {
-            return -1;
-          } else if (hasOrderB) {
-            return 1;
-          }
-          
-          // Fallback to newest first
-          return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
-      }
-    });
+    // Enhanced sorting logic: preserve server merchandising and controlled rotation order when default ('custom')
+    if (sortBy === "price-asc") {
+      filtered.sort((a, b) => getProductSellingPrice(a) - getProductSellingPrice(b));
+    } else if (sortBy === "price-desc") {
+      filtered.sort((a, b) => getProductSellingPrice(b) - getProductSellingPrice(a));
+    } else if (sortBy === "newest") {
+      filtered.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+    }
 
     setFilteredProducts(filtered);
   }, [products, selectedCategoryKey, isParentCategoryRoute, minPriceFilter, maxPriceFilter, sortBy, searchQuery, deliveryOption, occasionFilter, flowerTypeFilter, colorFilter, inStockOnly, bestsellerOnly, newArrivalOnly]);

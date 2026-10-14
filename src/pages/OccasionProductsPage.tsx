@@ -111,27 +111,7 @@ export const OccasionProductsPage: React.FC = () => {
         break;
       case 'featured':
       default:
-        // Prioritize custom occasion display order, then featured status
-        result.sort((a, b) => {
-          const getOccasionOrder = (p: ProductData) => {
-            const occOrders = (p as any).displayOrders?.occasions;
-            if (occOrders && typeof occOrders === 'object' && slug) {
-              const slugKey = slug.toLowerCase();
-              if (occOrders[slugKey] !== undefined && Number(occOrders[slugKey]) > 0) {
-                return Number(occOrders[slugKey]);
-              }
-              const camel = slugKey.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
-              if (occOrders[camel] !== undefined && Number(occOrders[camel]) > 0) {
-                return Number(occOrders[camel]);
-              }
-            }
-            return 999999;
-          };
-          const orderA = getOccasionOrder(a);
-          const orderB = getOccasionOrder(b);
-          if (orderA !== orderB) return orderA - orderB;
-          return (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0);
-        });
+        // Preserve server merchandising and rotation order
         break;
     }
 
