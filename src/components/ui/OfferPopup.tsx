@@ -523,7 +523,7 @@ const OfferPopup: React.FC<OfferPopupProps> = ({
                     </span>
                   ) : (
                     <span className="text-[11px] font-black uppercase tracking-widest text-yellow-300">
-                      SEASONAL SPECIAL
+                      {offer.badgeText || "NEW LAUNCH"}
                     </span>
                   )}
                 </div>
@@ -543,24 +543,37 @@ const OfferPopup: React.FC<OfferPopupProps> = ({
                   {offer.description}
                 </p>
 
-                {/* Claim Progress bar */}
-                <div className="mb-3.5 bg-black/25 rounded-xl p-2.5 border border-white/5">
-                  <div className="flex justify-between items-center text-[11px] font-bold mb-1">
-                    <span className="text-slate-300">Offer Claim Rate</span>
-                    <span className="text-yellow-300">{claimCount} Claimed Today</span>
+                {/* Claim Progress bar or New Launch Highlights */}
+                {(offer.discountPercent && offer.discountPercent > 0) || offer.code ? (
+                  <div className="mb-3.5 bg-black/25 rounded-xl p-2.5 border border-white/5">
+                    <div className="flex justify-between items-center text-[11px] font-bold mb-1">
+                      <span className="text-slate-300">Offer Claim Rate</span>
+                      <span className="text-yellow-300">{claimCount} Claimed Today</span>
+                    </div>
+                    <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${claimProgress}%` }}
+                        transition={{ duration: 1.2, ease: 'easeOut' }}
+                        className="h-full bg-gradient-to-r from-amber-400 to-yellow-300 rounded-full"
+                      />
+                    </div>
+                    <p className="text-[9px] text-slate-400 mt-1 italic text-left">
+                      * Limited coupons remaining. Claims are allocated on a first-come, first-served basis.
+                    </p>
                   </div>
-                  <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${claimProgress}%` }}
-                      transition={{ duration: 1.2, ease: 'easeOut' }}
-                      className="h-full bg-gradient-to-r from-amber-400 to-yellow-300 rounded-full"
-                    />
+                ) : (
+                  <div className="mb-3.5 grid grid-cols-2 gap-2">
+                    <div className="flex items-center gap-2 p-2 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10">
+                      <Sparkles className="h-4 w-4 text-amber-300 shrink-0" />
+                      <span className="text-[11px] font-bold leading-tight">Fresh Handcrafted Daily</span>
+                    </div>
+                    <div className="flex items-center gap-2 p-2 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10">
+                      <Truck className="h-4 w-4 text-emerald-300 shrink-0" />
+                      <span className="text-[11px] font-bold leading-tight">Same-Day Express Delivery</span>
+                    </div>
                   </div>
-                  <p className="text-[9px] text-slate-400 mt-1 italic text-left">
-                    * Limited coupons remaining. Claims are allocated on a first-come, first-served basis.
-                  </p>
-                </div>
+                )}
 
                 {/* Copyable Coupon Pill */}
                 {offer.code && (

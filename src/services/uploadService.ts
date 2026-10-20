@@ -3,7 +3,7 @@ import api from './api';
 // Upload image
 export const uploadImage = async (
   formData: FormData,
-  type: 'product' | 'category' | 'logo' | 'header' | 'branding' | 'hero' | 'review' | 'video' = 'product'
+  type: 'product' | 'category' | 'logo' | 'header' | 'branding' | 'hero' | 'review' | 'video' | 'offer' | 'campaign' = 'product'
 ) => {
   const config = {
     headers: {

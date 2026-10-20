@@ -11,7 +11,8 @@ import {
   BarChart3, Eye, Smartphone, Monitor, Sparkles, 
   Copy, Check, Gift, Heart, Flame, Snowflake, 
   Tag, Clock, Truck, Award, ShieldCheck, Flower2,
-  AlertTriangle, TrendingUp, Info, X
+  AlertTriangle, TrendingUp, Info, X,
+  Loader2, Upload, Cake, ShoppingBag, ArrowRight, Image as ImageIcon
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -89,6 +90,51 @@ const gradientOptions = [
 ];
 
 const festivalTemplates = {
+  cakes_launch: {
+    title: 'Introducing Our New Artisanal Cakes 🎂',
+    subtitle: 'Freshly Baked • Decadent Flavors Just Arrived',
+    description: 'Explore our latest collection of oven-fresh gourmet celebration cakes, velvety cheesecakes, and custom confectioneries, hand-baked daily with premium ingredients.',
+    discountPercent: 0,
+    code: '',
+    theme: 'general',
+    badgeText: 'New Cake Launch 🎂',
+    background: 'linear-gradient(135deg, rgba(88, 28, 135, 0.95) 0%, rgba(225, 29, 72, 0.85) 100%)',
+    textColor: '#ffffff',
+    buttonText: 'Explore New Cakes',
+    buttonLink: '/category/cakes',
+    secondaryCtaText: 'Maybe Later',
+    showCountdown: false
+  },
+  combos_launch: {
+    title: 'Newly Launched Combos & Hampers 🎁',
+    subtitle: 'Flowers, Fresh Cakes & Gourmet Delights',
+    description: 'Celebrate your special moments with our newly launched luxury combos — artisanal cakes paired with fresh hand-tied bouquets, chocolates, and personalized gifts.',
+    discountPercent: 0,
+    code: '',
+    theme: 'general',
+    badgeText: 'New Combos Launch ✨',
+    background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(217, 119, 6, 0.85) 100%)',
+    textColor: '#ffffff',
+    buttonText: 'Explore New Combos',
+    buttonLink: '/category/combos',
+    secondaryCtaText: 'Remind Me Later',
+    showCountdown: false
+  },
+  cakes_combos_launch: {
+    title: 'New Launches: Gourmet Cakes & Combos ✨',
+    subtitle: 'Exquisite Flavors & Floral Celebrations',
+    description: 'Be the first to experience our newly unveiled handcrafted cakes and signature celebration combo boxes. Delivered same-day across Hyderabad.',
+    discountPercent: 0,
+    code: '',
+    theme: 'general',
+    badgeText: 'New Launches 🎂🎁',
+    background: 'linear-gradient(135deg, rgba(30, 27, 75, 0.95) 0%, rgba(146, 64, 14, 0.85) 100%)',
+    textColor: '#ffffff',
+    buttonText: 'Discover New Launches',
+    buttonLink: '/category/cakes',
+    secondaryCtaText: 'Close',
+    showCountdown: false
+  },
   rakhi: {
     title: 'Happy Raksha Bandhan',
     subtitle: 'Celebrate the bond of love',
@@ -209,17 +255,18 @@ const OffersManager = () => {
   // Form states
   const [currentOffer, setCurrentOffer] = useState<Partial<Offer>>({
     theme: 'general',
-    background: 'linear-gradient(to right, #ff9966, #ff5e62)',
+    background: 'linear-gradient(135deg, rgba(88, 28, 135, 0.95) 0%, rgba(225, 29, 72, 0.85) 100%)',
     textColor: '#ffffff',
-    buttonText: 'Explore Collection',
-    buttonLink: '/shop',
-    secondaryCtaText: 'Remind Me Later',
+    buttonText: 'Explore New Cakes',
+    buttonLink: '/category/cakes',
+    secondaryCtaText: 'Maybe Later',
     showOnlyOnce: false,
-    showCountdown: true,
-    discountPercent: 10,
+    showCountdown: false,
+    discountPercent: 0,
+    badgeText: 'New Launch 🎂',
     triggerType: 'combined',
-    triggerDelay: 8,
-    triggerScrollPercent: 30,
+    triggerDelay: 4,
+    triggerScrollPercent: 25,
     frequencyCap: 'oncePerSession',
     deviceTargeting: 'both',
     isABTesting: false,
@@ -228,19 +275,25 @@ const OffersManager = () => {
   
   const [desktopFile, setDesktopFile] = useState<File | null>(null);
   const [mobileFile, setMobileFile] = useState<File | null>(null);
+  const [isUploadingDesktop, setIsUploadingDesktop] = useState(false);
+  const [isUploadingMobile, setIsUploadingMobile] = useState(false);
+  const [isUploadingVariantDesktop, setIsUploadingVariantDesktop] = useState(false);
+  const [isUploadingVariantMobile, setIsUploadingVariantMobile] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [popupPurpose, setPopupPurpose] = useState<'launch' | 'discount'>('launch');
 
   // A/B test editing states
   const [editingVariantIndex, setEditingVariantIndex] = useState<number | null>(null);
   const [variantForm, setVariantForm] = useState<Variant>({
     title: '',
     description: '',
-    discountPercent: 10,
+    discountPercent: 0,
     code: '',
-    buttonText: 'Claim Offer',
-    buttonLink: '/shop',
-    background: 'linear-gradient(to right, #ff9966, #ff5e62)',
+    buttonText: 'Explore Collection',
+    buttonLink: '/category/cakes',
+    background: 'linear-gradient(135deg, rgba(88, 28, 135, 0.95) 0%, rgba(225, 29, 72, 0.85) 100%)',
     textColor: '#ffffff',
-    badgeText: 'Variant Special',
+    badgeText: 'New Launch Special',
     theme: 'general'
   });
   const [variantDesktopFile, setVariantDesktopFile] = useState<File | null>(null);
@@ -270,46 +323,153 @@ const OffersManager = () => {
   const handleApplyTemplate = (tempKey: keyof typeof festivalTemplates) => {
     const template = festivalTemplates[tempKey];
     if (template) {
+      const isLaunch = tempKey.includes('launch') || template.discountPercent === 0;
+      setPopupPurpose(isLaunch ? 'launch' : 'discount');
       setCurrentOffer(prev => ({
         ...prev,
         ...(template as any)
       }));
       toast({
-        title: 'Success',
-        description: `Applied ${tempKey.toUpperCase()} festival template values`
+        title: 'Template Applied',
+        description: `Applied ${tempKey.replace(/_/g, ' ').toUpperCase()} preset values`
       });
     }
   };
 
-  // Upload utility helper
-  const uploadImageHelper = async (file: File): Promise<string> => {
-    const formData = new FormData();
-    formData.append('image', file);
-    const response = await uploadImageService(formData);
-    return response.imageUrl;
+  // Immediate reactive upload helper
+  const handleUploadImage = async (file: File, target: 'desktop' | 'mobile' | 'variantDesktop' | 'variantMobile') => {
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: 'Invalid File',
+        description: 'Please select a valid image file (JPEG, PNG, WebP)',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    if (file.size > 25 * 1024 * 1024) {
+      toast({
+        title: 'File Too Large',
+        description: 'Image file size must be less than 25MB',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    const localPreview = URL.createObjectURL(file);
+
+    if (target === 'desktop') {
+      setIsUploadingDesktop(true);
+      setCurrentOffer(prev => ({ ...prev, imageUrl: localPreview, image: localPreview }));
+    } else if (target === 'mobile') {
+      setIsUploadingMobile(true);
+      setCurrentOffer(prev => ({ ...prev, mobileImageUrl: localPreview }));
+    } else if (target === 'variantDesktop') {
+      setIsUploadingVariantDesktop(true);
+      setVariantForm(prev => ({ ...prev, imageUrl: localPreview }));
+    } else if (target === 'variantMobile') {
+      setIsUploadingVariantMobile(true);
+      setVariantForm(prev => ({ ...prev, mobileImageUrl: localPreview }));
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      const res = await uploadImageService(formData, 'offer');
+
+      if (res && res.imageUrl) {
+        if (target === 'desktop') {
+          setCurrentOffer(prev => ({ ...prev, imageUrl: res.imageUrl, image: res.imageUrl }));
+          setDesktopFile(null);
+        } else if (target === 'mobile') {
+          setCurrentOffer(prev => ({ ...prev, mobileImageUrl: res.imageUrl }));
+          setMobileFile(null);
+        } else if (target === 'variantDesktop') {
+          setVariantForm(prev => ({ ...prev, imageUrl: res.imageUrl }));
+          setVariantDesktopFile(null);
+        } else if (target === 'variantMobile') {
+          setVariantForm(prev => ({ ...prev, mobileImageUrl: res.imageUrl }));
+          setVariantMobileFile(null);
+        }
+
+        toast({
+          title: 'Image Uploaded',
+          description: 'Image uploaded and synchronized with live preview!'
+        });
+      } else {
+        throw new Error('Upload response did not include an image URL');
+      }
+    } catch (error: any) {
+      console.error('Image upload failed:', error);
+      toast({
+        title: 'Upload Failed',
+        description: error.response?.data?.message || error.message || 'Failed to upload image. You can also paste an image URL directly.',
+        variant: 'destructive'
+      });
+    } finally {
+      if (target === 'desktop') setIsUploadingDesktop(false);
+      else if (target === 'mobile') setIsUploadingMobile(false);
+      else if (target === 'variantDesktop') setIsUploadingVariantDesktop(false);
+      else if (target === 'variantMobile') setIsUploadingVariantMobile(false);
+    }
   };
 
   // Submit Handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!currentOffer.title?.trim() || !currentOffer.description?.trim()) {
+      toast({
+        title: 'Missing Required Fields',
+        description: 'Please provide both Campaign Title and Description',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setIsSaving(true);
     try {
       let imageUrl = currentOffer.imageUrl;
       let mobileImageUrl = currentOffer.mobileImageUrl;
 
-      if (desktopFile) {
-        imageUrl = await uploadImageHelper(desktopFile);
+      // Handle any pending file upload fallback
+      if (desktopFile && (!imageUrl || imageUrl.startsWith('blob:'))) {
+        const formData = new FormData();
+        formData.append('image', desktopFile);
+        const res = await uploadImageService(formData, 'offer');
+        imageUrl = res.imageUrl;
       }
-      if (mobileFile) {
-        mobileImageUrl = await uploadImageHelper(mobileFile);
+      if (mobileFile && (!mobileImageUrl || mobileImageUrl.startsWith('blob:'))) {
+        const formData = new FormData();
+        formData.append('image', mobileFile);
+        const res = await uploadImageService(formData, 'offer');
+        mobileImageUrl = res.imageUrl;
       }
+
+      // Default dates if missing
+      const startDate = currentOffer.startDate || new Date().toISOString();
+      const endDate = currentOffer.endDate || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
 
       const offerData = {
         ...currentOffer,
-        imageUrl,
-        mobileImageUrl
+        title: currentOffer.title.trim(),
+        description: currentOffer.description.trim(),
+        subtitle: currentOffer.subtitle?.trim() || null,
+        startDate,
+        endDate,
+        imageUrl: imageUrl || null,
+        mobileImageUrl: mobileImageUrl || null,
+        discountPercent: currentOffer.discountPercent !== undefined && currentOffer.discountPercent !== null 
+          ? Number(currentOffer.discountPercent) 
+          : 0,
+        code: currentOffer.code ? currentOffer.code.trim().toUpperCase() : null,
+        badgeText: currentOffer.badgeText?.trim() || (currentOffer.discountPercent && currentOffer.discountPercent > 0 ? `${currentOffer.discountPercent}% OFF` : 'NEW LAUNCH 🎂'),
+        buttonText: currentOffer.buttonText?.trim() || 'Explore Collection',
+        buttonLink: currentOffer.buttonLink?.trim() || '/category/cakes',
       };
 
-      if (isEditing) {
+      if (isEditing && currentOffer._id) {
         await api.put(`/offers/${currentOffer._id}`, offerData);
       } else {
         await api.post('/offers', offerData);
@@ -326,26 +486,29 @@ const OffersManager = () => {
     } catch (error: any) {
       toast({
         title: 'Error',
-        description: error.response?.data?.message || 'Failed to save campaign',
+        description: error.response?.data?.message || 'Failed to save campaign popup',
         variant: 'destructive'
       });
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const resetForm = () => {
     setCurrentOffer({
       theme: 'general',
-      background: 'linear-gradient(to right, #ff9966, #ff5e62)',
+      background: 'linear-gradient(135deg, rgba(88, 28, 135, 0.95) 0%, rgba(225, 29, 72, 0.85) 100%)',
       textColor: '#ffffff',
-      buttonText: 'Explore Collection',
-      buttonLink: '/shop',
-      secondaryCtaText: 'Remind Me Later',
+      buttonText: 'Explore New Cakes',
+      buttonLink: '/category/cakes',
+      secondaryCtaText: 'Maybe Later',
       showOnlyOnce: false,
-      showCountdown: true,
-      discountPercent: 10,
+      showCountdown: false,
+      discountPercent: 0,
+      badgeText: 'New Launch 🎂',
       triggerType: 'combined',
-      triggerDelay: 8,
-      triggerScrollPercent: 30,
+      triggerDelay: 4,
+      triggerScrollPercent: 25,
       frequencyCap: 'oncePerSession',
       deviceTargeting: 'both',
       isABTesting: false,
@@ -353,6 +516,12 @@ const OffersManager = () => {
     });
     setDesktopFile(null);
     setMobileFile(null);
+    setIsUploadingDesktop(false);
+    setIsUploadingMobile(false);
+    setIsUploadingVariantDesktop(false);
+    setIsUploadingVariantMobile(false);
+    setIsSaving(false);
+    setPopupPurpose('launch');
     setIsEditing(false);
     setShowForm(false);
     setActiveTab('general');
@@ -525,19 +694,21 @@ const OffersManager = () => {
               onClick={() => {
                 setIsEditing(false);
                 setShowForm(true);
+                setPopupPurpose('launch');
                 setCurrentOffer({
                   theme: 'general',
-                  background: 'linear-gradient(to right, #ff9966, #ff5e62)',
+                  background: 'linear-gradient(135deg, rgba(88, 28, 135, 0.95) 0%, rgba(225, 29, 72, 0.85) 100%)',
                   textColor: '#ffffff',
-                  buttonText: 'Explore Collection',
-                  buttonLink: '/shop',
-                  secondaryCtaText: 'Remind Me Later',
+                  buttonText: 'Explore New Cakes',
+                  buttonLink: '/category/cakes',
+                  secondaryCtaText: 'Maybe Later',
                   showOnlyOnce: false,
-                  showCountdown: true,
-                  discountPercent: 10,
+                  showCountdown: false,
+                  discountPercent: 0,
+                  badgeText: 'New Launch 🎂',
                   triggerType: 'combined',
-                  triggerDelay: 8,
-                  triggerScrollPercent: 30,
+                  triggerDelay: 4,
+                  triggerScrollPercent: 25,
                   frequencyCap: 'oncePerSession',
                   deviceTargeting: 'both',
                   isABTesting: false,
@@ -721,8 +892,19 @@ const OffersManager = () => {
 
               <div className="flex gap-2">
                 {/* Save Changes Button */}
-                <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl px-4 py-2">
-                  Save & Publish
+                <Button 
+                  type="submit" 
+                  disabled={isSaving || isUploadingDesktop || isUploadingMobile}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl px-4 py-2 flex items-center shadow-md"
+                >
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    'Save & Publish'
+                  )}
                 </Button>
                 
                 {/* Cancel Button */}
@@ -732,24 +914,142 @@ const OffersManager = () => {
               </div>
             </div>
 
-            {/* Festival Preset Selector Panel */}
-            <div className="bg-slate-950/40 border border-slate-800/80 rounded-2xl p-4">
-              <span className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">
-                ⭐ Pre-fill with Festival Templates
-              </span>
-              <div className="flex flex-wrap gap-2">
-                {Object.keys(festivalTemplates).map(key => (
+            {/* Presets & Launch Templates Selector Panel */}
+            <div className="bg-slate-950/40 border border-slate-800/80 rounded-2xl p-4 space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                <span className="block text-xs font-bold text-amber-300 uppercase tracking-widest flex items-center gap-1.5">
+                  <Sparkles className="h-3.5 w-3.5 text-amber-400" />
+                  Quick Presets & Templates
+                </span>
+                <span className="text-[11px] text-slate-400">Click any preset to prefill form</span>
+              </div>
+
+              {/* New Launch presets highlight */}
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5 flex items-center gap-1">
+                  <Cake className="h-3 w-3 text-amber-400" />
+                  New Product Launches (No Special Discount)
+                </span>
+                <div className="flex flex-wrap gap-2">
                   <Button
-                    key={key}
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => handleApplyTemplate(key as any)}
-                    className="border-slate-800 text-xs font-semibold capitalize text-amber-200 hover:bg-slate-800 bg-slate-900/30"
+                    onClick={() => handleApplyTemplate('cakes_launch')}
+                    className="border-amber-500/40 text-xs font-bold capitalize text-amber-300 hover:bg-amber-500/10 bg-amber-950/30"
                   >
-                    {key} Template
+                    <Cake className="h-3.5 w-3.5 mr-1 text-amber-400" />
+                    New Cakes Launch 🎂
                   </Button>
-                ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleApplyTemplate('combos_launch')}
+                    className="border-amber-500/40 text-xs font-bold capitalize text-amber-300 hover:bg-amber-500/10 bg-amber-950/30"
+                  >
+                    <Gift className="h-3.5 w-3.5 mr-1 text-yellow-400" />
+                    New Combos Launch 🎁
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleApplyTemplate('cakes_combos_launch')}
+                    className="border-amber-500/60 text-xs font-bold capitalize text-yellow-200 hover:bg-amber-500/20 bg-amber-900/40 shadow-sm"
+                  >
+                    <Sparkles className="h-3.5 w-3.5 mr-1 text-yellow-300" />
+                    Cakes & Combos Launch ✨
+                  </Button>
+                </div>
+              </div>
+
+              {/* Seasonal Festivals */}
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
+                  🎉 Seasonal Festival Specials
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {(['rakhi', 'valentines', 'diwali', 'christmas', 'newyear', 'mothersday'] as const).map(key => (
+                    <Button
+                      key={key}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleApplyTemplate(key)}
+                      className="border-slate-800 text-xs font-semibold capitalize text-slate-300 hover:bg-slate-800 bg-slate-900/40 h-7"
+                    >
+                      {key} Template
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Popup Purpose Selector */}
+            <div className="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4">
+              <span className="block text-xs font-bold text-slate-300 uppercase tracking-widest mb-2.5">
+                🎯 Popup Purpose & Mode
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPopupPurpose('launch');
+                    setCurrentOffer(prev => ({
+                      ...prev,
+                      discountPercent: 0,
+                      code: '',
+                      showCountdown: false,
+                      badgeText: prev.badgeText || 'New Launch 🎂'
+                    }));
+                  }}
+                  className={`p-3.5 rounded-xl border text-left transition-all flex items-start gap-3 ${
+                    popupPurpose === 'launch'
+                      ? 'border-amber-400 bg-amber-500/10 text-white shadow-md'
+                      : 'border-slate-800 bg-slate-900/30 text-slate-400 hover:border-slate-700'
+                  }`}
+                >
+                  <Cake className={`h-5 w-5 shrink-0 mt-0.5 ${popupPurpose === 'launch' ? 'text-amber-400' : 'text-slate-500'}`} />
+                  <div>
+                    <div className="text-sm font-bold text-slate-200 flex items-center gap-1.5">
+                      New Product Launch / Showcase
+                      {popupPurpose === 'launch' && <Check className="h-3.5 w-3.5 text-amber-400" />}
+                    </div>
+                    <p className="text-[11px] text-slate-400 mt-0.5 leading-snug">
+                      Announce new cakes, combos, or collections without requiring special checkout discounts.
+                    </p>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPopupPurpose('discount');
+                    setCurrentOffer(prev => ({
+                      ...prev,
+                      discountPercent: prev.discountPercent && prev.discountPercent > 0 ? prev.discountPercent : 10,
+                      showCountdown: true,
+                      badgeText: prev.badgeText || 'Special Offer'
+                    }));
+                  }}
+                  className={`p-3.5 rounded-xl border text-left transition-all flex items-start gap-3 ${
+                    popupPurpose === 'discount'
+                      ? 'border-amber-400 bg-amber-500/10 text-white shadow-md'
+                      : 'border-slate-800 bg-slate-900/30 text-slate-400 hover:border-slate-700'
+                  }`}
+                >
+                  <Tag className={`h-5 w-5 shrink-0 mt-0.5 ${popupPurpose === 'discount' ? 'text-amber-400' : 'text-slate-500'}`} />
+                  <div>
+                    <div className="text-sm font-bold text-slate-200 flex items-center gap-1.5">
+                      Promotional Discount Offer
+                      {popupPurpose === 'discount' && <Check className="h-3.5 w-3.5 text-amber-400" />}
+                    </div>
+                    <p className="text-[11px] text-slate-400 mt-0.5 leading-snug">
+                      Provide percentage savings and promo codes that auto-sync with checkout.
+                    </p>
+                  </div>
+                </button>
               </div>
             </div>
 
@@ -778,16 +1078,16 @@ const OffersManager = () => {
 
             {/* Tab content 1: General */}
             {activeTab === 'general' && (
-              <div className="space-y-4 animate-in fade-in duration-200">
+              <div className="space-y-5 animate-in fade-in duration-200">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="title" className="text-xs text-slate-400">Campaign Title</Label>
+                    <Label htmlFor="title" className="text-xs text-slate-400">Campaign Title *</Label>
                     <Input
                       id="title"
                       value={currentOffer.title || ''}
                       onChange={(e) => setCurrentOffer({ ...currentOffer, title: e.target.value })}
                       required
-                      placeholder="e.g. Happy Raksha Bandhan"
+                      placeholder="e.g. Introducing Our New Artisanal Cakes 🎂"
                       className="bg-slate-950/60 border-slate-800/80 rounded-xl"
                     />
                   </div>
@@ -798,58 +1098,194 @@ const OffersManager = () => {
                       id="subtitle"
                       value={currentOffer.subtitle || ''}
                       onChange={(e) => setCurrentOffer({ ...currentOffer, subtitle: e.target.value })}
-                      placeholder="e.g. Celebrate the bond of love"
+                      placeholder="e.g. Freshly Baked • Decadent Flavors"
                       className="bg-slate-950/60 border-slate-800/80 rounded-xl"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="description" className="text-xs text-slate-400">Description Message</Label>
+                  <Label htmlFor="description" className="text-xs text-slate-400">Description Message *</Label>
                   <textarea
                     id="description"
                     value={currentOffer.description || ''}
                     onChange={(e) => setCurrentOffer({ ...currentOffer, description: e.target.value })}
                     required
                     rows={3}
-                    placeholder="Enter details about your premium coupon discount offer..."
+                    placeholder="Enter details about your newly launched cakes, combos, or celebration arrangements..."
                     className="w-full bg-slate-950/60 border border-slate-800/80 rounded-xl p-3 text-sm focus:outline-none focus:border-amber-400/50"
                   />
                 </div>
 
-                {/* Promo Code & Discount Auto-Sync Banner */}
-                <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-start gap-2.5 text-xs text-amber-300">
-                  <Sparkles className="h-4.5 w-4.5 shrink-0 mt-0.5 text-amber-400 animate-pulse" />
+                {/* Display Image Upload Box directly in General Tab */}
+                <div className="space-y-3 bg-slate-950/50 p-4 rounded-2xl border border-slate-800/80">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <Label className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+                        <ImageIcon className="h-4 w-4 text-amber-400" />
+                        Campaign Display Banner Image
+                      </Label>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        Upload banner visual. Instant preview and Cloudinary sync.
+                      </p>
+                    </div>
+                    {currentOffer.imageUrl && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setCurrentOffer({ ...currentOffer, imageUrl: '', image: '' })}
+                        className="text-xs text-red-400 hover:text-red-300 hover:bg-red-950/30 h-7 px-2.5 rounded-lg"
+                      >
+                        <Trash2 className="h-3.5 w-3.5 mr-1" />
+                        Remove
+                      </Button>
+                    )}
+                  </div>
+
+                  <ImageUpload
+                    currentImage={currentOffer.imageUrl}
+                    onImageUpload={(file) => handleUploadImage(file, 'desktop')}
+                    isUploading={isUploadingDesktop}
+                    placeholder="Click or drag image to upload"
+                  />
+
+                  <div className="space-y-1 pt-1">
+                    <Label className="text-[10px] text-slate-400">Or paste image URL directly:</Label>
+                    <Input
+                      value={currentOffer.imageUrl || ''}
+                      onChange={(e) => setCurrentOffer({ ...currentOffer, imageUrl: e.target.value, image: e.target.value })}
+                      placeholder="https://images.unsplash.com/... or https://res.cloudinary.com/..."
+                      className="bg-slate-950/80 border-slate-800 text-xs text-slate-300 rounded-xl font-mono"
+                    />
+                  </div>
+                </div>
+
+                {/* CTA Destination & Category Shortcuts */}
+                <div className="space-y-3 bg-slate-950/50 p-4 rounded-2xl border border-slate-800/80">
+                  <span className="block text-xs font-bold text-slate-300 uppercase tracking-widest">
+                    🔗 CTA Button & Quick Category Destination
+                  </span>
+                  
+                  {/* Quick Category Buttons */}
                   <div>
-                    <span className="font-bold">Checkout Promo Code Auto-Sync:</span> Entering a promo code here (e.g. <span className="font-mono text-yellow-200 uppercase font-black px-1 py-0.5 bg-black/40 rounded">BFF20</span>) automatically activates it for customer checkout with this campaign's discount %, start date, and end date!
+                    <span className="text-[10px] text-slate-400 block mb-1.5">Quick fill link destination:</span>
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setCurrentOffer(prev => ({ ...prev, buttonText: 'Explore New Cakes', buttonLink: '/category/cakes' }))}
+                        className="border-slate-800 bg-slate-900/60 hover:bg-slate-800 text-xs text-amber-300"
+                      >
+                        <Cake className="h-3.5 w-3.5 mr-1 text-amber-400" />
+                        Cakes (/category/cakes)
+                      </Button>
+
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setCurrentOffer(prev => ({ ...prev, buttonText: 'Explore New Combos', buttonLink: '/category/combos' }))}
+                        className="border-slate-800 bg-slate-900/60 hover:bg-slate-800 text-xs text-amber-300"
+                      >
+                        <Gift className="h-3.5 w-3.5 mr-1 text-yellow-400" />
+                        Combos (/category/combos)
+                      </Button>
+
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setCurrentOffer(prev => ({ ...prev, buttonText: 'Shop New Arrivals', buttonLink: '/shop' }))}
+                        className="border-slate-800 bg-slate-900/60 hover:bg-slate-800 text-xs text-slate-300"
+                      >
+                        <ShoppingBag className="h-3.5 w-3.5 mr-1 text-slate-400" />
+                        All Shop (/shop)
+                      </Button>
+
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setCurrentOffer(prev => ({ ...prev, buttonText: 'Send Flowers Today', buttonLink: '/category/flowers' }))}
+                        className="border-slate-800 bg-slate-900/60 hover:bg-slate-800 text-xs text-slate-300"
+                      >
+                        <Flower2 className="h-3.5 w-3.5 mr-1 text-rose-400" />
+                        Flowers (/category/flowers)
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="buttonText_general" className="text-xs text-slate-400">Button Text</Label>
+                      <Input
+                        id="buttonText_general"
+                        value={currentOffer.buttonText || ''}
+                        onChange={(e) => setCurrentOffer({ ...currentOffer, buttonText: e.target.value })}
+                        placeholder="e.g. Explore New Cakes"
+                        className="bg-slate-950/60 border-slate-800/80 rounded-xl"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label htmlFor="buttonLink_general" className="text-xs text-slate-400">Button Link</Label>
+                      <Input
+                        id="buttonLink_general"
+                        value={currentOffer.buttonLink || ''}
+                        onChange={(e) => setCurrentOffer({ ...currentOffer, buttonLink: e.target.value })}
+                        placeholder="e.g. /category/cakes"
+                        className="bg-slate-950/60 border-slate-800/80 rounded-xl font-mono text-xs"
+                      />
+                    </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="code_general" className="text-xs text-slate-400">Promo Coupon Code</Label>
-                    <Input
-                      id="code_general"
-                      value={currentOffer.code || ''}
-                      onChange={(e) => setCurrentOffer({ ...currentOffer, code: e.target.value.toUpperCase() })}
-                      placeholder="e.g. BFF20 or SUMMER50"
-                      className="bg-slate-950/60 border-slate-800/80 rounded-xl font-mono uppercase text-amber-300 font-bold tracking-wider"
-                    />
+                {/* Promo Code & Discount Block */}
+                {popupPurpose === 'launch' ? (
+                  <div className="p-3.5 bg-emerald-950/30 border border-emerald-500/30 rounded-xl flex items-start gap-2.5 text-xs text-emerald-300">
+                    <Check className="h-4.5 w-4.5 shrink-0 mt-0.5 text-emerald-400" />
+                    <div>
+                      <span className="font-bold">No Discount Required:</span> New launch announcement mode is active. Customers clicking the popup will be taken straight to your new collection without requiring checkout coupons.
+                    </div>
                   </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-start gap-2.5 text-xs text-amber-300">
+                      <Sparkles className="h-4.5 w-4.5 shrink-0 mt-0.5 text-amber-400 animate-pulse" />
+                      <div>
+                        <span className="font-bold">Checkout Promo Code Auto-Sync:</span> Entering a promo code here (e.g. <span className="font-mono text-yellow-200 uppercase font-black px-1 py-0.5 bg-black/40 rounded">BFF20</span>) automatically activates it for customer checkout!
+                      </div>
+                    </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="discountPercent_general" className="text-xs text-slate-400">Discount Percentage (%)</Label>
-                    <Input
-                      id="discountPercent_general"
-                      type="number"
-                      min={0}
-                      max={100}
-                      value={currentOffer.discountPercent ?? 10}
-                      onChange={(e) => setCurrentOffer({ ...currentOffer, discountPercent: parseInt(e.target.value, 10) || 0 })}
-                      className="bg-slate-950/60 border-slate-800/80 rounded-xl text-yellow-300 font-bold"
-                    />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="code_general" className="text-xs text-slate-400">Promo Coupon Code</Label>
+                        <Input
+                          id="code_general"
+                          value={currentOffer.code || ''}
+                          onChange={(e) => setCurrentOffer({ ...currentOffer, code: e.target.value.toUpperCase() })}
+                          placeholder="e.g. CAKES10 or COMBOS15"
+                          className="bg-slate-950/60 border-slate-800/80 rounded-xl font-mono uppercase text-amber-300 font-bold tracking-wider"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="discountPercent_general" className="text-xs text-slate-400">Discount Percentage (%)</Label>
+                        <Input
+                          id="discountPercent_general"
+                          type="number"
+                          min={0}
+                          max={100}
+                          value={currentOffer.discountPercent ?? 0}
+                          onChange={(e) => setCurrentOffer({ ...currentOffer, discountPercent: parseInt(e.target.value, 10) || 0 })}
+                          className="bg-slate-950/60 border-slate-800/80 rounded-xl text-yellow-300 font-bold"
+                        />
+                      </div>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -858,7 +1294,7 @@ const OffersManager = () => {
                       id="badgeText"
                       value={currentOffer.badgeText || ''}
                       onChange={(e) => setCurrentOffer({ ...currentOffer, badgeText: e.target.value })}
-                      placeholder="e.g. Limited Time Offer"
+                      placeholder="e.g. New Launch 🎂 or Fresh Arrivals ✨"
                       className="bg-slate-950/60 border-slate-800/80 rounded-xl"
                     />
                   </div>
@@ -873,6 +1309,7 @@ const OffersManager = () => {
                         <SelectValue placeholder="Select theme icon preset" />
                       </SelectTrigger>
                       <SelectContent className="bg-slate-900 border-slate-800 text-slate-200">
+                        <SelectItem value="general">General Preset (Sparkles)</SelectItem>
                         <SelectItem value="rakhi">Rakhi (Petals/Gold)</SelectItem>
                         <SelectItem value="valentines">Valentine's (Hearts/Rose)</SelectItem>
                         <SelectItem value="diwali">Diwali (Sparks/Flame)</SelectItem>
@@ -882,7 +1319,6 @@ const OffersManager = () => {
                         <SelectItem value="fathersday">Father's Day (Classic Royal)</SelectItem>
                         <SelectItem value="sale">Sale Preset (Tag/Indigo)</SelectItem>
                         <SelectItem value="holiday">Holiday Preset (Calendar/Emerald)</SelectItem>
-                        <SelectItem value="general">General Preset (Sparkles)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -932,59 +1368,63 @@ const OffersManager = () => {
 
             {/* Tab content 2: Design */}
             {activeTab === 'design' && (
-              <div className="space-y-4 animate-in fade-in duration-200">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="discountPercent" className="text-xs text-slate-400">Discount Percentage</Label>
-                    <Input
-                      id="discountPercent"
-                      type="number"
-                      min={0}
-                      max={100}
-                      value={currentOffer.discountPercent ?? 10}
-                      onChange={(e) => setCurrentOffer({ ...currentOffer, discountPercent: parseInt(e.target.value, 10) })}
-                      className="bg-slate-950/60 border-slate-800/80 rounded-xl"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="code" className="text-xs text-slate-400">Promo Coupon Code</Label>
-                    <Input
-                      id="code"
-                      value={currentOffer.code || ''}
-                      onChange={(e) => setCurrentOffer({ ...currentOffer, code: e.target.value.toUpperCase() })}
-                      placeholder="e.g. OFFER10"
-                      className="bg-slate-950/60 border-slate-800/80 rounded-xl font-mono uppercase"
-                    />
-                  </div>
-
-                  <div className="flex items-center space-x-2 pt-6">
-                    <Checkbox
-                      id="showCountdown"
-                      checked={currentOffer.showCountdown !== false}
-                      onCheckedChange={(checked) => setCurrentOffer({ ...currentOffer, showCountdown: checked as boolean })}
-                      className="border-slate-700"
-                    />
-                    <Label htmlFor="showCountdown" className="text-xs text-slate-300">Show Expiry Countdown</Label>
-                  </div>
-                </div>
-
+              <div className="space-y-5 animate-in fade-in duration-200">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-xs text-slate-400">Desktop Display Image</Label>
+                    <div className="flex justify-between items-center">
+                      <Label className="text-xs text-slate-300 font-semibold">Desktop Display Image</Label>
+                      {currentOffer.imageUrl && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setCurrentOffer({ ...currentOffer, imageUrl: '', image: '' })}
+                          className="text-xs text-red-400 h-6 px-1.5"
+                        >
+                          Remove
+                        </Button>
+                      )}
+                    </div>
                     <ImageUpload
                       currentImage={currentOffer.imageUrl}
-                      onImageUpload={async (file) => setDesktopFile(file)}
+                      onImageUpload={(file) => handleUploadImage(file, 'desktop')}
+                      isUploading={isUploadingDesktop}
                       placeholder="Upload Desktop Image"
+                    />
+                    <Input
+                      value={currentOffer.imageUrl || ''}
+                      onChange={(e) => setCurrentOffer({ ...currentOffer, imageUrl: e.target.value, image: e.target.value })}
+                      placeholder="Or paste direct image URL"
+                      className="bg-slate-950/60 border-slate-800 text-xs text-slate-300 rounded-xl font-mono"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-xs text-slate-400">Mobile-Specific Image (Optional)</Label>
+                    <div className="flex justify-between items-center">
+                      <Label className="text-xs text-slate-300 font-semibold">Mobile-Specific Image (Optional)</Label>
+                      {currentOffer.mobileImageUrl && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setCurrentOffer({ ...currentOffer, mobileImageUrl: '' })}
+                          className="text-xs text-red-400 h-6 px-1.5"
+                        >
+                          Remove
+                        </Button>
+                      )}
+                    </div>
                     <ImageUpload
                       currentImage={currentOffer.mobileImageUrl}
-                      onImageUpload={async (file) => setMobileFile(file)}
+                      onImageUpload={(file) => handleUploadImage(file, 'mobile')}
+                      isUploading={isUploadingMobile}
                       placeholder="Upload Mobile Image"
+                    />
+                    <Input
+                      value={currentOffer.mobileImageUrl || ''}
+                      onChange={(e) => setCurrentOffer({ ...currentOffer, mobileImageUrl: e.target.value })}
+                      placeholder="Or paste direct mobile image URL"
+                      className="bg-slate-950/60 border-slate-800 text-xs text-slate-300 rounded-xl font-mono"
                     />
                   </div>
                 </div>
@@ -1045,6 +1485,16 @@ const OffersManager = () => {
                     </div>
                   </div>
                 </div>
+
+                <div className="flex items-center space-x-2 pt-2">
+                  <Checkbox
+                    id="showCountdown"
+                    checked={currentOffer.showCountdown === true}
+                    onCheckedChange={(checked) => setCurrentOffer({ ...currentOffer, showCountdown: checked as boolean })}
+                    className="border-slate-700"
+                  />
+                  <Label htmlFor="showCountdown" className="text-xs text-slate-300">Show Expiry Countdown Timer</Label>
+                </div>
               </div>
             )}
 
@@ -1059,7 +1509,7 @@ const OffersManager = () => {
                       value={currentOffer.buttonText || ''}
                       onChange={(e) => setCurrentOffer({ ...currentOffer, buttonText: e.target.value })}
                       required
-                      placeholder="e.g. Explore Rakhi Collection"
+                      placeholder="e.g. Explore New Cakes"
                       className="bg-slate-950/60 border-slate-800/80 rounded-xl"
                     />
                   </div>
@@ -1071,8 +1521,8 @@ const OffersManager = () => {
                       value={currentOffer.buttonLink || ''}
                       onChange={(e) => setCurrentOffer({ ...currentOffer, buttonLink: e.target.value })}
                       required
-                      placeholder="e.g. /category/rakhi"
-                      className="bg-slate-950/60 border-slate-800/80 rounded-xl"
+                      placeholder="e.g. /category/cakes"
+                      className="bg-slate-950/60 border-slate-800/80 rounded-xl font-mono text-xs"
                     />
                   </div>
                 </div>
@@ -1332,20 +1782,60 @@ const OffersManager = () => {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label className="text-xs text-slate-400">Variant Desktop Image</Label>
+                          <div className="flex justify-between items-center">
+                            <Label className="text-xs text-slate-400">Variant Desktop Image</Label>
+                            {variantForm.imageUrl && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setVariantForm(prev => ({ ...prev, imageUrl: '' }))}
+                                className="text-xs text-red-400 h-6 px-1.5"
+                              >
+                                Remove
+                              </Button>
+                            )}
+                          </div>
                           <ImageUpload
                             currentImage={variantForm.imageUrl}
-                            onImageUpload={async (file) => setVariantDesktopFile(file)}
+                            onImageUpload={(file) => handleUploadImage(file, 'variantDesktop')}
+                            isUploading={isUploadingVariantDesktop}
                             placeholder="Upload desktop variant image"
+                          />
+                          <Input
+                            value={variantForm.imageUrl || ''}
+                            onChange={(e) => setVariantForm(prev => ({ ...prev, imageUrl: e.target.value }))}
+                            placeholder="Or paste direct image URL"
+                            className="bg-slate-900 border-slate-800 text-xs text-slate-300 rounded-xl font-mono"
                           />
                         </div>
 
                         <div className="space-y-2">
-                          <Label className="text-xs text-slate-400">Variant Mobile Image</Label>
+                          <div className="flex justify-between items-center">
+                            <Label className="text-xs text-slate-400">Variant Mobile Image</Label>
+                            {variantForm.mobileImageUrl && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setVariantForm(prev => ({ ...prev, mobileImageUrl: '' }))}
+                                className="text-xs text-red-400 h-6 px-1.5"
+                              >
+                                Remove
+                              </Button>
+                            )}
+                          </div>
                           <ImageUpload
                             currentImage={variantForm.mobileImageUrl}
-                            onImageUpload={async (file) => setVariantMobileFile(file)}
+                            onImageUpload={(file) => handleUploadImage(file, 'variantMobile')}
+                            isUploading={isUploadingVariantMobile}
                             placeholder="Upload mobile variant image"
+                          />
+                          <Input
+                            value={variantForm.mobileImageUrl || ''}
+                            onChange={(e) => setVariantForm(prev => ({ ...prev, mobileImageUrl: e.target.value }))}
+                            placeholder="Or paste direct mobile image URL"
+                            className="bg-slate-900 border-slate-800 text-xs text-slate-300 rounded-xl font-mono"
                           />
                         </div>
                       </div>
@@ -1537,7 +2027,9 @@ const OffersManager = () => {
                     <div>
                       <div className="flex gap-1.5 items-center mb-1.5">
                         <span className="px-2 py-0.5 text-[8px] font-black uppercase tracking-wider bg-yellow-300 text-slate-950 rounded-full shadow-sm">
-                          {currentOffer.discountPercent ? `${currentOffer.discountPercent}% SPECIAL` : 'SPECIAL OFFER'}
+                          {currentOffer.discountPercent && currentOffer.discountPercent > 0 
+                            ? `${currentOffer.discountPercent}% SPECIAL` 
+                            : (currentOffer.badgeText || 'NEW LAUNCH 🎂')}
                         </span>
                       </div>
 
@@ -1618,6 +2110,14 @@ const OffersManager = () => {
                         />
                       </div>
                     )}
+
+                    <div className="flex gap-1 items-center mb-1">
+                      <span className="px-2 py-0.5 text-[8px] font-black uppercase tracking-wider bg-yellow-300 text-slate-950 rounded-full shadow-sm">
+                        {currentOffer.discountPercent && currentOffer.discountPercent > 0 
+                          ? `${currentOffer.discountPercent}% SPECIAL` 
+                          : (currentOffer.badgeText || 'NEW LAUNCH 🎂')}
+                      </span>
+                    </div>
 
                     <h3 className="text-sm font-bold tracking-tight leading-tight font-serif text-white mb-1 truncate">
                       {currentOffer.title || 'Special Floral Promotion'}
@@ -1749,6 +2249,7 @@ const OffersManager = () => {
                         size="sm"
                         onClick={() => {
                           setCurrentOffer(offer);
+                          setPopupPurpose(offer.discountPercent && offer.discountPercent > 0 ? 'discount' : 'launch');
                           setIsEditing(true);
                           setShowForm(true);
                           setDesktopFile(null);
