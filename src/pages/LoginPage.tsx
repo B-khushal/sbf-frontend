@@ -13,6 +13,7 @@ import GoogleSignInButton from '@/components/ui/GoogleSignInButton';
 import { fixEmailTypo } from '@/utils/emailUtils';
 import useCart from '@/hooks/use-cart';
 import { getAndClearPendingCartItem, peekPendingCartItem } from '@/utils/cartAuthHelper';
+import usePendingReviewStore from '@/hooks/use-pending-review';
 
 // Animation variants
 const containerVariants = {
@@ -147,6 +148,8 @@ const LoginPage = () => {
       
       if (result.success) {
         const addedPending = await fulfillPendingCartItem();
+        // Check if user has unreviewed delivered orders and slide-in review drawer if so
+        usePendingReviewStore.getState().checkPendingReviews(true);
         toast({
           title: "Welcome back! 🌸",
           description: "You have successfully logged in.",

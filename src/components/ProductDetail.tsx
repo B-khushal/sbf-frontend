@@ -27,6 +27,7 @@ import ProtectedImage from './ui/ProtectedImage';
 import { useValentine } from '@/contexts/ValentineContext';
 import { promptLoginForAddToCart } from '@/utils/cartAuthHelper';
 import { getProductEffectivePrice } from '@/utils/pricing';
+import usePendingReviewStore from '@/hooks/use-pending-review';
 
 const MotionProtectedImage = motion(ProtectedImage);
 
@@ -891,7 +892,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
 
       await onAddToCart(cartItem);
 
-      if (useCart.getState().showMixedCartModal) {
+      if (useCart.getState().showMixedCartModal || usePendingReviewStore.getState().hasPendingReview) {
         return;
       }
 

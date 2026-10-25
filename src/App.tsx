@@ -22,6 +22,7 @@ import CartLoader from '@/components/CartLoader';
 import PwaInstallManager from '@/components/PwaInstallManager';
 import ScrollToTop from '@/components/ScrollToTop';
 import ActivityRouteTracker from '@/components/ActivityRouteTracker';
+import PendingReviewGate from '@/components/reviews/PendingReviewGate';
 
 // Core pages that should load immediately
 import HomePage from "./pages/HomePage";
@@ -924,6 +925,7 @@ const App = () => {
                       </Suspense>
                       <MobileBottomNav />
                       <WhatsAppWidget />
+                      <PendingReviewGate />
                     </BrowserRouter>
                   </TooltipProvider>
                 </NotificationProvider>

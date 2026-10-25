@@ -8,6 +8,7 @@ import {
 } from '@/utils/cartManager';
 import * as cartService from '@/services/cartService';
 import { marketingTracker } from '@/services/marketingTracker';
+import usePendingReviewStore from './use-pending-review';
 
 const transformCartItem = (cartItem: any) => ({
   _id: cartItem._id,
@@ -88,6 +89,16 @@ export const useCart = create<CartState>((set, get) => ({
     
     if ((isIncomingValentine && hasRegular) || (!isIncomingValentine && hasValentine)) {
       set({ showMixedCartModal: true, conflictingProduct: item });
+      return;
+    }
+
+    // Review Gate: If authenticated and has unreviewed delivered bouquet, lock purchase
+    const pendingReviewState = usePendingReviewStore.getState();
+    const isAuth = localStorage.getItem('isAuthenticated') === 'true' || Boolean(localStorage.getItem('token'));
+    if (isAuth && pendingReviewState.hasPendingReview) {
+      pendingReviewState.openDrawer(
+        'Please review your previously delivered bouquet first before purchasing another one!'
+      );
       return;
     }
 

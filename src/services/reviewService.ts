@@ -395,6 +395,31 @@ export const getReviewPageUrl = (
   orderId?: string
 ) => buildProductReviewUrl(productId, productTitle, { orderId });
 
+export interface PendingDeliveredReviewItem {
+  orderId: string;
+  orderNumber: string;
+  deliveredAt: string;
+  deliveryDate?: string;
+  productId: string;
+  productTitle: string;
+  productImage: string;
+  productPrice: number;
+  quantity: number;
+  recipientName?: string | null;
+}
+
+export interface PendingDeliveredReviewsResponse {
+  hasPendingReview: boolean;
+  pendingCount: number;
+  pendingItems: PendingDeliveredReviewItem[];
+  requiresReviewToPurchase: boolean;
+}
+
+export const getPendingDeliveredReviews = async (): Promise<PendingDeliveredReviewsResponse> => {
+  const response = await api.get('/reviews/pending-delivered');
+  return response.data;
+};
+
 export default {
   addReviewReply,
   buildProductReviewUrl,
@@ -402,6 +427,7 @@ export default {
   deleteReview,
   getAdminReviewAnalytics,
   getAdminReviews,
+  getPendingDeliveredReviews,
   getProductReviews,
   getReviewEligibility,
   getReviewPageUrl,

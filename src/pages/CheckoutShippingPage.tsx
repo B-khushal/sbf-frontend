@@ -34,6 +34,7 @@ import FreeDeliveryCelebrationModal from '@/components/ui/FreeDeliveryCelebratio
 import { marketingTracker } from '@/services/marketingTracker';
 import { fixEmailTypo } from '@/utils/emailUtils';
 import { isSameDay } from 'date-fns';
+import usePendingReviewStore from '@/hooks/use-pending-review';
 
 // Animation variants
 const containerVariants = {
@@ -639,6 +640,18 @@ const CheckoutShippingPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (usePendingReviewStore.getState().hasPendingReview) {
+      usePendingReviewStore.getState().openDrawer(
+        'Review Required: Please review your delivered bouquet first before proceeding to payment!'
+      );
+      toast({
+        title: "Review Required Before Purchase",
+        description: "Please share your review on your previous delivered bouquet to proceed.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     if (hasValentine && isDateInvalidForValentine) {
       toast({

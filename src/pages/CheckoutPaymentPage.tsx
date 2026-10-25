@@ -19,6 +19,7 @@ import PromoCodeInput from '@/components/PromoCodeInput';
 import type { PromoCodeValidationResult } from '@/services/promoCodeService';
 import { RAZORPAY_CONFIG } from '@/config/razorpay';
 import { cn } from '@/lib/utils';
+import usePendingReviewStore from '@/hooks/use-pending-review';
 
 // Animation variants
 const containerVariants = {
@@ -291,6 +292,18 @@ const CheckoutPaymentPage = () => {
           document.activeElement.blur();
         }
       };
+
+      if (usePendingReviewStore.getState().hasPendingReview) {
+        usePendingReviewStore.getState().openDrawer(
+          'Review Required: Please review your delivered bouquet first before completing payment!'
+        );
+        toast({
+          title: "Review Required Before Purchase",
+          description: "Please share your review on your previous delivered bouquet to proceed.",
+          variant: "destructive",
+        });
+        return;
+      }
 
       if (!isRazorpayLoaded) {
         toast({

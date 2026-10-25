@@ -33,6 +33,7 @@ import type { PromoCodeValidationResult } from '@/services/promoCodeService';
 import { cn } from '@/lib/utils';
 import { calculateDeliveryFee } from '@/services/orderService';
 import ProtectedImage from '@/components/ui/ProtectedImage';
+import usePendingReviewStore from '@/hooks/use-pending-review';
 
 const CartPage: React.FC = () => {
   const navigate = useNavigate();
@@ -168,6 +169,19 @@ const CartPage: React.FC = () => {
   const finalTotal = (subtotal + deliveryFee) - (appliedPromoCode ? appliedPromoCode.discount : 0);
   
   const handleCheckout = () => {
+    const isAuth = localStorage.getItem('isAuthenticated') === 'true' || Boolean(localStorage.getItem('token'));
+    if (isAuth && usePendingReviewStore.getState().hasPendingReview) {
+      usePendingReviewStore.getState().openDrawer(
+        'Review Required: Please review your delivered bouquet first before proceeding to checkout!'
+      );
+      toast({
+        title: "Review Required Before Purchase",
+        description: "Please share your experience with your delivered bouquet to unlock new orders.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (appliedPromoCode) {
       localStorage.setItem('appliedPromoCode', JSON.stringify(appliedPromoCode));
     } else {
