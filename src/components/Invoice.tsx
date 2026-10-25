@@ -13,12 +13,12 @@ const Invoice: React.FC<InvoiceProps> = ({ order, isAdmin = false }) => {
   const shipping = order.shippingDetails || order.shipping || {};
   
   // Resolve customer details
-  const customerName = shipping.fullName || shipping.firstName 
+  const customerName = order.customerName || shipping.fullName || (shipping.firstName 
     ? `${shipping.firstName || ''} ${shipping.lastName || ''}`.trim()
-    : 'Valued Customer';
+    : (order.user?.name || 'Valued Customer'));
   
-  const customerEmail = shipping.email || order.user?.email || 'N/A';
-  const customerPhone = shipping.phone || order.user?.phone || 'N/A';
+  const customerEmail = order.customerEmail || shipping.email || order.user?.email || 'N/A';
+  const customerPhone = order.customerPhone || shipping.phone || order.user?.phone || 'N/A';
 
   // Resolve gift vs standard delivery details
   const isGift = !!(order.giftDetails && order.giftDetails.recipientName && order.giftDetails.recipientName.trim() !== '');
@@ -85,12 +85,27 @@ const Invoice: React.FC<InvoiceProps> = ({ order, isAdmin = false }) => {
     if (!dateStr) return 'N/A';
     try {
       const date = new Date(dateStr);
-      if (isNaN(date.getTime())) return 'Invalid date';
-      return format(date, 'dd/MM/yyyy');
+      if (isNaN(date.getTime())) return 'N/A';
+      return format(date, 'dd MMM yyyy');
     } catch (error) {
       console.error('Date formatting error:', error);
       return 'N/A';
     }
+  };
+
+  // Safe time slot formatting helper
+  const formatTimeSlot = (slot?: string) => {
+    if (!slot) return 'Standard Delivery (09:00 AM - 09:00 PM)';
+    const lower = String(slot).toLowerCase().trim();
+    if (lower === 'same_day' || lower === 'sameday') return 'Same-Day Delivery (09:00 AM - 09:00 PM)';
+    if (lower === 'morning') return 'Morning Delivery (09:00 AM - 12:00 PM)';
+    if (lower === 'afternoon') return 'Afternoon Delivery (12:00 PM - 03:00 PM)';
+    if (lower === 'late_afternoon') return 'Late Afternoon Delivery (03:00 PM - 06:00 PM)';
+    if (lower === 'evening') return 'Evening Delivery (06:00 PM - 09:00 PM)';
+    if (lower.includes('midnight')) return 'Midnight Delivery (11:30 PM - 12:30 AM)';
+    if (lower === 'standard') return 'Standard Delivery (09:00 AM - 09:00 PM)';
+    if (lower === 'fixed_time' || lower === 'fixed') return 'Fixed Time Delivery';
+    return slot.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
   };
 
   // Pricing calculations
@@ -112,8 +127,8 @@ const Invoice: React.FC<InvoiceProps> = ({ order, isAdmin = false }) => {
     <div className="invoice-container">
       <style dangerouslySetInnerHTML={{ __html: `
         .invoice-container {
-          width: 190mm;
-          min-height: 277mm;
+          width: 100%;
+          max-width: 190mm;
           margin: 0 auto;
           padding: 0;
           box-sizing: border-box;
@@ -121,9 +136,7 @@ const Invoice: React.FC<InvoiceProps> = ({ order, isAdmin = false }) => {
           overflow: hidden;
           font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
           color: #334155;
-          display: flex;
-          flex-direction: column;
-          justify-content: space-between;
+          page-break-inside: avoid;
         }
 
         .invoice-header {
@@ -364,7 +377,8 @@ const Invoice: React.FC<InvoiceProps> = ({ order, isAdmin = false }) => {
           text-align: center;
           border-top: 1px solid #e2e8f0;
           padding-top: 12px;
-          margin-top: auto; /* Push to bottom naturally */
+          margin-top: 14px;
+          page-break-inside: avoid;
         }
 
         .footer-thankyou {
@@ -544,8 +558,8 @@ const Invoice: React.FC<InvoiceProps> = ({ order, isAdmin = false }) => {
             <div className="logistics-card" style={{ flex: 1, borderLeft: '2px solid #8b5cf6' }}>
               <div className="card-title" style={{ fontSize: '10px', color: '#8b5cf6', borderBottom: '1px solid #f5f3ff', marginBottom: '4px', paddingBottom: '2px' }}>Delivery Logistics</div>
               <div style={{ fontSize: '10px', lineHeight: 1.4 }}>
-                <strong>Date:</strong> {formatDate(shipping.deliveryDate)}<br />
-                <strong>Slot:</strong> {shipping.timeSlot || 'Standard Delivery'}
+                <strong>Date:</strong> {formatDate(shipping.deliveryDate || order.deliveryDate || order.createdAt)}<br />
+                <strong>Slot:</strong> {formatTimeSlot(shipping.timeSlot || order.deliverySlot)}
               </div>
             </div>
           </div>
