@@ -1195,8 +1195,8 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
         <div className="absolute bottom-[10%] right-[-10%] w-[800px] h-[800px] rounded-full bg-[radial-gradient(circle_at_center,rgba(236,72,153,0.025)_0%,transparent_70%)] blur-[100px]" />
       </div>
 
-      <div className="max-w-[1440px] mx-auto pb-32 md:pb-12">
-        <div className="grid grid-cols-1 lg:grid-cols-[560px_minmax(0,1fr)] lg:gap-[72px] gap-8 items-start relative">
+      <div className="w-full max-w-[1440px] 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 pb-32 md:pb-12">
+        <div className="grid grid-cols-1 lg:grid-cols-[560px_minmax(0,1fr)] 2xl:grid-cols-[640px_minmax(0,1fr)] 3xl:grid-cols-[720px_minmax(0,1fr)] lg:gap-[72px] 2xl:gap-20 gap-8 items-start relative">
 
           {/* LEFT SIDE: Immersive Sticky Product Gallery */}
           <div className="lg:sticky lg:top-[120px] lg:self-start w-full relative">
@@ -2400,7 +2400,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
       </div>
 
       {/* Recommended Products Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mt-16 pb-16">
+      <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 md:px-8 2xl:px-12 mt-16 pb-16">
         <div className="pt-8 border-t border-slate-200/40 dark:border-slate-800/40 overflow-visible relative">
           <RecommendedProducts productId={product._id} category={product.category} />
         </div>

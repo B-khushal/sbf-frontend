@@ -796,7 +796,7 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
         )}
       </Helmet>
       <main className="pt-20">
-        <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="w-full max-w-8xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 py-8">
           {/* Search Results Header */}
           {searchQuery && (
             <div className="mb-12">
@@ -1427,7 +1427,7 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mt-4">
+          <div className="grid grid-cols-1 lg:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-8 mt-4">
             
             {/* Filters Sidebar - Desktop Only (>= lg) */}
             <div className="hidden lg:block lg:col-span-1">
@@ -1610,7 +1610,7 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
             </div>
 
             {/* Products Grid & Active Filter Pills Bar */}
-            <div className="lg:col-span-3">
+            <div className="lg:col-span-3 2xl:col-span-4 3xl:col-span-5">
               {/* Active Filter Chips & View Mode Controls */}
               <div className="mb-6 flex flex-wrap items-center justify-between gap-3 bg-white/70 backdrop-blur-sm p-3.5 rounded-2xl border border-sky-100/80 shadow-xs">
                 <div className="flex flex-wrap items-center gap-2">
@@ -1703,7 +1703,7 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
               </div>
 
               {isLoading ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 gap-8">
                   {[...Array(6)].map((_, i) => (
                     <div key={i} className="bg-white p-4 rounded-xl shadow-sm animate-pulse">
                       <div className="w-full h-48 bg-gray-200 rounded-lg"></div>

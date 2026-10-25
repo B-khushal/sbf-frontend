@@ -159,7 +159,7 @@ export const OccasionProductsPage: React.FC = () => {
       </Helmet>
 
       {/* Breadcrumb Nav */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+      <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 pt-6">
         <nav className="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
           <span className="hover:text-slate-800 cursor-pointer" onClick={() => navigate('/')}>Home</span>
           <ChevronRight className="h-3 w-3" />
@@ -170,7 +170,7 @@ export const OccasionProductsPage: React.FC = () => {
       </div>
 
       {/* Occasion Page Banner Hero */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-5">
+      <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 mt-5">
         <div 
           className="relative rounded-2xl overflow-hidden min-h-[220px] md:min-h-[300px] flex items-center justify-center p-6 bg-gradient-to-r from-bloom-pink-500/20 via-rose-500/5 to-amber-500/10 border border-slate-100 shadow-sm"
           style={{
@@ -209,7 +209,7 @@ export const OccasionProductsPage: React.FC = () => {
       </div>
 
       {/* Main content grid */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 py-10">
         <div className="flex flex-col lg:flex-row gap-8">
           
           {/* Desktop Filter Sidebar */}
@@ -279,7 +279,7 @@ export const OccasionProductsPage: React.FC = () => {
                 </Button>
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-4 md:gap-5 2xl:gap-6">
                 {filteredAndSortedProducts.map(product => (
                   <ProductCard key={product._id} product={product as any} />
                 ))}

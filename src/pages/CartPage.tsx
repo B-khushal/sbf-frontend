@@ -379,7 +379,7 @@ const CartPage: React.FC = () => {
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-secondary/5 to-accent/5 rounded-full blur-2xl animate-pulse" />
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-8 lg:py-10">
+      <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 py-5 sm:py-8 lg:py-10">
         
         {/* Navigation Breadcrumb & Stepper Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-stone-200/70 dark:border-slate-800">

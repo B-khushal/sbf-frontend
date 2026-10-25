@@ -667,7 +667,7 @@ const OffersManager = () => {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-8 min-h-screen text-slate-100 bg-[#0b0f19]">
+    <div className="p-6 w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto space-y-8 min-h-screen text-slate-100 bg-[#0b0f19]">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-6 border-b border-slate-800">
         <div>
           <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-200">

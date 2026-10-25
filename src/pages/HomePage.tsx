@@ -436,7 +436,10 @@ const HomePage = () => {
                 variants={itemVariants}
                 className="relative"
               >
-                <Categories />
+                <Categories
+                  title={section.title}
+                  subtitle={section.subtitle}
+                />
               </motion.section>
             );
 
@@ -564,7 +567,7 @@ const HomePage = () => {
                 variants={fadeInVariants}
                 className="px-3 xs:px-4 sm:px-6 md:px-8 lg:px-12 py-16 md:py-24 bg-gradient-to-br from-purple-100 via-blue-100 to-green-100"
               >
-                <div className="max-w-7xl mx-auto">
+                <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto">
                   <motion.div
                     className="flex flex-col lg:flex-row gap-6 sm:gap-8 md:gap-10 lg:gap-12 xl:gap-16 items-center"
                     variants={containerVariants}

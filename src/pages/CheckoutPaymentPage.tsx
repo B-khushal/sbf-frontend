@@ -922,7 +922,7 @@ const CheckoutPaymentPage = () => {
       <Navigation />
       
       <motion.div 
-        className="container mx-auto px-4 pb-32 sm:px-6 lg:px-8 py-8 max-w-7xl lg:pb-8"
+        className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 pb-32 sm:px-6 lg:px-8 2xl:px-12 py-8 lg:pb-8"
         initial="hidden"
         animate="visible"
         variants={containerVariants}

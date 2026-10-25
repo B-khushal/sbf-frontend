@@ -716,7 +716,7 @@ export const AdminOrders: React.FC = () => {
             1. PAGE HEADER (Clean, Compact, Operations-Focused)
            ======================================================== */}
         <header className="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 shadow-xs">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5">
+          <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-10 py-3.5 2xl:py-4.5">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
               
               {/* Left Title & Subtitle */}
@@ -902,7 +902,7 @@ export const AdminOrders: React.FC = () => {
           </div>
         </header>
 
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-5 space-y-5">
+        <main className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-10 mt-5 space-y-5 2xl:space-y-6">
 
           {/* ========================================================
               2. DATE / ORDER PERIOD NAVIGATION (Segmented Bar)
@@ -917,21 +917,21 @@ export const AdminOrders: React.FC = () => {
                   setSelectedStatus('all');
                 }}
                 className={cn(
-                  "flex-1 min-w-[170px] sm:min-w-[190px] py-2.5 px-4 rounded-xl text-left transition-all relative flex flex-col justify-center",
+                  "flex-1 min-w-[170px] sm:min-w-[190px] 2xl:min-w-[210px] 3xl:min-w-[240px] py-2.5 2xl:py-3.5 px-4 2xl:px-5 rounded-xl text-left transition-all relative flex flex-col justify-center",
                   activePeriod === 'today'
                     ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-950 dark:text-emerald-100 shadow-xs border border-emerald-200/80 dark:border-emerald-800/60"
                     : "hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-600 dark:text-slate-400"
                 )}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                  <span className="text-xs 2xl:text-sm font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
                     Today's Orders
                   </span>
                   {activePeriod === 'today' && (
                     <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
                   )}
                 </div>
-                <span className="text-sm font-semibold text-slate-900 dark:text-slate-100 mt-0.5">
+                <span className="text-sm 2xl:text-base font-semibold text-slate-900 dark:text-slate-100 mt-0.5">
                   {todayFormatted}
                 </span>
               </button>
@@ -943,21 +943,21 @@ export const AdminOrders: React.FC = () => {
                   setSelectedStatus('all');
                 }}
                 className={cn(
-                  "flex-1 min-w-[170px] sm:min-w-[190px] py-2.5 px-4 rounded-xl text-left transition-all relative flex flex-col justify-center",
+                  "flex-1 min-w-[170px] sm:min-w-[190px] 2xl:min-w-[210px] 3xl:min-w-[240px] py-2.5 2xl:py-3.5 px-4 2xl:px-5 rounded-xl 2xl:rounded-2xl text-left transition-all relative flex flex-col justify-center",
                   activePeriod === 'tomorrow'
                     ? "bg-blue-50 dark:bg-blue-950/40 text-blue-950 dark:text-blue-100 shadow-xs border border-blue-200/80 dark:border-blue-800/60"
                     : "hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-600 dark:text-slate-400"
                 )}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-blue-400">
+                  <span className="text-xs 2xl:text-sm font-bold uppercase tracking-wider text-blue-700 dark:text-blue-400">
                     Tomorrow
                   </span>
                   {activePeriod === 'tomorrow' && (
-                    <span className="w-2 h-2 rounded-full bg-blue-600" />
+                    <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
                   )}
                 </div>
-                <span className="text-sm font-semibold text-slate-900 dark:text-slate-100 mt-0.5">
+                <span className="text-sm 2xl:text-base font-semibold text-slate-900 dark:text-slate-100 mt-0.5">
                   {tomorrowFormatted}
                 </span>
               </button>
@@ -969,14 +969,14 @@ export const AdminOrders: React.FC = () => {
                   setSelectedStatus('all');
                 }}
                 className={cn(
-                  "flex-1 min-w-[170px] sm:min-w-[190px] py-2.5 px-4 rounded-xl text-left transition-all relative flex flex-col justify-center",
+                  "flex-1 min-w-[170px] sm:min-w-[190px] 2xl:min-w-[210px] 3xl:min-w-[240px] py-2.5 2xl:py-3.5 px-4 2xl:px-5 rounded-xl 2xl:rounded-2xl text-left transition-all relative flex flex-col justify-center",
                   activePeriod === 'upcoming'
                     ? "bg-violet-50 dark:bg-violet-950/40 text-violet-950 dark:text-violet-100 shadow-xs border border-violet-200/80 dark:border-violet-800/60"
                     : "hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-600 dark:text-slate-400"
                 )}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-wider text-violet-700 dark:text-violet-400 flex items-center gap-1.5">
+                  <span className="text-xs 2xl:text-sm font-bold uppercase tracking-wider text-violet-700 dark:text-violet-400 flex items-center gap-1.5">
                     Upcoming
                     {upcomingCount > 0 && (
                       <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-violet-100 dark:bg-violet-900/60 text-violet-700 dark:text-violet-300">
@@ -988,7 +988,7 @@ export const AdminOrders: React.FC = () => {
                     <span className="w-2 h-2 rounded-full bg-violet-600 animate-pulse" />
                   )}
                 </div>
-                <span className="text-sm font-semibold text-slate-900 dark:text-slate-100 mt-0.5">
+                <span className="text-sm 2xl:text-base font-semibold text-slate-900 dark:text-slate-100 mt-0.5">
                   Advance Bookings
                 </span>
               </button>
@@ -1000,21 +1000,21 @@ export const AdminOrders: React.FC = () => {
                   setSelectedStatus('all');
                 }}
                 className={cn(
-                  "flex-1 min-w-[170px] sm:min-w-[190px] py-2.5 px-4 rounded-xl text-left transition-all relative flex flex-col justify-center",
+                  "flex-1 min-w-[170px] sm:min-w-[190px] 2xl:min-w-[210px] 3xl:min-w-[240px] py-2.5 2xl:py-3.5 px-4 2xl:px-5 rounded-xl 2xl:rounded-2xl text-left transition-all relative flex flex-col justify-center",
                   activePeriod === 'past'
                     ? "bg-purple-50 dark:bg-purple-950/40 text-purple-950 dark:text-purple-100 shadow-xs border border-purple-200/80 dark:border-purple-800/60"
                     : "hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-600 dark:text-slate-400"
                 )}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-wider text-purple-700 dark:text-purple-400">
+                  <span className="text-xs 2xl:text-sm font-bold uppercase tracking-wider text-purple-700 dark:text-purple-400">
                     Past Orders
                   </span>
                   {activePeriod === 'past' && (
                     <span className="w-2 h-2 rounded-full bg-purple-600" />
                   )}
                 </div>
-                <span className="text-sm font-semibold text-slate-900 dark:text-slate-100 mt-0.5">
+                <span className="text-sm 2xl:text-base font-semibold text-slate-900 dark:text-slate-100 mt-0.5">
                   Previous deliveries
                 </span>
               </button>
@@ -1023,21 +1023,21 @@ export const AdminOrders: React.FC = () => {
               <button
                 onClick={() => setIsCustomRangeOpen(true)}
                 className={cn(
-                  "flex-1 min-w-[170px] sm:min-w-[190px] py-2.5 px-4 rounded-xl text-left transition-all relative flex flex-col justify-center",
+                  "flex-1 min-w-[170px] sm:min-w-[190px] 2xl:min-w-[210px] 3xl:min-w-[240px] py-2.5 2xl:py-3.5 px-4 2xl:px-5 rounded-xl 2xl:rounded-2xl text-left transition-all relative flex flex-col justify-center",
                   activePeriod === 'custom'
                     ? "bg-amber-50 dark:bg-amber-950/40 text-amber-950 dark:text-amber-100 shadow-xs border border-amber-200/80 dark:border-amber-800/60"
                     : "hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-600 dark:text-slate-400"
                 )}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+                  <span className="text-xs 2xl:text-sm font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
                     Custom Range
                   </span>
                   {activePeriod === 'custom' && (
                     <span className="w-2 h-2 rounded-full bg-amber-600" />
                   )}
                 </div>
-                <span className="text-sm font-semibold text-slate-900 dark:text-slate-100 mt-0.5 truncate">
+                <span className="text-sm 2xl:text-base font-semibold text-slate-900 dark:text-slate-100 mt-0.5 truncate">
                   {appliedCustomRange ? `${appliedCustomRange.start} → ${appliedCustomRange.end}` : 'Select dates...'}
                 </span>
               </button>
@@ -1098,34 +1098,34 @@ export const AdminOrders: React.FC = () => {
           {/* ========================================================
               3. ORDER SUMMARY STATISTICS CARDS (Compact, High-Contrast)
              ======================================================== */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 lg:gap-3.5 2xl:gap-4.5 3xl:gap-6">
             
             {/* Total Orders Card */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-3.5 shadow-xs flex flex-col justify-between">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl 2xl:rounded-2xl p-3.5 2xl:p-4.5 shadow-xs flex flex-col justify-between">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Total Orders</span>
+                <span className="text-xs 2xl:text-sm font-medium text-slate-500 dark:text-slate-400">Total Orders</span>
                 <span className="p-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                  <Package className="w-3.5 h-3.5" />
+                  <Package className="w-3.5 h-3.5 2xl:w-4 2xl:h-4" />
                 </span>
               </div>
               <div className="mt-2 flex items-baseline justify-between">
-                <span className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
+                <span className="text-2xl 2xl:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
                   {statusCounts.total}
                 </span>
-                <span className="text-[11px] font-semibold text-slate-400">100%</span>
+                <span className="text-[11px] 2xl:text-xs font-semibold text-slate-400">100%</span>
               </div>
             </div>
 
             {/* Preparing Card */}
-            <div className="bg-white dark:bg-slate-900 border border-amber-200/70 dark:border-amber-900/40 rounded-xl p-3.5 shadow-xs flex flex-col justify-between">
+            <div className="bg-white dark:bg-slate-900 border border-amber-200/70 dark:border-amber-900/40 rounded-xl 2xl:rounded-2xl p-3.5 2xl:p-4.5 shadow-xs flex flex-col justify-between">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-amber-800 dark:text-amber-300">Preparing</span>
+                <span className="text-xs 2xl:text-sm font-medium text-amber-800 dark:text-amber-300">Preparing</span>
                 <span className="p-1 rounded-md bg-amber-50 dark:bg-amber-950/50 text-amber-600">
-                  <ChefHat className="w-3.5 h-3.5" />
+                  <ChefHat className="w-3.5 h-3.5 2xl:w-4 2xl:h-4" />
                 </span>
               </div>
               <div className="mt-2 flex items-baseline justify-between">
-                <span className="text-2xl font-bold tracking-tight text-amber-900 dark:text-amber-200">
+                <span className="text-2xl 2xl:text-3xl font-bold tracking-tight text-amber-900 dark:text-amber-200">
                   {statusCounts.preparing}
                 </span>
                 <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
@@ -1133,15 +1133,15 @@ export const AdminOrders: React.FC = () => {
             </div>
 
             {/* Ready Card */}
-            <div className="bg-white dark:bg-slate-900 border border-blue-200/70 dark:border-blue-900/40 rounded-xl p-3.5 shadow-xs flex flex-col justify-between">
+            <div className="bg-white dark:bg-slate-900 border border-blue-200/70 dark:border-blue-900/40 rounded-xl 2xl:rounded-2xl p-3.5 2xl:p-4.5 shadow-xs flex flex-col justify-between">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-blue-800 dark:text-blue-300">Ready</span>
+                <span className="text-xs 2xl:text-sm font-medium text-blue-800 dark:text-blue-300">Ready</span>
                 <span className="p-1 rounded-md bg-blue-50 dark:bg-blue-950/50 text-blue-600">
-                  <Sparkles className="w-3.5 h-3.5" />
+                  <Sparkles className="w-3.5 h-3.5 2xl:w-4 2xl:h-4" />
                 </span>
               </div>
               <div className="mt-2 flex items-baseline justify-between">
-                <span className="text-2xl font-bold tracking-tight text-blue-900 dark:text-blue-200">
+                <span className="text-2xl 2xl:text-3xl font-bold tracking-tight text-blue-900 dark:text-blue-200">
                   {statusCounts.ready}
                 </span>
                 <span className="w-2 h-2 rounded-full bg-blue-600" />
@@ -1305,7 +1305,7 @@ export const AdminOrders: React.FC = () => {
              ======================================================== */}
           {isLoading ? (
             /* 17. SKELETON LOADING STATE */
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-5 2xl:gap-6">
               {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
                 <div key={i} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 overflow-hidden shadow-xs animate-pulse">
                   <div className="w-full h-44 bg-slate-200 dark:bg-slate-800" />
@@ -1387,7 +1387,7 @@ export const AdminOrders: React.FC = () => {
                       {groupOrders.length} {groupOrders.length === 1 ? 'order' : 'orders'}
                     </span>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-5 2xl:gap-6">
                     {groupOrders.map(order => renderOrderCard(order))}
                   </div>
                 </section>
@@ -1419,7 +1419,7 @@ export const AdminOrders: React.FC = () => {
                       {group.orders.length} {group.orders.length === 1 ? 'delivery' : 'deliveries'} scheduled
                     </span>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-5 2xl:gap-6">
                     {group.orders.map(order => renderOrderCard(order))}
                   </div>
                 </section>
@@ -1427,7 +1427,7 @@ export const AdminOrders: React.FC = () => {
             </div>
           ) : (
             /* NORMAL RESPONSIVE GRID (Today, Tomorrow, Custom) */
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-5 2xl:gap-6">
               {orders.map(order => renderOrderCard(order))}
             </div>
           )}

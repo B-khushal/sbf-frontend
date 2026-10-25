@@ -586,7 +586,7 @@ const ProfilePage: React.FC = () => {
         animate="visible"
         variants={containerVariants}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 py-8 sm:py-12">
           {/* Profile Header */}
           <motion.div 
             className="bg-white/80 backdrop-blur-md rounded-2xl shadow-xl border border-white/20 p-6 sm:p-8 mb-8"

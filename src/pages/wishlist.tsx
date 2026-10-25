@@ -192,7 +192,7 @@ const WishlistPage = () => {
           variants={itemVariants}
           className="px-4 sm:px-6 md:px-8 py-8 sm:py-16 md:py-24"
         >
-          <div className="max-w-7xl mx-auto text-center">
+          <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto text-center">
             <div className="relative">
               <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2 sm:-translate-y-4">
                 <div className="text-2xl sm:text-4xl text-red-400">💖</div>
@@ -236,7 +236,7 @@ const WishlistPage = () => {
           </div>
         </motion.section>
 
-        <div className="max-w-5xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 pb-16 sm:pb-20">
+        <div className="w-full max-w-5xl 2xl:max-w-7xl 3xl:max-w-8xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 pb-16 sm:pb-20">
 
 
           {isLoading && items.length === 0 ? (

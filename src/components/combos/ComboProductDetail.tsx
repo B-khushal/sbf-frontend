@@ -376,7 +376,7 @@ export const ComboProductDetail: React.FC<ComboProductDetailProps> = ({
       
       {/* Top Floating Breadcrumbs & Highlights */}
       <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-rose-100/70 dark:border-slate-800 sticky top-0 z-30 transition-all">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between text-xs">
+        <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 py-3 flex items-center justify-between text-xs">
           <nav className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 font-medium overflow-hidden whitespace-nowrap">
             <Link to="/" className="hover:text-rose-600 transition-colors">Home</Link>
             <ChevronRight className="w-3.5 h-3.5 shrink-0" />
@@ -413,7 +413,7 @@ export const ComboProductDetail: React.FC<ComboProductDetailProps> = ({
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 space-y-10">
+      <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 pt-6 sm:pt-8 space-y-10">
         
         {/* Main Product Showcase Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">

@@ -205,8 +205,8 @@ const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCar
       )}
 
       {loading ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-          {Array.from({ length: 4 }).map((_, idx) => (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-4 sm:gap-6 2xl:gap-7">
+          {Array.from({ length: 6 }).map((_, idx) => (
             <div key={idx} className={idx >= 2 ? "hidden md:block" : ""}>
               <ProductCardSkeleton />
             </div>
@@ -257,8 +257,8 @@ const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCar
         <div className={cn(
           "grid gap-3 sm:gap-4 md:gap-5 lg:gap-6 xl:gap-6 2xl:gap-7 animate-fade-in items-stretch",
           shopView 
-            ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-3" 
-            : "grid-cols-2 md:grid-cols-3 lg:grid-cols-4",
+            ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5" 
+            : "grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6",
           className
         )}>
           {visibleProducts.map((product) => (

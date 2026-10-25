@@ -342,7 +342,7 @@ const AdminDashboardHome: React.FC = () => {
   const orderedWidgets = [...pinnedWidgets, ...standardWidgets];
 
   return (
-    <div className="space-y-4 sm:space-y-6 p-3 sm:p-6 max-w-[1600px] mx-auto print:p-0">
+    <div className="space-y-4 sm:space-y-6 p-3 sm:p-6 max-w-[1600px] 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto print:p-0">
       
       {/* Top Header Command Bar */}
       <div className="flex flex-col space-y-4 lg:flex-row lg:justify-between lg:items-center lg:space-y-0 print:hidden">

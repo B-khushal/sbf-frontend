@@ -397,7 +397,7 @@ export const CakeProductDetail: React.FC<CakeProductDetailProps> = ({
     <div className="min-h-screen bg-stone-50/50 dark:bg-[#0c0d0e] font-sans antialiased text-stone-900 dark:text-stone-100 pb-24 md:pb-16 selection:bg-amber-100 selection:text-amber-900">
       
       {/* 1. Breadcrumbs */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-5 pb-3">
+      <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 pt-5 pb-3">
         <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-stone-500 dark:text-stone-400 font-medium overflow-x-auto whitespace-nowrap py-1">
           <Link to="/" className="hover:text-stone-900 dark:hover:text-white transition-colors">Home</Link>
           <ChevronRight className="w-3.5 h-3.5 text-stone-300 dark:text-stone-600 shrink-0" />
@@ -411,7 +411,7 @@ export const CakeProductDetail: React.FC<CakeProductDetailProps> = ({
       </div>
 
       {/* 2. Main Product Hero (Gallery + Information) */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-2">
+      <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 pt-2">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
           
           {/* LEFT: Image Gallery (6 Cols) */}
@@ -1021,7 +1021,7 @@ export const CakeProductDetail: React.FC<CakeProductDetailProps> = ({
       </div>
 
       {/* 9. Structured Description Tabs - Strictly Form-Driven */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16">
+      <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 mt-16">
         <div className="bg-white dark:bg-stone-900 rounded-3xl border border-stone-200/80 dark:border-stone-800 p-6 sm:p-10 shadow-xs">
           
           {/* Tab Navigation */}
@@ -1153,7 +1153,7 @@ export const CakeProductDetail: React.FC<CakeProductDetailProps> = ({
 
       {/* 10. "Complete the Celebration" (Combos) */}
       {recommendedCombos.length > 0 && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16">
+        <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 mt-16">
           <div className="flex items-baseline justify-between mb-6">
             <div>
               <span className="text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-widest block">
@@ -1218,7 +1218,7 @@ export const CakeProductDetail: React.FC<CakeProductDetailProps> = ({
       )}
 
       {/* 11. Customer Reviews Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16">
+      <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 mt-16">
         <ProductReviews
           productId={product._id}
           productTitle={product.title}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useMemo } from "react";
+import React, { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -57,11 +57,13 @@ type OccasionsSectionProps = {
 const OccasionProductCard = ({
   product,
   onAddToCart,
-  config = {}
+  config = {},
+  onCardClick,
 }: {
   product: ProductData;
   onAddToCart?: (item: any, quantity: number) => boolean;
   config?: any;
+  onCardClick?: (e: React.MouseEvent) => void;
 }) => {
   const { formatPrice, convertPrice } = useCurrency();
   const { addToCart } = useCart();
@@ -97,6 +99,10 @@ const OccasionProductCard = ({
   const handleCardClick = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).closest('.dot-indicator')) {
       return;
+    }
+    if (onCardClick) {
+      onCardClick(e);
+      if (e.defaultPrevented) return;
     }
     navigate(`/product/${product._id}`);
   };
@@ -549,6 +555,21 @@ export const OccasionsSection = ({ section, onAddToCart }: OccasionsSectionProps
   const tabsScrollRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
+  // Scroll tracking states
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
+
+  // Tabs scroll tracking states
+  const [canScrollTabsLeft, setCanScrollTabsLeft] = useState(false);
+  const [canScrollTabsRight, setCanScrollTabsRight] = useState(false);
+
+  // Mouse drag-to-scroll tracking
+  const isMouseDownRef = useRef(false);
+  const startXRef = useRef(0);
+  const scrollLeftStartRef = useRef(0);
+  const hasDraggedRef = useRef(false);
+
   // Load active occasions config
   useEffect(() => {
     const loadOccasions = async () => {
@@ -586,8 +607,8 @@ export const OccasionsSection = ({ section, onAddToCart }: OccasionsSectionProps
 
       try {
         setLoading(true);
-        // Load products belonging to this occasion
-        const limit = section.content?.maxProducts || 10;
+        // Load products belonging to this occasion (default 16 for rich side-scroller)
+        const limit = section.content?.maxProducts || 16;
         const response = await productService.getProductsByOccasion(selectedOccasion.slug);
         
         const productsList = (response.products || []).slice(0, limit);
@@ -608,16 +629,125 @@ export const OccasionsSection = ({ section, onAddToCart }: OccasionsSectionProps
     fetchProductsForOccasion();
   }, [selectedOccasion, productsCache, section.content?.maxProducts]);
 
+  // Product carousel scroll checker
+  const checkScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    setCanScrollLeft(scrollLeft > 8);
+    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 8);
+
+    const maxScroll = scrollWidth - clientWidth;
+    if (maxScroll > 0) {
+      setScrollProgress(Math.min(100, Math.max(0, (scrollLeft / maxScroll) * 100)));
+    } else {
+      setScrollProgress(0);
+    }
+  }, []);
+
+  // Tabs scroll checker
+  const checkTabsScroll = useCallback(() => {
+    const el = tabsScrollRef.current;
+    if (!el) return;
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    setCanScrollTabsLeft(scrollLeft > 6);
+    setCanScrollTabsRight(scrollLeft < scrollWidth - clientWidth - 6);
+  }, []);
+
+  // Set up listeners for product scroll
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    checkScroll();
+    el.addEventListener('scroll', checkScroll, { passive: true });
+    window.addEventListener('resize', checkScroll);
+
+    const timer = setTimeout(checkScroll, 250);
+
+    return () => {
+      el.removeEventListener('scroll', checkScroll);
+      window.removeEventListener('resize', checkScroll);
+      clearTimeout(timer);
+    };
+  }, [checkScroll, products, selectedOccasion]);
+
+  // Set up listeners for tabs scroll
+  useEffect(() => {
+    const el = tabsScrollRef.current;
+    if (!el) return;
+
+    checkTabsScroll();
+    el.addEventListener('scroll', checkTabsScroll, { passive: true });
+    window.addEventListener('resize', checkTabsScroll);
+
+    const timer = setTimeout(checkTabsScroll, 250);
+
+    return () => {
+      el.removeEventListener('scroll', checkTabsScroll);
+      window.removeEventListener('resize', checkTabsScroll);
+      clearTimeout(timer);
+    };
+  }, [checkTabsScroll, occasions]);
+
   // Carousel Arrow Controls
   const handleScroll = (direction: 'left' | 'right') => {
     const container = scrollRef.current;
     if (!container) return;
 
-    const scrollAmount = container.clientWidth * 0.75;
+    const scrollAmount = Math.max(container.clientWidth * 0.75, 280);
     container.scrollBy({
       left: direction === 'left' ? -scrollAmount : scrollAmount,
       behavior: 'smooth'
     });
+  };
+
+  // Tabs Arrow Controls
+  const handleTabsScroll = (direction: 'left' | 'right') => {
+    const el = tabsScrollRef.current;
+    if (!el) return;
+    const scrollAmount = Math.max(el.clientWidth * 0.6, 200);
+    el.scrollBy({
+      left: direction === 'left' ? -scrollAmount : scrollAmount,
+      behavior: 'smooth'
+    });
+  };
+
+  // Mouse drag handlers
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    const container = scrollRef.current;
+    if (!container) return;
+    isMouseDownRef.current = true;
+    hasDraggedRef.current = false;
+    startXRef.current = e.pageX - container.offsetLeft;
+    scrollLeftStartRef.current = container.scrollLeft;
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isMouseDownRef.current) return;
+    const container = scrollRef.current;
+    if (!container) return;
+    e.preventDefault();
+    const x = e.pageX - container.offsetLeft;
+    const walk = (x - startXRef.current) * 1.25;
+    if (Math.abs(walk) > 6) {
+      hasDraggedRef.current = true;
+    }
+    container.scrollLeft = scrollLeftStartRef.current - walk;
+  };
+
+  const handleMouseUpOrLeave = () => {
+    isMouseDownRef.current = false;
+    setTimeout(() => {
+      hasDraggedRef.current = false;
+    }, 60);
+  };
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    if (hasDraggedRef.current) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
   };
 
   // Header Title details
@@ -627,12 +757,12 @@ export const OccasionsSection = ({ section, onAddToCart }: OccasionsSectionProps
   const accentGold = selectedOccasion?.accentColor || '#D4AF37';
 
   // Responsive padding settings
-  const paddingClass = section.styling?.padding || "py-16";
+  const paddingClass = section.styling?.padding || "py-12 sm:py-16 md:py-20";
   const backgroundStyle = section.styling?.background || "#FFFDF7"; // SBFlorist Soft Cream
 
   if (occasionsLoading) {
     return (
-      <div className={cn("max-w-7xl mx-auto px-4", paddingClass)}>
+      <div className={cn("max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8", paddingClass)}>
         <div className="h-6 w-48 bg-slate-100 animate-pulse rounded mb-2" />
         <div className="h-4 w-96 bg-slate-100 animate-pulse rounded mb-8" />
         <div className="flex gap-4 mb-8 overflow-x-hidden">
@@ -651,23 +781,83 @@ export const OccasionsSection = ({ section, onAddToCart }: OccasionsSectionProps
       style={{ backgroundColor: backgroundStyle }}
       className={cn("w-full transition-colors duration-500", paddingClass)}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Section Header */}
-        <div className="mb-8 md:mb-10 text-center md:text-left">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">
-            {sectionTitle}
-          </h2>
-          <p className="text-sm sm:text-base text-slate-500 mt-2 max-w-2xl">
-            {sectionSubtitle}
-          </p>
+        {/* Section Header with Desktop Paired Navigation */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 md:mb-10 gap-4">
+          <div className="text-center sm:text-left">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">
+              {sectionTitle}
+            </h2>
+            <p className="text-sm sm:text-base text-slate-500 mt-2 max-w-2xl leading-relaxed">
+              {sectionSubtitle}
+            </p>
+          </div>
+
+          {/* Desktop & Tablet Paired Header Navigation Arrows */}
+          {products.length > 0 && (
+            <div className="hidden sm:flex items-center gap-2 self-center sm:self-end flex-shrink-0">
+              <button
+                type="button"
+                onClick={() => handleScroll('left')}
+                disabled={!canScrollLeft}
+                aria-label="Previous products"
+                className={cn(
+                  "h-9 w-9 md:h-10 md:w-10 rounded-full border border-slate-200 bg-white shadow-sm flex items-center justify-center text-slate-700 transition-all duration-200",
+                  canScrollLeft
+                    ? "hover:bg-slate-900 hover:text-white hover:border-slate-900 active:scale-95 cursor-pointer shadow-md"
+                    : "opacity-35 cursor-not-allowed text-slate-300 border-slate-200"
+                )}
+              >
+                <ChevronLeft className="h-4 w-4 md:h-5 md:w-5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => handleScroll('right')}
+                disabled={!canScrollRight}
+                aria-label="Next products"
+                className={cn(
+                  "h-9 w-9 md:h-10 md:w-10 rounded-full border border-slate-200 bg-white shadow-sm flex items-center justify-center text-slate-700 transition-all duration-200",
+                  canScrollRight
+                    ? "hover:bg-slate-900 hover:text-white hover:border-slate-900 active:scale-95 cursor-pointer shadow-md"
+                    : "opacity-35 cursor-not-allowed text-slate-300 border-slate-200"
+                )}
+              >
+                <ChevronRight className="h-4 w-4 md:h-5 md:w-5" />
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* Occasion Tabs Bar */}
-        <div className="relative border-b border-slate-100 mb-8 z-20">
+        {/* Occasion Tabs Bar with Scroll Buttons */}
+        <div className="relative border-b border-slate-200/80 mb-8 z-20 group/tabs">
+          {/* Tabs Left Arrow */}
+          {canScrollTabsLeft && (
+            <button
+              type="button"
+              onClick={() => handleTabsScroll('left')}
+              aria-label="Scroll occasions left"
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-30 h-8 w-8 rounded-full bg-white/95 backdrop-blur-sm border border-slate-200 shadow-sm flex items-center justify-center text-slate-700 hover:text-slate-900 hover:bg-slate-50 transition-all"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+          )}
+
+          {/* Tabs Right Arrow */}
+          {canScrollTabsRight && (
+            <button
+              type="button"
+              onClick={() => handleTabsScroll('right')}
+              aria-label="Scroll occasions right"
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-30 h-8 w-8 rounded-full bg-white/95 backdrop-blur-sm border border-slate-200 shadow-sm flex items-center justify-center text-slate-700 hover:text-slate-900 hover:bg-slate-50 transition-all"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          )}
+
           <div
             ref={tabsScrollRef}
-            className="flex gap-1.5 sm:gap-2.5 overflow-x-auto no-scrollbar scroll-smooth pb-0.5 select-none"
+            className="flex gap-1.5 sm:gap-2.5 overflow-x-auto no-scrollbar scroll-smooth pb-0.5 select-none px-1"
           >
             {occasions.map((occ) => {
               const isSelected = selectedOccasion?._id === occ._id;
@@ -712,29 +902,55 @@ export const OccasionsSection = ({ section, onAddToCart }: OccasionsSectionProps
         </div>
 
         {/* Product Slider Carousel */}
-        <div className="relative group/carousel">
+        <div className="relative group/carousel -mx-4 px-4 sm:mx-0 sm:px-0">
           
-          {/* Left Arrow Button */}
+          {/* Floating Left Arrow Button */}
           {showArrows && products.length > 0 && (
             <button
+              type="button"
               onClick={() => handleScroll('left')}
-              className="absolute left-[-18px] top-1/2 -translate-y-1/2 z-30 p-2.5 rounded-full bg-white/90 border border-slate-100 shadow-md hover:bg-slate-900 hover:text-white transition-all duration-300 opacity-0 group-hover/carousel:opacity-100 hidden md:flex active:scale-95"
+              disabled={!canScrollLeft}
+              aria-label="Scroll left"
+              className={cn(
+                "absolute -left-2 sm:-left-3 md:-left-4 lg:-left-5 top-1/2 -translate-y-1/2 z-30",
+                "h-10 w-10 sm:h-11 sm:w-11 md:h-12 md:w-12 rounded-full",
+                "bg-white/95 backdrop-blur-md border border-slate-200/90 shadow-[0_6px_20px_rgba(0,0,0,0.14)]",
+                "flex items-center justify-center text-slate-800 transition-all duration-200",
+                "hover:bg-slate-900 hover:text-white hover:border-slate-900 hover:scale-110 active:scale-95",
+                "focus:outline-none focus:ring-2 focus:ring-slate-400",
+                canScrollLeft
+                  ? "opacity-100 cursor-pointer pointer-events-auto"
+                  : "opacity-0 pointer-events-none"
+              )}
             >
-              <ChevronLeft className="h-5 w-5" />
+              <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6" />
             </button>
           )}
 
-          {/* Right Arrow Button */}
+          {/* Floating Right Arrow Button */}
           {showArrows && products.length > 0 && (
             <button
+              type="button"
               onClick={() => handleScroll('right')}
-              className="absolute right-[-18px] top-1/2 -translate-y-1/2 z-30 p-2.5 rounded-full bg-white/90 border border-slate-100 shadow-md hover:bg-slate-900 hover:text-white transition-all duration-300 opacity-0 group-hover/carousel:opacity-100 hidden md:flex active:scale-95"
+              disabled={!canScrollRight}
+              aria-label="Scroll right"
+              className={cn(
+                "absolute -right-2 sm:-right-3 md:-right-4 lg:-right-5 top-1/2 -translate-y-1/2 z-30",
+                "h-10 w-10 sm:h-11 sm:w-11 md:h-12 md:w-12 rounded-full",
+                "bg-white/95 backdrop-blur-md border border-slate-200/90 shadow-[0_6px_20px_rgba(0,0,0,0.14)]",
+                "flex items-center justify-center text-slate-800 transition-all duration-200",
+                "hover:bg-slate-900 hover:text-white hover:border-slate-900 hover:scale-110 active:scale-95",
+                "focus:outline-none focus:ring-2 focus:ring-slate-400",
+                canScrollRight
+                  ? "opacity-100 cursor-pointer pointer-events-auto"
+                  : "opacity-0 pointer-events-none"
+              )}
             >
-              <ChevronRight className="h-5 w-5" />
+              <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6" />
             </button>
           )}
 
-          {/* Products Sliding Container */}
+          {/* Products Sliding Container in the SAME ROW on all screens */}
           <div className="w-full overflow-hidden">
             <AnimatePresence mode="wait">
               {loading ? (
@@ -744,10 +960,13 @@ export const OccasionsSection = ({ section, onAddToCart }: OccasionsSectionProps
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5"
+                  className="flex gap-4 sm:gap-5 md:gap-6 overflow-hidden py-2"
                 >
                   {Array.from({ length: 4 }).map((_, idx) => (
-                    <div key={idx} className={idx >= 2 ? "hidden md:block" : ""}>
+                    <div
+                      key={idx}
+                      className="flex-shrink-0 w-[230px] xs:w-[250px] sm:w-[270px] md:w-[285px] lg:w-[295px] xl:w-[310px]"
+                    >
                       <ProductCardSkeleton />
                     </div>
                   ))}
@@ -770,7 +989,7 @@ export const OccasionsSection = ({ section, onAddToCart }: OccasionsSectionProps
                   </Button>
                 </motion.div>
               ) : (
-                // Horizontal scroll list of products
+                // Single-Row Horizontal side-scroller of products
                 <motion.div
                   key={`products-${selectedOccasion?.slug}`}
                   initial={{ opacity: 0, y: 15 }}
@@ -778,17 +997,25 @@ export const OccasionsSection = ({ section, onAddToCart }: OccasionsSectionProps
                   exit={{ opacity: 0, y: -15 }}
                   transition={{ duration: 0.3 }}
                   ref={scrollRef}
-                  className="flex gap-4 md:gap-5 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory py-1"
+                  onMouseDown={handleMouseDown}
+                  onMouseMove={handleMouseMove}
+                  onMouseUp={handleMouseUpOrLeave}
+                  onMouseLeave={handleMouseUpOrLeave}
+                  className="flex gap-4 sm:gap-5 md:gap-6 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory py-2 px-1 items-stretch cursor-grab active:cursor-grabbing select-none"
+                  style={{
+                    WebkitOverflowScrolling: 'touch',
+                  }}
                 >
                   {products.map((product) => (
                     <div
                       key={product._id}
-                      className="snap-start flex-shrink-0 w-[calc(50%-8px)] sm:w-[calc(50%-10px)] md:w-[calc(33.33%-10px)] lg:w-[calc(25%-15px)] xl:w-[calc(25%-15px)] flex"
+                      className="snap-start flex-shrink-0 w-[230px] xs:w-[250px] sm:w-[270px] md:w-[285px] lg:w-[295px] xl:w-[310px] 2xl:w-[325px] 3xl:w-[340px] flex"
                     >
                       <OccasionProductCard
                         product={product}
                         onAddToCart={onAddToCart}
                         config={section.content}
+                        onCardClick={handleCardClick}
                       />
                     </div>
                   ))}
@@ -796,6 +1023,22 @@ export const OccasionsSection = ({ section, onAddToCart }: OccasionsSectionProps
               )}
             </AnimatePresence>
           </div>
+
+          {/* Scroll Progress Bar */}
+          {products.length > 3 && (
+            <div className="flex items-center justify-center mt-6 sm:mt-8">
+              <div className="relative h-1 sm:h-1.5 w-28 sm:w-36 bg-amber-100/80 rounded-full overflow-hidden">
+                <div
+                  className="absolute top-0 bottom-0 rounded-full transition-all duration-150"
+                  style={{
+                    backgroundColor: accentGold || '#D4AF37',
+                    width: '35%',
+                    left: `${(scrollProgress / 100) * 65}%`,
+                  }}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* View All occasion landing page link */}

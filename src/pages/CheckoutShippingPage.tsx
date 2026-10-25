@@ -928,7 +928,7 @@ const CheckoutShippingPage = () => {
         </div>
       )}
       
-      <div className="container mx-auto max-w-7xl px-4 py-4 pb-32 sm:px-6 sm:py-6 lg:px-8 lg:py-8 lg:pb-8">
+      <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 py-4 pb-32 sm:px-6 sm:py-6 lg:px-8 2xl:px-12 lg:py-8 lg:pb-8">
         {/* Progress Bar */}
         <motion.div variants={itemVariants} className="mb-8">
           <div className="flex items-center justify-center space-x-4 mb-6">

@@ -116,7 +116,7 @@ export const BudgetFriendlySection: React.FC<BudgetFriendlySectionProps> = ({
       <div className="absolute top-0 right-1/4 w-96 h-96 bg-rose-100/40 rounded-full blur-3xl pointer-events-none -translate-y-1/2" />
       <div className="absolute bottom-0 left-1/4 w-80 h-80 bg-amber-100/30 rounded-full blur-3xl pointer-events-none translate-y-1/2" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 relative z-10">
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 sm:mb-12 gap-5">
           <div className="max-w-2xl">
@@ -152,13 +152,13 @@ export const BudgetFriendlySection: React.FC<BudgetFriendlySectionProps> = ({
 
         {/* Product Grid */}
         {loading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-            {Array.from({ length: 4 }).map((_, idx) => (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-4 sm:gap-6 2xl:gap-7">
+            {Array.from({ length: 6 }).map((_, idx) => (
               <ProductCardSkeleton key={idx} />
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5 lg:gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-3 sm:gap-5 lg:gap-6 2xl:gap-7">
             {products.map((product) => (
               <ProductCard
                 key={product._id}

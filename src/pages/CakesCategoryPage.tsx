@@ -289,7 +289,7 @@ export const CakesCategoryPage: React.FC = () => {
       </Helmet>
 
       {/* Breadcrumbs */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-5">
+      <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-10 pt-5">
         <nav className="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
           <Link to="/" className="hover:text-slate-800 transition-colors">Home</Link>
           <ChevronRight className="h-3 w-3 text-slate-400" />
@@ -304,23 +304,23 @@ export const CakesCategoryPage: React.FC = () => {
       </div>
 
       {/* Hero Banner Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-amber-950 via-stone-900 to-amber-900 text-white p-6 sm:p-10 md:p-14 shadow-lg">
+      <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-10 mt-4">
+        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-amber-950 via-stone-900 to-amber-900 text-white p-6 sm:p-10 md:p-14 2xl:p-16 shadow-lg">
           {/* Subtle Decorative Elements */}
           <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute -bottom-10 left-10 w-60 h-60 bg-rose-500/15 rounded-full blur-2xl pointer-events-none" />
 
-          <div className="relative z-10 max-w-2xl space-y-3">
+          <div className="relative z-10 max-w-2xl 2xl:max-w-4xl space-y-3">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-400/15 border border-amber-400/30 text-amber-200 text-[11px] font-extrabold tracking-widest uppercase">
               <Sparkles className="w-3.5 h-3.5 text-amber-300" />
               <span>SBF ARTISAN PATISSERIE</span>
             </div>
 
-            <h1 className="text-2xl sm:text-4xl md:text-5xl font-black font-serif tracking-tight leading-tight">
+            <h1 className="text-2xl sm:text-4xl md:text-5xl 2xl:text-6xl font-black font-serif tracking-tight leading-tight">
               Cakes, Made for Every Celebration
             </h1>
 
-            <p className="text-xs sm:text-base text-amber-100/90 font-light leading-relaxed">
+            <p className="text-xs sm:text-base 2xl:text-lg text-amber-100/90 font-light leading-relaxed">
               Freshly crafted cakes to make every special moment a little sweeter. Baked with European dark cocoa, fresh churned cream, and hand-selected berries.
             </p>
 
@@ -340,7 +340,7 @@ export const CakesCategoryPage: React.FC = () => {
       </div>
 
       {/* Quick Category / Flavor Filter Pills Bar */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+      <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-10 mt-6">
         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
           {FLAVOR_CATEGORIES.map((cat) => {
             const isSelected = selectedCategory === cat.id;
@@ -364,7 +364,7 @@ export const CakesCategoryPage: React.FC = () => {
       </div>
 
       {/* Main Content Area: Sidebar Filters + Products Grid */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 pb-20">
+      <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-10 mt-6 pb-20">
         {/* Top Control Bar: Results Count + Sort + Mobile Filter Trigger */}
         <div className="flex items-center justify-between gap-4 bg-white rounded-2xl border border-amber-100/80 p-3 sm:p-4 mb-6 shadow-2xs">
           <div className="flex items-center gap-2">
@@ -414,7 +414,7 @@ export const CakesCategoryPage: React.FC = () => {
         </div>
 
         {/* Layout: Sidebar + Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-8 items-start">
           {/* Desktop Filter Sidebar */}
           <aside className="hidden lg:block lg:col-span-1 bg-white rounded-3xl border border-amber-100/80 p-5 shadow-xs space-y-6 sticky top-24">
             <div className="flex items-center justify-between pb-3 border-b border-amber-100">
@@ -507,9 +507,9 @@ export const CakesCategoryPage: React.FC = () => {
           </aside>
 
           {/* Product Grid Area */}
-          <main className="lg:col-span-3">
+          <main className="lg:col-span-3 2xl:col-span-4 3xl:col-span-5">
             {loading ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 gap-4 sm:gap-6 2xl:gap-7">
                 {Array.from({ length: 6 }).map((_, idx) => (
                   <div
                     key={`skel-${idx}`}
@@ -522,7 +522,7 @@ export const CakesCategoryPage: React.FC = () => {
                 ))}
               </div>
             ) : filteredProducts.length > 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3.5 sm:gap-5">
+              <div className="grid grid-cols-2 md:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 gap-3.5 sm:gap-5 2xl:gap-6">
                 {filteredProducts.map((cake) => (
                   <CakeProductCard key={cake._id || cake.id} product={cake} className="h-full" />
                 ))}

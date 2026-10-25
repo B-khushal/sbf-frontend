@@ -117,7 +117,7 @@ const Footer = () => {
   if (loading) {
     return (
       <footer className="bg-secondary/40 pt-12 sm:pt-16 pb-6 sm:pb-8 px-3 sm:px-4 md:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
+        <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto">
           <div className="text-center">
             <div className="inline-block w-6 h-6 sm:w-8 sm:h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-3 sm:mb-4"></div>
             <p className="text-gray-600 text-sm sm:text-base">Loading footer...</p>
@@ -129,7 +129,7 @@ const Footer = () => {
 
   return (
     <footer className="relative bg-gradient-to-br from-secondary/40 via-secondary/30 to-secondary/20 pt-16 pb-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12">
         <div className="md:hidden rounded-t-3xl bg-white border-t border-sky-100 shadow-[0_-10px_30px_rgba(15,23,42,0.06)] px-4 pt-4 pb-4 space-y-4">
           <div className="space-y-2">
             <Link to="/" className="inline-flex items-center gap-2 text-lg font-bold text-gray-900 group">

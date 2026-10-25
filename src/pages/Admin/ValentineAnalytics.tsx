@@ -52,7 +52,7 @@ const ValentineAnalyticsDashboard: React.FC = () => {
   const maxOrders = Math.max(...analytics.dailyData.map(d => d.orders), 1);
 
   return (
-    <div className="p-4 md:p-6 space-y-6 max-w-7xl mx-auto">
+    <div className="p-4 md:p-6 space-y-6 w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="flex items-center gap-3">

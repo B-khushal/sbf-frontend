@@ -311,7 +311,7 @@ const ProductReviewsPage = () => {
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: schemaMarkup }} />
       ) : null}
 
-      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+      <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 py-10 sm:px-6 lg:px-8 2xl:px-12">
         <Button
           variant="ghost"
           onClick={() => navigate(product ? `/product/${product._id}` : '/shop')}

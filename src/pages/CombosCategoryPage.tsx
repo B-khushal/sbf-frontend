@@ -373,7 +373,7 @@ export const CombosCategoryPage: React.FC = () => {
       </Helmet>
 
       {/* Breadcrumbs */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-5">
+      <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-10 pt-5">
         <nav className="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
           <Link to="/" className="hover:text-slate-800 transition-colors">
             Home
@@ -392,23 +392,23 @@ export const CombosCategoryPage: React.FC = () => {
       </div>
 
       {/* Hero Banner Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-rose-950 via-neutral-900 to-amber-950 text-white p-6 sm:p-10 md:p-14 shadow-xl">
+      <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-10 mt-4">
+        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-rose-950 via-neutral-900 to-amber-950 text-white p-6 sm:p-10 md:p-14 2xl:p-16 shadow-xl">
           {/* Subtle Decorative Elements */}
           <div className="absolute top-0 right-0 w-96 h-96 bg-rose-500/15 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute -bottom-10 left-10 w-72 h-72 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
 
-          <div className="relative z-10 max-w-2xl space-y-3.5">
+          <div className="relative z-10 max-w-2xl 2xl:max-w-4xl space-y-3.5">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-400/15 border border-rose-400/30 text-rose-200 text-[11px] font-extrabold tracking-widest uppercase">
               <Sparkles className="w-3.5 h-3.5 text-rose-300" />
               <span>SBF SIGNATURE CELEBRATION COMBOS</span>
             </div>
 
-            <h1 className="text-2xl sm:text-4xl md:text-5xl font-black font-serif tracking-tight leading-tight">
+            <h1 className="text-2xl sm:text-4xl md:text-5xl 2xl:text-6xl font-black font-serif tracking-tight leading-tight">
               Flowers & Cakes, Curated for Unforgettable Moments
             </h1>
 
-            <p className="text-xs sm:text-base text-rose-100/90 font-light leading-relaxed">
+            <p className="text-xs sm:text-base 2xl:text-lg text-rose-100/90 font-light leading-relaxed">
               Experience the joy of double celebrations. Breathtaking hand-tied Dutch flower bouquets paired seamlessly with freshly baked gourmet artisan cakes and imported confectionery.
             </p>
 
@@ -431,7 +431,7 @@ export const CombosCategoryPage: React.FC = () => {
       </div>
 
       {/* Quick Category / Pill Filter Bar */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+      <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-10 mt-6">
         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
           {COMBO_PILLS.map((pill) => {
             const isSelected = selectedPill === pill.id;
@@ -455,7 +455,7 @@ export const CombosCategoryPage: React.FC = () => {
       </div>
 
       {/* Main Content Area: Sidebar Filters + Products Grid */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 pb-20">
+      <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-10 mt-6 pb-20">
         {/* Top Control Bar: Results Count + Search + Sort + Mobile Filter Trigger */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white rounded-2xl border border-rose-100 p-3 sm:p-4 mb-6 shadow-2xs">
           <div className="flex items-center gap-2.5">
@@ -517,7 +517,7 @@ export const CombosCategoryPage: React.FC = () => {
         </div>
 
         {/* Layout: Sidebar + Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-8 items-start">
           {/* Desktop Filter Sidebar */}
           <aside className="hidden lg:block lg:col-span-1 bg-white rounded-3xl border border-rose-100 p-5 shadow-xs space-y-6 sticky top-24">
             <div className="flex items-center justify-between pb-3 border-b border-rose-100">
@@ -650,9 +650,9 @@ export const CombosCategoryPage: React.FC = () => {
           </aside>
 
           {/* Products Grid Area (Matches Cakes Category Standard) */}
-          <main className="lg:col-span-3">
+          <main className="lg:col-span-3 2xl:col-span-4 3xl:col-span-5">
             {loading ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3.5 sm:gap-5">
+              <div className="grid grid-cols-2 md:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 gap-3.5 sm:gap-5 2xl:gap-6">
                 {[...Array(6)].map((_, i) => (
                   <div
                     key={i}
@@ -689,8 +689,8 @@ export const CombosCategoryPage: React.FC = () => {
                 </Button>
               </div>
             ) : (
-              /* Products Grid (2 columns on mobile, 3 columns on tablet/desktop) */
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3.5 sm:gap-5">
+              /* Products Grid (2 columns on mobile, 3 columns on tablet/desktop, 4-5 on big screens) */
+              <div className="grid grid-cols-2 md:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 gap-3.5 sm:gap-5 2xl:gap-6">
                 {filteredProducts.map((combo) => (
                   <motion.div
                     key={combo._id || combo.id}
@@ -710,7 +710,7 @@ export const CombosCategoryPage: React.FC = () => {
 
       {/* Trust & Gifting Highlights Strip */}
       <section className="bg-white border-t border-rose-100/80 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-10">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-center md:text-left">
             <div className="flex items-start gap-3.5 p-4 rounded-2xl bg-rose-50/40 border border-rose-100/70">
               <div className="p-2.5 rounded-xl bg-rose-600 text-white shrink-0">

@@ -79,7 +79,7 @@ const ProductsOverview: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-6 w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto">
       {/* Header & Refresh */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -110,7 +110,7 @@ const ProductsOverview: React.FC = () => {
       </div>
 
       {/* Top 8 Analytics Metric Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 2xl:grid-cols-8 gap-4 2xl:gap-5">
         {topCards.map((card, i) => {
           const Icon = card.icon;
           return (

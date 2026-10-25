@@ -320,7 +320,7 @@ const AddonForm: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto p-4 sm:p-6 max-w-7xl font-sans text-slate-800 antialiased">
+    <div className="container mx-auto p-4 sm:p-6 w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd font-sans text-slate-800 antialiased">
       {/* Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-5 mb-6 gap-4">
         <div className="flex items-center gap-3">

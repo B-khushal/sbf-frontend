@@ -51,7 +51,7 @@ const DeliveryAnalytics: React.FC = () => {
   }, []);
 
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto">
+    <div className="p-6 space-y-6 w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto">
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-emerald-900">Delivery Analytics</h1>
         <p className="text-muted-foreground">Monitor performance ratings, average transit duration, and logistics success metrics.</p>
