@@ -22,8 +22,13 @@
 /health      /health           200
 
 # SEO crawlers static files
-/robots.txt  /robots.txt       200
-/sitemap.xml /sitemap.xml      200
+/robots.txt            /robots.txt            200
+/sitemap.xml           /sitemap.xml           200
+/sitemap-pages.xml     /sitemap-pages.xml     200
+/sitemap-static.xml    /sitemap-static.xml    200
+/sitemap-categories.xml /sitemap-categories.xml 200
+/sitemap-products.xml  /sitemap-products.xml  200
+/sitemap-occasions.xml /sitemap-occasions.xml 200
 
 # All other routes should be handled by React Router
 /*           /index.html       200

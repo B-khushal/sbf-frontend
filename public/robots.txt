@@ -4,8 +4,14 @@ Allow: /
 Allow: /shop
 Allow: /flower-delivery-hyderabad
 Allow: /flower-delivery-secunderabad
+Allow: /bouquets
+Allow: /roses
 Allow: /cakes
 Allow: /combos
+Allow: /sunflowers
+Allow: /lilies
+Allow: /flower-baskets
+Allow: /hydrangea
 Allow: /occasions/
 Allow: /product/
 Allow: /products/
