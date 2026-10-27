@@ -1,13 +1,45 @@
-import { defineConfig } from "vite";
+import { defineConfig, type ViteDevServer, type PreviewServer } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import { fileURLToPath, URL } from "url";
 import { componentTagger } from "lovable-tagger";
 import compression from "vite-plugin-compression";
 import path from "path";
-import http from "http";
+import http, { type IncomingMessage, type ServerResponse } from "http";
+import https from "https";
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
+export default defineConfig(({ mode }) => {
+  const isProd = mode === 'production';
+  const backendTarget = process.env.VITE_BACKEND_URL || (isProd ? 'https://api.sbflorist.in' : 'http://127.0.0.1:5000');
+
+  const proxySitemapRequest = (req: IncomingMessage, res: ServerResponse, next: () => void) => {
+    if (req.url && /^\/sitemap.*\.xml(\?.*)?$/.test(req.url)) {
+      try {
+        const targetUrl = new URL(req.url, backendTarget);
+        const isTargetHttps = targetUrl.protocol === 'https:';
+        const client = isTargetHttps ? https : http;
+        const proxyReq = client.request(targetUrl, {
+          method: req.method || 'GET',
+          headers: {
+            ...req.headers,
+            host: targetUrl.host
+          }
+        }, (proxyRes) => {
+          res.writeHead(proxyRes.statusCode || 200, proxyRes.headers);
+          proxyRes.pipe(res);
+        });
+        proxyReq.on('error', () => next());
+        req.pipe(proxyReq);
+        return;
+      } catch (err) {
+        next();
+        return;
+      }
+    }
+    next();
+  };
+
+  return {
   base: '/',
   server: {
     host: "::",
@@ -16,7 +48,7 @@ export default defineConfig(({ mode }) => ({
     historyApiFallback: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: isProd ? 'https://api.sbflorist.in' : 'http://localhost:5000',
         changeOrigin: true,
       },
     },
@@ -25,22 +57,14 @@ export default defineConfig(({ mode }) => ({
     react(),
     {
       name: 'sitemap-proxy-middleware',
-      configureServer(server) {
-        server.middlewares.use((req, res, next) => {
-          if (req.url && /^\/sitemap.*\.xml(\?.*)?$/.test(req.url)) {
-            const targetUrl = new URL(req.url, 'http://127.0.0.1:5000');
-            const proxyReq = http.request(targetUrl, {
-              method: req.method,
-              headers: { ...req.headers, host: '127.0.0.1:5000' }
-            }, (proxyRes) => {
-              res.writeHead(proxyRes.statusCode || 200, proxyRes.headers);
-              proxyRes.pipe(res);
-            });
-            proxyReq.on('error', () => next());
-            req.pipe(proxyReq);
-            return;
-          }
-          next();
+      configureServer(server: ViteDevServer) {
+        server.middlewares.use((req: IncomingMessage, res: ServerResponse, next: (err?: unknown) => void) => {
+          proxySitemapRequest(req, res, () => next());
+        });
+      },
+      configurePreviewServer(server: PreviewServer) {
+        server.middlewares.use((req: IncomingMessage, res: ServerResponse, next: (err?: unknown) => void) => {
+          proxySitemapRequest(req, res, () => next());
         });
       }
     },
@@ -105,16 +129,17 @@ export default defineConfig(({ mode }) => ({
         },
         // Optimize chunk file names
         chunkFileNames: (chunkInfo) => {
-          const facadeModuleId = chunkInfo.facadeModuleId ? chunkInfo.facadeModuleId.split('/').pop().replace('.tsx', '').replace('.ts', '') : 'chunk';
+          const facadeModuleId = chunkInfo.facadeModuleId ? (chunkInfo.facadeModuleId.split('/').pop() || 'chunk').replace('.tsx', '').replace('.ts', '') : 'chunk';
           return `assets/[name]-[hash].js`;
         },
         // Optimize asset file names
         assetFileNames: (assetInfo) => {
-          const info = assetInfo.name.split('.');
-          const extType = info[info.length - 1];
-          if (/\.(png|jpe?g|svg|gif|tiff|bmp|ico)$/i.test(assetInfo.name)) {
+          const name = assetInfo.name || '';
+          const info = name.split('.');
+          const extType = info.length > 1 ? info[info.length - 1] : 'bin';
+          if (name && /\.(png|jpe?g|svg|gif|tiff|bmp|ico)$/i.test(name)) {
             return `assets/images/[name]-[hash].${extType}`;
-          } else if (/\.(woff2?|eot|ttf|otf)$/i.test(assetInfo.name)) {
+          } else if (name && /\.(woff2?|eot|ttf|otf)$/i.test(name)) {
             return `assets/fonts/[name]-[hash].${extType}`;
           }
           return `assets/[name]-[hash].${extType}`;
@@ -156,4 +181,5 @@ export default defineConfig(({ mode }) => ({
     // Enable SPA fallback for preview mode
     historyApiFallback: true,
   },
-}));
+};
+});

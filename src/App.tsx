@@ -123,6 +123,7 @@ const ValentineAnalyticsDashboard = lazy(() => import('./pages/Admin/ValentineAn
 const SeasonalCampaigns = lazy(() => import('./pages/Admin/SeasonalCampaigns'));
 const SeasonalCampaignForm = lazy(() => import('./pages/Admin/SeasonalCampaignForm'));
 const AdminOccasions = lazy(() => import('./pages/Admin/Occasions'));
+const SitemapViewerPage = lazy(() => import('./pages/SitemapViewerPage'));
 const OccasionProductsPage = lazy(() => import('./pages/OccasionProductsPage').then(m => ({ default: m.OccasionProductsPage })));
 const HyderabadDeliveryPage = lazy(() => import('./pages/HyderabadDeliveryPage'));
 const SecunderabadDeliveryPage = lazy(() => import('./pages/SecunderabadDeliveryPage'));
@@ -869,6 +870,44 @@ const App = () => {
                             <Route path="/contact" element={
                               <Suspense fallback={<LoadingFallback message="Loading contact..." />}>
                                 <ContactPage />
+                              </Suspense>
+                            } />
+                            <Route path="/faq" element={
+                              <Suspense fallback={<LoadingFallback message="Loading FAQ..." />}>
+                                <FaqPage />
+                              </Suspense>
+                            } />
+                            <Route path="/faqs" element={<Navigate to="/faq" replace />} />
+
+                            {/* Human-friendly Interactive XML Sitemaps */}
+                            <Route path="/sitemap.xml" element={
+                              <Suspense fallback={<LoadingFallback message="Loading Sitemap..." />}>
+                                <SitemapViewerPage />
+                              </Suspense>
+                            } />
+                            <Route path="/sitemap-pages.xml" element={
+                              <Suspense fallback={<LoadingFallback message="Loading Pages Sitemap..." />}>
+                                <SitemapViewerPage />
+                              </Suspense>
+                            } />
+                            <Route path="/sitemap-static.xml" element={
+                              <Suspense fallback={<LoadingFallback message="Loading Pages Sitemap..." />}>
+                                <SitemapViewerPage />
+                              </Suspense>
+                            } />
+                            <Route path="/sitemap-categories.xml" element={
+                              <Suspense fallback={<LoadingFallback message="Loading Categories Sitemap..." />}>
+                                <SitemapViewerPage />
+                              </Suspense>
+                            } />
+                            <Route path="/sitemap-products.xml" element={
+                              <Suspense fallback={<LoadingFallback message="Loading Products Sitemap..." />}>
+                                <SitemapViewerPage />
+                              </Suspense>
+                            } />
+                            <Route path="/sitemap-occasions.xml" element={
+                              <Suspense fallback={<LoadingFallback message="Loading Occasions Sitemap..." />}>
+                                <SitemapViewerPage />
                               </Suspense>
                             } />
                             <Route path="/flower-delivery-hyderabad" element={
