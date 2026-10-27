@@ -54,9 +54,6 @@ LABEL maintainer="B-khushal"
 LABEL description="SBF Florist Frontend"
 LABEL version="1.0.0"
 
-# Install curl for healthcheck
-RUN apk add --no-cache curl
-
 # Remove default nginx config
 RUN rm -rf /etc/nginx/conf.d/*
 
@@ -77,9 +74,9 @@ RUN chown -R nginx:nginx /var/cache/nginx && \
 # Expose port 80 (Dokploy/reverse proxy handles SSL)
 EXPOSE 80
 
-# Healthcheck — ensure nginx is serving content
+# Healthcheck — ensure nginx is serving content (uses built-in busybox wget)
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost/health || exit 1
+  CMD wget -q -O - http://127.0.0.1/health > /dev/null || exit 1
 
 # Start nginx in foreground
 CMD ["nginx", "-g", "daemon off;"]
