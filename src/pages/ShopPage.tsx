@@ -85,6 +85,131 @@ const CATEGORY_ALIAS_MAP: Record<string, string> = {
   "aniversary gifts": "Anniversary Gifts",
 };
 
+export const TARGET_CATEGORY_SEO: Record<string, {
+  title: string;
+  description: string;
+  h1: string;
+  canonical: string;
+  h2s?: Array<{ title: string; body: string }>;
+}> = {
+  bouquets: {
+    title: "Flower Bouquets in Hyderabad | Spring Blossoms Florist",
+    description: "Explore fresh flower bouquets in Hyderabad for birthdays, anniversaries and special occasions. Browse available styles and order your favorite bouquet online.",
+    h1: "Flower Bouquets in Hyderabad",
+    canonical: "/bouquets",
+    h2s: [
+      {
+        title: "Shop Flower Bouquets",
+        body: "Browse our hand-tied flower bouquets in Hyderabad, arranged by master florists with Dutch roses, oriental lilies, chrysanthemums, and fresh greenery for every expression of love, joy, or gratitude."
+      },
+      {
+        title: "Choose a Bouquet for Every Occasion",
+        body: "From romantic anniversaries and surprise birthday parties to corporate congratulations and get-well wishes, our fresh bouquets are crafted in modern wrapping with hydration packs."
+      },
+      {
+        title: "Popular Rose and Mixed Flower Bouquets",
+        body: "Discover our most requested arrangements including 10, 20, and 50 red rose bouquets, pastel mixed carnations, and vibrant seasonal bloom mixes with same-day delivery across Hyderabad."
+      },
+      {
+        title: "Frequently Asked Questions About Flower Bouquets",
+        body: "We offer 2-4 hour express same-day bouquet delivery and midnight surprise delivery between 11:00 PM and 11:59 PM across Hyderabad & Secunderabad. First order delivery is completely free."
+      }
+    ]
+  },
+  roses: {
+    title: "Rose Bouquets in Hyderabad | Red, Pink, Yellow & White Roses",
+    description: "Discover rose bouquets in Hyderabad, including red, pink, yellow and white roses. Explore available arrangements for romantic gifts and special occasions.",
+    h1: "Rose Bouquets in Hyderabad",
+    canonical: "/roses",
+    h2s: [
+      {
+        title: "Shop Rose Bouquets",
+        body: "Explore handcrafted rose bouquets in Hyderabad made from grade-A Dutch roses. Whether you need a simple token or a grand 100-rose gesture, we assemble and deliver with care."
+      },
+      {
+        title: "Red Rose Bouquets",
+        body: "The quintessential symbol of romance. Available in 10, 20, 30, 50, and 100 long-stem Dutch red roses wrapped in luxury matte and gold paper."
+      },
+      {
+        title: "Pink Rose Bouquets",
+        body: "Graceful and elegant pink roses perfect for expressing admiration, gratitude, birthdays, and anniversaries."
+      },
+      {
+        title: "Yellow Rose Bouquets",
+        body: "Warm, radiant yellow roses to brighten a friend's day, celebrate promotions, or send cheerful get-well wishes."
+      },
+      {
+        title: "White Rose Bouquets",
+        body: "Serene white roses representing purity and peace, ideal for weddings, congratulations, and respectful sympathy tributes."
+      },
+      {
+        title: "How to Choose the Right Rose Bouquet",
+        body: "Choose red for romantic passion, pink for sweetness and affection, yellow for joy and friendship, and white for peace and beginnings. All rose bouquets come with flower food and care instructions."
+      }
+    ]
+  },
+  sunflowers: {
+    title: "Sunflower Bouquets in Hyderabad | Spring Blossoms Florist",
+    description: "Explore available sunflower bouquets for birthdays, thoughtful gifts and cheerful celebrations. Browse sunflower arrangements at Spring Blossoms Florist.",
+    h1: "Sunflower Bouquets",
+    canonical: "/sunflowers",
+    h2s: [
+      {
+        title: "Shop Sunflower Bouquets in Hyderabad",
+        body: "Golden, cheerful sunflowers that bring instant warmth and optimism. Sourced fresh and arranged with white roses or seasonal fillers for a radiant floral gift."
+      }
+    ]
+  },
+  lilies: {
+    title: "Lily Flowers and Bouquets in Hyderabad | Spring Blossoms Florist",
+    description: "Discover available lily flowers and bouquets for thoughtful gifts and special occasions. Explore lily arrangements at Spring Blossoms Florist.",
+    h1: "Lily Flowers and Bouquets",
+    canonical: "/lilies",
+    h2s: [
+      {
+        title: "Explore Lily Flowers and Bouquets",
+        body: "Exquisite oriental and Asiatic lilies known for their intoxicating fragrance and majestic star-shaped blooms. Hand-arranged in bouquets and celebration vases."
+      }
+    ]
+  },
+  "flower-baskets": {
+    title: "Flower Baskets in Hyderabad | Spring Blossoms Florist",
+    description: "Explore available flower baskets for birthdays, celebrations and thoughtful gifting. Find floral arrangements suited to your occasion.",
+    h1: "Flower Baskets for Special Occasions",
+    canonical: "/flower-baskets",
+    h2s: [
+      {
+        title: "Artisanal Flower Baskets for Celebrations",
+        body: "Woven wicker and luxury handled baskets overflowing with Dutch roses, lilies, orchids, and carnations designed for centerpieces and celebratory greetings."
+      }
+    ]
+  },
+  baskets: {
+    title: "Flower Baskets in Hyderabad | Spring Blossoms Florist",
+    description: "Explore available flower baskets for birthdays, celebrations and thoughtful gifting. Find floral arrangements suited to your occasion.",
+    h1: "Flower Baskets for Special Occasions",
+    canonical: "/flower-baskets",
+    h2s: [
+      {
+        title: "Artisanal Flower Baskets for Celebrations",
+        body: "Woven wicker and luxury handled baskets overflowing with Dutch roses, lilies, orchids, and carnations designed for centerpieces and celebratory greetings."
+      }
+    ]
+  },
+  hydrangea: {
+    title: "Hydrangea Flower Bouquets in Hyderabad | Spring Blossoms Florist",
+    description: "Explore exquisite hydrangea flower bouquets and luxury arrangements in Hyderabad. Handcrafted by master florists at Spring Blossoms Florist.",
+    h1: "Hydrangea Flower Bouquets",
+    canonical: "/hydrangea",
+    h2s: [
+      {
+        title: "Luxury Hydrangea Floral Arrangements",
+        body: "Lush, cloud-like hydrangea clusters in soft pastels and vibrant tones, creating opulent bouquets for weddings, elegant birthdays, and milestone moments."
+      }
+    ]
+  }
+};
+
 const FLOWER_FILTER_OPTIONS = [
   { label: 'All Flower Types', value: '' },
   { label: '🌹 Roses', value: 'rose' },
@@ -775,6 +900,10 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
     setFilteredProducts(filtered);
   }, [products, selectedCategoryKey, isParentCategoryRoute, minPriceFilter, maxPriceFilter, sortBy, searchQuery, deliveryOption, occasionFilter, flowerTypeFilter, colorFilter, inStockOnly, bestsellerOnly, newArrivalOnly]);
 
+  // Target category SEO lookup
+  const targetCategoryKey = (selectedCategoryKey || normalizeCategoryKey(category) || (resolvedCategory && resolvedCategory.slug) || "").toLowerCase();
+  const targetSeo = TARGET_CATEGORY_SEO[targetCategoryKey];
+
   // Dynamically derive SEO metadata for categories and search
   let pageTitle = "Shop Online Flowers & Gifts in Hyderabad";
   let pageDescription = "Browse fresh flowers, bouquets, celebration cakes, and gift combos online with guaranteed same-day & midnight delivery across Hyderabad & Secunderabad.";
@@ -790,6 +919,10 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
     pageTitle = "Budget Friendly Flowers & Gifts Under ₹1,000";
     pageDescription = "Shop beautiful budget-friendly flowers, bouquets and gifts under ₹1,000 from Spring Blossoms Florist. Elegant gifting options at thoughtful prices.";
     pageCanonical = "/shop/budget-friendly";
+  } else if (targetSeo) {
+    pageTitle = targetSeo.title;
+    pageDescription = targetSeo.description;
+    pageCanonical = targetSeo.canonical;
   } else if (resolvedCategory) {
     pageTitle = resolvedCategory.metaTitle || `${resolvedCategory.name} Delivery in Hyderabad`;
     pageDescription = resolvedCategory.metaDescription || resolvedCategory.description || `Send fresh ${resolvedCategory.name} flowers and arrangements online with same-day and midnight delivery in Hyderabad from Spring Blossoms Florist.`;
@@ -958,11 +1091,38 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
                     </span>
                   </div>
                   <h1 className="text-3xl md:text-4xl font-black text-gray-800 mb-4">
-                    {selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)} Collection - Flower Delivery in Hyderabad
+                    {targetSeo?.h1 || `${selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)} Collection - Flower Delivery in Hyderabad`}
                   </h1>
                   <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                    Discover our beautiful selection of {selectedCategory.toLowerCase()} carefully curated for your special moments
+                    {targetSeo?.description || `Discover our beautiful selection of ${selectedCategory.toLowerCase()} carefully curated for your special moments`}
                   </p>
+
+                  {/* Roses Quick Color Collection Filter Pills */}
+                  {targetCategoryKey === 'roses' && (
+                    <div className="flex flex-wrap items-center justify-center gap-2 mt-5">
+                      {[
+                        { label: 'All Roses', val: '' },
+                        { label: '🌹 Red Roses', val: 'red' },
+                        { label: '🌸 Pink Roses', val: 'pink' },
+                        { label: '🌻 Yellow Roses', val: 'yellow' },
+                        { label: '🤍 White Roses', val: 'white' },
+                      ].map((chip) => (
+                        <button
+                          key={chip.val}
+                          type="button"
+                          onClick={() => setColorFilter(chip.val)}
+                          className={cn(
+                            "px-4 py-1.5 rounded-full text-xs font-bold transition-all border",
+                            colorFilter === chip.val
+                              ? "bg-rose-600 text-white border-rose-600 shadow-sm"
+                              : "bg-white text-slate-700 border-slate-200 hover:border-rose-300 hover:bg-rose-50/50"
+                          )}
+                        >
+                          {chip.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             )
@@ -1776,6 +1936,33 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
               )}
             </div>
           </div>
+
+          {/* Category Editorial SEO Guide & Recommended H2 Sections */}
+          {targetSeo?.h2s && targetSeo.h2s.length > 0 && (
+            <section className="mt-16 bg-white/95 backdrop-blur-sm rounded-3xl border border-rose-100/90 p-6 sm:p-10 shadow-xs space-y-8">
+              <div className="border-b border-rose-100 pb-5">
+                <h2 className="text-xl sm:text-2xl font-bold text-slate-900 font-serif">
+                  {targetSeo.h2s[0].title}
+                </h2>
+                <p className="text-sm text-slate-600 mt-2 leading-relaxed">
+                  {targetSeo.h2s[0].body}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
+                {targetSeo.h2s.slice(1).map((h2Item, i) => (
+                  <div key={i} className="space-y-2">
+                    <h2 className="text-base font-bold text-slate-900">
+                      {h2Item.title}
+                    </h2>
+                    <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                      {h2Item.body}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
         </div>
       </main>
 

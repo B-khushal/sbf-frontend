@@ -170,20 +170,30 @@ const ProductPage = () => {
     ? Math.round(product.price * (1 - product.discount / 100))
     : product.price;
 
-  const cleanDescription = product.description
-    ? product.description.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().slice(0, 160)
-    : `Order ${product.title} from Spring Blossoms Florist with same-day and midnight flower delivery in Hyderabad.`;
-
-  const primaryImage = (product.images && product.images[0]) || '/logo.png';
   const categoryName = typeof product.category === 'string'
     ? product.category
     : (product.category as any)?.name || 'Flowers';
+
+  // Determine relevant flower or gift type
+  const giftType = product.flowerType 
+    ? `${product.flowerType} Flowers`
+    : (categoryName === 'Cakes' ? 'Celebration Cakes' : categoryName === 'Combos' ? 'Flower & Cake Combos' : `${categoryName} Bouquets`);
+
+  // Extract verified product attributes or tags for dynamic description
+  const productFeatures = product.shortDescription
+    ? product.shortDescription.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()
+    : (product.flowerType || (product.tags && product.tags.length > 0 ? product.tags.slice(0, 3).join(', ') : giftType.toLowerCase()));
+
+  const productSeoTitle = `${product.title} | ${giftType} in Hyderabad`;
+  const productSeoDesc = `Discover ${product.title}, featuring ${productFeatures}. Explore available variants, pricing from ₹${finalPrice}, and express same-day or midnight delivery in Hyderabad from Spring Blossoms Florist.`;
+
+  const primaryImage = (product.images && product.images[0]) || '/logo.png';
 
   const productSchema = {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: product.title,
-    description: cleanDescription,
+    description: productSeoDesc,
     image: (product.images && product.images.length > 0)
       ? product.images.map(img => img.startsWith('/') ? `https://sbflorist.in${img}` : img)
       : [`https://sbflorist.in/logo.png`],
@@ -216,8 +226,8 @@ const ProductPage = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <SEOHead
-        title={`${product.title} - ₹${finalPrice}`}
-        description={cleanDescription}
+        title={productSeoTitle}
+        description={productSeoDesc}
         canonical={`/product/${product._id || actualId}`}
         ogType="product"
         ogImage={primaryImage}

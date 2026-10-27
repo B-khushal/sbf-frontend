@@ -275,14 +275,14 @@ export const CakesCategoryPage: React.FC = () => {
   return (
     <div className="bg-[#fcfaf7] min-h-screen">
       <Helmet>
-        <title>Online Cake Delivery in Hyderabad | Birthday &amp; Celebration Cakes | Spring Blossoms Florist</title>
+        <title>Cakes in Hyderabad | Spring Blossoms Florist</title>
         <meta
           name="description"
-          content="Order freshly baked cakes online with same-day and midnight cake delivery in Hyderabad from Spring Blossoms Florist. Dutch Truffle, Red Velvet, Black Forest and flowers combos."
+          content="Explore available cakes in Hyderabad for birthdays, anniversaries and special celebrations. Discover cake options and gift combinations at Spring Blossoms Florist."
         />
         <link rel="canonical" href="https://sbflorist.in/cakes" />
-        <meta property="og:title" content="Online Cake Delivery in Hyderabad | Spring Blossoms Florist" />
-        <meta property="og:description" content="Order freshly crafted celebration cakes and flower combos with same-day and midnight delivery across Hyderabad." />
+        <meta property="og:title" content="Cakes in Hyderabad | Spring Blossoms Florist" />
+        <meta property="og:description" content="Explore available cakes in Hyderabad for birthdays, anniversaries and special celebrations. Discover cake options and gift combinations at Spring Blossoms Florist." />
         <meta property="og:url" content="https://sbflorist.in/cakes" />
         <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
       </Helmet>
@@ -316,11 +316,11 @@ export const CakesCategoryPage: React.FC = () => {
             </div>
 
             <h1 className="text-2xl sm:text-4xl md:text-5xl 2xl:text-6xl font-black font-serif tracking-tight leading-tight">
-              Cakes, Made for Every Celebration
+              Cakes in Hyderabad for Every Celebration
             </h1>
 
             <p className="text-xs sm:text-base 2xl:text-lg text-amber-100/90 font-light leading-relaxed">
-              Freshly crafted cakes to make every special moment a little sweeter. Baked with European dark cocoa, fresh churned cream, and hand-selected berries.
+              Explore freshly crafted celebration cakes in Hyderabad, baked with European dark cocoa, farm-fresh cream, and hand-selected fruits to make every special moment memorable.
             </p>
 
             <div className="flex flex-wrap items-center gap-3 pt-2 text-[11px] sm:text-xs font-semibold text-amber-200/80">
@@ -576,6 +576,49 @@ export const CakesCategoryPage: React.FC = () => {
           </main>
         </div>
       </div>
+
+      {/* SEO Information & Category Guide */}
+      <section className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-10 pb-16">
+        <div className="bg-white rounded-3xl border border-amber-100/90 p-6 sm:p-10 shadow-xs space-y-10">
+          <div className="border-b border-amber-100 pb-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-2 font-serif">
+              Explore Our Cake Collection
+            </h2>
+            <p className="text-sm text-slate-600 leading-relaxed">
+              At Spring Blossoms Florist, our dedicated bakery crafts oven-fresh cakes daily in Hyderabad. From rich Belgian Chocolate Truffle and moist Red Velvet with smooth cream cheese to classic Black Forest and fresh Pineapple fruit cakes, each cake is prepared using premium natural ingredients with 100% vegetarian eggless options available for all flavors.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div>
+              <h2 className="text-base sm:text-lg font-bold text-slate-900 mb-2">
+                Cakes for Birthdays and Special Occasions
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                Whether celebrating a milestone birthday, an intimate anniversary, a family gathering, or a corporate milestone, our cakes in Hyderabad are designed to be the centerpiece of your celebration. Available in 0.5 kg, 1 kg, and larger multi-tier sizes with customizable chocolate text messages.
+              </p>
+            </div>
+
+            <div>
+              <h2 className="text-base sm:text-lg font-bold text-slate-900 mb-2">
+                Cakes and Flower Gift Combos
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                Pair your gourmet cake with hand-tied Dutch roses, fragrant Asiatic lilies, or imported Ferrero Rocher chocolates. Explore our <Link to="/combos" className="text-amber-800 font-semibold underline hover:text-amber-900">Flower &amp; Cake Combos</Link> for double the celebration joy, delivered seamlessly together in one temperature-controlled delivery.
+              </p>
+            </div>
+
+            <div>
+              <h2 className="text-base sm:text-lg font-bold text-slate-900 mb-2">
+                Cake Ordering and Delivery Information
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                We provide reliable <strong>cakes delivery in Hyderabad</strong> and Secunderabad. Enjoy Free Delivery on your first order and orders of ₹999+. Choose between daytime Express Same-Day delivery (2-4 hours) or our signature Midnight Surprise delivery slot (11:00 PM – 11:59 PM) for midnight birthday surprises.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Mobile Filters Bottom Sheet */}
       <AnimatePresence>

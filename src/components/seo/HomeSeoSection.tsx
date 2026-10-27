@@ -11,7 +11,8 @@ import {
   ShieldCheck, 
   Cake, 
   ArrowRight,
-  PhoneCall
+  PhoneCall,
+  Flower2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -23,27 +24,27 @@ interface FAQItem {
 const FAQ_DATA: FAQItem[] = [
   {
     question: "Do you offer same-day flower and cake delivery in Hyderabad and Secunderabad?",
-    answer: "Yes! SB Florist provides guaranteed same-day flower, cake, and gift delivery across both Hyderabad and Secunderabad. Place your order during our business hours, and our local delivery team will hand-deliver fresh blooms and cakes right to your recipient's doorstep within hours."
+    answer: "Yes! Spring Blossoms Florist provides guaranteed same-day flower, cake, and gift delivery across both Hyderabad and Secunderabad. Place your order during our business hours, and our local delivery team will hand-deliver fresh blooms and cakes right to your recipient's doorstep in 2-4 hours."
   },
   {
-    question: "How do your delivery charges and time slots work?",
-    answer: "We offer Free Delivery on your 1st order for all new customers! Additionally, standard delivery is FREE on orders of ₹999 and above (₹150 for orders below ₹999). You can select from Standard Delivery (9 AM - 9 PM), hourly Fixed Time Delivery (+₹150 slot fee), or our popular Midnight Surprise Delivery (+₹150-₹300 slot fee) during checkout."
+    question: "Can I find bouquets near me or order flowers delivery near me in Hyderabad?",
+    answer: "Yes. As a premier local florist with our central design studio located at Mehdipatnam, Hyderabad, we fulfill 'bouquets near me' and 'flowers delivery near me' searches with rapid hyper-local delivery across Banjara Hills, Jubilee Hills, Gachibowli, Hitec City, Madhapur, Kukatpally, Begumpet, Secunderabad, and 50+ localities."
   },
   {
-    question: "Can I schedule a midnight flower delivery for birthdays or anniversaries?",
-    answer: "Absolutely! Our Midnight Surprise Delivery slot is specifically designed for birthdays, anniversaries, and special moments. Our delivery partner will deliver between 11:00 PM and 11:59 PM to surprise your loved ones right as the clock strikes midnight."
+    question: "What types of rose bouquets do you offer (red, pink, yellow, white)?",
+    answer: "We carry farm-fresh Dutch roses in all signature colors: romantic Red Rose bouquets (10, 20, 50, and 100 stems), elegant Pink Rose arrangements, cheerful Yellow Roses for friendships and celebrations, and pristine White Rose bouquets, as well as multi-color mixed floral arrangements."
   },
   {
-    question: "Which localities in Secunderabad do you cover?",
-    answer: "We cover all major parts of Secunderabad including Begumpet, Secunderabad Station/HO, Bowenpally, Sainikpuri, Marredpally, ECIL, AS Rao Nagar, Neredmet, Sitaphalmandi, Bolaram, and surrounding areas. Enter your 6-digit PIN code at the top of our site to confirm instant eligibility."
+    question: "Can I send flowers and a cake together as a combo in Hyderabad?",
+    answer: "Yes, our flower and cake combos are among our bestsellers! Choose from classic Dutch Truffle, Black Forest, Red Velvet, Pineapple, or Butterscotch cakes paired with vibrant red roses, exotic lilies, or sunflowers, along with personalized greeting notes."
   },
   {
-    question: "Can I send flowers and a cake together as a combo?",
-    answer: "Yes, our cake with flowers combos are among our bestsellers! Choose from classic Dutch Truffle, Black Forest, Red Velvet, Pineapple, or Butterscotch cakes paired with vibrant red roses, exotic lilies, or mixed floral bouquets, along with personalized greeting cards."
+    question: "How do your delivery charges and midnight surprise slots work?",
+    answer: "We offer Free Delivery on your 1st order for all new customers! Standard delivery is FREE on orders of ₹999 and above. You can also book our popular Midnight Surprise Delivery (11:00 PM – 11:59 PM) for birthdays and anniversaries, or hourly Fixed Time delivery during checkout."
   },
   {
-    question: "Where is SB Florist located in Hyderabad?",
-    answer: "Our flagship floral studio is located at Door No. 12-2-786/A & B, Najam Centre, Pillar No. 32, Rethi Bowli, Mehdipatnam, Hyderabad, Telangana 500028. You can also reach our customer support directly at +91 9949683222 for custom flower styling and urgent orders."
+    question: "Where is Spring Blossoms Florist located in Hyderabad?",
+    answer: "Our flagship floral studio is located at Door No. 12-2-786/A & B, Najam Centre, Pillar No. 32, Rethi Bowli, Mehdipatnam, Hyderabad, Telangana 500028. You can also reach our customer support directly at +91 9949683222 for custom styling and urgent orders."
   }
 ];
 
@@ -72,20 +73,21 @@ export const HomeSeoSection: React.FC = () => {
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-rose-200/25 blur-[120px] rounded-full pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+        
         {/* Main Header */}
         <div className="text-center max-w-3xl mx-auto mb-14">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-rose-100/80 text-rose-700 text-xs font-semibold uppercase tracking-wider mb-4 border border-rose-200/70">
             <Sparkles className="w-3.5 h-3.5" />
-            Hyderabad & Secunderabad's Trusted Local Florist
+            Hyderabad &amp; Secunderabad's Trusted Local Florist
           </div>
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
-            Send Fresh Flowers, Delicious Cakes & Gifts Across{' '}
+            Send Fresh Flowers, Delicious Cakes &amp; Gifts Across{' '}
             <span className="bg-gradient-to-r from-rose-600 via-pink-600 to-amber-600 bg-clip-text text-transparent">
-              Hyderabad & Secunderabad
+              Hyderabad &amp; Secunderabad
             </span>
           </h2>
           <p className="mt-4 text-sm sm:text-base text-slate-600 leading-relaxed">
-            Welcome to <strong className="font-semibold text-slate-800">SB Florist</strong>, your neighborhood floral studio delivering hand-tied bouquets, luscious artisanal cakes, and luxury gift hampers throughout the Twin Cities with precision same-day and midnight delivery.
+            Welcome to <strong className="font-semibold text-slate-800">Spring Blossoms Florist</strong>, your neighborhood floral studio delivering hand-tied bouquets, luscious artisanal cakes, and luxury gift hampers throughout the Twin Cities with precision same-day and midnight delivery.
           </p>
         </div>
 
@@ -105,9 +107,9 @@ export const HomeSeoSection: React.FC = () => {
             <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center mb-3">
               <Clock className="w-5 h-5" />
             </div>
-            <h3 className="text-base font-bold text-slate-900">Midnight & Same-Day</h3>
+            <h3 className="text-base font-bold text-slate-900">Midnight &amp; Same-Day</h3>
             <p className="mt-1 text-xs text-slate-600 leading-relaxed">
-              Order by afternoon for same-day delivery, or book a 11 PM – 12 AM Midnight Surprise for unforgettable celebrations.
+              Order by afternoon for same-day delivery, or book an 11 PM – 12 AM Midnight Surprise for birthdays and anniversaries.
             </p>
           </div>
 
@@ -132,151 +134,237 @@ export const HomeSeoSection: React.FC = () => {
           </div>
         </div>
 
-        {/* Twin Cities Spotlight Cards */}
+        {/* Structured SEO Editorial Section 1: Bouquets & Roses */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
-          {/* Hyderabad Spotlight */}
-          <div className="rounded-3xl p-6 sm:p-8 bg-gradient-to-br from-white via-rose-50/40 to-pink-50/30 border border-rose-200/60 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+          
+          {/* H2: Shop Bouquets in Hyderabad */}
+          <div className="rounded-3xl p-6 sm:p-8 bg-white border border-rose-200/60 shadow-sm flex flex-col justify-between">
             <div>
-              <div className="flex items-center justify-between gap-2 mb-4">
-                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-rose-100 text-rose-800 flex items-center gap-1">
-                  <MapPin className="w-3 h-3" /> Hyderabad City
-                </span>
-                <span className="text-xs font-medium text-slate-500">50+ Localities Served</span>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200/50 mb-3">
+                <Flower2 className="w-3.5 h-3.5" /> Handcrafted Floral Bouquets
               </div>
-              <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mb-3">
-                Online Flower & Cake Delivery in Hyderabad
-              </h3>
-              <p className="text-sm text-slate-600 leading-relaxed mb-5">
-                Whether you need elegant red roses in <strong>Banjara Hills</strong>, celebratory bouquets in <strong>Jubilee Hills</strong>, gourmet cakes delivered to <strong>Gachibowli & Madhapur tech corridors</strong>, or traditional celebrations in <strong>Mehdipatnam & Old City</strong>, SB Florist ensures hand-delivered freshness with live tracking.
+              <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-3">
+                Shop Bouquets in Hyderabad
+              </h2>
+              <p className="text-sm text-slate-600 leading-relaxed mb-4">
+                Looking for fresh <strong>bouquets in Hyderabad</strong> or searching for a trusted <strong>florist in Hyderabad</strong>? At Spring Blossoms Florist, our master florists hand-craft vibrant bouquets using farm-fresh Dutch roses, delicate gypsophila (baby's breath), fragrant Asiatic lilies, and tropical orchids. Whether you need a birthday surprise, anniversary celebration, congratulations bouquet, or sympathy arrangement, we offer beautiful arrangements starting from under ₹1,000 with same-day delivery.
               </p>
-
-              {/* Localities pill tags */}
-              <div className="flex flex-wrap gap-1.5 mb-6">
-                {POPULAR_LOCALITIES_HYD.slice(0, 10).map((area) => (
-                  <span key={area} className="text-[11px] px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 font-medium">
-                    {area}
-                  </span>
-                ))}
-                <span className="text-[11px] px-2 py-1 text-rose-600 font-semibold">+ more</span>
+              <div className="flex flex-wrap gap-2 mb-6">
+                <Link to="/bouquets" className="text-xs px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold transition-colors">
+                  All Flower Bouquets &rarr;
+                </Link>
+                <Link to="/shop/budget-friendly" className="text-xs px-3 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 font-medium transition-colors">
+                  Under ₹1,000
+                </Link>
+                <Link to="/flower-baskets" className="text-xs px-3 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 font-medium transition-colors">
+                  Flower Baskets
+                </Link>
               </div>
             </div>
-
             <Link
-              to="/flower-delivery-hyderabad"
-              className="inline-flex items-center justify-between w-full px-5 py-3 rounded-xl bg-white border border-rose-200 text-rose-700 font-semibold text-sm hover:bg-rose-50/80 transition-colors group"
+              to="/bouquets"
+              className="inline-flex items-center justify-between w-full px-5 py-3 rounded-xl bg-rose-50 hover:bg-rose-100/80 border border-rose-200 text-rose-800 font-semibold text-sm transition-colors group"
             >
-              <span>Explore Hyderabad Flower Delivery Guide</span>
+              <span>Explore All Flower Bouquets</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
 
-          {/* Secunderabad Spotlight */}
-          <div className="rounded-3xl p-6 sm:p-8 bg-gradient-to-br from-white via-sky-50/40 to-indigo-50/30 border border-sky-200/60 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+          {/* H2: Find Your Perfect Roses Bouquet */}
+          <div className="rounded-3xl p-6 sm:p-8 bg-white border border-rose-200/60 shadow-sm flex flex-col justify-between">
             <div>
-              <div className="flex items-center justify-between gap-2 mb-4">
-                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-sky-100 text-sky-800 flex items-center gap-1">
-                  <MapPin className="w-3 h-3" /> Secunderabad Twin City
-                </span>
-                <span className="text-xs font-medium text-slate-500">Full Coverage</span>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200/50 mb-3">
+                <Heart className="w-3.5 h-3.5" /> Signature Rose Collections
               </div>
-              <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mb-3">
-                Send Flowers & Gifts to Secunderabad
-              </h3>
-              <p className="text-sm text-slate-600 leading-relaxed mb-5">
-                We take special pride in servicing our sister city. From <strong>Begumpet</strong> and <strong>Secunderabad HO</strong> to cantonment suburbs like <strong>Bowenpally, Sainikpuri, Marredpally, ECIL</strong>, and <strong>AS Rao Nagar</strong>, enjoy direct florist dispatch without third-party courier delays.
+              <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-3">
+                Find Your Perfect Roses Bouquet
+              </h2>
+              <p className="text-sm text-slate-600 leading-relaxed mb-4">
+                Roses express what words cannot. Discover our celebrated selection of <strong>roses in Hyderabad</strong>, ranging from classic 10 and 20 red rose bouquets to grand 50-stem presentations. Choose from passionate red roses, delicate pink roses, radiant yellow roses for friendship, and elegant white roses for peaceful congratulations.
               </p>
-
-              {/* Localities pill tags */}
-              <div className="flex flex-wrap gap-1.5 mb-6">
-                {POPULAR_LOCALITIES_SEC.slice(0, 10).map((area) => (
-                  <span key={area} className="text-[11px] px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 font-medium">
-                    {area}
-                  </span>
-                ))}
-                <span className="text-[11px] px-2 py-1 text-sky-600 font-semibold">+ more</span>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-6">
+                <Link to="/roses?color=red" className="text-xs p-2.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-700 font-semibold text-center transition-colors">
+                  🌹 Red Roses
+                </Link>
+                <Link to="/roses?color=pink" className="text-xs p-2.5 rounded-lg bg-pink-50 hover:bg-pink-100 text-pink-700 font-semibold text-center transition-colors">
+                  🌸 Pink Roses
+                </Link>
+                <Link to="/roses?color=yellow" className="text-xs p-2.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 font-semibold text-center transition-colors">
+                  🌻 Yellow Roses
+                </Link>
+                <Link to="/roses?color=white" className="text-xs p-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-center transition-colors">
+                  🤍 White Roses
+                </Link>
               </div>
             </div>
-
             <Link
-              to="/flower-delivery-secunderabad"
-              className="inline-flex items-center justify-between w-full px-5 py-3 rounded-xl bg-white border border-sky-200 text-sky-700 font-semibold text-sm hover:bg-sky-50/80 transition-colors group"
+              to="/roses"
+              className="inline-flex items-center justify-between w-full px-5 py-3 rounded-xl bg-rose-50 hover:bg-rose-100/80 border border-rose-200 text-rose-800 font-semibold text-sm transition-colors group"
             >
-              <span>Explore Secunderabad Flower Delivery Guide</span>
+              <span>Browse All Rose Bouquets</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
         </div>
 
-        {/* Occasions & Products Fast Links */}
-        <div className="rounded-3xl p-8 bg-white border border-slate-200/80 shadow-sm mb-16">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-6 border-b border-slate-100">
+        {/* Structured SEO Editorial Section 2: Exotic Varieties & Cakes/Combos */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+          
+          {/* H2: Sunflowers, Lilies and Fresh Seasonal Flowers */}
+          <div className="rounded-3xl p-6 sm:p-8 bg-white border border-amber-200/60 shadow-sm flex flex-col justify-between">
             <div>
-              <h3 className="text-lg font-bold text-slate-900">
-                Popular Flowers, Occasions & Gifts in Hyderabad & Secunderabad
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                Handpicked collections designed for every celebration and heartfelt expression.
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200/50 mb-3">
+                <Sparkles className="w-3.5 h-3.5" /> Exotic &amp; Seasonal Blooms
+              </div>
+              <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-3">
+                Sunflowers, Lilies and Fresh Seasonal Flowers
+              </h2>
+              <p className="text-sm text-slate-600 leading-relaxed mb-4">
+                Brighten any room with golden <strong>sunflowers</strong>, magnificent oriental <strong>lilies</strong>, and lush <strong>hydrangeas</strong>. Our seasonal flower varieties are sourced directly from sustainable growers and kept in climate-regulated freshness chambers so your recipient receives long-lasting blossoms that open gracefully over days.
               </p>
+              <div className="flex flex-wrap gap-2 mb-6">
+                <Link to="/sunflowers" className="text-xs px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 font-semibold transition-colors">
+                  🌻 Sunflower Bouquets
+                </Link>
+                <Link to="/lilies" className="text-xs px-3 py-1.5 rounded-lg bg-pink-50 hover:bg-pink-100 text-pink-800 font-semibold transition-colors">
+                  🌸 Lily Arrangements
+                </Link>
+                <Link to="/hydrangea" className="text-xs px-3 py-1.5 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-800 font-semibold transition-colors">
+                  🪻 Hydrangea Collections
+                </Link>
+              </div>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <a 
-                href="tel:+919949683222" 
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-semibold hover:bg-emerald-100 transition-colors"
+            <Link
+              to="/shop"
+              className="inline-flex items-center justify-between w-full px-5 py-3 rounded-xl bg-amber-50 hover:bg-amber-100/80 border border-amber-200 text-amber-800 font-semibold text-sm transition-colors group"
+            >
+              <span>Explore Seasonal Flower Catalog</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
+
+          {/* H2: Cakes and Flower Gift Combos */}
+          <div className="rounded-3xl p-6 sm:p-8 bg-white border border-pink-200/60 shadow-sm flex flex-col justify-between">
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-pink-50 text-pink-800 border border-pink-200/50 mb-3">
+                <Cake className="w-3.5 h-3.5" /> Patisserie &amp; Celebration Bundles
+              </div>
+              <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-3">
+                Cakes and Flower Gift Combos
+              </h2>
+              <p className="text-sm text-slate-600 leading-relaxed mb-4">
+                Elevate your surprise with seamless <strong>cakes delivery in Hyderabad</strong> and our signature <strong>flower and cake combos</strong>. Enjoy gourmet cakes including Belgian Dark Chocolate Truffle, classic Black Forest, Red Velvet with cream cheese frosting, and fresh Pineapple cakes paired with fresh roses and chocolates.
+              </p>
+              <div className="flex flex-wrap gap-2 mb-6">
+                <Link to="/cakes" className="text-xs px-3 py-1.5 rounded-lg bg-pink-50 hover:bg-pink-100 text-pink-800 font-semibold transition-colors">
+                  🎂 Cakes in Hyderabad
+                </Link>
+                <Link to="/combos" className="text-xs px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-800 font-semibold transition-colors">
+                  🎁 Flower &amp; Cake Combos
+                </Link>
+                <Link to="/flower-baskets" className="text-xs px-3 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 font-medium transition-colors">
+                  Gift Baskets &amp; Hampers
+                </Link>
+              </div>
+            </div>
+            <Link
+              to="/combos"
+              className="inline-flex items-center justify-between w-full px-5 py-3 rounded-xl bg-pink-50 hover:bg-pink-100/80 border border-pink-200 text-pink-800 font-semibold text-sm transition-colors group"
+            >
+              <span>Browse Celebration Combos</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
+        </div>
+
+        {/* H2: Flower Delivery Across Hyderabad & Secunderabad */}
+        <div className="mb-16">
+          <div className="text-center max-w-2xl mx-auto mb-8">
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900">
+              Flower Delivery Across Hyderabad &amp; Secunderabad
+            </h2>
+            <p className="text-sm text-slate-600 mt-2">
+              Fast, climate-conscious delivery directly from our Mehdipatnam floral studio to all major residential and commercial hubs.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Hyderabad Spotlight */}
+            <div className="rounded-3xl p-6 sm:p-8 bg-gradient-to-br from-white via-rose-50/40 to-pink-50/30 border border-rose-200/60 shadow-sm flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between gap-2 mb-4">
+                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-rose-100 text-rose-800 flex items-center gap-1">
+                    <MapPin className="w-3 h-3" /> Hyderabad City
+                  </span>
+                  <span className="text-xs font-medium text-slate-500">50+ Localities Served</span>
+                </div>
+                <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-2">
+                  Online Flower &amp; Cake Delivery in Hyderabad
+                </h3>
+                <p className="text-sm text-slate-600 leading-relaxed mb-4">
+                  Whether you need romantic red roses in <strong>Banjara Hills</strong>, celebratory bouquets in <strong>Jubilee Hills</strong>, gourmet cakes delivered to <strong>Gachibowli &amp; Madhapur tech corridors</strong>, or traditional celebrations in <strong>Mehdipatnam &amp; Old City</strong>, Spring Blossoms Florist ensures hand-delivered freshness with live tracking.
+                </p>
+                <div className="flex flex-wrap gap-1.5 mb-5">
+                  {POPULAR_LOCALITIES_HYD.slice(0, 10).map((area) => (
+                    <span key={area} className="text-[11px] px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 font-medium">
+                      {area}
+                    </span>
+                  ))}
+                  <span className="text-[11px] px-2 py-1 text-rose-600 font-semibold">+ more</span>
+                </div>
+              </div>
+              <Link
+                to="/flower-delivery-hyderabad"
+                className="inline-flex items-center justify-between w-full px-5 py-3 rounded-xl bg-white border border-rose-200 text-rose-700 font-semibold text-sm hover:bg-rose-50/80 transition-colors group"
               >
-                <PhoneCall className="w-3.5 h-3.5" />
-                +91 9949683222
-              </a>
+                <span>Explore Hyderabad Delivery Guide</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
             </div>
-          </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 text-xs">
-            <Link to="/shop?category=Roses" className="p-3 rounded-xl bg-slate-50 hover:bg-rose-50 hover:text-rose-700 transition-colors border border-slate-100 font-medium text-slate-700 text-center">
-              🌹 Red Roses Delivery
-            </Link>
-            <Link to="/shop?category=Bouquets" className="p-3 rounded-xl bg-slate-50 hover:bg-rose-50 hover:text-rose-700 transition-colors border border-slate-100 font-medium text-slate-700 text-center">
-              💐 Fresh Hand Bouquets
-            </Link>
-            <Link to="/cakes" className="p-3 rounded-xl bg-slate-50 hover:bg-rose-50 hover:text-rose-700 transition-colors border border-slate-100 font-medium text-slate-700 text-center">
-              🎂 Cakes & Combos
-            </Link>
-            <Link to="/occasions/birthday" className="p-3 rounded-xl bg-slate-50 hover:bg-rose-50 hover:text-rose-700 transition-colors border border-slate-100 font-medium text-slate-700 text-center">
-              🎉 Birthday Flowers
-            </Link>
-            <Link to="/occasions/anniversary" className="p-3 rounded-xl bg-slate-50 hover:bg-rose-50 hover:text-rose-700 transition-colors border border-slate-100 font-medium text-slate-700 text-center">
-              💍 Anniversary Florals
-            </Link>
-            <Link to="/occasions/romance" className="p-3 rounded-xl bg-slate-50 hover:bg-rose-50 hover:text-rose-700 transition-colors border border-slate-100 font-medium text-slate-700 text-center">
-              ❤️ Romantic Surprises
-            </Link>
-            <Link to="/occasions/congratulations" className="p-3 rounded-xl bg-slate-50 hover:bg-rose-50 hover:text-rose-700 transition-colors border border-slate-100 font-medium text-slate-700 text-center">
-              ✨ Congratulations
-            </Link>
-            <Link to="/shop?category=Plants" className="p-3 rounded-xl bg-slate-50 hover:bg-rose-50 hover:text-rose-700 transition-colors border border-slate-100 font-medium text-slate-700 text-center">
-              🪴 Indoor Green Plants
-            </Link>
-            <Link to="/flower-delivery-hyderabad" className="p-3 rounded-xl bg-rose-50/70 text-rose-800 hover:bg-rose-100 transition-colors border border-rose-200 font-medium text-center">
-              📍 Hyderabad Hub
-            </Link>
-            <Link to="/flower-delivery-secunderabad" className="p-3 rounded-xl bg-sky-50/70 text-sky-800 hover:bg-sky-100 transition-colors border border-sky-200 font-medium text-center">
-              📍 Secunderabad Hub
-            </Link>
-            <Link to="/contact" className="p-3 rounded-xl bg-slate-50 hover:bg-rose-50 hover:text-rose-700 transition-colors border border-slate-100 font-medium text-slate-700 text-center">
-              📍 Studio Mehdipatnam
-            </Link>
-            <Link to="/shop" className="p-3 rounded-xl bg-slate-50 hover:bg-rose-50 hover:text-rose-700 transition-colors border border-slate-100 font-medium text-slate-700 text-center">
-              🎁 Complete Catalog
-            </Link>
+            {/* Secunderabad Spotlight */}
+            <div className="rounded-3xl p-6 sm:p-8 bg-gradient-to-br from-white via-sky-50/40 to-indigo-50/30 border border-sky-200/60 shadow-sm flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between gap-2 mb-4">
+                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-sky-100 text-sky-800 flex items-center gap-1">
+                    <MapPin className="w-3 h-3" /> Secunderabad Twin City
+                  </span>
+                  <span className="text-xs font-medium text-slate-500">Full Coverage</span>
+                </div>
+                <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-2">
+                  Send Flowers &amp; Gifts to Secunderabad
+                </h3>
+                <p className="text-sm text-slate-600 leading-relaxed mb-4">
+                  We take special pride in servicing our sister city. From <strong>Begumpet</strong> and <strong>Secunderabad HO</strong> to cantonment suburbs like <strong>Bowenpally, Sainikpuri, Marredpally, ECIL</strong>, and <strong>AS Rao Nagar</strong>, enjoy direct florist dispatch without third-party courier delays.
+                </p>
+                <div className="flex flex-wrap gap-1.5 mb-5">
+                  {POPULAR_LOCALITIES_SEC.slice(0, 10).map((area) => (
+                    <span key={area} className="text-[11px] px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 font-medium">
+                      {area}
+                    </span>
+                  ))}
+                  <span className="text-[11px] px-2 py-1 text-sky-600 font-semibold">+ more</span>
+                </div>
+              </div>
+              <Link
+                to="/flower-delivery-secunderabad"
+                className="inline-flex items-center justify-between w-full px-5 py-3 rounded-xl bg-white border border-sky-200 text-sky-700 font-semibold text-sm hover:bg-sky-50/80 transition-colors group"
+              >
+                <span>Explore Secunderabad Delivery Guide</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
           </div>
         </div>
 
-        {/* High-Intent FAQ Accordion */}
+        {/* H2: Frequently Asked Questions */}
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
-            <h3 className="text-xl sm:text-2xl font-bold text-slate-900">
-              Frequently Asked Questions About Delivery in Twin Cities
-            </h3>
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
+              Frequently Asked Questions About Delivery in Hyderabad
+            </h2>
             <p className="text-xs sm:text-sm text-slate-500 mt-1">
-              Everything you need to know about placing flower, cake, and gift orders with SB Florist.
+              Everything you need to know about placing flower, cake, and bouquet orders with Spring Blossoms Florist.
             </p>
           </div>
 
@@ -321,13 +409,14 @@ export const HomeSeoSection: React.FC = () => {
         {/* Physical Florist Credentials Bar */}
         <div className="mt-14 pt-8 border-t border-slate-200/80 text-center text-xs text-slate-500 max-w-3xl mx-auto space-y-1">
           <p className="font-semibold text-slate-700">
-            SB Florist Studio: Door No. 12-2-786/A & B, Najam Centre, Pillar No. 32, Rethi Bowli, Mehdipatnam, Hyderabad 500028
+            Spring Blossoms Florist Studio: Door No. 12-2-786/A &amp; B, Najam Centre, Pillar No. 32, Rethi Bowli, Mehdipatnam, Hyderabad 500028
           </p>
           <p>
-            Serving: Banjara Hills, Jubilee Hills, Gachibowli, Madhapur, Begumpet, Secunderabad, Sainikpuri, Marredpally, Bowenpally, ECIL & all Twin Cities pin codes.
+            Serving: Banjara Hills, Jubilee Hills, Gachibowli, Madhapur, Begumpet, Secunderabad, Sainikpuri, Marredpally, Bowenpally, ECIL &amp; all Twin Cities pin codes. Direct Helpline: <a href="tel:+919949683222" className="text-rose-600 font-semibold hover:underline">+91 9949683222</a>
           </p>
         </div>
       </div>
     </section>
   );
 };
+export default HomeSeoSection;

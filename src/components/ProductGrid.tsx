@@ -557,7 +557,7 @@ export const ProductCard = ({ product, onAddToCart }: {
           {/* Image 1 (Default) */}
           <ProtectedImage
             src={getImageUrl(product.images[0], { width: 500 }) || '/images/placeholder.svg'}
-            alt={`${product.title} - Flower Delivery Hyderabad`}
+            alt={`${product.title} - ${product.category === 'Cakes' ? 'Celebration Cake' : product.category === 'Combos' ? 'Flower & Cake Combo' : `${product.category || 'Fresh Floral'} Arrangement`} Spring Blossoms Florist Hyderabad`}
             className={cn(
               "absolute inset-0 w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-105",
               isOutOfStock && "grayscale-[20%] opacity-90",
@@ -571,7 +571,7 @@ export const ProductCard = ({ product, onAddToCart }: {
           {product.images.length > 1 && (
             <ProtectedImage
               src={getImageUrl(product.images[1], { width: 500 })}
-              alt={`${product.title} - Spring Blossoms Florist Bouquet`}
+              alt={`${product.title} detail view - Spring Blossoms Florist`}
               className={cn(
                 "absolute inset-0 w-full h-full object-cover transition-opacity duration-700 opacity-0 group-hover:opacity-100 group-hover:scale-105",
                 isOutOfStock && "grayscale-[20%] opacity-90"

@@ -314,8 +314,8 @@ const HomePage = () => {
       className="min-h-screen relative"
     >
       <SEOHead
-        title="Flower Delivery in Hyderabad"
-        description="Send fresh flower bouquets, roses and thoughtful gifts with Spring Blossoms Florist in Hyderabad. Explore flowers for birthdays, anniversaries and special occasions."
+        title="Flower Delivery in Hyderabad | Spring Blossoms Florist"
+        description="Shop fresh bouquets, roses and flower gifts in Hyderabad with Spring Blossoms Florist. Explore flowers for special occasions, cakes and gift combos."
         canonical="/"
         ogType="website"
         jsonLd={[

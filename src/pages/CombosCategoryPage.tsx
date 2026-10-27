@@ -353,16 +353,16 @@ export const CombosCategoryPage: React.FC = () => {
   return (
     <div className="bg-[#fcfaf7] min-h-screen">
       <Helmet>
-        <title>Flowers and Cake Delivery in Hyderabad | Spring Blossoms Florist</title>
+        <title>Flower and Cake Combos in Hyderabad | Spring Blossoms Florist</title>
         <meta
           name="description"
-          content="Order signature flower bouquet and cake combos online from Spring Blossoms Florist in Hyderabad. Farm-fresh Dutch roses paired with gourmet Red Velvet, Dutch Truffle &amp; Black Forest cakes with same-day and midnight delivery."
+          content="Make celebrations memorable with flower and cake combos from Spring Blossoms Florist. Explore available gift combinations for birthdays, anniversaries and special moments."
         />
         <link rel="canonical" href="https://sbflorist.in/combos" />
-        <meta property="og:title" content="Flowers and Cake Delivery in Hyderabad | Spring Blossoms Florist" />
+        <meta property="og:title" content="Flower and Cake Combos in Hyderabad | Spring Blossoms Florist" />
         <meta
           property="og:description"
-          content="Handcrafted celebration pairings of fresh flowers, gourmet cakes, and chocolates with express same-day and midnight delivery across Hyderabad &amp; Secunderabad."
+          content="Make celebrations memorable with flower and cake combos from Spring Blossoms Florist. Explore available gift combinations for birthdays, anniversaries and special moments."
         />
         <meta property="og:url" content="https://sbflorist.in/combos" />
         <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
@@ -375,7 +375,7 @@ export const CombosCategoryPage: React.FC = () => {
             Home
           </Link>
           <ChevronRight className="h-3 w-3 text-slate-400" />
-          <span className="text-rose-900 font-bold">Combos & Hampers</span>
+          <span className="text-rose-900 font-bold">Combos &amp; Hampers</span>
           {selectedPill !== "all" && (
             <>
               <ChevronRight className="h-3 w-3 text-slate-400" />
@@ -401,11 +401,11 @@ export const CombosCategoryPage: React.FC = () => {
             </div>
 
             <h1 className="text-2xl sm:text-4xl md:text-5xl 2xl:text-6xl font-black font-serif tracking-tight leading-tight">
-              Flowers & Cakes, Curated for Unforgettable Moments
+              Flower and Cake Combos in Hyderabad
             </h1>
 
             <p className="text-xs sm:text-base 2xl:text-lg text-rose-100/90 font-light leading-relaxed">
-              Experience the joy of double celebrations. Breathtaking hand-tied Dutch flower bouquets paired seamlessly with freshly baked gourmet artisan cakes and imported confectionery.
+              Make celebrations memorable with handcrafted flower and cake combos from Spring Blossoms Florist. Breathtaking Dutch flower bouquets paired seamlessly with freshly baked artisan cakes and imported chocolates.
             </p>
 
             <div className="flex flex-wrap items-center gap-2.5 pt-2 text-[11px] sm:text-xs font-semibold text-rose-200/90">
@@ -762,6 +762,49 @@ export const CombosCategoryPage: React.FC = () => {
                   Every celebration combo includes a custom greeting card penned with your message.
                 </p>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* SEO Information & Combos Guide */}
+      <section className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-10 pb-16">
+        <div className="bg-white rounded-3xl border border-rose-100/90 p-6 sm:p-10 shadow-xs space-y-10">
+          <div className="border-b border-rose-100 pb-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-2 font-serif">
+              Shop Flower and Cake Combos
+            </h2>
+            <p className="text-sm text-slate-600 leading-relaxed">
+              Why settle for just flowers or just cake when you can double the celebration? At Spring Blossoms Florist, our master florists and pastry chefs pair fresh Dutch roses and lilies with gourmet artisan cakes to create stunning celebration combinations. Each combo is packaged with temperature-preserving care and delivered together seamlessly in Hyderabad &amp; Secunderabad.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div>
+              <h2 className="text-base sm:text-lg font-bold text-slate-900 mb-2">
+                Birthday Flower and Cake Gifts
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                Celebrate birthdays with our signature pairings: vibrant 10 or 20 Red Rose bouquets coupled with rich Dutch Truffle chocolate cake, or colorful mixed gerbera bouquets with fresh Pineapple cake. Includes a complimentary personalized birthday note card.
+              </p>
+            </div>
+
+            <div>
+              <h2 className="text-base sm:text-lg font-bold text-slate-900 mb-2">
+                Anniversary Gift Combinations
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                Mark your milestone with romantic luxury: 50 long-stem Dutch red roses bundled with velvety Red Velvet cake and imported Ferrero Rocher chocolates. Perfect for unforgettable midnight surprises right at 12:00 AM.
+              </p>
+            </div>
+
+            <div>
+              <h2 className="text-base sm:text-lg font-bold text-slate-900 mb-2">
+                How to Order a Flower and Cake Combo
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                Ordering is effortless: select your preferred floral arrangement, pick your cake flavor and weight (0.5 kg or 1 kg, egg or 100% eggless), add your custom message, and choose Daytime Express or Midnight Surprise delivery during checkout.
+              </p>
             </div>
           </div>
         </div>
