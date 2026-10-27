@@ -14,6 +14,7 @@ import { promptLoginForAddToCart } from '@/utils/cartAuthHelper';
 import { trackProductView } from '@/services/activityService';
 import { marketingTracker } from '@/services/marketingTracker';
 import SEOHead from '@/components/seo/SEOHead';
+import ContextualFaq from '@/components/faq/ContextualFaq';
 
 type Product = ProductData & {
   _id: string;
@@ -254,6 +255,15 @@ const ProductPage = () => {
             onReviewSubmit={fetchProduct}
           />
         )}
+
+        {/* Contextual FAQs for Products */}
+        <ContextualFaq
+          location="product"
+          title="Product, Care & Delivery FAQs"
+          subtitle="Helpful information about flower freshness, vase life, delivery scheduling, and care."
+          limit={4}
+          className="bg-gray-50/60 border-t border-gray-100"
+        />
       </main>
     </div>
   );

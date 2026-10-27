@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
 import AdminNavbar from '@/components/AdminNavbar';
-import { Truck, Map, DollarSign, Sliders, UserCheck, ChevronDown, ChevronUp, Scroll, Shield, Clock, Megaphone, Percent, BellRing } from 'lucide-react';
+import { Truck, Map, DollarSign, Sliders, UserCheck, ChevronDown, ChevronUp, Scroll, Shield, Clock, Megaphone, Percent, BellRing, HelpCircle } from 'lucide-react';
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -874,6 +874,20 @@ const AdminDashboard: React.FC = () => {
               </span>
             </div>
           )}
+        </Link>
+        <Link 
+          to="/admin/faqs" 
+          className={cn(
+            "sidebar-item",
+            location.pathname === "/admin/faqs" ? "bg-primary text-white font-medium" : "",
+            isCollapsed ? "sidebar-item-collapsed" : "sidebar-item-expanded"
+          )}
+          title={isCollapsed ? 'FAQ System' : ''}
+        >
+          <div className="sidebar-item-icon">
+            <HelpCircle className="h-4 w-4 text-rose-500" />
+          </div>
+          {!isCollapsed && <span className="sidebar-item-text">FAQ System</span>}
         </Link>
         <Link 
           to="/admin/settings" 

@@ -14,6 +14,7 @@ import { getImageUrl, getSquareImageUrl } from "@/config";
 import { cn } from "@/lib/utils";
 import ContactModal from "@/components/ui/ContactModal";
 import { PRIMARY_CATEGORIES, matchesCategoryGroup, normalizeCategoryKey, normalizeCategoryLabel } from "@/utils/categoryTaxonomy";
+import ContextualFaq from "@/components/faq/ContextualFaq";
 import { preprocessProductForSearch, createSearchIndex, rankSearchResults } from "@/utils/searchHelper";
 import { getProductEffectivePrice } from "@/utils/pricing";
 
@@ -1963,6 +1964,15 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
               </div>
             </section>
           )}
+
+          {/* Category Contextual FAQs */}
+          <ContextualFaq
+            location="category"
+            title="Bouquet & Floral FAQs"
+            subtitle="Helpful questions about flower selection, freshness, vase care, and same-day delivery."
+            limit={4}
+            className="mt-8"
+          />
         </div>
       </main>
 

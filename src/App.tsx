@@ -54,6 +54,8 @@ const ShippingPage = lazy(() => import("./pages/ShippingPrivacy"));
 const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
 const RefundPolicyPage = lazy(() => import("./pages/RefundPolicyPage"));
 const CancellationPolicyPage = lazy(() => import("./pages/CancellationPolicyPage"));
+const FaqPage = lazy(() => import("./pages/FaqPage"));
+const AdminFaqManagement = lazy(() => import("./pages/Admin/FaqManagement"));
 
 // Checkout Pages (lazy loaded as they're rarely used immediately)
 const CheckoutShippingPage = lazy(() => import("./pages/CheckoutShippingPage"));
@@ -264,6 +266,12 @@ const App = () => {
                               <CancellationPolicyPage />
                             </Suspense>
                           } />
+                          <Route path="/faq" element={
+                            <Suspense fallback={<LoadingFallback message="Loading FAQs..." />}>
+                              <FaqPage />
+                            </Suspense>
+                          } />
+                          <Route path="/faqs" element={<Navigate to="/faq" replace />} />
                           <Route path="/forgot-password" element={
                             <Suspense fallback={<LoadingFallback />}>
                               <ForgotPasswordPage />
@@ -527,6 +535,11 @@ const App = () => {
                             <Route path="settings" element={
                               <Suspense fallback={<LoadingFallback message="Loading settings..." />}>
                                 <AdminSettingsPage />
+                              </Suspense>
+                            } />
+                            <Route path="faqs" element={
+                              <Suspense fallback={<LoadingFallback message="Loading FAQ management..." />}>
+                                <AdminFaqManagement />
                               </Suspense>
                             } />
                             <Route path="notifications/fcm" element={

@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import ContextualFaq from "@/components/faq/ContextualFaq";
 import { cn } from "@/lib/utils";
 import { useCurrency } from "@/contexts/CurrencyContext";
 
@@ -619,6 +620,14 @@ export const CakesCategoryPage: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* Contextual FAQs for Cakes */}
+      <ContextualFaq
+        location="cakes"
+        title="Cake Delivery & Flavor FAQs"
+        subtitle="Frequently asked questions about cake freshness, eggless varieties, sizes, and delivery."
+        limit={5}
+      />
 
       {/* Mobile Filters Bottom Sheet */}
       <AnimatePresence>

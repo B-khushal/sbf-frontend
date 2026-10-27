@@ -34,6 +34,7 @@ import { cn } from "@/lib/utils";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { isComboProduct, extractComboComponents } from "@/utils/comboHelpers";
 import { formatCakeWeightLabel } from "@/utils/cakeHelpers";
+import ContextualFaq from "@/components/faq/ContextualFaq";
 
 // Quick filter pills for combos
 const COMBO_PILLS = [
@@ -809,6 +810,14 @@ export const CombosCategoryPage: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* Contextual FAQs for Combos */}
+      <ContextualFaq
+        location="combos"
+        title="Flowers & Cake Combo FAQs"
+        subtitle="Helpful questions about gift pairings, simultaneous delivery, fresh cakes, and personalization."
+        limit={5}
+      />
 
       {/* Mobile Slide-Over Filters Drawer */}
       <AnimatePresence>

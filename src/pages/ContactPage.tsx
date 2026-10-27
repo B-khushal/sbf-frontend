@@ -9,6 +9,7 @@ import { MapPin, Phone, Mail, Clock, Info, Send, MessageCircle, Sparkles, Loader
 import { useToast } from '@/hooks/use-toast';
 import { submitContactForm, openWhatsApp, openEmail, callPhone, openGoogleMaps } from '@/services/contactService';
 import { fixEmailTypo } from '@/utils/emailUtils';
+import ContextualFaq from '@/components/faq/ContextualFaq';
 
 // Animation variants
 const containerVariants = {
@@ -484,6 +485,14 @@ Sent from Spring Blossoms Florist Website`;
             </motion.section>
           </div>
         </div>
+
+        {/* Contextual FAQs for Contact */}
+        <ContextualFaq
+          location="contact"
+          title="Support & Ordering FAQs"
+          subtitle="Quick answers about order status, deliveries, modifications, and store support."
+          limit={5}
+        />
 
         {/* Call to Action Section */}
         <motion.section 

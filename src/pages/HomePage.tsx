@@ -31,6 +31,7 @@ import { HomeSeoSection } from "../components/seo/HomeSeoSection";
 import { BudgetFriendlySection } from "../components/BudgetFriendlySection";
 import { CakesSection } from "../components/CakesSection";
 import { CombosSection } from "../components/CombosSection";
+import ContextualFaq from "../components/faq/ContextualFaq";
 
 import api from "../services/api";
 
@@ -649,6 +650,14 @@ const HomePage = () => {
             return null;
         }
       })}
+
+      {/* Frequently Asked Questions */}
+      <ContextualFaq
+        location="home"
+        title="Frequently Asked Questions"
+        subtitle="Quick answers about placing orders, same-day delivery, and fresh blooms in Hyderabad."
+        limit={6}
+      />
 
       {/* SEO Showcase Section */}
       <HomeSeoSection />

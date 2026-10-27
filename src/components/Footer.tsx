@@ -198,9 +198,10 @@ const Footer = () => {
                 <span>Customer Support</span>
                 <span className="text-gray-400 group-open:rotate-180 transition-transform duration-300 text-xs">▼</span>
               </summary>
-              <div className="mt-3 grid grid-cols-2 gap-2 text-xs font-semibold">
+              <div className="mt-3 grid grid-cols-3 gap-2 text-xs font-semibold">
                 <Link to="/contact" className="rounded-xl bg-white border border-gray-100/60 px-3 py-2.5 text-gray-700 text-center hover:bg-pink-50/40">Contact</Link>
                 <Link to="/profile" className="rounded-xl bg-white border border-gray-100/60 px-3 py-2.5 text-gray-700 text-center hover:bg-pink-50/40">Track Order</Link>
+                <Link to="/faq" className="rounded-xl bg-white border border-gray-100/60 px-3 py-2.5 text-rose-700 font-bold text-center hover:bg-pink-50/40">FAQs</Link>
               </div>
             </details>
             <details className="group rounded-2xl border border-gray-100 bg-gray-50/60 p-4 transition-all duration-300 [&_summary::-webkit-details-marker]:hidden">
@@ -522,6 +523,12 @@ const Footer = () => {
             </Link>
           </div>
           <div className="flex flex-wrap justify-center sm:justify-end gap-x-6 sm:gap-x-8 gap-y-3 text-sm">
+            <Link
+              to="/faq"
+              className="text-gray-600 hover:text-primary transition-colors duration-300 font-medium"
+            >
+              FAQs
+            </Link>
             <Link
               to="/terms"
               className="text-gray-600 hover:text-primary transition-colors duration-300 font-medium"
