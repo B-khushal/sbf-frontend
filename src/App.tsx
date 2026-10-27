@@ -124,7 +124,6 @@ const AdminOccasions = lazy(() => import('./pages/Admin/Occasions'));
 const OccasionProductsPage = lazy(() => import('./pages/OccasionProductsPage').then(m => ({ default: m.OccasionProductsPage })));
 const HyderabadDeliveryPage = lazy(() => import('./pages/HyderabadDeliveryPage'));
 const SecunderabadDeliveryPage = lazy(() => import('./pages/SecunderabadDeliveryPage'));
-const SitemapPage = lazy(() => import('./pages/SitemapPage'));
 
 // Valentine Pages
 const ValentineSpecialPage = lazy(() => import('./pages/ValentineSpecialPage'));
@@ -867,11 +866,6 @@ const App = () => {
                             <Route path="/flower-delivery-secunderabad" element={
                               <Suspense fallback={<LoadingFallback message="Loading Secunderabad flower delivery..." />}>
                                 <SecunderabadDeliveryPage />
-                              </Suspense>
-                            } />
-                            <Route path="/sitemap" element={
-                              <Suspense fallback={<LoadingFallback message="Loading directory..." />}>
-                                <SitemapPage />
                               </Suspense>
                             } />
                             <Route path="/cakes" element={
