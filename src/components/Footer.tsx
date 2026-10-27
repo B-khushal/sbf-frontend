@@ -552,6 +552,12 @@ const Footer = () => {
             >
               Cancellation Policy
             </Link>
+            <Link
+              to="/sitemap"
+              className="text-gray-600 hover:text-primary transition-colors duration-300 font-medium"
+            >
+              Sitemap
+            </Link>
           </div>
         </div>
       </div>
