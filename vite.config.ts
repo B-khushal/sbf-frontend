@@ -4,6 +4,7 @@ import { fileURLToPath, URL } from "url";
 import { componentTagger } from "lovable-tagger";
 import compression from "vite-plugin-compression";
 import path from "path";
+import http from "http";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -22,6 +23,27 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
+    {
+      name: 'sitemap-proxy-middleware',
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          if (req.url && /^\/sitemap.*\.xml(\?.*)?$/.test(req.url)) {
+            const targetUrl = new URL(req.url, 'http://127.0.0.1:5000');
+            const proxyReq = http.request(targetUrl, {
+              method: req.method,
+              headers: { ...req.headers, host: '127.0.0.1:5000' }
+            }, (proxyRes) => {
+              res.writeHead(proxyRes.statusCode || 200, proxyRes.headers);
+              proxyRes.pipe(res);
+            });
+            proxyReq.on('error', () => next());
+            req.pipe(proxyReq);
+            return;
+          }
+          next();
+        });
+      }
+    },
     mode === 'development' && componentTagger(),
     // Add compression plugin for production builds
     mode === 'production' && compression({
