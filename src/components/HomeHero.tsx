@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, ArrowRight, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useSettings } from '../contexts/SettingsContext';
+import { getImageUrl } from '@/config';
 
 const HomeHero = () => {
   const { heroSlides, promoBanners, loading } = useSettings();
@@ -113,9 +114,10 @@ const HomeHero = () => {
         img.src = src;
       };
 
-      const currentSlideSrc = isMobile && enabledSlides[currentSlide]?.mobileImage 
+      const rawCurrentSrc = isMobile && enabledSlides[currentSlide]?.mobileImage 
         ? enabledSlides[currentSlide].mobileImage 
         : enabledSlides[currentSlide]?.image;
+      const currentSlideSrc = getImageUrl(rawCurrentSrc, isMobile ? { width: 720 } : { width: 1400 });
 
       if (currentSlideSrc) {
         preloadImage(currentSlideSrc, currentSlide);
@@ -162,7 +164,8 @@ const HomeHero = () => {
           "rounded-2xl sm:rounded-[28px]"
         )}>
           {enabledSlides.map((slide, index) => {
-            const slideImage = isMobile && slide.mobileImage ? slide.mobileImage : slide.image;
+            const rawSlideImage = isMobile && slide.mobileImage ? slide.mobileImage : slide.image;
+            const slideImage = getImageUrl(rawSlideImage, isMobile ? { width: 720 } : { width: 1400 });
             const overlayOpacity = slide.overlayOpacity !== undefined ? slide.overlayOpacity : 0.35;
             const textCol = slide.textColor || '#ffffff';
 
@@ -182,7 +185,7 @@ const HomeHero = () => {
                 {/* Slide Image */}
                 <img
                   src={slideImage}
-                  alt={slide.title}
+                  alt={`${slide.title} - Flower Delivery Hyderabad | Spring Blossoms Florist`}
                   className={cn(
                     "absolute inset-0 w-full h-full object-cover transition-all duration-700",
                     imagesLoaded[index] ? "opacity-100 scale-100" : "opacity-0 scale-105"
@@ -190,6 +193,7 @@ const HomeHero = () => {
                   onLoad={() => handleImageLoad(index)}
                   onError={(e) => handleImageError(e, index)}
                   loading={index === 0 ? "eager" : "lazy"}
+                  {...(index === 0 ? { fetchPriority: "high" } : {})}
                 />
 
                 {/* Tint overlay */}
@@ -205,7 +209,7 @@ const HomeHero = () => {
                   "items-end pb-3 sm:items-center sm:pb-0 sm:justify-center sm:text-center"
                 )}>
                   <div className="w-full max-w-lg lg:max-w-xl xl:max-w-2xl">
-                    <h1 
+                    <h2 
                       className={cn(
                         "font-black leading-tight tracking-tight transition-all drop-shadow-sm",
                         // Mobile: small left-aligned | Desktop: large centered
@@ -216,7 +220,7 @@ const HomeHero = () => {
                       style={{ color: textCol }}
                     >
                       {slide.title}
-                    </h1>
+                    </h2>
                     {/* Subtitle: hidden on mobile for compactness */}
                     <p 
                       className="hidden sm:block text-sm md:text-base lg:text-lg mb-4 lg:mb-6 leading-relaxed opacity-90 transition-all font-medium"
@@ -307,8 +311,9 @@ const HomeHero = () => {
                 {/* Background Image */}
                 {banner.image && (
                   <img 
-                    src={banner.image} 
-                    alt={banner.title} 
+                    src={getImageUrl(banner.image, { width: 640 })} 
+                    alt={`${banner.title} - Spring Blossoms Florist Hyderabad`} 
+                    loading="lazy"
                     className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700 ease-out"
                   />
                 )}

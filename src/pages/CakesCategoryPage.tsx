@@ -275,15 +275,14 @@ export const CakesCategoryPage: React.FC = () => {
   return (
     <div className="bg-[#fcfaf7] min-h-screen">
       <Helmet>
-        <title>Premium Cakes Online | Spring Blossoms Florist</title>
+        <title>Online Cake Delivery in Hyderabad | Birthday &amp; Celebration Cakes | Spring Blossoms Florist</title>
         <meta
           name="description"
-          content="Order freshly crafted cakes online from Spring Blossoms Florist. Choose from chocolate, red velvet, black forest, pineapple, butterscotch cakes and premium cake & flower combos."
+          content="Order freshly baked cakes online with same-day and midnight cake delivery in Hyderabad from Spring Blossoms Florist. Dutch Truffle, Red Velvet, Black Forest and flowers combos."
         />
-        <meta name="keywords" content="Cakes in Hyderabad, Fresh Cakes Online, Birthday Cakes Hyderabad, Red Velvet Cake, Black Forest Cake, Cake Flower Combo, Same Day Cake Delivery" />
         <link rel="canonical" href="https://sbflorist.in/cakes" />
-        <meta property="og:title" content="Premium Cakes Online | Spring Blossoms Florist" />
-        <meta property="og:description" content="Order freshly crafted cakes and celebration combos with same-day delivery across Hyderabad." />
+        <meta property="og:title" content="Online Cake Delivery in Hyderabad | Spring Blossoms Florist" />
+        <meta property="og:description" content="Order freshly crafted celebration cakes and flower combos with same-day and midnight delivery across Hyderabad." />
         <meta property="og:url" content="https://sbflorist.in/cakes" />
         <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
       </Helmet>

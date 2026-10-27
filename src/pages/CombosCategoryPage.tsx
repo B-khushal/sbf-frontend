@@ -353,20 +353,16 @@ export const CombosCategoryPage: React.FC = () => {
   return (
     <div className="bg-[#fcfaf7] min-h-screen">
       <Helmet>
-        <title>Luxury Flowers & Cake Combos Online | Spring Blossoms Florist</title>
+        <title>Flowers and Cake Delivery in Hyderabad | Spring Blossoms Florist</title>
         <meta
           name="description"
-          content="Order signature flower bouquet and cake combos online from Spring Blossoms Florist. Dutch red roses, oriental lilies paired with oven-fresh Red Velvet, Belgian Chocolate & Black Forest cakes with express same-day handover."
-        />
-        <meta
-          name="keywords"
-          content="Flowers and Cake Combos Hyderabad, Gift Hampers Online, Cake and Flower Delivery, Red Velvet and Lily Combo, Roses and Chocolate Cake, Birthday Combos Hyderabad"
+          content="Order signature flower bouquet and cake combos online from Spring Blossoms Florist in Hyderabad. Farm-fresh Dutch roses paired with gourmet Red Velvet, Dutch Truffle &amp; Black Forest cakes with same-day and midnight delivery."
         />
         <link rel="canonical" href="https://sbflorist.in/combos" />
-        <meta property="og:title" content="Luxury Flowers & Cake Combos Online | Spring Blossoms Florist" />
+        <meta property="og:title" content="Flowers and Cake Delivery in Hyderabad | Spring Blossoms Florist" />
         <meta
           property="og:description"
-          content="Handcrafted celebration pairings of fresh flowers, gourmet cakes, and chocolates with express same-day delivery across Hyderabad & Secunderabad."
+          content="Handcrafted celebration pairings of fresh flowers, gourmet cakes, and chocolates with express same-day and midnight delivery across Hyderabad &amp; Secunderabad."
         />
         <meta property="og:url" content="https://sbflorist.in/combos" />
         <script type="application/ld+json">{JSON.stringify(structuredData)}</script>

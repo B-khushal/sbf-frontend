@@ -4,6 +4,7 @@ import { useSettings } from '@/contexts/SettingsContext';
 import { ArrowUpRight, Flower2, Gift, Heart, Leaf, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 import { CategorySkeleton } from './HomePageSkeleton';
 import { cn } from '@/lib/utils';
+import { getImageUrl } from '@/config';
 
 const CATEGORY_QUERY_ALIASES: Record<string, string> = {
   anivarsery: 'anniversary',
@@ -93,8 +94,8 @@ const CategoryCircleItem = ({ category, index, isVisible }: { category: any; ind
           <div className="absolute inset-0 bg-slate-100 animate-pulse rounded-full" />
         )}
         <img
-          src={category.image}
-          alt={category.name}
+          src={getImageUrl(category.image, { width: 160 })}
+          alt={`${category.name} - Flowers Hyderabad`}
           loading="lazy"
           onLoad={() => setImageLoaded(true)}
           className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
@@ -144,8 +145,8 @@ const CategoryCard = ({ category, isVisible, delay, onCardClick }: CategoryCardP
 
         {/* Category Image */}
         <img
-          src={category.image}
-          alt={category.name}
+          src={getImageUrl(category.image, { width: 400 })}
+          alt={`${category.name} - Online Flower Delivery Hyderabad`}
           loading="lazy"
           onLoad={() => setImageLoaded(true)}
           className={cn(

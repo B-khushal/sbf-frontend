@@ -18,8 +18,6 @@ import {
   ExternalLink, Copy, Check, CheckCircle2, AlertCircle, ShoppingBag, 
   HelpCircle, ChevronDown, Plus, Heart, Trash2, Truck
 } from 'lucide-react';
-// @ts-ignore
-import html2pdf from 'html2pdf.js';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
@@ -381,7 +379,8 @@ const OrderDetailsPage: React.FC = () => {
       });
   };
 
-  const handleDownloadPDF = () => {
+  const handleDownloadPDF = async () => {
+    const html2pdf = (await import('html2pdf.js')).default;
     const element = document.getElementById('clean-invoice-pdf');
     if (element) {
       const invoiceHeight = element.scrollHeight;

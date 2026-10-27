@@ -1306,7 +1306,9 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                           {currentGalleryItem?.type === 'image' ? (
                             <MotionProtectedImage
                               src={imageUrl}
-                              alt={product.title}
+                              alt={`${product.title} - Flower Delivery Hyderabad | Spring Blossoms Florist`}
+                              loading="eager"
+                              fetchPriority="high"
                               onLoad={() => setIsImageLoading(false)}
                               className={cn(
                                 "w-full h-full object-cover rounded-[28px] transition-transform duration-700 ease-out",
@@ -2557,7 +2559,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                         exit={{ opacity: 0, scale: 0.95 }}
                         transition={{ duration: 0.3 }}
                         src={getImageUrl(currentGalleryItem?.url || '', { bustCache: false })}
-                        alt={product.title}
+                        alt={`${product.title} - Spring Blossoms Florist Hyderabad`}
                         className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-2xl"
                       />
 

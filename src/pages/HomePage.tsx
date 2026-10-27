@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
+import SEOHead from "@/components/seo/SEOHead";
 import { motion, type Variants } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 import { useNavigate } from "react-router-dom";
@@ -312,27 +313,20 @@ const HomePage = () => {
       variants={containerVariants}
       className="min-h-screen relative"
     >
-      <Helmet>
-        <title>Send Flowers to Hyderabad & Secunderabad | Online Cake & Gift Delivery | SB Florist</title>
-        <meta name="description" content="Send fresh flowers, cakes & gifts to Hyderabad & Secunderabad with SB Florist. Free delivery on 1st order & orders ₹999+. Guaranteed same-day & midnight flower delivery across all Twin Cities localities." />
-        <meta name="keywords" content="Send Flowers to Hyderabad, Flower Delivery in Hyderabad, Online Flowers Hyderabad, Same Day Flower Delivery Hyderabad, Fresh Flowers Hyderabad, Online Cakes Hyderabad, Cakes with Flowers Hyderabad, Gifts to Hyderabad, Online Gifts Hyderabad, Birthday Flowers Hyderabad, Anniversary Flowers Hyderabad, Midnight Flower Delivery Hyderabad, Roses to Hyderabad, Bouquets to Hyderabad, Local Florist Hyderabad, Florist in Hyderabad, Flower Delivery in Secunderabad, Send Flowers to Secunderabad, Online Gifts Secunderabad, Same Day Flower Delivery Secunderabad, Fresh Flowers in Secunderabad, Cakes with Flowers Secunderabad, Birthday Gifts Hyderabad, Birthday Gifts Secunderabad, Anniversary Gifts Hyderabad, Anniversary Gifts Secunderabad" />
-        <link rel="canonical" href="https://sbflorist.in/" />
-        <meta property="og:type" content="website" />
-        <meta property="og:title" content="Send Flowers to Hyderabad & Secunderabad | Online Cake & Gift Delivery | SB Florist" />
-        <meta property="og:description" content="Send fresh flowers, delicious cakes & gifts across Hyderabad & Secunderabad. Enjoy Free Delivery on your 1st order and orders ₹999+. Same-day & midnight surprise delivery." />
-        <meta property="og:url" content="https://sbflorist.in/" />
-        <meta property="og:site_name" content="SB Florist" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Send Flowers to Hyderabad & Secunderabad | SB Florist" />
-        <meta name="twitter:description" content="Fresh flowers, cakes, combos & gifts delivered across Hyderabad & Secunderabad with same-day and midnight delivery options." />
-        <script type="application/ld+json">
-          {JSON.stringify({
+      <SEOHead
+        title="Flower Delivery in Hyderabad"
+        description="Send fresh flower bouquets, roses and thoughtful gifts with Spring Blossoms Florist in Hyderabad. Explore flowers for birthdays, anniversaries and special occasions."
+        canonical="/"
+        ogType="website"
+        jsonLd={[
+          {
             "@context": "https://schema.org",
             "@graph": [
               {
                 "@type": "Florist",
                 "@id": "https://sbflorist.in/#florist",
-                "name": "SB Florist",
+                "name": "Spring Blossoms Florist",
+                "alternateName": "SB Florist",
                 "url": "https://sbflorist.in",
                 "logo": "https://sbflorist.in/logo.png",
                 "image": "https://sbflorist.in/logo.png",
@@ -361,31 +355,62 @@ const HomePage = () => {
                   }
                 ],
                 "areaServed": [
-                  {
-                    "@type": "City",
-                    "name": "Hyderabad"
-                  },
-                  {
-                    "@type": "City",
-                    "name": "Secunderabad"
-                  }
+                  { "@type": "City", "name": "Hyderabad" },
+                  { "@type": "City", "name": "Secunderabad" }
                 ]
               },
               {
                 "@type": "WebSite",
                 "@id": "https://sbflorist.in/#website",
                 "url": "https://sbflorist.in",
-                "name": "SB Florist",
+                "name": "Spring Blossoms Florist",
                 "potentialAction": {
                   "@type": "SearchAction",
                   "target": "https://sbflorist.in/shop?q={search_term_string}",
                   "query-input": "required name=search_term_string"
                 }
+              },
+              {
+                "@type": "FAQPage",
+                "mainEntity": [
+                  {
+                    "@type": "Question",
+                    "name": "Do you offer same-day flower and cake delivery in Hyderabad and Secunderabad?",
+                    "acceptedAnswer": {
+                      "@type": "Answer",
+                      "text": "Yes! Spring Blossoms Florist provides guaranteed same-day flower, cake, and gift delivery across both Hyderabad and Secunderabad. Place your order during business hours for doorstep delivery in 2-4 hours."
+                    }
+                  },
+                  {
+                    "@type": "Question",
+                    "name": "How do your delivery charges and time slots work?",
+                    "acceptedAnswer": {
+                      "@type": "Answer",
+                      "text": "Free Delivery on your 1st order for all new customers! Additionally, standard delivery is FREE on orders of ₹999 and above (₹150 for orders below ₹999). Midnight delivery is available between 11:00 PM and 11:59 PM."
+                    }
+                  },
+                  {
+                    "@type": "Question",
+                    "name": "Can I schedule a midnight flower delivery for birthdays or anniversaries?",
+                    "acceptedAnswer": {
+                      "@type": "Answer",
+                      "text": "Absolutely! Our Midnight Surprise Delivery slot operates between 11:00 PM and 11:59 PM to surprise your loved ones right as the clock strikes midnight."
+                    }
+                  },
+                  {
+                    "@type": "Question",
+                    "name": "Where is Spring Blossoms Florist located in Hyderabad?",
+                    "acceptedAnswer": {
+                      "@type": "Answer",
+                      "text": "Our flagship floral studio is located at Door No. 12-2-786/A & B, Najam Centre, Pillar No. 32, Rethi Bowli, Mehdipatnam, Hyderabad, Telangana 500028. Direct support: +91 9949683222."
+                    }
+                  }
+                ]
               }
             ]
-          })}
-        </script>
-      </Helmet>
+          }
+        ]}
+      />
 
       {/* Offer Popup */}
       <OfferPopup
@@ -409,14 +434,20 @@ const HomePage = () => {
         Reset Offers
       </button>
 
-
-
       {enabledSections.map((section, index) => {
         switch (section.type) {
           case 'hero':
             return (
               <div key={`hero-${index}`} className="contents">
                 <SeasonalCampaignHomeSection />
+                <div className="max-w-7xl mx-auto px-4 pt-4 pb-2 text-center">
+                  <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
+                    Flower Delivery in Hyderabad for Every Special Occasion
+                  </h1>
+                  <p className="mt-2 text-xs sm:text-sm text-slate-600 max-w-2xl mx-auto">
+                    Handcrafted bouquets, fresh roses, and artisanal celebration cakes delivered with care across Hyderabad &amp; Secunderabad.
+                  </p>
+                </div>
                 <motion.div
                   variants={itemVariants}
                   className="relative w-full overflow-hidden"

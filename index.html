@@ -1,33 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-WL7W5HFK3C"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-      gtag('config', 'G-WL7W5HFK3C');
-    </script>
-    <!-- Meta Pixel Code -->
+    <!-- Performance: Preconnect to critical asset origins -->
+    <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
+    <link rel="dns-prefetch" href="https://res.cloudinary.com" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Deferred Third-Party Analytics (GTM & Meta Pixel) -->
     <script>
-      !function(f,b,e,v,n,t,s)
-      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-      n.queue=[];t=b.createElement(e);t.async=!0;
-      t.src=v;s=b.getElementsByTagName(e)[0];
-      s.parentNode.insertBefore(t,s)}(window, document,'script',
-      'https://connect.facebook.net/en_US/fbevents.js');
-      fbq('init', '4412966495700809');
-      fbq('track', 'PageView');
+      (function() {
+        var loaded = false;
+        function initAnalytics() {
+          if (loaded) return;
+          loaded = true;
+
+          // Google tag (gtag.js)
+          var gScript = document.createElement('script');
+          gScript.async = true;
+          gScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-WL7W5HFK3C';
+          document.head.appendChild(gScript);
+
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){ dataLayer.push(arguments); }
+          window.gtag = gtag;
+          gtag('js', new Date());
+          gtag('config', 'G-WL7W5HFK3C');
+
+          // Meta Pixel Code
+          !function(f,b,e,v,n,t,s)
+          {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+          n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+          if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+          n.queue=[];t=b.createElement(e);t.async=!0;
+          t.src=v;s=b.getElementsByTagName(e)[0];
+          s.parentNode.insertBefore(t,s)}(window, document,'script',
+          'https://connect.facebook.net/en_US/fbevents.js');
+          fbq('init', '4412966495700809');
+          fbq('track', 'PageView');
+        }
+
+        // Initialize analytics after window load or on first user interaction
+        if (document.readyState === 'complete') {
+          setTimeout(initAnalytics, 1500);
+        } else {
+          window.addEventListener('load', function() {
+            if ('requestIdleCallback' in window) {
+              requestIdleCallback(initAnalytics, { timeout: 2500 });
+            } else {
+              setTimeout(initAnalytics, 1500);
+            }
+          });
+        }
+        ['touchstart', 'scroll', 'click'].forEach(function(evt) {
+          window.addEventListener(evt, initAnalytics, { once: true, passive: true });
+        });
+      })();
     </script>
-    <!-- End Meta Pixel Code -->
     <script>
       // Clear service workers and Cache Storage immediately in development
       if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        // 1. Unregister any service workers
         if ('serviceWorker' in navigator) {
           navigator.serviceWorker.getRegistrations().then(function(registrations) {
             registrations.forEach(function(r) {
@@ -37,7 +72,6 @@
             });
           });
         }
-        // 2. Clear Cache Storage to prevent stale bundle hits
         if ('caches' in window) {
           caches.keys().then(function(keys) {
             if (keys.length > 0) {
@@ -52,35 +86,127 @@
         }
       }
     </script>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Send Flowers to Hyderabad & Secunderabad | Online Cake & Gift Delivery | SB Florist</title>
-    <meta name="description" content="Send fresh flowers, cakes & gifts across Hyderabad & Secunderabad with SB Florist. Free delivery on 1st order & orders ₹999+. Same-day & midnight flower delivery guaranteed." />
-    <meta name="keywords" content="Send Flowers to Hyderabad, Flower Delivery in Hyderabad, Online Flowers Hyderabad, Same Day Flower Delivery Hyderabad, Fresh Flowers Hyderabad, Online Cakes Hyderabad, Cakes with Flowers Hyderabad, Gifts to Hyderabad, Online Gifts Hyderabad, Birthday Flowers Hyderabad, Anniversary Flowers Hyderabad, Midnight Flower Delivery Hyderabad, Roses to Hyderabad, Bouquets to Hyderabad, Local Florist Hyderabad, Florist in Hyderabad, Flower Delivery in Secunderabad, Send Flowers to Secunderabad, Online Gifts Secunderabad, Same Day Flower Delivery Secunderabad, Fresh Flowers in Secunderabad, Cakes with Flowers Secunderabad, Birthday Gifts Hyderabad, Birthday Gifts Secunderabad, Anniversary Gifts Hyderabad, Anniversary Gifts Secunderabad" />
+    <title>Flower Delivery in Hyderabad | Spring Blossoms Florist</title>
+    <meta name="description" content="Send fresh flower bouquets, roses and thoughtful gifts with Spring Blossoms Florist in Hyderabad. Explore flowers for birthdays, anniversaries and special occasions." />
+    <meta name="keywords" content="Flower delivery in Hyderabad, Best florist in Hyderabad, Online flower shop Hyderabad, Florist in Hyderabad, Order flowers online Hyderabad, Same day flower delivery Hyderabad, Midnight flower delivery Hyderabad, Roses to Hyderabad, Birthday flowers Hyderabad, Anniversary flowers Hyderabad, Cakes and flowers Hyderabad" />
     
     <!-- Open Graph Meta Tags -->
-    <meta property="og:title" content="Send Flowers to Hyderabad & Secunderabad | Online Cake & Gift Delivery | SB Florist" />
-    <meta property="og:description" content="Send fresh flowers, delicious cakes & gifts across Hyderabad & Secunderabad. Enjoy Free Delivery on your 1st order and orders ₹999+. Same-day & midnight surprise delivery." />
+    <meta property="og:title" content="Flower Delivery in Hyderabad | Spring Blossoms Florist" />
+    <meta property="og:description" content="Send fresh flower bouquets, roses and thoughtful gifts with Spring Blossoms Florist in Hyderabad. Explore flowers for birthdays, anniversaries and special occasions." />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://sbflorist.in" />
+    <meta property="og:url" content="https://sbflorist.in/" />
     <meta property="og:image" content="https://res.cloudinary.com/djtrhfqan/image/upload/v1791793252/logo_final_tp7ymk.png" />
+    <meta property="og:site_name" content="Spring Blossoms Florist" />
     
     <!-- Twitter Card Meta Tags -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Send Flowers to Hyderabad & Secunderabad | SB Florist" />
-    <meta name="twitter:description" content="Fresh flowers, cakes, combos & gifts delivered across Hyderabad & Secunderabad with same-day and midnight delivery options." />
+    <meta name="twitter:title" content="Flower Delivery in Hyderabad | Spring Blossoms Florist" />
+    <meta name="twitter:description" content="Fresh flowers, roses, celebration cakes, and gift combos delivered across Hyderabad & Secunderabad with same-day and midnight delivery options." />
     <meta name="twitter:image" content="https://res.cloudinary.com/djtrhfqan/image/upload/v1791793252/logo_final_tp7ymk.png" />
     
     <!-- Additional SEO Meta Tags -->
-    <meta name="robots" content="index, follow" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <meta name="author" content="Spring Blossoms Florist" />
     <meta name="geo.region" content="IN-TG" />
     <meta name="geo.placename" content="Hyderabad" />
+    <meta name="geo.position" content="17.3912;78.4326" />
+    <meta name="ICBM" content="17.3912, 78.4326" />
     <meta name="theme-color" content="#0284c7" />
-    <!-- Secondary brand colors for reference -->
-    <meta name="theme-color-pink" content="#db2777" />
-    <meta name="theme-color-green" content="#16a34a" />
-    <link rel="canonical" href="https://sbflorist.in" />
+    <link rel="canonical" href="https://sbflorist.in/" />
+
+    <!-- Structured Data: Florist & WebSite & FAQPage -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Florist",
+          "@id": "https://sbflorist.in/#florist",
+          "name": "Spring Blossoms Florist",
+          "alternateName": "SB Florist",
+          "url": "https://sbflorist.in",
+          "logo": "https://sbflorist.in/logo.png",
+          "image": "https://sbflorist.in/logo.png",
+          "description": "Premium local florist offering same-day and midnight flower, cake, and gift delivery across Hyderabad and Secunderabad.",
+          "telephone": "+91 9949683222",
+          "priceRange": "₹₹",
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "Door No. 12-2-786/A & B, Najam Centre, Pillar No. 32, Rethi Bowli, Mehdipatnam",
+            "addressLocality": "Hyderabad",
+            "addressRegion": "Telangana",
+            "postalCode": "500028",
+            "addressCountry": "IN"
+          },
+          "geo": {
+            "@type": "GeoCoordinates",
+            "latitude": 17.3912,
+            "longitude": 78.4326
+          },
+          "openingHoursSpecification": [
+            {
+              "@type": "OpeningHoursSpecification",
+              "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+              "opens": "09:00",
+              "closes": "21:00"
+            }
+          ],
+          "areaServed": [
+            { "@type": "City", "name": "Hyderabad" },
+            { "@type": "City", "name": "Secunderabad" }
+          ]
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://sbflorist.in/#website",
+          "url": "https://sbflorist.in",
+          "name": "Spring Blossoms Florist",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://sbflorist.in/shop?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "FAQPage",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "Do you offer same-day flower and cake delivery in Hyderabad and Secunderabad?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes! Spring Blossoms Florist provides guaranteed same-day flower, cake, and gift delivery across both Hyderabad and Secunderabad. Place your order during business hours for doorstep delivery in 2-4 hours."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How do your delivery charges and time slots work?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Free Delivery on your 1st order for all new customers! Additionally, standard delivery is FREE on orders of ₹999 and above (₹150 for orders below ₹999). Midnight delivery is available between 11:00 PM and 11:59 PM."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Can I schedule a midnight flower delivery for birthdays or anniversaries?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Absolutely! Our Midnight Surprise Delivery slot operates between 11:00 PM and 11:59 PM to surprise your loved ones right as the clock strikes midnight."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Where is Spring Blossoms Florist located in Hyderabad?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Our flagship floral studio is located at Door No. 12-2-786/A & B, Najam Centre, Pillar No. 32, Rethi Bowli, Mehdipatnam, Hyderabad, Telangana 500028. Direct support: +91 9949683222."
+              }
+            }
+          ]
+        }
+      ]
+    }
+    </script>
     
     <!-- Favicon and App Icons -->
     <link rel="icon" type="image/x-icon" href="/favicons/favicon.ico" />
@@ -143,7 +269,178 @@
       src="https://www.facebook.com/tr?id=4412966495700809&ev=PageView&noscript=1"
     /></noscript>
     <!-- End Meta Pixel Noscript -->
-    <div id="root"></div>
+
+    <!-- Search-Engine Accessible Initial Content (Replaced seamlessly by React SPA on mount) -->
+    <div id="root">
+      <header style="padding: 1.5rem; border-bottom: 1px solid #f1f5f9; max-width: 1200px; margin: 0 auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+          <a href="/" style="font-size: 1.5rem; font-weight: 800; color: #e11d48; text-decoration: none;">Spring Blossoms Florist</a>
+          <nav aria-label="Main Navigation">
+            <ul style="display: flex; flex-wrap: wrap; gap: 1.25rem; list-style: none; margin: 0; padding: 0; font-size: 0.875rem; font-weight: 600;">
+              <li><a href="/shop" style="color: #334155; text-decoration: none;">All Flowers</a></li>
+              <li><a href="/shop?category=Roses" style="color: #334155; text-decoration: none;">Roses</a></li>
+              <li><a href="/shop?category=Bouquets" style="color: #334155; text-decoration: none;">Bouquets</a></li>
+              <li><a href="/cakes" style="color: #334155; text-decoration: none;">Cakes</a></li>
+              <li><a href="/combos" style="color: #334155; text-decoration: none;">Combos</a></li>
+              <li><a href="/occasions/birthday" style="color: #334155; text-decoration: none;">Birthday</a></li>
+              <li><a href="/occasions/anniversary" style="color: #334155; text-decoration: none;">Anniversary</a></li>
+              <li><a href="/flower-delivery-hyderabad" style="color: #e11d48; text-decoration: none;">Hyderabad Delivery</a></li>
+              <li><a href="/flower-delivery-secunderabad" style="color: #0284c7; text-decoration: none;">Secunderabad Delivery</a></li>
+              <li><a href="/contact" style="color: #334155; text-decoration: none;">Contact</a></li>
+            </ul>
+          </nav>
+        </div>
+      </header>
+
+      <main style="max-width: 1200px; margin: 0 auto; padding: 2rem 1rem;">
+        <!-- Primary H1 & Hero Statement -->
+        <section style="text-align: center; margin-bottom: 3.5rem;">
+          <h1 style="font-size: 2.25rem; font-weight: 900; color: #0f172a; line-height: 1.25; margin-bottom: 1rem;">
+            Flower Delivery in Hyderabad for Every Special Occasion
+          </h1>
+          <p style="font-size: 1.125rem; color: #475569; max-width: 800px; margin: 0 auto 1.5rem; line-height: 1.6;">
+            Send farm-fresh flower bouquets, handcrafted Dutch roses, delicious gourmet cakes, and bespoke celebration hampers with <strong>Spring Blossoms Florist</strong> in Hyderabad. We deliver heartfelt expressions across Hyderabad and Secunderabad with guaranteed same-day delivery and our signature midnight surprise delivery slots.
+          </p>
+          <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+            <a href="/shop" style="background: #e11d48; color: #ffffff; padding: 0.75rem 1.5rem; border-radius: 0.75rem; text-decoration: none; font-weight: 700;">Explore Fresh Bouquets</a>
+            <a href="/cakes" style="background: #f8fafc; color: #0f172a; border: 1px solid #cbd5e1; padding: 0.75rem 1.5rem; border-radius: 0.75rem; text-decoration: none; font-weight: 600;">Celebration Cakes</a>
+            <a href="/flower-delivery-hyderabad" style="background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3; padding: 0.75rem 1.5rem; border-radius: 0.75rem; text-decoration: none; font-weight: 600;">Hyderabad Delivery Coverage</a>
+          </div>
+        </section>
+
+        <!-- Fresh Flower Collections -->
+        <section style="margin-bottom: 3.5rem;">
+          <h2 style="font-size: 1.75rem; font-weight: 800; color: #0f172a; margin-bottom: 0.5rem; text-align: center;">
+            Handcrafted Flower Collections for Delivery in Hyderabad
+          </h2>
+          <p style="text-align: center; color: #64748b; font-size: 0.95rem; margin-bottom: 2rem;">
+            Choose from farm-fresh stems arranged by master florists at our local Mehdipatnam design studio.
+          </p>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem;">
+            <article style="border: 1px solid #e2e8f0; border-radius: 1rem; padding: 1.5rem; background: #ffffff;">
+              <h3 style="font-size: 1.25rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem;">🌹 Premium Red Roses</h3>
+              <p style="font-size: 0.875rem; color: #475569; line-height: 1.5; margin-bottom: 1rem;">
+                Long-stemmed Dutch red roses, pink roses, and yellow roses hand-tied in luxury paper with satin ribbons. Perfect for romantic anniversaries and spontaneous surprises.
+              </p>
+              <a href="/shop?category=Roses" style="color: #e11d48; font-weight: 600; text-decoration: none; font-size: 0.875rem;">View Rose Bouquets &rarr;</a>
+            </article>
+
+            <article style="border: 1px solid #e2e8f0; border-radius: 1rem; padding: 1.5rem; background: #ffffff;">
+              <h3 style="font-size: 1.25rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem;">🌸 Elegant Oriental Lilies</h3>
+              <p style="font-size: 0.875rem; color: #475569; line-height: 1.5; margin-bottom: 1rem;">
+                Fragrant Asiatic and Oriental lilies that bloom gracefully in glass vases and basket arrangements, bringing peace, celebration, and sophisticated charm.
+              </p>
+              <a href="/shop?category=Lilies" style="color: #e11d48; font-weight: 600; text-decoration: none; font-size: 0.875rem;">View Lily Arrangements &rarr;</a>
+            </article>
+
+            <article style="border: 1px solid #e2e8f0; border-radius: 1rem; padding: 1.5rem; background: #ffffff;">
+              <h3 style="font-size: 1.25rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem;">🎂 Flowers &amp; Cake Combos</h3>
+              <p style="font-size: 0.875rem; color: #475569; line-height: 1.5; margin-bottom: 1rem;">
+                Double the celebration with freshly baked Dutch Truffle, Red Velvet, or Black Forest cakes paired with fresh floral bouquets and personalized greeting messages.
+              </p>
+              <a href="/combos" style="color: #e11d48; font-weight: 600; text-decoration: none; font-size: 0.875rem;">View Celebration Combos &rarr;</a>
+            </article>
+
+            <article style="border: 1px solid #e2e8f0; border-radius: 1rem; padding: 1.5rem; background: #ffffff;">
+              <h3 style="font-size: 1.25rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem;">🎉 Birthday &amp; Anniversary Specials</h3>
+              <p style="font-size: 0.875rem; color: #475569; line-height: 1.5; margin-bottom: 1rem;">
+                Specially curated gift hampers with imported chocolates, teddy bears, and vibrant mixed flowers to make birthdays and milestones truly unforgettable.
+              </p>
+              <a href="/occasions/birthday" style="color: #e11d48; font-weight: 600; text-decoration: none; font-size: 0.875rem;">Explore Birthday Gifts &rarr;</a>
+            </article>
+          </div>
+        </section>
+
+        <!-- Why Choose Spring Blossoms Florist -->
+        <section style="margin-bottom: 3.5rem; padding: 2.5rem 1.5rem; background: #fff1f2; border-radius: 1.5rem; border: 1px solid #fecdd3;">
+          <h2 style="font-size: 1.75rem; font-weight: 800; color: #0f172a; margin-bottom: 1.5rem; text-align: center;">
+            Why Choose Spring Blossoms Florist in Hyderabad?
+          </h2>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+            <div style="background: #ffffff; padding: 1.5rem; border-radius: 1rem; border: 1px solid #ffe4e6;">
+              <h3 style="font-size: 1.125rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem;">🌿 Farm-Fresh Guarantee</h3>
+              <p style="font-size: 0.875rem; color: #475569; line-height: 1.5;">
+                We source fresh flowers daily to ensure maximum longevity, vibrant colors, and lasting fragrance in every arrangement.
+              </p>
+            </div>
+            <div style="background: #ffffff; padding: 1.5rem; border-radius: 1rem; border: 1px solid #ffe4e6;">
+              <h3 style="font-size: 1.125rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem;">⏱️ Same-Day &amp; Midnight Delivery</h3>
+              <p style="font-size: 0.875rem; color: #475569; line-height: 1.5;">
+                Need flowers urgently? We deliver within 2 to 4 hours across Hyderabad. Schedule our midnight slot for surprise delivery right at 12:00 AM.
+              </p>
+            </div>
+            <div style="background: #ffffff; padding: 1.5rem; border-radius: 1rem; border: 1px solid #ffe4e6;">
+              <h3 style="font-size: 1.125rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem;">📍 Real Local Florist Studio</h3>
+              <p style="font-size: 0.875rem; color: #475569; line-height: 1.5;">
+                Based at Mehdipatnam, Hyderabad. We personally craft and deliver every order with temperature-conscious handling — never shipped via courier boxes.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Delivery Areas in Twin Cities -->
+        <section style="margin-bottom: 3.5rem;">
+          <h2 style="font-size: 1.75rem; font-weight: 800; color: #0f172a; margin-bottom: 0.5rem; text-align: center;">
+            Twin Cities Flower Delivery Coverage: Hyderabad &amp; Secunderabad
+          </h2>
+          <p style="text-align: center; color: #64748b; font-size: 0.95rem; max-width: 800px; margin: 0 auto 1.5rem;">
+            Spring Blossoms Florist delivers to over 100 pin codes across Hyderabad and Secunderabad. Enjoy direct florist dispatch to every locality:
+          </p>
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 1rem; padding: 1.5rem; font-size: 0.875rem; color: #334155; line-height: 1.8;">
+            <p><strong>Hyderabad Localities:</strong> Banjara Hills, Jubilee Hills, Gachibowli, Madhapur, Hitec City, Kondapur, Mehdipatnam, Begumpet, Somajiguda, Himayatnagar, Kukatpally, Miyapur, Chandanagar, Manikonda, Tolichowki, Attapur, Masab Tank, Khairatabad, Ameerpet, Dilsukhnagar, LB Nagar, Malakpet, Charminar, Koti, Abids, Uppal, Tarnaka, Habsiguda, and all surrounding areas.</p>
+            <p style="margin-top: 0.75rem;"><strong>Secunderabad Localities:</strong> Secunderabad Station, Begumpet, Sainikpuri, Marredpally, Bowenpally, ECIL, AS Rao Nagar, Neredmet, Bolaram, Sitaphalmandi, Kompally, Alwal, Malkajgiri, and Cantonment suburbs.</p>
+          </div>
+        </section>
+
+        <!-- FAQs -->
+        <section style="margin-bottom: 3.5rem; max-width: 850px; margin-left: auto; margin-right: auto;">
+          <h2 style="font-size: 1.75rem; font-weight: 800; color: #0f172a; margin-bottom: 1.5rem; text-align: center;">
+            Frequently Asked Questions About Flower Delivery in Hyderabad
+          </h2>
+          <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <div style="border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 1.25rem; background: #ffffff;">
+              <h3 style="font-size: 1.05rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem;">Can I get same-day flower delivery in Hyderabad today?</h3>
+              <p style="font-size: 0.875rem; color: #475569; line-height: 1.5; margin: 0;">
+                Yes! Spring Blossoms Florist offers same-day flower and gift delivery across Hyderabad and Secunderabad. Place your order during daytime hours and our florists will handcraft your bouquet for delivery within a few hours.
+              </p>
+            </div>
+            <div style="border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 1.25rem; background: #ffffff;">
+              <h3 style="font-size: 1.05rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem;">What are your flower delivery charges?</h3>
+              <p style="font-size: 0.875rem; color: #475569; line-height: 1.5; margin: 0;">
+                We offer Free Delivery on your 1st order for all new customers! For returning orders, standard delivery is FREE on orders of ₹999 and above. Orders below ₹999 carry a nominal delivery charge of ₹150.
+              </p>
+            </div>
+            <div style="border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 1.25rem; background: #ffffff;">
+              <h3 style="font-size: 1.05rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem;">Do you deliver flowers and cakes at midnight in Hyderabad?</h3>
+              <p style="font-size: 0.875rem; color: #475569; line-height: 1.5; margin: 0;">
+                Yes! Our Midnight Surprise Delivery slot operates between 11:00 PM and 11:59 PM. It is ideal for birthdays and anniversaries so your surprise arrives right as the clock strikes midnight.
+              </p>
+            </div>
+            <div style="border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 1.25rem; background: #ffffff;">
+              <h3 style="font-size: 1.05rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem;">Where is Spring Blossoms Florist located in Hyderabad?</h3>
+              <p style="font-size: 0.875rem; color: #475569; line-height: 1.5; margin: 0;">
+                Our physical floral studio is located at Door No. 12-2-786/A &amp; B, Najam Centre, Pillar No. 32, Rethi Bowli, Mehdipatnam, Hyderabad, Telangana 500028. You can also reach our customer support team directly at +91 9949683222.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Studio & Contact Information -->
+        <footer style="border-top: 1px solid #e2e8f0; padding-top: 2rem; text-align: center; font-size: 0.875rem; color: #64748b;">
+          <p style="font-weight: 700; color: #1e293b; margin-bottom: 0.25rem;">Spring Blossoms Florist &mdash; A Reason to Express</p>
+          <p style="margin-bottom: 0.25rem;">Door No. 12-2-786/A &amp; B, Najam Centre, Pillar No. 32, Rethi Bowli, Mehdipatnam, Hyderabad, Telangana 500028</p>
+          <p style="margin-bottom: 0.5rem;">Phone: <a href="tel:+919949683222" style="color: #e11d48; text-decoration: none;">+91 9949683222</a> | Email: <a href="mailto:contact@sbflorist.in" style="color: #e11d48; text-decoration: none;">contact@sbflorist.in</a></p>
+          <p style="font-size: 0.75rem; color: #94a3b8;">
+            <a href="/terms" style="color: #64748b; text-decoration: none;">Terms</a> &bull;
+            <a href="/privacy" style="color: #64748b; text-decoration: none;">Privacy</a> &bull;
+            <a href="/shipping" style="color: #64748b; text-decoration: none;">Shipping</a> &bull;
+            <a href="/refund-policy" style="color: #64748b; text-decoration: none;">Refund Policy</a> &bull;
+            <a href="/cancellation-policy" style="color: #64748b; text-decoration: none;">Cancellation Policy</a>
+          </p>
+        </footer>
+      </main>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

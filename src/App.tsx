@@ -27,9 +27,11 @@ import PendingReviewGate from '@/components/reviews/PendingReviewGate';
 // Core pages that should load immediately
 import HomePage from "./pages/HomePage";
 import NotFound from "./pages/NotFound";
-import LoginPage from "./pages/LoginPage";
-import SignupPage from "./pages/SignupPage";
-import VendorConsentPage from "./pages/VendorConsentPage";
+
+// Lazy-loaded auth and consent pages
+const LoginPage = lazy(() => import("./pages/LoginPage"));
+const SignupPage = lazy(() => import("./pages/SignupPage"));
+const VendorConsentPage = lazy(() => import("./pages/VendorConsentPage"));
 
 // Lazy loaded pages with better organization
 const ShopPage = lazy(() => import('./pages/ShopPage'));

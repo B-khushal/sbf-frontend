@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
+import SEOHead from "@/components/seo/SEOHead";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import ProductGrid from "@/components/ProductGrid";
 import useCart from "@/hooks/use-cart";
@@ -774,27 +775,51 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
     setFilteredProducts(filtered);
   }, [products, selectedCategoryKey, isParentCategoryRoute, minPriceFilter, maxPriceFilter, sortBy, searchQuery, deliveryOption, occasionFilter, flowerTypeFilter, colorFilter, inStockOnly, bestsellerOnly, newArrivalOnly]);
 
+  // Dynamically derive SEO metadata for categories and search
+  let pageTitle = "Shop Online Flowers & Gifts in Hyderabad";
+  let pageDescription = "Browse fresh flowers, bouquets, celebration cakes, and gift combos online with guaranteed same-day & midnight delivery across Hyderabad & Secunderabad.";
+  let pageCanonical = "/shop";
+  let shouldNoindex = false;
+
+  if (searchQuery) {
+    pageTitle = `Search Results for "${searchQuery}"`;
+    pageDescription = `Browse flower and gift search results for "${searchQuery}" at Spring Blossoms Florist.`;
+    pageCanonical = "/shop";
+    shouldNoindex = true; // Exclude internal search query combinations from index
+  } else if (isBudgetFriendlyCategory) {
+    pageTitle = "Budget Friendly Flowers & Gifts Under ₹1,000";
+    pageDescription = "Shop beautiful budget-friendly flowers, bouquets and gifts under ₹1,000 from Spring Blossoms Florist. Elegant gifting options at thoughtful prices.";
+    pageCanonical = "/shop/budget-friendly";
+  } else if (resolvedCategory) {
+    pageTitle = resolvedCategory.metaTitle || `${resolvedCategory.name} Delivery in Hyderabad`;
+    pageDescription = resolvedCategory.metaDescription || resolvedCategory.description || `Send fresh ${resolvedCategory.name} flowers and arrangements online with same-day and midnight delivery in Hyderabad from Spring Blossoms Florist.`;
+    pageCanonical = resolvedCategory.categoryUrl || `/${resolvedCategory.slug || selectedCategoryKey}`;
+  } else if (category && category !== "All") {
+    pageTitle = `${category} Delivery in Hyderabad`;
+    pageDescription = `Send fresh ${category.toLowerCase()} and beautiful flower bouquets online with same-day delivery across Hyderabad from Spring Blossoms Florist.`;
+    pageCanonical = selectedCategoryKey ? `/shop/${selectedCategoryKey}` : "/shop";
+  }
+
+  const categoryBreadcrumbs = [
+    { name: "Home", item: "/" },
+    { name: "Shop", item: "/shop" },
+  ];
+  if (category && category !== "All") {
+    categoryBreadcrumbs.push({
+      name: category,
+      item: pageCanonical,
+    });
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-bloom-blue-50 via-bloom-pink-50 to-bloom-green-50">
-      <Helmet>
-        {isBudgetFriendlyCategory ? (
-          <>
-            <title>Budget Friendly Flowers & Gifts Under ₹1,000 | Spring Blossoms Florist</title>
-            <meta name="description" content="Shop beautiful budget-friendly flowers, bouquets and gifts under ₹1,000 from Spring Blossoms Florist. Elegant gifting options at thoughtful prices." />
-            <meta name="keywords" content="budget friendly flowers, flowers under 1000, affordable flower delivery Hyderabad, budget bouquets, gifts under 1000, Spring Blossoms Florist" />
-            <link rel="canonical" href="https://sbflorist.in/shop/budget-friendly" />
-            <meta property="og:title" content="Budget Friendly Flowers & Gifts Under ₹1,000 | Spring Blossoms Florist" />
-            <meta property="og:description" content="Shop beautiful budget-friendly flowers, bouquets and gifts under ₹1,000 from Spring Blossoms Florist. Elegant gifting options at thoughtful prices." />
-            <meta property="og:url" content="https://sbflorist.in/shop/budget-friendly" />
-          </>
-        ) : (
-          <>
-            <title>Shop Online Flowers - Same Day & Midnight Delivery in Hyderabad | Spring Blossoms</title>
-            <meta name="description" content="Browse our beautiful collections of fresh flowers, bouquets, cakes, and gifts. Order online for express same day and midnight delivery in Hyderabad." />
-            <meta name="keywords" content="flower delivery Hyderabad, online flower delivery Hyderabad, same day flower delivery Hyderabad, midnight flower delivery Hyderabad, fresh flowers delivery Hyderabad, florist Hyderabad, best florist in Hyderabad, flower shop Hyderabad, online florist Hyderabad, bouquet delivery Hyderabad, rose bouquet delivery Hyderabad, birthday flower delivery Hyderabad, anniversary flower delivery Hyderabad, wedding flowers Hyderabad, flower arrangements Hyderabad, luxury flower delivery Hyderabad, affordable flower delivery Hyderabad, cheap flower delivery Hyderabad, premium flowers Hyderabad, flower bouquet online Hyderabad, send flowers to Hyderabad, Hyderabad flower delivery service, flowers home delivery Hyderabad, express flower delivery Hyderabad, 24 hour flower delivery Hyderabad, flowers near me Hyderabad, red roses delivery Hyderabad, orchid delivery Hyderabad, lily flower delivery Hyderabad, carnation bouquet Hyderabad, mixed flower bouquet Hyderabad, romantic flower delivery Hyderabad, Valentine's Day flowers Hyderabad, Mother's Day flower delivery Hyderabad, congratulations flowers Hyderabad, get well soon flowers Hyderabad, sympathy flowers Hyderabad, flower and cake delivery Hyderabad, flowers and gifts Hyderabad, flower basket delivery Hyderabad, customized bouquet Hyderabad, online bouquet order Hyderabad, florist near Hyderabad airport, flower delivery in Gachibowli, flower delivery in Hitech City, flower delivery in Banjara Hills, flower delivery in Jubilee Hills, flower delivery in Kondapur, flower delivery in Kukatpally, flower delivery in Secunderabad" />
-          </>
-        )}
-      </Helmet>
+      <SEOHead
+        title={pageTitle}
+        description={pageDescription}
+        canonical={pageCanonical}
+        noindex={shouldNoindex}
+        breadcrumbs={categoryBreadcrumbs}
+      />
       <main className="pt-20">
         <div className="w-full max-w-8xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 py-8">
           {/* Search Results Header */}

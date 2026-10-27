@@ -1,5 +1,3 @@
-import html2pdf from 'html2pdf.js';
-
 export const generatePDF = async (element: HTMLElement, filename: string) => {
   const opt = {
     margin: 1,
@@ -8,13 +6,14 @@ export const generatePDF = async (element: HTMLElement, filename: string) => {
     html2canvas: { 
       scale: 2,
       useCORS: true,
-      logging: true,
+      logging: false,
       letterRendering: true
     },
     jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' as const }
   };
 
   try {
+    const html2pdf = (await import('html2pdf.js')).default;
     await html2pdf().set(opt).from(element).save();
     return true;
   } catch (error) {

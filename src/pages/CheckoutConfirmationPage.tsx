@@ -21,8 +21,6 @@ import { LocationPreview } from '@/components/location/LocationPreview';
 import { MapplsLocation } from '@/types/location';
 import Invoice from '@/components/Invoice';
 import { marketingTracker } from '@/services/marketingTracker';
-// @ts-ignore
-import html2pdf from 'html2pdf.js';
 
 // Animation variants
 const containerVariants = {
@@ -435,7 +433,7 @@ const CheckoutConfirmationPage = () => {
     navigate('/shop');
   };
 
-  const handleDownloadInvoice = () => {
+  const handleDownloadInvoice = async () => {
     if (!order) return;
 
     const element = document.getElementById('clean-invoice-pdf');
@@ -470,6 +468,7 @@ const CheckoutConfirmationPage = () => {
         }
       };
       
+      const html2pdf = (await import('html2pdf.js')).default;
       html2pdf().from(element).set(options as any).save();
 
       toast({

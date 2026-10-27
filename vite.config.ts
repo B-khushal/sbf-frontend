@@ -56,52 +56,30 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       output: {
         // Manual chunks for better code splitting
-        manualChunks: {
-          // Vendor chunks - separate large libraries
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'ui-vendor': [
-            '@radix-ui/react-dialog',
-            '@radix-ui/react-dropdown-menu',
-            '@radix-ui/react-select',
-            '@radix-ui/react-tabs',
-            '@radix-ui/react-toast',
-            '@radix-ui/react-popover',
-            '@radix-ui/react-navigation-menu'
-          ],
-          'form-vendor': [
-            'react-hook-form',
-            '@hookform/resolvers',
-            'zod'
-          ],
-          'animation-vendor': [
-            'framer-motion',
-            '@dnd-kit/core',
-            '@dnd-kit/sortable'
-          ],
-          'chart-vendor': ['recharts'],
-          'utils': [
-            'axios',
-            'date-fns',
-            'clsx',
-            'tailwind-merge',
-            'class-variance-authority'
-          ],
-          // Admin chunks
-          'admin': [
-            'src/pages/Admin/Dashboard.tsx',
-            'src/pages/Admin/Products.tsx',
-            'src/pages/Admin/Orders.tsx',
-            'src/pages/Admin/Users.tsx',
-            'src/pages/Admin/Analytics.tsx',
-            'src/pages/AdminSettingsPage.tsx'
-          ],
-          // Vendor chunks
-          'vendor-pages': [
-            'src/pages/Vendor/VendorDashboard.tsx',
-            'src/pages/Vendor/VendorProducts.tsx',
-            'src/pages/Vendor/VendorOrders.tsx',
-            'src/pages/Vendor/VendorAnalytics.tsx'
-          ]
+        manualChunks: (id) => {
+          if (id.includes('node_modules')) {
+            if (id.includes('html2pdf') || id.includes('jspdf') || id.includes('html2canvas')) {
+              return 'html2pdf';
+            }
+            if (id.includes('recharts') || id.includes('d3-')) {
+              return 'chart-vendor';
+            }
+            if (id.includes('framer-motion')) {
+              return 'animation-vendor';
+            }
+            if (id.includes('@radix-ui')) {
+              return 'ui-vendor';
+            }
+            if (id.includes('react-router') || id.includes('react-dom') || id.includes('/react/')) {
+              return 'react-vendor';
+            }
+            if (id.includes('react-hook-form') || id.includes('@hookform') || id.includes('zod')) {
+              return 'form-vendor';
+            }
+            if (id.includes('axios') || id.includes('date-fns') || id.includes('clsx') || id.includes('tailwind-merge') || id.includes('class-variance-authority')) {
+              return 'utils';
+            }
+          }
         },
         // Optimize chunk file names
         chunkFileNames: (chunkInfo) => {

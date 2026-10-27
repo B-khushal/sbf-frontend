@@ -375,21 +375,33 @@ interface SettingsProviderProps {
   children: ReactNode;
 }
 
+const getCachedSettings = () => {
+  try {
+    if (typeof window !== 'undefined') {
+      const raw = sessionStorage.getItem('sbf_settings_cache') || localStorage.getItem('sbf_settings_cache');
+      if (raw) return JSON.parse(raw);
+    }
+  } catch (_) {}
+  return null;
+};
+
 export const SettingsProvider = ({ children }: SettingsProviderProps) => {
-  const [heroSlides, setHeroSlides] = useState<any[]>([]);
-  const [mobileBanners, setMobileBanners] = useState<any[]>([]);
-  const [promoBanners, setPromoBanners] = useState<any[]>([]);
-  const [homeSections, setHomeSections] = useState<HomeSection[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [shopCategories, setShopCategories] = useState<Category[]>([]);
-  const [headerSettings, setHeaderSettings] = useState<HeaderSettings>(defaultHeaderSettings);
-  const [footerSettings, setFooterSettings] = useState<FooterSettings>(defaultFooterSettings);
-  const [notificationsSettings, setNotificationsSettings] = useState<NotificationsSettings>(defaultNotificationsSettings);
-  const [globalSettings, setGlobalSettings] = useState<any>({});
-  const [deliverySettings, setDeliverySettings] = useState<any>({});
-  const [themeSettings, setThemeSettings] = useState<any>({});
-  const [productDisplaySettings, setProductDisplaySettings] = useState<any>({});
-  const [imageProtectionSettings, setImageProtectionSettings] = useState<any>({
+  const cached = getCachedSettings();
+
+  const [heroSlides, setHeroSlides] = useState<any[]>(cached?.heroSlides || []);
+  const [mobileBanners, setMobileBanners] = useState<any[]>(cached?.mobileBanners || []);
+  const [promoBanners, setPromoBanners] = useState<any[]>(cached?.promoBanners || []);
+  const [homeSections, setHomeSections] = useState<HomeSection[]>(cached?.homeSections || []);
+  const [categories, setCategories] = useState<Category[]>(cached?.categories || []);
+  const [shopCategories, setShopCategories] = useState<Category[]>(cached?.shopCategories || []);
+  const [headerSettings, setHeaderSettings] = useState<HeaderSettings>(cached?.headerSettings ? { ...defaultHeaderSettings, ...cached.headerSettings } : defaultHeaderSettings);
+  const [footerSettings, setFooterSettings] = useState<FooterSettings>(cached?.footerSettings ? { ...defaultFooterSettings, ...cached.footerSettings } : defaultFooterSettings);
+  const [notificationsSettings, setNotificationsSettings] = useState<NotificationsSettings>(cached?.notificationsSettings ? { ...defaultNotificationsSettings, ...cached.notificationsSettings } : defaultNotificationsSettings);
+  const [globalSettings, setGlobalSettings] = useState<any>(cached?.globalSettings || {});
+  const [deliverySettings, setDeliverySettings] = useState<any>(cached?.deliverySettings || {});
+  const [themeSettings, setThemeSettings] = useState<any>(cached?.themeSettings || {});
+  const [productDisplaySettings, setProductDisplaySettings] = useState<any>(cached?.productDisplaySettings || {});
+  const [imageProtectionSettings, setImageProtectionSettings] = useState<any>(cached?.imageProtectionSettings || {
     enableWatermark: true,
     watermarkText: "sbflorist.in",
     watermarkOpacity: 20,
@@ -401,7 +413,8 @@ export const SettingsProvider = ({ children }: SettingsProviderProps) => {
   const [draftSettings, setDraftSettings] = useState<any>(null);
   const [history, setHistory] = useState<any[]>([]);
 
-  const [loading, setLoading] = useState(false);
+  // Only show skeleton on first visit if no cached sections exist
+  const [loading, setLoading] = useState(!cached || !cached.homeSections || cached.homeSections.length === 0);
   const [error, setError] = useState<string | null>(null);
 
   const applyTheme = useCallback((theme: any) => {
@@ -431,13 +444,10 @@ export const SettingsProvider = ({ children }: SettingsProviderProps) => {
 
   const fetchSettings = useCallback(async () => {
     try {
-      setLoading(true);
       setError(null);
 
       const response = await api.get('/settings/all');
       const data = response.data;
-
-      console.log('Settings Context loaded:', data);
 
       if (data.heroSlides) setHeroSlides(data.heroSlides);
       if (data.mobileBanners) setMobileBanners(data.mobileBanners);
@@ -467,6 +477,10 @@ export const SettingsProvider = ({ children }: SettingsProviderProps) => {
       if (data.imageProtectionSettings) setImageProtectionSettings(data.imageProtectionSettings);
       if (data.draftSettings) setDraftSettings(data.draftSettings);
       if (data.history) setHistory(data.history);
+
+      try {
+        localStorage.setItem('sbf_settings_cache', JSON.stringify(data));
+      } catch (_) {}
 
     } catch (err) {
       console.warn('Failed to load settings from server, using local fallbacks', err);

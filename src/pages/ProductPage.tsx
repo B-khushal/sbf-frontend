@@ -13,6 +13,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { promptLoginForAddToCart } from '@/utils/cartAuthHelper';
 import { trackProductView } from '@/services/activityService';
 import { marketingTracker } from '@/services/marketingTracker';
+import SEOHead from '@/components/seo/SEOHead';
 
 type Product = ProductData & {
   _id: string;
@@ -165,8 +166,64 @@ const ProductPage = () => {
     return null;
   }
 
+  const finalPrice = product.discount && product.discount > 0
+    ? Math.round(product.price * (1 - product.discount / 100))
+    : product.price;
+
+  const cleanDescription = product.description
+    ? product.description.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().slice(0, 160)
+    : `Order ${product.title} from Spring Blossoms Florist with same-day and midnight flower delivery in Hyderabad.`;
+
+  const primaryImage = (product.images && product.images[0]) || '/logo.png';
+  const categoryName = typeof product.category === 'string'
+    ? product.category
+    : (product.category as any)?.name || 'Flowers';
+
+  const productSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.title,
+    description: cleanDescription,
+    image: (product.images && product.images.length > 0)
+      ? product.images.map(img => img.startsWith('/') ? `https://sbflorist.in${img}` : img)
+      : [`https://sbflorist.in/logo.png`],
+    sku: String(product._id || actualId),
+    offers: {
+      '@type': 'Offer',
+      url: `https://sbflorist.in/product/${product._id || actualId}`,
+      priceCurrency: 'INR',
+      price: finalPrice,
+      priceValidUntil: '2026-12-31',
+      itemCondition: 'https://schema.org/NewCondition',
+      availability: (product.stock !== undefined && product.stock <= 0)
+        ? 'https://schema.org/OutOfStock'
+        : 'https://schema.org/InStock',
+      seller: {
+        '@type': 'Florist',
+        name: 'Spring Blossoms Florist',
+        url: 'https://sbflorist.in'
+      }
+    }
+  };
+
+  const breadcrumbs = [
+    { name: 'Home', item: '/' },
+    { name: 'Shop', item: '/shop' },
+    { name: categoryName, item: `/shop?category=${encodeURIComponent(categoryName)}` },
+    { name: product.title, item: `/product/${product._id || actualId}` }
+  ];
+
   return (
     <div className="min-h-screen flex flex-col">
+      <SEOHead
+        title={`${product.title} - ₹${finalPrice}`}
+        description={cleanDescription}
+        canonical={`/product/${product._id || actualId}`}
+        ogType="product"
+        ogImage={primaryImage}
+        jsonLd={productSchema}
+        breadcrumbs={breadcrumbs}
+      />
       <main className="flex-1">
         {isComboProduct(product) ? (
           <ComboProductDetail
