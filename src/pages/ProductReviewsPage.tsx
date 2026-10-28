@@ -231,6 +231,8 @@ const ProductReviewsPage = () => {
   useEffect(() => {
     setPage(1);
     setReviews([]);
+    setGalleryImages([]);
+    setFeaturedReviews([]);
     void fetchReviews(1, true);
   }, [productId, sort, ratingFilter, withImages, verifiedOnly]);
 

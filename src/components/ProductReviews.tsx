@@ -66,6 +66,9 @@ const ProductReviews = ({ productId, productTitle = 'This arrangement', onReview
   };
 
   useEffect(() => {
+    setReviews([]);
+    setFeaturedReviews([]);
+    setGalleryImages([]);
     void fetchReviewPreview();
   }, [productId]);
 
