@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Helmet } from 'react-helmet-async';
+import SEOHead from '@/components/seo/SEOHead';
 import { motion, AnimatePresence } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 import { Heart, Award, Users, Leaf, Sparkles, Star, X, Book } from 'lucide-react';
@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 
 // Animation variants
 const containerVariants = {
-  hidden: { opacity: 0 },
+  hidden: { opacity: 1 },
   visible: {
     opacity: 1,
     transition: {
@@ -18,7 +18,7 @@ const containerVariants = {
 };
 
 const itemVariants = {
-  hidden: { y: 40, opacity: 0 },
+  hidden: { y: 0, opacity: 1 },
   visible: {
     y: 0,
     opacity: 1,
@@ -65,11 +65,11 @@ const AboutPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-bloom-blue-50 via-bloom-pink-50 to-bloom-green-50 relative overflow-hidden">
-      <Helmet>
-        <title>About Spring Blossoms - Best Florist in Hyderabad | Online Bouquet Shop</title>
-        <meta name="description" content="Learn more about Spring Blossoms, the best florist in Hyderabad. We offer fresh flowers delivery, roses for anniversary, and online flower delivery in Hyderabad." />
-        <meta name="keywords" content="flower delivery Hyderabad, online flower delivery Hyderabad, same day flower delivery Hyderabad, midnight flower delivery Hyderabad, fresh flowers delivery Hyderabad, florist Hyderabad, best florist in Hyderabad, flower shop Hyderabad, online florist Hyderabad, bouquet delivery Hyderabad, rose bouquet delivery Hyderabad, birthday flower delivery Hyderabad, anniversary flower delivery Hyderabad, wedding flowers Hyderabad, flower arrangements Hyderabad, luxury flower delivery Hyderabad, affordable flower delivery Hyderabad, cheap flower delivery Hyderabad, premium flowers Hyderabad, flower bouquet online Hyderabad, send flowers to Hyderabad, Hyderabad flower delivery service, flowers home delivery Hyderabad, express flower delivery Hyderabad, 24 hour flower delivery Hyderabad, flowers near me Hyderabad, red roses delivery Hyderabad, orchid delivery Hyderabad, lily flower delivery Hyderabad, carnation bouquet Hyderabad, mixed flower bouquet Hyderabad, romantic flower delivery Hyderabad, Valentine's Day flowers Hyderabad, Mother's Day flower delivery Hyderabad, congratulations flowers Hyderabad, get well soon flowers Hyderabad, sympathy flowers Hyderabad, flower and cake delivery Hyderabad, flowers and gifts Hyderabad, flower basket delivery Hyderabad, customized bouquet Hyderabad, online bouquet order Hyderabad, florist near Hyderabad airport, flower delivery in Gachibowli, flower delivery in Hitech City, flower delivery in Banjara Hills, flower delivery in Jubilee Hills, flower delivery in Kondapur, flower delivery in Kukatpally, flower delivery in Secunderabad" />
-      </Helmet>
+      <SEOHead
+        title="About Spring Blossoms Florist | Spring Blossoms Florist"
+        description="Learn about Spring Blossoms Florist, our floral craftsmanship, values, and commitment to delivering fresh flowers, cakes, and thoughtful gifts."
+        canonical="/about"
+      />
       {/* Animated Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-bloom-blue-200/20 via-transparent to-bloom-pink-200/20 rounded-full blur-3xl animate-spin-slow" />
@@ -77,7 +77,7 @@ const AboutPage: React.FC = () => {
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-bloom-pink-100/30 to-bloom-green-100/30 rounded-full blur-2xl animate-pulse" />
       </div>
       
-      <motion.main 
+      <motion.div 
         className="relative flex-1 pt-24 z-10"
         initial="hidden"
         animate="visible"
@@ -94,7 +94,7 @@ const AboutPage: React.FC = () => {
                 <div className="text-4xl text-yellow-400">✨</div>
               </div>
               <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-gray-800 mb-6 pt-8 leading-tight">
-                About <span className="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">Spring Blossoms</span> - Best Florist in Hyderabad
+                About <span className="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">Spring Blossoms Florist</span>
               </h1>
               <div className="absolute top-0 right-1/2 transform translate-x-32 -translate-y-4">
                 <div className="text-4xl text-yellow-400">✨</div>
@@ -379,7 +379,7 @@ const AboutPage: React.FC = () => {
             </div>
           </div>
         </motion.section>
-      </motion.main>
+      </motion.div>
       
       {showJourneyModal && <JourneyModal onClose={closeJourneyModal} />}
     </div>

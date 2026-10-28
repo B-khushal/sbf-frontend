@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
 import SEOHead from "@/components/seo/SEOHead";
+import { HOME_PAGE_SCHEMAS } from "@/components/seo/floristSchema";
 import { motion, type Variants } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 import { useNavigate } from "react-router-dom";
@@ -37,7 +38,7 @@ import api from "../services/api";
 
 // Animation variants
 const containerVariants: Variants = {
-  hidden: { opacity: 0 },
+  hidden: { opacity: 1 },
   visible: {
     opacity: 1,
     transition: {
@@ -178,6 +179,11 @@ const HomePage = () => {
       .filter(section => section.enabled)
       .sort((a, b) => a.order - b.order);
 
+    // Ensure hero section is always present so the primary H1 and hero render reliably
+    if (!sections.some(s => s.type === 'hero')) {
+      sections.unshift({ id: 'hero', type: 'hero', enabled: true, order: 0, title: '', subtitle: '' });
+    }
+
     // Inject WhyChooseUs if not already configured in homeSections
     if (!sections.some(s => s.type === 'whychooseus')) {
       const idx = sections.findIndex(s => s.type === 'categories');
@@ -292,12 +298,38 @@ const HomePage = () => {
   }, [homeSections, isMobile]);
 
   if (settingsLoading) {
-    return <HomePageSkeleton />;
+    return (
+      <div className="min-h-screen relative">
+        <SEOHead
+          title="Flower Delivery in Hyderabad | Spring Blossoms Florist"
+          description="Shop fresh bouquets, roses and flower gifts in Hyderabad with Spring Blossoms Florist. Explore flowers for special occasions, cakes and gift combos."
+          canonical="/"
+          ogType="website"
+          jsonLd={HOME_PAGE_SCHEMAS}
+        />
+        <div className="max-w-7xl mx-auto px-4 pt-4 pb-2 text-center">
+          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
+            Flower Delivery in Hyderabad for Every Special Occasion
+          </h1>
+          <p className="mt-2 text-xs sm:text-sm text-slate-600 max-w-2xl mx-auto">
+            Handcrafted bouquets, fresh roses, and artisanal celebration cakes delivered with care across Hyderabad &amp; Secunderabad.
+          </p>
+        </div>
+        <HomePageSkeleton />
+      </div>
+    );
   }
 
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
+        <SEOHead
+          title="Flower Delivery in Hyderabad | Spring Blossoms Florist"
+          description="Shop fresh bouquets, roses and flower gifts in Hyderabad with Spring Blossoms Florist. Explore flowers for special occasions, cakes and gift combos."
+          canonical="/"
+          ogType="website"
+          jsonLd={HOME_PAGE_SCHEMAS}
+        />
         <div className="text-center max-w-md">
           <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-800 mb-2">Oops! Something went wrong</h2>
@@ -319,98 +351,7 @@ const HomePage = () => {
         description="Shop fresh bouquets, roses and flower gifts in Hyderabad with Spring Blossoms Florist. Explore flowers for special occasions, cakes and gift combos."
         canonical="/"
         ogType="website"
-        jsonLd={[
-          {
-            "@context": "https://schema.org",
-            "@graph": [
-              {
-                "@type": "Florist",
-                "@id": "https://sbflorist.in/#florist",
-                "name": "Spring Blossoms Florist",
-                "alternateName": "SB Florist",
-                "url": "https://sbflorist.in",
-                "logo": "https://sbflorist.in/logo.png",
-                "image": "https://sbflorist.in/logo.png",
-                "description": "Premium local florist offering same-day and midnight flower, cake, and gift delivery across Hyderabad and Secunderabad.",
-                "telephone": "+91 9949683222",
-                "priceRange": "₹₹",
-                "address": {
-                  "@type": "PostalAddress",
-                  "streetAddress": "Door No. 12-2-786/A & B, Najam Centre, Pillar No. 32, Rethi Bowli, Mehdipatnam",
-                  "addressLocality": "Hyderabad",
-                  "addressRegion": "Telangana",
-                  "postalCode": "500028",
-                  "addressCountry": "IN"
-                },
-                "geo": {
-                  "@type": "GeoCoordinates",
-                  "latitude": 17.3912,
-                  "longitude": 78.4326
-                },
-                "openingHoursSpecification": [
-                  {
-                    "@type": "OpeningHoursSpecification",
-                    "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
-                    "opens": "09:00",
-                    "closes": "21:00"
-                  }
-                ],
-                "areaServed": [
-                  { "@type": "City", "name": "Hyderabad" },
-                  { "@type": "City", "name": "Secunderabad" }
-                ]
-              },
-              {
-                "@type": "WebSite",
-                "@id": "https://sbflorist.in/#website",
-                "url": "https://sbflorist.in",
-                "name": "Spring Blossoms Florist",
-                "potentialAction": {
-                  "@type": "SearchAction",
-                  "target": "https://sbflorist.in/shop?q={search_term_string}",
-                  "query-input": "required name=search_term_string"
-                }
-              },
-              {
-                "@type": "FAQPage",
-                "mainEntity": [
-                  {
-                    "@type": "Question",
-                    "name": "Do you offer same-day flower and cake delivery in Hyderabad and Secunderabad?",
-                    "acceptedAnswer": {
-                      "@type": "Answer",
-                      "text": "Yes! Spring Blossoms Florist provides guaranteed same-day flower, cake, and gift delivery across both Hyderabad and Secunderabad. Place your order during business hours for doorstep delivery in 2-4 hours."
-                    }
-                  },
-                  {
-                    "@type": "Question",
-                    "name": "How do your delivery charges and time slots work?",
-                    "acceptedAnswer": {
-                      "@type": "Answer",
-                      "text": "Free Delivery on your 1st order for all new customers! Additionally, standard delivery is FREE on orders of ₹999 and above (₹150 for orders below ₹999). Midnight delivery is available between 11:00 PM and 11:59 PM."
-                    }
-                  },
-                  {
-                    "@type": "Question",
-                    "name": "Can I schedule a midnight flower delivery for birthdays or anniversaries?",
-                    "acceptedAnswer": {
-                      "@type": "Answer",
-                      "text": "Absolutely! Our Midnight Surprise Delivery slot operates between 11:00 PM and 11:59 PM to surprise your loved ones right as the clock strikes midnight."
-                    }
-                  },
-                  {
-                    "@type": "Question",
-                    "name": "Where is Spring Blossoms Florist located in Hyderabad?",
-                    "acceptedAnswer": {
-                      "@type": "Answer",
-                      "text": "Our flagship floral studio is located at Door No. 12-2-786/A & B, Najam Centre, Pillar No. 32, Rethi Bowli, Mehdipatnam, Hyderabad, Telangana 500028. Direct support: +91 9949683222."
-                    }
-                  }
-                ]
-              }
-            ]
-          }
-        ]}
+        jsonLd={HOME_PAGE_SCHEMAS}
       />
 
       {/* Offer Popup */}

@@ -94,14 +94,14 @@ export const TARGET_CATEGORY_SEO: Record<string, {
   h2s?: Array<{ title: string; body: string }>;
 }> = {
   bouquets: {
-    title: "Flower Bouquets in Hyderabad | Spring Blossoms Florist",
-    description: "Explore fresh flower bouquets in Hyderabad for birthdays, anniversaries and special occasions. Browse available styles and order your favorite bouquet online.",
-    h1: "Flower Bouquets in Hyderabad",
-    canonical: "/bouquets",
+    title: "Fresh Flower Bouquets | Spring Blossoms Florist",
+    description: "Explore fresh flower bouquets for birthdays, anniversaries, and special occasions. Browse handcrafted floral styles and order your favorite bouquet online.",
+    h1: "Fresh Flower Bouquets",
+    canonical: "/shop/bouquets",
     h2s: [
       {
         title: "Shop Flower Bouquets",
-        body: "Browse our hand-tied flower bouquets in Hyderabad, arranged by master florists with Dutch roses, oriental lilies, chrysanthemums, and fresh greenery for every expression of love, joy, or gratitude."
+        body: "Browse our hand-tied flower bouquets arranged by master florists with Dutch roses, oriental lilies, chrysanthemums, and fresh greenery for every expression of love, joy, or gratitude."
       },
       {
         title: "Choose a Bouquet for Every Occasion",
@@ -109,18 +109,66 @@ export const TARGET_CATEGORY_SEO: Record<string, {
       },
       {
         title: "Popular Rose and Mixed Flower Bouquets",
-        body: "Discover our most requested arrangements including 10, 20, and 50 red rose bouquets, pastel mixed carnations, and vibrant seasonal bloom mixes with same-day delivery across Hyderabad."
+        body: "Discover our most requested arrangements including 10, 20, and 50 red rose bouquets, pastel mixed carnations, and vibrant seasonal bloom mixes."
       },
       {
         title: "Frequently Asked Questions About Flower Bouquets",
-        body: "We offer 2-4 hour express same-day bouquet delivery and midnight surprise delivery between 11:00 PM and 11:59 PM across Hyderabad & Secunderabad. First order delivery is completely free."
+        body: "Each bouquet is freshly prepared by our florists using seasonal blooms and wrapped with care instructions to help your flowers last longer."
+      }
+    ]
+  },
+  plants: {
+    title: "Shop Plants Online | Spring Blossoms Florist",
+    description: "Shop indoor plants, air-purifying greens, succulents, and potted plant gifts online at Spring Blossoms Florist for homes, offices, and thoughtful gifting.",
+    h1: "Shop Plants Online",
+    canonical: "/shop/plants",
+    h2s: [
+      {
+        title: "Indoor & Gifting Plants",
+        body: "Bring lasting greenery into any space with our curated collection of low-maintenance indoor plants, lucky bamboo, peace lilies, money plants, and desktop succulents."
+      },
+      {
+        title: "Thoughtful Eco-Friendly Gifts",
+        body: "Potted plants make meaningful, long-lasting gifts for housewarmings, birthdays, corporate milestones, and best wishes."
+      }
+    ]
+  },
+  chocolates: {
+    title: "Shop Chocolates Online | Spring Blossoms Florist",
+    description: "Order chocolate bouquets, gourmet chocolate hampers, and sweet gift sets online from Spring Blossoms Florist for birthdays, anniversaries, and celebrations.",
+    h1: "Shop Chocolates Online",
+    canonical: "/shop/chocolates",
+    h2s: [
+      {
+        title: "Gourmet Chocolate Bouquets & Gift Boxes",
+        body: "Delight chocolate lovers with our handcrafted chocolate bouquets, assorted pralines, Ferrero Rocher arrangements, and luxury chocolate gift baskets."
+      },
+      {
+        title: "Sweet Surprises for Every Celebration",
+        body: "Pair premium chocolates with fresh flowers or send a standalone chocolate hamper for birthdays, anniversaries, romantic gestures, and festive gifting."
+      }
+    ]
+  },
+  chocolate: {
+    title: "Shop Chocolates Online | Spring Blossoms Florist",
+    description: "Order chocolate bouquets, gourmet chocolate hampers, and sweet gift sets online from Spring Blossoms Florist for birthdays, anniversaries, and celebrations.",
+    h1: "Shop Chocolates Online",
+    canonical: "/shop/chocolates",
+    h2s: [
+      {
+        title: "Gourmet Chocolate Bouquets & Gift Boxes",
+        body: "Delight chocolate lovers with our handcrafted chocolate bouquets, assorted pralines, Ferrero Rocher arrangements, and luxury chocolate gift baskets."
+      },
+      {
+        title: "Sweet Surprises for Every Celebration",
+        body: "Pair premium chocolates with fresh flowers or send a standalone chocolate hamper for birthdays, anniversaries, romantic gestures, and festive gifting."
       }
     ]
   },
   roses: {
-    title: "Rose Bouquets in Hyderabad | Red, Pink, Yellow & White Roses",
-    description: "Discover rose bouquets in Hyderabad, including red, pink, yellow and white roses. Explore available arrangements for romantic gifts and special occasions.",
-    h1: "Rose Bouquets in Hyderabad",
+    title: "Rose Bouquets | Red, Pink, Yellow & White Roses | Spring Blossoms Florist",
+    description: "Discover rose bouquets, including red, pink, yellow and white roses. Explore handcrafted rose arrangements for romantic gifts and special occasions.",
+    h1: "Rose Bouquets",
     canonical: "/roses",
     h2s: [
       {
@@ -906,32 +954,32 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
   const targetSeo = TARGET_CATEGORY_SEO[targetCategoryKey];
 
   // Dynamically derive SEO metadata for categories and search
-  let pageTitle = "Shop Online Flowers & Gifts in Hyderabad";
-  let pageDescription = "Browse fresh flowers, bouquets, celebration cakes, and gift combos online with guaranteed same-day & midnight delivery across Hyderabad & Secunderabad.";
+  let pageTitle = "Shop Flowers, Bouquets, Cakes & Gifts Online | Spring Blossoms Florist";
+  let pageDescription = "Shop fresh flowers, handcrafted bouquets, celebration cakes, indoor plants, chocolates, and gift combos online at Spring Blossoms Florist.";
   let pageCanonical = "/shop";
   let shouldNoindex = false;
 
   if (searchQuery) {
-    pageTitle = `Search Results for "${searchQuery}"`;
+    pageTitle = `Search Results for "${searchQuery}" | Spring Blossoms Florist`;
     pageDescription = `Browse flower and gift search results for "${searchQuery}" at Spring Blossoms Florist.`;
     pageCanonical = "/shop";
     shouldNoindex = true; // Exclude internal search query combinations from index
   } else if (isBudgetFriendlyCategory) {
-    pageTitle = "Budget Friendly Flowers & Gifts Under ₹1,000";
+    pageTitle = "Budget Friendly Flowers & Gifts Under ₹1,000 | Spring Blossoms Florist";
     pageDescription = "Shop beautiful budget-friendly flowers, bouquets and gifts under ₹1,000 from Spring Blossoms Florist. Elegant gifting options at thoughtful prices.";
     pageCanonical = "/shop/budget-friendly";
   } else if (targetSeo) {
     pageTitle = targetSeo.title;
     pageDescription = targetSeo.description;
-    pageCanonical = targetSeo.canonical;
+    pageCanonical = pathCategory ? `/shop/${pathCategory.toLowerCase()}` : targetSeo.canonical;
   } else if (resolvedCategory) {
-    pageTitle = resolvedCategory.metaTitle || `${resolvedCategory.name} Delivery in Hyderabad`;
-    pageDescription = resolvedCategory.metaDescription || resolvedCategory.description || `Send fresh ${resolvedCategory.name} flowers and arrangements online with same-day and midnight delivery in Hyderabad from Spring Blossoms Florist.`;
+    pageTitle = resolvedCategory.metaTitle || `${resolvedCategory.name} | Spring Blossoms Florist`;
+    pageDescription = resolvedCategory.metaDescription || resolvedCategory.description || `Explore fresh ${resolvedCategory.name} arrangements and gifts online at Spring Blossoms Florist.`;
     pageCanonical = resolvedCategory.categoryUrl || `/${resolvedCategory.slug || selectedCategoryKey}`;
   } else if (category && category !== "All") {
-    pageTitle = `${category} Delivery in Hyderabad`;
-    pageDescription = `Send fresh ${category.toLowerCase()} and beautiful flower bouquets online with same-day delivery across Hyderabad from Spring Blossoms Florist.`;
-    pageCanonical = selectedCategoryKey ? `/shop/${selectedCategoryKey}` : "/shop";
+    pageTitle = `${category} | Spring Blossoms Florist`;
+    pageDescription = `Explore fresh ${category.toLowerCase()} and handcrafted floral gifts online at Spring Blossoms Florist.`;
+    pageCanonical = pathCategory ? `/shop/${pathCategory.toLowerCase()}` : (selectedCategoryKey ? `/shop/${selectedCategoryKey}` : "/shop");
   }
 
   const categoryBreadcrumbs = [
@@ -954,7 +1002,7 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
         noindex={shouldNoindex}
         breadcrumbs={categoryBreadcrumbs}
       />
-      <main className="pt-20">
+      <div className="pt-20">
         <div className="w-full max-w-8xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 py-8">
           {/* Search Results Header */}
           {searchQuery && (
@@ -976,7 +1024,7 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
                   </span>
                 </div>
                 <h1 className="text-3xl md:text-4xl font-black text-gray-800 mb-4">
-                  Search Results for "{searchQuery}" - Flower Delivery in Hyderabad
+                  Search Results for "{searchQuery}"
                 </h1>
                 <p className="text-lg text-gray-600 max-w-2xl mx-auto">
                   Found {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'} matching your search
@@ -988,6 +1036,14 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
           {/* Explore Our Exquisite Range - Only show when no category is selected and no search */}
           {!selectedCategory && !searchQuery && (
             <div className="mb-16">
+              <div className="text-center mb-10">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 tracking-tight mb-3">
+                  Shop Flowers, Bouquets, Cakes &amp; Gifts Online
+                </h1>
+                <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
+                  Explore handcrafted flower bouquets, artisanal cakes, indoor plants, gourmet chocolates, and curated gift combos for every celebration.
+                </p>
+              </div>
 
               {/* Mobile Responsive Category Grid */}
               <div className="max-w-6xl mx-auto">
@@ -1092,7 +1148,7 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
                     </span>
                   </div>
                   <h1 className="text-3xl md:text-4xl font-black text-gray-800 mb-4">
-                    {targetSeo?.h1 || `${selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)} Collection - Flower Delivery in Hyderabad`}
+                    {targetSeo?.h1 || `${selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)} Collection`}
                   </h1>
                   <p className="text-lg text-gray-600 max-w-2xl mx-auto">
                     {targetSeo?.description || `Discover our beautiful selection of ${selectedCategory.toLowerCase()} carefully curated for your special moments`}
@@ -1974,7 +2030,7 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
             className="mt-8"
           />
         </div>
-      </main>
+      </div>
 
       {/* Contact Modal */}
       <ContactModal 

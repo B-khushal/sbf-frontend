@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Helmet } from 'react-helmet-async';
+import SEOHead from '@/components/seo/SEOHead';
 import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 import { Button } from '@/components/ui/button';
@@ -13,7 +13,7 @@ import ContextualFaq from '@/components/faq/ContextualFaq';
 
 // Animation variants
 const containerVariants = {
-  hidden: { opacity: 0 },
+  hidden: { opacity: 1 },
   visible: {
     opacity: 1,
     transition: {
@@ -24,7 +24,7 @@ const containerVariants = {
 };
 
 const itemVariants = {
-  hidden: { y: 40, opacity: 0 },
+  hidden: { y: 0, opacity: 1 },
   visible: {
     y: 0,
     opacity: 1,
@@ -164,11 +164,11 @@ Sent from Spring Blossoms Florist Website`;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 relative overflow-hidden">
-      <Helmet>
-        <title>Contact Us - Best Florist in Hyderabad | Spring Blossoms Florist</title>
-        <meta name="description" content="Get in touch with the best florist in Hyderabad. Contact us for flower delivery in Hyderabad, custom bouquets, birthday flowers, and wedding floral arrangements." />
-        <meta name="keywords" content="flower delivery Hyderabad, online flower delivery Hyderabad, same day flower delivery Hyderabad, midnight flower delivery Hyderabad, fresh flowers delivery Hyderabad, florist Hyderabad, best florist in Hyderabad, flower shop Hyderabad, online florist Hyderabad, bouquet delivery Hyderabad, rose bouquet delivery Hyderabad, birthday flower delivery Hyderabad, anniversary flower delivery Hyderabad, wedding flowers Hyderabad, flower arrangements Hyderabad, luxury flower delivery Hyderabad, affordable flower delivery Hyderabad, cheap flower delivery Hyderabad, premium flowers Hyderabad, flower bouquet online Hyderabad, send flowers to Hyderabad, Hyderabad flower delivery service, flowers home delivery Hyderabad, express flower delivery Hyderabad, 24 hour flower delivery Hyderabad, flowers near me Hyderabad, red roses delivery Hyderabad, orchid delivery Hyderabad, lily flower delivery Hyderabad, carnation bouquet Hyderabad, mixed flower bouquet Hyderabad, romantic flower delivery Hyderabad, Valentine's Day flowers Hyderabad, Mother's Day flower delivery Hyderabad, congratulations flowers Hyderabad, get well soon flowers Hyderabad, sympathy flowers Hyderabad, flower and cake delivery Hyderabad, flowers and gifts Hyderabad, flower basket delivery Hyderabad, customized bouquet Hyderabad, online bouquet order Hyderabad, florist near Hyderabad airport, flower delivery in Gachibowli, flower delivery in Hitech City, flower delivery in Banjara Hills, flower delivery in Jubilee Hills, flower delivery in Kondapur, flower delivery in Kukatpally, flower delivery in Secunderabad" />
-      </Helmet>
+      <SEOHead
+        title="Contact Spring Blossoms Florist | Spring Blossoms Florist"
+        description="Contact Spring Blossoms Florist for inquiries about flower bouquets, custom floral arrangements, celebration cakes, and gift orders."
+        canonical="/contact"
+      />
       {/* Animated Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 rounded-full blur-3xl animate-spin-slow" />
@@ -176,7 +176,7 @@ Sent from Spring Blossoms Florist Website`;
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-secondary/3 to-accent/3 rounded-full blur-2xl animate-pulse" />
       </div>
       
-      <motion.main 
+      <motion.div 
         className="relative flex-1 pt-24 z-10"
         initial="hidden"
         animate="visible"
@@ -193,7 +193,7 @@ Sent from Spring Blossoms Florist Website`;
                 <div className="text-2xl sm:text-4xl text-yellow-400">💬</div>
               </div>
               <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl xl:text-7xl font-black text-gray-800 mb-4 sm:mb-6 pt-6 sm:pt-8 leading-tight">
-                Contact <span className="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">Us</span> - Best Florist in Hyderabad
+                Contact <span className="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">Spring Blossoms Florist</span>
               </h1>
               <div className="absolute top-0 right-1/2 transform translate-x-16 sm:translate-x-32 -translate-y-2 sm:-translate-y-4">
                 <div className="text-2xl sm:text-4xl text-yellow-400">✨</div>
@@ -377,10 +377,10 @@ Sent from Spring Blossoms Florist Website`;
                     <div className="flex-1">
                       <h3 className="text-xl font-bold text-gray-800 mb-2">📍 Our Location</h3>
                       <p className="text-gray-600 leading-relaxed mb-3">
-                      Door No. 12-2-786/A & B, Najam Centre,<br />
-                       Pillar No. 32,Rethi Bowli, Mehdipatnam,<br />
-                        Hyderabad, Telangana 500028<br />
-                        <span className="text-sm text-primary font-semibold">Near Tolichihocki, HITEC City </span>
+                      Pillar Number 32, Najam Centre, A/B, Door No. 12-2, 786,<br />
+                       Rethi Bowli Road, Mehdipatnam,<br />
+                        Hyderabad, Telangana 500006<br />
+                        <span className="text-sm text-primary font-semibold">Near Tolichowki, Mehdipatnam</span>
                       </p>
                       <Button
                         onClick={openGoogleMaps}
@@ -473,9 +473,9 @@ Sent from Spring Blossoms Florist Website`;
                       <div>
                         <h3 className="text-xl font-bold text-gray-800 mb-2">⏰ Store Hours</h3>
                         <div className="text-gray-600 space-y-1">
-                          <p><span className="font-semibold">Monday-Friday:</span> 09:00 AM - 11:00 PM</p>
-                          <p><span className="font-semibold">Saturday:</span> 09:00 AM - 11:00 PM</p>
-                          <p><span className="font-semibold">Sunday:</span> 09:00 AM - 11:00 PM</p>
+                          <p><span className="font-semibold">Monday-Friday:</span> 08:00 AM - 11:00 PM</p>
+                          <p><span className="font-semibold">Saturday:</span> 08:00 AM - 11:00 PM</p>
+                          <p><span className="font-semibold">Sunday:</span> 08:00 AM - 11:00 PM</p>
                         </div>
                       </div>
                     </div>
@@ -516,7 +516,7 @@ Sent from Spring Blossoms Florist Website`;
             </motion.a>
           </div>
         </motion.section>
-      </motion.main>
+      </motion.div>
     </div>
   );
 };

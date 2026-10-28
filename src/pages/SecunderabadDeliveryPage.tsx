@@ -16,6 +16,7 @@ import {
   ShieldCheck
 } from 'lucide-react';
 import PinCodeInput, { SERVICEABLE_PINCODES, ServiceablePinCode } from '@/components/ui/PinCodeInput';
+import { FLORIST_LOCAL_BUSINESS_SCHEMA } from '@/components/seo/floristSchema';
 import { cn } from '@/lib/utils';
 
 const SECUNDERABAD_AREAS = [
@@ -68,35 +69,7 @@ export const SecunderabadDeliveryPage: React.FC = () => {
     "@context": "https://schema.org",
     "@graph": [
       {
-        "@type": "Florist",
-        "@id": "https://sbflorist.in/flower-delivery-secunderabad#florist",
-        "name": "SB Florist Secunderabad",
-        "url": "https://sbflorist.in/flower-delivery-secunderabad",
-        "logo": "https://sbflorist.in/logo.png",
-        "image": "https://sbflorist.in/logo.png",
-        "telephone": "+91 9949683222",
-        "priceRange": "₹₹",
-        "address": {
-          "@type": "PostalAddress",
-          "streetAddress": "Door No. 12-2-786/A & B, Najam Centre, Pillar No. 32, Rethi Bowli, Mehdipatnam",
-          "addressLocality": "Hyderabad",
-          "addressRegion": "Telangana",
-          "postalCode": "500028",
-          "addressCountry": "IN"
-        },
-        "geo": {
-          "@type": "GeoCoordinates",
-          "latitude": 17.3912,
-          "longitude": 78.4326
-        },
-        "openingHoursSpecification": [
-          {
-            "@type": "OpeningHoursSpecification",
-            "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
-            "opens": "09:00",
-            "closes": "21:00"
-          }
-        ],
+        ...FLORIST_LOCAL_BUSINESS_SCHEMA,
         "areaServed": {
           "@type": "City",
           "name": "Secunderabad"
@@ -181,7 +154,7 @@ export const SecunderabadDeliveryPage: React.FC = () => {
                 <Sparkles className="w-3.5 h-3.5" /> Direct Florist Dispatch to Secunderabad Twin City
               </div>
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
-                Send Flowers & Cakes to <span className="bg-gradient-to-r from-sky-600 to-indigo-600 bg-clip-text text-transparent">Secunderabad</span>
+                Flower Delivery in <span className="bg-gradient-to-r from-sky-600 to-indigo-600 bg-clip-text text-transparent">Secunderabad</span>
               </h1>
               <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">
                 Looking to surprise loved ones in Secunderabad with blooming floral arrangements and fresh bakery cakes? SB Florist delivers handcrafted bouquets, birthday surprises, anniversary flowers, and combo gifts throughout Secunderabad with precision same-day and midnight delivery.
@@ -429,10 +402,10 @@ export const SecunderabadDeliveryPage: React.FC = () => {
               </h4>
               <div className="text-xs text-slate-600 space-y-2">
                 <p>
-                  <strong className="text-slate-800">Studio:</strong> Door No. 12-2-786/A & B, Najam Centre, Pillar No. 32, Rethi Bowli, Mehdipatnam, Hyderabad 500028
+                  <strong className="text-slate-800">Studio:</strong> Pillar Number 32, Najam Centre, A/B, Door No. 12-2, 786, Rethi Bowli Road, Mehdipatnam, Hyderabad 500006
                 </p>
                 <p>
-                  <strong className="text-slate-800">Hours:</strong> Mon - Sun, 9:00 AM - 9:00 PM
+                  <strong className="text-slate-800">Hours:</strong> Mon - Sun, 8:00 AM - 11:00 PM
                 </p>
                 <p>
                   <strong className="text-slate-800">Phone / WhatsApp:</strong> +91 9949683222

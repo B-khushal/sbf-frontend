@@ -419,7 +419,7 @@ const Footer = () => {
                 </div>
                 <div className="min-w-0 text-left">
                   <p className="font-semibold mb-1 text-gray-900">Business Hours</p>
-                  <p className="text-gray-600 text-sm">Mon - Sun: 9:00 AM - 9:00 PM</p>
+                  <p className="text-gray-600 text-sm">Mon - Sun: 8:00 AM - 11:00 PM</p>
                 </div>
               </li>
             </ul>

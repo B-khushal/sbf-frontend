@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { useSearchParams, useNavigate, Link } from "react-router-dom";
+import { useSearchParams, useNavigate, useLocation, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -64,6 +64,7 @@ const SORT_OPTIONS = [
 export const CakesCategoryPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { formatPrice, convertPrice } = useCurrency();
 
   // Raw data from database
@@ -251,14 +252,18 @@ export const CakesCategoryPage: React.FC = () => {
     (selectedPriceRange !== "all" ? 1 : 0) +
     (egglessOnly ? 1 : 0);
 
+  const canonicalUrl = location.pathname.startsWith("/shop/cakes")
+    ? "https://sbflorist.in/shop/cakes"
+    : "https://sbflorist.in/cakes";
+
   // SEO Schema
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
-    name: "Premium Cakes Online | Spring Blossoms Florist",
+    name: "Order Cakes Online | Spring Blossoms Florist",
     description:
       "Order freshly crafted cakes online from Spring Blossoms Florist. Choose from chocolate, red velvet, black forest, pineapple, butterscotch cakes and premium cake & flower combos.",
-    url: "https://sbflorist.in/cakes",
+    url: canonicalUrl,
     hasPart: filteredProducts.slice(0, 10).map((prod) => ({
       "@type": "Product",
       name: prod.name || prod.title,
@@ -276,15 +281,15 @@ export const CakesCategoryPage: React.FC = () => {
   return (
     <div className="bg-[#fcfaf7] min-h-screen">
       <Helmet>
-        <title>Cakes in Hyderabad | Spring Blossoms Florist</title>
+        <title>Order Cakes Online | Spring Blossoms Florist</title>
         <meta
           name="description"
-          content="Explore available cakes in Hyderabad for birthdays, anniversaries and special celebrations. Discover cake options and gift combinations at Spring Blossoms Florist."
+          content="Order freshly crafted cakes online for birthdays, anniversaries and special celebrations. Discover chocolate, red velvet, black forest, fruit cakes and gift combinations at Spring Blossoms Florist."
         />
-        <link rel="canonical" href="https://sbflorist.in/cakes" />
-        <meta property="og:title" content="Cakes in Hyderabad | Spring Blossoms Florist" />
-        <meta property="og:description" content="Explore available cakes in Hyderabad for birthdays, anniversaries and special celebrations. Discover cake options and gift combinations at Spring Blossoms Florist." />
-        <meta property="og:url" content="https://sbflorist.in/cakes" />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta property="og:title" content="Order Cakes Online | Spring Blossoms Florist" />
+        <meta property="og:description" content="Order freshly crafted cakes online for birthdays, anniversaries and special celebrations. Discover chocolate, red velvet, black forest, fruit cakes and gift combinations at Spring Blossoms Florist." />
+        <meta property="og:url" content={canonicalUrl} />
         <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
       </Helmet>
 
@@ -317,11 +322,11 @@ export const CakesCategoryPage: React.FC = () => {
             </div>
 
             <h1 className="text-2xl sm:text-4xl md:text-5xl 2xl:text-6xl font-black font-serif tracking-tight leading-tight">
-              Cakes in Hyderabad for Every Celebration
+              Order Cakes Online
             </h1>
 
             <p className="text-xs sm:text-base 2xl:text-lg text-amber-100/90 font-light leading-relaxed">
-              Explore freshly crafted celebration cakes in Hyderabad, baked with European dark cocoa, farm-fresh cream, and hand-selected fruits to make every special moment memorable.
+              Explore freshly crafted celebration cakes baked with European dark cocoa, farm-fresh cream, and hand-selected fruits to make every special moment memorable.
             </p>
 
             <div className="flex flex-wrap items-center gap-3 pt-2 text-[11px] sm:text-xs font-semibold text-amber-200/80">
@@ -507,7 +512,7 @@ export const CakesCategoryPage: React.FC = () => {
           </aside>
 
           {/* Product Grid Area */}
-          <main className="lg:col-span-3 2xl:col-span-4 3xl:col-span-5">
+          <section className="lg:col-span-3 2xl:col-span-4 3xl:col-span-5">
             {loading ? (
               <div className="grid grid-cols-2 md:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 gap-4 sm:gap-6 2xl:gap-7">
                 {Array.from({ length: 6 }).map((_, idx) => (
@@ -574,7 +579,7 @@ export const CakesCategoryPage: React.FC = () => {
                 </div>
               </div>
             )}
-          </main>
+          </section>
         </div>
       </div>
 

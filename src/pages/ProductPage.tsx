@@ -188,7 +188,7 @@ const ProductPage = () => {
   const productSeoTitle = `${product.title} | ${giftType} in Hyderabad`;
   const productSeoDesc = `Discover ${product.title}, featuring ${productFeatures}. Explore available variants, pricing from ₹${finalPrice}, and express same-day or midnight delivery in Hyderabad from Spring Blossoms Florist.`;
 
-  const primaryImage = (product.images && product.images[0]) || '/logo.png';
+  const primaryImage = (product.images && product.images[0]) || '/images/logo_final.png';
 
   const productSchema = {
     '@context': 'https://schema.org',
@@ -197,7 +197,7 @@ const ProductPage = () => {
     description: productSeoDesc,
     image: (product.images && product.images.length > 0)
       ? product.images.map(img => img.startsWith('/') ? `https://sbflorist.in${img}` : img)
-      : [`https://sbflorist.in/logo.png`],
+      : ['https://sbflorist.in/images/logo_final.png'],
     sku: String(product._id || actualId),
     offers: {
       '@type': 'Offer',
@@ -211,8 +211,9 @@ const ProductPage = () => {
         : 'https://schema.org/InStock',
       seller: {
         '@type': 'Florist',
+        '@id': 'https://sbflorist.in/#business',
         name: 'Spring Blossoms Florist',
-        url: 'https://sbflorist.in'
+        url: 'https://sbflorist.in/'
       }
     }
   };

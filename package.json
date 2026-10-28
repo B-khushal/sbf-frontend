@@ -21,7 +21,8 @@
     "lint": "eslint .",
     "preview": "vite preview --host 0.0.0.0 --port 3000",
     "start": "vite preview --host 0.0.0.0 --port 3000",
-    "optimize": "npm run build:production"
+    "optimize": "npm run build:production",
+    "test:seo-h1": "node tests/seo-h1-audit.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

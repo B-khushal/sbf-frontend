@@ -2,11 +2,12 @@ import React from 'react';
 import { motion } from "framer-motion";
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
+import SEOHead from '@/components/seo/SEOHead';
 import { RefreshCw, Clock, CreditCard, AlertCircle, CheckCircle, Phone, Mail, FileText, Sparkles, ArrowRight } from 'lucide-react';
 
 // Animation variants
 const containerVariants = {
-  hidden: { opacity: 0 },
+  hidden: { opacity: 1 },
   visible: {
     opacity: 1,
     transition: {
@@ -17,7 +18,7 @@ const containerVariants = {
 };
 
 const itemVariants = {
-  hidden: { y: 40, opacity: 0 },
+  hidden: { y: 0, opacity: 1 },
   visible: {
     y: 0,
     opacity: 1,
@@ -31,6 +32,11 @@ const itemVariants = {
 const RefundPolicyPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 relative overflow-hidden">
+      <SEOHead
+        title="Refund Policy | Spring Blossoms Florist"
+        description="Review the Refund Policy of Spring Blossoms Florist, including eligibility, timelines, and refund processing methods for flower, cake, and gift orders."
+        canonical="/refund-policy"
+      />
       {/* Animated Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 rounded-full blur-3xl animate-spin-slow" />
@@ -230,4 +236,4 @@ const RefundPolicyPage: React.FC = () => {
   );
 };
 
-export default RefundPolicyPage; 
+export default RefundPolicyPage;

@@ -2,11 +2,12 @@ import React from 'react';
 import { motion } from "framer-motion";
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
+import SEOHead from '@/components/seo/SEOHead';
 import { X, AlertTriangle, Phone, Mail, FileText, Sparkles, ArrowRight, Clock, UserX, MessageCircle } from 'lucide-react';
 
 // Animation variants
 const containerVariants = {
-  hidden: { opacity: 0 },
+  hidden: { opacity: 1 },
   visible: {
     opacity: 1,
     transition: {
@@ -17,7 +18,7 @@ const containerVariants = {
 };
 
 const itemVariants = {
-  hidden: { y: 40, opacity: 0 },
+  hidden: { y: 0, opacity: 1 },
   visible: {
     y: 0,
     opacity: 1,
@@ -31,6 +32,11 @@ const itemVariants = {
 const CancellationPolicyPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 via-rose-50 to-pink-50 relative overflow-hidden">
+      <SEOHead
+        title="Cancellation Policy | Spring Blossoms Florist"
+        description="Read the Cancellation Policy for flower, cake, and gift orders placed with Spring Blossoms Florist."
+        canonical="/cancellation-policy"
+      />
       {/* Animated Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 rounded-full blur-3xl animate-spin-slow" />
@@ -235,4 +241,4 @@ const CancellationPolicyPage: React.FC = () => {
   );
 };
 
-export default CancellationPolicyPage; 
+export default CancellationPolicyPage;

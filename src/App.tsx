@@ -27,6 +27,17 @@ import PendingReviewGate from '@/components/reviews/PendingReviewGate';
 // Core pages that should load immediately
 import HomePage from "./pages/HomePage";
 import NotFound from "./pages/NotFound";
+import ShopPage from "./pages/ShopPage";
+import AboutPage from "./pages/AboutPage";
+import ContactPage from "./pages/ContactPage";
+import CakesCategoryPage from "./pages/CakesCategoryPage";
+import CombosCategoryPage from "./pages/CombosCategoryPage";
+import ShippingPage from "./pages/ShippingPrivacy";
+import RefundPolicyPage from "./pages/RefundPolicyPage";
+import CancellationPolicyPage from "./pages/CancellationPolicyPage";
+import { OccasionProductsPage } from "./pages/OccasionProductsPage";
+import HyderabadDeliveryPage from "./pages/HyderabadDeliveryPage";
+import SecunderabadDeliveryPage from "./pages/SecunderabadDeliveryPage";
 
 // Lazy-loaded auth and consent pages
 const LoginPage = lazy(() => import("./pages/LoginPage"));
@@ -34,15 +45,10 @@ const SignupPage = lazy(() => import("./pages/SignupPage"));
 const VendorConsentPage = lazy(() => import("./pages/VendorConsentPage"));
 
 // Lazy loaded pages with better organization
-const ShopPage = lazy(() => import('./pages/ShopPage'));
 const ProductPage = lazy(() => import('./pages/ProductPage'));
 const ProductReviewsPage = lazy(() => import('./pages/ProductReviewsPage'));
 const CartPage = lazy(() => import('./pages/CartPage'));
-const AboutPage = lazy(() => import('./pages/AboutPage'));
-const ContactPage = lazy(() => import('./pages/ContactPage'));
 const WishlistPage = lazy(() => import("./pages/wishlist"));
-const CakesCategoryPage = lazy(() => import("./pages/CakesCategoryPage"));
-const CombosCategoryPage = lazy(() => import("./pages/CombosCategoryPage"));
 
 // Auth Pages (lazy loaded)
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
@@ -50,10 +56,7 @@ const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
 
 // Legal Pages (lazy loaded)
 const TermsPage = lazy(() => import("@/pages/TermsPage"));
-const ShippingPage = lazy(() => import("./pages/ShippingPrivacy"));
 const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
-const RefundPolicyPage = lazy(() => import("./pages/RefundPolicyPage"));
-const CancellationPolicyPage = lazy(() => import("./pages/CancellationPolicyPage"));
 const FaqPage = lazy(() => import("./pages/FaqPage"));
 const AdminFaqManagement = lazy(() => import("./pages/Admin/FaqManagement"));
 
@@ -124,9 +127,6 @@ const SeasonalCampaigns = lazy(() => import('./pages/Admin/SeasonalCampaigns'));
 const SeasonalCampaignForm = lazy(() => import('./pages/Admin/SeasonalCampaignForm'));
 const AdminOccasions = lazy(() => import('./pages/Admin/Occasions'));
 const SitemapViewerPage = lazy(() => import('./pages/SitemapViewerPage'));
-const OccasionProductsPage = lazy(() => import('./pages/OccasionProductsPage').then(m => ({ default: m.OccasionProductsPage })));
-const HyderabadDeliveryPage = lazy(() => import('./pages/HyderabadDeliveryPage'));
-const SecunderabadDeliveryPage = lazy(() => import('./pages/SecunderabadDeliveryPage'));
 
 // Valentine Pages
 const ValentineSpecialPage = lazy(() => import('./pages/ValentineSpecialPage'));
@@ -246,27 +246,15 @@ const App = () => {
                               <TermsPage />
                             </Suspense>
                           } />
-                          <Route path="/shipping" element={
-                            <Suspense fallback={<LoadingFallback />}>
-                              <ShippingPage />
-                            </Suspense>
-                          } />
+                          <Route path="/shipping" element={<ShippingPage />} />
                           <Route path="/privacy" element={
                             <Suspense fallback={<LoadingFallback />}>
                               <PrivacyPage />
                             </Suspense>
                           } />
-                          <Route path="/refund-policy" element={
-                            <Suspense fallback={<LoadingFallback />}>
-                              <RefundPolicyPage />
-                            </Suspense>
-                          } />
+                          <Route path="/refund-policy" element={<RefundPolicyPage />} />
                           <Route path="/returns" element={<Navigate to="/refund-policy" replace />} />
-                          <Route path="/cancellation-policy" element={
-                            <Suspense fallback={<LoadingFallback />}>
-                              <CancellationPolicyPage />
-                            </Suspense>
-                          } />
+                          <Route path="/cancellation-policy" element={<CancellationPolicyPage />} />
                           <Route path="/faq" element={
                             <Suspense fallback={<LoadingFallback message="Loading FAQs..." />}>
                               <FaqPage />
@@ -822,16 +810,12 @@ const App = () => {
                           {/* Main Layout Routes */}
                           <Route element={<MainLayout />}>
                             <Route path="/" element={<HomePage />} />
-                            <Route path="/shop" element={
-                              <Suspense fallback={<LoadingFallback message="Loading shop..." />}>
-                                <ShopPage />
-                              </Suspense>
-                            } />
-                            <Route path="/shop/:category" element={
-                              <Suspense fallback={<LoadingFallback message="Loading products..." />}>
-                                <ShopPage />
-                              </Suspense>
-                            } />
+                            <Route path="/shop" element={<ShopPage />} />
+                            <Route path="/cakes" element={<CakesCategoryPage />} />
+                            <Route path="/shop/cakes" element={<CakesCategoryPage />} />
+                            <Route path="/combos" element={<CombosCategoryPage />} />
+                            <Route path="/shop/combos" element={<CombosCategoryPage />} />
+                            <Route path="/shop/:category" element={<ShopPage />} />
                             <Route path="/product/:id" element={
                               <Suspense fallback={<LoadingFallback message="Loading product..." />}>
                                 <ProductPage />
@@ -857,21 +841,13 @@ const App = () => {
                                 <CartPage />
                               </Suspense>
                             } />
-                            <Route path="/about" element={
-                              <Suspense fallback={<LoadingFallback message="Loading about..." />}>
-                                <AboutPage />
-                              </Suspense>
-                            } />
+                            <Route path="/about" element={<AboutPage />} />
                             <Route path="/wishlist" element={
                               <Suspense fallback={<LoadingFallback message="Loading wishlist..." />}>
                                 <WishlistPage />
                               </Suspense>
                             } />
-                            <Route path="/contact" element={
-                              <Suspense fallback={<LoadingFallback message="Loading contact..." />}>
-                                <ContactPage />
-                              </Suspense>
-                            } />
+                            <Route path="/contact" element={<ContactPage />} />
                             <Route path="/faq" element={
                               <Suspense fallback={<LoadingFallback message="Loading FAQ..." />}>
                                 <FaqPage />
@@ -910,36 +886,8 @@ const App = () => {
                                 <SitemapViewerPage />
                               </Suspense>
                             } />
-                            <Route path="/flower-delivery-hyderabad" element={
-                              <Suspense fallback={<LoadingFallback message="Loading Hyderabad flower delivery..." />}>
-                                <HyderabadDeliveryPage />
-                              </Suspense>
-                            } />
-                            <Route path="/flower-delivery-secunderabad" element={
-                              <Suspense fallback={<LoadingFallback message="Loading Secunderabad flower delivery..." />}>
-                                <SecunderabadDeliveryPage />
-                              </Suspense>
-                            } />
-                            <Route path="/cakes" element={
-                              <Suspense fallback={<LoadingFallback message="Loading cakes collection..." />}>
-                                <CakesCategoryPage />
-                              </Suspense>
-                            } />
-                            <Route path="/shop/cakes" element={
-                              <Suspense fallback={<LoadingFallback message="Loading cakes collection..." />}>
-                                <CakesCategoryPage />
-                              </Suspense>
-                            } />
-                            <Route path="/combos" element={
-                              <Suspense fallback={<LoadingFallback message="Loading celebration combos..." />}>
-                                <CombosCategoryPage />
-                              </Suspense>
-                            } />
-                            <Route path="/shop/combos" element={
-                              <Suspense fallback={<LoadingFallback message="Loading celebration combos..." />}>
-                                <CombosCategoryPage />
-                              </Suspense>
-                            } />
+                            <Route path="/flower-delivery-hyderabad" element={<HyderabadDeliveryPage />} />
+                            <Route path="/flower-delivery-secunderabad" element={<SecunderabadDeliveryPage />} />
                             <Route path="/budget-friendly" element={<Navigate to="/shop/budget-friendly" replace />} />
                             {/* Valentine Special Pages */}
                             <Route path="/valentine-special" element={
@@ -963,21 +911,9 @@ const App = () => {
                               </Suspense>
                             } />
 
-                            <Route path="/occasions" element={
-                              <Suspense fallback={<LoadingFallback message="Loading occasions..." />}>
-                                <OccasionProductsPage />
-                              </Suspense>
-                            } />
-                            <Route path="/occasions/:slug" element={
-                              <Suspense fallback={<LoadingFallback message="Loading celebration gifts..." />}>
-                                <OccasionProductsPage />
-                              </Suspense>
-                            } />
-                            <Route path="/:slug" element={
-                              <Suspense fallback={<LoadingFallback message="Loading celebration gifts..." />}>
-                                <OccasionProductsPage />
-                              </Suspense>
-                            } />
+                            <Route path="/occasions" element={<OccasionProductsPage />} />
+                            <Route path="/occasions/:slug" element={<OccasionProductsPage />} />
+                            <Route path="/:slug" element={<OccasionProductsPage />} />
                             <Route path="/:parentCategory/:categorySlug" element={
                               <Suspense fallback={<LoadingFallback message="Loading category..." />}>
                                 <CategoryResolver />

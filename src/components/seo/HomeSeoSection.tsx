@@ -44,7 +44,7 @@ const FAQ_DATA: FAQItem[] = [
   },
   {
     question: "Where is Spring Blossoms Florist located in Hyderabad?",
-    answer: "Our flagship floral studio is located at Door No. 12-2-786/A & B, Najam Centre, Pillar No. 32, Rethi Bowli, Mehdipatnam, Hyderabad, Telangana 500028. You can also reach our customer support directly at +91 9949683222 for custom styling and urgent orders."
+    answer: "Our flagship floral studio is located at Pillar Number 32, Najam Centre, A/B, Door No. 12-2, 786, Rethi Bowli Road, Mehdipatnam, Hyderabad, Telangana 500006. You can also reach our customer support directly at +91 9949683222 for custom styling and urgent orders."
   }
 ];
 
@@ -409,7 +409,7 @@ export const HomeSeoSection: React.FC = () => {
         {/* Physical Florist Credentials Bar */}
         <div className="mt-14 pt-8 border-t border-slate-200/80 text-center text-xs text-slate-500 max-w-3xl mx-auto space-y-1">
           <p className="font-semibold text-slate-700">
-            Spring Blossoms Florist Studio: Door No. 12-2-786/A &amp; B, Najam Centre, Pillar No. 32, Rethi Bowli, Mehdipatnam, Hyderabad 500028
+            Spring Blossoms Florist Studio: Pillar Number 32, Najam Centre, A/B, Door No. 12-2, 786, Rethi Bowli Road, Mehdipatnam, Hyderabad, Telangana 500006
           </p>
           <p>
             Serving: Banjara Hills, Jubilee Hills, Gachibowli, Madhapur, Begumpet, Secunderabad, Sainikpuri, Marredpally, Bowenpally, ECIL &amp; all Twin Cities pin codes. Direct Helpline: <a href="tel:+919949683222" className="text-rose-600 font-semibold hover:underline">+91 9949683222</a>

@@ -229,7 +229,7 @@ const defaultFooterSettings: FooterSettings = {
   contactInfo: {
     email: "contact@sbflorist.in",
     phone: "+91 9949683222",
-    address: "Door No. 12-2-786/A & B, Najam Centre, Pillar No. 32, Rethi Bowli, Mehdipatnam, Hyderabad, Telangana 500028"
+    address: "Pillar Number 32, Najam Centre, A/B, Door No. 12-2, 786, Rethi Bowli Road, Mehdipatnam, Hyderabad, Telangana 500006"
   },
   links: [
     {

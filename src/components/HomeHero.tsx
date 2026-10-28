@@ -140,7 +140,7 @@ const HomeHero = () => {
       <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 to-secondary/10 shadow-sm mx-3 sm:mx-4 md:mx-6 lg:mx-8 rounded-2xl sm:rounded-3xl h-[140px] sm:h-[320px] lg:h-[450px]">
         <div className="absolute inset-0 flex items-center justify-center text-center text-gray-600 px-6">
           <div>
-            <h1 className="text-lg sm:text-2xl font-bold mb-2">Premium Flower Delivery in Hyderabad</h1>
+            <h2 className="text-lg sm:text-2xl font-bold mb-2">Premium Flower Delivery in Hyderabad</h2>
             <p className="mb-4 text-xs sm:text-sm text-gray-500">Send handcrafted bouquets online with Spring Blossoms Florist.</p>
             <Button onClick={() => navigate('/shop')} className="bg-primary hover:bg-primary/95 text-white font-semibold rounded-xl">
               Explore Our Collection

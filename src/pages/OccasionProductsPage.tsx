@@ -1,29 +1,111 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import SEOHead from '@/components/seo/SEOHead';
 import { ProductCard } from '@/components/ProductGrid';
 import productService, { OccasionData, ProductData } from '@/services/productService';
+import api from '@/services/api';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Loader2, Sparkles, Filter, X, ArrowUpDown, ChevronRight, HelpCircle, Inbox, Clock } from 'lucide-react';
+import { Loader2, Sparkles, Filter, X, ArrowUpDown, ChevronRight, Inbox, Clock } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { PRIMARY_CATEGORIES } from '@/utils/categoryTaxonomy';
 import CategoryResolver from './CategoryResolver';
 import { PriceRangeFilterCard, PRICE_FILTER_MIN, PRICE_FILTER_MAX } from './ShopPage';
 import { getProductEffectivePrice } from '@/utils/pricing';
 
+export interface OccasionSeoConfig {
+  name: string;
+  h1: string;
+  title: string;
+  description: string;
+  icon: string;
+  accentColor: string;
+  keywords: string[];
+}
+
+export const OCCASION_SEO_MAP: Record<string, OccasionSeoConfig> = {
+  romance: {
+    name: 'Romance',
+    h1: 'Romantic Flowers & Gifts',
+    title: 'Romantic Flowers & Gifts | Spring Blossoms Florist',
+    description: 'Express your love with romantic flowers, red rose bouquets, and thoughtful gifts from Spring Blossoms Florist.',
+    icon: 'Heart',
+    accentColor: '#E11D48',
+    keywords: ['romance', 'romantic', 'love', 'rose', 'red rose', 'valentine', 'anniversary'],
+  },
+  birthday: {
+    name: 'Birthday',
+    h1: 'Birthday Flowers & Gifts',
+    title: 'Birthday Flowers & Gifts | Spring Blossoms Florist',
+    description: 'Celebrate birthdays with vibrant flower bouquets, delicious cakes, and curated gift combos from Spring Blossoms Florist.',
+    icon: 'Cake',
+    accentColor: '#D97706',
+    keywords: ['birthday', 'bday', 'cake', 'celebration', 'bouquet'],
+  },
+  sympathy: {
+    name: 'Sympathy',
+    h1: 'Sympathy Flowers & Condolence Gifts',
+    title: 'Sympathy Flowers & Condolence Gifts | Spring Blossoms Florist',
+    description: 'Send peaceful sympathy flowers, white lily arrangements, and condolence gifts with care from Spring Blossoms Florist.',
+    icon: 'Flower2',
+    accentColor: '#475569',
+    keywords: ['sympathy', 'condolence', 'white', 'lily', 'lilies', 'peace', 'memorial'],
+  },
+  anniversary: {
+    name: 'Anniversary',
+    h1: 'Anniversary Flowers & Gifts',
+    title: 'Anniversary Flowers & Gifts | Spring Blossoms Florist',
+    description: 'Mark special milestones with anniversary flowers, luxury rose bouquets, cakes, and gift hampers from Spring Blossoms Florist.',
+    icon: 'Sparkles',
+    accentColor: '#BE123C',
+    keywords: ['anniversary', 'romance', 'rose', 'combo', 'couple', 'celebration'],
+  },
+  'get-well-soon': {
+    name: 'Get Well Soon',
+    h1: 'Get Well Soon Flowers & Gifts',
+    title: 'Get Well Soon Flowers & Gifts | Spring Blossoms Florist',
+    description: 'Brighten their recovery with cheerful get well soon flowers, fresh bouquets, and thoughtful gifts from Spring Blossoms Florist.',
+    icon: 'Sun',
+    accentColor: '#059669',
+    keywords: ['get well', 'get-well-soon', 'recovery', 'cheerful', 'yellow', 'sunflower', 'plant', 'basket'],
+  },
+  congratulations: {
+    name: 'Congratulations',
+    h1: 'Congratulations Flowers & Gifts',
+    title: 'Congratulations Flowers & Gifts | Spring Blossoms Florist',
+    description: 'Celebrate achievements and milestones with congratulations flowers, bouquets, and gift hampers from Spring Blossoms Florist.',
+    icon: 'Award',
+    accentColor: '#7C3AED',
+    keywords: ['congratulations', 'congrats', 'success', 'achievement', 'bouquet', 'combo'],
+  },
+};
+
+const formatSlugLabel = (rawSlug?: string): string => {
+  if (!rawSlug) return 'Occasions';
+  return rawSlug
+    .split('-')
+    .filter(Boolean)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
 export const OccasionProductsPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const { formatPrice, convertPrice } = useCurrency();
+  const location = useLocation();
+  const { formatPrice } = useCurrency();
+
+  const normalizedSlug = (slug || '').trim().toLowerCase();
+  const isExplicitOccasionPath = location.pathname.toLowerCase().startsWith('/occasions');
+  const staticOccasionConfig = normalizedSlug ? OCCASION_SEO_MAP[normalizedSlug] : undefined;
+  const isKnownOccasion = Boolean(isExplicitOccasionPath || staticOccasionConfig);
 
   const [occasion, setOccasion] = useState<OccasionData | null>(null);
   const [products, setProducts] = useState<ProductData[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(Boolean(normalizedSlug));
   const [error, setError] = useState<string | null>(null);
 
   // Filter States
@@ -36,27 +118,68 @@ export const OccasionProductsPage: React.FC = () => {
   const [isMobilePriceOpen, setIsMobilePriceOpen] = useState(true);
 
   useEffect(() => {
-    if (!slug) return;
-    
+    if (!normalizedSlug) {
+      setLoading(false);
+      return;
+    }
+
+    let isMounted = true;
+
     const loadOccasionData = async () => {
       try {
         setLoading(true);
         setError(null);
-        const data = await productService.getProductsByOccasion(slug);
+        const data = await productService.getProductsByOccasion(normalizedSlug);
+        if (!isMounted) return;
         setOccasion(data.occasion);
         setProducts(data.products || []);
       } catch (err: any) {
         console.error('Error fetching occasion products:', err);
-        setError(err.response?.data?.message || 'Failed to load products for this occasion');
+        if (!isMounted) return;
+
+        // If this is a known occasion route (/occasions/* or in OCCASION_SEO_MAP), try fallback product matching
+        if (isKnownOccasion) {
+          try {
+            const res = await api.get('/products');
+            if (!isMounted) return;
+            const allProducts: ProductData[] = res.data?.products || (Array.isArray(res.data) ? res.data : []);
+            const keywords = staticOccasionConfig?.keywords || [normalizedSlug.replace(/-/g, ' ')];
+            const matched = allProducts.filter((p: any) => {
+              const haystack = [
+                p.title,
+                p.name,
+                p.description,
+                p.category,
+                ...(Array.isArray(p.categories) ? p.categories : []),
+                ...(Array.isArray(p.occasions) ? p.occasions : []),
+                ...(Array.isArray(p.tags) ? p.tags : []),
+              ]
+                .filter(Boolean)
+                .join(' ')
+                .toLowerCase();
+              return keywords.some(kw => haystack.includes(kw.toLowerCase()));
+            });
+            setProducts(matched.length > 0 ? matched : allProducts.slice(0, 12));
+          } catch (_) {
+            setProducts([]);
+          }
+        } else {
+          setError(err.response?.data?.message || 'Failed to load products for this occasion');
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     loadOccasionData();
-    // Scroll to top on navigation
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [slug]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [normalizedSlug, isKnownOccasion, staticOccasionConfig]);
 
   // Extract all unique categories/types available in these products to build filters
   const uniqueTypes = useMemo(() => {
@@ -111,7 +234,6 @@ export const OccasionProductsPage: React.FC = () => {
         break;
       case 'featured':
       default:
-        // Preserve server merchandising and rotation order
         break;
     }
 
@@ -131,32 +253,86 @@ export const OccasionProductsPage: React.FC = () => {
     setSortOption('featured');
   };
 
-  if (loading) {
+  // For root-level /:slug routes that are NOT known occasions, wait for API or delegate to CategoryResolver
+  if (!isKnownOccasion) {
+    if (loading) {
+      return (
+        <div className="min-h-screen bg-slate-50/50 flex flex-col items-center justify-center py-20 gap-4">
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+          <p className="text-sm text-slate-500 font-medium">Loading collection...</p>
+        </div>
+      );
+    }
+    if (error || !occasion) {
+      return <CategoryResolver />;
+    }
+  }
+
+  // Handle /occasions index hub when no slug is provided
+  if (!normalizedSlug) {
     return (
-      <div className="min-h-screen bg-slate-50/50 flex flex-col items-center justify-center py-20 gap-4">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        <p className="text-sm text-slate-500 font-medium">Curating gifts for your celebration...</p>
+      <div className="bg-slate-50/30 min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <SEOHead
+          title="Shop Flowers & Gifts by Occasion | Spring Blossoms Florist"
+          description="Explore handcrafted flower bouquets, cakes, and gift hampers for every occasion including birthdays, anniversaries, romance, sympathy, and congratulations."
+          canonical="/occasions"
+        />
+        <div className="text-center max-w-3xl mx-auto mb-12">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 tracking-tight mb-4">
+            Shop Flowers &amp; Gifts by Occasion
+          </h1>
+          <p className="text-base sm:text-lg text-slate-600">
+            Celebrate life&apos;s meaningful moments with fresh flowers, artisan cakes, and thoughtful gifts curated for every occasion.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {Object.entries(OCCASION_SEO_MAP).map(([occSlug, cfg]) => (
+            <Link
+              key={occSlug}
+              to={`/occasions/${occSlug}`}
+              className="group bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs hover:shadow-md transition-all flex flex-col justify-between"
+            >
+              <div>
+                <h2 className="text-xl font-bold text-slate-900 group-hover:text-rose-600 transition-colors mb-2">
+                  {cfg.h1}
+                </h2>
+                <p className="text-sm text-slate-600 leading-relaxed">{cfg.description}</p>
+              </div>
+              <span className="mt-4 inline-flex items-center text-xs font-bold text-rose-600">
+                Explore {cfg.name} Collection <ChevronRight className="w-4 h-4 ml-1" />
+              </span>
+            </Link>
+          ))}
+        </div>
       </div>
     );
   }
 
-  if (error || !occasion) {
-    return <CategoryResolver />;
-  }
-
-  const seoTitle = occasion.seoTitle || `${occasion.name} Gifts Delivery | Online Gift Shop - SBFlorist`;
-  const seoDesc = occasion.seoDescription || `Send the finest customized gift sets, fresh flowers, and celebration cakes tagged under ${occasion.name}. Same-day and midnight delivery guaranteed.`;
-  const accentColor = occasion.accentColor || '#D4AF37';
+  const displayName = staticOccasionConfig?.name || occasion?.name || formatSlugLabel(normalizedSlug);
+  const headingText = staticOccasionConfig?.h1 || (occasion?.name ? `${occasion.name} Flowers & Gifts` : `${displayName} Flowers & Gifts`);
+  const seoTitle = staticOccasionConfig?.title || occasion?.seoTitle || `${headingText} | Spring Blossoms Florist`;
+  const seoDesc =
+    staticOccasionConfig?.description ||
+    occasion?.seoDescription ||
+    `Explore handcrafted flowers, bouquets, cakes, and gift sets for ${displayName} at Spring Blossoms Florist.`;
+  const canonicalPath = isExplicitOccasionPath || staticOccasionConfig ? `/occasions/${normalizedSlug}` : `/${normalizedSlug}`;
+  const accentColor = occasion?.accentColor || staticOccasionConfig?.accentColor || '#D4AF37';
+  const iconName = occasion?.icon || staticOccasionConfig?.icon || 'Sparkles';
+  const bannerUrl = occasion?.banner;
 
   return (
     <div className="bg-slate-50/30 min-h-screen">
-      <Helmet>
-        <title>{seoTitle}</title>
-        <meta name="description" content={seoDesc} />
-        <meta property="og:title" content={seoTitle} />
-        <meta property="og:description" content={seoDesc} />
-        {occasion.thumbnail && <meta property="og:image" content={occasion.thumbnail} />}
-      </Helmet>
+      <SEOHead
+        title={seoTitle}
+        description={seoDesc}
+        canonical={canonicalPath}
+        ogImage={occasion?.thumbnail}
+        breadcrumbs={[
+          { name: 'Home', item: '/' },
+          { name: 'Occasions', item: '/occasions' },
+          { name: displayName, item: canonicalPath },
+        ]}
+      />
 
       {/* Breadcrumb Nav */}
       <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 pt-6">
@@ -165,44 +341,43 @@ export const OccasionProductsPage: React.FC = () => {
           <ChevronRight className="h-3 w-3" />
           <span className="hover:text-slate-800 cursor-pointer" onClick={() => navigate('/shop')}>Occasions</span>
           <ChevronRight className="h-3 w-3" />
-          <span className="text-slate-800">{occasion.name}</span>
+          <span className="text-slate-800">{displayName}</span>
         </nav>
       </div>
 
       {/* Occasion Page Banner Hero */}
       <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 mt-5">
-        <div 
+        <div
           className="relative rounded-2xl overflow-hidden min-h-[220px] md:min-h-[300px] flex items-center justify-center p-6 bg-gradient-to-r from-bloom-pink-500/20 via-rose-500/5 to-amber-500/10 border border-slate-100 shadow-sm"
           style={{
-            backgroundImage: occasion.banner ? `url(${occasion.banner})` : undefined,
+            backgroundImage: bannerUrl ? `url(${bannerUrl})` : undefined,
             backgroundSize: 'cover',
             backgroundPosition: 'center'
           }}
         >
-          {occasion.banner && <div className="absolute inset-0 bg-black/35 z-10" />}
+          {bannerUrl && <div className="absolute inset-0 bg-black/35 z-10" />}
 
           <div className={cn(
             "relative z-20 text-center max-w-2xl px-4",
-            occasion.banner ? "text-white" : "text-slate-900"
+            bannerUrl ? "text-white" : "text-slate-900"
           )}>
-            <div 
+            <div
               className={cn(
                 "inline-flex p-3 rounded-full mx-auto shadow-inner mb-3.5",
-                occasion.banner ? "bg-white/10 backdrop-blur-md text-white" : "bg-white text-slate-850"
+                bannerUrl ? "bg-white/10 backdrop-blur-md text-white" : "bg-white text-slate-850"
               )}
             >
-              {/* Dynamic Lucide Icon */}
-              {React.createElement((LucideIcons as any)[occasion.icon] || Sparkles, {
+              {React.createElement((LucideIcons as any)[iconName] || Sparkles, {
                 className: "h-6 w-6",
-                style: { color: occasion.banner ? '#FFFFFF' : accentColor }
+                style: { color: bannerUrl ? '#FFFFFF' : accentColor }
               })}
             </div>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight">{occasion.name} Collection</h1>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight">{headingText}</h1>
             <p className={cn(
               "text-xs sm:text-sm md:text-base mt-2.5 max-w-xl mx-auto font-medium",
-              occasion.banner ? "text-slate-200" : "text-slate-500"
+              bannerUrl ? "text-slate-200" : "text-slate-600"
             )}>
-              {occasion.seoDescription || `Discover the finest gifts, flowers, cakes and luxury packages handpicked and curated specially for ${occasion.name}.`}
+              {seoDesc}
             </p>
           </div>
         </div>
@@ -211,7 +386,7 @@ export const OccasionProductsPage: React.FC = () => {
       {/* Main content grid */}
       <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 py-10">
         <div className="flex flex-col lg:flex-row gap-8">
-          
+
           {/* Desktop Filter Sidebar */}
           <aside className="w-full lg:w-64 flex-shrink-0 hidden lg:block space-y-6">
             <CardFilters
@@ -236,7 +411,7 @@ export const OccasionProductsPage: React.FC = () => {
               <span className="text-xs sm:text-sm font-semibold text-slate-500">
                 Showing <span className="text-slate-900 font-bold">{filteredAndSortedProducts.length}</span> products
               </span>
-              
+
               <div className="flex items-center gap-2.5 self-end sm:self-auto">
                 {/* Mobile Filter Button */}
                 <Button
@@ -267,7 +442,20 @@ export const OccasionProductsPage: React.FC = () => {
             </div>
 
             {/* Products Grid */}
-            {filteredAndSortedProducts.length === 0 ? (
+            {loading ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
+                {Array.from({ length: 8 }).map((_, idx) => (
+                  <div
+                    key={`occ-skel-${idx}`}
+                    className="h-80 rounded-2xl bg-white border border-slate-100 p-4 animate-pulse space-y-3"
+                  >
+                    <div className="w-full h-44 bg-slate-100 rounded-xl" />
+                    <div className="h-4 bg-slate-100 rounded w-3/4" />
+                    <div className="h-3 bg-slate-50 rounded w-1/2" />
+                  </div>
+                ))}
+              </div>
+            ) : filteredAndSortedProducts.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 bg-white border rounded-2xl p-6 text-center gap-3">
                 <Inbox className="h-10 w-10 text-slate-350" />
                 <h3 className="font-semibold text-lg text-slate-800">No Matching Gifts</h3>
@@ -309,7 +497,7 @@ export const OccasionProductsPage: React.FC = () => {
                   <X className="h-5 w-5" />
                 </Button>
               </div>
-              
+
               <div className="py-6 space-y-6">
                 <CardFilters
                   uniqueTypes={uniqueTypes}
@@ -326,7 +514,7 @@ export const OccasionProductsPage: React.FC = () => {
                 />
               </div>
             </div>
-            
+
             <div className="border-t pt-4">
               <Button onClick={() => setMobileFiltersOpen(false)} className="w-full bg-slate-900 text-white font-bold h-11">
                 Apply Filters
@@ -349,7 +537,6 @@ const CardFilters = ({
   sameDayOnly,
   setSameDayOnly,
   handleClearFilters,
-  formatPrice,
   isPriceOpen,
   setIsPriceOpen
 }: {
@@ -429,3 +616,5 @@ const CardFilters = ({
     </div>
   );
 };
+
+export default OccasionProductsPage;

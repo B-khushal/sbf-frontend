@@ -72,12 +72,12 @@ export const getContactInfo = async (): Promise<ContactInfo> => {
     // Return default contact info if API fails
     const defaultContactInfo: ContactInfo = {
       address: {
-        street: 'Door No. 12-2-786/A & B, Najam Centre',
-        area: 'Pillar No. 32, Rethi Bowli, Mehdipatnam',
+        street: 'Pillar Number 32, Najam Centre, A/B, Door No. 12-2, 786',
+        area: 'Rethi Bowli Road, Mehdipatnam',
         city: 'Hyderabad',
         state: 'Telangana',
-        pincode: '500028',
-        landmark: 'Near Tolichihocki, HITEC City'
+        pincode: '500006',
+        landmark: 'Near Tolichowki, Mehdipatnam'
       },
       phone: {
         primary: '+91 9949683222',
@@ -85,16 +85,16 @@ export const getContactInfo = async (): Promise<ContactInfo> => {
       },
       email: 'contact@sbflorist.in',
       businessHours: {
-        monday: '9:00 AM - 8:00 PM',
-        tuesday: '9:00 AM - 8:00 PM',
-        wednesday: '9:00 AM - 8:00 PM',
-        thursday: '9:00 AM - 8:00 PM',
-        friday: '9:00 AM - 8:00 PM',
-        saturday: '9:00 AM - 8:00 PM',
-        sunday: '10:00 AM - 6:00 PM'
+        monday: '8:00 AM - 11:00 PM',
+        tuesday: '8:00 AM - 11:00 PM',
+        wednesday: '8:00 AM - 11:00 PM',
+        thursday: '8:00 AM - 11:00 PM',
+        friday: '8:00 AM - 11:00 PM',
+        saturday: '8:00 AM - 11:00 PM',
+        sunday: '8:00 AM - 11:00 PM'
       },
       socialMedia: {
-        website: 'www.sbflorist.com',
+        website: 'https://sbflorist.in/',
         whatsapp: 'https://wa.me/9949683222'
       }
     };
@@ -128,8 +128,6 @@ export const callPhone = () => {
 };
 
 export const openGoogleMaps = () => {
-  const address = "Door No. 12-2-786/A & B, Najam Centre, Pillar No. 32, Rethi Bowli, Mehdipatnam, Hyderabad, Telangana 500028";
-  const encodedAddress = encodeURIComponent(address);
-  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
+  const mapsUrl = 'https://www.google.com/maps?cid=8660521669298042697';
   window.open(mapsUrl, '_blank');
-}; 
+};

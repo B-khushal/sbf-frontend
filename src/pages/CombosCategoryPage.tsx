@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { useSearchParams, useNavigate, Link } from "react-router-dom";
+import { useSearchParams, useNavigate, useLocation, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -83,6 +83,7 @@ const SORT_OPTIONS = [
 export const CombosCategoryPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { formatPrice, convertPrice } = useCurrency();
 
   // Raw data from database
@@ -329,14 +330,18 @@ export const CombosCategoryPage: React.FC = () => {
     (egglessOnly ? 1 : 0) +
     (searchQuery.trim() ? 1 : 0);
 
+  const canonicalUrl = location.pathname.startsWith("/shop/combos")
+    ? "https://sbflorist.in/shop/combos"
+    : "https://sbflorist.in/combos";
+
   // SEO Schema
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
-    name: "Luxury Flowers & Cake Combos Online | Spring Blossoms Florist",
+    name: "Flowers, Cakes & Gift Combos | Spring Blossoms Florist",
     description:
-      "Order signature flower bouquet and cake combos online from Spring Blossoms Florist. Dutch red roses, oriental lilies paired with oven-fresh Red Velvet, Belgian Chocolate & Black Forest cakes with express same-day handover.",
-    url: "https://sbflorist.in/combos",
+      "Order signature flower bouquet and cake combos online from Spring Blossoms Florist. Dutch red roses, oriental lilies paired with oven-fresh Red Velvet, Belgian Chocolate & Black Forest cakes.",
+    url: canonicalUrl,
     hasPart: filteredProducts.slice(0, 10).map((prod) => ({
       "@type": "Product",
       name: prod.name || prod.title,
@@ -354,18 +359,18 @@ export const CombosCategoryPage: React.FC = () => {
   return (
     <div className="bg-[#fcfaf7] min-h-screen">
       <Helmet>
-        <title>Flower and Cake Combos in Hyderabad | Spring Blossoms Florist</title>
+        <title>Flowers, Cakes &amp; Gift Combos | Spring Blossoms Florist</title>
         <meta
           name="description"
-          content="Make celebrations memorable with flower and cake combos from Spring Blossoms Florist. Explore available gift combinations for birthdays, anniversaries and special moments."
+          content="Make celebrations memorable with flowers, cakes and gift combos from Spring Blossoms Florist. Explore curated gift combinations for birthdays, anniversaries and special moments."
         />
-        <link rel="canonical" href="https://sbflorist.in/combos" />
-        <meta property="og:title" content="Flower and Cake Combos in Hyderabad | Spring Blossoms Florist" />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta property="og:title" content="Flowers, Cakes & Gift Combos | Spring Blossoms Florist" />
         <meta
           property="og:description"
-          content="Make celebrations memorable with flower and cake combos from Spring Blossoms Florist. Explore available gift combinations for birthdays, anniversaries and special moments."
+          content="Make celebrations memorable with flowers, cakes and gift combos from Spring Blossoms Florist. Explore curated gift combinations for birthdays, anniversaries and special moments."
         />
-        <meta property="og:url" content="https://sbflorist.in/combos" />
+        <meta property="og:url" content={canonicalUrl} />
         <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
       </Helmet>
 
@@ -402,7 +407,7 @@ export const CombosCategoryPage: React.FC = () => {
             </div>
 
             <h1 className="text-2xl sm:text-4xl md:text-5xl 2xl:text-6xl font-black font-serif tracking-tight leading-tight">
-              Flower and Cake Combos in Hyderabad
+              Flowers, Cakes &amp; Gift Combos
             </h1>
 
             <p className="text-xs sm:text-base 2xl:text-lg text-rose-100/90 font-light leading-relaxed">
@@ -647,7 +652,7 @@ export const CombosCategoryPage: React.FC = () => {
           </aside>
 
           {/* Products Grid Area (Matches Cakes Category Standard) */}
-          <main className="lg:col-span-3 2xl:col-span-4 3xl:col-span-5">
+          <section className="lg:col-span-3 2xl:col-span-4 3xl:col-span-5">
             {loading ? (
               <div className="grid grid-cols-2 md:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 gap-3.5 sm:gap-5 2xl:gap-6">
                 {[...Array(6)].map((_, i) => (
@@ -701,7 +706,7 @@ export const CombosCategoryPage: React.FC = () => {
                 ))}
               </div>
             )}
-          </main>
+          </section>
         </div>
       </div>
 

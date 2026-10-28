@@ -26,11 +26,12 @@ import {
 } from 'lucide-react';
 import Footer from '@/components/Footer';
 import Navigation from '@/components/Navigation';
+import SEOHead from '@/components/seo/SEOHead';
 import { Button } from '@/components/ui/button';
 
 // Animation variants
 const containerVariants = {
-  hidden: { opacity: 0 },
+  hidden: { opacity: 1 },
   visible: {
     opacity: 1,
     transition: {
@@ -41,7 +42,7 @@ const containerVariants = {
 };
 
 const itemVariants = {
-  hidden: { y: 40, opacity: 0 },
+  hidden: { y: 0, opacity: 1 },
   visible: {
     y: 0,
     opacity: 1,
@@ -53,13 +54,18 @@ const itemVariants = {
 };
 
 const ShippingPage = () => {
-  const [contentRef, contentInView] = useInView({
+  const [contentRef] = useInView({
     triggerOnce: true,
     threshold: 0.2
   });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 relative overflow-hidden">
+      <SEOHead
+        title="Flower & Gift Delivery Information | Spring Blossoms Florist"
+        description="Read our flower, cake, and gift shipping and delivery information, including delivery slots, coverage areas, and order handling at Spring Blossoms Florist."
+        canonical="/shipping"
+      />
       {/* Animated Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 rounded-full blur-3xl animate-spin-slow" />
@@ -86,15 +92,14 @@ const ShippingPage = () => {
                 <div className="text-2xl sm:text-4xl">🚚</div>
               </div>
               <h1 className="text-2xl sm:text-4xl md:text-6xl lg:text-7xl font-black text-gray-800 mb-4 sm:mb-6 pt-6 sm:pt-8 leading-tight">
-                Flower Delivery in Hyderabad - <span className="bg-gradient-to-r from-blue-400 via-purple-500 to-teal-600 bg-clip-text text-transparent">Shipping & Delivery</span>
+                Flower &amp; Gift <span className="bg-gradient-to-r from-blue-400 via-purple-500 to-teal-600 bg-clip-text text-transparent">Delivery Information</span>
               </h1>
               <div className="absolute top-0 right-1/2 transform translate-x-16 sm:translate-x-32 -translate-y-2 sm:-translate-y-4">
                 <div className="text-2xl sm:text-4xl">🌸</div>
               </div>
             </div>
             <p className="text-base sm:text-xl md:text-2xl text-gray-600 max-w-4xl mx-auto leading-relaxed mb-6 sm:mb-8 px-4">
-              Best florist in Hyderabad offering flower delivery in Hyderabad, online bouquet shop India, midnight flower delivery, 
-              roses for anniversary, and birthday flowers online. Send flowers online with prompt and safe delivery.
+              Learn about our flower, cake, and gift delivery policies, hand-delivery practices, delivery windows, and order handling at Spring Blossoms Florist.
             </p>
 
             {/* Back Button */}

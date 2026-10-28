@@ -17,6 +17,7 @@ import {
   Star
 } from 'lucide-react';
 import PinCodeInput, { SERVICEABLE_PINCODES, ServiceablePinCode } from '@/components/ui/PinCodeInput';
+import { FLORIST_LOCAL_BUSINESS_SCHEMA } from '@/components/seo/floristSchema';
 import { cn } from '@/lib/utils';
 
 const HYD_PINCODES = SERVICEABLE_PINCODES.filter(p => p.city === 'Hyderabad');
@@ -53,7 +54,7 @@ const FAQS = [
   },
   {
     q: "Where is SB Florist located in Hyderabad, and can I pick up flowers directly?",
-    a: "Our floral studio is located at Door No. 12-2-786/A & B, Najam Centre, Pillar No. 32, Rethi Bowli, Mehdipatnam, Hyderabad 500028. You can order online for home delivery or contact us directly at +91 9949683222 for customized styling and studio inquiries."
+    a: "Our floral studio is located at Pillar Number 32, Najam Centre, A/B, Door No. 12-2, 786, Rethi Bowli Road, Mehdipatnam, Hyderabad, Telangana 500006. You can order online for home delivery or contact us directly at +91 9949683222 for customized styling and studio inquiries."
   },
   {
     q: "Which areas in Hyderabad do you cover?",
@@ -75,35 +76,7 @@ export const HyderabadDeliveryPage: React.FC = () => {
     "@context": "https://schema.org",
     "@graph": [
       {
-        "@type": "Florist",
-        "@id": "https://sbflorist.in/flower-delivery-hyderabad#florist",
-        "name": "SB Florist Hyderabad",
-        "url": "https://sbflorist.in/flower-delivery-hyderabad",
-        "logo": "https://sbflorist.in/logo.png",
-        "image": "https://sbflorist.in/logo.png",
-        "telephone": "+91 9949683222",
-        "priceRange": "₹₹",
-        "address": {
-          "@type": "PostalAddress",
-          "streetAddress": "Door No. 12-2-786/A & B, Najam Centre, Pillar No. 32, Rethi Bowli, Mehdipatnam",
-          "addressLocality": "Hyderabad",
-          "addressRegion": "Telangana",
-          "postalCode": "500028",
-          "addressCountry": "IN"
-        },
-        "geo": {
-          "@type": "GeoCoordinates",
-          "latitude": 17.3912,
-          "longitude": 78.4326
-        },
-        "openingHoursSpecification": [
-          {
-            "@type": "OpeningHoursSpecification",
-            "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
-            "opens": "09:00",
-            "closes": "21:00"
-          }
-        ],
+        ...FLORIST_LOCAL_BUSINESS_SCHEMA,
         "areaServed": {
           "@type": "City",
           "name": "Hyderabad"
@@ -188,7 +161,7 @@ export const HyderabadDeliveryPage: React.FC = () => {
                 <Sparkles className="w-3.5 h-3.5" /> Handcrafted by Master Florists at Mehdipatnam Studio
               </div>
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
-                Online Flower Delivery in <span className="bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent">Hyderabad</span>
+                Flower Delivery in <span className="bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent">Hyderabad</span>
               </h1>
               <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">
                 Send breathtaking fresh flowers, artisanal cakes, and luxury gift hampers anywhere in Hyderabad. Whether celebrating birthdays, anniversaries, or spontaneous gestures of love, SB Florist guarantees hand-tied elegance and punctual same-day & midnight delivery.
@@ -454,10 +427,10 @@ export const HyderabadDeliveryPage: React.FC = () => {
               </h4>
               <div className="text-xs text-slate-600 space-y-2">
                 <p>
-                  <strong className="text-slate-800">Studio:</strong> Door No. 12-2-786/A & B, Najam Centre, Pillar No. 32, Rethi Bowli, Mehdipatnam, Hyderabad 500028
+                  <strong className="text-slate-800">Studio:</strong> Pillar Number 32, Najam Centre, A/B, Door No. 12-2, 786, Rethi Bowli Road, Mehdipatnam, Hyderabad 500006
                 </p>
                 <p>
-                  <strong className="text-slate-800">Hours:</strong> Mon - Sun, 9:00 AM - 9:00 PM
+                  <strong className="text-slate-800">Hours:</strong> Mon - Sun, 8:00 AM - 11:00 PM
                 </p>
                 <p>
                   <strong className="text-slate-800">Phone / WhatsApp:</strong> +91 9949683222
