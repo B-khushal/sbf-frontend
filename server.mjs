@@ -44,7 +44,10 @@ const serveFile = (res, filePath, contentTypeOverride = null, cacheControl = 'pu
     res.writeHead(200, {
       'Content-Type': contentType,
       'Cache-Control': cacheControl,
-      'X-Content-Type-Options': 'nosniff'
+      'Strict-Transport-Security': 'max-age=31536000',
+      'X-Content-Type-Options': 'nosniff',
+      'X-Frame-Options': 'SAMEORIGIN',
+      'Referrer-Policy': 'strict-origin-when-cross-origin'
     });
     fs.createReadStream(filePath).pipe(res);
     return true;
@@ -189,8 +192,8 @@ for (const port of candidatePorts) {
       console.error(`Failed to bind primary port ${port}:`, err.message);
     }
   });
-  srv.listen(port, '0.0.0.0', () => {
-    console.log(`SBF Frontend production server listening on http://0.0.0.0:${port}`);
+  srv.listen(port, () => {
+    console.log(`SBF Frontend production server listening on port ${port}`);
   });
 }
 

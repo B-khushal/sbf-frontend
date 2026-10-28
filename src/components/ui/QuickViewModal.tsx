@@ -205,7 +205,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
 
               {/* Description */}
               <div className="space-y-1">
-                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Description</h4>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Description</p>
                 <p className="text-sm text-gray-600 leading-relaxed max-h-40 overflow-y-auto">
                   {product.description || "Fresh and premium flowers arranged beautifully to convey your heartfelt emotions. Handcrafted with love and care by our expert florists."}
                 </p>

@@ -190,6 +190,8 @@ const ProductPage = () => {
 
   const primaryImage = (product.images && product.images[0]) || '/images/logo_final.png';
 
+  const hasVerifiedRatings = Number(product.numReviews) > 0 && Number(product.rating) > 0;
+
   const productSchema = {
     '@context': 'https://schema.org',
     '@type': 'Product',
@@ -199,6 +201,15 @@ const ProductPage = () => {
       ? product.images.map(img => img.startsWith('/') ? `https://sbflorist.in${img}` : img)
       : ['https://sbflorist.in/images/logo_final.png'],
     sku: String(product._id || actualId),
+    ...(hasVerifiedRatings ? {
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: Number(Number(product.rating).toFixed(1)),
+        reviewCount: Number(product.numReviews),
+        bestRating: 5,
+        worstRating: 1
+      }
+    } : {}),
     offers: {
       '@type': 'Offer',
       url: `https://sbflorist.in/product/${product._id || actualId}`,

@@ -185,7 +185,7 @@ const HomeHero = () => {
                 {/* Slide Image */}
                 <img
                   src={slideImage}
-                  alt={`${slide.title} - Flower Delivery Hyderabad | Spring Blossoms Florist`}
+                  alt={slide.title?.trim() || "Fresh flower bouquets and cakes delivery in Hyderabad"}
                   className={cn(
                     "absolute inset-0 w-full h-full object-cover transition-all duration-700",
                     imagesLoaded[index] ? "opacity-100 scale-100" : "opacity-0 scale-105"
@@ -209,18 +209,20 @@ const HomeHero = () => {
                   "items-end pb-3 sm:items-center sm:pb-0 sm:justify-center sm:text-center"
                 )}>
                   <div className="w-full max-w-lg lg:max-w-xl xl:max-w-2xl">
-                    <h2 
-                      className={cn(
-                        "font-black leading-tight tracking-tight transition-all drop-shadow-sm",
-                        // Mobile: small left-aligned | Desktop: large centered
-                        "text-sm xs:text-base sm:text-3xl md:text-4xl lg:text-4xl xl:text-5xl",
-                        "mb-0.5 sm:mb-2 lg:mb-4",
-                        "line-clamp-2 sm:line-clamp-none"
-                      )}
-                      style={{ color: textCol }}
-                    >
-                      {slide.title}
-                    </h2>
+                    {slide.title?.trim() && (
+                      <p 
+                        className={cn(
+                          "font-black leading-tight tracking-tight transition-all drop-shadow-sm",
+                          // Mobile: small left-aligned | Desktop: large centered
+                          "text-sm xs:text-base sm:text-3xl md:text-4xl lg:text-4xl xl:text-5xl",
+                          "mb-0.5 sm:mb-2 lg:mb-4",
+                          "line-clamp-2 sm:line-clamp-none"
+                        )}
+                        style={{ color: textCol }}
+                      >
+                        {slide.title}
+                      </p>
+                    )}
                     {/* Subtitle: hidden on mobile for compactness */}
                     <p 
                       className="hidden sm:block text-sm md:text-base lg:text-lg mb-4 lg:mb-6 leading-relaxed opacity-90 transition-all font-medium"
@@ -312,7 +314,7 @@ const HomeHero = () => {
                 {banner.image && (
                   <img 
                     src={getImageUrl(banner.image, { width: 640 })} 
-                    alt={`${banner.title} - Spring Blossoms Florist Hyderabad`} 
+                    alt={banner.title || "Promotional gift offer"} 
                     loading="lazy"
                     className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700 ease-out"
                   />
@@ -335,9 +337,9 @@ const HomeHero = () => {
                         )}
                       </span>
                     )}
-                    <h3 className="text-xl font-bold mt-2.5 leading-tight group-hover:text-pink-100 transition-colors">
+                    <p className="text-xl font-bold mt-2.5 leading-tight group-hover:text-pink-100 transition-colors">
                       {banner.title}
-                    </h3>
+                    </p>
                     <p className="text-xs text-white/80 mt-1 leading-relaxed max-w-[220px]">
                       {banner.subtitle}
                     </p>

@@ -134,8 +134,12 @@ const Footer = () => {
           <div className="space-y-2">
             <Link to="/" className="inline-flex items-center gap-2 text-lg font-bold text-gray-900 group">
               <img
-                src="https://res.cloudinary.com/djtrhfqan/image/upload/v1791793251/logo_f_without_bg_mdrtys.png"
-                alt={footerSettings.companyName}
+                src="/images/logo_emblem.png"
+                alt={footerSettings.companyName || "Spring Blossoms Florist"}
+                width={24}
+                height={24}
+                loading="lazy"
+                decoding="async"
                 className="w-6 h-6 object-contain drop-shadow-sm transition-transform group-hover:scale-105"
               />
               {footerSettings.companyName}
@@ -270,7 +274,7 @@ const Footer = () => {
           <div className="bg-gradient-to-r from-primary/90 to-secondary/90 rounded-2xl p-5 sm:p-6 lg:p-8 shadow-xl backdrop-blur-sm">
             <div className="flex flex-col lg:flex-row items-center justify-between gap-5 sm:gap-6">
               <div className="text-center lg:text-left w-full lg:w-auto">
-                <h3 className="text-xl sm:text-xl lg:text-2xl font-bold mb-3 text-white leading-tight">Subscribe to Our Newsletter</h3>
+                <p className="text-xl sm:text-xl lg:text-2xl font-bold mb-3 text-white leading-tight">Subscribe to Our Newsletter</p>
                 <p className="text-white/90 text-sm lg:text-base max-w-md mx-auto lg:mx-0 leading-relaxed">Get updates on new arrivals and special offers!</p>
               </div>
               <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row w-full lg:w-auto gap-3 min-w-0">
@@ -298,15 +302,18 @@ const Footer = () => {
           <div className="text-center sm:text-left space-y-5 sm:space-y-6">
             <Link to="/" className="inline-flex items-center gap-3 text-2xl font-bold text-gray-900 hover:text-primary transition-colors duration-300 group">
               <img
-                src="https://res.cloudinary.com/djtrhfqan/image/upload/v1791793251/logo_f_without_bg_mdrtys.png"
-                alt={footerSettings.companyName}
+                src="/images/logo_emblem.png"
+                alt={footerSettings.companyName || "Spring Blossoms Florist"}
+                width={32}
+                height={32}
+                loading="lazy"
+                decoding="async"
                 className="w-8 h-8 object-contain drop-shadow-sm transition-transform group-hover:scale-105"
               />
               {footerSettings.companyName}
             </Link>
             <p className="text-gray-600 text-sm leading-relaxed max-w-sm mx-auto sm:mx-0">
-              Best florist in Hyderabad offering flower delivery in Hyderabad, online bouquet shop India, midnight flower delivery,
-              roses for anniversary, and birthday flowers online. Send flowers online with confidence.
+              Handcrafted flower bouquets, fresh celebration cakes, and curated gift hampers delivered across Hyderabad &amp; Secunderabad with same-day and midnight delivery options.
             </p>
             <div className="flex items-center justify-center sm:justify-start gap-4 flex-wrap">
               {/* WhatsApp Link */}
@@ -352,7 +359,7 @@ const Footer = () => {
           {/* Quick Links */}
           {footerSettings.links.map((section) => (
             <div key={section.section} className="text-center sm:text-left">
-              <h3 className="text-lg font-bold mb-6 text-gray-900">{section.section}</h3>
+              <p className="text-lg font-bold mb-6 text-gray-900">{section.section}</p>
               <ul className="space-y-4">
                 {section.items
                   .filter(item => item.enabled)
@@ -373,7 +380,7 @@ const Footer = () => {
 
           {/* Contact Info */}
           <div className="text-center sm:text-left">
-            <h3 className="text-lg font-bold mb-6 text-gray-900">Contact Us</h3>
+            <p className="text-lg font-bold mb-6 text-gray-900">Contact Us</p>
             <ul className="space-y-5">
               <li className="flex items-start gap-4 justify-center sm:justify-start">
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">

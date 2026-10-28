@@ -136,7 +136,7 @@ export const WhatsAppWidget: React.FC = () => {
                 </svg>
               </div>
               <div>
-                <h4 className="font-bold text-sm leading-tight">{businessName}</h4>
+                <p className="font-bold text-sm leading-tight">{businessName}</p>
                 <p className="text-xs text-emerald-100 flex items-center gap-1.5 mt-0.5">
                   <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
                   {onlineStatusText} • {widgetTitle}

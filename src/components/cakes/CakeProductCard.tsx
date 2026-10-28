@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { Heart, ShoppingBag, Star, Sparkles, Scale, Egg } from "lucide-react";
+import { Heart, ShoppingBag, Star, Sparkles, Scale, Egg, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import useCart from "@/hooks/use-cart";
@@ -256,16 +256,18 @@ export const CakeProductCard: React.FC<CakeProductCardProps> = ({
           {/* Quick View Button (Desktop) */}
           <div className="absolute inset-0 bg-black/15 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-10 hidden md:flex">
             <Button
-              size="sm"
+              size="icon"
               variant="secondary"
-              className="bg-white/95 text-gray-800 hover:bg-white text-xs font-semibold rounded-xl px-4 py-1.5 shadow-md transition-transform duration-300 translate-y-2 group-hover:translate-y-0"
+              aria-label={`Preview ${product.title || product.name}`}
+              title={`Preview ${product.title || product.name}`}
+              className="bg-white/95 text-gray-800 hover:bg-white h-9 w-9 rounded-full shadow-md transition-transform duration-300 translate-y-2 group-hover:translate-y-0"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 setIsQuickViewOpen(true);
               }}
             >
-              Quick View
+              <Eye className="h-4 w-4" />
             </Button>
           </div>
 
@@ -300,9 +302,9 @@ export const CakeProductCard: React.FC<CakeProductCardProps> = ({
         <div className={cn("flex flex-col justify-between flex-1 bg-white", isCompact ? "p-2.5 xs:p-3" : "p-3 xs:p-3.5 md:p-4")}>
           <div className="space-y-1.5 flex flex-col">
             {/* Title */}
-            <h3 className="font-bold text-xs sm:text-sm text-slate-800 line-clamp-1 group-hover:text-amber-800 transition-colors">
+            <p className="font-bold text-xs sm:text-sm text-slate-800 line-clamp-1 group-hover:text-amber-800 transition-colors">
               {product.title || product.name}
-            </h3>
+            </p>
 
             {/* Short Description */}
             <p className="text-[11px] text-slate-500 line-clamp-1">

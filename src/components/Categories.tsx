@@ -95,7 +95,7 @@ const CategoryCircleItem = ({ category, index, isVisible }: { category: any; ind
         )}
         <img
           src={getImageUrl(category.image, { width: 160 })}
-          alt={`${category.name} - Flowers Hyderabad`}
+          alt={`${category.name} collection`}
           loading="lazy"
           onLoad={() => setImageLoaded(true)}
           className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
@@ -146,7 +146,7 @@ const CategoryCard = ({ category, isVisible, delay, onCardClick }: CategoryCardP
         {/* Category Image */}
         <img
           src={getImageUrl(category.image, { width: 400 })}
-          alt={`${category.name} - Online Flower Delivery Hyderabad`}
+          alt={`${category.name} collection`}
           loading="lazy"
           onLoad={() => setImageLoaded(true)}
           className={cn(
@@ -165,9 +165,9 @@ const CategoryCard = ({ category, isVisible, delay, onCardClick }: CategoryCardP
           </div>
 
           <div>
-            <h3 className="text-xs sm:text-sm md:text-[15px] font-bold text-white tracking-wide group-hover:text-pink-100 transition-colors line-clamp-1 drop-shadow-sm">
+            <p className="text-xs sm:text-sm md:text-[15px] font-bold text-white tracking-wide group-hover:text-pink-100 transition-colors line-clamp-1 drop-shadow-sm">
               {category.name}
-            </h3>
+            </p>
             <p className="mt-0.5 text-[9px] sm:text-[10px] md:text-[11px] text-white/75 line-clamp-1 font-medium leading-normal drop-shadow-xs">
               {category.description || 'Explore collection'}
             </p>
@@ -367,9 +367,9 @@ const Categories = ({ title, subtitle }: CategoriesProps) => {
                 )}
                 {/* Semi-transparent dark overlay to ensure text readability */}
                 <div className="absolute inset-0 bg-gradient-to-r from-black/45 via-black/20 to-transparent p-4 flex flex-col justify-center text-white">
-                  <h4 className="text-sm font-extrabold tracking-wide uppercase leading-tight drop-shadow-sm">
+                  <p className="text-sm font-extrabold tracking-wide uppercase leading-tight drop-shadow-sm">
                     {banner.title}
-                  </h4>
+                  </p>
                   <p className="text-xs text-white/95 mt-0.5 font-medium leading-tight drop-shadow-xs">
                     {banner.subtitle}
                   </p>

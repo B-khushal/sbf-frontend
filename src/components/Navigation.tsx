@@ -25,6 +25,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useFloating, offset, flip, shift, autoUpdate } from '@floating-ui/react';
 import { preprocessProductForSearch, createSearchIndex, rankSearchResults, SearchItem } from '@/utils/searchHelper';
 import searchService from '@/services/searchService';
+import { getImageUrl } from '@/config';
 
 interface NavItem {
   href: string;
@@ -537,8 +538,12 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
               </button>
               <Link to="/" className="flex items-center gap-1.5 flex-shrink-0 group">
                 <img
-                  src={headerSettings?.logo || "https://res.cloudinary.com/djtrhfqan/image/upload/v1791793252/logo_final_tp7ymk.png"}
+                  src={!headerSettings?.logo || headerSettings.logo.includes('logo_final_tp7ymk.png') ? "/images/logo-header.png" : getImageUrl(headerSettings.logo, { width: 280 })}
                   alt="Spring Blossoms Florist"
+                  width={120}
+                  height={36}
+                  loading="eager"
+                  decoding="async"
                   className="h-8 sm:h-9 w-auto max-w-[140px] object-contain transition-transform group-hover:scale-105"
                 />
               </Link>
@@ -573,32 +578,15 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                 transition={{ duration: 0.6 }}
               >
                 <Link to="/" className="flex items-center group">
-                  {/* Desktop Logo */}
-                  <div className="hidden lg:block">
-                    <img
-                      src={headerSettings?.logo || "https://res.cloudinary.com/djtrhfqan/image/upload/v1791793252/logo_final_tp7ymk.png"}
-                      alt="Best Florist in Hyderabad - Flower Delivery in Hyderabad | Spring Blossoms Florist"
-                      className="h-12 xl:h-14 w-auto object-contain transition-all duration-300 ease-in-out group-hover:scale-105 drop-shadow-sm"
-                    />
-                  </div>
-                  
-                  {/* Tablet Logo */}
-                  <div className="hidden md:block lg:hidden">
-                    <img
-                      src={headerSettings?.logo || "https://res.cloudinary.com/djtrhfqan/image/upload/v1791793252/logo_final_tp7ymk.png"}
-                      alt="Best Florist in Hyderabad - Flower Delivery in Hyderabad | Spring Blossoms Florist"
-                      className="h-10 sm:h-11 w-auto object-contain transition-all duration-300 ease-in-out group-hover:scale-105 drop-shadow-sm"
-                    />
-                  </div>
-                  
-                  {/* Mobile Logo */}
-                  <div className="md:hidden flex items-center">
-                    <img
-                      src={headerSettings?.logo || "https://res.cloudinary.com/djtrhfqan/image/upload/v1791793252/logo_final_tp7ymk.png"}
-                      alt="Best Florist in Hyderabad - Flower Delivery in Hyderabad | Spring Blossoms Florist"
-                      className="h-9 sm:h-10 w-auto object-contain transition-all duration-300 ease-in-out group-hover:scale-105 drop-shadow-sm"
-                    />
-                  </div>
+                  <img
+                    src={!headerSettings?.logo || headerSettings.logo.includes('logo_final_tp7ymk.png') ? "/images/logo-header.png" : getImageUrl(headerSettings.logo, { width: 280 })}
+                    alt="Spring Blossoms Florist"
+                    width={140}
+                    height={56}
+                    loading="eager"
+                    decoding="async"
+                    className="h-9 sm:h-10 md:h-11 lg:h-12 xl:h-14 w-auto object-contain transition-all duration-300 ease-in-out group-hover:scale-105 drop-shadow-sm"
+                  />
                 </Link>
               </motion.div>
             </div>

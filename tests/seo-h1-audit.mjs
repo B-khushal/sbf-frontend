@@ -9,7 +9,7 @@ const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, '..');
 
 export const EXPECTED_ROUTES = [
-  { path: '/', expectedH1: 'Flower Delivery in Hyderabad for Every Special Occasion', expectedCanonical: 'https://sbflorist.in/' },
+  { path: '/', expectedH1: 'Flowers, Cakes & Gifts Delivery in Hyderabad', expectedCanonical: 'https://sbflorist.in/' },
   { path: '/shop', expectedH1: 'Shop Flowers, Bouquets, Cakes & Gifts Online', expectedCanonical: 'https://sbflorist.in/shop' },
   { path: '/about', expectedH1: 'About Spring Blossoms Florist', expectedCanonical: 'https://sbflorist.in/about' },
   { path: '/contact', expectedH1: 'Contact Spring Blossoms Florist', expectedCanonical: 'https://sbflorist.in/contact' },
@@ -172,9 +172,9 @@ async function runAudit() {
     if (h1Text !== route.expectedH1) {
       throw new Error(`Initial HTML H1 mismatch in ${rel}: expected "${route.expectedH1}", got "${h1Text}"`);
     }
-    const titleMatch = html.match(/<title>([\s\S]*?)<\/title>/i);
-    const descMatch = html.match(/<meta\s+name="description"\s+content="([^"]*)"/i);
-    const canonMatch = html.match(/<link\s+rel="canonical"\s+href="([^"]*)"/i);
+    const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+    const descMatch = html.match(/<meta[^>]*name="description"[^>]*content="([^"]*)"/i);
+    const canonMatch = html.match(/<link[^>]*rel="canonical"[^>]*href="([^"]*)"/i);
     if (!titleMatch || !decodeEntities(titleMatch[1])) {
       throw new Error(`Missing <title> in ${rel}`);
     }

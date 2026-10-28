@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useSearchParams, useNavigate, useLocation, Link } from "react-router-dom";
-import { Helmet } from "react-helmet-async";
+import SEOHead from "@/components/seo/SEOHead";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Cake,
@@ -280,18 +280,17 @@ export const CakesCategoryPage: React.FC = () => {
 
   return (
     <div className="bg-[#fcfaf7] min-h-screen">
-      <Helmet>
-        <title>Order Cakes Online | Spring Blossoms Florist</title>
-        <meta
-          name="description"
-          content="Order freshly crafted cakes online for birthdays, anniversaries and special celebrations. Discover chocolate, red velvet, black forest, fruit cakes and gift combinations at Spring Blossoms Florist."
-        />
-        <link rel="canonical" href={canonicalUrl} />
-        <meta property="og:title" content="Order Cakes Online | Spring Blossoms Florist" />
-        <meta property="og:description" content="Order freshly crafted cakes online for birthdays, anniversaries and special celebrations. Discover chocolate, red velvet, black forest, fruit cakes and gift combinations at Spring Blossoms Florist." />
-        <meta property="og:url" content={canonicalUrl} />
-        <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
-      </Helmet>
+      <SEOHead
+        title="Order Cakes Online | Spring Blossoms Florist"
+        description="Order freshly crafted cakes online for birthdays, anniversaries and special celebrations. Discover chocolate, red velvet, black forest, fruit cakes and gift combinations at Spring Blossoms Florist."
+        canonical={canonicalUrl}
+        breadcrumbs={[
+          { name: "Home", item: "/" },
+          { name: "Shop", item: "/shop" },
+          { name: "Cakes", item: canonicalUrl },
+        ]}
+        jsonLd={[structuredData]}
+      />
 
       {/* Breadcrumbs */}
       <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-10 pt-5">

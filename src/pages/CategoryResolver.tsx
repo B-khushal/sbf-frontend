@@ -1,7 +1,7 @@
 import React, { useEffect, useState, lazy, Suspense } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import api from '@/services/api';
-import ShopPage from './ShopPage';
+import ShopPage, { TARGET_CATEGORY_SEO } from './ShopPage';
 import NotFound from './NotFound';
 import { Loader2 } from 'lucide-react';
 import { useSeasonalCampaign } from '@/contexts/SeasonalCampaignContext';
@@ -104,6 +104,33 @@ const CategoryResolver: React.FC = () => {
     resolveUrl();
   }, [activeCampaign, currentPath, categorySlug, normalizedPath]);
 
+  if (activeCampaign) {
+    return (
+      <Suspense fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <Loader2 className="animate-spin rounded-full h-12 w-12 border-2 border-primary mx-auto" />
+        </div>
+      }>
+        <SeasonalCampaignPage slug={activeCampaign.slug} />
+      </Suspense>
+    );
+  }
+
+  const targetSeoConfig = TARGET_CATEGORY_SEO[normalizedPath];
+  const fallbackCategory = targetSeoConfig
+    ? {
+        slug: normalizedPath,
+        name: targetSeoConfig.h1,
+        metaTitle: targetSeoConfig.title,
+        metaDescription: targetSeoConfig.description,
+        categoryUrl: targetSeoConfig.canonical,
+      }
+    : null;
+
+  if (fallbackCategory) {
+    return <ShopPage resolvedCategory={resolvedCategory || fallbackCategory} />;
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-bloom-blue-50 via-bloom-pink-50 to-bloom-green-50">
@@ -119,18 +146,6 @@ const CategoryResolver: React.FC = () => {
     // Perform browser redirect
     navigate(shouldRedirect, { replace: true });
     return null;
-  }
-
-  if (activeCampaign) {
-    return (
-      <Suspense fallback={
-        <div className="min-h-screen flex items-center justify-center">
-          <Loader2 className="animate-spin rounded-full h-12 w-12 border-2 border-primary mx-auto" />
-        </div>
-      }>
-        <SeasonalCampaignPage slug={activeCampaign.slug} />
-      </Suspense>
-    );
   }
 
   if (error || !resolvedCategory) {

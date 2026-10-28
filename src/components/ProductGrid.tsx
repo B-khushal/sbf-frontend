@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { Heart, ShoppingBag, Star, ArrowRight, Sparkles, Wand2, ChevronLeft, ChevronRight, Play, Scale } from "lucide-react";
+import { Heart, ShoppingBag, Star, ArrowRight, Sparkles, Wand2, ChevronLeft, ChevronRight, Play, Scale, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -182,10 +182,8 @@ const ProductGrid = ({ products, title, subtitle, className, loading, onAddToCar
     }
   };
 
-  // Create circular product list for seamless scrolling
-  const circularProducts = horizontal && visibleProducts.length > 0
-    ? [...visibleProducts, ...visibleProducts, ...visibleProducts] // Triple the products for seamless loop
-    : visibleProducts;
+  // Avoid duplicating DOM nodes in horizontal scroll
+  const circularProducts = visibleProducts;
 
   return (
     <section className={cn("py-8 sm:py-12 lg:py-16 xl:py-20 px-3 sm:px-4 md:px-6 lg:px-8", className)}>
@@ -541,23 +539,25 @@ export const ProductCard = ({ product, onAddToCart }: {
           {/* Quick View Hover overlay (desktop only) */}
           <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-10 hidden md:flex">
             <Button
-              size="sm"
+              size="icon"
               variant="secondary"
-              className="bg-white text-gray-800 border-0 shadow-md hover:bg-white/95 text-xs font-semibold rounded-xl px-4 py-2 transition-transform duration-300 translate-y-2 group-hover:translate-y-0"
+              aria-label={`Preview ${product.title}`}
+              title={`Preview ${product.title}`}
+              className="bg-white text-gray-800 border-0 shadow-md hover:bg-white/95 h-9 w-9 rounded-full transition-transform duration-300 translate-y-2 group-hover:translate-y-0"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 setIsQuickViewOpen(true);
               }}
             >
-              Quick View
+              <Eye className="h-4 w-4" />
             </Button>
           </div>
 
           {/* Image 1 (Default) */}
           <ProtectedImage
             src={getImageUrl(product.images[0], { width: 500 }) || '/images/placeholder.svg'}
-            alt={`${product.title} - ${product.category === 'Cakes' ? 'Celebration Cake' : product.category === 'Combos' ? 'Flower & Cake Combo' : `${product.category || 'Fresh Floral'} Arrangement`} Spring Blossoms Florist Hyderabad`}
+            alt={product.title}
             className={cn(
               "absolute inset-0 w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-105",
               isOutOfStock && "grayscale-[20%] opacity-90",
@@ -571,7 +571,7 @@ export const ProductCard = ({ product, onAddToCart }: {
           {product.images.length > 1 && (
             <ProtectedImage
               src={getImageUrl(product.images[1], { width: 500 })}
-              alt={`${product.title} detail view - Spring Blossoms Florist`}
+              alt={`${product.title} alternate view`}
               className={cn(
                 "absolute inset-0 w-full h-full object-cover transition-opacity duration-700 opacity-0 group-hover:opacity-100 group-hover:scale-105",
                 isOutOfStock && "grayscale-[20%] opacity-90"
@@ -592,9 +592,9 @@ export const ProductCard = ({ product, onAddToCart }: {
           <div className="space-y-1.5 xs:space-y-2">
             {/* Title container with exact height of 2 lines */}
             <div className="min-h-[2.25rem] md:min-h-[2.5rem] flex items-start overflow-hidden">
-              <h3 className="font-semibold text-xs sm:text-sm text-gray-800 leading-tight line-clamp-2 group-hover:text-bloom-pink-600 transition-colors">
+              <p className="font-semibold text-xs sm:text-sm text-gray-800 leading-tight line-clamp-2 group-hover:text-bloom-pink-600 transition-colors">
                 {product.title}
-              </h3>
+              </p>
             </div>
 
             {/* Rating & Delivery Row */}
@@ -769,13 +769,15 @@ export const ProductCard = ({ product, onAddToCart }: {
         </div>
       </div>
 
-      {/* Quick View Modal */}
-      <QuickViewModal
-        product={product}
-        isOpen={isQuickViewOpen}
-        onClose={() => setIsQuickViewOpen(false)}
-        onAddToCart={onAddToCart}
-      />
+      {/* Quick View Modal — only mounted when open */}
+      {isQuickViewOpen && (
+        <QuickViewModal
+          product={product}
+          isOpen={isQuickViewOpen}
+          onClose={() => setIsQuickViewOpen(false)}
+          onAddToCart={onAddToCart}
+        />
+      )}
     </>
   );
 };

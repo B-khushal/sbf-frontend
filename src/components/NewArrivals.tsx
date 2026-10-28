@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 import { cn } from "@/lib/utils";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { Heart, ShoppingBag, Star, ArrowRight, Sparkles, Wand2, ChevronLeft, ChevronRight, Flower2, Play } from "lucide-react";
+import { Heart, ShoppingBag, Star, ArrowRight, Sparkles, Wand2, ChevronLeft, ChevronRight, Flower2, Play, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import useCart from "@/hooks/use-cart";
@@ -607,16 +607,18 @@ const LuxuryProductCard = ({
         {/* Quick View Trigger Hover Overlay */}
         <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-center justify-center z-10">
           <Button
-            size="sm"
+            size="icon"
             variant="secondary"
+            aria-label={`Preview ${product.title}`}
+            title={`Preview ${product.title}`}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
               onOpenQuickView(product);
             }}
-            className="bg-white/95 text-gray-800 border-0 shadow-md hover:bg-black hover:text-white transition-all duration-300 translate-y-3 group-hover:translate-y-0 text-xs font-semibold rounded-full px-5 py-2.5"
+            className="bg-white/95 text-gray-800 border-0 shadow-md hover:bg-black hover:text-white transition-all duration-300 translate-y-3 group-hover:translate-y-0 rounded-full h-10 w-10"
           >
-            Quick View
+            <Eye className="h-4 w-4" />
           </Button>
         </div>
 
@@ -669,9 +671,9 @@ const LuxuryProductCard = ({
           )}
 
           {/* Title */}
-          <h3 className="font-medium text-sm md:text-base text-gray-800 leading-snug line-clamp-2 transition-colors duration-300 group-hover:text-[#b53d69]">
+          <p className="font-medium text-sm md:text-base text-gray-800 leading-snug line-clamp-2 transition-colors duration-300 group-hover:text-[#b53d69]">
             {product.title}
-          </h3>
+          </p>
         </div>
 
         <div className="mt-4 space-y-3.5">
@@ -730,7 +732,7 @@ const LuxuryProductCard = ({
               className="w-full h-10 text-xs font-semibold rounded-xl border border-[#b53d69]/30 bg-transparent text-[#b53d69] hover:bg-gradient-to-r hover:from-[#b53d69] hover:to-rose-500 hover:text-white hover:border-0 shadow-sm transition-all duration-500 flex items-center justify-center gap-2 active:scale-95"
             >
               <ShoppingBag className="h-3.5 w-3.5" />
-              Quick Add
+              Add to Cart
             </Button>
           )}
         </div>

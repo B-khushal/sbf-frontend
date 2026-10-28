@@ -192,9 +192,9 @@ interface SettingsContextType {
 }
 
 const defaultHeaderSettings: HeaderSettings = {
-  logo: "https://res.cloudinary.com/djtrhfqan/image/upload/v1791793252/logo_final_tp7ymk.png",
-  stickyLogo: "https://res.cloudinary.com/djtrhfqan/image/upload/v1791793251/logo_f_without_bg_mdrtys.png",
-  mobileLogo: "https://res.cloudinary.com/djtrhfqan/image/upload/v1791793252/logo_final_tp7ymk.png",
+  logo: "/images/logo-header.png",
+  stickyLogo: "/images/logo-header.png",
+  mobileLogo: "/images/logo-header.png",
   announcementBar: {
     enabled: true,
     text: 'Use code SBF10 to get an exclusive discount — only on your first order! 🌸',
@@ -391,7 +391,19 @@ export const SettingsProvider = ({ children }: SettingsProviderProps) => {
   const [heroSlides, setHeroSlides] = useState<any[]>(cached?.heroSlides || []);
   const [mobileBanners, setMobileBanners] = useState<any[]>(cached?.mobileBanners || []);
   const [promoBanners, setPromoBanners] = useState<any[]>(cached?.promoBanners || []);
-  const [homeSections, setHomeSections] = useState<HomeSection[]>(cached?.homeSections || []);
+  const [homeSections, setHomeSections] = useState<HomeSection[]>(
+    cached?.homeSections && cached.homeSections.length > 0
+      ? cached.homeSections
+      : [
+          { id: 'hero', type: 'hero', enabled: true, order: 1, title: '', subtitle: '' },
+          { id: 'categories', type: 'categories', enabled: true, order: 2, title: 'Explore Categories', subtitle: 'Curated floral collections for every moment' },
+          { id: 'whychooseus', type: 'whychooseus', enabled: true, order: 2.5, title: '', subtitle: '' },
+          { id: 'featured', type: 'featured', enabled: true, order: 3, title: 'Featured Collection', subtitle: 'Handpicked bestselling bouquets and floral gifts' },
+          { id: 'occasions', type: 'occasions', enabled: true, order: 4, title: 'Shop by Occasion', subtitle: 'Celebrate birthdays, anniversaries, romance and milestones' },
+          { id: 'new_arrivals', type: 'new_arrivals', enabled: true, order: 5, title: 'New Arrivals', subtitle: 'Freshly designed floral arrangements added to our studio collection' },
+          { id: 'social', type: 'social', enabled: true, order: 99, title: '', subtitle: '' },
+        ]
+  );
   const [categories, setCategories] = useState<Category[]>(cached?.categories || []);
   const [shopCategories, setShopCategories] = useState<Category[]>(cached?.shopCategories || []);
   const [headerSettings, setHeaderSettings] = useState<HeaderSettings>(cached?.headerSettings ? { ...defaultHeaderSettings, ...cached.headerSettings } : defaultHeaderSettings);
@@ -413,8 +425,8 @@ export const SettingsProvider = ({ children }: SettingsProviderProps) => {
   const [draftSettings, setDraftSettings] = useState<any>(null);
   const [history, setHistory] = useState<any[]>([]);
 
-  // Only show skeleton on first visit if no cached sections exist
-  const [loading, setLoading] = useState(!cached || !cached.homeSections || cached.homeSections.length === 0);
+  // Default homeSections are immediately available so initial render is never blocked
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const applyTheme = useCallback((theme: any) => {

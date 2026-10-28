@@ -357,17 +357,18 @@ const OccasionProductCard = ({
           {config.showQuickView !== false && (
             <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-10 hidden md:flex">
               <Button
-                size="sm"
+                size="icon"
                 variant="secondary"
+                aria-label={`Preview ${formattedTitle}`}
+                title={`Preview ${formattedTitle}`}
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
                   setIsQuickViewOpen(true);
                 }}
-                className="bg-white/95 text-slate-900 border-none shadow-md hover:bg-slate-900 hover:text-white transition-all duration-300 font-bold rounded-full px-4 py-1.5 text-xs"
+                className="bg-white/95 text-slate-900 border-none shadow-md hover:bg-slate-900 hover:text-white transition-all duration-300 rounded-full h-9 w-9"
               >
-                <Eye className="h-3.5 w-3.5 mr-1.5" />
-                Quick View
+                <Eye className="h-4 w-4" />
               </Button>
             </div>
           )}
@@ -414,9 +415,9 @@ const OccasionProductCard = ({
           <div className="space-y-1.5">
             {/* Title Container (fixed 2 lines) */}
             <div className="min-h-[2.35rem] flex items-start overflow-hidden">
-              <h3 className="font-bold text-xs sm:text-sm text-slate-800 line-clamp-2 leading-snug group-hover:text-amber-800 transition-colors">
+              <p className="font-bold text-xs sm:text-sm text-slate-800 line-clamp-2 leading-snug group-hover:text-amber-800 transition-colors">
                 {formattedTitle}
-              </h3>
+              </p>
             </div>
 
             {/* Rating & Same-Day Delivery Row */}
@@ -526,18 +527,20 @@ const OccasionProductCard = ({
         </div>
       </div>
 
-      {/* Quick View Modal */}
-      <QuickViewModal
-        product={{
-          ...product,
-          price: effectivePrice,
-          originalPrice: activeComparePrice || effectivePrice,
-          priceVariants: product.priceVariants,
-        } as any}
-        isOpen={isQuickViewOpen}
-        onClose={() => setIsQuickViewOpen(false)}
-        onAddToCart={onAddToCart}
-      />
+      {/* Quick View Modal — only mounted when open */}
+      {isQuickViewOpen && (
+        <QuickViewModal
+          product={{
+            ...product,
+            price: effectivePrice,
+            originalPrice: activeComparePrice || effectivePrice,
+            priceVariants: product.priceVariants,
+          } as any}
+          isOpen={isQuickViewOpen}
+          onClose={() => setIsQuickViewOpen(false)}
+          onAddToCart={onAddToCart}
+        />
+      )}
     </>
   );
 };

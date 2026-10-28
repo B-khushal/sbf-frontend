@@ -305,7 +305,7 @@ const FilterSection: React.FC<{ title: string; children: React.ReactNode }> = ({
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex justify-between items-center text-left"
       >
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-sky-500 to-pink-500">{title}</h3>
+        <p className="text-sm font-semibold uppercase tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-sky-500 to-pink-500">{title}</p>
         <ChevronDown
           size={18}
           className={`text-sky-500 transform transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
@@ -688,7 +688,7 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
 
   // Initialize from URL parameters
   useEffect(() => {
-    const urlSearchQuery = searchParams.get('search');
+    const urlSearchQuery = searchParams.get('q') || searchParams.get('search');
     if (urlSearchQuery) {
       setSearchQuery(urlSearchQuery);
     }
@@ -1067,7 +1067,7 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
                       
                       {/* Content Overlay */}
                       <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 text-white">
-                        <h3 className="text-xs sm:text-sm lg:text-base font-bold mb-1 leading-tight">{category.name}</h3>
+                        <p className="text-xs sm:text-sm lg:text-base font-bold mb-1 leading-tight">{category.name}</p>
                         <p className="text-xs text-white/80 hidden sm:block">{category.count} products</p>
                       </div>
                       

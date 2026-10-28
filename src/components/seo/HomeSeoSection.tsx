@@ -23,28 +23,24 @@ interface FAQItem {
 
 const FAQ_DATA: FAQItem[] = [
   {
-    question: "Do you offer same-day flower and cake delivery in Hyderabad and Secunderabad?",
-    answer: "Yes! Spring Blossoms Florist provides guaranteed same-day flower, cake, and gift delivery across both Hyderabad and Secunderabad. Place your order during our business hours, and our local delivery team will hand-deliver fresh blooms and cakes right to your recipient's doorstep in 2-4 hours."
+    question: "Do you offer same-day flower delivery in Hyderabad?",
+    answer: "Yes! Spring Blossoms Florist provides same-day flower, cake, and gift delivery across Hyderabad and Secunderabad. Simply place your order during daytime hours and select your preferred delivery time slot at checkout."
   },
   {
-    question: "Can I find bouquets near me or order flowers delivery near me in Hyderabad?",
-    answer: "Yes. As a premier local florist with our central design studio located at Mehdipatnam, Hyderabad, we fulfill 'bouquets near me' and 'flowers delivery near me' searches with rapid hyper-local delivery across Banjara Hills, Jubilee Hills, Gachibowli, Hitec City, Madhapur, Kukatpally, Begumpet, Secunderabad, and 50+ localities."
+    question: "Can I schedule midnight cake and flower delivery in Hyderabad?",
+    answer: "Absolutely. Our Midnight Surprise Delivery slot (11:00 PM – 11:59 PM) is available for birthdays, anniversaries, and romantic surprises across all major localities in Hyderabad and Secunderabad."
   },
   {
-    question: "What types of rose bouquets do you offer (red, pink, yellow, white)?",
-    answer: "We carry farm-fresh Dutch roses in all signature colors: romantic Red Rose bouquets (10, 20, 50, and 100 stems), elegant Pink Rose arrangements, cheerful Yellow Roses for friendships and celebrations, and pristine White Rose bouquets, as well as multi-color mixed floral arrangements."
+    question: "What are the delivery charges across Hyderabad and Secunderabad?",
+    answer: "New customers enjoy Free Delivery on their 1st order! Additionally, standard delivery is FREE on all orders of ₹999 and above. Orders below ₹999 carry a nominal ₹150 delivery fee."
   },
   {
-    question: "Can I send flowers and a cake together as a combo in Hyderabad?",
-    answer: "Yes, our flower and cake combos are among our bestsellers! Choose from classic Dutch Truffle, Black Forest, Red Velvet, Pineapple, or Butterscotch cakes paired with vibrant red roses, exotic lilies, or sunflowers, along with personalized greeting notes."
+    question: "How do you keep flowers and cakes fresh during delivery?",
+    answer: "Every bouquet is handcrafted using fresh-cut Dutch roses, lilies, orchids, and seasonal blooms shortly before dispatch from our Mehdipatnam studio. Cakes are sourced fresh and transported in temperature-controlled packaging."
   },
   {
-    question: "How do your delivery charges and midnight surprise slots work?",
-    answer: "We offer Free Delivery on your 1st order for all new customers! Standard delivery is FREE on orders of ₹999 and above. You can also book our popular Midnight Surprise Delivery (11:00 PM – 11:59 PM) for birthdays and anniversaries, or hourly Fixed Time delivery during checkout."
-  },
-  {
-    question: "Where is Spring Blossoms Florist located in Hyderabad?",
-    answer: "Our flagship floral studio is located at Pillar Number 32, Najam Centre, A/B, Door No. 12-2, 786, Rethi Bowli Road, Mehdipatnam, Hyderabad, Telangana 500006. You can also reach our customer support directly at +91 9949683222 for custom styling and urgent orders."
+    question: "Can I include a personalized message card with my gift?",
+    answer: "Yes, every order includes a complimentary message card where you can add your custom note for the recipient during checkout."
   }
 ];
 
@@ -97,7 +93,7 @@ export const HomeSeoSection: React.FC = () => {
             <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center mb-3">
               <Truck className="w-5 h-5" />
             </div>
-            <h3 className="text-base font-bold text-slate-900">1st Order Free Delivery</h3>
+            <p className="text-base font-bold text-slate-900">1st Order Free Delivery</p>
             <p className="mt-1 text-xs text-slate-600 leading-relaxed">
               Enjoy ₹0 delivery fee on your first order! Plus free standard delivery on orders ₹999+ across Twin Cities.
             </p>
@@ -107,7 +103,7 @@ export const HomeSeoSection: React.FC = () => {
             <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center mb-3">
               <Clock className="w-5 h-5" />
             </div>
-            <h3 className="text-base font-bold text-slate-900">Midnight &amp; Same-Day</h3>
+            <p className="text-base font-bold text-slate-900">Midnight &amp; Same-Day</p>
             <p className="mt-1 text-xs text-slate-600 leading-relaxed">
               Order by afternoon for same-day delivery, or book an 11 PM – 12 AM Midnight Surprise for birthdays and anniversaries.
             </p>
@@ -117,7 +113,7 @@ export const HomeSeoSection: React.FC = () => {
             <div className="w-10 h-10 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center mb-3">
               <Heart className="w-5 h-5" />
             </div>
-            <h3 className="text-base font-bold text-slate-900">Farm-Fresh Florals</h3>
+            <p className="text-base font-bold text-slate-900">Farm-Fresh Florals</p>
             <p className="mt-1 text-xs text-slate-600 leading-relaxed">
               Dutch roses, oriental lilies, carnations, and orchids arranged by master florists at our Mehdipatnam design studio.
             </p>
@@ -127,7 +123,7 @@ export const HomeSeoSection: React.FC = () => {
             <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center mb-3">
               <Cake className="w-5 h-5" />
             </div>
-            <h3 className="text-base font-bold text-slate-900">Cakes With Flowers</h3>
+            <p className="text-base font-bold text-slate-900">Cakes With Flowers</p>
             <p className="mt-1 text-xs text-slate-600 leading-relaxed">
               Pair freshly baked Dutch Truffle, Red Velvet, or Pineapple cakes with custom bouquets and chocolates in one order.
             </p>
@@ -379,27 +375,30 @@ export const HomeSeoSection: React.FC = () => {
                     isOpen ? "border-rose-300 shadow-sm" : "border-slate-200 hover:border-slate-300"
                   )}
                 >
-                  <button
-                    type="button"
-                    onClick={() => toggleFaq(index)}
-                    className="w-full px-5 py-4 text-left flex items-center justify-between gap-4 cursor-pointer select-none"
-                    aria-expanded={isOpen}
-                  >
-                    <span className="text-sm sm:text-base font-semibold text-slate-800">
-                      {faq.question}
-                    </span>
-                    <ChevronDown 
-                      className={cn(
-                        "w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200",
-                        isOpen && "rotate-180 text-rose-600"
-                      )} 
-                    />
-                  </button>
-                  {isOpen && (
-                    <div className="px-5 pb-4 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100 pt-3">
-                      {faq.answer}
-                    </div>
-                  )}
+                  <h3 className="m-0">
+                    <button
+                      type="button"
+                      onClick={() => toggleFaq(index)}
+                      className="w-full px-5 py-4 text-left flex items-center justify-between gap-4 cursor-pointer select-none"
+                      aria-expanded={isOpen}
+                    >
+                      <span className="text-sm sm:text-base font-semibold text-slate-800">
+                        {faq.question}
+                      </span>
+                      <ChevronDown 
+                        className={cn(
+                          "w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200",
+                          isOpen && "rotate-180 text-rose-600"
+                        )} 
+                      />
+                    </button>
+                  </h3>
+                  <div className={cn(
+                    "px-5 pb-4 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100 pt-3",
+                    !isOpen && "hidden"
+                  )}>
+                    {faq.answer}
+                  </div>
                 </div>
               );
             })}

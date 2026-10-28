@@ -199,32 +199,32 @@ const applyRouteSeoToHtml = (html: string, routePath: string): string => {
   let updated = html;
   updated = updated.replace(/<title>[\s\S]*?<\/title>/i, `<title>${safeTitle}</title>`);
   updated = updated.replace(
-    /<meta\s+name="description"\s+content="[^"]*"\s*\/?>/i,
-    `<meta name="description" content="${safeDesc}" />`
+    /<meta\s+name="description"\s+content="[^"]*"[^>]*>/i,
+    `<meta name="description" content="${safeDesc}" data-rh="true" />`
   );
   updated = updated.replace(
-    /<meta\s+property="og:title"\s+content="[^"]*"\s*\/?>/i,
-    `<meta property="og:title" content="${safeTitle}" />`
+    /<meta\s+property="og:title"\s+content="[^"]*"[^>]*>/i,
+    `<meta property="og:title" content="${safeTitle}" data-rh="true" />`
   );
   updated = updated.replace(
-    /<meta\s+property="og:description"\s+content="[^"]*"\s*\/?>/i,
-    `<meta property="og:description" content="${safeDesc}" />`
+    /<meta\s+property="og:description"\s+content="[^"]*"[^>]*>/i,
+    `<meta property="og:description" content="${safeDesc}" data-rh="true" />`
   );
   updated = updated.replace(
-    /<meta\s+property="og:url"\s+content="[^"]*"\s*\/?>/i,
-    `<meta property="og:url" content="${safeCanonical}" />`
+    /<meta\s+property="og:url"\s+content="[^"]*"[^>]*>/i,
+    `<meta property="og:url" content="${safeCanonical}" data-rh="true" />`
   );
   updated = updated.replace(
-    /<meta\s+name="twitter:title"\s+content="[^"]*"\s*\/?>/i,
-    `<meta name="twitter:title" content="${safeTitle}" />`
+    /<meta\s+name="twitter:title"\s+content="[^"]*"[^>]*>/i,
+    `<meta name="twitter:title" content="${safeTitle}" data-rh="true" />`
   );
   updated = updated.replace(
-    /<meta\s+name="twitter:description"\s+content="[^"]*"\s*\/?>/i,
-    `<meta name="twitter:description" content="${safeDesc}" />`
+    /<meta\s+name="twitter:description"\s+content="[^"]*"[^>]*>/i,
+    `<meta name="twitter:description" content="${safeDesc}" data-rh="true" />`
   );
   updated = updated.replace(
-    /<link\s+rel="canonical"\s+href="[^"]*"\s*\/?>/i,
-    `<link rel="canonical" href="${safeCanonical}" />`
+    /<link\s+rel="canonical"\s+href="[^"]*"[^>]*>/i,
+    `<link rel="canonical" href="${safeCanonical}" data-rh="true" />`
   );
   updated = updated.replace(
     /<script\s+type="application\/ld\+json"\s+data-prerendered-seo="home">[\s\S]*?<\/script>\s*/gi,

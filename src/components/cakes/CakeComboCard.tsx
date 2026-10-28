@@ -173,9 +173,9 @@ export const CakeComboCard: React.FC<CakeComboCardProps> = ({ combo, className }
           </div>
 
           {/* Title - Consistent 2-line height */}
-          <h3 className="font-bold text-xs sm:text-sm text-slate-800 line-clamp-2 min-h-[2.25rem] sm:min-h-[2.5rem] leading-snug group-hover:text-rose-700 transition-colors">
+          <p className="font-bold text-xs sm:text-sm text-slate-800 line-clamp-2 min-h-[2.25rem] sm:min-h-[2.5rem] leading-snug group-hover:text-rose-700 transition-colors">
             {combo.name || combo.title}
-          </h3>
+          </p>
 
           {/* Combo Items Included Pills - Fixed height row */}
           <div className="flex flex-wrap gap-1.5 pt-0.5 min-h-[1.75rem] items-center">

@@ -133,10 +133,10 @@ const HomePage = () => {
         setLoading(true);
         setError("");
 
-        // Fetch products from API
+        // Fetch products from API (capped for homepage showcase performance)
         const [featuredResponse, newResponse] = await Promise.allSettled([
-          api.get('/products/featured'),
-          api.get('/products/new')
+          api.get('/products/featured', { params: { limit: 8 } }),
+          api.get('/products/new', { params: { limit: 8 } })
         ]);
 
         const processProducts = (products) => {
@@ -152,11 +152,11 @@ const HomePage = () => {
         };
 
         const featuredData = featuredResponse.status === 'fulfilled'
-          ? processProducts(featuredResponse.value.data.products || featuredResponse.value.data || [])
+          ? processProducts(featuredResponse.value.data.products || featuredResponse.value.data || []).slice(0, 8)
           : [];
 
         const newData = newResponse.status === 'fulfilled'
-          ? processProducts(newResponse.value.data.products || newResponse.value.data || [])
+          ? processProducts(newResponse.value.data.products || newResponse.value.data || []).slice(0, 8)
           : [];
 
         setFeaturedProducts(featuredData);
@@ -301,15 +301,15 @@ const HomePage = () => {
     return (
       <div className="min-h-screen relative">
         <SEOHead
-          title="Flower Delivery in Hyderabad | Spring Blossoms Florist"
-          description="Shop fresh bouquets, roses and flower gifts in Hyderabad with Spring Blossoms Florist. Explore flowers for special occasions, cakes and gift combos."
+          title="Flowers & Cakes Delivery in Hyderabad | SB Florist"
+          description="Order fresh flowers, cakes and gifts in Hyderabad & Secunderabad. Free delivery on your first order and ₹999+ orders, with same-day and midnight delivery."
           canonical="/"
           ogType="website"
           jsonLd={HOME_PAGE_SCHEMAS}
         />
         <div className="max-w-7xl mx-auto px-4 pt-4 pb-2 text-center">
           <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
-            Flower Delivery in Hyderabad for Every Special Occasion
+            Flowers, Cakes &amp; Gifts Delivery in Hyderabad
           </h1>
           <p className="mt-2 text-xs sm:text-sm text-slate-600 max-w-2xl mx-auto">
             Handcrafted bouquets, fresh roses, and artisanal celebration cakes delivered with care across Hyderabad &amp; Secunderabad.
@@ -324,8 +324,8 @@ const HomePage = () => {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <SEOHead
-          title="Flower Delivery in Hyderabad | Spring Blossoms Florist"
-          description="Shop fresh bouquets, roses and flower gifts in Hyderabad with Spring Blossoms Florist. Explore flowers for special occasions, cakes and gift combos."
+          title="Flowers & Cakes Delivery in Hyderabad | SB Florist"
+          description="Order fresh flowers, cakes and gifts in Hyderabad & Secunderabad. Free delivery on your first order and ₹999+ orders, with same-day and midnight delivery."
           canonical="/"
           ogType="website"
           jsonLd={HOME_PAGE_SCHEMAS}
@@ -347,8 +347,8 @@ const HomePage = () => {
       className="min-h-screen relative"
     >
       <SEOHead
-        title="Flower Delivery in Hyderabad | Spring Blossoms Florist"
-        description="Shop fresh bouquets, roses and flower gifts in Hyderabad with Spring Blossoms Florist. Explore flowers for special occasions, cakes and gift combos."
+        title="Flowers & Cakes Delivery in Hyderabad | SB Florist"
+        description="Order fresh flowers, cakes and gifts in Hyderabad & Secunderabad. Free delivery on your first order and ₹999+ orders, with same-day and midnight delivery."
         canonical="/"
         ogType="website"
         jsonLd={HOME_PAGE_SCHEMAS}
@@ -384,7 +384,7 @@ const HomePage = () => {
                 <SeasonalCampaignHomeSection />
                 <div className="max-w-7xl mx-auto px-4 pt-4 pb-2 text-center">
                   <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
-                    Flower Delivery in Hyderabad for Every Special Occasion
+                    Flowers, Cakes &amp; Gifts Delivery in Hyderabad
                   </h1>
                   <p className="mt-2 text-xs sm:text-sm text-slate-600 max-w-2xl mx-auto">
                     Handcrafted bouquets, fresh roses, and artisanal celebration cakes delivered with care across Hyderabad &amp; Secunderabad.
@@ -592,15 +592,7 @@ const HomePage = () => {
         }
       })}
 
-      {/* Frequently Asked Questions */}
-      <ContextualFaq
-        location="home"
-        title="Frequently Asked Questions"
-        subtitle="Quick answers about placing orders, same-day delivery, and fresh blooms in Hyderabad."
-        limit={6}
-      />
-
-      {/* SEO Showcase Section */}
+      {/* SEO Showcase Section (includes Frequently Asked Questions matching FAQPage schema) */}
       <HomeSeoSection />
 
       {/* Valentine marketing overlays */}

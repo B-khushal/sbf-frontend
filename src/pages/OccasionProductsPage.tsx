@@ -13,7 +13,7 @@ import { Loader2, Sparkles, Filter, X, ArrowUpDown, ChevronRight, Inbox, Clock }
 import * as LucideIcons from 'lucide-react';
 import { cn } from '@/lib/utils';
 import CategoryResolver from './CategoryResolver';
-import { PriceRangeFilterCard, PRICE_FILTER_MIN, PRICE_FILTER_MAX } from './ShopPage';
+import { PriceRangeFilterCard, PRICE_FILTER_MIN, PRICE_FILTER_MAX, TARGET_CATEGORY_SEO } from './ShopPage';
 import { getProductEffectivePrice } from '@/utils/pricing';
 
 export interface OccasionSeoConfig {
@@ -255,6 +255,9 @@ export const OccasionProductsPage: React.FC = () => {
 
   // For root-level /:slug routes that are NOT known occasions, wait for API or delegate to CategoryResolver
   if (!isKnownOccasion) {
+    if (normalizedSlug && TARGET_CATEGORY_SEO[normalizedSlug]) {
+      return <CategoryResolver />;
+    }
     if (loading) {
       return (
         <div className="min-h-screen bg-slate-50/50 flex flex-col items-center justify-center py-20 gap-4">

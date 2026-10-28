@@ -9,10 +9,11 @@ export const FLORIST_LOCAL_BUSINESS_SCHEMA = {
   name: 'Spring Blossoms Florist',
   url: FLORIST_BUSINESS_URL,
   telephone: '+919949683222',
+  priceRange: '₹₹',
   image: FLORIST_BUSINESS_IMAGE,
   logo: FLORIST_BUSINESS_IMAGE,
   description:
-    'Spring Blossoms Florist offers flower bouquets, floral arrangements and gifts for birthdays, anniversaries, celebrations and other special occasions.',
+    'Spring Blossoms Florist offers flower bouquets, floral arrangements, celebration cakes and gifts for birthdays, anniversaries, celebrations and other special occasions across Hyderabad and Secunderabad.',
   address: {
     '@type': 'PostalAddress',
     streetAddress:
@@ -27,6 +28,10 @@ export const FLORIST_LOCAL_BUSINESS_SCHEMA = {
     latitude: 17.395077,
     longitude: 78.433996,
   },
+  areaServed: [
+    { '@type': 'City', name: 'Hyderabad' },
+    { '@type': 'City', name: 'Secunderabad' },
+  ],
   hasMap: 'https://www.google.com/maps?cid=8660521669298042697',
   sameAs: ['https://www.google.com/maps?cid=8660521669298042697'],
   openingHoursSpecification: [
@@ -70,34 +75,42 @@ export const HOME_FAQ_SCHEMA = {
   mainEntity: [
     {
       '@type': 'Question',
-      name: 'Do you offer same-day flower and cake delivery in Hyderabad and Secunderabad?',
+      name: 'Do you offer same-day flower delivery in Hyderabad?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Yes! Spring Blossoms Florist provides same-day flower, cake, and gift delivery across both Hyderabad and Secunderabad. Place your order during business hours for doorstep delivery.',
+        text: 'Yes! Spring Blossoms Florist provides same-day flower, cake, and gift delivery across Hyderabad and Secunderabad. Simply place your order during daytime hours and select your preferred delivery time slot at checkout.',
       },
     },
     {
       '@type': 'Question',
-      name: 'How do your delivery charges and time slots work?',
+      name: 'Can I schedule midnight cake and flower delivery in Hyderabad?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Free Delivery on your 1st order for all new customers! Additionally, standard delivery is FREE on orders of ₹999 and above (₹150 for orders below ₹999). Midnight delivery is available between 11:00 PM and 11:59 PM.',
+        text: 'Absolutely. Our Midnight Surprise Delivery slot (11:00 PM – 11:59 PM) is available for birthdays, anniversaries, and romantic surprises across all major localities in Hyderabad and Secunderabad.',
       },
     },
     {
       '@type': 'Question',
-      name: 'Can I schedule a midnight flower delivery for birthdays or anniversaries?',
+      name: 'What are the delivery charges across Hyderabad and Secunderabad?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Absolutely! Our Midnight Surprise Delivery slot operates between 11:00 PM and 11:59 PM to surprise your loved ones right as the clock strikes midnight.',
+        text: 'New customers enjoy Free Delivery on their 1st order! Additionally, standard delivery is FREE on all orders of ₹999 and above. Orders below ₹999 carry a nominal ₹150 delivery fee.',
       },
     },
     {
       '@type': 'Question',
-      name: 'Where is Spring Blossoms Florist located in Hyderabad?',
+      name: 'How do you keep flowers and cakes fresh during delivery?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Our flagship floral studio is located at Pillar Number 32, Najam Centre, A/B, Door No. 12-2, 786, Rethi Bowli Road, Mehdipatnam, Hyderabad, Telangana 500006. Direct support: +91 9949683222.',
+        text: 'Every bouquet is handcrafted using fresh-cut Dutch roses, lilies, orchids, and seasonal blooms shortly before dispatch from our Mehdipatnam studio. Cakes are sourced fresh and transported in temperature-controlled packaging.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'Can I include a personalized message card with my gift?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Yes, every order includes a complimentary message card where you can add your custom note for the recipient during checkout.',
       },
     },
   ],

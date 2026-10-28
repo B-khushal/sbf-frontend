@@ -13,6 +13,9 @@ export interface SEOHeadProps {
   keywords?: string;
   ogType?: 'website' | 'product' | 'article';
   ogImage?: string;
+  ogImageWidth?: string | number;
+  ogImageHeight?: string | number;
+  ogImageAlt?: string;
   noindex?: boolean;
   jsonLd?: Record<string, any> | Array<Record<string, any>>;
   breadcrumbs?: BreadcrumbItem[];
@@ -20,7 +23,12 @@ export interface SEOHeadProps {
 
 export const SITE_ORIGIN = 'https://sbflorist.in';
 export const DEFAULT_BRAND = 'Spring Blossoms Florist';
-export const DEFAULT_OG_IMAGE = 'https://sbflorist.in/images/logo_final.png';
+export const DEFAULT_TITLE = 'Flowers & Cakes Delivery in Hyderabad | SB Florist';
+export const DEFAULT_DESCRIPTION =
+  'Order fresh flowers, cakes and gifts in Hyderabad & Secunderabad. Free delivery on your first order and ₹999+ orders, with same-day and midnight delivery.';
+export const DEFAULT_OG_IMAGE = 'https://sbflorist.in/images/og-preview.jpg';
+export const DEFAULT_OG_IMAGE_ALT =
+  'Spring Blossoms Florist — Flowers, Cakes & Gifts Delivery in Hyderabad & Secunderabad';
 
 export const serializeJsonLd = (schema: Record<string, any>): string =>
   JSON.stringify(schema).replace(/</g, '\\u003c');
@@ -64,21 +72,39 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
   keywords,
   ogType = 'website',
   ogImage = DEFAULT_OG_IMAGE,
+  ogImageWidth,
+  ogImageHeight,
+  ogImageAlt,
   noindex = false,
   jsonLd,
   breadcrumbs,
 }) => {
-  const finalTitle = title ? (title.includes('Spring Blossoms') || title.includes('SB Florist') ? title : `${title} | ${DEFAULT_BRAND}`) : `Flower Delivery in Hyderabad | ${DEFAULT_BRAND}`;
-  const finalDesc = description || 'Send fresh flower bouquets, roses and thoughtful gifts with Spring Blossoms Florist in Hyderabad. Explore flowers for birthdays, anniversaries and special occasions.';
+  const finalTitle = title
+    ? title.includes('Spring Blossoms') || title.includes('SB Florist')
+      ? title
+      : `${title} | ${DEFAULT_BRAND}`
+    : DEFAULT_TITLE;
+  const finalDesc = description || DEFAULT_DESCRIPTION;
   const finalCanonical = cleanCanonicalUrl(canonical);
-  const finalOgImage = ogImage.startsWith('/') ? `${SITE_ORIGIN}${ogImage}` : ogImage;
+  const rawOgImage = ogImage && !ogImage.includes('logo_final_tp7ymk.png') ? ogImage : DEFAULT_OG_IMAGE;
+  const finalOgImage = rawOgImage.startsWith('/') ? `${SITE_ORIGIN}${rawOgImage}` : rawOgImage;
+  const isDefaultPreview = finalOgImage === DEFAULT_OG_IMAGE;
+  const finalOgImageWidth = ogImageWidth ?? (isDefaultPreview ? '1200' : undefined);
+  const finalOgImageHeight = ogImageHeight ?? (isDefaultPreview ? '630' : undefined);
+  const finalOgImageAlt = ogImageAlt || (isDefaultPreview ? DEFAULT_OG_IMAGE_ALT : finalTitle);
 
   useLayoutEffect(() => {
     if (typeof document !== 'undefined') {
       const staticScripts = document.head.querySelectorAll('script[data-prerendered-seo]');
       staticScripts.forEach((el) => el.parentNode?.removeChild(el));
+
+      // Remove any non-Helmet static meta/canonical tags to prevent duplicate OG/Twitter/meta tags
+      const duplicateStaticTags = document.head.querySelectorAll(
+        'meta[name="description"]:not([data-rh]), meta[name="keywords"]:not([data-rh]), meta[name="robots"]:not([data-rh]), link[rel="canonical"]:not([data-rh]), meta[property^="og:"]:not([data-rh]), meta[name^="twitter:"]:not([data-rh])'
+      );
+      duplicateStaticTags.forEach((el) => el.parentNode?.removeChild(el));
     }
-  }, [finalCanonical]);
+  }, [finalCanonical, finalTitle, finalDesc]);
 
   // Build breadcrumb JSON-LD if provided
   const breadcrumbSchema = breadcrumbs && breadcrumbs.length > 0 ? {
@@ -123,6 +149,9 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
       <meta property="og:type" content={ogType} />
       <meta property="og:url" content={finalCanonical} />
       <meta property="og:image" content={finalOgImage} />
+      {finalOgImageWidth && <meta property="og:image:width" content={String(finalOgImageWidth)} />}
+      {finalOgImageHeight && <meta property="og:image:height" content={String(finalOgImageHeight)} />}
+      <meta property="og:image:alt" content={finalOgImageAlt} />
       <meta property="og:site_name" content={DEFAULT_BRAND} />
 
       {/* Twitter Cards */}
