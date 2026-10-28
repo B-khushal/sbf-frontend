@@ -150,6 +150,7 @@ const Footer = () => {
               { label: 'Track Order', href: '/profile' },
               { label: 'Contact', href: '/contact' },
               { label: 'About', href: '/about' },
+              { label: 'Sitemap', href: '/sitemap' },
             ].map((item) => (
               <Link
                 key={item.href}
@@ -558,6 +559,12 @@ const Footer = () => {
               className="text-gray-600 hover:text-primary transition-colors duration-300 font-medium"
             >
               Cancellation Policy
+            </Link>
+            <Link
+              to="/sitemap"
+              className="text-gray-600 hover:text-primary transition-colors duration-300 font-medium"
+            >
+              Sitemap
             </Link>
           </div>
         </div>

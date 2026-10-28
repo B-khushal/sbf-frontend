@@ -20,7 +20,7 @@
     "build:production": "NODE_ENV=production vite build --mode production",
     "lint": "eslint .",
     "preview": "vite preview --host 0.0.0.0 --port 3000",
-    "start": "vite preview --host 0.0.0.0 --port 3000",
+    "start": "node server.mjs",
     "optimize": "npm run build:production",
     "test:seo-h1": "node tests/seo-h1-audit.mjs"
   },

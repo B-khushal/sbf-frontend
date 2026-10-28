@@ -41,7 +41,7 @@ const CategoryResolver: React.FC = () => {
         const staticRoutes = [
           '/about', '/contact', '/login', '/signup', '/register', '/profile', '/account', '/orders', '/cart', '/wishlist',
           '/checkout', '/admin', '/vendor', '/terms', '/privacy', '/shipping',
-          '/refund-policy', '/cancellation-policy', '/faq', '/faqs'
+          '/refund-policy', '/cancellation-policy', '/faq', '/faqs', '/sitemap', '/site-map'
         ];
         
         if (staticRoutes.some(route => currentPath.startsWith(route))) {

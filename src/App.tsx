@@ -855,7 +855,22 @@ const App = () => {
                             } />
                             <Route path="/faqs" element={<Navigate to="/faq" replace />} />
 
-                            {/* Human-friendly Interactive XML Sitemaps */}
+                            {/* Human-friendly Interactive Sitemap UI Routes */}
+                            <Route path="/sitemap" element={
+                              <Suspense fallback={<LoadingFallback message="Loading Sitemap..." />}>
+                                <SitemapViewerPage />
+                              </Suspense>
+                            } />
+                            <Route path="/site-map" element={
+                              <Suspense fallback={<LoadingFallback message="Loading Sitemap..." />}>
+                                <SitemapViewerPage />
+                              </Suspense>
+                            } />
+                            <Route path="/sitemap/:section" element={
+                              <Suspense fallback={<LoadingFallback message="Loading Sitemap..." />}>
+                                <SitemapViewerPage />
+                              </Suspense>
+                            } />
                             <Route path="/sitemap.xml" element={
                               <Suspense fallback={<LoadingFallback message="Loading Sitemap..." />}>
                                 <SitemapViewerPage />

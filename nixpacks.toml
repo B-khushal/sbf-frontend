@@ -2,12 +2,17 @@ providers = ["node"]
 
 [variables]
 NIXPACKS_SPA_CADDY = "false"
+NPM_CONFIG_PRODUCTION = "false"
+VITE_API_URL = "https://api.sbflorist.in/api"
+VITE_UPLOADS_URL = "https://api.sbflorist.in"
+VITE_BACKEND_URL = "https://api.sbflorist.in"
+VITE_APP_MODE = "production"
 
 [phases.setup]
 nixPkgs = ["nodejs_20"]
 
 [phases.install]
-cmds = ["npm ci"]
+cmds = ["npm ci --include=dev"]
 
 [phases.build]
 cmds = ["npm run build"]

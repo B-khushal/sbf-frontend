@@ -147,6 +147,36 @@ const SEO_ROUTE_MAP: Record<string, RouteSeoEntry> = {
     h1: "Congratulations Flowers & Gifts",
     canonical: "https://sbflorist.in/occasions/congratulations",
   },
+  "/sitemap": {
+    title: "XML Sitemap Index | Spring Blossoms Florist",
+    description: "Explore the interactive sitemap directory for Spring Blossoms Florist, including pages, categories, products, and occasions across Hyderabad and Secunderabad.",
+    h1: "XML Sitemap Index",
+    canonical: "https://sbflorist.in/sitemap",
+  },
+  "/sitemap/pages": {
+    title: "Static & Location Pages Sitemap | Spring Blossoms Florist",
+    description: "Browse canonical static pages, Hyderabad and Secunderabad delivery hubs, policy pages, and customer FAQs at Spring Blossoms Florist.",
+    h1: "Static & Location Pages Sitemap",
+    canonical: "https://sbflorist.in/sitemap/pages",
+  },
+  "/sitemap/categories": {
+    title: "Product Categories Sitemap | Spring Blossoms Florist",
+    description: "Browse all active flower, bouquet, cake, chocolate, and gift combo categories at Spring Blossoms Florist.",
+    h1: "Product Categories Sitemap",
+    canonical: "https://sbflorist.in/sitemap/categories",
+  },
+  "/sitemap/products": {
+    title: "Products Catalog Sitemap | Spring Blossoms Florist",
+    description: "Browse all approved handcrafted flower bouquets, celebration cakes, and gift arrangements at Spring Blossoms Florist.",
+    h1: "Products Catalog Sitemap",
+    canonical: "https://sbflorist.in/sitemap/products",
+  },
+  "/sitemap/occasions": {
+    title: "Occasions & Celebrations Sitemap | Spring Blossoms Florist",
+    description: "Browse curated celebration collections for birthdays, anniversaries, romance, sympathy, and festive occasions at Spring Blossoms Florist.",
+    h1: "Occasions & Celebrations Sitemap",
+    canonical: "https://sbflorist.in/sitemap/occasions",
+  },
 };
 
 const escapeHtml = (str: string): string =>
@@ -215,6 +245,22 @@ export default defineConfig(({ mode }) => {
 
   const proxySitemapRequest = (req: IncomingMessage, res: ServerResponse, next: () => void) => {
     if (req.url && /^\/sitemap.*\.xml(\?.*)?$/.test(req.url)) {
+      const serveStaticXmlFallback = () => {
+        const cleanFile = (req.url || '/sitemap.xml').split('?')[0].replace(/^\/+/, '') || 'sitemap.xml';
+        const distFile = path.resolve(__dirname, 'dist', cleanFile);
+        const publicFile = path.resolve(__dirname, 'public', cleanFile);
+        const targetFile = fs.existsSync(distFile) ? distFile : (fs.existsSync(publicFile) ? publicFile : null);
+        if (targetFile) {
+          const xmlContent = fs.readFileSync(targetFile, 'utf-8');
+          res.statusCode = 200;
+          res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+          res.setHeader('Cache-Control', 'public, max-age=3600');
+          res.end(xmlContent);
+          return;
+        }
+        next();
+      };
+
       try {
         const targetUrl = new URL(req.url, backendTarget);
         const isTargetHttps = targetUrl.protocol === 'https:';
@@ -223,17 +269,27 @@ export default defineConfig(({ mode }) => {
           method: req.method || 'GET',
           headers: {
             ...req.headers,
-            host: targetUrl.host
+            host: targetUrl.host,
+            accept: 'application/xml, text/xml;q=0.9, */*;q=0.8'
           }
         }, (proxyRes) => {
-          res.writeHead(proxyRes.statusCode || 200, proxyRes.headers);
+          const contentType = String(proxyRes.headers['content-type'] || '').toLowerCase();
+          if ((proxyRes.statusCode || 500) >= 400 || !contentType.includes('xml')) {
+            proxyRes.resume();
+            serveStaticXmlFallback();
+            return;
+          }
+          res.writeHead(proxyRes.statusCode || 200, {
+            ...proxyRes.headers,
+            'content-type': 'application/xml; charset=utf-8'
+          });
           proxyRes.pipe(res);
         });
-        proxyReq.on('error', () => next());
+        proxyReq.on('error', () => serveStaticXmlFallback());
         req.pipe(proxyReq);
         return;
       } catch (err) {
-        next();
+        serveStaticXmlFallback();
         return;
       }
     }
