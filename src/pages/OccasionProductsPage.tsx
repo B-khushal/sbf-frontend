@@ -1,11 +1,13 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, Link, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import SEOHead from '@/components/seo/SEOHead';
 import { ProductCard } from '@/components/ProductGrid';
 import productService, { OccasionData, ProductData } from '@/services/productService';
 import api from '@/services/api';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import { useSeasonalCampaign } from '@/contexts/SeasonalCampaignContext';
+import SeasonalCampaignPage from './SeasonalCampaignPage';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -102,6 +104,19 @@ export const OccasionProductsPage: React.FC = () => {
   const isExplicitOccasionPath = location.pathname.toLowerCase().startsWith('/occasions');
   const staticOccasionConfig = normalizedSlug ? OCCASION_SEO_MAP[normalizedSlug] : undefined;
   const isKnownOccasion = Boolean(isExplicitOccasionPath || staticOccasionConfig);
+
+  const { isSeasonalCampaignSlug } = useSeasonalCampaign();
+  const isSeasonal = Boolean(normalizedSlug && isSeasonalCampaignSlug(normalizedSlug));
+
+  // If this route corresponds to a Seasonal Campaign:
+  // 1. If reached via /occasions/:slug (e.g. /occasions/diwali), redirect cleanly to /diwali direct
+  // 2. If reached via /:slug (e.g. /diwali), render the dedicated Seasonal Campaign page directly
+  if (isSeasonal) {
+    if (isExplicitOccasionPath) {
+      return <Navigate to={`/${normalizedSlug}`} replace />;
+    }
+    return <SeasonalCampaignPage slug={normalizedSlug} />;
+  }
 
   const [occasion, setOccasion] = useState<OccasionData | null>(null);
   const [products, setProducts] = useState<ProductData[]>([]);

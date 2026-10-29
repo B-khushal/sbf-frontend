@@ -88,6 +88,46 @@ const getCampaignMobileIcon = (icon?: string) => {
   return <GiftIcon />;
 };
 
+const getCampaignShortLabel = (campaign: { 
+  slug?: string;
+  name?: string; 
+  navigation?: { mobileNavbarLabel?: string }; 
+  general?: { shortName?: string };
+}): string => {
+  if (campaign.navigation?.mobileNavbarLabel?.trim()) {
+    return campaign.navigation.mobileNavbarLabel.trim();
+  }
+  if (campaign.general?.shortName?.trim()) {
+    return campaign.general.shortName.trim();
+  }
+  const slug = (campaign.slug || '').toLowerCase();
+  if (slug === 'mothers-day') return "Mother's";
+  if (slug === 'fathers-day') return "Father's";
+  if (slug === 'rakhi') return 'Rakhi';
+  if (slug === 'friendship-day') return 'Friendship';
+  if (slug === 'new-year') return 'New Year';
+  if (slug === 'diwali') return 'Diwali';
+
+  const raw = (campaign.name || '').trim();
+  let cleaned = raw
+    .replace(/\s+(special\s+celebration|celebration|specials?|special\s+offer)\b/gi, '')
+    .trim();
+
+  if (cleaned.toLowerCase().includes('mother')) {
+    cleaned = "Mother's";
+  } else if (cleaned.toLowerCase().includes('father')) {
+    cleaned = "Father's";
+  } else if (cleaned.toLowerCase().includes('raksha bandhan') || cleaned.toLowerCase().includes('rakhi')) {
+    cleaned = 'Rakhi';
+  } else if (cleaned.toLowerCase().includes('friendship')) {
+    cleaned = 'Friendship';
+  } else if (cleaned.toLowerCase().includes('new year')) {
+    cleaned = 'New Year';
+  }
+
+  return cleaned || raw;
+};
+
 export const MobileBottomNav = () => {
   const { pathname } = useLocation();
   const { user } = useAuth();
@@ -160,16 +200,36 @@ export const MobileBottomNav = () => {
     ? (isSeasonal ? config.valentineButtonColor : undefined)
     : (floatingNavbarCampaign ? floatingNavbarCampaign.theme.primaryColor : undefined);
 
+  // Dynamic glow style based on color and intensity
+  const buttonSize = config.valentineButtonSize || 48;
+  const glowEnabled = config.valentineGlowEnabled !== false;
+  const glowShadows = glowEnabled ? {
+    low: `0 4px 12px -3px ${config.valentineButtonColor}30, 0 2px 6px -2px ${config.valentineButtonColor}20`,
+    medium: `0 6px 18px -3px ${config.valentineButtonColor}50, 0 3px 8px -2px ${config.valentineButtonColor}30`,
+    high: `0 8px 24px -3px ${config.valentineButtonColor}70, 0 4px 12px -2px ${config.valentineButtonColor}40`
+  } : {
+    low: `0 2px 8px -2px rgba(0,0,0,0.1)`,
+    medium: `0 4px 12px -2px rgba(0,0,0,0.15)`,
+    high: `0 6px 16px -2px rgba(0,0,0,0.2)`
+  };
+  const glowStyle = glowShadows[config.glowIntensity] || glowShadows.medium;
+
   // Build tabs dynamically
-  const tabs: Array<{
+  type NavTab = {
     id: string;
     label: string;
     href: string;
     icon?: React.ReactNode;
     badge?: number;
     isActive: boolean;
-    isSpacer?: boolean;
-  }> = [];
+    isFloatingCenter?: boolean;
+    floatingBackground?: string;
+    floatingShadow?: string;
+    glowColor?: string;
+    particles?: React.ReactNode;
+  };
+
+  const tabs: NavTab[] = [];
 
   if (config.showSbfButton) {
     tabs.push({
@@ -190,47 +250,108 @@ export const MobileBottomNav = () => {
   });
 
   if (showValentine) {
-    // Spacer for floating Valentine button in center
     tabs.push({
-      id: 'valentine-spacer',
+      id: 'valentine-floating',
       label: config.valentineLabel || 'LOVE',
       href: '/valentine-special',
-      isSpacer: true,
-      isActive: pathname.startsWith('/valentine-special') || pathname.startsWith('/valentine-shop')
+      isFloatingCenter: true,
+      isActive: pathname.startsWith('/valentine-special') || pathname.startsWith('/valentine-shop'),
+      icon: config.valentineIcon === 'rose' ? <RoseIcon /> : config.valentineIcon === 'gift' ? <GiftIcon /> : <HeartIcon />,
+      floatingBackground: `linear-gradient(135deg, ${config.valentineButtonColor} 0%, #FF5C93 50%, ${config.valentineButtonColor}dd 100%)`,
+      floatingShadow: glowStyle,
+      glowColor: `${config.valentineButtonColor}50`,
+      particles: config.enableHeartParticles ? (
+        <div className="absolute inset-0 pointer-events-none overflow-visible">
+          {[...Array(3)].map((_, i) => (
+            <span
+              key={i}
+              className="absolute text-rose-300 text-[8px] select-none pointer-events-none"
+              style={{
+                left: '50%',
+                top: '50%',
+                marginLeft: '-4px',
+                marginTop: '-4px',
+                '--x': `${(i % 2 === 0 ? 1 : -1) * (10 + Math.random() * 14)}px`,
+                '--y': `-${22 + Math.random() * 18}px`,
+                animation: 'particleRise 3s ease-out infinite',
+                animationDelay: `${i * 0.8}s`
+              } as React.CSSProperties}
+            >
+              ❤️
+            </span>
+          ))}
+        </div>
+      ) : null
     });
 
     inlineNavbarCampaigns.forEach((campaign) => {
       tabs.push({
         id: campaign.slug,
-        label: campaign.name,
-        href: `/occasions/${campaign.slug}`,
-        icon: getCampaignMobileIcon(campaign.theme.icon),
-        isActive: pathname.startsWith(`/occasions/${campaign.slug}`)
+        label: getCampaignShortLabel(campaign),
+        href: `/${campaign.slug}`,
+        icon: getCampaignMobileIcon(campaign.theme?.icon),
+        isActive: pathname === `/${campaign.slug}` || pathname.startsWith(`/${campaign.slug}/`)
       });
     });
   } else if (floatingNavbarCampaign) {
-    // Spacer for floating campaign button in center
+    const campaignTheme = floatingNavbarCampaign.theme;
+    const campaignPrimary = campaignTheme?.primaryColor || '#FF2E78';
+    const campaignSecondary = campaignTheme?.secondaryColor || campaignPrimary;
+    const campaignGlow = `${campaignPrimary}50`;
+    const campaignShadow = `0 6px 18px -3px ${campaignGlow}, 0 3px 8px -2px ${campaignPrimary}30`;
+
     tabs.push({
-      id: `campaign-spacer-${floatingNavbarCampaign.slug}`,
-      label: floatingNavbarCampaign.name,
-      href: `/occasions/${floatingNavbarCampaign.slug}`,
-      isSpacer: true,
-      isActive: pathname.startsWith(`/occasions/${floatingNavbarCampaign.slug}`)
+      id: `campaign-floating-${floatingNavbarCampaign.slug}`,
+      label: getCampaignShortLabel(floatingNavbarCampaign),
+      href: `/${floatingNavbarCampaign.slug}`,
+      isFloatingCenter: true,
+      isActive: pathname === `/${floatingNavbarCampaign.slug}` || pathname.startsWith(`/${floatingNavbarCampaign.slug}/`),
+      icon: getCampaignMobileIcon(campaignTheme?.icon),
+      floatingBackground: `linear-gradient(135deg, ${campaignPrimary} 0%, ${campaignSecondary} 50%, ${campaignPrimary}dd 100%)`,
+      floatingShadow: campaignShadow,
+      glowColor: campaignGlow,
+      particles: config.enableHeartParticles && campaignTheme?.animationStyle !== 'none' ? (
+        <div className="absolute inset-0 pointer-events-none overflow-visible">
+          {[...Array(3)].map((_, i) => {
+            let particleChar = '🎁';
+            if (campaignTheme?.animationStyle === 'hearts') particleChar = '❤️';
+            else if (campaignTheme?.animationStyle === 'petals') particleChar = '🌸';
+            else if (campaignTheme?.animationStyle === 'leaves') particleChar = '🍃';
+            else if (campaignTheme?.animationStyle === 'confetti') particleChar = '🎉';
+            
+            return (
+              <span
+                key={i}
+                className="absolute text-[8px] select-none pointer-events-none"
+                style={{
+                  left: '50%',
+                  top: '50%',
+                  marginLeft: '-4px',
+                  marginTop: '-4px',
+                  '--x': `${(i % 2 === 0 ? 1 : -1) * (10 + Math.random() * 14)}px`,
+                  '--y': `-${22 + Math.random() * 18}px`,
+                  animation: 'particleRise 3s ease-out infinite',
+                  animationDelay: `${i * 0.8}s`
+                } as React.CSSProperties}
+              >
+                {particleChar}
+              </span>
+            );
+          })}
+        </div>
+      ) : null
     });
 
     inlineNavbarCampaigns.forEach((campaign) => {
       tabs.push({
         id: campaign.slug,
-        label: campaign.name,
-        href: `/occasions/${campaign.slug}`,
-        icon: getCampaignMobileIcon(campaign.theme.icon),
-        isActive: pathname.startsWith(`/occasions/${campaign.slug}`)
+        label: getCampaignShortLabel(campaign),
+        href: `/${campaign.slug}`,
+        icon: getCampaignMobileIcon(campaign.theme?.icon),
+        isActive: pathname === `/${campaign.slug}` || pathname.startsWith(`/${campaign.slug}/`)
       });
     });
-  }
-
-  // Only show wishlist when appropriate
-  if (showWishlist) {
+  } else if (showWishlist) {
     tabs.push({
       id: 'wishlist',
       label: 'Wishlist',
@@ -258,134 +379,6 @@ export const MobileBottomNav = () => {
     isActive: pathname.startsWith('/profile') || pathname.startsWith('/login')
   });
 
-  // Dynamic glow style based on color and intensity
-  const buttonSize = config.valentineButtonSize || 48;
-  const glowEnabled = config.valentineGlowEnabled !== false;
-  const glowShadows = glowEnabled ? {
-    low: `0 4px 12px -3px ${config.valentineButtonColor}30, 0 2px 6px -2px ${config.valentineButtonColor}20`,
-    medium: `0 6px 18px -3px ${config.valentineButtonColor}50, 0 3px 8px -2px ${config.valentineButtonColor}30`,
-    high: `0 8px 24px -3px ${config.valentineButtonColor}70, 0 4px 12px -2px ${config.valentineButtonColor}40`
-  } : {
-    low: `0 2px 8px -2px rgba(0,0,0,0.1)`,
-    medium: `0 4px 12px -2px rgba(0,0,0,0.15)`,
-    high: `0 6px 16px -2px rgba(0,0,0,0.2)`
-  };
-  const glowStyle = glowShadows[config.glowIntensity] || glowShadows.medium;
-
-  // Floating Valentine Button element
-  const floatingValentineButton = showValentine && (
-    <Link
-      to="/valentine-special"
-      className={cn(
-        "absolute left-1/2 flex items-center justify-center rounded-full text-white z-50",
-        config.enableFloatingAnimation ? "animate-float" : "",
-        "transition-all duration-300 ease-out active:scale-95"
-      )}
-      style={{
-        width: `${buttonSize}px`,
-        height: `${buttonSize}px`,
-        top: `-${Math.round(buttonSize * 0.42)}px`,
-        background: `linear-gradient(135deg, ${config.valentineButtonColor} 0%, #FF5C93 50%, ${config.valentineButtonColor}dd 100%)`,
-        boxShadow: glowStyle,
-        border: `1.5px solid rgba(255,255,255,0.35)`,
-        '--glow-color': `${config.valentineButtonColor}50`
-      } as React.CSSProperties}
-    >
-      {/* Frosted shine overlay */}
-      <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/20 to-transparent pointer-events-none" />
-      
-      {/* Selected Icon */}
-      <span className="relative z-10 drop-shadow-sm">
-        {config.valentineIcon === 'rose' ? <RoseIcon /> : config.valentineIcon === 'gift' ? <GiftIcon /> : <HeartIcon />}
-      </span>
-      
-      {/* Floating Particles — reduced to 3 for subtlety */}
-      {config.enableHeartParticles && (
-        <div className="absolute inset-0 pointer-events-none overflow-visible">
-          {[...Array(3)].map((_, i) => (
-            <span
-              key={i}
-              className="absolute text-rose-300 text-[8px] select-none pointer-events-none"
-              style={{
-                left: '50%',
-                top: '50%',
-                marginLeft: '-4px',
-                marginTop: '-4px',
-                '--x': `${(i % 2 === 0 ? 1 : -1) * (10 + Math.random() * 14)}px`,
-                '--y': `-${22 + Math.random() * 18}px`,
-                animation: 'particleRise 3s ease-out infinite',
-                animationDelay: `${i * 0.8}s`
-              } as React.CSSProperties}
-            >
-              ❤️
-            </span>
-          ))}
-        </div>
-      )}
-    </Link>
-  );
-
-  // Floating Seasonal Campaign Button element (mutually exclusive with Valentine's center slot)
-  const floatingCampaignButton = !showValentine && floatingNavbarCampaign && (
-    <Link
-      to={`/occasions/${floatingNavbarCampaign.slug}`}
-      className={cn(
-        "absolute left-1/2 flex items-center justify-center rounded-full text-white z-50",
-        config.enableFloatingAnimation ? "animate-float" : "",
-        "transition-all duration-300 ease-out active:scale-95"
-      )}
-      style={{
-        width: `${buttonSize}px`,
-        height: `${buttonSize}px`,
-        top: `-${Math.round(buttonSize * 0.42)}px`,
-        background: `linear-gradient(135deg, ${floatingNavbarCampaign.theme.primaryColor} 0%, ${floatingNavbarCampaign.theme.secondaryColor || floatingNavbarCampaign.theme.primaryColor} 50%, ${floatingNavbarCampaign.theme.primaryColor}dd 100%)`,
-        boxShadow: activeColor ? `0 6px 18px -3px ${activeColor}50, 0 3px 8px -2px ${activeColor}30` : undefined,
-        border: `1.5px solid rgba(255,255,255,0.35)`,
-        '--glow-color': `${floatingNavbarCampaign.theme.primaryColor}50`
-      } as React.CSSProperties}
-    >
-      {/* Frosted shine overlay */}
-      <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/20 to-transparent pointer-events-none" />
-      
-      {/* Selected Icon */}
-      <span className="relative z-10 drop-shadow-sm">
-        {getCampaignMobileIcon(floatingNavbarCampaign.theme.icon)}
-      </span>
-      
-      {/* Floating Particles — reduced to 3 for subtlety */}
-      {config.enableHeartParticles && floatingNavbarCampaign.theme.animationStyle !== 'none' && (
-        <div className="absolute inset-0 pointer-events-none overflow-visible">
-          {[...Array(3)].map((_, i) => {
-            let particleChar = '🎁';
-            if (floatingNavbarCampaign.theme.animationStyle === 'hearts') particleChar = '❤️';
-            else if (floatingNavbarCampaign.theme.animationStyle === 'petals') particleChar = '🌸';
-            else if (floatingNavbarCampaign.theme.animationStyle === 'leaves') particleChar = '🍃';
-            else if (floatingNavbarCampaign.theme.animationStyle === 'confetti') particleChar = '🎉';
-            
-            return (
-              <span
-                key={i}
-                className="absolute text-[8px] select-none pointer-events-none"
-                style={{
-                  left: '50%',
-                  top: '50%',
-                  marginLeft: '-4px',
-                  marginTop: '-4px',
-                  '--x': `${(i % 2 === 0 ? 1 : -1) * (10 + Math.random() * 14)}px`,
-                  '--y': `-${22 + Math.random() * 18}px`,
-                  animation: 'particleRise 3s ease-out infinite',
-                  animationDelay: `${i * 0.8}s`
-                } as React.CSSProperties}
-              >
-                {particleChar}
-              </span>
-            );
-          })}
-        </div>
-      )}
-    </Link>
-  );
-
   const isGlass = config.navbarBackgroundStyle === 'glassmorphism';
 
   const containerStyle: React.CSSProperties = {
@@ -395,7 +388,7 @@ export const MobileBottomNav = () => {
     right: 0,
     width: '100%',
     zIndex: 9999,
-    paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.5rem)',
+    paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.375rem)',
     ...(activeColor ? {
       boxShadow: `0 -8px 30px -8px ${activeColor}15`,
       borderTop: `1px solid ${activeColor}20`
@@ -407,7 +400,7 @@ export const MobileBottomNav = () => {
   const content = (
     <div 
       className={cn(
-        "mobile-bottom-nav lg:hidden border-t px-2 pt-2 pb-1.5 transition-all duration-300 rounded-t-[1.5rem]",
+        "mobile-bottom-nav lg:hidden border-t px-1 pt-1.5 pb-1 transition-all duration-300 rounded-t-[1.5rem]",
         isGlass
           ? "bg-white/70 dark:bg-slate-900/75 backdrop-blur-2xl border-white/30 dark:border-slate-800/40"
           : "bg-white dark:bg-slate-900 border-gray-100 dark:border-slate-800"
@@ -416,10 +409,10 @@ export const MobileBottomNav = () => {
     >
       {/* CSS Animations — optimized for 60fps */}
       <style>{`
-        @keyframes floatUp {
-          0% { transform: translate(-50%, -${Math.round(buttonSize * 0.42)}px); }
-          50% { transform: translate(-50%, -${Math.round(buttonSize * 0.42) + 3}px); }
-          100% { transform: translate(-50%, -${Math.round(buttonSize * 0.42)}px); }
+        @keyframes floatVertical {
+          0% { transform: translateY(0); }
+          50% { transform: translateY(-3.5px); }
+          100% { transform: translateY(0); }
         }
         @keyframes floatPulse {
           0% { box-shadow: 0 4px 12px -3px var(--glow-color); }
@@ -430,8 +423,8 @@ export const MobileBottomNav = () => {
           0% { transform: translate(0, 0) scale(1); opacity: 0.6; }
           100% { transform: translate(var(--x), var(--y)) scale(0); opacity: 0; }
         }
-        .animate-float {
-          animation: floatUp 4s ease-in-out infinite;
+        .animate-float-vertical {
+          animation: floatVertical 3.5s ease-in-out infinite;
           will-change: transform;
         }
         .animate-glow-pulse {
@@ -440,34 +433,73 @@ export const MobileBottomNav = () => {
         }
       `}</style>
 
-      {/* Floating Center Button wrapper */}
-      <div className="relative w-full h-full flex items-center justify-evenly">
-        {floatingValentineButton}
-        {floatingCampaignButton}
-
+      {/* Grid containing all tabs with mathematically identical column widths */}
+      <div 
+        className="relative w-full h-full grid items-center"
+        style={{
+          gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))`
+        }}
+      >
         {tabs.map((item) => {
-          if (item.isSpacer) {
-            // Placeholder space for the floating center button
+          if (item.isFloatingCenter) {
             return (
-              <div 
-                key={item.id} 
-                className="relative flex flex-col items-center justify-end flex-1 min-w-[52px] py-1 select-none pointer-events-none"
+              <Link
+                key={item.id}
+                to={item.href}
+                className="relative flex flex-col items-center justify-end h-full pt-1 pb-1 select-none group"
               >
-                <div style={{ width: `${buttonSize}px`, height: `${Math.round(buttonSize * 0.55)}px` }} />
-                <span 
+                {/* Floating Action Button — centered directly over this column */}
+                <div 
+                  className="absolute -top-5 left-1/2 -translate-x-1/2 flex items-center justify-center pointer-events-none z-50"
+                  style={{ width: `${buttonSize}px`, height: `${buttonSize}px` }}
+                >
+                  <div
+                    className={cn(
+                      "w-full h-full rounded-full flex items-center justify-center text-white pointer-events-auto transition-transform duration-200 active:scale-95 relative",
+                      config.enableFloatingAnimation ? "animate-float-vertical" : ""
+                    )}
+                    style={{
+                      background: item.floatingBackground,
+                      boxShadow: item.floatingShadow,
+                      border: '1.5px solid rgba(255,255,255,0.35)',
+                      '--glow-color': item.glowColor
+                    } as React.CSSProperties}
+                  >
+                    {/* Frosted shine overlay */}
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/25 to-transparent pointer-events-none" />
+
+                    {/* Floating Icon */}
+                    <span className="relative z-10 drop-shadow-sm flex items-center justify-center">
+                      {item.icon}
+                    </span>
+
+                    {/* Floating particles */}
+                    {item.particles}
+                  </div>
+                </div>
+
+                {/* Clearance space so the label sits below the circular floating button */}
+                <div 
+                  style={{ height: `${Math.round(buttonSize * 0.44)}px` }} 
+                  className="w-full shrink-0 pointer-events-none" 
+                />
+
+                {/* Label aligned directly underneath on the exact same vertical center axis */}
+                <span
                   className={cn(
-                    "text-[9px] font-semibold tracking-widest z-10 transition-all duration-300 mt-0.5 uppercase",
+                    "text-[9px] sm:text-[10px] font-bold tracking-tight z-10 transition-colors duration-200 uppercase text-center w-full px-0.5 truncate",
                     item.isActive 
-                      ? "font-bold" 
-                      : "text-gray-400 dark:text-gray-500"
+                      ? "font-extrabold" 
+                      : "text-gray-500 dark:text-gray-400"
                   )}
                   style={item.isActive && activeColor ? {
                     color: activeColor
                   } : {}}
+                  title={item.label}
                 >
                   {item.label}
                 </span>
-              </div>
+              </Link>
             );
           }
 
@@ -476,7 +508,7 @@ export const MobileBottomNav = () => {
               key={item.id}
               to={item.href}
               className={cn(
-                "relative flex flex-col items-center justify-center flex-1 min-w-[52px] min-h-[44px] py-1 text-[10px] font-semibold transition-all duration-300 rounded-xl z-10",
+                "relative flex flex-col items-center justify-center h-full py-1 text-[10px] font-semibold transition-all duration-200 rounded-xl z-10 select-none",
                 item.isActive 
                   ? (activeColor ? "" : "text-primary font-bold")
                   : "text-gray-500 hover:text-primary dark:text-gray-400"
@@ -517,7 +549,9 @@ export const MobileBottomNav = () => {
                   </span>
                 )}
               </motion.div>
-              <span className="text-[10px] font-semibold z-10 uppercase tracking-wider">{item.label}</span>
+              <span className="text-[10px] font-semibold z-10 uppercase tracking-tight whitespace-nowrap truncate w-full text-center px-0.5" title={item.label}>
+                {item.label}
+              </span>
             </Link>
           );
         })}

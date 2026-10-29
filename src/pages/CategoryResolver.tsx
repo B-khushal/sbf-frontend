@@ -1,5 +1,5 @@
 import React, { useEffect, useState, lazy, Suspense } from 'react';
-import { useNavigate, useLocation, useParams } from 'react-router-dom';
+import { useNavigate, useLocation, useParams, Navigate } from 'react-router-dom';
 import api from '@/services/api';
 import ShopPage, { TARGET_CATEGORY_SEO } from './ShopPage';
 import NotFound from './NotFound';
@@ -12,7 +12,7 @@ const CategoryResolver: React.FC = () => {
   const { categorySlug } = useParams<{ parentCategory?: string; categorySlug?: string }>();
   const location = useLocation();
   const navigate = useNavigate();
-  const { activeCampaigns } = useSeasonalCampaign();
+  const { isSeasonalCampaignSlug } = useSeasonalCampaign();
   const [loading, setLoading] = useState(true);
   const [resolvedCategory, setResolvedCategory] = useState<any>(null);
   const [shouldRedirect, setShouldRedirect] = useState<string | null>(null);
@@ -25,9 +25,12 @@ const CategoryResolver: React.FC = () => {
     campaignSlug = normalizedPath.substring('occasions/'.length);
   }
 
-  const activeCampaign = activeCampaigns.find(
-    (campaign) => campaign.slug.toLowerCase() === campaignSlug
-  );
+  const isSeasonal = isSeasonalCampaignSlug(campaignSlug);
+
+  // If this was requested as /occasions/:slug, redirect to /:slug directly
+  if (isSeasonal && normalizedPath.startsWith('occasions/')) {
+    return <Navigate to={`/${campaignSlug}`} replace />;
+  }
 
   useEffect(() => {
     const resolveUrl = async () => {
@@ -51,7 +54,7 @@ const CategoryResolver: React.FC = () => {
         }
 
         // Seasonal campaign slugs take precedence over category resolution.
-        if (activeCampaign) {
+        if (isSeasonal) {
           setLoading(false);
           return;
         }
@@ -102,16 +105,16 @@ const CategoryResolver: React.FC = () => {
     };
 
     resolveUrl();
-  }, [activeCampaign, currentPath, categorySlug, normalizedPath]);
+  }, [isSeasonal, currentPath, categorySlug, normalizedPath]);
 
-  if (activeCampaign) {
+  if (isSeasonal) {
     return (
       <Suspense fallback={
         <div className="min-h-screen flex items-center justify-center">
           <Loader2 className="animate-spin rounded-full h-12 w-12 border-2 border-primary mx-auto" />
         </div>
       }>
-        <SeasonalCampaignPage slug={activeCampaign.slug} />
+        <SeasonalCampaignPage slug={campaignSlug} />
       </Suspense>
     );
   }

@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { 
   ArrowLeft, Save, Calendar, Image as ImageIcon, 
   Settings, Tags, Gift, Truck, Globe, BarChart3, Plus, Trash2, 
-  Sparkles, CheckCircle2 
+  Sparkles, CheckCircle2, ExternalLink 
 } from 'lucide-react';
 import seasonalCampaignService from '@/services/seasonalCampaignService';
 import { uploadImage } from '@/services/uploadService';
@@ -273,15 +273,27 @@ const SeasonalCampaignForm: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Switch
-            checked={campaign.enabled}
-            onCheckedChange={(checked) => setCampaign(prev => prev ? ({ ...prev, enabled: checked }) : null)}
-            className="data-[state=checked]:bg-emerald-600"
-          />
-          <span className="text-sm font-semibold mr-4">
-            {campaign.enabled ? 'Campaign ON' : 'Campaign OFF'}
-          </span>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => window.open(`/${campaign.slug}`, '_blank')}
+            className="border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+            title={`View live page for /${campaign.slug}`}
+          >
+            <ExternalLink className="mr-1.5 h-4 w-4" />
+            View Live Page (/{campaign.slug})
+          </Button>
+          <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
+            <Switch
+              checked={campaign.enabled}
+              onCheckedChange={(checked) => setCampaign(prev => prev ? ({ ...prev, enabled: checked }) : null)}
+              className="data-[state=checked]:bg-emerald-600"
+            />
+            <span className="text-xs sm:text-sm font-semibold">
+              {campaign.enabled ? 'ON' : 'OFF'}
+            </span>
+          </div>
           <Button disabled={isSaving} onClick={handleSave} className="bg-indigo-600 hover:bg-indigo-700">
             <Save className="mr-2 h-4 w-4" />
             {isSaving ? 'Saving...' : 'Save Settings'}
@@ -537,15 +549,30 @@ const SeasonalCampaignForm: React.FC = () => {
                     />
                   </div>
 
-                  <div className="flex items-center justify-between p-3 border rounded-lg bg-slate-50/50">
-                    <div className="flex flex-col">
-                      <span className="text-xs font-semibold">Mobile Bottom Navigation Bar</span>
-                      <span className="text-[10px] text-muted-foreground">Add button in mobile navbar.</span>
+                  <div className="p-3 border rounded-lg bg-slate-50/50 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex flex-col">
+                        <span className="text-xs font-semibold">Mobile Bottom Navigation Bar</span>
+                        <span className="text-[10px] text-muted-foreground">Add button in mobile navbar.</span>
+                      </div>
+                      <Switch 
+                        checked={campaign.navigation?.showInMobileNavbar} 
+                        onCheckedChange={(checked) => handleFieldChange('navigation', 'showInMobileNavbar', checked)} 
+                      />
                     </div>
-                    <Switch 
-                      checked={campaign.navigation?.showInMobileNavbar} 
-                      onCheckedChange={(checked) => handleFieldChange('navigation', 'showInMobileNavbar', checked)} 
-                    />
+                    {campaign.navigation?.showInMobileNavbar && (
+                      <div className="pt-2 border-t border-slate-200/60 space-y-1">
+                        <Label className="text-[11px] font-medium text-slate-600">Short Mobile Nav Label (optional)</Label>
+                        <Input 
+                          size={1}
+                          className="h-8 text-xs font-medium"
+                          value={campaign.navigation?.mobileNavbarLabel || ''} 
+                          onChange={(e) => handleFieldChange('navigation', 'mobileNavbarLabel', e.target.value)} 
+                          placeholder={campaign.name.replace(/\s+(special\s+celebration|celebration|specials?)\b/gi, '').trim() || "e.g. Mother's Day"}
+                        />
+                        <p className="text-[10px] text-muted-foreground">Short 1-2 word label to fit perfectly under the floating mobile icon.</p>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex items-center justify-between p-3 border rounded-lg bg-slate-50/50">

@@ -74,6 +74,7 @@ export interface SeasonalCampaign {
     showInHomepage: boolean;
     showInNavigationMenu: boolean;
     showInMobileNavbar: boolean;
+    mobileNavbarLabel?: string;
     showInAnnouncementBar: boolean;
     showInFeaturedSection: boolean;
   };

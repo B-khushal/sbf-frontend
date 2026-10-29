@@ -772,8 +772,8 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                 .map((campaign) => (
                   <NavLink 
                     key={campaign.slug} 
-                    to={`/occasions/${campaign.slug}`} 
-                    active={pathname === `/occasions/${campaign.slug}`}
+                    to={`/${campaign.slug}`} 
+                    active={pathname === `/${campaign.slug}`}
                     className="text-purple-700 hover:text-purple-900 font-semibold"
                   >
                     {campaign.name}
@@ -1409,11 +1409,11 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
                       .map((campaign) => (
                         <Link
                           key={campaign.slug}
-                          to={`/occasions/${campaign.slug}`}
+                          to={`/${campaign.slug}`}
                           onClick={() => setMobileMenuOpen(false)}
                           className={cn(
                             'flex items-center gap-3 px-3 py-3 text-sm font-semibold rounded-lg transition-all duration-200 bg-purple-50 text-purple-700',
-                            pathname === `/occasions/${campaign.slug}` && 'bg-purple-100'
+                            pathname === `/${campaign.slug}` && 'bg-purple-100'
                           )}
                         >
                           <div className="flex items-center justify-center w-5 h-5">

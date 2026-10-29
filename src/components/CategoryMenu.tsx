@@ -201,7 +201,7 @@ const CategoryMenu = () => {
             .filter(campaign => campaign.enabled || campaign.isActive)
             .map(campaign => ({
               name: campaign.name,
-              path: `/occasions/${campaign.slug}`,
+              path: `/${campaign.slug}`,
               count: campaign.productCount || getCategoryCount(campaign.name) || 1
             }));
           subcats = [...subcats, ...campaignSubcats];

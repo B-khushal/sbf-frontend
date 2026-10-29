@@ -4,7 +4,12 @@ import { ProductData } from './productService';
 
 class SeasonalCampaignService {
   // GET /api/seasonal-campaigns/status - Fetch active campaigns status
-  async getActiveCampaignsStatus(): Promise<{ success: boolean; campaigns: SeasonalCampaign[] }> {
+  async getActiveCampaignsStatus(): Promise<{ 
+    success: boolean; 
+    campaigns: SeasonalCampaign[];
+    allSlugs?: string[];
+    allCampaignSlugs?: Array<{ id: string; name: string; slug: string; enabled: boolean }>;
+  }> {
     const response = await api.get('/seasonal-campaigns/status');
     return response.data;
   }

@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useSeasonalCampaign } from '@/contexts/SeasonalCampaignContext';
-import { Plus, Edit, BarChart3, Trash2, Calendar, Settings, AlertTriangle, X, Sparkles } from 'lucide-react';
+import { Plus, Edit, BarChart3, Trash2, Calendar, Settings, AlertTriangle, X, Sparkles, ExternalLink } from 'lucide-react';
 import seasonalCampaignService from '@/services/seasonalCampaignService';
 import { SeasonalCampaign } from '@/types/seasonalCampaign';
 
@@ -187,7 +187,16 @@ const SeasonalCampaigns: React.FC = () => {
                     </span>
                     <div>
                       <CardTitle className="text-xl font-bold">{campaign.name}</CardTitle>
-                      <CardDescription className="text-xs font-mono">/{campaign.slug}</CardDescription>
+                      <a 
+                        href={`/${campaign.slug}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-xs font-mono text-indigo-600 hover:text-indigo-800 hover:underline inline-flex items-center gap-1 mt-0.5"
+                        title={`Open live page: /${campaign.slug}`}
+                      >
+                        /{campaign.slug}
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -235,7 +244,17 @@ const SeasonalCampaigns: React.FC = () => {
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="flex-1"
+                    className="flex-1 text-slate-700 hover:bg-slate-50"
+                    onClick={() => window.open(`/${campaign.slug}`, '_blank')}
+                    title={`View live page for /${campaign.slug}`}
+                  >
+                    <ExternalLink className="mr-1 h-3.5 w-3.5 text-indigo-600" />
+                    View Page
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1 bg-indigo-50/70 border-indigo-200 text-indigo-700 hover:bg-indigo-100"
                     onClick={() => navigate(`/admin/seasonal-campaigns/edit/${campaign._id}`)}
                   >
                     <Settings className="mr-1 h-3.5 w-3.5" />
@@ -244,7 +263,7 @@ const SeasonalCampaigns: React.FC = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="text-red-600 hover:text-red-700 border-red-100 hover:bg-red-50"
+                    className="text-red-600 hover:text-red-700 border-red-100 hover:bg-red-50 px-2.5"
                     onClick={() => handleDelete(campaign._id!, campaign.name)}
                   >
                     <Trash2 className="h-3.5 w-3.5" />

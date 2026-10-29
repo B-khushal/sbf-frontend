@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { motion, type Variants } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { Gift, ArrowRight, Sparkles, Clock, Calendar, Truck, ShieldCheck, Heart, Star, Copy, Check, X } from 'lucide-react';
+import { Gift, ArrowRight, Sparkles, Clock, Calendar, Truck, ShieldCheck, Heart, Star, Copy, Check, X, Eye, Settings, Play } from 'lucide-react';
 import seasonalCampaignService from '@/services/seasonalCampaignService';
 import { SeasonalCampaign, SeasonalCategory } from '@/types/seasonalCampaign';
 import { ProductData } from '@/services/productService';
@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 
 interface SeasonalCampaignPageProps {
-  slug: string;
+  slug?: string;
 }
 
 const containerVariants: Variants = {
@@ -154,10 +154,14 @@ const CampaignCountdown: React.FC<{
   );
 };
 
-const SeasonalCampaignPage: React.FC<SeasonalCampaignPageProps> = ({ slug }) => {
+const SeasonalCampaignPage: React.FC<SeasonalCampaignPageProps> = ({ slug: propSlug }) => {
+  const { slug: paramSlug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { formatPrice, convertPrice } = useCurrency();
+
+  const rawSlug = propSlug || paramSlug || '';
+  const slug = rawSlug.trim().toLowerCase().replace(/^\/+|\/+$/g, '').replace(/^occasions\//, '');
 
   const [campaign, setCampaign] = useState<SeasonalCampaign | null>(null);
   const [products, setProducts] = useState<ProductData[]>([]);
@@ -165,16 +169,38 @@ const SeasonalCampaignPage: React.FC<SeasonalCampaignPageProps> = ({ slug }) => 
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [selectedCategorySlug, setSelectedCategorySlug] = useState<string>('all');
   const [showPopup, setShowPopup] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isActivating, setIsActivating] = useState(false);
 
   useEffect(() => {
-    if (campaign && campaign.enabled) {
+    // Check if user is logged in as admin
+    const userData = localStorage.getItem('userData') || sessionStorage.getItem('userData');
+    const user = localStorage.getItem('user');
+    const role = localStorage.getItem('role');
+    let admin = role === 'admin';
+    if (!admin && userData) {
+      try { admin = JSON.parse(userData).role === 'admin'; } catch (_) {}
+    }
+    if (!admin && user) {
+      try { admin = JSON.parse(user).role === 'admin'; } catch (_) {}
+    }
+    setIsAdmin(admin);
+  }, []);
+
+  useEffect(() => {
+    if (campaign && (campaign.enabled || isAdmin)) {
       setShowPopup(true);
     } else {
       setShowPopup(false);
     }
-  }, [campaign]);
+  }, [campaign, isAdmin]);
 
   useEffect(() => {
+    if (!slug) {
+      setLoading(false);
+      return;
+    }
+
     const fetchCampaignData = async () => {
       try {
         setLoading(true);
@@ -183,27 +209,25 @@ const SeasonalCampaignPage: React.FC<SeasonalCampaignPageProps> = ({ slug }) => 
           setCampaign(res.campaign);
           setProducts(res.products || []);
           
-          // Track campaign page view asynchronously
-          if (res.campaign._id) {
+          // Track campaign page view asynchronously if enabled
+          if (res.campaign._id && res.campaign.enabled) {
             seasonalCampaignService.trackCampaignView(res.campaign._id).catch(err => {
               console.warn('Failed to track campaign page view:', err);
             });
           }
+        } else {
+          setCampaign(null);
         }
       } catch (err) {
         console.error('Error fetching campaign data:', err);
-        toast({
-          title: 'Error',
-          description: 'Failed to load campaign page details.',
-          variant: 'destructive',
-        });
+        setCampaign(null);
       } finally {
         setLoading(false);
       }
     };
 
     fetchCampaignData();
-  }, [slug, toast]);
+  }, [slug]);
 
   const handleCopyCode = (code: string) => {
     navigator.clipboard.writeText(code);
@@ -213,6 +237,29 @@ const SeasonalCampaignPage: React.FC<SeasonalCampaignPageProps> = ({ slug }) => 
       description: `Code "${code}" copied to clipboard.`,
     });
     setTimeout(() => setCopiedCode(null), 3000);
+  };
+
+  const handleActivateCampaign = async () => {
+    if (!campaign?._id) return;
+    try {
+      setIsActivating(true);
+      const res = await seasonalCampaignService.adminUpdateCampaign(campaign._id, { enabled: true, isActive: true });
+      if (res.success) {
+        setCampaign(prev => prev ? ({ ...prev, enabled: true, isActive: true }) : null);
+        toast({
+          title: "Campaign Activated!",
+          description: `${campaign.name} is now LIVE on your storefront.`,
+        });
+      }
+    } catch (err: any) {
+      toast({
+        title: "Activation Failed",
+        description: err.response?.data?.message || err.message || "Failed to activate campaign",
+        variant: "destructive"
+      });
+    } finally {
+      setIsActivating(false);
+    }
   };
 
   // Filter products by selected category
@@ -239,15 +286,77 @@ const SeasonalCampaignPage: React.FC<SeasonalCampaignPageProps> = ({ slug }) => 
 
   if (!campaign) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-150">
-        <div className="text-center max-w-md px-6">
-          <Gift className="w-16 h-16 text-gray-400 mx-auto mb-6" />
-          <h1 className="text-2xl font-bold text-gray-800 mb-3">Celebration Not Active</h1>
-          <p className="text-gray-500 mb-6">This seasonal campaign is not active or has ended. Please visit our shop to explore our latest gifts!</p>
-          <Button onClick={() => navigate('/shop')} className="w-full">
-            Browse All Gifts
-          </Button>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+        <div className="text-center max-w-md bg-white p-8 rounded-3xl shadow-lg border border-gray-100">
+          <Gift className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">Celebration Not Found</h1>
+          <p className="text-gray-500 mb-6 text-sm">We couldn't find an active seasonal campaign for this occasion. Explore our flower and gift collection below!</p>
+          <div className="flex flex-col gap-2.5">
+            <Button onClick={() => navigate('/shop')} className="w-full rounded-xl">
+              Browse All Flowers & Gifts
+            </Button>
+            <Button variant="outline" onClick={() => navigate('/')} className="w-full rounded-xl">
+              Return Home
+            </Button>
+          </div>
         </div>
+      </div>
+    );
+  }
+
+  const isLive = Boolean(campaign.enabled && (campaign as any).isActive !== false);
+
+  // If campaign is toggled OFF and user is not an admin, render the friendly "Coming Soon" screen (matching Valentine's behavior)
+  if (!isLive && !isAdmin) {
+    const primaryColor = campaign.theme?.primaryColor || '#E11D48';
+    const bgGradient = campaign.theme?.backgroundGradient || `linear-gradient(135deg, ${primaryColor}15 0%, ${primaryColor}30 100%)`;
+    
+    return (
+      <div 
+        className="min-h-screen flex items-center justify-center px-4 py-16"
+        style={{ background: bgGradient }}
+      >
+        <Helmet>
+          <title>{`${campaign.name} Special Celebration Coming Soon | Spring Blossoms Florist`}</title>
+          <meta name="description" content={`Our special ${campaign.name} festive collection is currently being prepared. Check back soon for flowers, cakes, and gifts!`} />
+          <link rel="canonical" href={`https://sbflorist.in/${campaign.slug}`} />
+        </Helmet>
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4 }}
+          className="text-center max-w-lg bg-white/95 backdrop-blur-md px-8 py-12 rounded-3xl shadow-xl border border-white/60 mx-auto"
+        >
+          <span className="text-6xl mb-4 block select-none animate-bounce" role="img" aria-label={campaign.name}>
+            {campaign.theme?.icon || '🎉'}
+          </span>
+          <Badge className="mb-4 bg-amber-100 text-amber-800 border-amber-200 text-xs font-bold uppercase tracking-wider">
+            Coming Soon
+          </Badge>
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-3 tracking-tight">
+            {campaign.name}
+          </h1>
+          <p className="text-gray-600 mb-8 leading-relaxed text-sm sm:text-base">
+            Our special <strong>{campaign.name}</strong> festive experience is currently being prepared with love. Check back soon for exclusive arrangements, cakes, and celebratory gift hampers!
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Button 
+              onClick={() => navigate('/shop')} 
+              className="px-6 py-2.5 rounded-xl font-semibold shadow-md text-white"
+              style={{ backgroundColor: primaryColor }}
+            >
+              Browse All Gifts
+              <ArrowRight className="w-4 h-4 ml-1.5" />
+            </Button>
+            <Button 
+              onClick={() => navigate('/')} 
+              variant="outline" 
+              className="px-6 py-2.5 rounded-xl font-semibold"
+            >
+              Return Home
+            </Button>
+          </div>
+        </motion.div>
       </div>
     );
   }
@@ -297,6 +406,38 @@ const SeasonalCampaignPage: React.FC<SeasonalCampaignPageProps> = ({ slug }) => 
         className="min-h-screen relative overflow-hidden"
         style={{ background: primaryBg }}
       >
+        {/* Admin Preview Banner if campaign is disabled */}
+        {!isLive && isAdmin && (
+          <div className="bg-amber-600 text-white px-4 py-2.5 text-xs sm:text-sm font-semibold flex flex-wrap items-center justify-between gap-3 shadow-md sticky top-0 z-50 backdrop-blur-md">
+            <div className="flex items-center gap-2">
+              <Eye className="w-4 h-4 text-amber-200" />
+              <span>
+                <strong>Admin Preview Mode:</strong> This campaign is currently <strong>OFF</strong>. Public visitors see the Coming Soon page.
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                disabled={isActivating}
+                onClick={handleActivateCampaign}
+                className="h-7 text-xs font-bold bg-white text-amber-800 hover:bg-amber-50 rounded-lg shadow-sm"
+              >
+                <Play className="w-3 h-3 mr-1 fill-current" />
+                {isActivating ? 'Activating...' : 'Turn ON Now'}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => navigate(`/admin/seasonal-campaigns/edit/${campaign._id}`)}
+                className="h-7 text-xs border-white/60 text-white hover:bg-amber-700 rounded-lg"
+              >
+                <Settings className="w-3 h-3 mr-1" />
+                Configure
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Particle Overlay */}
         <FloatingParticles style={theme.animationStyle} count={22} />
 

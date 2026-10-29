@@ -22,7 +22,9 @@ export const SeasonalCampaignHomeSection: React.FC = () => {
     (c) => (c.enabled || c.isActive) && (c.navigation?.showInHomepage !== false) && c.slug !== 'valentine' && c.slug !== 'valentines-week'
   );
 
-  if (homepageCampaigns.length === 0) return null;
+  // When there is only 1 festival, it is displayed at the side of the hero slides in HomeHero (and in mobile view).
+  // The separate multi-column section is only displayed when there are 2 or more festivals to fill the grid.
+  if (homepageCampaigns.length <= 1) return null;
 
   // Retrieve global homepage section settings from the first active campaign
   const primaryCampaign = homepageCampaigns[0];
@@ -63,8 +65,13 @@ export const SeasonalCampaignHomeSection: React.FC = () => {
 
             // Customizable card details
             const cardTagText = campaign.general?.cardTagText || "Limited Campaign";
-            const cardTitleText = campaign.general?.cardTitleText || `${campaign.name} Special`;
-            const cardDescriptionText = campaign.general?.cardDescriptionText || campaign.seo?.metaDescription || `Order our premium collection of flowers and gifts customized specifically for ${campaign.name}.`;
+            const rawTitle = (campaign.name || 'Festival').trim();
+            const cardTitleText = campaign.general?.cardTitleText?.trim()
+              ? campaign.general.cardTitleText.trim()
+              : (rawTitle.toLowerCase().includes('celebration') || rawTitle.toLowerCase().includes('special')
+                ? rawTitle
+                : `${rawTitle} Special`);
+            const cardDescriptionText = campaign.general?.cardDescriptionText || campaign.seo?.metaDescription || `Order our premium collection of flowers and gifts customized specifically for ${rawTitle}.`;
             const cardButtonText = campaign.general?.cardButtonText || "Shop Now";
 
             return (
@@ -75,7 +82,7 @@ export const SeasonalCampaignHomeSection: React.FC = () => {
                 viewport={{ once: true, margin: '-100px' }}
                 variants={cardVariants}
                 className="relative rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl hover:scale-101 transition-all duration-500 group flex flex-col justify-end min-h-[350px] sm:min-h-[400px] border border-gray-100 cursor-pointer"
-                onClick={() => navigate(`/occasions/${campaign.slug}`)}
+                onClick={() => navigate(`/${campaign.slug}`)}
               >
                 {/* Background Image with Overlay */}
                 <div className="absolute inset-0 bg-cover bg-center group-hover:scale-103 transition-transform duration-700" style={{ backgroundImage: `url(${bannerImage})` }} />

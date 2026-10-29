@@ -4,21 +4,76 @@ import { ChevronLeft, ChevronRight, ArrowRight, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useSettings } from '../contexts/SettingsContext';
+import { useSeasonalCampaign } from '@/contexts/SeasonalCampaignContext';
 import { getImageUrl } from '@/config';
 
 const HomeHero = () => {
   const { heroSlides, promoBanners, loading } = useSettings();
+  const { activeCampaigns } = useSeasonalCampaign();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [imagesLoaded, setImagesLoaded] = useState<boolean[]>([]);
   const [screenWidth, setScreenWidth] = useState(window.innerWidth);
   const navigate = useNavigate();
 
+  // Active seasonal festivals (excluding Valentine which has its own system)
+  const homepageFestivals = useMemo(() => {
+    return (activeCampaigns || []).filter(
+      (c) => (c.enabled || c.isActive) && (c.navigation?.showInHomepage !== false) && c.slug !== 'valentine' && c.slug !== 'valentines-week'
+    );
+  }, [activeCampaigns]);
+
+  // When there is exactly 1 festival active, showcase it alongside the hero slides
+  const singleFestival = homepageFestivals.length === 1 ? homepageFestivals[0] : null;
+
+  const singleFestivalDetails = useMemo(() => {
+    if (!singleFestival) return null;
+
+    const heroBanner = singleFestival.banners?.find(
+      (b: any) => b.enabled && (b.position === 'hero' || b.position === 'carousel')
+    );
+    const bannerImage = singleFestival.general?.cardImage
+      ? getImageUrl(singleFestival.general.cardImage)
+      : heroBanner?.image 
+        ? getImageUrl(heroBanner.image)
+        : "https://images.unsplash.com/photo-1513151233558-d860c5398176?q=80&w=1200&auto=format&fit=crop";
+
+    const primaryColor = singleFestival.theme?.primaryColor || '#E91E63';
+    const secondaryColor = singleFestival.theme?.secondaryColor || '#FF6090';
+    const tagText = singleFestival.general?.cardTagText || "Limited Campaign";
+
+    const rawTitle = (singleFestival.name || 'Festival').trim();
+    const titleText = singleFestival.general?.cardTitleText?.trim()
+      ? singleFestival.general.cardTitleText.trim()
+      : (rawTitle.toLowerCase().includes('celebration') || rawTitle.toLowerCase().includes('special')
+        ? rawTitle
+        : `${rawTitle} Special`);
+
+    const descriptionText = singleFestival.general?.cardDescriptionText || 
+      singleFestival.seo?.metaDescription || 
+      `Order our premium collection of flowers and gifts customized specifically for ${rawTitle}.`;
+
+    const buttonText = singleFestival.general?.cardButtonText || "Shop Now";
+
+    return {
+      slug: singleFestival.slug,
+      bannerImage,
+      primaryColor,
+      secondaryColor,
+      tagText,
+      titleText,
+      descriptionText,
+      buttonText
+    };
+  }, [singleFestival]);
+
   const enabledPromoBanners = useMemo(() => {
     return (promoBanners || [])
       .filter(banner => banner.enabled)
       .sort((a, b) => a.order - b.order);
   }, [promoBanners]);
+
+  const hasSideContent = Boolean(singleFestivalDetails) || enabledPromoBanners.length > 0;
 
   // Handle window resizing
   useEffect(() => {
@@ -125,7 +180,7 @@ const HomeHero = () => {
     }
   }, [enabledSlides, currentSlide, isMobile, handleImageLoad]);
 
-  if (loading && enabledSlides.length === 0) {
+  if (loading && enabledSlides.length === 0 && !hasSideContent) {
     return (
       <div className="relative overflow-hidden bg-gray-200 shadow-sm animate-pulse mx-3 sm:mx-4 md:mx-6 lg:mx-8 rounded-2xl sm:rounded-3xl h-[140px] sm:h-[320px] lg:h-[450px]">
         <div className="absolute inset-0 flex items-center justify-center">
@@ -135,7 +190,7 @@ const HomeHero = () => {
     );
   }
 
-  if (enabledSlides.length === 0) {
+  if (enabledSlides.length === 0 && !hasSideContent) {
     return (
       <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 to-secondary/10 shadow-sm mx-3 sm:mx-4 md:mx-6 lg:mx-8 rounded-2xl sm:rounded-3xl h-[140px] sm:h-[320px] lg:h-[450px]">
         <div className="absolute inset-0 flex items-center justify-center text-center text-gray-600 px-6">
@@ -157,13 +212,24 @@ const HomeHero = () => {
         
         {/* Main featured banner slider */}
         <div className={cn(
-          enabledPromoBanners.length > 0 ? "lg:col-span-2" : "lg:col-span-3",
+          hasSideContent ? "lg:col-span-2" : "lg:col-span-3",
           "relative overflow-hidden bg-gray-900 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-gray-100",
           // Mobile: compact rounded card | Desktop: tall rounded card
           "h-[140px] xs:h-[160px] sm:h-[300px] md:h-[380px] lg:h-[450px]",
           "rounded-2xl sm:rounded-[28px]"
         )}>
-          {enabledSlides.map((slide, index) => {
+          {enabledSlides.length === 0 ? (
+            <div className="absolute inset-0 flex items-center justify-center text-center text-white px-6 bg-gradient-to-br from-pink-600 via-rose-600 to-primary">
+              <div>
+                <h2 className="text-base sm:text-3xl font-extrabold mb-1.5 sm:mb-2">Premium Flower Delivery in Hyderabad</h2>
+                <p className="mb-3 sm:mb-4 text-xs sm:text-sm text-white/90">Send handcrafted bouquets online with Spring Blossoms Florist.</p>
+                <Button onClick={() => navigate('/shop')} className="bg-white text-gray-900 hover:bg-white/90 font-bold rounded-xl shadow-md text-xs sm:text-sm">
+                  Explore Our Collection
+                </Button>
+              </div>
+            </div>
+          ) : (
+            enabledSlides.map((slide, index) => {
             const rawSlideImage = isMobile && slide.mobileImage ? slide.mobileImage : slide.image;
             const slideImage = getImageUrl(rawSlideImage, isMobile ? { width: 720 } : { width: 1400 });
             const overlayOpacity = slide.overlayOpacity !== undefined ? slide.overlayOpacity : 0.35;
@@ -248,7 +314,7 @@ const HomeHero = () => {
                 </div>
               </div>
             );
-          })}
+          }))}
 
           {/* Carousel navigation buttons - hidden on mobile for cleaner look */}
           {totalSlides > 1 && (
@@ -296,10 +362,76 @@ const HomeHero = () => {
           )}
         </div>
 
-        {/* Stacked dynamic promotional cards (1/3 width, hidden on mobile/tablet) */}
-        {enabledPromoBanners.length > 0 && (
+        {/* Stacked dynamic promotional cards / Single festival showcase (1/3 width, hidden on mobile/tablet) */}
+        {hasSideContent && (
           <div className="hidden lg:flex flex-col gap-4 lg:gap-5 h-[450px]">
-            {enabledPromoBanners.slice(0, 2).map((banner, index) => (
+            {/* If single festival is active, showcase it at the side of the hero slides */}
+            {singleFestivalDetails && (
+              <div 
+                onClick={() => navigate(`/${singleFestivalDetails.slug}`)}
+                className={cn(
+                  "relative rounded-[28px] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-gray-100 group cursor-pointer flex flex-col justify-between",
+                  enabledPromoBanners.length > 0 ? "flex-1 min-h-0" : "h-full"
+                )}
+              >
+                {/* Background Image */}
+                <img 
+                  src={singleFestivalDetails.bannerImage} 
+                  alt={singleFestivalDetails.titleText} 
+                  loading="lazy"
+                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                />
+
+                {/* Dark Gradient Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/20 group-hover:from-black/95 transition-colors duration-500" />
+
+                {/* Festive Ambient Glow Aura */}
+                <div 
+                  className="absolute -top-12 -right-12 w-48 h-48 rounded-full blur-3xl opacity-50 mix-blend-screen pointer-events-none"
+                  style={{ background: `radial-gradient(circle, ${singleFestivalDetails.primaryColor}, transparent)` }}
+                />
+
+                {/* Card Content */}
+                <div className="relative z-10 p-6 sm:p-7 flex flex-col justify-between h-full text-white">
+                  <div>
+                    <span 
+                      className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full backdrop-blur-md shadow-sm"
+                      style={{ 
+                        backgroundColor: `${singleFestivalDetails.primaryColor}40`, 
+                        border: `1px solid ${singleFestivalDetails.primaryColor}70`,
+                        color: '#ffffff'
+                      }}
+                    >
+                      <Sparkles size={11} className="fill-current text-yellow-300" />
+                      {singleFestivalDetails.tagText}
+                    </span>
+                    <h3 className="text-2xl lg:text-3xl font-black mt-3 leading-tight group-hover:text-yellow-200 transition-colors drop-shadow-sm">
+                      {singleFestivalDetails.titleText}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-white/80 mt-2 leading-relaxed line-clamp-3 max-w-[280px]">
+                      {singleFestivalDetails.descriptionText}
+                    </p>
+                  </div>
+
+                  <div className="pt-4">
+                    <button
+                      className="px-5 py-2.5 font-bold rounded-xl text-xs sm:text-sm tracking-wider uppercase inline-flex items-center gap-2 shadow-lg group-hover:scale-105 transition-all duration-300"
+                      style={{ 
+                        background: `linear-gradient(135deg, ${singleFestivalDetails.primaryColor}, ${singleFestivalDetails.secondaryColor})`, 
+                        color: '#ffffff',
+                        boxShadow: `0 4px 15px -3px ${singleFestivalDetails.primaryColor}60`
+                      }}
+                    >
+                      {singleFestivalDetails.buttonText}
+                      <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Promo banners: show remaining slot if festival exists, or up to 2 if no festival */}
+            {enabledPromoBanners.slice(0, singleFestivalDetails ? 1 : 2).map((banner, index) => (
               <div 
                 key={banner.id || index}
                 onClick={() => navigate(banner.link)}
@@ -310,7 +442,6 @@ const HomeHero = () => {
                     : "bg-gradient-to-br from-sky-500 to-indigo-600"
                 )}
               >
-                {/* Background Image */}
                 {banner.image && (
                   <img 
                     src={getImageUrl(banner.image, { width: 640 })} 
@@ -319,10 +450,8 @@ const HomeHero = () => {
                     className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700 ease-out"
                   />
                 )}
-                {/* Overlay */}
                 <div className="absolute inset-0 bg-black/25" />
                 
-                {/* Card Content */}
                 <div className="relative z-10 p-6 flex flex-col justify-between h-full text-white">
                   <div>
                     {banner.badge && (
@@ -355,6 +484,70 @@ const HomeHero = () => {
         )}
 
       </div>
+
+      {/* Mobile Festival Card (Displayed right below the slides in the hero section on mobile screens < lg) */}
+      {singleFestivalDetails && (
+        <div 
+          onClick={() => navigate(`/${singleFestivalDetails.slug}`)}
+          className="block lg:hidden mt-3 sm:mt-4 relative rounded-2xl sm:rounded-[24px] overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.06)] border border-gray-100 cursor-pointer group"
+          style={{
+            height: isMobile ? '145px' : '200px'
+          }}
+        >
+          {/* Background Image */}
+          <img 
+            src={singleFestivalDetails.bannerImage} 
+            alt={singleFestivalDetails.titleText} 
+            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+          />
+
+          {/* Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-black/30 group-hover:from-black/95 transition-colors" />
+
+          {/* Festive Ambient Glow Aura */}
+          <div 
+            className="absolute -top-10 -right-10 w-36 h-36 rounded-full blur-2xl opacity-50 mix-blend-screen pointer-events-none"
+            style={{ background: `radial-gradient(circle, ${singleFestivalDetails.primaryColor}, transparent)` }}
+          />
+
+          {/* Mobile Content */}
+          <div className="relative z-10 p-3.5 sm:p-5 flex flex-col justify-between h-full text-white">
+            <div>
+              <span 
+                className="inline-flex items-center gap-1 text-[9px] uppercase font-bold tracking-widest px-2.5 py-0.5 rounded-md backdrop-blur-sm shadow-sm"
+                style={{ 
+                  backgroundColor: `${singleFestivalDetails.primaryColor}40`, 
+                  border: `1px solid ${singleFestivalDetails.primaryColor}70`,
+                  color: '#ffffff'
+                }}
+              >
+                <Sparkles size={10} className="fill-current text-yellow-300" />
+                {singleFestivalDetails.tagText}
+              </span>
+              <h3 className="text-base sm:text-xl font-black mt-1.5 leading-tight group-hover:text-yellow-200 transition-colors drop-shadow-sm line-clamp-1">
+                {singleFestivalDetails.titleText}
+              </h3>
+              <p className="text-[11px] sm:text-xs text-white/80 mt-0.5 sm:mt-1 leading-snug line-clamp-2 max-w-[290px] sm:max-w-md">
+                {singleFestivalDetails.descriptionText}
+              </p>
+            </div>
+
+            <div className="pt-1">
+              <button
+                className="px-3.5 py-1.5 sm:px-4 sm:py-2 font-bold rounded-xl text-[11px] sm:text-xs tracking-wider uppercase inline-flex items-center gap-1.5 shadow-md group-hover:scale-105 transition-transform"
+                style={{ 
+                  background: `linear-gradient(to right, ${singleFestivalDetails.primaryColor}, ${singleFestivalDetails.secondaryColor})`, 
+                  color: '#ffffff',
+                  boxShadow: `0 3px 10px -2px ${singleFestivalDetails.primaryColor}60`
+                }}
+              >
+                {singleFestivalDetails.buttonText}
+                <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
