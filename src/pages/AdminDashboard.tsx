@@ -327,6 +327,16 @@ const AdminDashboard: React.FC = () => {
                 <span className="sidebar-item-text">Overview</span>
               </Link>
               <Link
+                to="/admin/products/all"
+                className={cn(
+                  "sidebar-item flex items-center py-2 px-3 rounded-md transition-colors",
+                  location.pathname === "/admin/products/all" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                )}
+              >
+                <Boxes className="h-4 w-4 mr-2" />
+                <span className="sidebar-item-text">All Products</span>
+              </Link>
+              <Link
                 to="/admin/products/bouquets"
                 className={cn(
                   "sidebar-item flex items-center py-2 px-3 rounded-md transition-colors",

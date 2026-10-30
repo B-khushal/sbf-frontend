@@ -2201,7 +2201,7 @@ const AdminProducts: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
-                          <Button variant="ghost" size="sm" onClick={() => navigate(`/admin/products/edit/${product._id}`)} className="touch-action-btn">
+                          <Button variant="ghost" size="sm" onClick={() => navigate(`/admin/products/edit/${product._id}`, { state: { from: '/admin/products/all' } })} className="touch-action-btn">
                             <Edit className="h-4 w-4" />
                           </Button>
                           <Button variant="ghost" size="sm" onClick={() => handleDeleteProduct(product._id)} className="touch-action-btn">
@@ -2452,7 +2452,7 @@ const AdminProducts: React.FC = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => navigate(`/admin/products/edit/${product._id}`)}
+                        onClick={() => navigate(`/admin/products/edit/${product._id}`, { state: { from: '/admin/products/all' } })}
                         className="flex-1 h-8 text-xs flex items-center justify-center gap-1"
                       >
                         <Edit className="h-3 w-3" /> Edit

@@ -69,7 +69,7 @@ const PlantsPage: React.FC = () => {
         loading={loading}
         catalogTypeFilter="plant"
         onRefresh={fetchPlants}
-        onEditProduct={(product) => navigate(`/admin/products/edit/${product._id}`)}
+        onEditProduct={(product) => navigate(`/admin/products/edit/${product._id}`, { state: { from: '/admin/products/plants' } })}
       />
     </div>
   );

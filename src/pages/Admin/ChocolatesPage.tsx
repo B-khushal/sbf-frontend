@@ -69,7 +69,7 @@ const ChocolatesPage: React.FC = () => {
         loading={loading}
         catalogTypeFilter="chocolate"
         onRefresh={fetchChocolates}
-        onEditProduct={(product) => navigate(`/admin/products/edit/${product._id}`)}
+        onEditProduct={(product) => navigate(`/admin/products/edit/${product._id}`, { state: { from: '/admin/products/chocolates' } })}
       />
     </div>
   );

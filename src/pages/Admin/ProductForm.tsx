@@ -270,9 +270,20 @@ const ProductForm = () => {
   const isVendorPath = location.pathname.includes('/vendor/');
   const [userRole, setUserRole] = useState<string>('');
   
-  // Helper function to get the correct products list route based on user role
+  // Helper function to get the correct products list route based on user role and product category
   const getProductsListRoute = () => {
-    return isVendorPath ? '/vendor/products' : '/admin/products';
+    if (isVendorPath) return '/vendor/products';
+    if (location.state && (location.state as any).from) {
+      return (location.state as any).from;
+    }
+    const type = (formData.catalogType || formData.category || '').toLowerCase();
+    if (type.includes('cake')) return '/admin/products/cakes';
+    if (type.includes('plant')) return '/admin/products/plants';
+    if (type.includes('chocolate')) return '/admin/products/chocolates';
+    if (type.includes('combo')) return '/admin/products/combos';
+    if (type.includes('hamper') || type.includes('basket')) return '/admin/products/hampers';
+    if (type.includes('bouquet') || type.includes('flower') || type.includes('rose')) return '/admin/products/bouquets';
+    return '/admin/products/all';
   };
 
   const [formData, setFormData] = useState<ProductData>(initialFormData);
@@ -1637,9 +1648,19 @@ const ProductForm = () => {
   };
 
   const handleCategoryChange = (value: string) => {
+    const valLower = (value || '').toLowerCase();
+    let newCatalogType = formData.catalogType;
+    if (valLower.includes('cake')) newCatalogType = 'cake';
+    else if (valLower.includes('plant')) newCatalogType = 'plant';
+    else if (valLower.includes('chocolate')) newCatalogType = 'chocolate';
+    else if (valLower.includes('combo')) newCatalogType = 'combo';
+    else if (valLower.includes('hamper') || valLower.includes('basket')) newCatalogType = 'hamper';
+    else if (valLower.includes('flower') || valLower.includes('bouquet') || valLower.includes('rose')) newCatalogType = 'bouquet';
+
     setFormData(prev => ({
       ...prev,
       category: value,
+      catalogType: newCatalogType as any,
       subcategory: getSubcategories(value).some((sub) => sub.slug === prev.subcategory)
         ? prev.subcategory
         : ''
@@ -1887,7 +1908,7 @@ const ProductForm = () => {
           formData.category?.toLowerCase().includes('combo') ||
           (Array.isArray(formData.comboAttributes?.comboProducts) && formData.comboAttributes.comboProducts.length > 0)
             ? 'combo'
-            : undefined
+            : (formData.category?.toLowerCase().includes('cake') ? 'cake' : (formData.category?.toLowerCase().includes('plant') ? 'plant' : (formData.category?.toLowerCase().includes('chocolate') ? 'chocolate' : 'bouquet')))
         ),
       };
       

@@ -100,6 +100,12 @@ const ProductsOverview: React.FC = () => {
             <RefreshCw className="h-4 w-4" />
             Refresh
           </Button>
+          <Link to="/admin/products/all">
+            <Button variant="outline" size="sm" className="flex items-center gap-1.5">
+              <Boxes className="h-4 w-4" />
+              Manage All Products
+            </Button>
+          </Link>
           <Link to="/admin/products/new">
             <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5 shadow-sm">
               <Plus className="h-4 w-4" />
@@ -288,7 +294,7 @@ const ProductsOverview: React.FC = () => {
               <CardTitle className="text-base font-semibold">Recently Added Products</CardTitle>
               <CardDescription className="text-xs">Latest additions to the product catalog.</CardDescription>
             </div>
-            <Link to="/admin/products/bouquets">
+            <Link to="/admin/products/all">
               <Button variant="ghost" size="sm" className="text-xs text-emerald-600 hover:text-emerald-700 flex items-center gap-1">
                 View All <ArrowRight className="h-3.5 w-3.5" />
               </Button>

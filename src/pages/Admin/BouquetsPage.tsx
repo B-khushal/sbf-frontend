@@ -336,7 +336,7 @@ const BouquetsPage: React.FC = () => {
         loading={loading}
         catalogTypeFilter="all"
         onRefresh={fetchBouquets}
-        onEditProduct={(product) => navigate(`/admin/products/edit/${product._id}`)}
+        onEditProduct={(product) => navigate(`/admin/products/edit/${product._id}`, { state: { from: '/admin/products/bouquets' } })}
       />
     </div>
   );
