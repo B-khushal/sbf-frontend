@@ -13,7 +13,7 @@ if (self.location.hostname === 'localhost' || self.location.hostname === '127.0.
   });
 }
 
-const CACHE_VERSION = "v1";
+const CACHE_VERSION = "v2";
 const UI_CACHE = `sbf-ui-${CACHE_VERSION}`;
 const APP_CACHE = `sbf-app-${CACHE_VERSION}`;
 const API_CACHE = `sbf-api-${CACHE_VERSION}`;
@@ -109,15 +109,10 @@ const networkFirst = async (request, cacheName) => {
   }
 };
 
-const adminRouteCacheFirst = async (request) => {
+const adminRouteNetworkFirst = async (request) => {
   const cache = await caches.open(APP_CACHE);
   const url = new URL(request.url);
   const routeRequest = new Request(`${url.origin}${url.pathname}`);
-  const cachedResponse = await cache.match(routeRequest);
-
-  if (cachedResponse) {
-    return cachedResponse;
-  }
 
   try {
     const networkResponse = await fetch(request);
@@ -126,6 +121,10 @@ const adminRouteCacheFirst = async (request) => {
     }
     return networkResponse;
   } catch (error) {
+    const cachedResponse = await cache.match(routeRequest);
+    if (cachedResponse) {
+      return cachedResponse;
+    }
     return (
       (await cache.match(OFFLINE_PAGE_URL)) ||
       new Response("Offline", { status: 503, statusText: "Offline" })
@@ -161,7 +160,7 @@ self.addEventListener("fetch", (event) => {
   }
 
   if (request.mode === "navigate" && ADMIN_VENDOR_ROUTE.test(pathname)) {
-    event.respondWith(adminRouteCacheFirst(request));
+    event.respondWith(adminRouteNetworkFirst(request));
     return;
   }
 

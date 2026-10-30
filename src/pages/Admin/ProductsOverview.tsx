@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import productService, { OverviewStats, ProductData } from "@/services/productService";
 import { getImageUrl } from "@/config";
+import AdminProducts from "./Products";
 import {
   Package,
   CheckCircle,
@@ -27,13 +29,16 @@ import {
   TrendingUp,
   RefreshCw,
   ArrowRight,
-  ShieldAlert
+  ShieldAlert,
+  LayoutDashboard
 } from "lucide-react";
 
 const ProductsOverview: React.FC = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<OverviewStats | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState<string>(searchParams.get("tab") || "overview");
 
   const fetchOverviewData = async () => {
     try {
@@ -80,60 +85,79 @@ const ProductsOverview: React.FC = () => {
 
   return (
     <div className="space-y-6 w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto">
-      {/* Header & Refresh */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            Catalog Overview
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Central management hub for all product types, inventory, and catalog performance.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={fetchOverviewData}
-            className="flex items-center gap-1.5"
-          >
-            <RefreshCw className="h-4 w-4" />
-            Refresh
-          </Button>
-          <Link to="/admin/products/all">
-            <Button variant="outline" size="sm" className="flex items-center gap-1.5">
-              <Boxes className="h-4 w-4" />
-              Manage All Products
+      <Tabs
+        value={activeTab}
+        onValueChange={(val) => {
+          setActiveTab(val);
+          setSearchParams(val === "overview" ? {} : { tab: val });
+        }}
+        className="space-y-6"
+      >
+        {/* Header & Tabs */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+              Product Catalog
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Central management hub for all product types, inventory, and catalog performance.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <TabsList className="bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+              <TabsTrigger value="overview" className="flex items-center gap-1.5 text-xs font-semibold data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                <LayoutDashboard className="h-3.5 w-3.5" /> Overview
+              </TabsTrigger>
+              <TabsTrigger value="table" className="flex items-center gap-1.5 text-xs font-semibold data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                <Boxes className="h-3.5 w-3.5" /> All Products ({stats?.totalProducts || 181})
+              </TabsTrigger>
+            </TabsList>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={fetchOverviewData}
+              className="flex items-center gap-1.5"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Refresh
             </Button>
-          </Link>
-          <Link to="/admin/products/new">
-            <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5 shadow-sm">
-              <Plus className="h-4 w-4" />
-              Add Product
-            </Button>
-          </Link>
+            <Link to="/admin/products/new">
+              <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5 shadow-sm font-semibold">
+                <Plus className="h-4 w-4" />
+                Add Product
+              </Button>
+            </Link>
+          </div>
         </div>
-      </div>
 
-      {/* Top 8 Analytics Metric Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 2xl:grid-cols-8 gap-4 2xl:gap-5">
-        {topCards.map((card, i) => {
-          const Icon = card.icon;
-          return (
-            <Card key={i} className="border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow">
-              <CardContent className="p-4 flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-slate-500">{card.title}</p>
-                  <p className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">{card.value}</p>
-                </div>
-                <div className={`p-2.5 rounded-xl ${card.bg}`}>
-                  <Icon className={`h-5 w-5 ${card.color}`} />
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+        <TabsContent value="overview" className="space-y-6 mt-0">
+          {/* Top 8 Analytics Metric Cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 2xl:grid-cols-8 gap-4 2xl:gap-5">
+            {topCards.map((card, i) => {
+              const Icon = card.icon;
+              return (
+                <Card
+                  key={i}
+                  onClick={() => {
+                    if (card.title.includes("Product")) {
+                      setActiveTab("table");
+                    }
+                  }}
+                  className={`border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md transition-all ${card.title.includes("Product") ? "cursor-pointer hover:border-emerald-500" : ""}`}
+                >
+                  <CardContent className="p-4 flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-medium text-slate-500">{card.title}</p>
+                      <p className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">{card.value}</p>
+                    </div>
+                    <div className={`p-2.5 rounded-xl ${card.bg}`}>
+                      <Icon className={`h-5 w-5 ${card.color}`} />
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
 
       {/* Quick Action Hub */}
       <Card className="border-slate-200/80 dark:border-slate-800 shadow-sm bg-gradient-to-r from-slate-900 to-slate-800 text-white">
@@ -361,6 +385,12 @@ const ProductsOverview: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+        </TabsContent>
+
+        <TabsContent value="table" className="mt-0">
+          <AdminProducts />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
