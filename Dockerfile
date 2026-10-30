@@ -71,8 +71,9 @@ RUN chown -R nginx:nginx /var/cache/nginx && \
     chown -R nginx:nginx /var/run/nginx.pid && \
     chown -R nginx:nginx /usr/share/nginx/html
 
-# Expose port 80 (Dokploy/reverse proxy handles SSL)
+# Expose port 80 and 3000 (Dokploy reverse proxy supports both)
 EXPOSE 80
+EXPOSE 3000
 
 # Healthcheck — ensure nginx is serving content (uses built-in busybox wget)
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
