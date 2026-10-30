@@ -104,8 +104,22 @@ const CakeFormSection: React.FC<CakeFormSectionProps> = ({ formData, setFormData
   const attrs = formData.cakeAttributes || {};
   const [customSizeInput, setCustomSizeInput] = useState('');
 
+  // Guard: Never run cake attribute synchronization on bouquets or non-cake products
+  const categoryStr = String(formData.category || '').toLowerCase();
+  const catalogTypeStr = String(formData.catalogType || '').toLowerCase();
+  const isExplicitNonCake = catalogTypeStr === 'bouquet' ||
+    catalogTypeStr === 'flower' ||
+    catalogTypeStr === 'plant' ||
+    categoryStr === 'bouquets' ||
+    categoryStr === 'bouquet' ||
+    categoryStr === 'flowers' ||
+    categoryStr === 'flower' ||
+    categoryStr.includes('bouquet');
+
   // Hydrate priceVariants and cakeAttributes with robust two-way syncing & combo inheritance
   useEffect(() => {
+    if (isExplicitNonCake) return;
+
     const hasExistingVariants = Array.isArray(formData.priceVariants) && formData.priceVariants.length > 0;
     const hasAvailableSizes = Array.isArray(attrs.availableSizes) && attrs.availableSizes.length > 0;
 

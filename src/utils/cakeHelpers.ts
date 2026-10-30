@@ -58,15 +58,31 @@ export const formatCakeWeightLabel = (weight?: string | null): string => {
 export const isCakeProduct = (product: any): boolean => {
   if (!product) return false;
 
-  // 1. Explicit catalogType
-  if (product.catalogType === 'cake') return true;
-
-  // 2. Primary category check
+  const catalogType = String(product.catalogType || '').toLowerCase().trim();
   const cat = (
     typeof product.category === 'string'
       ? product.category
       : product.category?.name || product.category?.slug || ''
   ).toLowerCase().trim();
+
+  // Strict non-cake guard: Bouquets, Flowers, and non-cake categories are NEVER cakes
+  if (
+    catalogType === 'bouquet' ||
+    catalogType === 'flower' ||
+    catalogType === 'plant' ||
+    cat === 'bouquets' ||
+    cat === 'bouquet' ||
+    cat === 'flowers' ||
+    cat === 'flower' ||
+    cat.includes('bouquet')
+  ) {
+    return false;
+  }
+
+  // 1. Explicit catalogType
+  if (product.catalogType === 'cake') return true;
+
+  // 2. Primary category check
   if (cat === 'cakes' || cat === 'cake') return true;
 
   // 3. Categories array check
@@ -84,9 +100,9 @@ export const isCakeProduct = (product: any): boolean => {
       ? product.subcategory
       : product.subcategory?.name || product.subcategory?.slug || ''
   ).toLowerCase().trim();
-  if (subcat === 'cakes' || subcat === 'cake' || subcat.includes('cake')) return true;
+  if (subcat === 'cakes' || subcat === 'cake' || (subcat.includes('cake') && !subcat.includes('combo'))) return true;
 
-  // 5. Cake attributes present
+  // 5. Cake attributes present (must have cake-specific properties like flavor, shape, weight, or eggless)
   if (
     product.cakeAttributes &&
     (product.cakeAttributes.flavor ||
@@ -94,8 +110,8 @@ export const isCakeProduct = (product: any): boolean => {
       product.cakeAttributes.shape ||
       product.cakeAttributes.prepTime ||
       product.cakeAttributes.occasion ||
-      (Array.isArray(product.cakeAttributes.availableSizes) && product.cakeAttributes.availableSizes.length > 0) ||
-      product.cakeAttributes.eggless !== undefined)
+      product.cakeAttributes.eggless !== undefined ||
+      (Array.isArray(product.cakeAttributes.availableSizes) && product.cakeAttributes.availableSizes.length > 0 && (cat === 'cakes' || cat === 'cake' || catalogType === 'cake')))
   ) {
     return true;
   }

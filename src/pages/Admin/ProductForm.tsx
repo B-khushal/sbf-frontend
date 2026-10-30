@@ -13,7 +13,7 @@ import productService from '@/services/productService';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, Trash2, ArrowLeft, Upload, Image as ImageIcon, Plus, X, Wand2, Flower2, Gift, Camera, Hash, MessageSquare, IndianRupee, AlertCircle, ChevronDown, ChevronUp, Heart, Film, Play, Link as LinkIcon, Move, FolderTree, Sparkles, CheckCircle, Calculator } from 'lucide-react';
+import { Loader2, Trash2, ArrowLeft, Upload, Image as ImageIcon, Plus, X, Wand2, Flower2, Gift, Camera, Hash, MessageSquare, IndianRupee, AlertCircle, ChevronDown, ChevronUp, Heart, Film, Play, Link as LinkIcon, Move, FolderTree, Sparkles, CheckCircle, Calculator, Pencil, Check } from 'lucide-react';
 import api from '../../services/api';
 import axios from 'axios'; // Keep for axios.isAxiosError
 import ProductFeaturesToggle from '@/components/ui/ProductFeaturesToggle';
@@ -241,15 +241,7 @@ const initialFormData: ProductData = {
   valentineSlug: '',
   seasonalCampaigns: [],
   campaignSettings: {},
-  cakeAttributes: {
-    flavor: '',
-    weight: '',
-    shape: 'round',
-    eggless: false,
-    prepTime: '',
-    availableSizes: [],
-    occasion: '',
-  },
+  cakeAttributes: undefined,
   plantAttributes: {},
   chocolateAttributes: {},
   hamperAttributes: {},
@@ -655,7 +647,33 @@ const ProductForm = () => {
     discountPrice: undefined,
     stock: 0
   });
+  const [editingVariantIndex, setEditingVariantIndex] = useState<number | null>(null);
+  const [editingVariantData, setEditingVariantData] = useState<PriceVariant>({
+    label: '',
+    price: 0,
+    discountPrice: undefined,
+    stock: 0
+  });
   const [forceShowCakeSection, setForceShowCakeSection] = useState(false);
+
+  const isBouquetProduct = Boolean(
+    formData.catalogType === 'bouquet' ||
+    formData.catalogType === 'flower' ||
+    formData.category === 'bouquets' ||
+    formData.category === 'bouquet' ||
+    formData.category === 'flowers' ||
+    formData.category === 'flower' ||
+    (typeof formData.category === 'string' && (formData.category.toLowerCase().includes('bouquet') || formData.category.toLowerCase().includes('flower')))
+  );
+
+  const isCakeProductType = !isBouquetProduct && Boolean(
+    formData.catalogType === 'cake' ||
+    formData.category === 'cakes' ||
+    formData.category === 'cake' ||
+    formData.subcategory?.toLowerCase().includes('cake') ||
+    formData.categories?.some(c => String(c).toLowerCase().includes('cake')) ||
+    (formData.title?.toLowerCase().includes('cake') && !formData.title?.toLowerCase().includes('bouquet'))
+  );
 
   const fetchProductData = async () => {
     try {
@@ -766,16 +784,28 @@ const ProductForm = () => {
           ? (data as any).details.priceVariants
           : []);
 
+      const fetchedCat = String(data.category || '').toLowerCase();
+      const fetchedCatalogType = String(data.catalogType || (data as any).details?.catalogType || '').toLowerCase();
+      const isBouquetData = fetchedCatalogType === 'bouquet' || fetchedCat === 'bouquets' || fetchedCat === 'bouquet' || fetchedCat === 'flowers' || fetchedCat === 'flower' || fetchedCat.includes('bouquet');
+      const isCakeData = !isBouquetData && (
+        fetchedCatalogType === 'cake' ||
+        fetchedCat === 'cakes' ||
+        fetchedCat === 'cake' ||
+        fetchedCat.includes('cake')
+      );
+
       const hasVariantData = Boolean(
         data.hasPriceVariants ||
         rawPriceVariants.length > 0 ||
-        (Array.isArray(data.cakeAttributes?.availableSizes) && data.cakeAttributes.availableSizes.length > 0) ||
-        (Array.isArray((data as any).details?.cakeAttributes?.availableSizes) && (data as any).details.cakeAttributes.availableSizes.length > 0)
+        (!isBouquetData && (
+          (Array.isArray(data.cakeAttributes?.availableSizes) && data.cakeAttributes.availableSizes.length > 0) ||
+          (Array.isArray((data as any).details?.cakeAttributes?.availableSizes) && (data as any).details.cakeAttributes.availableSizes.length > 0)
+        ))
       );
 
-      // If price variants are empty but cake has available sizes, pre-synthesize them
+      // If price variants are empty but cake has available sizes, pre-synthesize them (only for actual cakes)
       let effectivePriceVariants = rawPriceVariants;
-      if (effectivePriceVariants.length === 0) {
+      if (effectivePriceVariants.length === 0 && isCakeData) {
         const sizes = data.cakeAttributes?.availableSizes || (data as any).details?.cakeAttributes?.availableSizes;
         if (Array.isArray(sizes) && sizes.length > 0) {
           const defaultPrice = Number(data.price) || 0;
@@ -874,7 +904,8 @@ const ProductForm = () => {
         seasonalCampaigns: Array.isArray(data.seasonalCampaigns) ? data.seasonalCampaigns : [],
         campaignSettings: data.campaignSettings || {},
         occasionIds: Array.isArray(data.occasionIds) ? data.occasionIds : [],
-        cakeAttributes: data.cakeAttributes || (data as any).details?.cakeAttributes || {
+        catalogType: isBouquetData ? 'bouquet' : (isCakeData ? 'cake' : (data.catalogType || (data as any).details?.catalogType || 'bouquet')),
+        cakeAttributes: isCakeData ? (data.cakeAttributes || (data as any).details?.cakeAttributes || {
           flavor: '',
           weight: '',
           shape: 'round',
@@ -882,7 +913,7 @@ const ProductForm = () => {
           prepTime: '',
           availableSizes: [],
           occasion: '',
-        },
+        }) : undefined,
         plantAttributes: data.plantAttributes || (data as any).details?.plantAttributes || {},
         chocolateAttributes: data.chocolateAttributes || (data as any).details?.chocolateAttributes || {},
         hamperAttributes: data.hamperAttributes || (data as any).details?.hamperAttributes || {},
@@ -1893,23 +1924,27 @@ const ProductForm = () => {
         seasonalCampaigns: formData.seasonalCampaigns || [],
         campaignSettings: formData.campaignSettings || {},
         occasionIds: formData.occasionIds || [],
-        cakeAttributes: formData.cakeAttributes ? {
-          ...formData.cakeAttributes,
-          availableSizes: Array.isArray(formData.priceVariants) && formData.priceVariants.length > 0
-            ? formData.priceVariants.map(v => v.label || v.size || v.name)
-            : (formData.cakeAttributes.availableSizes || [])
-        } : formData.cakeAttributes,
+        cakeAttributes: isCakeProductType ? (
+          formData.cakeAttributes ? {
+            ...formData.cakeAttributes,
+            availableSizes: Array.isArray(formData.priceVariants) && formData.priceVariants.length > 0
+              ? formData.priceVariants.map(v => v.label || v.size || v.name)
+              : (formData.cakeAttributes.availableSizes || [])
+          } : formData.cakeAttributes
+        ) : undefined,
         plantAttributes: formData.plantAttributes,
         chocolateAttributes: formData.chocolateAttributes,
         hamperAttributes: formData.hamperAttributes,
         comboAttributes: formData.comboAttributes,
-        catalogType: formData.catalogType || (
-          formData.category === 'combos' ||
-          formData.category?.toLowerCase().includes('combo') ||
-          (Array.isArray(formData.comboAttributes?.comboProducts) && formData.comboAttributes.comboProducts.length > 0)
-            ? 'combo'
-            : (formData.category?.toLowerCase().includes('cake') ? 'cake' : (formData.category?.toLowerCase().includes('plant') ? 'plant' : (formData.category?.toLowerCase().includes('chocolate') ? 'chocolate' : 'bouquet')))
-        ),
+        catalogType: isBouquetProduct ? 'bouquet' : (isCakeProductType ? 'cake' : (
+          formData.catalogType || (
+            formData.category === 'combos' ||
+            formData.category?.toLowerCase().includes('combo') ||
+            (Array.isArray(formData.comboAttributes?.comboProducts) && formData.comboAttributes.comboProducts.length > 0)
+              ? 'combo'
+              : (formData.category?.toLowerCase().includes('cake') ? 'cake' : (formData.category?.toLowerCase().includes('plant') ? 'plant' : (formData.category?.toLowerCase().includes('chocolate') ? 'chocolate' : 'bouquet')))
+          )
+        )),
       };
       
       if (isEditMode) {
@@ -2301,11 +2336,170 @@ const ProductForm = () => {
     });
   };
 
+  const handleStartEditVariant = (index: number) => {
+    setEditingVariantIndex(index);
+    const variant = formData.priceVariants[index];
+    setEditingVariantData({
+      label: variant.label,
+      price: variant.price,
+      discountPrice: variant.discountPrice,
+      stock: variant.stock,
+    });
+  };
+
+  const handleCancelEditVariant = () => {
+    setEditingVariantIndex(null);
+    setEditingVariantData({
+      label: '',
+      price: 0,
+      discountPrice: undefined,
+      stock: 0,
+    });
+  };
+
+  const handleSaveEditVariant = (index: number) => {
+    const trimmedLabel = editingVariantData.label.trim();
+    if (!trimmedLabel) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a label for the variant",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (Number(editingVariantData.price) <= 0) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a price greater than 0",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (Number(editingVariantData.stock) < 0) {
+      toast({
+        title: "Validation Error",
+        description: "Stock cannot be negative",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Check for duplicate labels with other variants
+    const isDuplicate = formData.priceVariants.some((v, i) => i !== index && v.label.toLowerCase() === trimmedLabel.toLowerCase());
+    if (isDuplicate) {
+      toast({
+        title: "Validation Error",
+        description: "Another variant with this label already exists",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setFormData(prev => {
+      const updated = [...(prev.priceVariants || [])];
+      updated[index] = {
+        label: trimmedLabel,
+        price: Number(editingVariantData.price),
+        discountPrice: (editingVariantData.discountPrice !== undefined && editingVariantData.discountPrice !== null && (editingVariantData.discountPrice as any) !== '')
+          ? Number(editingVariantData.discountPrice)
+          : undefined,
+        stock: Number(editingVariantData.stock) || 0,
+      };
+      return {
+        ...prev,
+        priceVariants: updated,
+      };
+    });
+
+    setEditingVariantIndex(null);
+    toast({
+      title: "Variant Updated",
+      description: `Updated variant: ${trimmedLabel}`,
+      variant: "default"
+    });
+  };
+
+  const isBouquet2VariantsActive = Boolean(
+    formData.hasPriceVariants &&
+    formData.priceVariants &&
+    formData.priceVariants.length === 2 &&
+    formData.priceVariants.some(v => (v.label || '').toLowerCase().includes('standard')) &&
+    formData.priceVariants.some(v => (v.label || '').toLowerCase().includes('deluxe'))
+  );
+
+  const applyBouquet2VariantsPreset = () => {
+    const basePrice = Number(formData.price) > 0 ? Number(formData.price) : 899;
+    const baseStock = Number(formData.countInStock !== undefined && formData.countInStock !== null ? formData.countInStock : 20);
+    const baseDiscount = Number(formData.discount) || 0;
+
+    const standardPrice = basePrice;
+    const standardDiscountPrice = formData.discountPrice !== undefined && formData.discountPrice !== null && Number(formData.discountPrice) > 0
+      ? Number(formData.discountPrice)
+      : (baseDiscount > 0 ? Math.round(standardPrice * (1 - baseDiscount / 100)) : undefined);
+
+    const deluxePrice = Math.round(basePrice * 1.45);
+    const deluxeDiscountPrice = baseDiscount > 0
+      ? Math.round(deluxePrice * (1 - baseDiscount / 100))
+      : undefined;
+
+    const standardVariant: PriceVariant = {
+      label: 'Standard',
+      price: standardPrice,
+      discountPrice: standardDiscountPrice,
+      stock: baseStock,
+    };
+
+    const deluxeVariant: PriceVariant = {
+      label: 'Deluxe',
+      price: deluxePrice,
+      discountPrice: deluxeDiscountPrice,
+      stock: baseStock,
+    };
+
+    setFormData(prev => ({
+      ...prev,
+      hasPriceVariants: true,
+      priceVariants: [standardVariant, deluxeVariant],
+    }));
+
+    setEditingVariantIndex(null);
+
+    toast({
+      title: "2 Bouquet Variants Activated",
+      description: "Standard & Deluxe bouquet variants populated. You can edit their prices and stock below.",
+      variant: "default",
+    });
+  };
+
+  const handleToggleBouquet2Variants = (checked: boolean) => {
+    if (checked) {
+      applyBouquet2VariantsPreset();
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        hasPriceVariants: false,
+        priceVariants: [],
+      }));
+      setEditingVariantIndex(null);
+      toast({
+        title: "Bouquet Variants Disabled",
+        description: "Single bouquet pricing restored.",
+      });
+    }
+  };
+
   const removePriceVariant = (index: number) => {
     setFormData(prev => ({
       ...prev,
       priceVariants: prev.priceVariants.filter((_, i) => i !== index)
     }));
+    if (editingVariantIndex === index) {
+      setEditingVariantIndex(null);
+    } else if (editingVariantIndex !== null && editingVariantIndex > index) {
+      setEditingVariantIndex(prev => (prev !== null ? prev - 1 : null));
+    }
   };
 
   // Show loading state while data is being fetched in edit mode
@@ -2725,19 +2919,57 @@ const ProductForm = () => {
         </Card>
 
         {/* Price Variants */}
-        <Card className="border-2 border-dashed border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-3 text-purple-800">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100">
-                <IndianRupee className="h-5 w-5 text-purple-600" />
+        <Card className="border-2 border-dashed border-purple-200 bg-gradient-to-br from-purple-50/50 to-pink-50/30 dark:bg-slate-900 shadow-sm rounded-2xl overflow-hidden">
+          <CardHeader className="bg-purple-50/50 dark:bg-purple-950/30 border-b border-purple-100 dark:border-purple-900/50 py-4 px-6">
+            <CardTitle className="flex items-center gap-3 text-purple-900 dark:text-purple-200 text-lg font-bold">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-100 text-purple-600">
+                <IndianRupee className="h-5 w-5" />
               </div>
-              Price Variants
+              {isBouquetProduct ? "Bouquet Size & Price Variants" : (isCakeProductType ? "Cake Weight & Price Variants" : "Price Variants")}
             </CardTitle>
-            <CardDescription className="text-purple-600">
-              Add multiple price variants for different sizes or quantities
+            <CardDescription className="text-purple-700 dark:text-purple-300 text-xs">
+              {isBouquetProduct 
+                ? "Configure size options for bouquets (e.g. Standard vs Deluxe with extra stems). Independent of cake weights."
+                : "Add multiple price variants for different sizes or quantities with independent pricing and discounts."}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-6 pt-6">
+            {/* Bouquet 2-Variant Toggle Preset */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-xl border border-pink-200 bg-gradient-to-r from-pink-50/80 via-purple-50/40 to-pink-50/80 dark:from-pink-950/20 dark:to-purple-950/20 gap-3 shadow-xs">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">🌸</span>
+                  <Label htmlFor="bouquet2VariantsToggle" className="text-sm font-bold text-pink-950 dark:text-pink-100 cursor-pointer">
+                    Bouquet 2-Size Variants (Standard & Deluxe)
+                  </Label>
+                  <Badge variant="outline" className="text-[11px] bg-pink-100 text-pink-700 border-pink-300 font-semibold">
+                    2 Sizes Preset
+                  </Badge>
+                </div>
+                <p className="text-xs text-pink-800/80 dark:text-pink-300/80 leading-relaxed">
+                  Toggle on to automatically set 2 bouquet sizes: <strong>Standard</strong> (regular price) and <strong>Deluxe</strong> (extra stems). These are strictly bouquet variants and will not be mixed with cake weights.
+                </p>
+              </div>
+              <div className="flex items-center gap-2.5 self-end sm:self-auto shrink-0">
+                {isBouquet2VariantsActive && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={applyBouquet2VariantsPreset}
+                    className="h-8 text-xs font-semibold text-pink-700 border-pink-300 hover:bg-pink-100 bg-white"
+                  >
+                    Reset 2 Sizes
+                  </Button>
+                )}
+                <Switch
+                  id="bouquet2VariantsToggle"
+                  checked={isBouquet2VariantsActive}
+                  onCheckedChange={handleToggleBouquet2Variants}
+                />
+              </div>
+            </div>
+
             {/* Main Toggle */}
             <div className="flex items-center justify-between rounded-lg border border-purple-200 bg-white p-4">
               <div className="flex items-center space-x-3">
@@ -2748,13 +2980,13 @@ const ProductForm = () => {
                 />
                 <div>
                   <Label htmlFor="hasPriceVariants" className="text-base font-medium">Enable Price Variants</Label>
-                  <p className="text-sm text-gray-500">Allow different prices for different sizes/quantities</p>
+                  <p className="text-sm text-gray-500">Allow multiple price tiers with individual prices and stock</p>
                 </div>
               </div>
               {formData.hasPriceVariants && (
-                <Badge variant="secondary" className="bg-purple-100 text-purple-700">
+                <Badge variant="secondary" className="bg-purple-100 text-purple-700 font-semibold">
                   <IndianRupee className="mr-1 h-3 w-3" />
-                  Multiple Prices
+                  {formData.priceVariants.length} {formData.priceVariants.length === 1 ? 'Variant' : 'Variants'}
                 </Badge>
               )}
             </div>
@@ -2816,41 +3048,150 @@ const ProductForm = () => {
                   </Button>
                 </div>
 
-                {/* Existing Variants */}
+                {/* Existing Variants with Editing Capability */}
                 {formData.priceVariants.length > 0 && (
                   <div className="space-y-4">
-                    <h4 className="font-medium text-gray-900">Current Variants</h4>
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-semibold text-gray-900 flex items-center gap-2">
+                        <span>Current Variants</span>
+                        <Badge variant="outline" className="text-xs bg-slate-50 text-slate-600">
+                          {formData.priceVariants.length}
+                        </Badge>
+                      </h4>
+                      <span className="text-xs text-gray-500">Click Edit to modify variant labels, prices, or stock</span>
+                    </div>
+
                     <div className="space-y-3">
                       {formData.priceVariants.map((variant, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-4"
-                        >
-                          <div className="flex-1 space-y-1">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium text-gray-900">{variant.label}</span>
-                              <Badge variant="outline" className="bg-purple-50 text-purple-700">
-                                ₹{variant.price}
-                              </Badge>
-                              {variant.discountPrice !== undefined && variant.discountPrice !== null && Number(variant.discountPrice) < Number(variant.price) && (
-                                <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-300">
-                                  Pays: ₹{variant.discountPrice}
+                        <div key={index}>
+                          {editingVariantIndex === index ? (
+                            <div className="rounded-xl border-2 border-purple-400 bg-purple-50/50 dark:bg-purple-950/30 p-4 shadow-sm space-y-3">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-bold uppercase tracking-wider text-purple-800 dark:text-purple-300 flex items-center gap-1.5">
+                                  <Pencil className="h-3.5 w-3.5" /> Editing Variant #{index + 1}
+                                </span>
+                                <Badge variant="outline" className="text-[10px] bg-purple-100 text-purple-800 border-purple-300 font-bold">
+                                  Editing
                                 </Badge>
-                              )}
+                              </div>
+
+                              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                                <div className="space-y-1">
+                                  <Label className="text-xs font-semibold text-slate-700">Variant Label</Label>
+                                  <Input
+                                    value={editingVariantData.label}
+                                    onChange={(e) => setEditingVariantData(prev => ({ ...prev, label: e.target.value }))}
+                                    placeholder="e.g. Standard, Deluxe"
+                                    className="h-9 text-sm bg-white"
+                                  />
+                                </div>
+
+                                <div className="space-y-1">
+                                  <Label className="text-xs font-semibold text-slate-700">Price (₹)</Label>
+                                  <Input
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    value={editingVariantData.price || ''}
+                                    onChange={(e) => setEditingVariantData(prev => ({ ...prev, price: Number(e.target.value) }))}
+                                    placeholder="Regular price"
+                                    className="h-9 text-sm bg-white"
+                                  />
+                                </div>
+
+                                <div className="space-y-1">
+                                  <Label className="text-xs font-semibold text-slate-700">Direct Discount Price (₹)</Label>
+                                  <Input
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    value={editingVariantData.discountPrice !== undefined && editingVariantData.discountPrice !== null ? editingVariantData.discountPrice : ''}
+                                    onChange={(e) => setEditingVariantData(prev => ({
+                                      ...prev,
+                                      discountPrice: e.target.value === '' ? undefined : Number(e.target.value)
+                                    }))}
+                                    placeholder="Optional pays price"
+                                    className="h-9 text-sm bg-white"
+                                  />
+                                </div>
+
+                                <div className="space-y-1">
+                                  <Label className="text-xs font-semibold text-slate-700">Stock</Label>
+                                  <Input
+                                    type="number"
+                                    min="0"
+                                    value={editingVariantData.stock}
+                                    onChange={(e) => setEditingVariantData(prev => ({ ...prev, stock: Number(e.target.value) }))}
+                                    placeholder="Available stock"
+                                    className="h-9 text-sm bg-white"
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="flex items-center justify-end gap-2 pt-2 border-t border-purple-200">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={handleCancelEditVariant}
+                                  className="h-8 text-xs text-slate-600 hover:bg-slate-200/60"
+                                >
+                                  <X className="h-3.5 w-3.5 mr-1" /> Cancel
+                                </Button>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  onClick={() => handleSaveEditVariant(index)}
+                                  className="h-8 text-xs bg-purple-600 hover:bg-purple-700 text-white font-semibold shadow-xs"
+                                >
+                                  <Check className="h-3.5 w-3.5 mr-1" /> Save Changes
+                                </Button>
+                              </div>
                             </div>
-                            <div className="text-sm text-gray-500">
-                              Stock: {variant.stock} units
+                          ) : (
+                            <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-4 hover:border-gray-300 transition-colors">
+                              <div className="flex-1 space-y-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-semibold text-gray-900">{variant.label}</span>
+                                  <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 font-bold">
+                                    ₹{variant.price}
+                                  </Badge>
+                                  {variant.discountPrice !== undefined && variant.discountPrice !== null && Number(variant.discountPrice) < Number(variant.price) && (
+                                    <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-300 font-semibold">
+                                      Pays: ₹{variant.discountPrice}
+                                    </Badge>
+                                  )}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  Stock: <strong className="text-gray-700">{variant.stock}</strong> units
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-1.5">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleStartEditVariant(index)}
+                                  className="h-8 px-2.5 text-xs text-slate-700 hover:text-purple-700 hover:bg-purple-100 rounded-lg flex items-center gap-1"
+                                  title="Edit this variant"
+                                >
+                                  <Pencil className="h-3.5 w-3.5" />
+                                  <span>Edit</span>
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => removePriceVariant(index)}
+                                  className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg"
+                                  title="Delete variant"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
                             </div>
-                          </div>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removePriceVariant(index)}
-                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -3138,29 +3479,18 @@ const ProductForm = () => {
         </Card>
 
         {/* Specialized Domain Product Forms (Cakes, Plants, Chocolates, Hampers) */}
-        {(Boolean(
+        {!isBouquetProduct && ((
           formData.category === 'cakes' ||
           formData.category === 'cake' ||
           formData.catalogType === 'cake' ||
           formData.subcategory?.toLowerCase().includes('cake') ||
           formData.categories?.some(c => String(c).toLowerCase().includes('cake')) ||
-          formData.title?.toLowerCase().includes('cake') ||
-          formData.description?.toLowerCase().includes('cake') ||
-          (formData.cakeAttributes && Object.keys(formData.cakeAttributes).some(k => {
-            const val = (formData.cakeAttributes as any)[k];
-            return val !== undefined && val !== '' && val !== null && (!Array.isArray(val) || val.length > 0);
-          })) ||
+          (formData.title?.toLowerCase().includes('cake') && !formData.title?.toLowerCase().includes('bouquet')) ||
           (Array.isArray(formData.comboAttributes?.comboProducts) && formData.comboAttributes.comboProducts.some((p: any) =>
             p.type === 'cake' || p.catalogType === 'cake' || String(p.name || '').toLowerCase().includes('cake')
           )) ||
-          (Array.isArray((formData as any).hamperAttributes?.hamperItems) && (formData as any).hamperAttributes.hamperItems.some((item: any) =>
-            item.type === 'cake' || item.catalogType === 'cake' || String(item.name || '').toLowerCase().includes('cake')
-          )) ||
-          (Array.isArray(formData.priceVariants) && formData.priceVariants.some((v: any) =>
-            /(\d+(\.\d+)?\s*(kg|gm|pound|tier|inch)|½|1\/2)/i.test(v.label || v.size || '')
-          )) ||
           forceShowCakeSection
-        )) ? (
+        ) ? (
           <CakeFormSection formData={formData} setFormData={setFormData} />
         ) : (
           <div className="flex items-center justify-between p-3.5 rounded-xl border border-dashed border-amber-300 bg-amber-50/50 text-xs">
@@ -3178,7 +3508,7 @@ const ProductForm = () => {
               <Plus className="w-3.5 h-3.5 mr-1" /> Add Cake Weight Variants
             </Button>
           </div>
-        )}
+        ))}
 
         {(formData.category === 'plants' || formData.category === 'plant' || formData.subcategory?.toLowerCase().includes('plant') || formData.catalogType === 'plant') && (
           <PlantFormSection formData={formData} setFormData={setFormData} />
