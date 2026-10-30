@@ -68,6 +68,9 @@ export interface PriceVariant {
   stock: number;
   discountPrice?: number;
   comparePrice?: number;
+  detail?: string;
+  description?: string;
+  badge?: string;
 }
 
 export interface ProductVideo {

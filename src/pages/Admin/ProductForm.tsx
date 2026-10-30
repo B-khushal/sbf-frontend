@@ -161,6 +161,9 @@ interface PriceVariant {
   stock: number;
   discountPrice?: number;
   comparePrice?: number;
+  detail?: string;
+  description?: string;
+  badge?: string;
 }
 
 const initialFormData: ProductData = {
@@ -643,6 +646,7 @@ const ProductForm = () => {
   const [comboTotalPrice, setComboTotalPrice] = useState(0);
   const [newPriceVariant, setNewPriceVariant] = useState<PriceVariant>({
     label: '',
+    detail: '',
     price: 0,
     discountPrice: undefined,
     stock: 0
@@ -650,6 +654,7 @@ const ProductForm = () => {
   const [editingVariantIndex, setEditingVariantIndex] = useState<number | null>(null);
   const [editingVariantData, setEditingVariantData] = useState<PriceVariant>({
     label: '',
+    detail: '',
     price: 0,
     discountPrice: undefined,
     stock: 0
@@ -2315,6 +2320,7 @@ const ProductForm = () => {
 
     setNewPriceVariant({
       label: '',
+      detail: '',
       price: 0,
       discountPrice: undefined,
       stock: 0
@@ -2341,6 +2347,7 @@ const ProductForm = () => {
     const variant = formData.priceVariants[index];
     setEditingVariantData({
       label: variant.label,
+      detail: variant.detail || variant.description || '',
       price: variant.price,
       discountPrice: variant.discountPrice,
       stock: variant.stock,
@@ -2351,6 +2358,7 @@ const ProductForm = () => {
     setEditingVariantIndex(null);
     setEditingVariantData({
       label: '',
+      detail: '',
       price: 0,
       discountPrice: undefined,
       stock: 0,
@@ -2400,7 +2408,10 @@ const ProductForm = () => {
     setFormData(prev => {
       const updated = [...(prev.priceVariants || [])];
       updated[index] = {
+        ...updated[index],
         label: trimmedLabel,
+        detail: editingVariantData.detail ? editingVariantData.detail.trim() : undefined,
+        description: editingVariantData.detail ? editingVariantData.detail.trim() : undefined,
         price: Number(editingVariantData.price),
         discountPrice: (editingVariantData.discountPrice !== undefined && editingVariantData.discountPrice !== null && (editingVariantData.discountPrice as any) !== '')
           ? Number(editingVariantData.discountPrice)
@@ -2444,8 +2455,28 @@ const ProductForm = () => {
       ? Math.round(deluxePrice * (1 - baseDiscount / 100))
       : undefined;
 
+    const titleLower = String(formData.title || '').toLowerCase();
+    let standardDetail = '6 Orchids';
+    let deluxeDetail = '8 Orchids';
+
+    if (titleLower.includes('rose')) {
+      standardDetail = '10 Red Roses';
+      deluxeDetail = '15 Red Roses & Fillers';
+    } else if (titleLower.includes('lily') || titleLower.includes('lilies')) {
+      standardDetail = '3 Asiatic Lilies';
+      deluxeDetail = '5 Asiatic Lilies';
+    } else if (titleLower.includes('carnation')) {
+      standardDetail = '10 Carnations';
+      deluxeDetail = '15 Carnations & Fillers';
+    } else if (!titleLower.includes('orchid')) {
+      standardDetail = '6 Stems Standard Bouquet';
+      deluxeDetail = '8 Stems Deluxe Bouquet';
+    }
+
     const standardVariant: PriceVariant = {
       label: 'Standard',
+      detail: standardDetail,
+      description: standardDetail,
       price: standardPrice,
       discountPrice: standardDiscountPrice,
       stock: baseStock,
@@ -2453,6 +2484,9 @@ const ProductForm = () => {
 
     const deluxeVariant: PriceVariant = {
       label: 'Deluxe',
+      detail: deluxeDetail,
+      description: deluxeDetail,
+      badge: 'Deluxe Bloom',
       price: deluxePrice,
       discountPrice: deluxeDiscountPrice,
       stock: baseStock,
@@ -2996,17 +3030,25 @@ const ProductForm = () => {
                 {/* Add New Variant */}
                 <div className="space-y-4">
                   <h4 className="font-medium text-gray-900">Add New Variant</h4>
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
-                    <div className="space-y-2">
-                      <Label>Label</Label>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-5">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold text-slate-700">Label *</Label>
                       <Input
-                        placeholder="e.g., Small, Medium, Large"
+                        placeholder="e.g. Standard, Deluxe"
                         value={newPriceVariant.label}
                         onChange={(e) => handlePriceVariantChange('label', e.target.value)}
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label>Price (₹)</Label>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold text-slate-700">Detail / Includes</Label>
+                      <Input
+                        placeholder="e.g. 6 Orchids, 8 Orchids"
+                        value={newPriceVariant.detail || ''}
+                        onChange={(e) => handlePriceVariantChange('detail', e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold text-slate-700">Price (₹) *</Label>
                       <Input
                         type="number"
                         placeholder="Enter regular price"
@@ -3016,8 +3058,8 @@ const ProductForm = () => {
                         step="0.01"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label>Direct Discount Price (₹)</Label>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold text-slate-700">Direct Discount (₹)</Label>
                       <Input
                         type="number"
                         placeholder="Optional discount price"
@@ -3027,8 +3069,8 @@ const ProductForm = () => {
                         step="0.01"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label>Stock</Label>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold text-slate-700">Stock</Label>
                       <Input
                         type="number"
                         placeholder="Enter stock"
@@ -3058,7 +3100,7 @@ const ProductForm = () => {
                           {formData.priceVariants.length}
                         </Badge>
                       </h4>
-                      <span className="text-xs text-gray-500">Click Edit to modify variant labels, prices, or stock</span>
+                      <span className="text-xs text-gray-500">Click Edit to modify variant labels, details, prices, or stock</span>
                     </div>
 
                     <div className="space-y-3">
@@ -3075,9 +3117,9 @@ const ProductForm = () => {
                                 </Badge>
                               </div>
 
-                              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
                                 <div className="space-y-1">
-                                  <Label className="text-xs font-semibold text-slate-700">Variant Label</Label>
+                                  <Label className="text-xs font-semibold text-slate-700">Variant Label *</Label>
                                   <Input
                                     value={editingVariantData.label}
                                     onChange={(e) => setEditingVariantData(prev => ({ ...prev, label: e.target.value }))}
@@ -3087,7 +3129,17 @@ const ProductForm = () => {
                                 </div>
 
                                 <div className="space-y-1">
-                                  <Label className="text-xs font-semibold text-slate-700">Price (₹)</Label>
+                                  <Label className="text-xs font-semibold text-slate-700">Detail / Includes</Label>
+                                  <Input
+                                    value={editingVariantData.detail || ''}
+                                    onChange={(e) => setEditingVariantData(prev => ({ ...prev, detail: e.target.value }))}
+                                    placeholder="e.g. 6 Orchids, 8 Orchids"
+                                    className="h-9 text-sm bg-white"
+                                  />
+                                </div>
+
+                                <div className="space-y-1">
+                                  <Label className="text-xs font-semibold text-slate-700">Price (₹) *</Label>
                                   <Input
                                     type="number"
                                     min="0"
@@ -3100,7 +3152,7 @@ const ProductForm = () => {
                                 </div>
 
                                 <div className="space-y-1">
-                                  <Label className="text-xs font-semibold text-slate-700">Direct Discount Price (₹)</Label>
+                                  <Label className="text-xs font-semibold text-slate-700">Direct Discount (₹)</Label>
                                   <Input
                                     type="number"
                                     min="0"
@@ -3151,8 +3203,13 @@ const ProductForm = () => {
                           ) : (
                             <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-4 hover:border-gray-300 transition-colors">
                               <div className="flex-1 space-y-1">
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 flex-wrap">
                                   <span className="font-semibold text-gray-900">{variant.label}</span>
+                                  {(variant.detail || variant.description) && (
+                                    <Badge variant="secondary" className="bg-pink-100 text-pink-700 border-pink-200 text-xs font-semibold">
+                                      🌸 {variant.detail || variant.description}
+                                    </Badge>
+                                  )}
                                   <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 font-bold">
                                     ₹{variant.price}
                                   </Badge>

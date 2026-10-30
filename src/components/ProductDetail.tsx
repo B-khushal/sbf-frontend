@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, Heart, Share2, Minus, Plus, ChevronLeft, ChevronRight, Star, Eye, ShoppingBag, Wand2, Gift, ClipboardList, Leaf, Info, Truck, Tag, Sparkles, AlertCircle } from 'lucide-react';
+import { ShoppingCart, Heart, Share2, Minus, Plus, ChevronLeft, ChevronRight, Star, Eye, ShoppingBag, Wand2, Gift, ClipboardList, Leaf, Info, Truck, Tag, Sparkles, AlertCircle, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useCurrency } from '@/contexts/CurrencyContext';
@@ -71,6 +71,11 @@ type PriceVariant = {
   label: string;
   price: number;
   stock: number;
+  discountPrice?: number;
+  comparePrice?: number;
+  detail?: string;
+  description?: string;
+  badge?: string;
 };
 
 type ProductDetailProps = {
@@ -1035,76 +1040,153 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
     if (!product.hasPriceVariants || !product.priceVariants?.length) return null;
 
     return (
-      <div className="mt-6 space-y-4">
-        <h3 className="text-lg font-semibold text-gray-900">Select Size/Quantity</h3>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+      <div className="mt-7 space-y-3.5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-base">🌸</span>
+            <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">
+              Select Size & Quantity
+            </h3>
+          </div>
+          {selectedVariant && (
+            <span className="text-xs font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 px-2.5 py-0.5 rounded-full border border-rose-200/80 dark:border-rose-900/40">
+              {selectedVariant.label}
+            </span>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <AnimatePresence>
-            {product.priceVariants.map((variant, index) => (
-              <motion.div
-                key={variant.label}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.2, delay: index * 0.05 }}
-              >
-                <Card
-                  className={cn(
-                    "cursor-pointer overflow-hidden transition-all duration-200 hover:shadow-md",
-                    selectedVariant?.label === variant.label
-                      ? "border-2 border-primary bg-primary/5 shadow-sm"
-                      : "border border-gray-200 hover:border-primary/50",
-                    variant.stock === 0 && "opacity-50"
-                  )}
-                  onClick={() => variant.stock > 0 && setSelectedVariant(variant)}
+            {product.priceVariants.map((variant, index) => {
+              const isSelected = selectedVariant?.label === variant.label;
+              const effP = getProductEffectivePrice(product, variant.price, variant);
+              const hasVarDisc = effP > 0 && variant.price > effP;
+              const savingsAmount = hasVarDisc ? variant.price - effP : 0;
+
+              // Extract smart detail fallback if detail field wasn't set explicitly
+              let displayDetail = variant.detail || variant.description || '';
+              if (!displayDetail) {
+                const labelLower = (variant.label || '').toLowerCase();
+                const titleLower = String(product.title || '').toLowerCase();
+                if (titleLower.includes('orchid')) {
+                  displayDetail = labelLower.includes('deluxe') ? '8 Orchids' : '6 Orchids';
+                } else if (titleLower.includes('rose')) {
+                  displayDetail = labelLower.includes('deluxe') ? '15 Red Roses & Fillers' : '10 Fresh Roses';
+                } else if (titleLower.includes('lily') || titleLower.includes('lilies')) {
+                  displayDetail = labelLower.includes('deluxe') ? '5 Asiatic Lilies' : '3 Asiatic Lilies';
+                } else if (labelLower.includes('deluxe')) {
+                  displayDetail = 'Extra Stems & Lush Fillers';
+                } else if (labelLower.includes('standard')) {
+                  displayDetail = 'Standard Fresh Bouquet';
+                }
+              }
+
+              const isDeluxe = (variant.label || '').toLowerCase().includes('deluxe') || index === 1;
+
+              return (
+                <motion.div
+                  key={variant.label}
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -15 }}
+                  transition={{ duration: 0.2, delay: index * 0.05 }}
+                  whileHover={variant.stock > 0 ? { y: -2 } : {}}
+                  className="h-full"
                 >
-                  <motion.div
-                    className="p-4"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                  <div
+                    className={cn(
+                      "relative h-full flex flex-col justify-between rounded-2xl p-4 cursor-pointer transition-all duration-200 select-none overflow-hidden",
+                      isSelected
+                        ? "border-2 border-rose-500 bg-gradient-to-br from-rose-50/80 via-white to-pink-50/50 dark:from-rose-950/40 dark:via-slate-900/60 dark:to-pink-950/20 shadow-md shadow-rose-500/10 ring-2 ring-rose-400/20"
+                        : "border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/70 hover:border-rose-300 dark:hover:border-slate-700 hover:shadow-xs",
+                      variant.stock === 0 && "opacity-50 cursor-not-allowed bg-slate-50 dark:bg-slate-900/30"
+                    )}
+                    onClick={() => variant.stock > 0 && setSelectedVariant(variant)}
                   >
-                    <div className="text-center">
-                      <h4 className="font-medium text-gray-900">{variant.label}</h4>
-                      {(() => {
-                        const effP = getProductEffectivePrice(product, variant.price, variant);
-                        const hasVarDisc = effP > 0 && variant.price > effP;
-                        return (
-                          <div className="mt-1">
-                            <p className="text-lg font-semibold text-primary">
-                              {formatPrice(convertPrice(effP))}
-                            </p>
-                            {hasVarDisc && (
-                              <span className="text-xs text-gray-400 line-through">
-                                {formatPrice(convertPrice(variant.price))}
+                    {/* Top Row: Title, Badge & Radio Check */}
+                    <div>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="space-y-0.5">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-bold text-slate-900 dark:text-slate-100 text-sm tracking-tight">
+                              {variant.label}
+                            </span>
+                            {(variant.badge || isDeluxe) && (
+                              <span className="text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-amber-500 to-rose-500 text-white px-2 py-0.5 rounded-full shadow-xs">
+                                {variant.badge || "Deluxe Bloom"}
                               </span>
                             )}
                           </div>
-                        );
-                      })()}
-                      {variant.stock > 0 ? (
-                        variant.stock <= 5 && (
-                          <Badge variant="outline" className="mt-2 bg-orange-50 text-orange-700">
-                            Only {variant.stock} left
-                          </Badge>
-                        )
-                      ) : (
-                        <Badge variant="outline" className="mt-2 bg-red-50 text-red-700">
-                          Out of Stock
-                        </Badge>
+
+                          {/* Subtitle / Detail (e.g. 6 Orchids, 8 Orchids) */}
+                          {displayDetail && (
+                            <p className="text-xs font-semibold text-rose-700 dark:text-rose-400 flex items-center gap-1 pt-0.5">
+                              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0"></span>
+                              <span>{displayDetail}</span>
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Selected Indicator Checkmark */}
+                        <div className={cn(
+                          "w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-all",
+                          isSelected
+                            ? "bg-rose-600 text-white shadow-xs scale-105"
+                            : "border border-slate-300 dark:border-slate-700 bg-slate-50/80 dark:bg-slate-800"
+                        )}>
+                          {isSelected ? (
+                            <Check className="w-3.5 h-3.5 stroke-[3]" />
+                          ) : (
+                            <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600" />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Bottom Row: Price, Strikethrough & Savings Tag */}
+                    <div className="mt-3.5 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 flex items-baseline justify-between gap-2">
+                      <div className="flex items-baseline gap-2 flex-wrap">
+                        <span className="text-lg font-black text-slate-900 dark:text-white tabular-nums tracking-tight font-sans">
+                          {formatPrice(convertPrice(effP))}
+                        </span>
+                        {hasVarDisc && (
+                          <span className="text-xs text-slate-400 line-through tabular-nums font-medium">
+                            {formatPrice(convertPrice(variant.price))}
+                          </span>
+                        )}
+                      </div>
+
+                      {hasVarDisc && (
+                        <span className="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 dark:text-emerald-400 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800 tabular-nums shrink-0">
+                          Save {formatPrice(convertPrice(savingsAmount))}
+                        </span>
                       )}
                     </div>
-                  </motion.div>
-                </Card>
-              </motion.div>
-            ))}
+
+                    {/* Low Stock Callout */}
+                    {variant.stock > 0 && variant.stock <= 5 && (
+                      <div className="mt-2 text-[10px] font-bold text-amber-700 dark:text-amber-400 flex items-center gap-1">
+                        <span>⚡ Only {variant.stock} left</span>
+                      </div>
+                    )}
+                    {variant.stock === 0 && (
+                      <div className="mt-2 text-[10px] font-bold text-red-600 flex items-center gap-1">
+                        <span>Out of stock</span>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              );
+            })}
           </AnimatePresence>
         </div>
 
         {/* Variant Selection Notice */}
         {!selectedVariant && (
-          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-sm text-blue-800 flex items-center gap-2">
-              <Info className="h-4 w-4" />
-              Please select a variant to continue
+          <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl">
+            <p className="text-xs font-semibold text-amber-800 flex items-center gap-2">
+              <Info className="h-4 w-4 shrink-0 text-amber-600" />
+              Please select a bouquet size to continue
             </p>
           </div>
         )}
