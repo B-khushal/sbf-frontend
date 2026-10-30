@@ -356,11 +356,11 @@ const ValentineProductDetailsPage: React.FC = () => {
               <div>
                 <p className="text-xs text-rose-200/50 font-medium uppercase mb-1">Delivered Price</p>
                 <div className="flex items-baseline gap-2.5">
-                  <span className="text-3xl font-black text-rose-300 font-mono">
+                  <span className="text-3xl font-extrabold text-rose-300 font-sans tabular-nums">
                     {formatPrice(convertPrice(activePrice))}
                   </span>
                   {activePrice < Number(product.price) && (
-                    <span className="text-sm text-rose-200/40 line-through font-mono">
+                    <span className="text-sm text-rose-200/40 line-through font-sans tabular-nums">
                       {formatPrice(convertPrice(product.price))}
                     </span>
                   )}

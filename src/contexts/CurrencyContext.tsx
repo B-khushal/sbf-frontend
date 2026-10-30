@@ -74,15 +74,19 @@ export const CurrencyProvider = ({ children }: { children: ReactNode }) => {
       return new Intl.NumberFormat(CURRENCY_LOCALE[currency], {
         style: 'currency',
         currency,
-        minimumFractionDigits: 2,
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
       }).format(0);
     }
     
+    const num = Number(amount);
+    const isWhole = num % 1 === 0;
     return new Intl.NumberFormat(CURRENCY_LOCALE[currency], {
       style: 'currency',
       currency,
-      minimumFractionDigits: 2,
-    }).format(amount);
+      minimumFractionDigits: isWhole ? 0 : 2,
+      maximumFractionDigits: 2,
+    }).format(num);
   }, [currency]);
 
   // Display exchange rate in a user-friendly way

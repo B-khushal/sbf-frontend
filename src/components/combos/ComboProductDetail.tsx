@@ -627,11 +627,11 @@ export const ComboProductDetail: React.FC<ComboProductDetailProps> = ({
             <div className="rounded-3xl p-5 bg-gradient-to-br from-rose-500/10 via-amber-500/10 to-transparent border border-rose-200/80 dark:border-rose-900/40 space-y-4">
               <div className="flex flex-wrap items-baseline justify-between gap-3">
                 <div className="flex items-baseline gap-3">
-                  <span className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+                  <span className="text-3xl sm:text-4xl font-extrabold font-sans text-slate-900 dark:text-white tracking-tight tabular-nums">
                     {formatPrice(convertPrice(unitPrice))}
                   </span>
                   {unitComparePrice > unitPrice && (
-                    <span className="text-base sm:text-lg text-slate-400 line-through font-semibold">
+                    <span className="text-base sm:text-lg text-slate-400 line-through font-medium font-sans tabular-nums">
                       {formatPrice(convertPrice(unitComparePrice))}
                     </span>
                   )}

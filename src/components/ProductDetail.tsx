@@ -1665,7 +1665,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
             <div className="py-4 border-y border-slate-200/40 dark:border-slate-800/40">
               <div className="flex items-baseline gap-3">
                 {product.category === 'combos' && product.comboItems && product.comboItems.length > 0 ? (
-                  <span className="text-3xl lg:text-[3rem] font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+                  <span className="text-3xl lg:text-[2.75rem] font-extrabold font-sans text-slate-900 dark:text-slate-100 tracking-tight tabular-nums">
                     {formatPrice(convertPrice(getComboMaxPrice(product)))}
                   </span>
                 ) : (
@@ -1674,12 +1674,12 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                       key={displayDiscountedPrice}
                       initial={{ opacity: 0, y: -4 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="text-3xl lg:text-[3rem] font-bold text-slate-900 dark:text-slate-100 tracking-tight"
+                      className="text-3xl lg:text-[2.75rem] font-extrabold font-sans text-slate-900 dark:text-slate-100 tracking-tight tabular-nums"
                     >
                       {formatPrice(convertPrice(displayDiscountedPrice))}
                     </motion.span>
                     {displayDiscountedPrice < displayPrice && (
-                      <span className="text-lg text-slate-400 line-through font-medium">
+                      <span className="text-lg text-slate-400 line-through font-medium font-sans tabular-nums">
                         {formatPrice(convertPrice(displayPrice))}
                       </span>
                     )}
@@ -2008,7 +2008,7 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                 </div>
                 <div className="text-right">
                   <span className="block text-[9px] uppercase tracking-wider text-slate-400 font-bold">Total price</span>
-                  <span className="text-xl font-extrabold text-slate-900 dark:text-slate-100 font-mono">
+                  <span className="text-xl font-extrabold text-slate-900 dark:text-slate-100 font-sans tabular-nums">
                     {formatPrice(convertPrice(displayDiscountedPrice * quantity))}
                   </span>
                 </div>

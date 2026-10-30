@@ -610,15 +610,15 @@ export const CakeProductDetail: React.FC<CakeProductDetailProps> = ({
 
               {/* Live Dynamic Price Display strictly from product form */}
               <div className="pt-3 flex items-baseline gap-3">
-                <div className="text-3xl sm:text-4xl font-bold font-serif text-stone-950 dark:text-white tracking-tight">
+                <div className="text-3xl sm:text-4xl font-extrabold font-sans text-stone-950 dark:text-white tracking-tight tabular-nums">
                   {formatPrice(convertPrice(singleUnitPrice))}
                 </div>
                 {hasRealDiscount && (
                   <>
-                    <div className="text-sm sm:text-base text-stone-400 line-through">
+                    <div className="text-sm sm:text-base text-stone-400 line-through font-medium font-sans tabular-nums">
                       {formatPrice(convertPrice(rawCompare + addonsCost))}
                     </div>
-                    <Badge className="bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200 border-none text-[11px] font-semibold">
+                    <Badge className="bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200 border-none text-[11px] font-bold">
                       Save {Math.round(discountInfo.percentage)}%
                     </Badge>
                   </>
