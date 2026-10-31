@@ -1,3 +1,6 @@
+import { PageHeader } from '@/components/dashboard/PageHeader';
+import { StatCard } from '@/components/dashboard/StatCard';
+import { SoftButton } from '@/components/dashboard/SoftButton';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Heart, ArrowLeft, TrendingUp, ShoppingBag, DollarSign, BarChart3, Users, Package } from 'lucide-react';
@@ -53,59 +56,66 @@ const ValentineAnalyticsDashboard: React.FC = () => {
 
   return (
     <div className="p-4 md:p-6 space-y-6 w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <Button onClick={() => navigate('/admin/valentine')} variant="ghost" size="icon">
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
-              <Heart className="w-6 h-6 text-rose-500" fill="currentColor" />
-              Valentine Analytics
-            </h1>
-            <p className="text-muted-foreground text-sm">
-              Feb 8 – Feb 15, {year} | Real-time order data
-            </p>
+      <PageHeader
+        title="Valentine Campaign Analytics"
+        subtitle={`Feb 8 – Feb 15, ${year} | Real-time seasonal revenue, conversion rates, and day-by-day performance`}
+        breadcrumbs={[
+          { label: 'Admin', href: '/admin' },
+          { label: 'Marketing', href: '/marketing' },
+          { label: 'Valentine Management', href: '/admin/valentine' },
+          { label: 'Analytics' },
+        ]}
+        statusBadge={{ label: `Year ${year}`, variant: 'rose' }}
+        actions={
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#edf1f7] dark:bg-slate-800 shadow-[inset_2px_2px_5px_rgba(163,177,198,0.25),inset_-2px_-2px_5px_rgba(255,255,255,0.7)]">
+              <span className="text-xs text-slate-500 font-medium">Year:</span>
+              <input
+                type="number"
+                value={year}
+                onChange={(e) => setYear(parseInt(e.target.value) || new Date().getFullYear())}
+                className="w-16 bg-transparent font-bold text-slate-800 dark:text-slate-100 text-sm focus:outline-none"
+                min={2020}
+                max={2030}
+              />
+            </div>
+            <SoftButton variant="primary" onClick={fetchAnalytics}>
+              Refresh Data
+            </SoftButton>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Input
-            type="number"
-            value={year}
-            onChange={(e) => setYear(parseInt(e.target.value) || new Date().getFullYear())}
-            className="w-24"
-            min={2020}
-            max={2030}
-          />
-          <Button onClick={fetchAnalytics} variant="outline" size="sm">
-            Refresh
-          </Button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {summaryCards.map((card) => {
-          const Icon = card.icon;
-          return (
-            <Card key={card.label}>
-              <CardContent className="p-4 md:p-5">
-                <div className="flex items-center justify-between mb-3">
-                  <div className={`w-10 h-10 rounded-xl ${card.bg} flex items-center justify-center`}>
-                    <Icon className={`w-5 h-5 ${card.color}`} />
-                  </div>
-                </div>
-                <p className="text-2xl md:text-3xl font-bold">{card.value}</p>
-                <p className="text-xs text-muted-foreground mt-1">{card.label}</p>
-              </CardContent>
-            </Card>
-          );
-        })}
+        <StatCard
+          title="Total Orders"
+          value={analytics.summary.totalOrders}
+          icon={ShoppingBag}
+          colorPalette="rose"
+        />
+        <StatCard
+          title="Total Revenue"
+          value={`₹${analytics.summary.totalRevenue.toLocaleString()}`}
+          icon={DollarSign}
+          colorPalette="emerald"
+        />
+        <StatCard
+          title="Avg. Order Value"
+          value={`₹${analytics.summary.averageOrderValue}`}
+          icon={TrendingUp}
+          colorPalette="purple"
+        />
+        <StatCard
+          title="Conversion Rate"
+          value={`${analytics.summary.conversionRate}%`}
+          icon={Users}
+          colorPalette="amber"
+        />
       </div>
 
       {/* Daily Breakdown Chart */}
-      <Card>
+      <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]">
         <CardHeader>
           <CardTitle>Daily Breakdown</CardTitle>
           <CardDescription>Orders and revenue for each day of Valentine Week</CardDescription>
@@ -153,7 +163,7 @@ const ValentineAnalyticsDashboard: React.FC = () => {
       {/* Bottom Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Top Products */}
-        <Card>
+        <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]">
           <CardHeader>
             <CardTitle className="text-base">Valentine Products</CardTitle>
             <CardDescription>Products tagged for Valentine's</CardDescription>
@@ -183,7 +193,7 @@ const ValentineAnalyticsDashboard: React.FC = () => {
         </Card>
 
         {/* Offers Usage */}
-        <Card>
+        <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]">
           <CardHeader>
             <CardTitle className="text-base">Offers Performance</CardTitle>
             <CardDescription>{analytics.activeOffers} active offers during Valentine week</CardDescription>

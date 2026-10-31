@@ -1,3 +1,4 @@
+import { SoftButton } from '@/components/dashboard/SoftButton';
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '@/services/api';
@@ -663,7 +664,7 @@ const OrderDetailsPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start" ref={orderRef} id="order-details-pdf">
         
         {/* Brand Invoice Header */}
-        <div className="col-span-1 lg:col-span-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="col-span-1 lg:col-span-3 bg-[#edf1f7] dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-6 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex items-center gap-4">
             <div className="h-14 w-14 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center text-3xl shadow-sm border border-emerald-100 dark:border-emerald-900/30">
               🌸
@@ -685,7 +686,7 @@ const OrderDetailsPage: React.FC = () => {
         <div className="lg:col-span-2 space-y-6">
           
           {/* Card 1: Product Items */}
-          <Card className="border-slate-100 dark:border-slate-850 shadow-sm rounded-2xl overflow-hidden bg-white dark:bg-slate-900">
+          <Card className="border border-slate-200/60 dark:border-slate-800 rounded-2xl overflow-hidden bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]">
             <CardHeader className="border-b border-slate-50 dark:border-slate-850/50 pb-4">
               <CardTitle className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
                 <ShoppingBag className="h-4 w-4 text-slate-500" />
@@ -715,7 +716,7 @@ const OrderDetailsPage: React.FC = () => {
                           </button>
                         </div>
                       ) : (
-                        <div className="h-24 w-24 bg-slate-50 dark:bg-slate-950 border border-slate-200/50 dark:border-slate-850 rounded-xl flex items-center justify-center">
+                        <div className="h-24 w-24 bg-[#edf1f7] dark:bg-slate-800/50 border border-slate-200/40 dark:border-slate-800 rounded-xl shadow-[inset_2px_2px_5px_rgba(163,177,198,0.2),inset_-2px_-2px_5px_rgba(255,255,255,0.7)] flex items-center justify-center">
                           <Flower2 className="h-8 w-8 text-slate-400" />
                         </div>
                       )}
@@ -940,7 +941,7 @@ const OrderDetailsPage: React.FC = () => {
 
           {/* Card 2: Tracking History Timeline */}
           {order.trackingHistory && order.trackingHistory.length > 0 && (
-            <Card className="border-slate-100 dark:border-slate-850 shadow-sm rounded-2xl bg-white dark:bg-slate-900">
+            <Card className="border border-slate-200/60 dark:border-slate-800 rounded-2xl overflow-hidden bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]">
               <CardHeader className="border-b border-slate-50 dark:border-slate-850/50 pb-4">
                 <CardTitle className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
                   <Clock className="h-4 w-4 text-slate-500" />
@@ -1309,7 +1310,7 @@ const OrderDetailsPage: React.FC = () => {
           </Card>
 
           {/* Delivery Dispatch Logistics Card */}
-          <Card className="border-emerald-100 dark:border-emerald-800 shadow-sm rounded-2xl bg-white dark:bg-slate-900 overflow-hidden">
+          <Card className="border border-emerald-500/30 rounded-2xl overflow-hidden bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]">
             <CardHeader className="bg-emerald-50/50 border-b border-emerald-100/50 pb-4">
               <CardTitle className="text-sm font-bold text-emerald-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
                 <Truck className="h-4 w-4 text-emerald-700" />

@@ -1,3 +1,5 @@
+import { PageHeader } from '@/components/dashboard/PageHeader';
+import { SoftButton } from '@/components/dashboard/SoftButton';
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -135,49 +137,52 @@ const VendorDetailsPage = () => {
 
     return (
         <div className="container mx-auto p-6 max-w-6xl space-y-6">
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="icon" onClick={() => navigate('/admin/vendors')}>
-                        <ArrowLeft className="h-5 w-5" />
-                    </Button>
-                    <div>
-                        <h1 className="text-3xl font-bold tracking-tight">{vendor.storeName}</h1>
-                        <p className="text-muted-foreground flex items-center gap-2 mt-1">
-                            Started {new Date(vendor.createdAt).toLocaleDateString()}
-                            {getStatusBadge(vendor.status)}
-                        </p>
-                    </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                    {vendor.status === 'pending' && (
-                        <>
-                            <Button onClick={() => setShowApprovalDialog(true)} className="bg-green-600 hover:bg-green-700">
-                                <Check className="mr-2 h-4 w-4" /> Approve & Sign
-                            </Button>
-                            <Button variant="destructive" onClick={() => handleStatusUpdate('rejected')}>
-                                <X className="mr-2 h-4 w-4" /> Reject
-                            </Button>
-                        </>
-                    )}
-                    {vendor.status === 'approved' && (
-                        <Button variant="outline" className="text-amber-600 border-amber-200 hover:bg-amber-50" onClick={() => handleStatusUpdate('suspended')}>
-                            <Pause className="mr-2 h-4 w-4" /> Suspend Vendor
-                        </Button>
-                    )}
-                    {(vendor.status === 'suspended' || vendor.status === 'rejected') && (
-                        <Button variant="outline" className="text-green-600 border-green-200 hover:bg-green-50" onClick={() => handleStatusUpdate('approved')}>
-                            <Play className="mr-2 h-4 w-4" /> Reactivate Vendor
-                        </Button>
-                    )}
-                </div>
-            </div>
+            <PageHeader
+        title={vendor.storeName || 'Vendor Profile'}
+        subtitle={`Registered on ${new Date(vendor.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} | Owner: ${vendor.ownerName || vendor.user?.name || 'Partner'}`}
+        breadcrumbs={[
+          { label: 'Admin', href: '/admin' },
+          { label: 'Vendors', href: '/admin/vendors' },
+          { label: vendor.storeName || 'Details' },
+        ]}
+        statusBadge={{
+          label: vendor.status === 'approved' ? 'Active Vendor' : vendor.status === 'pending' ? 'Pending Approval' : vendor.status,
+          variant: vendor.status === 'approved' ? 'success' : vendor.status === 'pending' ? 'warning' : 'rose',
+        }}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <SoftButton variant="secondary" icon={ArrowLeft} onClick={() => navigate('/admin/vendors')}>
+              Back
+            </SoftButton>
+            {vendor.status === 'pending' && (
+              <>
+                <SoftButton variant="primary" icon={Check} onClick={() => setShowApprovalDialog(true)}>
+                  Approve & Sign
+                </SoftButton>
+                <SoftButton variant="danger" icon={X} onClick={() => handleStatusUpdate('rejected')}>
+                  Reject
+                </SoftButton>
+              </>
+            )}
+            {vendor.status === 'approved' && (
+              <SoftButton variant="secondary" icon={Pause} onClick={() => handleStatusUpdate('suspended')}>
+                Suspend Partner
+              </SoftButton>
+            )}
+            {(vendor.status === 'suspended' || vendor.status === 'rejected') && (
+              <SoftButton variant="primary" icon={Play} onClick={() => handleStatusUpdate('approved')}>
+                Reactivate Partner
+              </SoftButton>
+            )}
+          </div>
+        }
+      />
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
                 {/* Main Details (Left Col) */}
                 <div className="md:col-span-2 space-y-6">
-                    <Card>
+                    <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <Store className="h-5 w-5 text-primary" />
@@ -196,7 +201,7 @@ const VendorDetailsPage = () => {
                         </CardContent>
                     </Card>
 
-                    <Card>
+                    <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <Briefcase className="h-5 w-5 text-primary" />
@@ -221,7 +226,7 @@ const VendorDetailsPage = () => {
                         </CardContent>
                     </Card>
 
-                    <Card>
+                    <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <Landmark className="h-5 w-5 text-primary" />
@@ -253,7 +258,7 @@ const VendorDetailsPage = () => {
 
                 {/* Sidebar Info (Right Col) */}
                 <div className="space-y-6">
-                    <Card>
+                    <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <Mail className="h-5 w-5 text-primary" />
@@ -285,7 +290,7 @@ const VendorDetailsPage = () => {
                         </CardContent>
                     </Card>
 
-                    <Card>
+                    <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <FileText className="h-5 w-5 text-primary" />

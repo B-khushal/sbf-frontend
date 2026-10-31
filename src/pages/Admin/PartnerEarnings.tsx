@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { API_BASE_URL } from '@/config';
-import { DollarSign, IndianRupee, RefreshCw, UserCheck } from 'lucide-react';
+import { DollarSign, IndianRupee, RefreshCw, UserCheck, ShieldCheck, Wallet } from 'lucide-react';
+import { PageHeader } from '@/components/dashboard/PageHeader';
+import { StatCard } from '@/components/dashboard/StatCard';
+import { SoftButton } from '@/components/dashboard/SoftButton';
+import { StatusBadge } from '@/components/dashboard/StatusBadge';
 
 interface EarningPartner {
   _id: string;
@@ -28,7 +30,7 @@ const PartnerEarnings: React.FC = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data.success) {
-        setEarnings(res.data.partners);
+        setEarnings(res.data.partners || []);
       }
     } catch (err: any) {
       toast({
@@ -45,81 +47,134 @@ const PartnerEarnings: React.FC = () => {
     fetchEarnings();
   }, []);
 
-  const totalPayout = earnings.reduce((sum, item) => sum + (item.totalEarnings || 0), 0);
+  const stats = useMemo(() => {
+    const totalPayout = earnings.reduce((sum, item) => sum + (item.totalEarnings || 0), 0);
+    const todayPayout = earnings.reduce((sum, item) => sum + (item.todayEarnings || 0), 0);
+    return {
+      totalPayout,
+      todayPayout,
+      courierCount: earnings.length,
+    };
+  }, [earnings]);
 
   return (
-    <div className="p-6 space-y-6 w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-emerald-900">Partner Earnings</h1>
-          <p className="text-muted-foreground">Manage courier payment balances, cash-outs, and ledger payouts.</p>
-        </div>
-        <Button onClick={fetchEarnings} className="bg-emerald-700 hover:bg-emerald-800 text-white gap-2">
-          <RefreshCw className="h-4 w-4" /> Refresh Ledger
-        </Button>
-      </div>
+    <div className="space-y-6 w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto">
+      {/* Neumorphic Page Header */}
+      <PageHeader
+        breadcrumbs={[
+          { label: 'Admin', href: '/admin' },
+          { label: 'Logistics', href: '/admin/delivery/analytics' },
+          { label: 'Partner Earnings' },
+        ]}
+        title="Partner Earnings & Settlements"
+        description="Monitor courier payment balances, daily tip/fare disbursements, and direct bank account settlement records."
+        liveStatus={{ label: `${earnings.length} Active Couriers`, ping: true }}
+        actions={
+          <SoftButton
+            variant="default"
+            size="sm"
+            icon={RefreshCw}
+            onClick={fetchEarnings}
+          >
+            Refresh Ledger
+          </SoftButton>
+        }
+      />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="border-emerald-100 shadow-sm bg-white">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-semibold text-emerald-950">Total Payouts Distributed</CardTitle>
-            <IndianRupee className="w-5 h-5 text-emerald-700" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-emerald-950">₹{totalPayout.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground mt-1">Paid directly to courier bank accounts</p>
-          </CardContent>
-        </Card>
+      {/* KPI Stats Row */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <StatCard
+          title="Total Payouts Distributed"
+          value={`₹${stats.totalPayout.toLocaleString()}`}
+          icon={IndianRupee}
+          color="emerald"
+          subtitle="Cumulative courier ledger"
+        />
+        <StatCard
+          title="Today's Active Earnings"
+          value={`₹${stats.todayPayout.toLocaleString()}`}
+          icon={Wallet}
+          color="blue"
+          subtitle="Earned on today's shifts"
+        />
+        <StatCard
+          title="Registered Couriers"
+          value={stats.courierCount}
+          icon={UserCheck}
+          color="purple"
+          subtitle="Direct delivery partners"
+        />
       </div>
 
       {/* Earnings Table */}
-      <Card className="border-emerald-100 shadow-sm bg-white overflow-hidden">
-        <CardHeader className="bg-emerald-50/55 border-b border-emerald-100">
-          <CardTitle className="text-emerald-900 flex items-center gap-2">
-            <DollarSign className="h-5 w-5 text-emerald-700" /> Earning Summary Ledger
-          </CardTitle>
-          <CardDescription>Payout tracking details per courier.</CardDescription>
-        </CardHeader>
-        <CardContent className="p-0">
-          {loading ? (
-            <div className="p-12 text-center text-muted-foreground animate-pulse">Loading earnings ledger...</div>
-          ) : earnings.length === 0 ? (
-            <div className="p-12 text-center text-muted-foreground">No earnings recorded.</div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-emerald-50/20 text-emerald-900 border-b border-emerald-100 text-xs font-bold uppercase tracking-wider">
-                    <th className="p-4">Courier Name</th>
-                    <th className="p-4">Vehicle Type</th>
-                    <th className="p-4 text-right">Today's Earnings</th>
-                    <th className="p-4 text-right">Total Earnings</th>
-                    <th className="p-4 text-center">Settlement Status</th>
+      <div className="rounded-2xl border border-white/80 dark:border-slate-800 shadow-[6px_6px_18px_rgba(163,177,198,0.22),-6px_-6px_18px_rgba(255,255,255,0.8)] bg-[#f4f7fb] dark:bg-slate-900 overflow-hidden transition-all">
+        <div className="bg-[#edf1f7] dark:bg-slate-800/60 border-b border-slate-200/80 dark:border-slate-800 p-4 flex items-center justify-between">
+          <div>
+            <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+              <DollarSign className="h-4 w-4 text-emerald-600" /> Payout Summary Ledger
+            </h2>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              Live compensation tracking by delivery partner.
+            </p>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="p-12 text-center text-xs text-muted-foreground animate-pulse">
+            Loading earnings ledger...
+          </div>
+        ) : earnings.length === 0 ? (
+          <div className="p-12 text-center text-xs text-muted-foreground">
+            No courier earnings recorded.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-[#edf1f7]/60 dark:bg-slate-800/40 border-b border-slate-200/80 dark:border-slate-800 text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+                  <th className="p-4">Courier Partner</th>
+                  <th className="p-4">Vehicle Type</th>
+                  <th className="p-4 text-right">Today's Earnings</th>
+                  <th className="p-4 text-right">Total Lifetime Earnings</th>
+                  <th className="p-4 text-center">Settlement Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-xs text-slate-800 dark:text-slate-200">
+                {earnings.map((p) => (
+                  <tr
+                    key={p._id}
+                    className="hover:bg-white/60 dark:hover:bg-slate-800/40 transition-colors"
+                  >
+                    <td className="p-4 flex items-center gap-2.5 font-bold">
+                      <div className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700">
+                        <UserCheck className="h-3.5 w-3.5" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-slate-900 dark:text-slate-100">{p.name}</p>
+                        <p className="text-[10px] text-muted-foreground font-normal">{p.email}</p>
+                      </div>
+                    </td>
+                    <td className="p-4 capitalize">
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-200/70 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                        {p.vehicleType || 'Bike'}
+                      </span>
+                    </td>
+                    <td className="p-4 text-right font-bold text-slate-900 dark:text-slate-100">
+                      ₹{p.todayEarnings?.toLocaleString() || 0}
+                    </td>
+                    <td className="p-4 text-right font-bold text-emerald-600">
+                      ₹{p.totalEarnings?.toLocaleString() || 0}
+                    </td>
+                    <td className="p-4 text-center">
+                      <StatusBadge status="settled" />
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-emerald-50 text-sm text-emerald-950">
-                  {earnings.map(p => (
-                    <tr key={p._id} className="hover:bg-emerald-50/10">
-                      <td className="p-4 flex items-center gap-2 font-medium">
-                        <UserCheck className="h-4 w-4 text-emerald-700" />
-                        {p.name}
-                      </td>
-                      <td className="p-4 capitalize">{p.vehicleType}</td>
-                      <td className="p-4 text-right font-semibold text-emerald-950">₹{p.todayEarnings}</td>
-                      <td className="p-4 text-right font-bold text-emerald-700">₹{p.totalEarnings}</td>
-                      <td className="p-4 text-center">
-                        <span className="inline-block bg-green-50 text-green-700 text-xs px-2.5 py-0.5 rounded-full font-semibold">
-                          Settled
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

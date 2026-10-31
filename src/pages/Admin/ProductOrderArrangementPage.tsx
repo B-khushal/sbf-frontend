@@ -1,3 +1,5 @@
+import { PageHeader } from '@/components/dashboard/PageHeader';
+import { SoftButton } from '@/components/dashboard/SoftButton';
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -851,44 +853,40 @@ export const ProductOrderArrangementPage: React.FC = () => {
   return (
     <div className="space-y-6 pb-24">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
-              <Layers className="h-6 w-6 text-[#ec4899]" />
-              Smart Order Manager
-            </h1>
-            <Badge className="bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider">
-              Enterprise
-            </Badge>
+      <PageHeader
+        title="Storefront Merchandising & Ordering"
+        subtitle="Visual drag-and-drop display sequence, occasion pinning, priority badges, and catalog layout control."
+        breadcrumbs={[
+          { label: 'Admin', href: '/admin' },
+          { label: 'Catalog', href: '/admin/products' },
+          { label: 'Display Order' },
+        ]}
+        statusBadge={{
+          label: `${filteredProducts.length} Merchandised Items`,
+          variant: 'rose',
+        }}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <SoftButton
+              variant="secondary"
+              icon={History}
+              onClick={openAuditLogsModal}
+            >
+              Audit History
+            </SoftButton>
+            <SoftButton
+              variant="primary"
+              icon={Plus}
+              onClick={() => navigate('/admin/products/new')}
+            >
+              Add New Product
+            </SoftButton>
           </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            Visual merchandising suite for Storefront Sections, Categories, and <strong>Shop by Occasion</strong>.
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Audit History & Rollback Trigger */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={openAuditLogsModal}
-            className="h-9 text-xs font-semibold rounded-xl border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 gap-1.5 shadow-sm"
-          >
-            <History className="h-4 w-4 text-purple-600" />
-            Audit History
-          </Button>
-
-          <Link to="/admin/products/new">
-            <Button className="bg-[#ec4899] hover:bg-[#db2777] text-white font-medium text-xs shadow-sm gap-1.5 rounded-xl h-9">
-              <Plus className="h-4 w-4" /> Add New Product
-            </Button>
-          </Link>
-        </div>
-      </div>
+        }
+      />
 
       {/* Scope Control Box & Undo/Redo Bar */}
-      <Card className="border border-slate-200/80 dark:border-slate-800 shadow-sm rounded-2xl bg-white dark:bg-slate-900">
+      <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)] border border-slate-200/80 dark:border-slate-800 shadow-sm rounded-2xl bg-white dark:bg-slate-900">
         <CardContent className="p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3">
             <span className="font-bold text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
@@ -1029,7 +1027,7 @@ export const ProductOrderArrangementPage: React.FC = () => {
       />
 
       {/* Smart Filters Bar & Quick Select Controls */}
-      <Card className="border border-slate-200/80 dark:border-slate-800 shadow-sm rounded-2xl bg-white dark:bg-slate-900">
+      <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)] border border-slate-200/80 dark:border-slate-800 shadow-sm rounded-2xl bg-white dark:bg-slate-900">
         <CardContent className="p-4 flex flex-col md:flex-row gap-3 items-center justify-between">
           <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto flex-1">
             {/* Search Input */}
@@ -1259,7 +1257,7 @@ export const ProductOrderArrangementPage: React.FC = () => {
       )}
 
       {/* Main Sorting Section Card */}
-      <Card className="shadow-lg border border-slate-200/80 dark:border-slate-800 rounded-2xl overflow-hidden bg-white dark:bg-slate-900">
+      <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)] shadow-lg border border-slate-200/80 dark:border-slate-800 rounded-2xl overflow-hidden bg-white dark:bg-slate-900">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b pb-4 gap-4 bg-slate-50/50 dark:bg-slate-800/30">
           <div>
             <CardTitle className="text-xl flex items-center gap-2 font-bold text-slate-900 dark:text-slate-100">

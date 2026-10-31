@@ -1,3 +1,5 @@
+import { PageHeader } from '@/components/dashboard/PageHeader';
+import { SoftButton } from '@/components/dashboard/SoftButton';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -2565,72 +2567,54 @@ const ProductForm = () => {
 
   return (
     <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto py-6 px-4 sm:px-6 2xl:px-8 space-y-6">
-      {/* Premium Header Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 sm:p-8 text-white shadow-xl border border-slate-800">
-        <div className="absolute -right-10 -bottom-10 h-48 w-48 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
-        <div className="absolute right-20 -top-10 h-32 w-32 rounded-full bg-purple-500/10 blur-2xl pointer-events-none" />
-
-        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              onClick={() => navigate(getProductsListRoute())}
-              className="h-11 w-11 rounded-xl border-slate-700/80 bg-slate-800/80 text-white hover:bg-slate-700 hover:text-white transition-all shrink-0 shadow-md"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div>
-              <div className="flex items-center gap-3 flex-wrap">
-                <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
-                  {isEditMode ? (formData.title || 'Edit Product') : 'Add New Product'}
-                </h1>
-                <Badge className={isEditMode ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-xs px-2.5 py-0.5" : "bg-indigo-500/20 text-indigo-300 border-indigo-500/30 text-xs px-2.5 py-0.5"}>
-                  {isEditMode ? 'Editing Catalog Entry' : 'New Catalog Item'}
-                </Badge>
-              </div>
-              <p className="text-xs sm:text-sm text-slate-300 mt-1 font-normal">
-                {isEditMode ? 'Update product pricing, inventory, categories, media, and specialized details.' : 'Create a premium product listing with variants, custom options, and media.'}
-              </p>
-            </div>
-          </div>
-
+      {/* Neumorphic Header Bar */}
+      <PageHeader
+        title={isEditMode ? (formData.title || 'Edit Product') : 'Add New Product'}
+        subtitle={isEditMode ? 'Update product pricing, inventory, categories, media, and specialized details.' : 'Create a premium product listing with variants, custom options, and media.'}
+        breadcrumbs={[
+          { label: 'Admin', href: '/admin' },
+          { label: 'Catalog', href: getProductsListRoute() },
+          { label: isEditMode ? 'Edit Product' : 'Add New' },
+        ]}
+        statusBadge={{
+          label: isEditMode ? 'Editing Catalog Entry' : 'New Catalog Item',
+          variant: isEditMode ? 'success' : 'rose',
+        }}
+        actions={
           <div className="flex items-center gap-3 shrink-0">
-            <Button
+            <SoftButton
               type="button"
-              variant="outline"
+              variant="secondary"
               onClick={() => navigate(getProductsListRoute())}
-              className="h-11 px-5 rounded-xl border-slate-700 text-slate-200 hover:bg-slate-800 hover:text-white text-xs font-semibold"
             >
               Cancel
-            </Button>
-            <Button
+            </SoftButton>
+            <SoftButton
               type="submit"
+              variant="primary"
               disabled={isLoading || isUploading}
               onClick={handleSubmit}
-              className="h-11 px-6 rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white font-bold text-xs gap-2 shadow-lg shadow-purple-500/25 transition-all transform hover:scale-[1.02]"
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
                   Saving...
                 </>
               ) : (
                 <>
-                  <Wand2 className="h-4 w-4" />
+                  <Wand2 className="h-4 w-4 mr-1.5" />
                   {isEditMode ? 'Save Changes' : 'Publish Product'}
                 </>
               )}
-            </Button>
+            </SoftButton>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       <form onSubmit={handleSubmit} className="space-y-8 pb-10">
 
         {/* Basic Information */}
-        <Card className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+        <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)] overflow-hidden">
           <CardHeader className="bg-slate-50/70 dark:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800/80 py-4 px-6">
             <CardTitle className="flex items-center gap-3 text-slate-900 dark:text-slate-100 text-lg font-bold">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400">
@@ -3270,7 +3254,7 @@ const ProductForm = () => {
         </Card>
 
         {/* Categories & Features */}
-        <Card className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+        <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)] overflow-hidden">
           <CardHeader className="bg-slate-50/70 dark:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800/80 py-4 px-6">
             <CardTitle className="flex items-center gap-3 text-slate-900 dark:text-slate-100 text-lg font-bold">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">

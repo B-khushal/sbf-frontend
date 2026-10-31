@@ -22,6 +22,9 @@ import { useCurrency } from '@/contexts/CurrencyContext';
 import { getAllVendors, updateVendorStatus, getVendorById, approveVendor, deleteVendor } from '@/services/vendorService';
 import { useNavigate } from 'react-router-dom';
 import { UPLOADS_URL } from '@/config';
+import { PageHeader } from '@/components/dashboard/PageHeader';
+import { StatCard } from '@/components/dashboard/StatCard';
+import { SoftButton } from '@/components/dashboard/SoftButton';
 
 type Vendor = {
   _id: string;
@@ -375,41 +378,41 @@ const AdminVendorManagement: React.FC = () => {
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
-            <div className="text-sm text-muted-foreground">Total Vendors</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
-            <div className="text-sm text-muted-foreground">Pending Approval</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-green-600">{stats.approved}</div>
-            <div className="text-sm text-muted-foreground">Active Vendors</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-purple-600">{stats.verified}</div>
-            <div className="text-sm text-muted-foreground">Verified</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-emerald-600">{formatPrice(stats.totalRevenue)}</div>
-            <div className="text-sm text-muted-foreground">Total Revenue</div>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-4">
+        <StatCard
+          title="Total Vendors"
+          value={stats.total}
+          icon={Store}
+          colorPalette="rose"
+        />
+        <StatCard
+          title="Pending Approval"
+          value={stats.pending}
+          icon={Users}
+          colorPalette="amber"
+        />
+        <StatCard
+          title="Active Vendors"
+          value={stats.approved}
+          icon={Check}
+          colorPalette="emerald"
+        />
+        <StatCard
+          title="KYC Verified"
+          value={stats.verified}
+          icon={Star}
+          colorPalette="purple"
+        />
+        <StatCard
+          title="Vendor Revenue"
+          value={formatPrice(stats.totalRevenue)}
+          icon={Store}
+          colorPalette="bloom"
+        />
       </div>
 
       {/* Filters and Search */}
-      <Card>
+      <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]">
         <CardHeader>
           <CardTitle>Filter Vendors</CardTitle>
         </CardHeader>
@@ -476,7 +479,7 @@ const AdminVendorManagement: React.FC = () => {
       </Card>
 
       {/* Vendors Table */}
-      <Card>
+      <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]">
         <CardHeader>
           <CardTitle>Vendors ({filteredVendors.length})</CardTitle>
         </CardHeader>
@@ -723,7 +726,7 @@ const AdminVendorManagement: React.FC = () => {
 
               {/* Store Information */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card>
+                <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]">
                   <CardHeader>
                     <CardTitle className="text-lg">Store Information</CardTitle>
                   </CardHeader>
@@ -753,7 +756,7 @@ const AdminVendorManagement: React.FC = () => {
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]">
                   <CardHeader>
                     <CardTitle className="text-lg">Owner Information</CardTitle>
                   </CardHeader>
@@ -775,7 +778,7 @@ const AdminVendorManagement: React.FC = () => {
               </div>
 
               {/* Statistics */}
-              <Card>
+              <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]">
                 <CardHeader>
                   <CardTitle className="text-lg">Performance Statistics</CardTitle>
                 </CardHeader>
@@ -806,7 +809,7 @@ const AdminVendorManagement: React.FC = () => {
               </Card>
 
               {/* Banking Information */}
-              <Card>
+              <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]">
                 <CardHeader>
                   <CardTitle className="text-lg">Banking Information</CardTitle>
                 </CardHeader>
@@ -832,7 +835,7 @@ const AdminVendorManagement: React.FC = () => {
               </Card>
 
               {/* Commission Information */}
-              <Card>
+              <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]">
                 <CardHeader>
                   <CardTitle className="text-lg">Commission Structure</CardTitle>
                 </CardHeader>

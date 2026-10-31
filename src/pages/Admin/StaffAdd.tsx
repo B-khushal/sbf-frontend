@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/dashboard/PageHeader';
+import { SoftButton } from '@/components/dashboard/SoftButton';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import api from '@/services/api';
-import { ChevronLeft, UserPlus } from 'lucide-react';
+import { ArrowLeft, UserPlus } from 'lucide-react';
 import { fixEmailTypo } from '@/utils/emailUtils';
 
 interface Zone {
@@ -103,89 +103,110 @@ const StaffAdd: React.FC = () => {
   };
 
   return (
-    <div className="max-w-xl mx-auto p-4 space-y-6">
-      <Button 
-        variant="ghost" 
-        onClick={() => navigate('/admin/staff')} 
-        className="flex items-center gap-2 text-slate-600 hover:text-slate-900"
-      >
-        <ChevronLeft className="h-4 w-4" /> Back to Staff Directory
-      </Button>
+    <div className="max-w-2xl mx-auto space-y-6">
+      <PageHeader
+        title="Add New Employee"
+        subtitle="Setup operational credentials, branch store assignment, and delivery zones for a staff member."
+        breadcrumbs={[
+          { label: 'Admin', href: '/admin' },
+          { label: 'Staff Management', href: '/admin/staff' },
+          { label: 'Add Employee' },
+        ]}
+        actions={
+          <SoftButton
+            variant="secondary"
+            icon={ArrowLeft}
+            onClick={() => navigate('/admin/staff')}
+          >
+            Back
+          </SoftButton>
+        }
+      />
 
-      <Card className="subtle-shadow border-gray-100">
-        <CardHeader className="border-b border-gray-50 pb-6 bg-slate-50/50">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
-              <UserPlus className="h-6 w-6" />
-            </div>
-            <div>
-              <CardTitle className="text-2xl font-bold text-bloom-dark">Add New Employee</CardTitle>
-              <CardDescription>Setup credentials and store assignment for a new staff member.</CardDescription>
-            </div>
+      <div className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)] p-6 md:p-8">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="name" className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+              Full Name
+            </Label>
+            <Input 
+              id="name" 
+              value={newStaff.name} 
+              onChange={e => setNewStaff({...newStaff, name: e.target.value})} 
+              placeholder="e.g. Ramesh Kumar"
+              className="h-11 rounded-xl bg-[#edf1f7] dark:bg-slate-800 shadow-[inset_2px_2px_5px_rgba(163,177,198,0.2),inset_-2px_-2px_5px_rgba(255,255,255,0.7)] border-none"
+              required 
+            />
           </div>
-        </CardHeader>
-        <CardContent className="pt-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="name">Full Name</Label>
-              <Input 
-                id="name" 
-                value={newStaff.name} 
-                onChange={e => setNewStaff({...newStaff, name: e.target.value})} 
-                placeholder="John Doe"
-                required 
-              />
-            </div>
-            <div>
-              <Label htmlFor="email">Email Address</Label>
-              <Input 
-                id="email" 
-                type="email" 
-                value={newStaff.email} 
-                onChange={e => setNewStaff({...newStaff, email: e.target.value})} 
-                onBlur={e => setNewStaff(prev => ({ ...prev, email: fixEmailTypo(e.target.value) }))}
-                placeholder="johndoe@sbflorist.in"
-                required 
-              />
-            </div>
-            <div>
-              <Label htmlFor="phone">Phone Number</Label>
-              <Input 
-                id="phone" 
-                value={newStaff.phone} 
-                onChange={e => setNewStaff({...newStaff, phone: e.target.value})} 
-                placeholder="+91 XXXXXXXXXX"
-                required 
-              />
-            </div>
-            <div>
-              <Label htmlFor="password">Default Password</Label>
-              <Input 
-                id="password" 
-                type="password" 
-                value={newStaff.password} 
-                onChange={e => setNewStaff({...newStaff, password: e.target.value})} 
-                placeholder="••••••••"
-                required 
-              />
-            </div>
-            <div>
-              <Label htmlFor="role">Assigned Role</Label>
-              <Select value={newStaff.role} onValueChange={v => handleSelectChange('role', v)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select role" />
-                </SelectTrigger>
-                <SelectContent>
-                  {roles.map(r => (
-                    <SelectItem key={r._id} value={r.code}>{r.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="store">Store Hub</Label>
+
+          <div className="space-y-2">
+            <Label htmlFor="email" className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+              Email Address
+            </Label>
+            <Input 
+              id="email" 
+              type="email" 
+              value={newStaff.email} 
+              onChange={e => setNewStaff({...newStaff, email: e.target.value})} 
+              onBlur={e => setNewStaff(prev => ({ ...prev, email: fixEmailTypo(e.target.value) }))}
+              placeholder="ramesh@sbflorist.in"
+              className="h-11 rounded-xl bg-[#edf1f7] dark:bg-slate-800 shadow-[inset_2px_2px_5px_rgba(163,177,198,0.2),inset_-2px_-2px_5px_rgba(255,255,255,0.7)] border-none"
+              required 
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="phone" className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+              Phone Number
+            </Label>
+            <Input 
+              id="phone" 
+              value={newStaff.phone} 
+              onChange={e => setNewStaff({...newStaff, phone: e.target.value})} 
+              placeholder="+91 9876543210"
+              className="h-11 rounded-xl bg-[#edf1f7] dark:bg-slate-800 shadow-[inset_2px_2px_5px_rgba(163,177,198,0.2),inset_-2px_-2px_5px_rgba(255,255,255,0.7)] border-none"
+              required 
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="password" className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+              Temporary Login Password
+            </Label>
+            <Input 
+              id="password" 
+              type="password" 
+              value={newStaff.password} 
+              onChange={e => setNewStaff({...newStaff, password: e.target.value})} 
+              placeholder="••••••••"
+              className="h-11 rounded-xl bg-[#edf1f7] dark:bg-slate-800 shadow-[inset_2px_2px_5px_rgba(163,177,198,0.2),inset_-2px_-2px_5px_rgba(255,255,255,0.7)] border-none"
+              required 
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="role" className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+              Assigned Organization Role
+            </Label>
+            <Select value={newStaff.role} onValueChange={v => handleSelectChange('role', v)}>
+              <SelectTrigger className="h-11 rounded-xl bg-[#edf1f7] dark:bg-slate-800 shadow-[inset_2px_2px_5px_rgba(163,177,198,0.2),inset_-2px_-2px_5px_rgba(255,255,255,0.7)] border-none">
+                <SelectValue placeholder="Select role" />
+              </SelectTrigger>
+              <SelectContent>
+                {roles.map(r => (
+                  <SelectItem key={r._id} value={r.code}>{r.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="store" className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                Store Hub
+              </Label>
               <Select value={newStaff.assigned_store || 'none'} onValueChange={v => handleSelectChange('assigned_store', v)}>
-                <SelectTrigger>
+                <SelectTrigger className="h-11 rounded-xl bg-[#edf1f7] dark:bg-slate-800 shadow-[inset_2px_2px_5px_rgba(163,177,198,0.2),inset_-2px_-2px_5px_rgba(255,255,255,0.7)] border-none">
                   <SelectValue placeholder="Select Store Hub" />
                 </SelectTrigger>
                 <SelectContent>
@@ -196,10 +217,13 @@ const StaffAdd: React.FC = () => {
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <Label htmlFor="zone">Delivery Zone Assignment</Label>
+
+            <div className="space-y-2">
+              <Label htmlFor="zone" className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                Delivery Zone Assignment
+              </Label>
               <Select value={newStaff.assigned_zone || 'none'} onValueChange={v => handleSelectChange('assigned_zone', v)}>
-                <SelectTrigger>
+                <SelectTrigger className="h-11 rounded-xl bg-[#edf1f7] dark:bg-slate-800 shadow-[inset_2px_2px_5px_rgba(163,177,198,0.2),inset_-2px_-2px_5px_rgba(255,255,255,0.7)] border-none">
                   <SelectValue placeholder="Select Delivery Zone" />
                 </SelectTrigger>
                 <SelectContent>
@@ -210,15 +234,18 @@ const StaffAdd: React.FC = () => {
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex gap-2 justify-end pt-4 border-t border-gray-50">
-              <Button type="button" variant="outline" onClick={() => navigate('/admin/staff')}>Cancel</Button>
-              <Button type="submit" className="bg-primary hover:bg-primary/90 text-white" disabled={saving}>
-                {saving ? 'Creating...' : 'Create Employee'}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+          </div>
+
+          <div className="flex gap-3 justify-end pt-5 border-t border-slate-200/50 dark:border-slate-800/50">
+            <SoftButton type="button" variant="secondary" onClick={() => navigate('/admin/staff')}>
+              Cancel
+            </SoftButton>
+            <SoftButton type="submit" variant="primary" icon={UserPlus} disabled={saving}>
+              {saving ? 'Creating...' : 'Create Employee'}
+            </SoftButton>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };

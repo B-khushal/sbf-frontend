@@ -1,3 +1,5 @@
+import { PageHeader } from '@/components/dashboard/PageHeader';
+import { SoftButton } from '@/components/dashboard/SoftButton';
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
@@ -435,7 +437,7 @@ const AddonForm: React.FC = () => {
             </div>
 
             {/* Form Fields Card */}
-            <Card className="border-slate-200/80 shadow-md rounded-2xl overflow-hidden bg-white">
+            <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)] border-slate-200/80 shadow-md rounded-2xl overflow-hidden bg-white">
               <CardContent className="p-6 sm:p-8">
                 
                 {/* 1. GENERAL INFORMATION TAB */}

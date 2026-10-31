@@ -1,3 +1,6 @@
+import { PageHeader } from '@/components/dashboard/PageHeader';
+import { StatCard } from '@/components/dashboard/StatCard';
+import { SoftButton } from '@/components/dashboard/SoftButton';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -274,7 +277,7 @@ const StaffList: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <Card className="subtle-shadow border-gray-100">
+      <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]">
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             <div className="relative">
@@ -339,7 +342,7 @@ const StaffList: React.FC = () => {
       </Card>
 
       {/* Directory Table */}
-      <Card className="subtle-shadow border-gray-100 overflow-hidden">
+      <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)] overflow-hidden">
         <CardContent className="p-0">
           <div className="w-full overflow-x-auto">
             <Table>

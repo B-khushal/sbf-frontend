@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { EnterpriseProductTable } from "@/components/Admin/EnterpriseProductTable";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import productService, { ProductData } from "@/services/productService";
-import { Cake, Plus, RefreshCw } from "lucide-react";
+import { Cake, Plus, RefreshCw, Sparkles, CheckCircle2, Layers } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { PageHeader } from "@/components/dashboard/PageHeader";
+import { StatCard } from "@/components/dashboard/StatCard";
+import { SoftButton } from "@/components/dashboard/SoftButton";
 
 const CakesPage: React.FC = () => {
   const navigate = useNavigate();
@@ -33,43 +35,107 @@ const CakesPage: React.FC = () => {
     fetchCakes();
   }, []);
 
+  const stats = useMemo(() => {
+    let egglessCount = 0;
+    let containsEggCount = 0;
+    let inStockCount = 0;
+
+    products.forEach((p) => {
+      const isEggless =
+        p.cakeAttributes?.isEggless ||
+        p.isEggless ||
+        String(p.title || "").toLowerCase().includes("eggless");
+      if (isEggless) egglessCount++;
+      else containsEggCount++;
+
+      if ((p.countInStock || 0) > 0 || (p.stock || 0) > 0) inStockCount++;
+    });
+
+    return {
+      total: products.length,
+      egglessCount,
+      containsEggCount,
+      inStockCount,
+    };
+  }, [products]);
+
   return (
     <div className="space-y-6 w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-amber-100 dark:bg-amber-950/40 rounded-xl text-amber-600">
-            <Cake className="h-6 w-6" />
+      {/* Neumorphic Page Header */}
+      <PageHeader
+        breadcrumbs={[
+          { label: "Admin", href: "/admin" },
+          { label: "Products", href: "/admin/products" },
+          { label: "Cakes Catalog" },
+        ]}
+        title="Cakes Management"
+        description="Flavor profiles, weight variants, eggless / contains egg classification, preparation lead times, and sizes."
+        liveStatus={{ label: `${products.length} Cakes Active`, ping: true }}
+        actions={
+          <div className="flex items-center gap-2.5">
+            <SoftButton
+              variant="default"
+              size="sm"
+              icon={RefreshCw}
+              onClick={fetchCakes}
+            >
+              Refresh
+            </SoftButton>
+            <SoftButton
+              variant="primary"
+              size="sm"
+              icon={Plus}
+              onClick={() => navigate("/admin/products/new?type=cake")}
+            >
+              Add Cake
+            </SoftButton>
           </div>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-              Cakes Management
-            </h1>
-            <p className="text-xs text-muted-foreground">
-              Flavor, weight, eggless/egg options, preparation times, and available sizes.
-            </p>
-          </div>
-        </div>
+        }
+      />
 
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={fetchCakes} className="text-xs gap-1.5">
-            <RefreshCw className="h-3.5 w-3.5" /> Refresh
-          </Button>
-          <Button
-            size="sm"
-            onClick={() => navigate("/admin/products/new?type=cake")}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs gap-1.5"
-          >
-            <Plus className="h-3.5 w-3.5" /> Add Cake
-          </Button>
-        </div>
+      {/* KPI Stats Row */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <StatCard
+          title="Total Cakes"
+          value={stats.total}
+          icon={Cake}
+          color="amber"
+          subtitle="All cataloged cakes"
+        />
+        <StatCard
+          title="100% Eggless"
+          value={stats.egglessCount}
+          icon={CheckCircle2}
+          color="emerald"
+          subtitle="Pure vegetarian recipes"
+        />
+        <StatCard
+          title="Contains Egg"
+          value={stats.containsEggCount}
+          icon={Layers}
+          color="rose"
+          subtitle="Classic baking recipes"
+        />
+        <StatCard
+          title="Available in Stock"
+          value={stats.inStockCount}
+          icon={Sparkles}
+          color="purple"
+          subtitle="Ready for order"
+        />
       </div>
 
+      {/* Enterprise Product Table */}
       <EnterpriseProductTable
         products={products}
         loading={loading}
         catalogTypeFilter="cake"
         onRefresh={fetchCakes}
-        onEditProduct={(product) => navigate(`/admin/products/edit/${product._id}`, { state: { from: '/admin/products/cakes' } })}
+        onEditProduct={(product) =>
+          navigate(`/admin/products/edit/${product._id}`, {
+            state: { from: "/admin/products/cakes" },
+          })
+        }
       />
     </div>
   );

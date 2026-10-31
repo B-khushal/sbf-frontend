@@ -1,3 +1,6 @@
+import { PageHeader } from '@/components/dashboard/PageHeader';
+import { StatCard } from '@/components/dashboard/StatCard';
+import { SoftButton } from '@/components/dashboard/SoftButton';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -162,15 +165,61 @@ const SeasonalCampaigns: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Seasonal Campaigns</h1>
-          <p className="text-muted-foreground">Manage centralized storefront configurations for all occasions (except Valentine's Week).</p>
-        </div>
-        <Button onClick={() => setShowAddModal(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add New Occasion
-        </Button>
+      <PageHeader
+        title="Seasonal Campaigns & Festive Occasions"
+        subtitle="Manage centralized storefront configurations, promotional themes, and festive collections."
+        breadcrumbs={[
+          { label: 'Admin', href: '/admin' },
+          { label: 'Marketing', href: '/marketing' },
+          { label: 'Seasonal Campaigns' },
+        ]}
+        statusBadge={{
+          label: `${campaigns.filter((c) => c.enabled).length} Live Campaigns`,
+          variant: 'success',
+        }}
+        actions={
+          <SoftButton
+            variant="primary"
+            icon={Plus}
+            onClick={() => setShowAddModal(true)}
+          >
+            Add New Occasion
+          </SoftButton>
+        }
+      />
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          title="Total Campaigns"
+          value={campaigns.length}
+          icon={Sparkles}
+          colorPalette="rose"
+        />
+        <StatCard
+          title="Active Live"
+          value={campaigns.filter((c) => c.enabled).length}
+          icon={Calendar}
+          colorPalette="emerald"
+        />
+        <StatCard
+          title="Festive Orders"
+          value={campaigns.reduce((acc, c) => acc + (c.ordersCount || 0), 0)}
+          icon={Settings}
+          colorPalette="amber"
+        />
+        <StatCard
+          title="Festive Revenue"
+          value={formatPrice(
+            convertPrice(
+              campaigns.reduce(
+                (acc, c) => acc + (c.revenue ?? c.analytics?.revenue ?? 0),
+                0
+              )
+            )
+          )}
+          icon={Sparkles}
+          colorPalette="purple"
+        />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -178,7 +227,7 @@ const SeasonalCampaigns: React.FC = () => {
           const hasDates = campaign.general?.startDate && campaign.general?.endDate;
           
           return (
-            <Card key={campaign._id} className="overflow-hidden border border-gray-100 hover:shadow-lg transition-all duration-300">
+            <Card key={campaign._id} className="overflow-hidden rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)] transition-all duration-300">
               <CardHeader className="pb-4" style={{ borderTop: `4px solid ${campaign.theme?.primaryColor || '#4f46e5'}` }}>
                 <div className="flex justify-between items-start">
                   <div className="flex items-center gap-2">
@@ -278,7 +327,7 @@ const SeasonalCampaigns: React.FC = () => {
       {/* Add New Occasion Modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fadeIn">
-          <Card className="w-full max-w-md border border-slate-100 shadow-2xl">
+          <Card className="w-full max-w-md rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[10px_10px_30px_rgba(0,0,0,0.25)]">
             <CardHeader className="bg-slate-50 border-b">
               <div className="flex justify-between items-center">
                 <CardTitle className="text-xl flex items-center gap-2">

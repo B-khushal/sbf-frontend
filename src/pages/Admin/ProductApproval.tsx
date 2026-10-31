@@ -1,3 +1,5 @@
+import { PageHeader } from '@/components/dashboard/PageHeader';
+import { SoftButton } from '@/components/dashboard/SoftButton';
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -145,22 +147,29 @@ const ProductApproval: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="responsive-toolbar">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Product Approval</h1>
-          <p className="text-muted-foreground mt-1">
-            Review and approve vendor product submissions
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          onClick={fetchPendingProducts}
-          disabled={loading}
-        >
-          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
-      </div>
+      <PageHeader
+        title="Vendor Catalog Quality & Approvals"
+        subtitle="Review, audit, verify ingredient details, and approve marketplace vendor product listings."
+        breadcrumbs={[
+          { label: 'Admin', href: '/admin' },
+          { label: 'Catalog', href: '/admin/products' },
+          { label: 'Product Approvals' },
+        ]}
+        statusBadge={{
+          label: `${products.length} Pending Submissions`,
+          variant: products.length > 0 ? 'warning' : 'success',
+        }}
+        actions={
+          <SoftButton
+            variant="secondary"
+            icon={RefreshCw}
+            onClick={fetchPendingProducts}
+            disabled={loading}
+          >
+            Refresh Queue
+          </SoftButton>
+        }
+      />
 
       {products.length === 0 && !loading && (
         <Alert>
@@ -172,7 +181,7 @@ const ProductApproval: React.FC = () => {
       )}
 
       {products.length > 0 && (
-        <Card>
+        <Card className="rounded-2xl border-0 shadow-[8px_8px_24px_rgba(166,180,200,0.45),-8px_-8px_24px_rgba(255,255,255,0.95)] bg-white">
           <CardHeader>
             <CardTitle>Pending Products ({products.length})</CardTitle>
           </CardHeader>

@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { PageHeader } from '@/components/dashboard/PageHeader';
+import { StatCard } from '@/components/dashboard/StatCard';
+import { SoftButton } from '@/components/dashboard/SoftButton';
 import {
   HelpCircle,
   Plus,
@@ -324,36 +327,36 @@ export const FaqManagement: React.FC = () => {
         </div>
       </div>
 
-      {/* Stats Cards */}
+{/* Stats Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <Card className="rounded-2xl border-gray-200">
-          <CardContent className="p-4 sm:p-5">
-            <p className="text-xs text-gray-500 font-medium">Total Questions</p>
-            <p className="text-2xl sm:text-3xl font-extrabold text-gray-900 mt-1">{faqs.length}</p>
-          </CardContent>
-        </Card>
-        <Card className="rounded-2xl border-gray-200">
-          <CardContent className="p-4 sm:p-5">
-            <p className="text-xs text-emerald-600 font-medium">Published Live</p>
-            <p className="text-2xl sm:text-3xl font-extrabold text-emerald-700 mt-1">{publishedCount}</p>
-          </CardContent>
-        </Card>
-        <Card className="rounded-2xl border-gray-200">
-          <CardContent className="p-4 sm:p-5">
-            <p className="text-xs text-amber-600 font-medium">Drafts / Inactive</p>
-            <p className="text-2xl sm:text-3xl font-extrabold text-amber-700 mt-1">{draftCount}</p>
-          </CardContent>
-        </Card>
-        <Card className="rounded-2xl border-gray-200">
-          <CardContent className="p-4 sm:p-5">
-            <p className="text-xs text-rose-600 font-medium">Categories</p>
-            <p className="text-2xl sm:text-3xl font-extrabold text-rose-700 mt-1">{categories.length}</p>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Total Questions"
+          value={faqs.length}
+          icon={HelpCircle}
+          colorPalette="rose"
+        />
+        <StatCard
+          title="Published Live"
+          value={publishedCount}
+          icon={CheckCircle2}
+          colorPalette="emerald"
+        />
+        <StatCard
+          title="Drafts / Inactive"
+          value={draftCount}
+          icon={XCircle}
+          colorPalette="amber"
+        />
+        <StatCard
+          title="Categories"
+          value={categories.length}
+          icon={Tag}
+          colorPalette="purple"
+        />
       </div>
 
       {/* Search & Filters */}
-      <Card className="rounded-2xl border-gray-200 shadow-2xs">
+      <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]">
         <CardContent className="p-4 sm:p-5 space-y-4">
           <form onSubmit={handleSearchSubmit} className="flex gap-2">
             <div className="relative flex-1">
@@ -444,7 +447,7 @@ export const FaqManagement: React.FC = () => {
       </Card>
 
       {/* FAQs List Table */}
-      <Card className="rounded-2xl border-gray-200 overflow-hidden shadow-2xs">
+      <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)] overflow-hidden">
         <CardHeader className="bg-gray-50/50 border-b border-gray-100 py-4 px-6 flex flex-row items-center justify-between">
           <div>
             <CardTitle className="text-base font-bold text-gray-900">

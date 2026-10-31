@@ -1,3 +1,6 @@
+import { PageHeader } from '@/components/dashboard/PageHeader';
+import { StatCard } from '@/components/dashboard/StatCard';
+import { SoftButton } from '@/components/dashboard/SoftButton';
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -183,95 +186,101 @@ const AttendanceLogs: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-bloom-dark">Attendance & Schedules</h1>
-          <p className="text-muted-foreground">Monitor live check-in states, daily shift allocations, and active schedules.</p>
-        </div>
-        <Button onClick={fetchAttendanceData} variant="outline" className="flex items-center gap-2">
-          <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} /> Refresh
-        </Button>
-      </div>
+      <PageHeader
+        title="Attendance & Shift Schedules"
+        subtitle="Monitor live staff check-ins, daily shift allocations, break timers, and roster attendance."
+        breadcrumbs={[
+          { label: 'Admin', href: '/admin' },
+          { label: 'Staff', href: '/admin/staff' },
+          { label: 'Attendance' },
+        ]}
+        statusBadge={{
+          label: `${onDutyCount} On Duty Now`,
+          variant: 'success',
+        }}
+        actions={
+          <SoftButton
+            variant="secondary"
+            icon={RefreshCw}
+            onClick={fetchAttendanceData}
+            disabled={isLoading}
+          >
+            Refresh Logs
+          </SoftButton>
+        }
+      />
 
       {/* Metrics Row */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="subtle-shadow border-gray-100 bg-white">
-          <CardHeader className="py-4 flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Staff Directory</CardTitle>
-            <Clock className="h-4 w-4 text-slate-400" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-bloom-dark">{totalStaff} Members</div>
-            <p className="text-xs text-muted-foreground mt-1">Configured employee accounts</p>
-          </CardContent>
-        </Card>
-
-        <Card className="subtle-shadow border-gray-100 bg-white">
-          <CardHeader className="py-4 flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Live On Duty Now</CardTitle>
-            <UserCheck className="h-4 w-4 text-emerald-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-emerald-600 flex items-center gap-2">
-              {onDutyCount} Active
-              <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">Currently checked-in via session</p>
-          </CardContent>
-        </Card>
-
-        <Card className="subtle-shadow border-gray-100 bg-white">
-          <CardHeader className="py-4 flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Online Delivery Drivers</CardTitle>
-            <MapPin className="h-4 w-4 text-teal-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-teal-600">{deliveryOnlineCount} Partners</div>
-            <p className="text-xs text-muted-foreground mt-1">Ready for order assignment</p>
-          </CardContent>
-        </Card>
-
-        <Card className="subtle-shadow border-gray-100 bg-white">
-          <CardHeader className="py-4 flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Duty Coverage Rate</CardTitle>
-            <Calendar className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-primary">{attendanceRate}% Today</div>
-            <p className="text-xs text-muted-foreground mt-1">Active vs scheduled staffing ratio</p>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+        <StatCard
+          title="Total Staff Directory"
+          value={`${totalStaff} Members`}
+          subtitle="Configured employee accounts"
+          icon={Clock}
+          variant="default"
+          isGlass
+        />
+        <StatCard
+          title="Live On Duty Now"
+          value={`${onDutyCount} Active`}
+          subtitle="Currently checked-in via session"
+          icon={UserCheck}
+          variant="success"
+          isGlass
+        />
+        <StatCard
+          title="Online Delivery Drivers"
+          value={`${deliveryOnlineCount} Partners`}
+          subtitle="Ready for order assignment"
+          icon={MapPin}
+          variant="teal"
+          isGlass
+        />
+        <StatCard
+          title="Duty Coverage Rate"
+          value={`${attendanceRate}% Today`}
+          subtitle="Active vs scheduled staffing ratio"
+          icon={Calendar}
+          variant="rose"
+          isGlass
+        />
       </div>
 
       {/* Tabs Layout */}
-      <Card className="subtle-shadow border-gray-100 bg-white">
-        <CardHeader className="pb-3 border-b border-gray-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="rounded-2xl p-6 transition-all duration-300" style={{
+        background: '#ffffff',
+        boxShadow: '8px 8px 24px rgba(166, 180, 200, 0.45), -8px -8px 24px rgba(255, 255, 255, 0.95)'
+      }}>
+        <div className="pb-5 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full md:w-auto">
-            <TabsList className="bg-slate-100/80 p-1">
-              <TabsTrigger value="live" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">
+            <TabsList className="bg-slate-100/80 p-1 rounded-xl">
+              <TabsTrigger value="live" className="data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-lg">
                 Live Status Board
               </TabsTrigger>
-              <TabsTrigger value="shifts" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">
+              <TabsTrigger value="shifts" className="data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-lg">
                 Daily Schedules
               </TabsTrigger>
-              <TabsTrigger value="punches" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">
+              <TabsTrigger value="punches" className="data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-lg">
                 Attendance Punch Logs
               </TabsTrigger>
             </TabsList>
           </Tabs>
 
           <div className="relative w-full md:w-72">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
             <Input
               placeholder="Search employee name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 bg-slate-50/50 focus-visible:bg-white"
+              className="pl-9 bg-slate-50 border-slate-200 rounded-xl"
+              style={{
+                boxShadow: 'inset 2px 2px 4px rgba(166, 180, 200, 0.2), inset -2px -2px 4px rgba(255, 255, 255, 0.7)'
+              }}
             />
           </div>
-        </CardHeader>
+        </div>
         
-        <CardContent className="p-0">
+        <div className="p-0">
           {isLoading ? (
             <div className="p-12 text-center">
               <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
@@ -462,8 +471,8 @@ const AttendanceLogs: React.FC = () => {
               </TabsContent>
             </>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 };

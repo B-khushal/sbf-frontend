@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { API_BASE_URL } from '@/config';
-import { Truck, RefreshCw, Navigation, MapPin } from 'lucide-react';
+import { Truck, RefreshCw, Navigation, MapPin, Clock } from 'lucide-react';
+import { PageHeader } from '@/components/dashboard/PageHeader';
+import { SoftButton } from '@/components/dashboard/SoftButton';
+import { StatusBadge } from '@/components/dashboard/StatusBadge';
 
 interface ActiveDelivery {
   _id: string;
@@ -52,7 +53,7 @@ const ActiveDeliveries: React.FC = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data.success) {
-        setActive(res.data.active);
+        setActive(res.data.active || []);
       }
     } catch (err: any) {
       toast({
@@ -119,14 +120,14 @@ const ActiveDeliveries: React.FC = () => {
     // Store marker icon custom styling
     const storeIcon = window.L.divIcon({
       className: 'store-map-icon',
-      html: `<div style="background-color: #064e3b; color: white; width: 34px; height: 34px; border-radius: 50%; border: 3px solid white; display: flex; align-items: center; justify-content: center; font-size: 14px; box-shadow: 0 4px 6px rgba(0,0,0,0.15);">🌸</div>`,
-      iconSize: [34, 34],
-      iconAnchor: [17, 17]
+      html: `<div style="background-color: #e11d48; color: white; width: 36px; height: 36px; border-radius: 50%; border: 3px solid white; display: flex; align-items: center; justify-content: center; font-size: 15px; box-shadow: 0 4px 10px rgba(225,29,72,0.4);">🌸</div>`,
+      iconSize: [36, 36],
+      iconAnchor: [18, 18]
     });
 
     // Store Marker
     const storeMarker = window.L.marker(storeCoords, { icon: storeIcon })
-      .bindPopup('<strong>Spring Blossoms Florist Store</strong><br>Mehdipatnam Hub')
+      .bindPopup('<strong>Spring Blossoms Florist Hub</strong><br>Mehdipatnam Flagship')
       .addTo(mapRef.current);
     markersRef.current.push(storeMarker);
 
@@ -135,9 +136,9 @@ const ActiveDeliveries: React.FC = () => {
       if (item.partnerId && item.partnerId.currentLatitude && item.partnerId.currentLongitude) {
         const partnerIcon = window.L.divIcon({
           className: 'partner-map-icon',
-          html: `<div style="background-color: #0284c7; color: white; width: 30px; height: 30px; border-radius: 50%; border: 2.5px solid white; display: flex; align-items: center; justify-content: center; font-size: 12px; box-shadow: 0 3px 5px rgba(0,0,0,0.15);">🛵</div>`,
-          iconSize: [30, 30],
-          iconAnchor: [15, 15]
+          html: `<div style="background-color: #059669; color: white; width: 32px; height: 32px; border-radius: 50%; border: 2.5px solid white; display: flex; align-items: center; justify-content: center; font-size: 13px; box-shadow: 0 4px 8px rgba(5,150,105,0.35);">🛵</div>`,
+          iconSize: [32, 32],
+          iconAnchor: [16, 16]
         });
 
         const marker = window.L.marker([item.partnerId.currentLatitude, item.partnerId.currentLongitude], { icon: partnerIcon })
@@ -160,77 +161,102 @@ const ActiveDeliveries: React.FC = () => {
   }, [isMapLoaded, active]);
 
   return (
-    <div className="p-6 space-y-6 w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-emerald-900">Active Deliveries</h1>
-          <p className="text-muted-foreground">Monitor ongoing courier coordinates, transit states, and live routing.</p>
-        </div>
-        <Button onClick={fetchActiveDeliveries} className="bg-emerald-700 hover:bg-emerald-800 text-white gap-2">
-          <RefreshCw className="h-4 w-4" /> Refresh Map
-        </Button>
-      </div>
+    <div className="space-y-6 w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto">
+      {/* Neumorphic Header */}
+      <PageHeader
+        breadcrumbs={[
+          { label: 'Admin', href: '/admin' },
+          { label: 'Logistics', href: '/admin/delivery/analytics' },
+          { label: 'Live Tracking' },
+        ]}
+        title="Active Deliveries & Fleet Radar"
+        description="Real-time courier GPS coordinates, active transit routes, customer destination tracking, and live ETA calculations."
+        liveStatus={{ label: `${active.length} Couriers en Route`, ping: true }}
+        actions={
+          <SoftButton
+            variant="default"
+            size="sm"
+            icon={RefreshCw}
+            onClick={fetchActiveDeliveries}
+          >
+            Refresh Radar
+          </SoftButton>
+        }
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Map View */}
         <div className="lg:col-span-2">
-          <Card className="border-emerald-100 shadow-sm bg-white overflow-hidden h-[600px] flex flex-col">
-            <div className="flex-1 w-full bg-emerald-50/20" ref={mapContainerRef} style={{ minHeight: '100%' }}>
+          <div className="rounded-2xl border border-white/80 dark:border-slate-800 shadow-[6px_6px_18px_rgba(163,177,198,0.22),-6px_-6px_18px_rgba(255,255,255,0.8)] bg-[#f4f7fb] dark:bg-slate-900 overflow-hidden h-[620px] flex flex-col">
+            <div className="flex-1 w-full bg-[#edf1f7]/50" ref={mapContainerRef} style={{ minHeight: '100%' }}>
               {!isMapLoaded && (
-                <div className="w-full h-full flex items-center justify-center text-muted-foreground animate-pulse">
-                  Initializing Live Tracking Map...
+                <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground animate-pulse font-medium">
+                  Initializing Live Tracking Telemetry...
                 </div>
               )}
             </div>
-          </Card>
+          </div>
         </div>
 
         {/* Dispatch Log Sidebar */}
-        <div className="lg:col-span-1 space-y-4">
-          <Card className="border-emerald-100 shadow-sm bg-white h-[600px] flex flex-col">
-            <CardHeader className="bg-emerald-50/55 border-b border-emerald-100 p-4">
-              <CardTitle className="text-emerald-900 text-lg flex items-center gap-2">
-                <Truck className="h-5 w-5 text-emerald-700" /> Active Dispatch Log
-              </CardTitle>
-              <CardDescription>Live list of shipments currently out on routes.</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1 overflow-y-auto p-0 divide-y divide-emerald-50">
+        <div className="lg:col-span-1">
+          <div className="rounded-2xl border border-white/80 dark:border-slate-800 shadow-[6px_6px_18px_rgba(163,177,198,0.22),-6px_-6px_18px_rgba(255,255,255,0.8)] bg-[#f4f7fb] dark:bg-slate-900 h-[620px] flex flex-col overflow-hidden">
+            <div className="bg-[#edf1f7] dark:bg-slate-800/60 border-b border-slate-200/80 dark:border-slate-800 p-4">
+              <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <Truck className="h-4 w-4 text-rose-600" /> Active Dispatches
+              </h2>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                Shipments out on transit across Hyderabad / Secunderabad.
+              </p>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-3 space-y-3">
               {loading ? (
-                <div className="p-6 text-center text-muted-foreground animate-pulse">Loading transit orders...</div>
+                <div className="p-8 text-center text-xs text-muted-foreground animate-pulse">
+                  Scanning delivery routes...
+                </div>
               ) : active.length === 0 ? (
-                <div className="p-6 text-center text-muted-foreground">No active dispatches right now.</div>
+                <div className="p-8 text-center text-xs text-muted-foreground">
+                  No active delivery shipments currently out on routes.
+                </div>
               ) : (
-                active.map(item => (
-                  <div key={item._id} className="p-4 hover:bg-emerald-50/20 transition-colors">
+                active.map((item) => (
+                  <div
+                    key={item._id}
+                    className="p-3.5 rounded-xl border border-white/80 dark:border-slate-800 bg-white/70 dark:bg-slate-800/60 shadow-[3px_3px_8px_rgba(163,177,198,0.18),-3px_-3px_8px_rgba(255,255,255,0.7)] hover:shadow-md transition-all space-y-2.5"
+                  >
                     <div className="flex justify-between items-start gap-2">
                       <div>
-                        <div className="font-semibold text-emerald-950">Order #{item.orderId?.orderNumber}</div>
-                        <div className="text-xs text-muted-foreground mt-0.5">
+                        <div className="font-bold text-xs text-slate-900 dark:text-slate-100">
+                          Order #{item.orderId?.orderNumber}
+                        </div>
+                        <div className="text-[11px] text-muted-foreground mt-0.5">
                           To: {item.orderId?.shippingDetails?.fullName}
                         </div>
-                        <div className="text-xs text-muted-foreground truncate max-w-[200px]">
+                        <div className="text-[10px] text-muted-foreground truncate max-w-[190px] font-medium">
                           {item.orderId?.shippingDetails?.address}
                         </div>
                       </div>
-                      <span className="bg-sky-50 text-sky-700 text-[10px] px-2 py-0.5 rounded font-bold capitalize whitespace-nowrap">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 capitalize shrink-0">
                         {item.status.replace(/_/g, ' ')}
                       </span>
                     </div>
 
-                    <div className="mt-3 flex items-center justify-between text-xs border-t border-dashed border-emerald-100 pt-2.5">
-                      <div className="flex items-center gap-1.5 font-medium text-emerald-950">
-                        <Navigation className="h-3.5 w-3.5 text-emerald-700" />
+                    <div className="flex items-center justify-between text-xs border-t border-slate-100 dark:border-slate-800 pt-2 text-[11px]">
+                      <div className="flex items-center gap-1.5 font-semibold text-slate-800 dark:text-slate-200">
+                        <Navigation className="h-3 w-3 text-rose-500" />
                         {item.partnerId ? item.partnerId.name : 'Unassigned'}
                       </div>
-                      <div className="text-muted-foreground">
-                        {item.distance} km • <strong className="text-emerald-800">{item.eta} mins</strong>
+                      <div className="text-muted-foreground text-[10px] flex items-center gap-1">
+                        <Clock className="h-3 w-3 text-emerald-600" />
+                        {item.distance} km • <strong className="text-emerald-600 font-bold">{item.eta}m ETA</strong>
                       </div>
                     </div>
                   </div>
                 ))
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
     </div>

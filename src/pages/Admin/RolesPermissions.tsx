@@ -1,3 +1,5 @@
+import { PageHeader } from '@/components/dashboard/PageHeader';
+import { SoftButton } from '@/components/dashboard/SoftButton';
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -228,27 +230,34 @@ const RolesPermissions: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-bloom-dark">Roles & Permissions</h1>
-          <p className="text-muted-foreground">
-            Configure system capabilities and access levels for administrative staff, managers, and partners.
-          </p>
-        </div>
-        {isPlatformAdminOrStoreOwner && (
-          <Button 
-            onClick={() => setIsCreateOpen(true)}
-            className="bg-primary hover:bg-primary/95 text-white flex items-center gap-2"
-          >
-            <Plus className="h-4 w-4" /> Create Custom Role
-          </Button>
-        )}
-      </div>
+      <PageHeader
+        title="Roles & Security Permissions"
+        subtitle="Configure granular access levels, authorization matrix, and module privileges across the platform."
+        breadcrumbs={[
+          { label: 'Admin', href: '/admin' },
+          { label: 'Roles & Permissions' },
+        ]}
+        statusBadge={{
+          label: `${roles.length} Configured Roles`,
+          variant: 'success',
+        }}
+        actions={
+          isPlatformAdminOrStoreOwner ? (
+            <SoftButton
+              variant="primary"
+              icon={Plus}
+              onClick={() => setIsCreateOpen(true)}
+            >
+              Create Custom Role
+            </SoftButton>
+          ) : undefined
+        }
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Roles list */}
         <div className="lg:col-span-1 space-y-4">
-          <Card className="subtle-shadow border-gray-100">
+          <Card className="rounded-2xl border-0 shadow-[8px_8px_24px_rgba(166,180,200,0.45),-8px_-8px_24px_rgba(255,255,255,0.95)] bg-white">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center gap-2">
                 <Shield className="h-5 w-5 text-primary" /> Roles Directory
@@ -302,7 +311,7 @@ const RolesPermissions: React.FC = () => {
         {/* Right Column: Permission Matrix */}
         <div className="lg:col-span-2">
           {selectedRole ? (
-            <Card className="subtle-shadow border-gray-100">
+            <Card className="rounded-2xl border-0 shadow-[8px_8px_24px_rgba(166,180,200,0.45),-8px_-8px_24px_rgba(255,255,255,0.95)] bg-white">
               <CardHeader className="pb-3 border-b flex flex-row items-center justify-between">
                 <div>
                   <CardTitle className="text-xl flex items-center gap-2">

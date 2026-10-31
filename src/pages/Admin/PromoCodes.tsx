@@ -1,33 +1,33 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2, Power } from 'lucide-react';
-import { 
-  getAllPromoCodes, 
-  createPromoCode, 
+import { Plus, Edit, Trash2, Power, Tag, Percent, Calendar, Check, Copy, Sparkles, Layers } from 'lucide-react';
+import {
+  getAllPromoCodes,
+  createPromoCode,
   updatePromoCode,
   deletePromoCode,
-  type PromoCode
+  type PromoCode,
 } from '@/services/promoCodeService';
 import { uploadImage } from '@/services/uploadService';
 import { useToast } from '@/hooks/use-toast';
 import { ImageUpload } from '@/components/ui/ImageUpload';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { PageHeader } from '@/components/dashboard/PageHeader';
+import { StatCard } from '@/components/dashboard/StatCard';
+import { SoftButton } from '@/components/dashboard/SoftButton';
+import { StatusBadge } from '@/components/dashboard/StatusBadge';
 
 const gradientOptions = [
-  { name: 'Sunrise', value: 'linear-gradient(to right, #ff9966, #ff5e62)' },
-  { name: 'Ocean', value: 'linear-gradient(to right, #43cea2, #185a9d)' },
-  { name: 'Grapefruit', value: 'linear-gradient(to right, #ffc0cb, #f3a683)' },
-  { name: 'Peachy', value: 'linear-gradient(to right, #ffecd2, #fcb69f)' },
-  { name: 'Sky', value: 'linear-gradient(to right, #a1c4fd, #c2e9fb)' },
-  { name: 'Lush', value: 'linear-gradient(to right, #56ab2f, #a8e063)' },
-  { name: 'Royal', value: 'linear-gradient(to right, #8e44ad, #c0392b)' },
-  { name: 'Sunset', value: 'linear-gradient(to right, #ff7e5f, #feb47b)' },
-  { name: 'Nightfall', value: 'linear-gradient(to right, #2c3e50, #4ca1af)' },
-  { name: 'Custom', value: '#ffffff' }
+  { name: 'Sunrise Rose', value: 'linear-gradient(to right, #ff9966, #ff5e62)' },
+  { name: 'Emerald Ocean', value: 'linear-gradient(to right, #43cea2, #185a9d)' },
+  { name: 'Grapefruit Glow', value: 'linear-gradient(to right, #ffc0cb, #f3a683)' },
+  { name: 'Peachy Floral', value: 'linear-gradient(to right, #ffecd2, #fcb69f)' },
+  { name: 'Sky Lavender', value: 'linear-gradient(to right, #a1c4fd, #c2e9fb)' },
+  { name: 'Lush Mint', value: 'linear-gradient(to right, #56ab2f, #a8e063)' },
+  { name: 'Royal Velvet', value: 'linear-gradient(to right, #8e44ad, #c0392b)' },
+  { name: 'Sunset Amber', value: 'linear-gradient(to right, #ff7e5f, #feb47b)' },
+  { name: 'Classic Clean', value: '#ffffff' },
 ];
 
 export const PromoCodes: React.FC = () => {
@@ -46,7 +46,7 @@ export const PromoCodes: React.FC = () => {
     validUntil: '',
     image: '',
     background: '#ffffff',
-    isActive: true
+    isActive: true,
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
@@ -64,9 +64,9 @@ export const PromoCodes: React.FC = () => {
     } catch (error) {
       console.error('Error fetching promo codes:', error);
       toast({
-        title: "Error",
-        description: "Failed to fetch promo codes",
-        variant: "destructive"
+        title: 'Error',
+        description: 'Failed to fetch promo codes',
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
@@ -83,7 +83,7 @@ export const PromoCodes: React.FC = () => {
       validUntil: '',
       image: '',
       background: '#ffffff',
-      isActive: true
+      isActive: true,
     });
     setSelectedFile(null);
   };
@@ -91,10 +91,9 @@ export const PromoCodes: React.FC = () => {
   const handleCreatePromoCode = async (e: React.FormEvent) => {
     e.preventDefault();
     setUploading(true);
-    
-    try {
-      let imageUrl = '';
 
+    try {
+      let imageUrl = formData.image;
       if (selectedFile) {
         const uploadFormData = new FormData();
         uploadFormData.append('image', selectedFile);
@@ -105,17 +104,16 @@ export const PromoCodes: React.FC = () => {
       const promoCodeData = {
         ...formData,
         image: imageUrl,
-        isActive: formData.isActive !== false
+        isActive: formData.isActive !== false,
       };
 
       const response = await createPromoCode(promoCodeData);
-      
+
       if (response.success) {
         toast({
-          title: "Success",
-          description: "Promo code created successfully"
+          title: 'Success',
+          description: 'Promo code created successfully',
         });
-        
         setShowCreateForm(false);
         resetForm();
         fetchPromoCodes();
@@ -123,9 +121,9 @@ export const PromoCodes: React.FC = () => {
     } catch (error: any) {
       console.error('Error creating promo code:', error);
       toast({
-        title: "Error",
+        title: 'Error',
         description: error.response?.data?.message || 'Failed to create promo code',
-        variant: "destructive"
+        variant: 'destructive',
       });
     } finally {
       setUploading(false);
@@ -134,37 +132,31 @@ export const PromoCodes: React.FC = () => {
 
   const handleEditPromoCode = (promoCode: PromoCode) => {
     setEditingPromoCode(promoCode);
-    const rawDate = promoCode.validUntil || (promoCode as any).endDate || (promoCode as any).validFrom;
-    const parsedDate = (rawDate && !isNaN(new Date(rawDate).getTime()))
-      ? new Date(rawDate).toISOString().split('T')[0]
-      : '';
-
     setFormData({
       code: promoCode.code,
       description: promoCode.description,
       discountType: promoCode.discountType,
       discountValue: promoCode.discountValue,
-      minimumOrderAmount: promoCode.minimumOrderAmount || 0,
-      validUntil: parsedDate,
+      minimumOrderAmount: promoCode.minimumOrderAmount,
+      validUntil: promoCode.validUntil
+        ? new Date(promoCode.validUntil).toISOString().split('T')[0]
+        : '',
       image: (promoCode as any).image || '',
       background: (promoCode as any).background || '#ffffff',
-      isActive: promoCode.isActive !== false
+      isActive: promoCode.isActive !== false,
     });
     setSelectedFile(null);
-    
     setShowEditForm(true);
     setShowCreateForm(false);
   };
 
   const handleUpdatePromoCode = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!editingPromoCode) return;
     setUploading(true);
-    
+
     try {
       let imageUrl = formData.image;
-
       if (selectedFile) {
         const uploadFormData = new FormData();
         uploadFormData.append('image', selectedFile);
@@ -175,17 +167,19 @@ export const PromoCodes: React.FC = () => {
       const promoCodeData = {
         ...formData,
         image: imageUrl,
-        isActive: formData.isActive !== false
+        isActive: formData.isActive !== false,
       };
 
-      const response = await updatePromoCode(editingPromoCode._id || (editingPromoCode as any).id, promoCodeData);
-      
+      const response = await updatePromoCode(
+        editingPromoCode._id || (editingPromoCode as any).id,
+        promoCodeData
+      );
+
       if (response.success) {
         toast({
-          title: "Success",
-          description: "Promo code updated successfully"
+          title: 'Success',
+          description: 'Promo code updated successfully',
         });
-        
         setShowEditForm(false);
         setEditingPromoCode(null);
         resetForm();
@@ -194,9 +188,9 @@ export const PromoCodes: React.FC = () => {
     } catch (error: any) {
       console.error('Error updating promo code:', error);
       toast({
-        title: "Error",
+        title: 'Error',
         description: error.response?.data?.message || 'Failed to update promo code',
-        variant: "destructive"
+        variant: 'destructive',
       });
     } finally {
       setUploading(false);
@@ -209,16 +203,16 @@ export const PromoCodes: React.FC = () => {
       const newStatus = !promoCode.isActive;
       await updatePromoCode(targetId, { isActive: newStatus });
       toast({
-        title: "Success",
-        description: `Promo code "${promoCode.code}" is now ${newStatus ? 'Active' : 'Inactive'}`
+        title: 'Success',
+        description: `Promo code "${promoCode.code}" is now ${newStatus ? 'Active' : 'Inactive'}`,
       });
       fetchPromoCodes();
     } catch (error: any) {
       console.error('Error toggling active status:', error);
       toast({
-        title: "Error",
-        description: "Failed to update active status",
-        variant: "destructive"
+        title: 'Error',
+        description: 'Failed to update active status',
+        variant: 'destructive',
       });
     }
   };
@@ -230,488 +224,400 @@ export const PromoCodes: React.FC = () => {
 
     try {
       await deletePromoCode(promoCode._id);
-      
       toast({
-        title: "Success",
-        description: "Promo code deleted successfully"
+        title: 'Success',
+        description: 'Promo code deleted successfully',
       });
-      
       fetchPromoCodes();
     } catch (error: any) {
       console.error('Error deleting promo code:', error);
       toast({
-        title: "Error",
+        title: 'Error',
         description: error.response?.data?.message || 'Failed to delete promo code',
-        variant: "destructive"
+        variant: 'destructive',
       });
     }
   };
 
-  const getStatusBadge = (promoCode: PromoCode) => {
-    const now = new Date();
-    const validUntil = new Date(promoCode.validUntil);
-    
-    if (!promoCode.isActive) {
-      return <Badge variant="secondary">Inactive</Badge>;
-    } else if (now > validUntil) {
-      return <Badge variant="destructive">Expired</Badge>;
-    } else {
-      return <Badge className="bg-green-100 text-green-800">Active</Badge>;
-    }
-  };
-
-  const formatDiscount = (promoCode: PromoCode) => {
-    if (promoCode.discountType === 'percentage') {
-      return `${promoCode.discountValue}% OFF`;
-    } else {
-      return `₹${promoCode.discountValue} OFF`;
-    }
-  };
+  const stats = useMemo(() => {
+    const active = promoCodes.filter((p) => p.isActive).length;
+    const totalUses = promoCodes.reduce((sum, p) => sum + (p.usedCount || 0), 0);
+    return {
+      total: promoCodes.length,
+      active,
+      totalUses,
+    };
+  }, [promoCodes]);
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">Promo Codes</h1>
-          <p className="text-muted-foreground">Manage promotional codes and discounts</p>
-        </div>
-        
-        <Button 
-          onClick={() => {
-            setShowCreateForm(!showCreateForm);
-            setShowEditForm(false);
-            setEditingPromoCode(null);
-            resetForm();
-          }}
-          disabled={showEditForm}
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Create Promo Code
-        </Button>
+    <div className="space-y-6 w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto">
+      {/* Neumorphic Page Header */}
+      <PageHeader
+        breadcrumbs={[
+          { label: 'Admin', href: '/admin' },
+          { label: 'Marketing', href: '/marketing' },
+          { label: 'Promo Codes' },
+        ]}
+        title="Promotional Discounts & Coupons"
+        description="Configure coupon codes, cart percentage/fixed discounts, minimum thresholds, and expiry countdowns."
+        liveStatus={{ label: `${stats.active} Coupons Active`, ping: true }}
+        actions={
+          <SoftButton
+            variant="primary"
+            size="sm"
+            icon={Plus}
+            onClick={() => {
+              setShowCreateForm(!showCreateForm);
+              setShowEditForm(false);
+              setEditingPromoCode(null);
+              resetForm();
+            }}
+          >
+            {showCreateForm ? 'Cancel Form' : 'Create Promo Code'}
+          </SoftButton>
+        }
+      />
+
+      {/* KPI Stats Row */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <StatCard
+          title="Total Promo Codes"
+          value={stats.total}
+          icon={Tag}
+          color="purple"
+          subtitle="All promotional campaigns"
+        />
+        <StatCard
+          title="Active Live"
+          value={stats.active}
+          icon={Percent}
+          color="emerald"
+          subtitle="Redeemable during checkout"
+        />
+        <StatCard
+          title="Total Redemptions"
+          value={stats.totalUses}
+          icon={Sparkles}
+          color="rose"
+          subtitle="Orders discounted by coupon"
+        />
       </div>
 
-      {/* Create Form */}
-      {showCreateForm && (
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Create New Promo Code</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleCreatePromoCode} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Promo Code *</label>
-                  <Input
-                    value={formData.code}
-                    onChange={(e) => setFormData({...formData, code: e.target.value.toUpperCase()})}
-                    placeholder="e.g., SAVE20"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Discount Type *</label>
-                  <select 
-                    className="w-full p-2 border rounded-md"
-                    value={formData.discountType}
-                    onChange={(e) => setFormData({...formData, discountType: e.target.value as 'percentage' | 'fixed'})}
-                  >
-                    <option value="percentage">Percentage (%)</option>
-                    <option value="fixed">Fixed Amount (₹)</option>
-                  </select>
-                </div>
-              </div>
+      {/* Create / Edit Form Card */}
+      {(showCreateForm || showEditForm) && (
+        <div className="sbf-card rounded-2xl border border-white/80 dark:border-slate-800 shadow-[6px_6px_18px_rgba(163,177,198,0.22),-6px_-6px_18px_rgba(255,255,255,0.8)] bg-[#f4f7fb] dark:bg-slate-900 p-6 space-y-5 animate-in fade-in slide-in-from-top-2">
+          <div>
+            <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+              <Tag className="h-4 w-4 text-rose-600" />
+              {showEditForm ? `Edit Promo Code: ${formData.code}` : 'Create New Promo Code'}
+            </h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Set discount value, usage limits, minimum order spend, and visual banner presentation.
+            </p>
+          </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-2">Description *</label>
-                <Input
-                  value={formData.description}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
-                  placeholder="Describe this promo code..."
-                  required
-                />
-              </div>
-
-              {/* Background Selector */}
-              <div>
-                <label className="block text-sm font-medium mb-2">Background</label>
-                <div className="flex items-center gap-2">
-                  <Select
-                    value={formData.background}
-                    onValueChange={(value) => setFormData({ ...formData, background: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select background" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {gradientOptions.map(option => (
-                        <SelectItem key={option.name} value={option.value}>
-                          <div className="flex items-center gap-2">
-                            <div
-                              className="w-4 h-4 rounded-full"
-                              style={{ background: option.value }}
-                            />
-                            {option.name}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {formData.background && !formData.background.includes('gradient') && (
-                    <Input
-                      type="color"
-                      value={formData.background}
-                      onChange={(e) => setFormData({ ...formData, background: e.target.value })}
-                      className="w-16 p-1"
-                    />
-                  )}
-                </div>
-              </div>
-
-              {/* Image Upload Section */}
-              <div>
-                <label className="block text-sm font-medium mb-2">Promo Code Image</label>
-                <ImageUpload
-                  currentImage={formData.image}
-                  onImageUpload={async (file) => setSelectedFile(file)}
-                  placeholder="Click or drag to upload an image for the promo code"
-                />
-                <p className="text-xs text-gray-500 mt-2">
-                  Recommended size: 400x200px. Max size: 5MB.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Discount Value * {formData.discountType === 'percentage' ? '(%)' : '(₹)'}
-                  </label>
-                  <Input
-                    type="number"
-                    value={formData.discountValue}
-                    onChange={(e) => setFormData({...formData, discountValue: parseFloat(e.target.value) || 0})}
-                    min="0"
-                    max={formData.discountType === 'percentage' ? "100" : undefined}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Minimum Order Amount (₹)</label>
-                  <Input
-                    type="number"
-                    value={formData.minimumOrderAmount}
-                    onChange={(e) => setFormData({...formData, minimumOrderAmount: parseFloat(e.target.value) || 0})}
-                    min="0"
-                    placeholder="0 = No minimum"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Valid Until *</label>
-                  <Input
-                    type="date"
-                    value={formData.validUntil}
-                    onChange={(e) => setFormData({...formData, validUntil: e.target.value})}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-2 py-2">
-                <Checkbox
-                  id="createIsActive"
-                  checked={formData.isActive}
-                  onCheckedChange={(checked) => setFormData({ ...formData, isActive: Boolean(checked) })}
-                />
-                <label htmlFor="createIsActive" className="text-sm font-medium cursor-pointer">
-                  Active (Enable this promo code for checkout redemptions)
+          <form
+            onSubmit={showEditForm ? handleUpdatePromoCode : handleCreatePromoCode}
+            className="space-y-4"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  Promo Code *
                 </label>
-              </div>
-
-              <div className="flex space-x-2">
-                <Button type="submit" disabled={uploading}>
-                  {uploading ? 'Creating...' : 'Create Promo Code'}
-                </Button>
-                <Button type="button" variant="outline" onClick={() => {
-                  setShowCreateForm(false);
-                  resetForm();
-                }}>
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Edit Form */}
-      {showEditForm && editingPromoCode && (
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Edit Promo Code</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleUpdatePromoCode} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Promo Code *</label>
-                  <Input
-                    value={formData.code}
-                    onChange={(e) => setFormData({...formData, code: e.target.value.toUpperCase()})}
-                    placeholder="e.g., SAVE20"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Discount Type *</label>
-                  <select 
-                    className="w-full p-2 border rounded-md"
-                    value={formData.discountType}
-                    onChange={(e) => setFormData({...formData, discountType: e.target.value as 'percentage' | 'fixed'})}
-                  >
-                    <option value="percentage">Percentage (%)</option>
-                    <option value="fixed">Fixed Amount (₹)</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Description *</label>
-                <Input
-                  value={formData.description}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
-                  placeholder="Describe this promo code..."
+                <input
+                  type="text"
+                  value={formData.code}
+                  onChange={(e) =>
+                    setFormData({ ...formData, code: e.target.value.toUpperCase() })
+                  }
+                  placeholder="e.g. ROSELOVE20"
                   required
+                  className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200/70 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-mono shadow-[inset_2px_2px_4px_rgba(163,177,198,0.25),inset_-2px_-2px_4px_rgba(255,255,255,0.8)] focus:outline-none focus:ring-1 focus:ring-rose-500 uppercase font-bold"
                 />
               </div>
 
-              {/* Background Selector */}
-              <div>
-                <label className="block text-sm font-medium mb-2">Background</label>
-                <div className="flex items-center gap-2">
-                  <Select
-                    value={formData.background}
-                    onValueChange={(value) => setFormData({ ...formData, background: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select background" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {gradientOptions.map(option => (
-                        <SelectItem key={option.name} value={option.value}>
-                          <div className="flex items-center gap-2">
-                            <div
-                              className="w-4 h-4 rounded-full"
-                              style={{ background: option.value }}
-                            />
-                            {option.name}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {formData.background && !formData.background.includes('gradient') && (
-                    <Input
-                      type="color"
-                      value={formData.background}
-                      onChange={(e) => setFormData({ ...formData, background: e.target.value })}
-                      className="w-16 p-1"
-                    />
-                  )}
-                </div>
-              </div>
-
-              {/* Image Upload Section */}
-              <div>
-                <label className="block text-sm font-medium mb-2">Promo Code Image</label>
-                <ImageUpload
-                  currentImage={formData.image}
-                  onImageUpload={async (file) => setSelectedFile(file)}
-                  placeholder="Click or drag to upload an image for the promo code"
-                />
-                <p className="text-xs text-gray-500 mt-2">
-                  Recommended size: 400x200px. Max size: 5MB.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Discount Value * {formData.discountType === 'percentage' ? '(%)' : '(₹)'}
-                  </label>
-                  <Input
-                    type="number"
-                    value={formData.discountValue}
-                    onChange={(e) => setFormData({...formData, discountValue: parseFloat(e.target.value) || 0})}
-                    min="0"
-                    max={formData.discountType === 'percentage' ? "100" : undefined}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Minimum Order Amount (₹)</label>
-                  <Input
-                    type="number"
-                    value={formData.minimumOrderAmount}
-                    onChange={(e) => setFormData({...formData, minimumOrderAmount: parseFloat(e.target.value) || 0})}
-                    min="0"
-                    placeholder="0 = No minimum"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Valid Until *</label>
-                  <Input
-                    type="date"
-                    value={formData.validUntil}
-                    onChange={(e) => setFormData({...formData, validUntil: e.target.value})}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-2 py-2">
-                <Checkbox
-                  id="editIsActive"
-                  checked={formData.isActive}
-                  onCheckedChange={(checked) => setFormData({ ...formData, isActive: Boolean(checked) })}
-                />
-                <label htmlFor="editIsActive" className="text-sm font-medium cursor-pointer">
-                  Active (Enable this promo code for checkout redemptions)
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  Discount Type *
                 </label>
-              </div>
-
-              <div className="flex space-x-2">
-                <Button type="submit" disabled={uploading}>
-                  {uploading ? 'Updating...' : 'Update Promo Code'}
-                </Button>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => {
-                    setShowEditForm(false);
-                    setEditingPromoCode(null);
-                    resetForm();
-                  }}
+                <select
+                  className="w-full h-9 px-3 text-xs rounded-xl border border-slate-200/70 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-950 text-slate-800 dark:text-slate-100 shadow-[inset_2px_2px_4px_rgba(163,177,198,0.2)] focus:outline-none"
+                  value={formData.discountType}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      discountType: e.target.value as 'percentage' | 'fixed',
+                    })
+                  }
                 >
-                  Cancel
-                </Button>
+                  <option value="percentage">Percentage (%)</option>
+                  <option value="fixed">Fixed Amount (₹)</option>
+                </select>
               </div>
-            </form>
-          </CardContent>
-        </Card>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                Description *
+              </label>
+              <input
+                type="text"
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+                placeholder="e.g. Flat 20% off on all Anniversary Flower Bouquets"
+                required
+                className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200/70 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-950 text-slate-800 dark:text-slate-100 shadow-[inset_2px_2px_4px_rgba(163,177,198,0.25),inset_-2px_-2px_4px_rgba(255,255,255,0.8)] focus:outline-none"
+              />
+            </div>
+
+            {/* Background & Styling */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  Voucher Palette Theme
+                </label>
+                <Select
+                  value={formData.background}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, background: value })
+                  }
+                >
+                  <SelectTrigger className="h-9 text-xs rounded-xl bg-[#edf1f7] dark:bg-slate-950 border-slate-200/70">
+                    <SelectValue placeholder="Select background" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {gradientOptions.map((option) => (
+                      <SelectItem key={option.name} value={option.value}>
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-3.5 h-3.5 rounded-full border shadow-xs"
+                            style={{ background: option.value }}
+                          />
+                          <span className="text-xs">{option.name}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  Discount Value * {formData.discountType === 'percentage' ? '(%)' : '(₹)'}
+                </label>
+                <input
+                  type="number"
+                  value={formData.discountValue}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      discountValue: parseFloat(e.target.value) || 0,
+                    })
+                  }
+                  min="0"
+                  max={formData.discountType === 'percentage' ? 100 : undefined}
+                  required
+                  className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200/70 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-950 text-slate-800 dark:text-slate-100 shadow-[inset_2px_2px_4px_rgba(163,177,198,0.25),inset_-2px_-2px_4px_rgba(255,255,255,0.8)] focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  Minimum Order Amount (₹)
+                </label>
+                <input
+                  type="number"
+                  value={formData.minimumOrderAmount}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      minimumOrderAmount: parseFloat(e.target.value) || 0,
+                    })
+                  }
+                  min="0"
+                  placeholder="0 = No minimum"
+                  className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200/70 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-950 text-slate-800 dark:text-slate-100 shadow-[inset_2px_2px_4px_rgba(163,177,198,0.25),inset_-2px_-2px_4px_rgba(255,255,255,0.8)] focus:outline-none"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  Valid Until *
+                </label>
+                <input
+                  type="date"
+                  value={formData.validUntil}
+                  onChange={(e) =>
+                    setFormData({ ...formData, validUntil: e.target.value })
+                  }
+                  required
+                  className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200/70 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-950 text-slate-800 dark:text-slate-100 shadow-[inset_2px_2px_4px_rgba(163,177,198,0.25),inset_-2px_-2px_4px_rgba(255,255,255,0.8)] focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2 py-2">
+              <Checkbox
+                id="formIsActive"
+                checked={formData.isActive}
+                onCheckedChange={(checked) =>
+                  setFormData({ ...formData, isActive: Boolean(checked) })
+                }
+              />
+              <label
+                htmlFor="formIsActive"
+                className="text-xs font-semibold text-slate-700 dark:text-slate-300 cursor-pointer"
+              >
+                Active (Enable this coupon immediately for checkout redemptions)
+              </label>
+            </div>
+
+            <div className="flex justify-end gap-2.5 pt-2">
+              <SoftButton
+                type="button"
+                variant="default"
+                size="sm"
+                onClick={() => {
+                  setShowCreateForm(false);
+                  setShowEditForm(false);
+                  setEditingPromoCode(null);
+                  resetForm();
+                }}
+              >
+                Cancel
+              </SoftButton>
+              <SoftButton
+                type="submit"
+                variant="primary"
+                size="sm"
+                disabled={uploading}
+              >
+                {uploading
+                  ? 'Saving...'
+                  : showEditForm
+                  ? 'Update Promo Code'
+                  : 'Create Promo Code'}
+              </SoftButton>
+            </div>
+          </form>
+        </div>
       )}
 
       {/* Promo Codes List */}
       <div className="space-y-4">
         {loading ? (
-          <div className="text-center py-8">Loading promo codes...</div>
+          <div className="text-center py-16 text-xs text-muted-foreground animate-pulse font-medium">
+            Loading promotional discounts...
+          </div>
         ) : promoCodes.length === 0 ? (
-          <Card>
-            <CardContent className="p-6 text-center text-muted-foreground">
-              No promo codes found. Create your first promo code to get started.
-            </CardContent>
-          </Card>
+          <div className="rounded-2xl border border-white/80 dark:border-slate-800 shadow-[6px_6px_18px_rgba(163,177,198,0.22)] bg-[#f4f7fb] dark:bg-slate-900 p-12 text-center text-xs text-muted-foreground">
+            No promo codes created yet. Click "Create Promo Code" to launch a campaign.
+          </div>
         ) : (
-          promoCodes.map((promoCode) => (
-            <Card key={promoCode._id}>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div 
-                      className="flex items-start space-x-4 mb-4 p-4 rounded-lg"
-                      style={{ background: (promoCode as any).background || '#ffffff' }}
-                    >
-                      {/* Promo Code Image */}
-                      {(promoCode as any).image && (
-                        <div className="flex-shrink-0">
-                          <img
-                            src={(promoCode as any).image}
-                            alt={`${promoCode.code} promo`}
-                            className="w-20 h-20 object-cover rounded-lg border border-gray-200"
-                          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {promoCodes.map((promoCode) => {
+              const now = new Date();
+              const validUntil = new Date(promoCode.validUntil);
+              const isExpired = !isNaN(validUntil.getTime()) && now > validUntil;
+              const discountLabel =
+                promoCode.discountType === 'percentage'
+                  ? `${promoCode.discountValue}% OFF`
+                  : `₹${promoCode.discountValue} OFF`;
+
+              return (
+                <div
+                  key={promoCode._id}
+                  className="rounded-2xl border border-white/80 dark:border-slate-800 shadow-[6px_6px_18px_rgba(163,177,198,0.22),-6px_-6px_18px_rgba(255,255,255,0.8)] bg-[#f4f7fb] dark:bg-slate-900 overflow-hidden flex flex-col justify-between transition-all duration-300"
+                >
+                  <div
+                    className="p-5 relative"
+                    style={{ background: (promoCode as any).background || '#ffffff' }}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-extrabold text-lg text-slate-950 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-xl shadow-xs border border-slate-200/60">
+                            {promoCode.code}
+                          </span>
+                          <span className="font-bold text-xs px-2.5 py-1 rounded-xl bg-rose-600 text-white shadow-xs">
+                            {discountLabel}
+                          </span>
                         </div>
-                      )}
-                      
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-2">
-                          <h3 className="text-lg font-semibold text-gray-800">{promoCode.code}</h3>
-                          {getStatusBadge(promoCode)}
-                          <Badge variant="outline" className="bg-white">
-                            {formatDiscount(promoCode)}
-                          </Badge>
-                        </div>
-                        
-                        <p className="text-gray-600 mb-3">{promoCode.description}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm px-4">
-                      <div>
-                        <p className="text-muted-foreground">Used</p>
-                        <p className="font-medium">
-                          {promoCode.usedCount}
-                          {promoCode.usageLimit && ` / ${promoCode.usageLimit}`}
+                        <p className="text-xs text-slate-800 font-medium mt-2 line-clamp-2">
+                          {promoCode.description}
                         </p>
                       </div>
-                      <div>
-                        <p className="text-muted-foreground">Min Order</p>
-                        <p className="font-medium">
-                          {promoCode.minimumOrderAmount > 0 ? `₹${promoCode.minimumOrderAmount}` : 'None'}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground">Valid Until</p>
-                        <p className="font-medium">
-                          {(promoCode.validUntil || (promoCode as any).endDate) && !isNaN(new Date(promoCode.validUntil || (promoCode as any).endDate).getTime())
-                            ? new Date(promoCode.validUntil || (promoCode as any).endDate).toLocaleDateString()
-                            : 'N/A'}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground">Created</p>
-                        <p className="font-medium">
-                          {promoCode.createdAt && !isNaN(new Date(promoCode.createdAt).getTime())
-                            ? new Date(promoCode.createdAt).toLocaleDateString()
-                            : 'N/A'}
-                        </p>
-                      </div>
+
+                      <StatusBadge
+                        status={
+                          isExpired
+                            ? 'expired'
+                            : promoCode.isActive
+                            ? 'active'
+                            : 'inactive'
+                        }
+                      />
                     </div>
                   </div>
-                  
-                  <div className="flex space-x-2">
-                    <Button
-                      variant={promoCode.isActive ? "outline" : "default"}
-                      size="sm"
-                      onClick={() => handleToggleActive(promoCode)}
-                      className={!promoCode.isActive ? "bg-emerald-600 hover:bg-emerald-700 text-white" : ""}
-                    >
-                      <Power className="w-4 h-4 mr-2" />
-                      {promoCode.isActive ? 'Deactivate' : 'Activate'}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEditPromoCode(promoCode)}
-                    >
-                      <Edit className="w-4 h-4 mr-2" />
-                      Edit
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDeletePromoCode(promoCode)}
-                      disabled={promoCode.usedCount > 0}
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Delete
-                    </Button>
+
+                  <div className="p-4 bg-white/70 dark:bg-slate-900/90 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+                    <div className="space-y-0.5 text-[11px] text-muted-foreground">
+                      <div>
+                        Min Order: <strong className="text-slate-800 dark:text-slate-200">
+                          {promoCode.minimumOrderAmount > 0 ? `₹${promoCode.minimumOrderAmount}` : 'None'}
+                        </strong>
+                      </div>
+                      <div>
+                        Valid Till: <strong className="text-slate-800 dark:text-slate-200">
+                          {!isNaN(validUntil.getTime()) ? validUntil.toLocaleDateString() : 'Ongoing'}
+                        </strong>
+                      </div>
+                      <div>
+                        Redemptions: <strong className="text-slate-800 dark:text-slate-200">{promoCode.usedCount || 0} times</strong>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      <SoftButton
+                        variant={promoCode.isActive ? 'default' : 'primary'}
+                        size="sm"
+                        onClick={() => handleToggleActive(promoCode)}
+                        icon={Power}
+                      >
+                        {promoCode.isActive ? 'Deactivate' : 'Activate'}
+                      </SoftButton>
+                      <SoftButton
+                        variant="default"
+                        size="icon"
+                        className="h-8 w-8 text-sky-600"
+                        onClick={() => handleEditPromoCode(promoCode)}
+                      >
+                        <Edit className="h-3.5 w-3.5" />
+                      </SoftButton>
+                      <SoftButton
+                        variant="danger"
+                        size="icon"
+                        className="h-8 w-8 text-rose-600"
+                        onClick={() => handleDeletePromoCode(promoCode)}
+                        disabled={(promoCode.usedCount || 0) > 0}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </SoftButton>
+                    </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          ))
+              );
+            })}
+          </div>
         )}
       </div>
     </div>
   );
 };
 
-export default PromoCodes; 
+export default PromoCodes;

@@ -1,3 +1,6 @@
+import { PageHeader } from '@/components/dashboard/PageHeader';
+import { StatCard } from '@/components/dashboard/StatCard';
+import { SoftButton } from '@/components/dashboard/SoftButton';
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { 
@@ -431,47 +434,22 @@ const Analytics: React.FC = () => {
     <div className="p-3 sm:p-6 space-y-4 sm:space-y-6 max-w-[1600px] mx-auto transition-all duration-300 print:p-0">
       
       {/* Header bar */}
-      <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:items-center md:space-y-0 print:hidden">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold flex items-center gap-2 tracking-tight text-slate-800">
-            <BarChart3 className="h-6 w-6 sm:h-8 sm:w-8 text-indigo-600" />
-            Admin BI Dashboard
-          </h1>
-          <p className="text-sm text-slate-500">
-            Real-time, data-driven analytics audited directly from database collections.
-          </p>
-        </div>
-
-        {/* Filters and Controls */}
-        <div className="flex flex-wrap items-center gap-2">
-          
-          {/* Configurable Auto-Refresh */}
-          <div className="flex items-center gap-1">
-            <Clock className="h-3.5 w-3.5 text-slate-400" />
-            <Select value={autoRefreshInterval} onValueChange={setAutoRefreshInterval}>
-              <SelectTrigger className="w-[120px] text-xs h-9 bg-white border border-slate-200 shadow-sm">
-                <SelectValue placeholder="Auto Refresh" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="0">Manual Refresh</SelectItem>
-                <SelectItem value="15">Auto (15s)</SelectItem>
-                <SelectItem value="30">Auto (30s)</SelectItem>
-                <SelectItem value="60">Auto (60s)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Time Filters */}
-          <div className="flex items-center gap-1">
-            <Filter className="h-3.5 w-3.5 text-slate-400" />
-            <Select value={dateRange} onValueChange={(val) => {
-              setDateRange(val);
-              if (val !== 'custom') {
-                setTimeout(() => fetchAnalyticsData(true), 50);
-              }
-            }}>
-              <SelectTrigger className="w-[140px] text-xs h-9 bg-white border border-slate-200 shadow-sm">
-                <SelectValue />
+      <PageHeader
+        title="Admin Business Intelligence & Analytics"
+        subtitle="Real-time, comprehensive revenue trends, fulfillment performance, product leaderboards, and customer geographic data."
+        breadcrumbs={[
+          { label: 'Admin', href: '/admin' },
+          { label: 'Analytics' },
+        ]}
+        statusBadge={{
+          label: lastUpdated ? `Synced: ${lastUpdated.slice(-8)}` : "Live Connected",
+          variant: 'success',
+        }}
+        actions={
+          <div className="flex flex-wrap items-center gap-2 print:hidden">
+            <Select value={dateRange} onValueChange={setDateRange}>
+              <SelectTrigger className="w-[140px] text-xs h-9 rounded-xl bg-[#edf1f7] dark:bg-slate-800 shadow-[inset_2px_2px_5px_rgba(163,177,198,0.2),inset_-2px_-2px_5px_rgba(255,255,255,0.7)] border-none">
+                <SelectValue placeholder="Period" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="today">Today</SelectItem>
@@ -482,48 +460,29 @@ const Analytics: React.FC = () => {
                 <SelectItem value="this_month">This Month</SelectItem>
                 <SelectItem value="last_month">Last Month</SelectItem>
                 <SelectItem value="this_year">This Year</SelectItem>
-                <SelectItem value="last_year">Last Year</SelectItem>
-                <SelectItem value="custom">Custom Date Range</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Action buttons */}
-          <div className="flex items-center gap-1.5">
-            <Select onValueChange={(val) => {
-              if (val === 'csv') handleCSVExport();
-              else if (val === 'xls') handleExcelExport();
-              else if (val === 'pdf') handlePrintPDF();
-            }}>
-              <SelectTrigger className="w-[100px] text-xs h-9 bg-white border border-slate-200 shadow-sm">
-                <div className="flex items-center gap-1 text-slate-700">
-                  <Download className="h-3.5 w-3.5" />
-                  <span>Export</span>
-                </div>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="csv">CSV File</SelectItem>
-                <SelectItem value="xls">Excel Sheet</SelectItem>
-                <SelectItem value="pdf">Print / PDF</SelectItem>
+                <SelectItem value="custom">Custom Range</SelectItem>
               </SelectContent>
             </Select>
 
-            <Button 
-              onClick={() => fetchAnalyticsData(true)} 
-              disabled={refreshing}
-              variant="outline"
-              size="sm"
-              className="h-9 px-3 border-slate-200 hover:bg-slate-50 shadow-sm bg-white"
+            <SoftButton
+              variant="secondary"
+              icon={Download}
+              onClick={handleCSVExport}
             >
-              {refreshing ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <RefreshCw className="h-3.5 w-3.5 text-slate-500" />
-              )}
-            </Button>
+              Export CSV
+            </SoftButton>
+
+            <SoftButton
+              variant="primary"
+              icon={RefreshCw}
+              onClick={() => fetchAnalyticsData(true)}
+              disabled={refreshing}
+            >
+              {refreshing ? 'Syncing...' : 'Refresh'}
+            </SoftButton>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* Custom range input picker panel */}
       {dateRange === 'custom' && (
@@ -568,7 +527,7 @@ const Analytics: React.FC = () => {
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         
         {/* Card 1: Revenue */}
-        <Card className="border border-slate-200/60 shadow-md relative overflow-hidden bg-gradient-to-br from-white to-slate-50 hover:shadow-xl transition-all duration-300">
+        <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)] relative overflow-hidden bg-gradient-to-br from-white to-slate-50 hover:shadow-xl transition-all duration-300">
           <div className="absolute top-0 left-0 right-0 h-1 bg-indigo-600" />
           <CardHeader className="pb-1 flex flex-row items-center justify-between space-y-0 pt-4 px-4">
             <CardTitle className="text-xs font-semibold text-slate-500 tracking-wider uppercase">Net revenue</CardTitle>
@@ -596,7 +555,7 @@ const Analytics: React.FC = () => {
         </Card>
 
         {/* Card 2: Orders */}
-        <Card className="border border-slate-200/60 shadow-md relative overflow-hidden bg-gradient-to-br from-white to-slate-50 hover:shadow-xl transition-all duration-300">
+        <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)] relative overflow-hidden bg-gradient-to-br from-white to-slate-50 hover:shadow-xl transition-all duration-300">
           <div className="absolute top-0 left-0 right-0 h-1 bg-emerald-500" />
           <CardHeader className="pb-1 flex flex-row items-center justify-between space-y-0 pt-4 px-4">
             <CardTitle className="text-xs font-semibold text-slate-500 tracking-wider uppercase">Total Orders</CardTitle>
@@ -624,7 +583,7 @@ const Analytics: React.FC = () => {
         </Card>
 
         {/* Card 3: New Users */}
-        <Card className="border border-slate-200/60 shadow-md relative overflow-hidden bg-gradient-to-br from-white to-slate-50 hover:shadow-xl transition-all duration-300">
+        <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)] relative overflow-hidden bg-gradient-to-br from-white to-slate-50 hover:shadow-xl transition-all duration-300">
           <div className="absolute top-0 left-0 right-0 h-1 bg-amber-500" />
           <CardHeader className="pb-1 flex flex-row items-center justify-between space-y-0 pt-4 px-4">
             <CardTitle className="text-xs font-semibold text-slate-500 tracking-wider uppercase">New Customers</CardTitle>
@@ -642,7 +601,7 @@ const Analytics: React.FC = () => {
         </Card>
 
         {/* Card 4: Repeat Rate */}
-        <Card className="border border-slate-200/60 shadow-md relative overflow-hidden bg-gradient-to-br from-white to-slate-50 hover:shadow-xl transition-all duration-300">
+        <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)] relative overflow-hidden bg-gradient-to-br from-white to-slate-50 hover:shadow-xl transition-all duration-300">
           <div className="absolute top-0 left-0 right-0 h-1 bg-pink-500" />
           <CardHeader className="pb-1 flex flex-row items-center justify-between space-y-0 pt-4 px-4">
             <CardTitle className="text-xs font-semibold text-slate-500 tracking-wider uppercase">Repeat Purchase Rate</CardTitle>

@@ -1,3 +1,7 @@
+import { PageHeader } from '@/components/dashboard/PageHeader';
+import { StatCard } from '@/components/dashboard/StatCard';
+import { SoftButton } from '@/components/dashboard/SoftButton';
+import { NeumorphicCard } from '@/components/dashboard/NeumorphicCard';
 import { useEffect, useMemo, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -228,43 +232,34 @@ const AdminReviews = () => {
 
   return (
     <div className="space-y-8 px-4 py-6 sm:px-6 lg:px-8">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-        <div className="space-y-2">
-          <Badge className="w-fit rounded-full bg-rose-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-rose-700 dark:bg-rose-950/50 dark:text-rose-200">
-            Reviews Dashboard
-          </Badge>
-          <h1 className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-white">
-            Customer Reviews & Ratings Management
-          </h1>
-          <p className="max-w-3xl text-sm leading-7 text-slate-500 dark:text-slate-300">
-            Moderate incoming reviews, reply to customers, flag spam, and monitor how product
-            sentiment is changing over time.
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title="Customer Reviews & Feedback"
+        subtitle="Moderate incoming customer reviews, reply to inquiries, verify photo uploads, and monitor brand sentiment."
+        breadcrumbs={[
+          { label: 'Admin', href: '/admin' },
+          { label: 'Marketing', href: '/marketing' },
+          { label: 'Reviews' },
+        ]}
+        statusBadge={{
+          label: `${summary.pending} Pending Moderation`,
+          variant: summary.pending > 0 ? 'warning' : 'success'
+        }}
+      />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {overviewCards.map((card) => (
-          <Card key={card.label} className="rounded-[28px] border-0 bg-white/80 shadow-[0_20px_60px_rgba(15,23,42,0.05)] dark:bg-slate-950/70">
-            <CardContent className="flex items-center justify-between p-6">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                  {card.label}
-                </p>
-                <p className="mt-3 text-3xl font-semibold text-slate-900 dark:text-white">
-                  {card.value}
-                </p>
-              </div>
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-200">
-                <card.icon className="h-5 w-5" />
-              </div>
-            </CardContent>
-          </Card>
+        {overviewCards.map((card, idx) => (
+          <StatCard
+            key={card.label}
+            title={card.label}
+            value={card.value}
+            icon={card.icon}
+            colorPalette={idx === 0 ? 'rose' : idx === 1 ? 'amber' : idx === 2 ? 'bloom' : 'purple'}
+          />
         ))}
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.55fr_1fr]">
-        <Card className="rounded-[32px] border-0 bg-white/80 shadow-[0_24px_70px_rgba(15,23,42,0.05)] dark:bg-slate-950/70">
+        <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]">
           <CardHeader>
             <CardTitle className="text-lg font-semibold text-slate-900 dark:text-white">
               Rating Trend
@@ -295,7 +290,7 @@ const AdminReviews = () => {
           </CardContent>
         </Card>
 
-        <Card className="rounded-[32px] border-0 bg-white/80 shadow-[0_24px_70px_rgba(15,23,42,0.05)] dark:bg-slate-950/70">
+        <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]">
           <CardHeader>
             <CardTitle className="text-lg font-semibold text-slate-900 dark:text-white">
               Most Reviewed Products
@@ -324,7 +319,7 @@ const AdminReviews = () => {
         </Card>
       </div>
 
-      <Card className="rounded-[32px] border-0 bg-white/80 shadow-[0_24px_70px_rgba(15,23,42,0.05)] dark:bg-slate-950/70">
+      <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]">
         <CardHeader>
           <CardTitle className="text-lg font-semibold text-slate-900 dark:text-white">
             Filters & Queue
@@ -453,7 +448,7 @@ const AdminReviews = () => {
           reviews.map((review) => (
             <Card
               key={review._id}
-              className="rounded-[34px] border-0 bg-white/80 shadow-[0_24px_70px_rgba(15,23,42,0.05)] dark:bg-slate-950/70"
+              className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]"
             >
               <CardContent className="space-y-5 p-6">
                 <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
@@ -550,7 +545,7 @@ const AdminReviews = () => {
 
                 <ReviewCard review={review} showStatusBadge />
 
-                <div className="rounded-[28px] border border-slate-200/80 bg-slate-50/80 p-5 dark:border-slate-800/80 dark:bg-slate-900/60">
+                <div className="rounded-xl border border-slate-200/50 dark:border-slate-800/50 bg-[#edf1f7] dark:bg-slate-800/50 shadow-[inset_2px_2px_5px_rgba(163,177,198,0.2),inset_-2px_-2px_5px_rgba(255,255,255,0.7)] p-5">
                   <div className="mb-3 flex items-center justify-between gap-3">
                     <div>
                       <p className="text-sm font-semibold text-slate-900 dark:text-white">

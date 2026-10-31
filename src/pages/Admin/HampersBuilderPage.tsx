@@ -1,3 +1,5 @@
+import { PageHeader } from '@/components/dashboard/PageHeader';
+import { SoftButton } from '@/components/dashboard/SoftButton';
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -489,49 +491,45 @@ const HampersBuilderPage: React.FC = () => {
   return (
     <div className="space-y-6 w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-emerald-100 dark:bg-emerald-950/40 rounded-xl text-emerald-600">
-            <Gift className="h-6 w-6" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-              Add a Combo Product
-            </h1>
-            <p className="text-xs text-muted-foreground">
-              Combine flowers, cakes, chocolates, soft toys, and gifts into a premium hamper package or combo.
-            </p>
-          </div>
-        </div>
+      <PageHeader
+        title="Combo & Luxury Hamper Builder"
+        subtitle="Combine flowers, cakes, chocolates, and greeting add-ons into a bespoke bundle."
+        breadcrumbs={[
+          { label: 'Admin', href: '/admin' },
+          { label: 'Combos', href: '/admin/combos' },
+          { label: 'Hamper Builder' },
+        ]}
+        statusBadge={{
+          label: `${selectedComponents.length} Selected Items`,
+          variant: 'rose',
+        }}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            {selectedComponents.length > 0 && (
+              <SoftButton
+                variant="secondary"
+                icon={Wand2}
+                onClick={() => handleAutoFillDetails()}
+              >
+                Auto-Fill Details
+              </SoftButton>
+            )}
 
-        <div className="flex items-center gap-2">
-          {selectedComponents.length > 0 && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => handleAutoFillDetails()}
-              className="text-xs font-semibold gap-1.5 border-emerald-300 text-emerald-700 bg-white hover:bg-emerald-50 dark:border-emerald-800 dark:bg-slate-900 dark:text-emerald-300 shadow-2xs"
+            <SoftButton
+              variant="primary"
+              icon={Save}
+              onClick={handleSaveHamper}
+              disabled={saving}
             >
-              <Wand2 className="w-3.5 h-3.5 text-emerald-600" />
-              Auto-Fill Details
-            </Button>
-          )}
-
-          <Button
-            onClick={handleSaveHamper}
-            disabled={saving}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs gap-1.5 shadow-sm px-5"
-          >
-            <Save className="h-4 w-4" />
-            {saving ? "Saving Combo..." : "Save Combo Product"}
-          </Button>
-        </div>
-      </div>
+              {saving ? "Saving Combo..." : "Save Combo Product"}
+            </SoftButton>
+          </div>
+        }
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Product Catalog Picker */}
-        <Card className="border-slate-200/80 dark:border-slate-800 shadow-sm lg:col-span-1 flex flex-col h-[650px]">
+        <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)] border-slate-200/80 dark:border-slate-800 shadow-sm lg:col-span-1 flex flex-col h-[650px]">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold flex items-center justify-between">
               <span>Add Items to Combo</span>
@@ -586,7 +584,7 @@ const HampersBuilderPage: React.FC = () => {
 
         {/* Center Column: Basic Info & Category Selection */}
         <div className="space-y-4 lg:col-span-1">
-          <Card className="border-slate-200/80 dark:border-slate-800 shadow-sm">
+          <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)] border-slate-200/80 dark:border-slate-800 shadow-sm">
             <CardHeader className="pb-3 flex flex-row items-center justify-between gap-2">
               <div>
                 <CardTitle className="text-sm font-semibold">Combo Basic Info</CardTitle>
@@ -783,7 +781,7 @@ const HampersBuilderPage: React.FC = () => {
           </Card>
 
           {/* Selected Components List */}
-          <Card className="border-slate-200/80 dark:border-slate-800 shadow-sm">
+          <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)] border-slate-200/80 dark:border-slate-800 shadow-sm">
             <CardHeader className="pb-3 flex flex-row items-center justify-between">
               <CardTitle className="text-sm font-semibold">Combo Contents</CardTitle>
               <Badge variant="outline" className="text-[10px] border-emerald-500 text-emerald-700 dark:text-emerald-400">{selectedComponents.length} items</Badge>
@@ -825,7 +823,7 @@ const HampersBuilderPage: React.FC = () => {
         </div>
 
         {/* Right Column: Live Customer Card Preview */}
-        <Card className="border-slate-200/80 dark:border-slate-800 shadow-sm lg:col-span-1">
+        <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)] border-slate-200/80 dark:border-slate-800 shadow-sm lg:col-span-1">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
               <Sparkles className="h-4 w-4 text-emerald-500" /> Live Customer Card Preview

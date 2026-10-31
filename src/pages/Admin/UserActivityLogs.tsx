@@ -1,3 +1,5 @@
+import { PageHeader } from '@/components/dashboard/PageHeader';
+import { SoftButton } from '@/components/dashboard/SoftButton';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -380,25 +382,46 @@ const UserActivityLogs: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <Card>
+      <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]">
         <CardHeader className="pb-4">
-          <div className="responsive-toolbar">
-            <CardTitle className="text-xl sm:text-2xl font-bold">User Activity Logs</CardTitle>
-            <div className="flex w-full md:w-auto flex-wrap items-center gap-2">
-              <Button variant="outline" onClick={() => void fetchLogs()} disabled={isLoading} className="gap-2">
-                <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-                Refresh
-              </Button>
-              <Button variant="outline" onClick={exportToCSV} className="gap-2">
-                <Download className="h-4 w-4" />
-                Export CSV
-              </Button>
-              <Button variant="outline" onClick={exportToExcel} className="gap-2">
-                <FileSpreadsheet className="h-4 w-4" />
-                Export Excel
-              </Button>
-            </div>
-          </div>
+          <PageHeader
+            title="User Activity & Audit Trail"
+            subtitle="Monitor real-time customer navigation, checkout milestones, authentication events, and administrative changes."
+            breadcrumbs={[
+              { label: 'Admin', href: '/admin' },
+              { label: 'Activity Logs' },
+            ]}
+            statusBadge={{
+              label: `${pagination.total} Recorded Events`,
+              variant: 'success',
+            }}
+            actions={
+              <div className="flex flex-wrap items-center gap-2">
+                <SoftButton
+                  variant="secondary"
+                  icon={RefreshCw}
+                  onClick={() => void fetchLogs()}
+                  disabled={isLoading}
+                >
+                  Refresh
+                </SoftButton>
+                <SoftButton
+                  variant="secondary"
+                  icon={Download}
+                  onClick={exportToCSV}
+                >
+                  Export CSV
+                </SoftButton>
+                <SoftButton
+                  variant="primary"
+                  icon={FileSpreadsheet}
+                  onClick={exportToExcel}
+                >
+                  Export Excel
+                </SoftButton>
+              </div>
+            }
+          />
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 mt-4">
             <div className="relative xl:col-span-2">

@@ -1,3 +1,6 @@
+import { PageHeader } from '@/components/dashboard/PageHeader';
+import { StatCard } from '@/components/dashboard/StatCard';
+import { SoftButton } from '@/components/dashboard/SoftButton';
 import React, { useState, useEffect } from 'react';
 import {
   Card,
@@ -79,7 +82,7 @@ const HolidayManagement: React.FC = () => {
             </div>
           </div>
           
-          <Card>
+          <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]">
             <CardContent className="p-6">
               <div className="text-center">
                 <div className="text-red-600 mb-4">
@@ -112,7 +115,7 @@ const HolidayManagement: React.FC = () => {
             </div>
           </div>
           
-          <Card>
+          <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]">
             <CardContent className="p-6">
               <div className="text-center">
                 <div className="text-red-600 mb-4">
@@ -399,7 +402,7 @@ const HolidayManagement: React.FC = () => {
           </div>
         </div>
         
-        <Card>
+        <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]">
           <CardContent className="p-6">
             <div className="text-center">
               <div className="text-red-600 mb-4">
@@ -483,64 +486,35 @@ const HolidayManagement: React.FC = () => {
       {/* Stats Cards */}
       {stats && (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total Holidays</p>
-                  <p className="text-2xl font-bold">{stats.total || 0}</p>
-                </div>
-                <CalendarIcon className="h-8 w-8 text-blue-500" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Active</p>
-                  <p className="text-2xl font-bold text-green-600">{stats.active || 0}</p>
-                </div>
-                <div className="h-8 w-8 bg-green-100 rounded-full flex items-center justify-center">
-                  <div className="h-4 w-4 bg-green-500 rounded-full"></div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Inactive</p>
-                  <p className="text-2xl font-bold text-red-600">{stats.inactive || 0}</p>
-                </div>
-                <div className="h-8 w-8 bg-red-100 rounded-full flex items-center justify-center">
-                  <div className="h-4 w-4 bg-red-500 rounded-full"></div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Year</p>
-                  <p className="text-2xl font-bold">{stats.year || selectedYear}</p>
-                </div>
-                <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
-                  <span className="text-blue-600 font-bold">{(stats.year || selectedYear).toString().slice(-2)}</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <StatCard
+            title="Total Holidays"
+            value={stats.total || 0}
+            icon={CalendarIcon}
+            colorPalette="rose"
+          />
+          <StatCard
+            title="Active Closures"
+            value={stats.active || 0}
+            icon={CalendarIcon}
+            colorPalette="emerald"
+          />
+          <StatCard
+            title="Inactive / Past"
+            value={stats.inactive || 0}
+            icon={CalendarIcon}
+            colorPalette="amber"
+          />
+          <StatCard
+            title="Calendar Year"
+            value={stats.year || selectedYear}
+            icon={CalendarIcon}
+            colorPalette="purple"
+          />
         </div>
       )}
 
       {/* Filters */}
-      <Card>
+      <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Filter className="h-5 w-5" />
@@ -613,7 +587,7 @@ const HolidayManagement: React.FC = () => {
       </Card>
 
       {/* Holidays Table */}
-      <Card>
+      <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]">
         <CardHeader>
           <CardTitle>Holidays ({filteredHolidays.length})</CardTitle>
         </CardHeader>
@@ -870,7 +844,7 @@ const HolidayManagement: React.FC = () => {
           </div>
         </div>
         
-        <Card>
+        <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]">
           <CardContent className="p-6">
             <div className="text-center">
               <div className="text-red-600 mb-4">

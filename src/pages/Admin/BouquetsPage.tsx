@@ -1,7 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { EnterpriseProductTable } from "@/components/Admin/EnterpriseProductTable";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import productService, { ProductData } from "@/services/productService";
 import {
@@ -15,6 +13,9 @@ import {
   Filter,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { PageHeader } from "@/components/dashboard/PageHeader";
+import { StatCard } from "@/components/dashboard/StatCard";
+import { SoftButton } from "@/components/dashboard/SoftButton";
 
 const QUICK_FILTER_PRESETS = [
   { id: "all", label: "All Flower Products" },
@@ -213,94 +214,75 @@ const BouquetsPage: React.FC = () => {
   }, [products, activeTab]);
 
   return (
-    <div className="space-y-5 w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto">
-      {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-gradient-to-br from-pink-500 to-rose-600 rounded-xl text-white shadow-md">
-            <Flower2 className="h-6 w-6" />
+    <div className="space-y-6 w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto">
+      {/* Neumorphic Page Header */}
+      <PageHeader
+        breadcrumbs={[
+          { label: "Admin", href: "/admin" },
+          { label: "Products", href: "/admin/products" },
+          { label: "Bouquets & Flowers" },
+        ]}
+        title="Flowers & Bouquets Catalog"
+        description="Manage all fresh flowers, bouquets, anniversary, birthday, sympathy, and basket arrangements in one place."
+        liveStatus={{ label: `${products.length} Products Active`, ping: true }}
+        actions={
+          <div className="flex items-center gap-2.5">
+            <SoftButton
+              variant="default"
+              size="sm"
+              icon={RefreshCw}
+              onClick={fetchBouquets}
+            >
+              Refresh
+            </SoftButton>
+            <SoftButton
+              variant="primary"
+              size="sm"
+              icon={Plus}
+              onClick={() => navigate("/admin/products/new?type=bouquet")}
+            >
+              Add Bouquet
+            </SoftButton>
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-                Flower Products & Bouquets Catalog
-              </h1>
-              <Badge className="bg-pink-100 text-pink-700 dark:bg-pink-950/50 dark:text-pink-300 font-semibold text-[11px] border border-pink-200 dark:border-pink-800">
-                {products.length} Products
-              </Badge>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Manage all fresh flowers, bouquets, anniversary, birthday, sympathy, and basket arrangements in one place.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={fetchBouquets}
-            className="text-xs gap-1.5"
-          >
-            <RefreshCw className="h-3.5 w-3.5" /> Refresh
-          </Button>
-          <Button
-            size="sm"
-            onClick={() => navigate("/admin/products/new?type=bouquet")}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs gap-1.5 shadow-sm"
-          >
-            <Plus className="h-3.5 w-3.5" /> Add Bouquet
-          </Button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Metric Cards Banner */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-xs flex items-center gap-3">
-          <div className="p-2 bg-purple-100 dark:bg-purple-950/50 rounded-lg text-purple-600">
-            <FolderTree className="h-4 w-4" />
-          </div>
-          <div>
-            <p className="text-[11px] text-muted-foreground font-medium">Total Products</p>
-            <p className="text-base font-bold text-slate-900 dark:text-slate-100">{stats.total}</p>
-          </div>
-        </div>
-
-        <div className="p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-xs flex items-center gap-3">
-          <div className="p-2 bg-amber-100 dark:bg-amber-950/50 rounded-lg text-amber-600">
-            <Tag className="h-4 w-4" />
-          </div>
-          <div>
-            <p className="text-[11px] text-muted-foreground font-medium">Subcategories</p>
-            <p className="text-base font-bold text-slate-900 dark:text-slate-100">{stats.subcategoriesCount}</p>
-          </div>
-        </div>
-
-        <div className="p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-xs flex items-center gap-3">
-          <div className="p-2 bg-indigo-100 dark:bg-indigo-950/50 rounded-lg text-indigo-600">
-            <Layers className="h-4 w-4" />
-          </div>
-          <div>
-            <p className="text-[11px] text-muted-foreground font-medium">Multi-Category</p>
-            <p className="text-base font-bold text-slate-900 dark:text-slate-100">{stats.multiCategoryCount}</p>
-          </div>
-        </div>
-
-        <div className="p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-xs flex items-center gap-3">
-          <div className="p-2 bg-emerald-100 dark:bg-emerald-950/50 rounded-lg text-emerald-600">
-            <Sparkles className="h-4 w-4" />
-          </div>
-          <div>
-            <p className="text-[11px] text-muted-foreground font-medium">Ready in Stock</p>
-            <p className="text-base font-bold text-emerald-600 dark:text-emerald-400">{stats.inStockCount}</p>
-          </div>
-        </div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <StatCard
+          title="Total Products"
+          value={stats.total}
+          icon={FolderTree}
+          color="purple"
+          subtitle="Bouquets & floral gifts"
+        />
+        <StatCard
+          title="Subcategories"
+          value={stats.subcategoriesCount}
+          icon={Tag}
+          color="amber"
+          subtitle="Distinct arrangements"
+        />
+        <StatCard
+          title="Multi-Category"
+          value={stats.multiCategoryCount}
+          icon={Layers}
+          color="blue"
+          subtitle="Cross-listed items"
+        />
+        <StatCard
+          title="Ready in Stock"
+          value={stats.inStockCount}
+          icon={Sparkles}
+          color="emerald"
+          subtitle="Available for delivery"
+        />
       </div>
 
-      {/* Quick Category / Subcategory Filter Tabs */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-        <span className="text-xs font-semibold text-slate-500 mr-1 flex items-center gap-1 shrink-0">
-          <Filter className="h-3 w-3" /> Quick Filter:
+      {/* Quick Category / Subcategory Filter Tabs (Neumorphic Inset Surface) */}
+      <div className="p-1.5 rounded-2xl bg-[#edf1f7] dark:bg-slate-950 border border-slate-200/60 dark:border-slate-800 shadow-[inset_3px_3px_6px_rgba(163,177,198,0.25),inset_-3px_-3px_6px_rgba(255,255,255,0.8)] flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+        <span className="text-xs font-semibold text-slate-500 px-3 flex items-center gap-1 shrink-0">
+          <Filter className="h-3 w-3 text-rose-500" /> Presets:
         </span>
         {QUICK_FILTER_PRESETS.map((preset) => {
           const count = tabCounts[preset.id] || 0;
@@ -309,18 +291,18 @@ const BouquetsPage: React.FC = () => {
             <button
               key={preset.id}
               onClick={() => setActiveTab(preset.id)}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 ${
                 isActive
-                  ? "bg-slate-900 text-white dark:bg-white dark:text-slate-950 shadow-xs"
-                  : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
+                  ? "bg-white dark:bg-slate-800 text-rose-600 dark:text-rose-400 shadow-[3px_3px_8px_rgba(163,177,198,0.25),-3px_-3px_8px_rgba(255,255,255,0.8)]"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
               }`}
             >
               <span>{preset.label}</span>
               <span
                 className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
                   isActive
-                    ? "bg-white/20 text-white dark:bg-slate-950/20 dark:text-slate-950"
-                    : "bg-slate-100 dark:bg-slate-800 text-slate-500"
+                    ? "bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300"
+                    : "bg-slate-200/70 dark:bg-slate-800 text-slate-500"
                 }`}
               >
                 {count}
@@ -330,13 +312,17 @@ const BouquetsPage: React.FC = () => {
         })}
       </div>
 
-      {/* Enterprise Product Table with Bulk Taxonomy Support */}
+      {/* Enterprise Product Table */}
       <EnterpriseProductTable
         products={displayedProducts}
         loading={loading}
         catalogTypeFilter="all"
         onRefresh={fetchBouquets}
-        onEditProduct={(product) => navigate(`/admin/products/edit/${product._id}`, { state: { from: '/admin/products/bouquets' } })}
+        onEditProduct={(product) =>
+          navigate(`/admin/products/edit/${product._id}`, {
+            state: { from: "/admin/products/bouquets" },
+          })
+        }
       />
     </div>
   );

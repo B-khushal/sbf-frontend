@@ -1,3 +1,6 @@
+import { PageHeader } from '@/components/dashboard/PageHeader';
+import { StatCard } from '@/components/dashboard/StatCard';
+import { SoftButton } from '@/components/dashboard/SoftButton';
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -147,74 +150,83 @@ const LoginSessions: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-bloom-dark">Login Sessions</h1>
-          <p className="text-muted-foreground">Monitor real-time active login tokens and session states for all administrative users.</p>
-        </div>
-        <Button onClick={fetchSessions} variant="outline" className="flex items-center gap-2">
-          <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} /> Refresh
-        </Button>
-      </div>
+      <PageHeader
+        title="Active Login Sessions & Security"
+        subtitle="Monitor real-time authorization tokens, device fingerprints, IP addresses, and remote revocation states."
+        breadcrumbs={[
+          { label: 'Admin', href: '/admin' },
+          { label: 'Security', href: '/admin' },
+          { label: 'Login Sessions' },
+        ]}
+        statusBadge={{
+          label: `${activeCount} Active Tokens`,
+          variant: 'success',
+        }}
+        actions={
+          <SoftButton
+            variant="secondary"
+            icon={RefreshCw}
+            onClick={fetchSessions}
+            disabled={isLoading}
+          >
+            Refresh Sessions
+          </SoftButton>
+        }
+      />
 
       {/* Stats row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="subtle-shadow border-gray-100 bg-white">
-          <CardHeader className="py-4 flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Active Sessions</CardTitle>
-            <UserCheck className="h-4 w-4 text-emerald-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-emerald-600 flex items-center gap-2">
-              {activeCount} Active
-              <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">Tokens currently valid on client devices</p>
-          </CardContent>
-        </Card>
-
-        <Card className="subtle-shadow border-gray-100 bg-white">
-          <CardHeader className="py-4 flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Unique Users Active</CardTitle>
-            <Globe className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-bloom-dark">{uniqueUsersCount} Staff Members</div>
-            <p className="text-xs text-muted-foreground mt-1">Distinct employees logged in right now</p>
-          </CardContent>
-        </Card>
-
-        <Card className="subtle-shadow border-gray-100 bg-white">
-          <CardHeader className="py-4 flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Audit Trail Limit</CardTitle>
-            <ShieldCheck className="h-4 w-4 text-slate-400" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-slate-700">{totalCount} Sessions</div>
-            <p className="text-xs text-muted-foreground mt-1">Recent logins kept in session log</p>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <StatCard
+          title="Active Sessions"
+          value={`${activeCount} Active`}
+          subtitle="Tokens currently valid on client devices"
+          icon={UserCheck}
+          variant="success"
+          isGlass
+        />
+        <StatCard
+          title="Unique Users Active"
+          value={`${uniqueUsersCount} Staff`}
+          subtitle="Distinct employees logged in right now"
+          icon={Globe}
+          variant="rose"
+          isGlass
+        />
+        <StatCard
+          title="Audit Trail Limit"
+          value={`${totalCount} Sessions`}
+          subtitle="Recent logins kept in session log"
+          icon={ShieldCheck}
+          variant="default"
+          isGlass
+        />
       </div>
 
       {/* Main Table Card */}
-      <Card className="subtle-shadow border-gray-100 bg-white">
-        <CardHeader className="pb-3 border-b border-gray-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="rounded-2xl p-6 transition-all duration-300" style={{
+        background: '#ffffff',
+        boxShadow: '8px 8px 24px rgba(166, 180, 200, 0.45), -8px -8px 24px rgba(255, 255, 255, 0.95)'
+      }}>
+        <div className="pb-5 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
           <div>
-            <CardTitle className="text-lg">Session Directory & Security Logs</CardTitle>
-            <CardDescription>Force logout staff members to revoke token access in case of device loss or termination.</CardDescription>
+            <h3 className="text-base font-semibold text-slate-800">Session Directory & Security Logs</h3>
+            <p className="text-xs text-slate-500 mt-0.5">Force logout staff members to revoke token access in case of device loss or termination.</p>
           </div>
           <div className="relative w-full md:w-72">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
             <Input
               placeholder="Search user, IP, or browser..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 bg-slate-50/50 focus-visible:bg-white"
+              className="pl-9 bg-slate-50 border-slate-200 rounded-xl"
+              style={{
+                boxShadow: 'inset 2px 2px 4px rgba(166, 180, 200, 0.2), inset -2px -2px 4px rgba(255, 255, 255, 0.7)'
+              }}
             />
           </div>
-        </CardHeader>
+        </div>
         
-        <CardContent className="p-0">
+        <div className="p-0">
           {isLoading ? (
             <div className="p-12 text-center">
               <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
@@ -340,8 +352,8 @@ const LoginSessions: React.FC = () => {
               </Table>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 };

@@ -1,3 +1,6 @@
+import { PageHeader } from '@/components/dashboard/PageHeader';
+import { StatCard } from '@/components/dashboard/StatCard';
+import { SoftButton } from '@/components/dashboard/SoftButton';
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -141,65 +144,57 @@ const AdminUsers: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2">
-            <Users className="h-7 w-7 text-primary" />
-            Customers
-          </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Manage customer accounts, verify profiles, and monitor customer activity
-          </p>
-        </div>
-        <Button onClick={handleAddCustomerClick} className="shadow-sm">
-          <UserPlus className="mr-2 h-4 w-4" /> Add Customer
-        </Button>
-      </div>
+      <PageHeader
+        title="Customer Accounts & Profiles"
+        subtitle="Manage customer directories, account security, order histories, and loyalty status."
+        breadcrumbs={[
+          { label: 'Admin', href: '/admin' },
+          { label: 'Customers' },
+        ]}
+        statusBadge={{
+          label: `${activeCount} Active Customers`,
+          variant: 'success',
+        }}
+        actions={
+          <SoftButton
+            variant="primary"
+            icon={UserPlus}
+            onClick={handleAddCustomerClick}
+          >
+            Add Customer
+          </SoftButton>
+        }
+      />
 
       {/* Customer Specific KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <Card className="p-4 bg-blue-50/70 dark:bg-blue-950/30 border-blue-100 dark:border-blue-900/40">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Total Customers</p>
-              <h3 className="text-2xl font-bold text-blue-900 dark:text-blue-200 mt-1">{customers.length}</h3>
-            </div>
-            <Users className="h-8 w-8 text-blue-400/60 dark:text-blue-500/40" />
-          </div>
-        </Card>
-
-        <Card className="p-4 bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-100 dark:border-emerald-900/40">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Active Customers</p>
-              <h3 className="text-2xl font-bold text-emerald-900 dark:text-emerald-200 mt-1">{activeCount}</h3>
-            </div>
-            <UserCheck className="h-8 w-8 text-emerald-400/60 dark:text-emerald-500/40" />
-          </div>
-        </Card>
-
-        <Card className="p-4 bg-violet-50/70 dark:bg-violet-950/30 border-violet-100 dark:border-violet-900/40">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-semibold text-violet-600 dark:text-violet-400 uppercase tracking-wider">New (Last 30 Days)</p>
-              <h3 className="text-2xl font-bold text-violet-900 dark:text-violet-200 mt-1">{newThisMonthCount}</h3>
-            </div>
-            <Calendar className="h-8 w-8 text-violet-400/60 dark:text-violet-500/40" />
-          </div>
-        </Card>
-
-        <Card className="p-4 bg-slate-50/80 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Inactive Accounts</p>
-              <h3 className="text-2xl font-bold text-slate-700 dark:text-slate-300 mt-1">{inactiveCount}</h3>
-            </div>
-            <UserX className="h-8 w-8 text-slate-400/60 dark:text-slate-500/40" />
-          </div>
-        </Card>
+        <StatCard
+          title="Total Customers"
+          value={customers.length}
+          icon={Users}
+          colorPalette="rose"
+        />
+        <StatCard
+          title="Active Customers"
+          value={activeCount}
+          icon={UserCheck}
+          colorPalette="emerald"
+        />
+        <StatCard
+          title="New (Last 30 Days)"
+          value={newThisMonthCount}
+          icon={Calendar}
+          colorPalette="purple"
+        />
+        <StatCard
+          title="Inactive Accounts"
+          value={inactiveCount}
+          icon={UserX}
+          colorPalette="amber"
+        />
       </div>
 
-      <Card>
+      <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]">
         <CardHeader className="py-4">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <CardTitle className="text-lg">Customer Directory ({filteredCustomers.length})</CardTitle>

@@ -1,33 +1,34 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Search, 
-  Download, 
-  Gift, 
-  ChevronLeft, 
-  ChevronRight, 
-  ArrowUpDown, 
-  Check, 
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Search,
+  Download,
+  Gift,
+  ChevronLeft,
+  ChevronRight,
+  ArrowUpDown,
+  Check,
   Package,
-  Layers
+  Layers,
+  Sparkles,
+  AlertTriangle,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  getAddons, 
-  updateAddon, 
-  deleteAddon, 
-  type AddonProduct 
+import {
+  getAddons,
+  updateAddon,
+  deleteAddon,
+  type AddonProduct,
 } from '@/services/addonService';
+import { PageHeader } from '@/components/dashboard/PageHeader';
+import { StatCard } from '@/components/dashboard/StatCard';
+import { SoftButton } from '@/components/dashboard/SoftButton';
+import { StatusBadge } from '@/components/dashboard/StatusBadge';
 
 const ADDON_CATEGORIES = [
   { value: 'greeting-cards', label: 'Greeting Cards' },
@@ -38,17 +39,17 @@ const ADDON_CATEGORIES = [
   { value: 'perfumes', label: 'Perfumes' },
   { value: 'balloons', label: 'Balloons' },
   { value: 'gift-hampers', label: 'Gift Hampers' },
-  { value: 'other', label: 'Other / Custom' }
+  { value: 'other', label: 'Other / Custom' },
 ];
 
 const AddonManagement: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  
+
   // Data States
   const [addons, setAddons] = useState<AddonProduct[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Filters and Pagination States
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -62,7 +63,7 @@ const AddonManagement: React.FC = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const addonRes = await getAddons({ status: 'all' }); // fetch all active/inactive for admin
+      const addonRes = await getAddons({ status: 'all' });
       if (addonRes.success) {
         setAddons(addonRes.addons || []);
       }
@@ -71,7 +72,7 @@ const AddonManagement: React.FC = () => {
       toast({
         title: 'Error loading data',
         description: 'Failed to fetch addons list from server.',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
@@ -82,106 +83,87 @@ const AddonManagement: React.FC = () => {
     loadData();
   }, []);
 
-  // Delete Addon
-  const handleDelete = async (id: string, name: string) => {
-    if (!window.confirm(`Are you sure you want to permanently delete the addon product "${name}"?`)) {
+  // Quick Inline Status Toggle
+  const handleToggleStatus = async (addon: AddonProduct) => {
+    try {
+      const nextActiveState = !addon.active;
+      const res = await updateAddon(addon._id, { active: nextActiveState });
+      if (res.success) {
+        setAddons((prev) =>
+          prev.map((item) =>
+            item._id === addon._id ? { ...item, active: nextActiveState } : item
+          )
+        );
+        toast({
+          title: 'Status Updated',
+          description: `"${addon.name}" is now ${nextActiveState ? 'Visible' : 'Hidden'} in cart upsell.`,
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Update Failed',
+        description: 'Could not update status on server.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Delete Action
+  const handleDeleteAddon = async (id: string, name: string) => {
+    if (!window.confirm(`Are you sure you want to permanently delete "${name}"?`)) {
+      return;
+    }
+    try {
+      const res = await deleteAddon(id);
+      if (res.success) {
+        setAddons((prev) => prev.filter((item) => item._id !== id));
+        toast({
+          title: 'Addon Deleted',
+          description: `"${name}" removed successfully.`,
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Delete Failed',
+        description: 'Could not delete addon from database.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // CSV Export Action
+  const handleCSVExport = () => {
+    if (!addons.length) {
+      toast({ title: 'Export Failed', description: 'No addons to export.', variant: 'destructive' });
       return;
     }
 
-    try {
-      const response = await deleteAddon(id);
-      if (response.success) {
-        toast({
-          title: 'Deleted',
-          description: `Addon "${name}" deleted successfully.`
-        });
-        loadData();
-      }
-    } catch (error) {
-      console.error('Error deleting addon:', error);
-      toast({
-        title: 'Deletion Failed',
-        description: 'Could not delete the addon product.',
-        variant: 'destructive'
-      });
-    }
-  };
-
-  // Quick toggle status action
-  const toggleActiveStatus = async (addon: AddonProduct) => {
-    const nextActive = !addon.active;
-    const nextStatus = nextActive ? 'active' : 'inactive';
-    
-    try {
-      const response = await updateAddon(addon._id, { 
-        active: nextActive,
-        status: nextStatus 
-      });
-      
-      if (response.success) {
-        toast({
-          title: 'Status Updated',
-          description: `"${addon.name}" is now ${nextActive ? 'Active' : 'Inactive'}.`
-        });
-        
-        // Optimistic UI update
-        setAddons(prev => prev.map(item => 
-          item._id === addon._id 
-            ? { ...item, active: nextActive, status: nextStatus } 
-            : item
-        ));
-      }
-    } catch (error) {
-      console.error('Error toggling status:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to toggle status.',
-        variant: 'destructive'
-      });
-    }
-  };
-
-  // CSV Export
-  const handleCSVExport = () => {
-    const headers = ['Name', 'Slug', 'Category', 'Price', 'DiscountedPrice', 'Stock', 'SKU', 'Status', 'Active', 'SortOrder', 'Badge', 'Tags', 'LinkedCategories', 'LinkedOccasions'];
-    const csvRows = addons.map(addon => [
-      addon.name,
-      addon.slug,
-      addon.category,
-      addon.price,
-      addon.discountedPrice || '',
-      addon.stock,
-      addon.SKU || '',
-      addon.status,
-      addon.active ? 'true' : 'false',
-      addon.sortOrder,
-      addon.badge || '',
-      (addon.tags || []).join(';'),
-      (addon.linkedCategories || []).join(';'),
-      (addon.linkedOccasions || []).join(';')
+    const headers = ['Name', 'SKU', 'Category', 'Price', 'DiscountedPrice', 'Stock', 'Active', 'SortOrder'];
+    const rows = addons.map((a) => [
+      `"${a.name.replace(/"/g, '""')}"`,
+      `"${a.SKU || ''}"`,
+      `"${a.category}"`,
+      a.price,
+      a.discountedPrice || a.price,
+      a.stock,
+      a.active ? 'Yes' : 'No',
+      a.sortOrder,
     ]);
 
-    const csvContent = "data:text/csv;charset=utf-8," 
-      + [headers.join(','), ...csvRows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))].join('\n');
-      
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
     const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `addon_products_export_${new Date().toISOString().split('T')[0]}.csv`);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `sbf_addons_export_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-
-    toast({
-      title: 'CSV Exported',
-      description: 'The addon products list was downloaded successfully.'
-    });
   };
 
   // Sort Handlers
   const handleSort = (field: keyof AddonProduct | 'discount') => {
     if (sortBy === field) {
-      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
     } else {
       setSortBy(field);
       setSortDirection('asc');
@@ -192,29 +174,26 @@ const AddonManagement: React.FC = () => {
   const filteredAndSortedAddons = useMemo(() => {
     let result = [...addons];
 
-    // Search query matching (name, SKU, slug, description)
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
-      result = result.filter(addon => 
-        addon.name.toLowerCase().includes(searchLower) ||
-        (addon.SKU && addon.SKU.toLowerCase().includes(searchLower)) ||
-        addon.slug.toLowerCase().includes(searchLower) ||
-        (addon.description && addon.description.toLowerCase().includes(searchLower))
+      result = result.filter(
+        (addon) =>
+          addon.name.toLowerCase().includes(searchLower) ||
+          (addon.SKU && addon.SKU.toLowerCase().includes(searchLower)) ||
+          addon.slug.toLowerCase().includes(searchLower) ||
+          (addon.description && addon.description.toLowerCase().includes(searchLower))
       );
     }
 
-    // Category Filter
     if (selectedCategory && selectedCategory !== 'all') {
-      result = result.filter(addon => addon.category === selectedCategory);
+      result = result.filter((addon) => addon.category === selectedCategory);
     }
 
-    // Status Filter
     if (selectedStatus && selectedStatus !== 'all') {
       const isActive = selectedStatus === 'active';
-      result = result.filter(addon => addon.active === isActive);
+      result = result.filter((addon) => addon.active === isActive);
     }
 
-    // Sorting
     result.sort((a, b) => {
       let valA: any = a[sortBy as keyof AddonProduct];
       let valB: any = b[sortBy as keyof AddonProduct];
@@ -228,13 +207,9 @@ const AddonManagement: React.FC = () => {
       if (valB === undefined || valB === null) valB = '';
 
       if (typeof valA === 'string') {
-        return sortDirection === 'asc' 
-          ? valA.localeCompare(valB) 
-          : valB.localeCompare(valA);
+        return sortDirection === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
       } else {
-        return sortDirection === 'asc' 
-          ? valA - valB 
-          : valB - valA;
+        return sortDirection === 'asc' ? valA - valB : valB - valA;
       }
     });
 
@@ -248,415 +223,378 @@ const AddonManagement: React.FC = () => {
     return filteredAndSortedAddons.slice(startIdx, startIdx + pageSize);
   }, [filteredAndSortedAddons, currentPage, pageSize]);
 
-  // Reset page to 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, selectedCategory, selectedStatus]);
 
+  const stats = useMemo(() => {
+    const active = addons.filter((a) => a.active).length;
+    const lowStock = addons.filter((a) => a.stock < 5).length;
+    const withLinks = addons.filter(
+      (a) =>
+        (a.linkedCategories?.length || 0) +
+          (a.linkedOccasions?.length || 0) +
+          (a.linkedProducts?.length || 0) >
+        0
+    ).length;
+
+    return {
+      total: addons.length,
+      active,
+      lowStock,
+      withLinks,
+    };
+  }, [addons]);
+
   return (
-    <div className="container mx-auto p-4 sm:p-6 w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd font-sans">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-pink-600 via-rose-500 to-amber-500 bg-clip-text text-transparent flex items-center gap-2">
-            <Gift className="h-8 w-8 text-pink-600 animate-pulse" />
-            Addon Products System
-          </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Manage small checkout upsell items such as greeting cards, chocolates, teddy bears, and hampers.
-          </p>
-        </div>
+    <div className="space-y-6 w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto">
+      {/* Neumorphic Page Header */}
+      <PageHeader
+        breadcrumbs={[
+          { label: 'Admin', href: '/admin' },
+          { label: 'Catalog', href: '/admin/products' },
+          { label: 'Addons & Upsells' },
+        ]}
+        title="Addon Products & Upsells"
+        description="Manage small checkout upsell items such as greeting cards, artisanal chocolates, teddy bears, candles, and bespoke gift hampers."
+        liveStatus={{ label: `${stats.active} Addons Active`, ping: true }}
+        actions={
+          <div className="flex items-center gap-2.5">
+            <SoftButton
+              variant="default"
+              size="sm"
+              icon={Download}
+              onClick={handleCSVExport}
+            >
+              Export CSV
+            </SoftButton>
+            <SoftButton
+              variant="primary"
+              size="sm"
+              icon={Plus}
+              onClick={() => navigate('/admin/addons/new')}
+            >
+              Create Addon
+            </SoftButton>
+          </div>
+        }
+      />
 
-        <div className="flex flex-wrap items-center gap-3">
-          <Button
-            onClick={handleCSVExport}
-            variant="outline"
-            className="border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold"
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Export CSV
-          </Button>
-          <Button
-            onClick={() => navigate('/admin/addons/new')}
-            className="bg-gradient-to-r from-pink-600 to-rose-500 hover:from-pink-700 hover:to-rose-600 text-white font-bold shadow-md shadow-pink-200"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Create Addon
-          </Button>
-        </div>
-      </div>
-
-      {/* Stats Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <Card className="bg-slate-50/50 border-slate-200">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-xs font-bold text-slate-400 uppercase">Total Addons</p>
-              <h3 className="text-2xl font-black text-slate-800 mt-1">{addons.length}</h3>
-            </div>
-            <div className="h-10 w-10 bg-pink-100 rounded-lg flex items-center justify-center text-pink-600">
-              <Gift className="h-5 w-5" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-slate-50/50 border-slate-200">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-xs font-bold text-slate-400 uppercase">Active / Visible</p>
-              <h3 className="text-2xl font-black text-emerald-600 mt-1">
-                {addons.filter(a => a.active).length}
-              </h3>
-            </div>
-            <div className="h-10 w-10 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600">
-              <Check className="h-5 w-5" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-slate-50/50 border-slate-200">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-xs font-bold text-slate-400 uppercase">Low Stock (&lt; 5)</p>
-              <h3 className={`text-2xl font-black mt-1 ${addons.filter(a => a.stock < 5).length > 0 ? 'text-amber-500' : 'text-slate-800'}`}>
-                {addons.filter(a => a.stock < 5).length}
-              </h3>
-            </div>
-            <div className="h-10 w-10 bg-amber-100 rounded-lg flex items-center justify-center text-amber-500">
-              <Package className="h-5 w-5" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-slate-50/50 border-slate-200">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-xs font-bold text-slate-400 uppercase">Recommendation Links</p>
-              <h3 className="text-2xl font-black text-indigo-600 mt-1">
-                {addons.filter(a => (a.linkedCategories?.length || 0) + (a.linkedOccasions?.length || 0) + (a.linkedProducts?.length || 0) > 0).length}
-              </h3>
-            </div>
-            <div className="h-10 w-10 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600">
-              <Layers className="h-5 w-5" />
-            </div>
-          </CardContent>
-        </Card>
+      {/* Stats KPI Row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <StatCard
+          title="Total Addons"
+          value={stats.total}
+          icon={Gift}
+          color="rose"
+          subtitle="All cataloged upsells"
+        />
+        <StatCard
+          title="Active / Visible"
+          value={stats.active}
+          icon={Check}
+          color="emerald"
+          subtitle="Displayed in checkout cart"
+        />
+        <StatCard
+          title="Low Stock (< 5)"
+          value={stats.lowStock}
+          icon={Package}
+          color={stats.lowStock > 0 ? 'amber' : 'slate'}
+          subtitle="Needs inventory restock"
+        />
+        <StatCard
+          title="Recommendation Rules"
+          value={stats.withLinks}
+          icon={Layers}
+          color="purple"
+          subtitle="Smart product pairing links"
+        />
       </div>
 
       {/* Filter and Search Bar */}
-      <Card className="border-slate-200 shadow-sm mb-6">
-        <CardContent className="p-4">
-          <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
-            <div className="relative w-full lg:max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 h-4.5 w-4.5" />
-              <Input
-                type="text"
-                placeholder="Search addon by name, SKU, slug..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 border-slate-200 focus:border-pink-500 bg-white"
-              />
-            </div>
-            
-            <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-              <div className="flex items-center gap-2 flex-1 sm:flex-none">
-                <Label htmlFor="category-filter" className="text-xs font-bold text-slate-500 whitespace-nowrap uppercase">Category</Label>
-                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger id="category-filter" className="w-[160px] bg-white border-slate-200 text-xs">
-                    <SelectValue placeholder="All Categories" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    {ADDON_CATEGORIES.map(cat => (
-                      <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+      <div className="sbf-card p-4 rounded-2xl border border-white/70 dark:border-slate-800 shadow-[5px_5px_15px_rgba(163,177,198,0.22),-5px_-5px_15px_rgba(255,255,255,0.75)] bg-[#f4f7fb] dark:bg-slate-900/90 flex flex-col lg:flex-row gap-3.5 items-center justify-between">
+        <div className="relative w-full lg:max-w-md">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Search addon by name, SKU, slug..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-9 pr-3 h-9 text-xs rounded-xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-950 text-slate-800 dark:text-slate-100 placeholder-slate-400 shadow-[inset_2px_2px_4px_rgba(163,177,198,0.3),inset_-2px_-2px_4px_rgba(255,255,255,0.8)] focus:outline-none focus:ring-1 focus:ring-rose-500/50 transition-all"
+          />
+        </div>
 
-              <div className="flex items-center gap-2 flex-1 sm:flex-none">
-                <Label htmlFor="status-filter" className="text-xs font-bold text-slate-500 whitespace-nowrap uppercase">Status</Label>
-                <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                  <SelectTrigger id="status-filter" className="w-[130px] bg-white border-slate-200 text-xs">
-                    <SelectValue placeholder="All Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <SelectTrigger className="w-[160px] h-9 text-xs rounded-xl bg-[#edf1f7] dark:bg-slate-950 border-slate-200/60 dark:border-slate-800 shadow-[inset_2px_2px_4px_rgba(163,177,198,0.2),inset_-2px_-2px_4px_rgba(255,255,255,0.8)]">
+              <SelectValue placeholder="All Categories" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              {ADDON_CATEGORIES.map((cat) => (
+                <SelectItem key={cat.value} value={cat.value}>
+                  {cat.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setSearchTerm('');
-                  setSelectedCategory('all');
-                  setSelectedStatus('all');
-                }}
-                className="text-slate-500 hover:text-slate-700 text-xs font-semibold"
-              >
-                Reset Filters
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+            <SelectTrigger className="w-[130px] h-9 text-xs rounded-xl bg-[#edf1f7] dark:bg-slate-950 border-slate-200/60 dark:border-slate-800 shadow-[inset_2px_2px_4px_rgba(163,177,198,0.2),inset_-2px_-2px_4px_rgba(255,255,255,0.8)]">
+              <SelectValue placeholder="All Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="active">Active Only</SelectItem>
+              <SelectItem value="inactive">Inactive Only</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {(searchTerm || selectedCategory !== 'all' || selectedStatus !== 'all') && (
+            <SoftButton
+              variant="default"
+              size="sm"
+              onClick={() => {
+                setSearchTerm('');
+                setSelectedCategory('all');
+                setSelectedStatus('all');
+              }}
+            >
+              Reset
+            </SoftButton>
+          )}
+        </div>
+      </div>
 
       {/* Main Table Card */}
-      <Card className="border-slate-200 shadow-sm overflow-hidden">
-        <CardContent className="p-0">
-          {loading ? (
-            <div className="flex flex-col items-center justify-center py-20 gap-3">
-              <div className="h-10 w-10 border-4 border-pink-500 border-t-transparent rounded-full animate-spin"></div>
-              <p className="text-sm text-slate-400 font-semibold">Loading addon products...</p>
-            </div>
-          ) : paginatedAddons.length === 0 ? (
-            <div className="text-center py-16 px-4">
-              <Gift className="h-16 w-16 text-slate-300 mx-auto mb-4" />
-              <h3 className="text-lg font-bold text-slate-700">No Addon Products Found</h3>
-              <p className="text-sm text-slate-400 max-w-sm mx-auto mt-1">
-                {searchTerm || selectedCategory !== 'all' || selectedStatus !== 'all' 
-                  ? 'No addons match your current search queries or filter selectors.' 
-                  : 'Start by creating your very first checkout addon upsell product!'}
-              </p>
-              {(searchTerm || selectedCategory !== 'all' || selectedStatus !== 'all') ? (
-                <Button 
-                  onClick={() => {
-                    setSearchTerm('');
-                    setSelectedCategory('all');
-                    setSelectedStatus('all');
-                  }} 
-                  className="mt-4 bg-slate-800 text-white font-semibold"
-                >
-                  Clear Filters
-                </Button>
-              ) : (
-                <Button onClick={() => navigate('/admin/addons/new')} className="mt-4 bg-pink-600 hover:bg-pink-700 text-white font-semibold">
-                  Create Addon
-                </Button>
-              )}
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-50/70 border-b border-slate-100 text-xs font-bold text-slate-400 uppercase tracking-wider select-none">
-                    <th className="p-4 w-20">Image</th>
-                    <th className="p-4 cursor-pointer hover:bg-slate-100/50" onClick={() => handleSort('name')}>
-                      <div className="flex items-center gap-1.5">
-                        Name {sortBy === 'name' && <ArrowUpDown className="h-3.5 w-3.5 text-slate-600" />}
-                      </div>
-                    </th>
-                    <th className="p-4 cursor-pointer hover:bg-slate-100/50" onClick={() => handleSort('category')}>
-                      <div className="flex items-center gap-1.5">
-                        Category {sortBy === 'category' && <ArrowUpDown className="h-3.5 w-3.5 text-slate-600" />}
-                      </div>
-                    </th>
-                    <th className="p-4 cursor-pointer hover:bg-slate-100/50 text-right" onClick={() => handleSort('price')}>
-                      <div className="flex items-center justify-end gap-1.5">
-                        Price {sortBy === 'price' && <ArrowUpDown className="h-3.5 w-3.5 text-slate-600" />}
-                      </div>
-                    </th>
-                    <th className="p-4 cursor-pointer hover:bg-slate-100/50 text-right" onClick={() => handleSort('stock')}>
-                      <div className="flex items-center justify-end gap-1.5">
-                        Stock {sortBy === 'stock' && <ArrowUpDown className="h-3.5 w-3.5 text-slate-600" />}
-                      </div>
-                    </th>
-                    <th className="p-4">Linked Rules</th>
-                    <th className="p-4 cursor-pointer hover:bg-slate-100/50" onClick={() => handleSort('sortOrder')}>
-                      <div className="flex items-center gap-1.5">
-                        Sort Order {sortBy === 'sortOrder' && <ArrowUpDown className="h-3.5 w-3.5 text-slate-600" />}
-                      </div>
-                    </th>
-                    <th className="p-4">Badge</th>
-                    <th className="p-4 w-28">Status</th>
-                    <th className="p-4 text-center w-28">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="text-slate-700 text-sm divide-y divide-slate-100">
-                  {paginatedAddons.map((addon) => {
-                    const priceDiff = addon.discountedPrice && addon.discountedPrice < addon.price;
-                    const linkedCount = 
-                      (addon.linkedCategories?.length || 0) + 
-                      (addon.linkedOccasions?.length || 0) + 
-                      (addon.linkedProducts?.length || 0);
+      <div className="rounded-2xl border border-white/80 dark:border-slate-800 shadow-[6px_6px_18px_rgba(163,177,198,0.22),-6px_-6px_18px_rgba(255,255,255,0.8)] bg-[#f4f7fb] dark:bg-slate-900 overflow-hidden transition-all">
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20 gap-3">
+            <div className="h-8 w-8 border-3 border-rose-500 border-t-transparent rounded-full animate-spin" />
+            <p className="text-xs text-slate-500 font-semibold">
+              Loading addon products...
+            </p>
+          </div>
+        ) : paginatedAddons.length === 0 ? (
+          <div className="text-center py-16 px-4">
+            <Gift className="h-12 w-12 text-slate-300 mx-auto mb-3 opacity-60" />
+            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">
+              No Addon Products Found
+            </h3>
+            <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1">
+              {searchTerm || selectedCategory !== 'all' || selectedStatus !== 'all'
+                ? 'No addons match your current filters.'
+                : 'Start by creating your first upsell item.'}
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-[#edf1f7] dark:bg-slate-800/60 border-b border-slate-200/80 dark:border-slate-800 text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider select-none">
+                  <th className="p-3.5 w-16">Image</th>
+                  <th
+                    className="p-3.5 cursor-pointer hover:text-rose-600"
+                    onClick={() => handleSort('name')}
+                  >
+                    <div className="flex items-center gap-1">
+                      Name {sortBy === 'name' && <ArrowUpDown className="h-3 w-3" />}
+                    </div>
+                  </th>
+                  <th
+                    className="p-3.5 cursor-pointer hover:text-rose-600"
+                    onClick={() => handleSort('category')}
+                  >
+                    <div className="flex items-center gap-1">
+                      Category {sortBy === 'category' && <ArrowUpDown className="h-3 w-3" />}
+                    </div>
+                  </th>
+                  <th
+                    className="p-3.5 cursor-pointer hover:text-rose-600 text-right"
+                    onClick={() => handleSort('price')}
+                  >
+                    <div className="flex items-center justify-end gap-1">
+                      Price {sortBy === 'price' && <ArrowUpDown className="h-3 w-3" />}
+                    </div>
+                  </th>
+                  <th
+                    className="p-3.5 cursor-pointer hover:text-rose-600 text-right"
+                    onClick={() => handleSort('stock')}
+                  >
+                    <div className="flex items-center justify-end gap-1">
+                      Stock {sortBy === 'stock' && <ArrowUpDown className="h-3 w-3" />}
+                    </div>
+                  </th>
+                  <th className="p-3.5">Linked Rules</th>
+                  <th
+                    className="p-3.5 cursor-pointer hover:text-rose-600"
+                    onClick={() => handleSort('sortOrder')}
+                  >
+                    <div className="flex items-center gap-1">
+                      Sort {sortBy === 'sortOrder' && <ArrowUpDown className="h-3 w-3" />}
+                    </div>
+                  </th>
+                  <th className="p-3.5 w-24">Status</th>
+                  <th className="p-3.5 text-right w-24 pr-5">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="text-slate-700 dark:text-slate-300 text-xs divide-y divide-slate-100 dark:divide-slate-800/50">
+                {paginatedAddons.map((addon) => {
+                  const priceDiff =
+                    addon.discountedPrice && addon.discountedPrice < addon.price;
+                  const linkedCount =
+                    (addon.linkedCategories?.length || 0) +
+                    (addon.linkedOccasions?.length || 0) +
+                    (addon.linkedProducts?.length || 0);
 
-                    return (
-                      <tr key={addon._id} className="hover:bg-slate-50/40 transition-colors group">
-                        <td className="p-4">
-                          <div className="h-12 w-12 rounded-lg border border-slate-200 overflow-hidden bg-white">
-                            <img
-                              src={addon.image}
-                              alt={addon.name}
-                              className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-200"
-                            />
-                          </div>
-                        </td>
-                        <td className="p-4">
+                  return (
+                    <tr
+                      key={addon._id}
+                      className="hover:bg-white/60 dark:hover:bg-slate-800/40 transition-colors"
+                    >
+                      <td className="p-3.5">
+                        <div className="h-11 w-11 rounded-xl border border-white shadow-xs overflow-hidden bg-white">
+                          <img
+                            src={addon.image}
+                            alt={addon.name}
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+                      </td>
+                      <td className="p-3.5">
+                        <p className="font-bold text-xs text-slate-900 dark:text-slate-100">
+                          {addon.name}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground font-mono">
+                          SKU: {addon.SKU || 'N/A'}
+                        </p>
+                      </td>
+                      <td className="p-3.5 capitalize">
+                        <span className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-slate-200/70 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                          {addon.category.replace('-', ' ')}
+                        </span>
+                      </td>
+                      <td className="p-3.5 text-right font-semibold">
+                        {priceDiff ? (
                           <div>
-                            <p className="font-bold text-slate-800 text-base">{addon.name}</p>
-                            <p className="text-xs text-slate-400 mt-0.5 font-mono">SKU: {addon.SKU || 'N/A'}</p>
-                          </div>
-                        </td>
-                        <td className="p-4 capitalize">
-                          <Badge variant="outline" className="bg-slate-100 text-slate-700 border-0">
-                            {addon.category.replace('-', ' ')}
-                          </Badge>
-                        </td>
-                        <td className="p-4 text-right">
-                          {priceDiff ? (
-                            <div>
-                              <p className="font-bold text-slate-800">₹{addon.discountedPrice}</p>
-                              <p className="text-xs text-slate-400 line-through">₹{addon.price}</p>
-                            </div>
-                          ) : (
-                            <p className="font-bold text-slate-800">₹{addon.price}</p>
-                          )}
-                        </td>
-                        <td className="p-4 text-right">
-                          <span className={`font-bold ${addon.stock < 5 ? 'text-rose-600 bg-rose-50 px-2 py-0.5 rounded' : 'text-slate-700'}`}>
-                            {addon.stock}
-                          </span>
-                        </td>
-                        <td className="p-4">
-                          {linkedCount > 0 ? (
-                            <div className="flex flex-wrap gap-1 max-w-[200px]">
-                              {addon.linkedCategories && addon.linkedCategories.length > 0 && (
-                                <Badge className="bg-indigo-50 text-indigo-700 border-indigo-100 text-[10px]" variant="outline">
-                                  {addon.linkedCategories.length} Categories
-                                </Badge>
-                              )}
-                              {addon.linkedOccasions && addon.linkedOccasions.length > 0 && (
-                                <Badge className="bg-amber-50 text-amber-700 border-amber-100 text-[10px]" variant="outline">
-                                  {addon.linkedOccasions.length} Occasions
-                                </Badge>
-                              )}
-                              {addon.linkedProducts && addon.linkedProducts.length > 0 && (
-                                <Badge className="bg-emerald-50 text-emerald-700 border-emerald-100 text-[10px]" variant="outline">
-                                  {addon.linkedProducts.length} Products
-                                </Badge>
-                              )}
-                            </div>
-                          ) : (
-                            <span className="text-xs text-slate-400 italic">Fallback (Bestseller)</span>
-                          )}
-                        </td>
-                        <td className="p-4 text-center font-mono font-semibold">
-                          {addon.sortOrder}
-                        </td>
-                        <td className="p-4">
-                          {addon.badge ? (
-                            <Badge className="bg-pink-100 text-pink-700 border-0 text-[10px] font-bold">
-                              {addon.badge}
-                            </Badge>
-                          ) : (
-                            <span className="text-slate-300">-</span>
-                          )}
-                        </td>
-                        <td className="p-4">
-                          <div className="flex items-center gap-2">
-                            <Switch
-                              checked={addon.active}
-                              onCheckedChange={() => toggleActiveStatus(addon)}
-                            />
-                            <span className={`text-xs font-bold ${addon.active ? 'text-emerald-600' : 'text-slate-400'}`}>
-                              {addon.active ? 'Active' : 'Inactive'}
+                            <span className="font-bold text-rose-600">
+                              ₹{addon.discountedPrice}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground line-through ml-1">
+                              ₹{addon.price}
                             </span>
                           </div>
-                        </td>
-                        <td className="p-4">
-                          <div className="flex items-center justify-center gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => navigate(`/admin/addons/edit/${addon._id}`)}
-                              className="h-8 w-8 text-slate-600 hover:text-slate-900"
-                              title="Edit"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDelete(addon._id, addon.name)}
-                              className="h-8 w-8 text-rose-500 hover:text-rose-700 hover:bg-rose-50"
-                              title="Delete"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                        ) : (
+                          <span>₹{addon.price}</span>
+                        )}
+                      </td>
+                      <td className="p-3.5 text-right">
+                        <span
+                          className={`font-bold text-xs ${
+                            addon.stock < 5
+                              ? 'text-rose-600'
+                              : 'text-slate-800 dark:text-slate-200'
+                          }`}
+                        >
+                          {addon.stock}
+                        </span>
+                      </td>
+                      <td className="p-3.5">
+                        {linkedCount > 0 ? (
+                          <div className="flex flex-wrap gap-1 max-w-[200px]">
+                            {addon.linkedCategories && addon.linkedCategories.length > 0 && (
+                              <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300">
+                                {addon.linkedCategories.length} Cats
+                              </span>
+                            )}
+                            {addon.linkedOccasions && addon.linkedOccasions.length > 0 && (
+                              <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300">
+                                {addon.linkedOccasions.length} Occs
+                              </span>
+                            )}
+                            {addon.linkedProducts && addon.linkedProducts.length > 0 && (
+                              <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
+                                {addon.linkedProducts.length} Prods
+                              </span>
+                            )}
                           </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                        ) : (
+                          <span className="text-[10px] text-muted-foreground italic">
+                            Universal Upsell
+                          </span>
+                        )}
+                      </td>
+                      <td className="p-3.5 font-mono text-xs">
+                        {addon.sortOrder}
+                      </td>
+                      <td className="p-3.5">
+                        <div className="flex items-center gap-1.5">
+                          <Switch
+                            checked={addon.active}
+                            onCheckedChange={() => handleToggleStatus(addon)}
+                          />
+                          <span className="text-[10px] font-medium text-slate-500">
+                            {addon.active ? 'On' : 'Off'}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="p-3.5 text-right pr-5">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <SoftButton
+                            variant="default"
+                            size="icon"
+                            className="h-8 w-8 text-sky-600"
+                            onClick={() => navigate(`/admin/addons/edit/${addon._id}`)}
+                          >
+                            <Edit className="h-3.5 w-3.5" />
+                          </SoftButton>
+                          <SoftButton
+                            variant="danger"
+                            size="icon"
+                            className="h-8 w-8 text-rose-600"
+                            onClick={() => handleDeleteAddon(addon._id, addon.name)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </SoftButton>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
 
-      {/* Pagination Controls */}
-      {!loading && filteredAndSortedAddons.length > 0 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4 select-none">
-          <p className="text-xs font-bold text-slate-400 uppercase">
-            Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, filteredAndSortedAddons.length)} of {filteredAndSortedAddons.length} Addons
-          </p>
-
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Label htmlFor="page-size" className="text-xs font-bold text-slate-400 uppercase whitespace-nowrap">Show</Label>
-              <Select 
-                value={String(pageSize)} 
-                onValueChange={(val) => {
-                  setPageSize(Number(val));
-                  setCurrentPage(1);
-                }}
-              >
-                <SelectTrigger id="page-size" className="w-[70px] h-8 text-xs bg-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="10">10</SelectItem>
-                  <SelectItem value="25">25</SelectItem>
-                  <SelectItem value="50">50</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-0.5">
-              <Button
-                variant="ghost"
-                size="icon"
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="p-4 border-t border-slate-200/60 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 bg-[#edf1f7]/50 dark:bg-slate-900">
+            <span>
+              Page <strong>{currentPage}</strong> of <strong>{totalPages}</strong> ({filteredAndSortedAddons.length} addons)
+            </span>
+            <div className="flex items-center gap-1.5">
+              <SoftButton
+                variant="default"
+                size="sm"
+                icon={ChevronLeft}
                 disabled={currentPage === 1}
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                className="h-8 w-8 rounded-md text-slate-500 disabled:opacity-30"
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                <Button
-                  key={page}
-                  variant={currentPage === page ? 'secondary' : 'ghost'}
-                  onClick={() => setCurrentPage(page)}
-                  className={`h-8 w-8 rounded-md text-xs font-bold ${currentPage === page ? 'bg-pink-50 text-pink-600' : 'text-slate-600'}`}
-                >
-                  {page}
-                </Button>
-              ))}
-              <Button
-                variant="ghost"
-                size="icon"
+                Previous
+              </SoftButton>
+              <SoftButton
+                variant="default"
+                size="sm"
                 disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                className="h-8 w-8 rounded-md text-slate-500 disabled:opacity-30"
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
+                Next <ChevronRight className="h-3.5 w-3.5 ml-1" />
+              </SoftButton>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

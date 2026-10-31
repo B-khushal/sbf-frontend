@@ -1,3 +1,5 @@
+import { PageHeader } from '@/components/dashboard/PageHeader';
+import { SoftButton } from '@/components/dashboard/SoftButton';
 import React, { useEffect, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -1045,35 +1047,41 @@ const AdminProducts: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="responsive-toolbar">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Products Management</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">Manage catalog products, pricing, inventory and marketing exports</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2.5">
-          <Button
-            variant="outline"
-            onClick={() => setShowExportModal(true)}
-            className="border-pink-200 bg-pink-50/50 hover:bg-pink-100/60 text-pink-700 hover:text-pink-800 font-semibold shadow-xs"
-          >
-            <Download className="mr-2 h-4 w-4 text-pink-600" />
-            Export Catalog
-            {selectedProductIds.length > 0 && (
-              <Badge className="ml-2 bg-pink-600 text-white hover:bg-pink-700 text-[10px] px-1.5 py-0">
-                {selectedProductIds.length}
-              </Badge>
-            )}
-          </Button>
+      <PageHeader
+        title="Products & Master Catalog"
+        subtitle="Manage inventory items, pricing tiers, cake & bouquet variants, and catalog exports."
+        breadcrumbs={[
+          { label: 'Admin', href: '/admin' },
+          { label: 'Products' },
+        ]}
+        statusBadge={{
+          label: `${filteredProducts.length} Products Active`,
+          variant: 'rose',
+        }}
+        actions={
+          <div className="flex flex-wrap items-center gap-2.5">
+            <SoftButton
+              variant="secondary"
+              icon={Download}
+              onClick={() => setShowExportModal(true)}
+            >
+              Export Catalog
+              {selectedProductIds.length > 0 && ` (${selectedProductIds.length})`}
+            </SoftButton>
 
-          <Button onClick={() => navigate('/admin/products/new')}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add New Product
-          </Button>
-        </div>
-      </div>
+            <SoftButton
+              variant="primary"
+              icon={Plus}
+              onClick={() => navigate('/admin/products/new')}
+            >
+              Add New Product
+            </SoftButton>
+          </div>
+        }
+      />
 
       {/* Sticky Display Order Management Navbar Controls */}
-      <Card className="sticky top-16 z-30 shadow-md border-pink-100 bg-white/95 backdrop-blur-sm p-4">
+      <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)] sticky top-16 z-30 shadow-md border-pink-100 bg-white/95 backdrop-blur-sm p-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3">
             <span className="text-sm font-semibold text-gray-700">Manage Order For:</span>
@@ -1195,7 +1203,7 @@ const AdminProducts: React.FC = () => {
 
       {/* Bulk actions bar */}
       {selectedProductIds.length > 0 && (
-        <Card className="border-pink-200 bg-pink-50/50 shadow-sm transition-all duration-200">
+        <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)] border-pink-200 bg-pink-50/50 shadow-sm transition-all duration-200">
           <CardContent className="py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="text-sm text-pink-800 font-medium">
               Selected <span className="font-bold text-pink-900">{selectedProductIds.length}</span> {selectedProductIds.length === 1 ? 'product' : 'products'} for bulk updates
@@ -1232,7 +1240,7 @@ const AdminProducts: React.FC = () => {
       {/* General Category Assignment Modal */}
       {showGeneralCategoryDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 backdrop-blur-sm p-4">
-          <Card className="w-full max-w-md border-2 border-pink-200 shadow-2xl">
+          <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)] w-full max-w-md border-2 border-pink-200 shadow-2xl">
             <CardHeader className="bg-pink-50/50 border-b border-pink-100">
               <CardTitle className="text-pink-800 flex items-center gap-2">📂 Bulk Assign Category</CardTitle>
             </CardHeader>
@@ -1266,7 +1274,7 @@ const AdminProducts: React.FC = () => {
       {/* Display Order Bulk Assign Modal */}
       {showBulkOrderDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 backdrop-blur-sm p-4">
-          <Card className="w-full max-w-md border-2 border-pink-200 shadow-2xl">
+          <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)] w-full max-w-md border-2 border-pink-200 shadow-2xl">
             <CardHeader className="bg-pink-50/50 border-b border-pink-100">
               <CardTitle className="text-pink-800 flex items-center gap-2">🔢 Bulk Assign Display Orders</CardTitle>
             </CardHeader>
@@ -1310,7 +1318,7 @@ const AdminProducts: React.FC = () => {
       {/* Valentine Categories Assignment Modal */}
       {showCategoryDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 backdrop-blur-sm p-4">
-          <Card className="w-full max-w-lg border-2 border-pink-200 shadow-2xl">
+          <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)] w-full max-w-lg border-2 border-pink-200 shadow-2xl">
             <CardHeader className="bg-pink-50/50 border-b border-pink-100">
               <CardTitle className="text-pink-800 flex items-center gap-2">❤️ Bulk Assign Valentine Categories</CardTitle>
             </CardHeader>
@@ -1353,7 +1361,7 @@ const AdminProducts: React.FC = () => {
       {/* Dates Assignment Modal */}
       {showDateDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 backdrop-blur-sm p-4">
-          <Card className="w-full max-w-lg border-2 border-pink-200 shadow-2xl">
+          <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)] w-full max-w-lg border-2 border-pink-200 shadow-2xl">
             <CardHeader className="bg-pink-50/50 border-b border-pink-100">
               <CardTitle className="text-pink-800 flex items-center gap-2">❤️ Bulk Assign Valentine Dates</CardTitle>
             </CardHeader>
@@ -1396,7 +1404,7 @@ const AdminProducts: React.FC = () => {
       {/* Occasions Assignment Modal */}
       {showOccasionDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 backdrop-blur-sm p-4">
-          <Card className="w-full max-w-lg border-2 border-amber-200 shadow-2xl">
+          <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)] w-full max-w-lg border-2 border-amber-200 shadow-2xl">
             <CardHeader className="bg-amber-50/50 border-b border-amber-100">
               <CardTitle className="text-amber-800 flex items-center gap-2">🎉 Bulk Assign Gifting Occasions</CardTitle>
             </CardHeader>
@@ -1475,7 +1483,7 @@ const AdminProducts: React.FC = () => {
       )}
 
       {/* Advanced Filters Section */}
-      <Card className="mb-6">
+      <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)] mb-6">
         <CardHeader className="pb-4">
           <div className="responsive-toolbar">
             <CardTitle className="flex items-center gap-2">
@@ -1626,7 +1634,7 @@ const AdminProducts: React.FC = () => {
       </div>
 
       {activeSection && activeSection !== 'none' ? (
-        <Card className="shadow-lg border border-gray-100">
+        <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)] shadow-lg border border-gray-100">
           <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b pb-4 gap-4">
             <div>
               <CardTitle className="text-xl flex items-center gap-2">

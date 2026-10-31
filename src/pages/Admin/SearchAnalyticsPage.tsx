@@ -1,3 +1,6 @@
+import { PageHeader } from '@/components/dashboard/PageHeader';
+import { StatCard } from '@/components/dashboard/StatCard';
+import { SoftButton } from '@/components/dashboard/SoftButton';
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -59,49 +62,48 @@ export const SearchAnalyticsPage: React.FC = () => {
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-5">
-        <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary mb-2">
-            <Sparkles size={13} /> Enterprise Search Intelligence
+      <PageHeader
+        title="Search Engine Analytics"
+        subtitle="Real-time customer search queries, conversion trends, click-through rates, and catalog search gaps."
+        breadcrumbs={[
+          { label: 'Admin', href: '/admin' },
+          { label: 'Analytics', href: '/admin/analytics' },
+          { label: 'Search Analytics' },
+        ]}
+        statusBadge={{
+          label: `${summary.totalSearches.toLocaleString()} Queries Tracked`,
+          variant: 'success',
+        }}
+        actions={
+          <div className="flex items-center gap-3">
+            <Select value={timeframe} onValueChange={(val: any) => setTimeframe(val)}>
+              <SelectTrigger className="w-[140px] rounded-xl bg-[#edf1f7] dark:bg-slate-800 shadow-[inset_2px_2px_5px_rgba(163,177,198,0.2),inset_-2px_-2px_5px_rgba(255,255,255,0.7)] border-none">
+                <SelectValue placeholder="Timeframe" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="today">Today</SelectItem>
+                <SelectItem value="7days">Last 7 Days</SelectItem>
+                <SelectItem value="30days">Last 30 Days</SelectItem>
+                <SelectItem value="all">All Time</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <SoftButton
+              variant="secondary"
+              icon={RefreshCw}
+              onClick={fetchAnalytics}
+              disabled={loading}
+            >
+              Refresh
+            </SoftButton>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
-            Search Engine Analytics
-          </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Real-time insights into customer search queries, conversion rates, and catalog search gaps.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <Select value={timeframe} onValueChange={(val: any) => setTimeframe(val)}>
-            <SelectTrigger className="w-[140px] bg-white border-gray-200">
-              <SelectValue placeholder="Timeframe" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="today">Today</SelectItem>
-              <SelectItem value="7days">Last 7 Days</SelectItem>
-              <SelectItem value="30days">Last 30 Days</SelectItem>
-              <SelectItem value="all">All Time</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={fetchAnalytics}
-            disabled={loading}
-            className="flex items-center gap-2 border-gray-200 hover:bg-gray-50"
-          >
-            <RefreshCw size={14} className={loading ? 'animate-spin text-primary' : ''} />
-            <span>Refresh</span>
-          </Button>
-        </div>
-      </div>
+        }
+      />
 
       {/* 4 Key Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {/* Total Searches Card */}
-        <Card className="border-sky-100 shadow-sm hover:shadow-md transition-shadow bg-gradient-to-br from-white to-sky-50/40">
+        <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)] border-sky-100 shadow-sm hover:shadow-md transition-shadow bg-gradient-to-br from-white to-sky-50/40">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs font-bold uppercase tracking-wider text-sky-800">
               Total Searches
@@ -123,7 +125,7 @@ export const SearchAnalyticsPage: React.FC = () => {
         </Card>
 
         {/* Failed Searches Card */}
-        <Card className="border-rose-100 shadow-sm hover:shadow-md transition-shadow bg-gradient-to-br from-white to-rose-50/40">
+        <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)] border-rose-100 shadow-sm hover:shadow-md transition-shadow bg-gradient-to-br from-white to-rose-50/40">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs font-bold uppercase tracking-wider text-rose-800">
               Zero-Result Searches
@@ -143,7 +145,7 @@ export const SearchAnalyticsPage: React.FC = () => {
         </Card>
 
         {/* Search Conversion Rate Card */}
-        <Card className="border-emerald-100 shadow-sm hover:shadow-md transition-shadow bg-gradient-to-br from-white to-emerald-50/40">
+        <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)] border-emerald-100 shadow-sm hover:shadow-md transition-shadow bg-gradient-to-br from-white to-emerald-50/40">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs font-bold uppercase tracking-wider text-emerald-800">
               Search Conversion Rate
@@ -163,7 +165,7 @@ export const SearchAnalyticsPage: React.FC = () => {
         </Card>
 
         {/* Search Driven Revenue Card */}
-        <Card className="border-amber-100 shadow-sm hover:shadow-md transition-shadow bg-gradient-to-br from-white to-amber-50/40">
+        <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)] border-amber-100 shadow-sm hover:shadow-md transition-shadow bg-gradient-to-br from-white to-amber-50/40">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs font-bold uppercase tracking-wider text-amber-800">
               Search Revenue
@@ -200,7 +202,7 @@ export const SearchAnalyticsPage: React.FC = () => {
 
         {/* Top 20 Searches Tab */}
         <TabsContent value="top-searches">
-          <Card className="border-gray-200/80 shadow-xs">
+          <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)] border-gray-200/80 shadow-xs">
             <CardHeader className="border-b border-gray-100 pb-4">
               <CardTitle className="text-lg font-bold text-gray-900">
                 Most Searched Keywords
@@ -285,7 +287,7 @@ export const SearchAnalyticsPage: React.FC = () => {
 
         {/* Failed Searches Tab */}
         <TabsContent value="failed-searches">
-          <Card className="border-gray-200/80 shadow-xs">
+          <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)] border-gray-200/80 shadow-xs">
             <CardHeader className="border-b border-gray-100 pb-4">
               <CardTitle className="text-lg font-bold text-gray-900 flex items-center gap-2 text-rose-700">
                 <AlertTriangle size={18} />

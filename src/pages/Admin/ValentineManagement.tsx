@@ -1,3 +1,5 @@
+import { PageHeader } from '@/components/dashboard/PageHeader';
+import { SoftButton } from '@/components/dashboard/SoftButton';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Heart, Save, RefreshCw, BarChart3, Power, Settings, Palette, Clock, Calendar, Package, Tag, Gift, Truck, Image, Search as SearchIcon, Plus, Trash2, Edit, Eye, EyeOff, GripVertical, ChevronDown, ChevronUp, UploadCloud } from 'lucide-react';
@@ -135,48 +137,55 @@ const ValentineManagement: React.FC = () => {
   return (
     <div className="p-4 md:p-6 space-y-6 w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto">
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
-            <Heart className="w-7 h-7 text-rose-500" fill="currentColor" />
-            Valentine's Management
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Manage your Valentine's Week seasonal campaign
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          {/* Master Toggle */}
-          <div className={`flex items-center gap-3 px-4 py-2.5 rounded-xl border ${
-            settings.enabled
-              ? 'bg-rose-50 border-rose-200 dark:bg-rose-950/30 dark:border-rose-800'
-              : 'bg-gray-50 border-gray-200 dark:bg-gray-900 dark:border-gray-700'
-          }`}>
-            <Power className={`w-4 h-4 ${settings.enabled ? 'text-rose-500' : 'text-gray-400'}`} />
-            <span className="text-sm font-medium">
-              {settings.enabled ? 'Valentine Mode ON' : 'Valentine Mode OFF'}
-            </span>
-            <Switch
-              checked={settings.enabled}
-              onCheckedChange={handleToggle}
-              className="data-[state=checked]:bg-rose-500"
-            />
+      <PageHeader
+        title="Valentine's Campaign Management"
+        subtitle="Manage seasonal theme accents, countdown timers, 7-day timeline, special banners, and product spotlights."
+        breadcrumbs={[
+          { label: 'Admin', href: '/admin' },
+          { label: 'Marketing', href: '/marketing' },
+          { label: 'Valentine Management' },
+        ]}
+        statusBadge={{
+          label: settings.enabled ? 'Valentine Mode ON' : 'Valentine Mode OFF',
+          variant: settings.enabled ? 'rose' : 'neutral',
+        }}
+        actions={
+          <div className="flex flex-wrap items-center gap-3">
+            <div className={`flex items-center gap-3 px-4 py-2 rounded-xl bg-[#edf1f7] dark:bg-slate-800 shadow-[inset_2px_2px_5px_rgba(163,177,198,0.25),inset_-2px_-2px_5px_rgba(255,255,255,0.7)]`}>
+              <Power className={`w-4 h-4 ${settings.enabled ? 'text-rose-500' : 'text-slate-400'}`} />
+              <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
+                {settings.enabled ? 'Live on Store' : 'Disabled'}
+              </span>
+              <Switch
+                checked={settings.enabled}
+                onCheckedChange={handleToggle}
+                className="data-[state=checked]:bg-rose-500"
+              />
+            </div>
+
+            <SoftButton
+              variant="secondary"
+              icon={BarChart3}
+              onClick={() => navigate('/admin/valentine/analytics')}
+            >
+              Analytics
+            </SoftButton>
+
+            <SoftButton
+              variant="primary"
+              icon={Save}
+              onClick={handleSave}
+              disabled={saving}
+            >
+              {saving ? 'Saving...' : 'Save All'}
+            </SoftButton>
           </div>
-
-          <Button onClick={() => navigate('/admin/valentine/analytics')} variant="outline" size="sm">
-            <BarChart3 className="w-4 h-4 mr-1" /> Analytics
-          </Button>
-
-          <Button onClick={handleSave} disabled={saving} className="bg-rose-500 hover:bg-rose-600">
-            <Save className="w-4 h-4 mr-1" />
-            {saving ? 'Saving...' : 'Save All'}
-          </Button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="flex flex-wrap gap-1 h-auto p-1 bg-muted/50">
+        <TabsList className="flex flex-wrap gap-1.5 h-auto p-2 rounded-2xl bg-[#edf1f7] dark:bg-slate-900 shadow-[inset_2px_2px_5px_rgba(163,177,198,0.25),inset_-2px_-2px_5px_rgba(255,255,255,0.7)] border border-slate-200/50 dark:border-slate-800/50">
           <TabsTrigger value="general" className="text-xs"><Settings className="w-3 h-3 mr-1" />General</TabsTrigger>
           <TabsTrigger value="theme" className="text-xs"><Palette className="w-3 h-3 mr-1" />Theme</TabsTrigger>
           <TabsTrigger value="countdown" className="text-xs"><Clock className="w-3 h-3 mr-1" />Countdown</TabsTrigger>
@@ -192,7 +201,7 @@ const ValentineManagement: React.FC = () => {
 
         {/* ============ GENERAL ============ */}
         <TabsContent value="general" className="space-y-4">
-          <Card>
+          <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]">
             <CardHeader>
               <CardTitle>Campaign Settings</CardTitle>
               <CardDescription>Configure the Valentine's campaign details</CardDescription>
@@ -250,7 +259,7 @@ const ValentineManagement: React.FC = () => {
 
         {/* ============ THEME ============ */}
         <TabsContent value="theme" className="space-y-4">
-          <Card>
+          <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]">
             <CardHeader>
               <CardTitle>Theme Settings</CardTitle>
               <CardDescription>Customize the Valentine's visual experience</CardDescription>
@@ -320,7 +329,7 @@ const ValentineManagement: React.FC = () => {
 
         {/* ============ COUNTDOWN ============ */}
         <TabsContent value="countdown" className="space-y-4">
-          <Card>
+          <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]">
             <CardHeader>
               <CardTitle>Countdown Timer</CardTitle>
               <CardDescription>Set the countdown target date displayed on the Valentine page</CardDescription>
@@ -343,7 +352,7 @@ const ValentineManagement: React.FC = () => {
 
         {/* ============ TIMELINE ============ */}
         <TabsContent value="timeline" className="space-y-4">
-          <Card>
+          <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]">
             <CardHeader>
               <CardTitle>Valentine Week Timeline</CardTitle>
               <CardDescription>Manage the 8 date cards (Feb 8 – Feb 15)</CardDescription>
@@ -427,7 +436,7 @@ const ValentineManagement: React.FC = () => {
 
         {/* ============ PRODUCTS ============ */}
         <TabsContent value="products" className="space-y-4">
-          <Card>
+          <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]">
             <CardHeader>
               <CardTitle>Product Assignment</CardTitle>
               <CardDescription>Assign products to Valentine dates and categories from the Products page. Products with valentine fields will appear here.</CardDescription>
@@ -448,7 +457,7 @@ const ValentineManagement: React.FC = () => {
 
         {/* ============ OFFERS ============ */}
         <TabsContent value="offers" className="space-y-4">
-          <Card>
+          <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]">
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle>Valentine's Offers</CardTitle>
@@ -517,7 +526,7 @@ const ValentineManagement: React.FC = () => {
 
         {/* ============ GIFT BUILDER ============ */}
         <TabsContent value="giftbuilder" className="space-y-4">
-          <Card>
+          <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]">
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle>Gift Builder Items</CardTitle>
@@ -726,7 +735,7 @@ const ValentineManagement: React.FC = () => {
 
         {/* ============ DELIVERY ============ */}
         <TabsContent value="delivery" className="space-y-4">
-          <Card>
+          <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]">
             <CardHeader>
               <CardTitle>Valentine Delivery Settings</CardTitle>
               <CardDescription>Configure premium delivery options for Valentine's</CardDescription>
@@ -778,7 +787,7 @@ const ValentineManagement: React.FC = () => {
 
         {/* ============ BANNERS ============ */}
         <TabsContent value="banners" className="space-y-4">
-          <Card>
+          <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]">
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle>Valentine Banners</CardTitle>
@@ -847,7 +856,7 @@ const ValentineManagement: React.FC = () => {
 
         {/* ============ SEO ============ */}
         <TabsContent value="seo" className="space-y-4">
-          <Card>
+          <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]">
             <CardHeader>
               <CardTitle>SEO Settings</CardTitle>
               <CardDescription>Optimize the Valentine's page for search engines</CardDescription>
@@ -887,7 +896,7 @@ const ValentineManagement: React.FC = () => {
 
         {/* ============ MOBILE NAVIGATION ============ */}
         <TabsContent value="mobilenav" className="space-y-4">
-          <Card>
+          <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]">
             <CardHeader>
               <CardTitle>Mobile Navigation Settings</CardTitle>
               <CardDescription>Configure the premium mobile bottom navigation layout and style</CardDescription>

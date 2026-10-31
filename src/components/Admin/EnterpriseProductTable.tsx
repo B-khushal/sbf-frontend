@@ -389,17 +389,18 @@ export const EnterpriseProductTable: React.FC<EnterpriseProductTableProps> = ({
   return (
     <div className="space-y-4">
       {/* Smart Filters Bar */}
-      <Card className="border-slate-200/80 dark:border-slate-800 shadow-sm">
-        <CardContent className="p-4 flex flex-col md:flex-row gap-3 items-center justify-between">
+      <div className="sbf-card p-4 rounded-2xl border border-white/70 dark:border-slate-800 shadow-[5px_5px_15px_rgba(163,177,198,0.22),-5px_-5px_15px_rgba(255,255,255,0.75)] bg-[#f4f7fb] dark:bg-slate-900/90 transition-all">
+        <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
           <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
             {/* Search Input */}
-            <div className="relative min-w-[240px] flex-1 md:flex-initial">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
-              <Input
+            <div className="relative min-w-[260px] flex-1 md:flex-initial">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+              <input
+                type="text"
                 placeholder="Search products by title, SKU..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 h-9 text-xs"
+                className="w-full pl-9 pr-3 h-9 text-xs rounded-xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-950 text-slate-800 dark:text-slate-100 placeholder-slate-400 shadow-[inset_2px_2px_4px_rgba(163,177,198,0.3),inset_-2px_-2px_4px_rgba(255,255,255,0.8)] focus:outline-none focus:ring-1 focus:ring-rose-500/50 transition-all"
               />
             </div>
 
@@ -459,23 +460,29 @@ export const EnterpriseProductTable: React.FC<EnterpriseProductTableProps> = ({
               <ArrowUpDown className="h-3.5 w-3.5" />
               {isReorderMode ? "Exit Reorder" : "Reorder Products"}
             </Button>
-            <div className="flex items-center border border-slate-200 dark:border-slate-800 rounded-lg p-0.5 bg-slate-50 dark:bg-slate-900">
-              <Button
-                variant={viewMode === "grid" ? "default" : "ghost"}
-                size="sm"
+            <div className="flex items-center p-1 rounded-xl bg-[#edf1f7] dark:bg-slate-950 border border-slate-200/60 dark:border-slate-800 shadow-[inset_2px_2px_4px_rgba(163,177,198,0.25),inset_-2px_-2px_4px_rgba(255,255,255,0.8)]">
+              <button
+                type="button"
                 onClick={() => setViewMode("grid")}
-                className={`h-8 px-2.5 text-xs gap-1 ${viewMode === "grid" ? "bg-emerald-600 text-white hover:bg-emerald-700" : ""}`}
+                className={`h-7 px-3 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all ${
+                  viewMode === "grid"
+                    ? "bg-white dark:bg-slate-800 text-rose-600 dark:text-rose-400 shadow-[2px_2px_6px_rgba(163,177,198,0.25),-2px_-2px_6px_rgba(255,255,255,0.7)]"
+                    : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                }`}
               >
                 <LayoutGrid className="h-3.5 w-3.5" /> Grid
-              </Button>
-              <Button
-                variant={viewMode === "table" ? "default" : "ghost"}
-                size="sm"
+              </button>
+              <button
+                type="button"
                 onClick={() => setViewMode("table")}
-                className={`h-8 px-2.5 text-xs gap-1 ${viewMode === "table" ? "bg-emerald-600 text-white hover:bg-emerald-700" : ""}`}
+                className={`h-7 px-3 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all ${
+                  viewMode === "table"
+                    ? "bg-white dark:bg-slate-800 text-rose-600 dark:text-rose-400 shadow-[2px_2px_6px_rgba(163,177,198,0.25),-2px_-2px_6px_rgba(255,255,255,0.7)]"
+                    : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                }`}
               >
                 <List className="h-3.5 w-3.5" /> Table
-              </Button>
+              </button>
             </div>
             <Button
               variant="outline"
@@ -491,8 +498,8 @@ export const EnterpriseProductTable: React.FC<EnterpriseProductTableProps> = ({
               )}
             </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Floating Bulk Operations Toolbar */}
       {selectedIds.length > 0 && (
@@ -650,8 +657,8 @@ export const EnterpriseProductTable: React.FC<EnterpriseProductTableProps> = ({
                       navigate(`/admin/products/edit/${product._id}`);
                     }
                   }}
-                  className={`group relative cursor-pointer overflow-hidden border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md transition-all flex flex-col justify-between bg-white dark:bg-slate-900 rounded-2xl ${
-                    isSelected ? "ring-2 ring-emerald-500 bg-emerald-50/10" : ""
+                  className={`group relative cursor-pointer overflow-hidden border border-white/80 dark:border-slate-800/80 shadow-[6px_6px_16px_rgba(163,177,198,0.22),-6px_-6px_16px_rgba(255,255,255,0.8)] hover:shadow-[10px_10px_22px_rgba(163,177,198,0.32),-10px_-10px_22px_rgba(255,255,255,0.95)] hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-between bg-[#f4f7fb] dark:bg-slate-900 rounded-2xl ${
+                    isSelected ? "ring-2 ring-rose-500 bg-rose-50/20" : ""
                   }`}
                 >
                   {/* Card Image Header */}
@@ -894,7 +901,7 @@ export const EnterpriseProductTable: React.FC<EnterpriseProductTableProps> = ({
         </div>
       ) : (
         /* Table View */
-        <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
+        <div className="rounded-2xl border border-white/80 dark:border-slate-800 shadow-[6px_6px_18px_rgba(163,177,198,0.22),-6px_-6px_18px_rgba(255,255,255,0.8)] bg-[#f4f7fb] dark:bg-slate-900 overflow-hidden transition-all">
           <Table>
           <TableHeader className="bg-slate-50 dark:bg-slate-800/50">
             <TableRow>

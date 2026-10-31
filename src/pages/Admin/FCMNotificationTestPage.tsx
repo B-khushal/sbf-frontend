@@ -1,3 +1,6 @@
+import { PageHeader } from '@/components/dashboard/PageHeader';
+import { StatCard } from '@/components/dashboard/StatCard';
+import { SoftButton } from '@/components/dashboard/SoftButton';
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   BellRing,
@@ -445,159 +448,110 @@ export const FCMNotificationTestPage: React.FC = () => {
 
   return (
     <div className="space-y-6 pb-12 max-w-[1600px] mx-auto">
-      {/* Top Header Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border border-indigo-800/40 p-6 md:p-8 text-white shadow-2xl">
-        <div className="absolute top-0 right-0 -mt-12 -mr-12 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-1/3 -mb-16 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-2">
-            <div className="flex flex-wrap items-center gap-2.5">
-              <div className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/30">
-                <BellRing className="h-6 w-6 animate-pulse" />
-              </div>
-              <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
-                FCM Push Notifications & Dispatcher
-              </h1>
-              <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/30 px-2.5 py-0.5 text-xs font-semibold">
-                ● Live Dispatcher
-              </Badge>
-            </div>
-            <p className="text-slate-300 text-sm md:text-base max-w-2xl leading-relaxed">
-              Verify all admin recipients, test high-priority audio & vibration alerts for new orders, preview notifications on live mobile frames, and monitor device health.
-            </p>
-          </div>
-
-          {/* Quick Action Buttons */}
-          <div className="flex flex-wrap items-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
+      <PageHeader
+        title="FCM Push Notifications & Dispatcher"
+        subtitle="Verify all admin recipients, test high-priority audio & vibration alerts for new orders, preview notifications on live mobile frames, and monitor device health."
+        breadcrumbs={[
+          { label: 'Admin', href: '/admin' },
+          { label: 'System', href: '/admin' },
+          { label: 'FCM Push Dispatcher' },
+        ]}
+        statusBadge={{
+          label: fcmStatus?.initialized ? 'Live Dispatcher' : 'FCM Offline',
+          variant: fcmStatus?.initialized ? 'success' : 'rose',
+        }}
+        actions={
+          <div className="flex flex-wrap items-center gap-2.5">
+            <SoftButton
+              variant={isPlayingAudio ? 'primary' : 'secondary'}
+              icon={Volume2}
               onClick={handlePlaySound}
-              className={`bg-slate-800/80 border-slate-700 hover:bg-slate-700 text-slate-100 transition-all ${
-                isPlayingAudio ? 'ring-2 ring-emerald-400 bg-emerald-950/60' : ''
-              }`}
             >
-              <Volume2 className={`h-4 w-4 mr-2 ${isPlayingAudio ? 'animate-bounce text-emerald-400' : 'text-slate-400'}`} />
               {isPlayingAudio ? 'Playing Chime...' : 'Test Alarm Chime'}
-            </Button>
+            </SoftButton>
 
-            <Button
-              variant="outline"
-              size="sm"
+            <SoftButton
+              variant="secondary"
+              icon={RefreshCw}
               onClick={() => {
                 fetchDevices();
                 fetchStatus();
                 toast({ title: 'Refreshed', description: 'Device tokens and FCM status reloaded.' });
               }}
               disabled={isLoadingDevices || isLoadingStatus}
-              className="bg-slate-800/80 border-slate-700 hover:bg-slate-700 text-slate-100"
             >
-              <RefreshCw className={`h-4 w-4 mr-2 ${isLoadingDevices ? 'animate-spin' : ''}`} />
               Sync Devices
-            </Button>
+            </SoftButton>
 
-            <Button
-              variant="outline"
-              size="sm"
+            <SoftButton
+              variant="danger"
+              icon={Trash2}
               onClick={handleCleanup}
               disabled={isCleaning}
-              className="bg-slate-800/80 border-slate-700 hover:bg-slate-700 text-slate-100"
             >
-              <Trash2 className="h-4 w-4 mr-2 text-rose-400" />
               {isCleaning ? 'Cleaning...' : 'Prune Stale Tokens'}
-            </Button>
+            </SoftButton>
           </div>
+        }
+      />
+
+      {/* Diagnostic Status Strip */}
+      <div className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)] p-4 grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+        <div className="flex items-center gap-2">
+          <div className={`h-2.5 w-2.5 rounded-full ${fcmStatus?.initialized ? 'bg-emerald-500 animate-ping' : 'bg-rose-500'}`} />
+          <span className="text-slate-500 font-medium">Firebase SDK:</span>
+          <span className="font-bold text-slate-800 dark:text-slate-100">
+            {isLoadingStatus ? 'Checking...' : fcmStatus?.initialized ? 'Operational' : 'Disabled'}
+          </span>
         </div>
 
-        {/* Diagnostic Status Strip */}
-        <div className="mt-6 pt-5 border-t border-slate-800/80 grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
-          <div className="flex items-center gap-2">
-            <div className={`h-2.5 w-2.5 rounded-full ${fcmStatus?.initialized ? 'bg-emerald-400 animate-ping' : 'bg-rose-400'}`} />
-            <span className="text-slate-400">Firebase SDK:</span>
-            <span className="font-semibold text-slate-100">
-              {isLoadingStatus ? 'Checking...' : fcmStatus?.initialized ? 'Operational' : 'Disabled'}
-            </span>
-          </div>
+        <div className="flex items-center gap-2">
+          <Server className="h-3.5 w-3.5 text-indigo-500" />
+          <span className="text-slate-500 font-medium">Project:</span>
+          <span className="font-bold text-slate-800 dark:text-slate-100 truncate max-w-[140px]" title={fcmStatus?.projectId}>
+            {fcmStatus?.projectId || 'Configured'}
+          </span>
+        </div>
 
-          <div className="flex items-center gap-2">
-            <Server className="h-3.5 w-3.5 text-indigo-400" />
-            <span className="text-slate-400">Project:</span>
-            <span className="font-semibold text-slate-100 truncate max-w-[140px]" title={fcmStatus?.projectId}>
-              {fcmStatus?.projectId || 'Configured'}
-            </span>
-          </div>
+        <div className="flex items-center gap-2">
+          <Radio className="h-3.5 w-3.5 text-emerald-500" />
+          <span className="text-slate-500 font-medium">Sound Channel:</span>
+          <span className="font-bold text-emerald-600 dark:text-emerald-400 font-mono">orders_channel</span>
+        </div>
 
-          <div className="flex items-center gap-2">
-            <Radio className="h-3.5 w-3.5 text-emerald-400" />
-            <span className="text-slate-400">Sound Channel:</span>
-            <span className="font-semibold text-emerald-300 font-mono">orders_channel</span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Zap className="h-3.5 w-3.5 text-amber-400" />
-            <span className="text-slate-400">Priority:</span>
-            <span className="font-semibold text-amber-300">High (3-Ring Alarm)</span>
-          </div>
+        <div className="flex items-center gap-2">
+          <Zap className="h-3.5 w-3.5 text-amber-500" />
+          <span className="text-slate-500 font-medium">Priority:</span>
+          <span className="font-bold text-amber-600 dark:text-amber-400">High (3-Ring Alarm)</span>
         </div>
       </div>
 
       {/* Metrics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border border-slate-200 dark:border-slate-800 bg-card shadow-sm hover:shadow-md transition-shadow">
-          <CardContent className="p-5 flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Active Admin Devices</p>
-              <h3 className="text-2xl font-bold mt-1 text-foreground">{stats.active}</h3>
-              <p className="text-xs text-muted-foreground mt-1">Across {stats.distinctUsers} admin accounts</p>
-            </div>
-            <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-xl">
-              <Smartphone className="h-6 w-6" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border border-slate-200 dark:border-slate-800 bg-card shadow-sm hover:shadow-md transition-shadow">
-          <CardContent className="p-5 flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Android Devices</p>
-              <h3 className="text-2xl font-bold mt-1 text-foreground">{stats.android}</h3>
-              <p className="text-xs text-muted-foreground mt-1">SBF Florist Admin App</p>
-            </div>
-            <div className="p-3 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 rounded-xl">
-              <Smartphone className="h-6 w-6" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border border-slate-200 dark:border-slate-800 bg-card shadow-sm hover:shadow-md transition-shadow">
-          <CardContent className="p-5 flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">iOS & Web Devices</p>
-              <h3 className="text-2xl font-bold mt-1 text-foreground">{stats.ios + stats.web}</h3>
-              <p className="text-xs text-muted-foreground mt-1">{stats.ios} iOS • {stats.web} Web browsers</p>
-            </div>
-            <div className="p-3 bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 rounded-xl">
-              <Laptop className="h-6 w-6" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border border-slate-200 dark:border-slate-800 bg-card shadow-sm hover:shadow-md transition-shadow">
-          <CardContent className="p-5 flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Service Health</p>
-              <div className="flex items-center gap-2 mt-1">
-                <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                <h3 className="text-lg font-bold text-foreground">Ready to Dispatch</h3>
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">FCM credentials valid</p>
-            </div>
-            <div className="p-3 bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 rounded-xl">
-              <Zap className="h-6 w-6" />
-            </div>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Active Devices"
+          value={stats.active}
+          icon={Smartphone}
+          colorPalette="emerald"
+        />
+        <StatCard
+          title="Android Devices"
+          value={stats.android}
+          icon={Smartphone}
+          colorPalette="rose"
+        />
+        <StatCard
+          title="iOS & Web"
+          value={stats.ios + stats.web}
+          icon={Laptop}
+          colorPalette="purple"
+        />
+        <StatCard
+          title="Dispatcher Status"
+          value={fcmStatus?.initialized ? "Operational" : "Offline"}
+          icon={Zap}
+          colorPalette="amber"
+        />
       </div>
 
       {/* Main Two-Column Layout: Left = Dispatcher & Preview, Right = Admin Recipients Directory */}
