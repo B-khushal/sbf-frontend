@@ -2,12 +2,21 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
+export interface StatCardTrendObject {
+  value: string | number;
+  isPositive?: boolean;
+  label?: string;
+}
+
 export interface StatCardProps {
   title: string;
   value: React.ReactNode;
-  icon?: React.ReactNode;
-  trend?: number; // e.g. 12.5 for +12.5%
-  trendLabel?: string; // e.g. "vs yesterday" or "vs last month"
+  icon?: React.ReactNode | React.ElementType;
+  iconColor?: string;
+  iconBg?: string;
+  trend?: number | StatCardTrendObject;
+  trendLabel?: string;
+  comparison?: string;
   subtitle?: string;
   badge?: React.ReactNode;
   variant?: 'rose' | 'emerald' | 'amber' | 'blue' | 'indigo' | 'neutral';
@@ -19,8 +28,11 @@ export const StatCard: React.FC<StatCardProps> = ({
   title,
   value,
   icon,
+  iconColor,
+  iconBg,
   trend,
   trendLabel = 'vs last period',
+  comparison,
   subtitle,
   badge,
   variant = 'rose',
@@ -36,15 +48,49 @@ export const StatCard: React.FC<StatCardProps> = ({
     neutral: 'text-slate-600 dark:text-slate-400 bg-slate-100/80 dark:bg-slate-800/60 border-slate-200/60 dark:border-slate-700/40',
   }[variant];
 
-  const hasTrend = trend !== undefined && trend !== null;
-  const isPositive = (trend ?? 0) > 0;
-  const isZero = (trend ?? 0) === 0;
+  const renderIcon = (iconInput: any) => {
+    if (!iconInput) return null;
+    if (React.isValidElement(iconInput)) {
+      return iconInput;
+    }
+    if (
+      typeof iconInput === 'function' ||
+      (typeof iconInput === 'object' && iconInput !== null && ('render' in iconInput || '$$typeof' in iconInput))
+    ) {
+      const IconComponent = iconInput;
+      return <IconComponent className="w-5 h-5" />;
+    }
+    return null;
+  };
+
+  let trendValue: string | null = null;
+  let isPositive = false;
+  let isNegative = false;
+  let isZero = false;
+  let customTrendLabel = trendLabel;
+
+  if (typeof trend === 'number') {
+    trendValue = `${trend > 0 ? '+' : ''}${trend.toFixed(1)}%`;
+    isPositive = trend > 0;
+    isNegative = trend < 0;
+    isZero = trend === 0;
+  } else if (typeof trend === 'object' && trend !== null) {
+    trendValue = String(trend.value);
+    isPositive = trend.isPositive === true;
+    isNegative = trend.isPositive === false;
+    isZero = !isPositive && !isNegative;
+    if (trend.label) customTrendLabel = trend.label;
+  }
+
+  const containerColorClass = iconBg && iconColor
+    ? cn(iconBg, iconColor, 'border border-slate-200/50')
+    : iconColors;
 
   return (
     <div
       onClick={onClick}
       className={cn(
-        'sbf-neumo-raised sbf-neumo-raised-hover p-4 sm:p-5 flex flex-col justify-between select-none',
+        'sbf-neumo-raised sbf-neumo-raised-hover p-4 sm:p-5 flex flex-col justify-between select-none rounded-3xl',
         onClick && 'cursor-pointer',
         className
       )}
@@ -56,10 +102,10 @@ export const StatCard: React.FC<StatCardProps> = ({
             <div
               className={cn(
                 'sbf-neumo-raised-sm w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 border transition-transform duration-300 group-hover:scale-105',
-                iconColors
+                containerColorClass
               )}
             >
-              {icon}
+              {renderIcon(icon)}
             </div>
           )}
           <div>
@@ -83,7 +129,7 @@ export const StatCard: React.FC<StatCardProps> = ({
         </div>
 
         {/* Trend Pill */}
-        {hasTrend && (
+        {trendValue && (
           <div
             className={cn(
               'sbf-neumo-inset-sm flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold shrink-0',
@@ -101,18 +147,15 @@ export const StatCard: React.FC<StatCardProps> = ({
             ) : (
               <TrendingDown className="w-3 h-3 stroke-[2.5]" />
             )}
-            <span>
-              {isPositive ? '+' : ''}
-              {Math.abs(trend ?? 0).toFixed(1)}%
-            </span>
+            <span>{trendValue}</span>
           </div>
         )}
       </div>
 
-      {/* Optional Footnote / Sub-context */}
-      {hasTrend && trendLabel && (
-        <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-2 font-medium">
-          {trendLabel}
+      {/* Optional Footnote / Comparison context */}
+      {(comparison || customTrendLabel) && (
+        <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-2 font-medium truncate">
+          {comparison || customTrendLabel}
         </p>
       )}
     </div>
