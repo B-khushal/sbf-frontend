@@ -710,12 +710,12 @@ export const AdminOrders: React.FC = () => {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 pb-20 text-slate-900 dark:text-slate-100">
+      <div className="min-h-screen bg-[var(--sbf-canvas)] pb-20 text-slate-900 dark:text-slate-100">
         
         {/* ========================================================
             1. PAGE HEADER (Clean, Compact, Operations-Focused)
            ======================================================== */}
-        <header className="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 shadow-xs">
+        <header className="sticky top-0 z-30 bg-[var(--sbf-canvas)]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 shadow-sm">
           <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-10 py-3.5 2xl:py-4.5">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
               
@@ -745,7 +745,7 @@ export const AdminOrders: React.FC = () => {
                     value={searchInput}
                     onChange={(e) => setSearchInput(e.target.value)}
                     placeholder="Search by ID, customer, product..."
-                    className="pl-9 pr-8 h-9 text-xs rounded-xl bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 focus-visible:ring-emerald-500"
+                    className="pl-9 pr-8 h-9 text-xs rounded-xl sbf-neumo-inset-sm bg-[var(--sbf-card)] border-none text-slate-800 dark:text-slate-100 focus-visible:ring-emerald-500"
                   />
                   {searchInput && (
                     <button
@@ -907,7 +907,7 @@ export const AdminOrders: React.FC = () => {
           {/* ========================================================
               2. DATE / ORDER PERIOD NAVIGATION (Segmented Bar)
              ======================================================== */}
-          <div className="bg-white dark:bg-slate-900 p-1.5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
+          <div className="p-1.5 rounded-2xl sbf-neumo-inset-sm bg-[var(--sbf-card)] border border-slate-200/60 dark:border-slate-800">
             <nav className="flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth" aria-label="Order Period Tabs">
               
               {/* Tab 1: Today's Orders */}

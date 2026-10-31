@@ -26,7 +26,6 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Build arguments for Vite environment variables
-# These are baked into the static files at build time
 ARG VITE_API_URL=https://api.sbflorist.in/api
 ARG VITE_UPLOADS_URL=https://api.sbflorist.in
 ARG VITE_APP_MODE=production
@@ -49,7 +48,6 @@ RUN npm run build
 # ── Stage 3: Serve with Nginx ────────────────
 FROM nginx:1.27-alpine AS production
 
-# Add labels for image metadata
 LABEL maintainer="B-khushal"
 LABEL description="SBF Florist Frontend"
 LABEL version="1.0.0"
@@ -63,13 +61,15 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 # Copy built static files from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Ensure proper permissions
-RUN chown -R nginx:nginx /usr/share/nginx/html
+# Ensure proper permissions across nginx runtime directories
+RUN chmod -R 755 /usr/share/nginx/html && \
+    mkdir -p /var/cache/nginx /var/log/nginx /var/run && \
+    chmod -R 777 /var/cache/nginx /var/log/nginx /var/run
 
 # Expose ports 80 and 3000 (Dokploy reverse proxy supports both)
 EXPOSE 80 3000
 
-# Healthcheck — ensure nginx is serving content (uses built-in busybox wget)
+# Healthcheck — ensure nginx is serving content
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
   CMD wget -q -O - http://127.0.0.1/health > /dev/null || exit 1
 

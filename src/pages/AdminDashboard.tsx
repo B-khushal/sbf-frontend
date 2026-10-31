@@ -1,29 +1,65 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link, Outlet, useLocation } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { BarChart, Users, ShoppingBag, Package, Settings, LogOut, Menu, TrendingUp, ChevronLeft, ChevronRight, Tag, Gift, Store, Calendar, CheckCircle, ClipboardList, Activity, MessageSquareText, Heart, Flower2, Sprout, Cake, Cookie, Boxes, FolderTree, Layers, Warehouse, LayoutDashboard, ArrowUpDown, Search } from 'lucide-react';
+import { 
+  BarChart, 
+  Users, 
+  ShoppingBag, 
+  Package, 
+  Settings, 
+  LogOut, 
+  Menu, 
+  TrendingUp, 
+  ChevronLeft, 
+  ChevronRight, 
+  Tag, 
+  Gift, 
+  Store, 
+  Calendar, 
+  Activity, 
+  Heart, 
+  Flower2, 
+  Sprout, 
+  Cake, 
+  Boxes, 
+  FolderTree, 
+  Layers, 
+  LayoutDashboard, 
+  Search,
+  Truck, 
+  Map, 
+  DollarSign, 
+  Sliders, 
+  UserCheck, 
+  ChevronDown, 
+  ChevronUp, 
+  Shield, 
+  Clock, 
+  Megaphone, 
+  Percent, 
+  BellRing, 
+  HelpCircle,
+  Sparkles,
+  ClipboardList
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
 import AdminNavbar from '@/components/AdminNavbar';
-import { Truck, Map, DollarSign, Sliders, UserCheck, ChevronDown, ChevronUp, Scroll, Shield, Clock, Megaphone, Percent, BellRing, HelpCircle } from 'lucide-react';
 
-const AdminDashboard: React.FC = () => {
+export const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
   const { logout, user, isLoading } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
-    // Load sidebar state from localStorage
     const saved = localStorage.getItem('adminSidebarCollapsed');
     return saved ? JSON.parse(saved) : false;
   });
   const [isKitchenModeActive, setIsKitchenModeActive] = useState(false);
 
-  // Check if any sub-route of delivery is active to auto-expand the dropdown
+  // Sub-route active tracking
   const isDeliveryActive = location.pathname.startsWith('/admin/delivery-') || 
                            location.pathname === '/admin/partner-earnings' ||
                            location.pathname === '/admin/active-deliveries' ||
@@ -61,37 +97,26 @@ const AdminDashboard: React.FC = () => {
   const [isOrdersOpen, setIsOrdersOpen] = useState(isOrdersActive);
 
   useEffect(() => {
-    if (isOrdersActive) {
-      setIsOrdersOpen(true);
-    }
+    if (isOrdersActive) setIsOrdersOpen(true);
   }, [location.pathname, isOrdersActive]);
 
-  // Keep dropdown open if the route matches
   useEffect(() => {
-    if (isProductsActive) {
-      setIsProductsOpen(true);
-    }
+    if (isProductsActive) setIsProductsOpen(true);
   }, [location.pathname, isProductsActive]);
 
   useEffect(() => {
-    if (isDeliveryActive) {
-      setIsDeliveryOpen(true);
-    }
+    if (isDeliveryActive) setIsDeliveryOpen(true);
   }, [location.pathname, isDeliveryActive]);
 
   useEffect(() => {
-    if (isStaffActive) {
-      setIsStaffOpen(true);
-    }
+    if (isStaffActive) setIsStaffOpen(true);
   }, [location.pathname, isStaffActive]);
 
   useEffect(() => {
-    if (isMarketingActive) {
-      setIsMarketingOpen(true);
-    }
+    if (isMarketingActive) setIsMarketingOpen(true);
   }, [location.pathname, isMarketingActive]);
   
-  // Check if user is admin, if not redirect
+  // Auth check
   useEffect(() => {
     if (!isLoading && (!user || !allowedAdminRoles.includes(user.role))) {
       toast({
@@ -103,12 +128,11 @@ const AdminDashboard: React.FC = () => {
     }
   }, [user, isLoading, navigate, toast]);
 
-  // Save sidebar state to localStorage
   useEffect(() => {
     localStorage.setItem('adminSidebarCollapsed', JSON.stringify(isSidebarCollapsed));
   }, [isSidebarCollapsed]);
 
-  // Add keyboard shortcut for sidebar toggle (Ctrl/Cmd + B)
+  // Keyboard shortcut Ctrl/Cmd + B
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key === 'b') {
@@ -154,19 +178,19 @@ const AdminDashboard: React.FC = () => {
     };
   }, []);
   
-  // Show loading state while checking auth
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Verifying admin access...</p>
+      <div className="sbf-dashboard-shell min-h-screen flex items-center justify-center">
+        <div className="sbf-neumo-raised p-8 rounded-3xl text-center space-y-4 max-w-xs">
+          <div className="w-12 h-12 border-4 border-rose-500 border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+            Verifying Admin Access...
+          </p>
         </div>
       </div>
     );
   }
   
-  // If no user or not admin after loading completes, don't render dashboard
   if (!user || !allowedAdminRoles.includes(user.role)) {
     return null;
   }
@@ -184,51 +208,101 @@ const AdminDashboard: React.FC = () => {
     });
     navigate('/login');
   };
-  
-  const SidebarContent = ({ isCollapsed = false }) => (
-    <>
-      <div className={`flex items-center mb-8 ${isCollapsed ? 'justify-center' : ''}`}>
-        <Link to="/" className="flex items-center">
-          <img
-            src={isCollapsed ? "https://res.cloudinary.com/djtrhfqan/image/upload/v1791793251/logo_f_without_bg_mdrtys.png" : "https://res.cloudinary.com/djtrhfqan/image/upload/v1791793252/logo_final_tp7ymk.png"}
-            alt="Spring Blossoms Florist Logo"
-            className={`transition-all duration-300 ease-in-out hover:scale-105 object-contain ${
-              isCollapsed ? 'h-10 w-10' : 'h-14 w-auto max-w-full drop-shadow-sm'
-            }`}
-          />
-        </Link>
+
+  const NavItem = ({
+    to,
+    icon: Icon,
+    label,
+    active,
+    collapsed = false,
+    badge,
+  }: {
+    to: string;
+    icon: React.ElementType;
+    label: string;
+    active: boolean;
+    collapsed?: boolean;
+    badge?: React.ReactNode;
+  }) => (
+    <Link
+      to={to}
+      title={collapsed ? label : undefined}
+      className={cn(
+        'group flex items-center gap-3 px-3.5 py-2.5 rounded-2xl transition-all duration-200 select-none text-xs font-semibold',
+        active
+          ? 'sbf-nav-active'
+          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-800/40',
+        collapsed && 'justify-center px-2 py-3'
+      )}
+    >
+      <div className={cn(
+        "w-5 h-5 flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-110",
+        active ? "text-rose-600 dark:text-rose-400" : "text-slate-500 dark:text-slate-400"
+      )}>
+        <Icon className="w-4 h-4 stroke-[2.2]" />
       </div>
-      
-      {!isCollapsed && (
-        <div className="mb-6">
-          {user && (
-            <div className="px-2 py-3">
-              <p className="text-sm font-medium">Logged in as:</p>
-              <p className="text-base font-bold">{user.name}</p>
-              <p className="text-xs text-muted-foreground">{user.email}</p>
+      {!collapsed && <span className="truncate">{label}</span>}
+      {!collapsed && badge && <span className="ml-auto shrink-0">{badge}</span>}
+    </Link>
+  );
+
+  const SidebarContent = ({ isCollapsed = false }) => (
+    <div className="flex flex-col h-full">
+      {/* 1. SBF Brand Identity Card (Inspired by reference logo placement) */}
+      <div className={cn("pt-4 pb-5 px-3 flex items-center", isCollapsed ? "justify-center" : "justify-between")}>
+        <Link to="/" className="flex items-center gap-3 group">
+          <div className="sbf-neumo-raised-sm w-12 h-12 rounded-2xl p-1.5 flex items-center justify-center bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50 shrink-0 group-hover:scale-105 transition-transform">
+            <img
+              src="https://res.cloudinary.com/djtrhfqan/image/upload/v1791793251/logo_f_without_bg_mdrtys.png"
+              alt="Spring Blossoms Florist"
+              className="w-full h-full object-contain"
+            />
+          </div>
+          {!isCollapsed && (
+            <div className="text-left">
+              <span className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white block font-sans">
+                Spring Blossoms
+              </span>
+              <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400 tracking-widest block">
+                FLORIST HQ
+              </span>
             </div>
           )}
+        </Link>
+      </div>
+
+      {/* 2. Elevated User Capsule (Inspired by Sweetie Mehtaa's profile in reference image) */}
+      {!isCollapsed && user && (
+        <div className="mx-2 mb-5 p-3 rounded-2xl sbf-neumo-inset-sm flex items-center gap-3 bg-[var(--sbf-canvas)] border border-slate-200/40 dark:border-slate-800/40">
+          <div className="sbf-neumo-raised-sm w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-tr from-rose-500 to-amber-500 text-white font-extrabold text-sm shrink-0 border border-white/60">
+            {user.name ? user.name.charAt(0).toUpperCase() : 'A'}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-black text-slate-900 dark:text-white truncate">
+              {user.name}
+            </p>
+            <p className="text-[10px] font-semibold text-rose-600 dark:text-rose-400 capitalize truncate">
+              {user.role ? user.role.replace(/_/g, ' ') : 'Administrator'}
+            </p>
+          </div>
         </div>
       )}
-      
-      <nav className="flex-1 space-y-1">
-        <Link 
-          to="/admin" 
-          className={cn(
-            "sidebar-item",
-            location.pathname === "/admin" ? "bg-primary text-white font-medium" : "",
-            isCollapsed ? "sidebar-item-collapsed" : "sidebar-item-expanded"
-          )}
-          title={isCollapsed ? 'Dashboard' : ''}
-        >
-          <div className="sidebar-item-icon">
-            <BarChart className="h-4 w-4" />
-          </div>
-          {!isCollapsed && <span className="sidebar-item-text">Dashboard</span>}
-        </Link>
-        {/* Orders Collapsible Dropdown */}
+
+      {/* 3. Navigation Links List */}
+      <nav className="flex-1 space-y-1.5 overflow-y-auto pr-1 pb-4 scrollbar-thin">
+        {/* Dashboard Home */}
+        <NavItem
+          to="/admin"
+          icon={LayoutDashboard}
+          label="Dashboard"
+          active={location.pathname === "/admin"}
+          collapsed={isCollapsed}
+        />
+
+        {/* Orders Collapsible Group */}
         <div className="space-y-1">
           <button
+            type="button"
             onClick={() => {
               if (isCollapsed) {
                 setIsSidebarCollapsed(false);
@@ -238,54 +312,65 @@ const AdminDashboard: React.FC = () => {
               }
             }}
             className={cn(
-              "w-full sidebar-item flex items-center justify-between transition-colors",
-              isOrdersActive ? "bg-accent/40 text-accent-foreground font-medium" : "",
-              isCollapsed ? "sidebar-item-collapsed justify-center" : "sidebar-item-expanded"
+              "w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl transition-all duration-200 text-xs font-semibold select-none",
+              isOrdersActive
+                ? "text-rose-600 dark:text-rose-400 font-bold bg-rose-50/60 dark:bg-rose-950/20"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-800/40",
+              isCollapsed && "justify-center px-2 py-3"
             )}
-            title={isCollapsed ? 'Orders' : ''}
+            title={isCollapsed ? "Orders" : undefined}
           >
-            <div className="flex items-center">
-              <div className="sidebar-item-icon">
-                <ShoppingBag className="h-4 w-4" />
-              </div>
-              {!isCollapsed && <span className="sidebar-item-text ml-3">Orders</span>}
+            <div className="flex items-center gap-3">
+              <ShoppingBag className="w-4 h-4 stroke-[2.2]" />
+              {!isCollapsed && <span>Orders</span>}
             </div>
             {!isCollapsed && (
-              isOrdersOpen ? 
-                <ChevronUp className="h-4 w-4 transition-transform" /> : 
-                <ChevronDown className="h-4 w-4 transition-transform" />
+              isOrdersOpen ? (
+                <ChevronUp className="w-3.5 h-3.5 opacity-60" />
+              ) : (
+                <ChevronDown className="w-3.5 h-3.5 opacity-60" />
+              )
             )}
           </button>
 
           {isOrdersOpen && !isCollapsed && (
-            <div className="pl-4 space-y-1 mt-1 border-l-2 border-primary/20 ml-5 text-xs">
+            <div className="pl-4 pr-1 space-y-1 mt-1 border-l-2 border-rose-400/40 ml-4.5 text-xs">
               <Link
                 to="/admin/orders"
                 className={cn(
-                  "sidebar-item flex items-center py-2 px-3 rounded-md transition-colors",
-                  location.pathname === "/admin/orders" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  "flex items-center gap-2 py-2 px-3 rounded-xl transition-all font-semibold",
+                  location.pathname === "/admin/orders"
+                    ? "sbf-nav-active"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/40"
                 )}
               >
-                <ShoppingBag className="h-4 w-4 mr-2" />
-                <span className="sidebar-item-text">All Orders</span>
+                <span>All Orders</span>
               </Link>
               <Link
                 to="/admin/orders/today"
                 className={cn(
-                  "sidebar-item flex items-center py-2 px-3 rounded-md transition-colors",
-                  location.pathname === "/admin/orders/today" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  "flex items-center justify-between py-2 px-3 rounded-xl transition-all font-semibold",
+                  location.pathname === "/admin/orders/today"
+                    ? "sbf-nav-active"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/40"
                 )}
               >
-                <Clock className="h-4 w-4 mr-2 text-amber-500" />
-                <span className="sidebar-item-text">Today's Orders</span>
-                <span className="ml-auto text-[10px] bg-amber-100 text-amber-800 font-bold px-1.5 py-0.5 rounded">LIVE</span>
+                <div className="flex items-center gap-2">
+                  <Clock className="w-3.5 h-3.5 text-amber-500" />
+                  <span>Today's Orders</span>
+                </div>
+                <span className="text-[9px] font-black uppercase tracking-wider bg-amber-500 text-white px-1.5 py-0.2 rounded-md shadow-2xs">
+                  LIVE
+                </span>
               </Link>
             </div>
           )}
         </div>
-        {/* Products Collapsible Dropdown */}
+
+        {/* Products & Catalog Collapsible Group */}
         <div className="space-y-1">
           <button
+            type="button"
             onClick={() => {
               if (isCollapsed) {
                 setIsSidebarCollapsed(false);
@@ -295,217 +380,175 @@ const AdminDashboard: React.FC = () => {
               }
             }}
             className={cn(
-              "w-full sidebar-item flex items-center justify-between transition-colors",
-              isProductsActive ? "bg-accent/40 text-accent-foreground font-medium" : "",
-              isCollapsed ? "sidebar-item-collapsed justify-center" : "sidebar-item-expanded"
+              "w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl transition-all duration-200 text-xs font-semibold select-none",
+              isProductsActive
+                ? "text-rose-600 dark:text-rose-400 font-bold bg-rose-50/60 dark:bg-rose-950/20"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-800/40",
+              isCollapsed && "justify-center px-2 py-3"
             )}
-            title={isCollapsed ? 'Products' : ''}
+            title={isCollapsed ? "Catalog Products" : undefined}
           >
-            <div className="flex items-center">
-              <div className="sidebar-item-icon">
-                <Package className="h-4 w-4" />
-              </div>
-              {!isCollapsed && <span className="sidebar-item-text ml-3">Products</span>}
+            <div className="flex items-center gap-3">
+              <Boxes className="w-4 h-4 stroke-[2.2]" />
+              {!isCollapsed && <span>Products Catalog</span>}
             </div>
             {!isCollapsed && (
-              isProductsOpen ? 
-                <ChevronUp className="h-4 w-4 transition-transform" /> : 
-                <ChevronDown className="h-4 w-4 transition-transform" />
+              isProductsOpen ? (
+                <ChevronUp className="w-3.5 h-3.5 opacity-60" />
+              ) : (
+                <ChevronDown className="w-3.5 h-3.5 opacity-60" />
+              )
             )}
           </button>
 
           {isProductsOpen && !isCollapsed && (
-            <div className="pl-4 space-y-1 mt-1 border-l-2 border-primary/20 ml-5 text-xs">
+            <div className="pl-4 pr-1 space-y-1 mt-1 border-l-2 border-rose-400/40 ml-4.5 text-xs">
               <Link
-                to="/admin/products"
+                to="/admin/products/overview"
                 className={cn(
-                  "sidebar-item flex items-center py-2 px-3 rounded-md transition-colors",
-                  location.pathname === "/admin/products" || location.pathname === "/admin/products/overview" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  "flex items-center gap-2 py-2 px-3 rounded-xl transition-all font-semibold",
+                  location.pathname === "/admin/products" || location.pathname === "/admin/products/overview"
+                    ? "sbf-nav-active"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/40"
                 )}
               >
-                <LayoutDashboard className="h-4 w-4 mr-2" />
-                <span className="sidebar-item-text">Overview</span>
+                <span>Overview</span>
               </Link>
               <Link
                 to="/admin/products/all"
                 className={cn(
-                  "sidebar-item flex items-center py-2 px-3 rounded-md transition-colors",
-                  location.pathname === "/admin/products/all" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  "flex items-center gap-2 py-2 px-3 rounded-xl transition-all font-semibold",
+                  location.pathname === "/admin/products/all"
+                    ? "sbf-nav-active"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/40"
                 )}
               >
-                <Boxes className="h-4 w-4 mr-2" />
-                <span className="sidebar-item-text">All Products</span>
+                <span>All Products</span>
               </Link>
               <Link
                 to="/admin/products/bouquets"
                 className={cn(
-                  "sidebar-item flex items-center py-2 px-3 rounded-md transition-colors",
-                  location.pathname === "/admin/products/bouquets" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  "flex items-center gap-2 py-2 px-3 rounded-xl transition-all font-semibold",
+                  location.pathname === "/admin/products/bouquets"
+                    ? "sbf-nav-active"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/40"
                 )}
               >
-                <Flower2 className="h-4 w-4 mr-2" />
-                <span className="sidebar-item-text">Bouquets</span>
-              </Link>
-              <Link
-                to="/admin/products/plants"
-                className={cn(
-                  "sidebar-item flex items-center py-2 px-3 rounded-md transition-colors",
-                  location.pathname === "/admin/products/plants" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                )}
-              >
-                <Sprout className="h-4 w-4 mr-2" />
-                <span className="sidebar-item-text">Plants</span>
+                <Flower2 className="w-3.5 h-3.5 text-pink-500" />
+                <span>Bouquets</span>
               </Link>
               <Link
                 to="/admin/products/cakes"
                 className={cn(
-                  "sidebar-item flex items-center py-2 px-3 rounded-md transition-colors",
-                  location.pathname === "/admin/products/cakes" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  "flex items-center gap-2 py-2 px-3 rounded-xl transition-all font-semibold",
+                  location.pathname === "/admin/products/cakes"
+                    ? "sbf-nav-active"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/40"
                 )}
               >
-                <Cake className="h-4 w-4 mr-2" />
-                <span className="sidebar-item-text">Cakes</span>
+                <Cake className="w-3.5 h-3.5 text-amber-500" />
+                <span>Cakes</span>
               </Link>
               <Link
-                to="/admin/products/chocolates"
+                to="/admin/products/plants"
                 className={cn(
-                  "sidebar-item flex items-center py-2 px-3 rounded-md transition-colors",
-                  location.pathname === "/admin/products/chocolates" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  "flex items-center gap-2 py-2 px-3 rounded-xl transition-all font-semibold",
+                  location.pathname === "/admin/products/plants"
+                    ? "sbf-nav-active"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/40"
                 )}
               >
-                <Cookie className="h-4 w-4 mr-2" />
-                <span className="sidebar-item-text">Chocolates</span>
-              </Link>
-              <Link
-                to="/admin/products/hampers"
-                className={cn(
-                  "sidebar-item flex items-center py-2 px-3 rounded-md transition-colors",
-                  location.pathname === "/admin/products/hampers" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                )}
-              >
-                <Gift className="h-4 w-4 mr-2" />
-                <span className="sidebar-item-text">Hampers</span>
+                <Sprout className="w-3.5 h-3.5 text-emerald-500" />
+                <span>Plants</span>
               </Link>
               <Link
                 to="/admin/products/combos"
                 className={cn(
-                  "sidebar-item flex items-center py-2 px-3 rounded-md transition-colors",
-                  location.pathname === "/admin/products/combos" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  "flex items-center gap-2 py-2 px-3 rounded-xl transition-all font-semibold",
+                  location.pathname === "/admin/products/combos"
+                    ? "sbf-nav-active"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/40"
                 )}
               >
-                <Boxes className="h-4 w-4 mr-2" />
-                <span className="sidebar-item-text">Combo Products</span>
+                <Gift className="w-3.5 h-3.5 text-rose-500" />
+                <span>Combos</span>
               </Link>
               <Link
                 to="/admin/products/addons"
                 className={cn(
-                  "sidebar-item flex items-center py-2 px-3 rounded-md transition-colors",
-                  location.pathname === "/admin/products/addons" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  "flex items-center gap-2 py-2 px-3 rounded-xl transition-all font-semibold",
+                  location.pathname === "/admin/products/addons"
+                    ? "sbf-nav-active"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/40"
                 )}
               >
-                <Tag className="h-4 w-4 mr-2" />
-                <span className="sidebar-item-text">Add-ons</span>
-              </Link>
-              <Link
-                to="/admin/products/categories"
-                className={cn(
-                  "sidebar-item flex items-center py-2 px-3 rounded-md transition-colors",
-                  location.pathname === "/admin/products/categories" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                )}
-              >
-                <FolderTree className="h-4 w-4 mr-2" />
-                <span className="sidebar-item-text">Categories</span>
-              </Link>
-              <Link
-                to="/admin/products/collections"
-                className={cn(
-                  "sidebar-item flex items-center py-2 px-3 rounded-md transition-colors",
-                  location.pathname === "/admin/products/collections" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                )}
-              >
-                <Layers className="h-4 w-4 mr-2" />
-                <span className="sidebar-item-text">Collections</span>
+                <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+                <span>Add-ons</span>
               </Link>
               <Link
                 to="/admin/products/inventory"
                 className={cn(
-                  "sidebar-item flex items-center py-2 px-3 rounded-md transition-colors",
-                  location.pathname === "/admin/products/inventory" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  "flex items-center gap-2 py-2 px-3 rounded-xl transition-all font-semibold",
+                  location.pathname === "/admin/products/inventory"
+                    ? "sbf-nav-active"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/40"
                 )}
               >
-                <Warehouse className="h-4 w-4 mr-2" />
-                <span className="sidebar-item-text">Inventory</span>
-              </Link>
-              <Link
-                to="/admin/products/order-arrangement"
-                className={cn(
-                  "sidebar-item flex items-center py-2 px-3 rounded-md transition-colors",
-                  location.pathname === "/admin/products/order-arrangement" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                )}
-              >
-                <ArrowUpDown className="h-4 w-4 mr-2" />
-                <span className="sidebar-item-text">Order Arrangement</span>
-              </Link>
-              <Link
-                to="/admin/products/search-analytics"
-                className={cn(
-                  "sidebar-item flex items-center py-2 px-3 rounded-md transition-colors",
-                  location.pathname === "/admin/products/search-analytics" || location.pathname === "/admin/search-analytics" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                )}
-              >
-                <Search className="h-4 w-4 mr-2" />
-                <span className="sidebar-item-text">Search Analytics</span>
-              </Link>
-              <Link
-                to="/admin/product-approval"
-                className={cn(
-                  "sidebar-item flex items-center py-2 px-3 rounded-md transition-colors",
-                  location.pathname === "/admin/product-approval" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                )}
-              >
-                <CheckCircle className="h-4 w-4 mr-2" />
-                <span className="sidebar-item-text">Product Approvals</span>
-              </Link>
-              <Link
-                to="/admin/products/reviews"
-                className={cn(
-                  "sidebar-item flex items-center py-2 px-3 rounded-md transition-colors",
-                  location.pathname === "/admin/products/reviews" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                )}
-              >
-                <MessageSquareText className="h-4 w-4 mr-2" />
-                <span className="sidebar-item-text">Reviews</span>
-              </Link>
-              <Link
-                to="/admin/products/settings"
-                className={cn(
-                  "sidebar-item flex items-center py-2 px-3 rounded-md transition-colors",
-                  location.pathname === "/admin/products/settings" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                )}
-              >
-                <Settings className="h-4 w-4 mr-2" />
-                <span className="sidebar-item-text">Settings</span>
+                <span>Inventory Log</span>
               </Link>
             </div>
           )}
         </div>
-        <Link 
-          to="/admin/users" 
-          className={cn(
-            "sidebar-item",
-            location.pathname.startsWith("/admin/users") ? "bg-primary text-white font-medium" : "",
-            isCollapsed ? "sidebar-item-collapsed" : "sidebar-item-expanded"
-          )}
-          title={isCollapsed ? 'Customers' : ''}
-        >
-          <div className="sidebar-item-icon">
-            <Users className="h-4 w-4" />
-          </div>
-          {!isCollapsed && <span className="sidebar-item-text">Customers</span>}
-        </Link>
-        {/* Marketing Dropdown */}
+
+        {/* Categories & Taxonomy */}
+        <NavItem
+          to="/admin/categories"
+          icon={FolderTree}
+          label="Categories"
+          active={location.pathname === "/admin/categories"}
+          collapsed={isCollapsed}
+        />
+
+        {/* Occasions */}
+        <NavItem
+          to="/admin/occasions"
+          icon={Calendar}
+          label="Occasions"
+          active={location.pathname.startsWith("/admin/occasions")}
+          collapsed={isCollapsed}
+        />
+
+        {/* Customers / Users */}
+        <NavItem
+          to="/admin/users"
+          icon={Users}
+          label="Customers"
+          active={location.pathname.startsWith("/admin/users")}
+          collapsed={isCollapsed}
+        />
+
+        {/* Vendors */}
+        <NavItem
+          to="/admin/vendors"
+          icon={Store}
+          label="Vendors"
+          active={location.pathname.startsWith("/admin/vendors")}
+          collapsed={isCollapsed}
+        />
+
+        {/* Reports & Analytics */}
+        <NavItem
+          to="/admin/analytics"
+          icon={TrendingUp}
+          label="Analytics & Reports"
+          active={location.pathname.startsWith("/admin/analytics")}
+          collapsed={isCollapsed}
+        />
+
+        {/* Marketing Campaigns */}
         <div className="space-y-1">
           <button
+            type="button"
             onClick={() => {
               if (isCollapsed) {
                 setIsSidebarCollapsed(false);
@@ -515,154 +558,70 @@ const AdminDashboard: React.FC = () => {
               }
             }}
             className={cn(
-              "w-full sidebar-item flex items-center justify-between transition-colors",
-              isMarketingActive ? "bg-accent/40 text-accent-foreground font-medium" : "",
-              isCollapsed ? "sidebar-item-collapsed justify-center" : "sidebar-item-expanded"
+              "w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl transition-all duration-200 text-xs font-semibold select-none",
+              isMarketingActive
+                ? "text-rose-600 dark:text-rose-400 font-bold bg-rose-50/60 dark:bg-rose-950/20"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-800/40",
+              isCollapsed && "justify-center px-2 py-3"
             )}
-            title={isCollapsed ? 'Marketing' : ''}
+            title={isCollapsed ? "Marketing" : undefined}
           >
-            <div className="flex items-center">
-              <div className="sidebar-item-icon">
-                <Megaphone className="h-4 w-4" />
-              </div>
-              {!isCollapsed && <span className="sidebar-item-text ml-3">Marketing</span>}
+            <div className="flex items-center gap-3">
+              <Megaphone className="w-4 h-4 stroke-[2.2]" />
+              {!isCollapsed && <span>Marketing & Offers</span>}
             </div>
             {!isCollapsed && (
-              isMarketingOpen ? 
-                <ChevronUp className="h-4 w-4 transition-transform" /> : 
-                <ChevronDown className="h-4 w-4 transition-transform" />
+              isMarketingOpen ? (
+                <ChevronUp className="w-3.5 h-3.5 opacity-60" />
+              ) : (
+                <ChevronDown className="w-3.5 h-3.5 opacity-60" />
+              )
             )}
           </button>
-          
+
           {isMarketingOpen && !isCollapsed && (
-            <div className="pl-4 space-y-1 mt-1 border-l-2 border-primary/20 ml-5">
-              <Link 
-                to="/admin/occasions" 
+            <div className="pl-4 pr-1 space-y-1 mt-1 border-l-2 border-rose-400/40 ml-4.5 text-xs">
+              <Link
+                to="/admin/seasonal-campaigns"
                 className={cn(
-                  "sidebar-item flex items-center py-2 px-3 rounded-md text-sm transition-colors",
-                  location.pathname === "/admin/occasions" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  "flex items-center gap-2 py-2 px-3 rounded-xl transition-all font-semibold",
+                  location.pathname.startsWith("/admin/seasonal-campaigns")
+                    ? "sbf-nav-active"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/40"
                 )}
               >
-                <Gift className="h-4 w-4 mr-2" />
-                <span className="sidebar-item-text">Occasions</span>
+                <span>Campaigns</span>
               </Link>
-              <Link 
-                to="/admin/seasonal-campaigns" 
+              <Link
+                to="/admin/promocodes"
                 className={cn(
-                  "sidebar-item flex items-center py-2 px-3 rounded-md text-sm transition-colors",
-                  location.pathname === "/admin/seasonal-campaigns" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  "flex items-center gap-2 py-2 px-3 rounded-xl transition-all font-semibold",
+                  location.pathname === "/admin/promocodes"
+                    ? "sbf-nav-active"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/40"
                 )}
               >
-                <Calendar className="h-4 w-4 mr-2" />
-                <span className="sidebar-item-text">Seasonal Campaigns</span>
+                <span>Promo Codes</span>
               </Link>
-              <Link 
-                to="/admin/valentine" 
+              <Link
+                to="/admin/offers"
                 className={cn(
-                  "sidebar-item flex items-center py-2 px-3 rounded-md text-sm transition-colors",
-                  location.pathname === "/admin/valentine" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  "flex items-center gap-2 py-2 px-3 rounded-xl transition-all font-semibold",
+                  location.pathname === "/admin/offers"
+                    ? "sbf-nav-active"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/40"
                 )}
               >
-                <Heart className="h-4 w-4 mr-2" />
-                <span className="sidebar-item-text">Valentine's</span>
-              </Link>
-              <Link 
-                to="/marketing" 
-                className="sidebar-item flex items-center py-2 px-3 rounded-md text-sm transition-colors text-purple-600 dark:text-purple-400 font-semibold hover:bg-purple-50 dark:hover:bg-purple-950/40 border border-purple-200 dark:border-purple-800/40 my-1"
-              >
-                <TrendingUp className="h-4 w-4 mr-2 text-purple-600" />
-                <span className="sidebar-item-text">Marketing Panel ↗</span>
+                <span>Special Offers</span>
               </Link>
             </div>
           )}
         </div>
-        <Link 
-          to="/admin/offers" 
-          className={cn(
-            "sidebar-item",
-            location.pathname === "/admin/offers" ? "bg-primary text-white font-medium" : "",
-            isCollapsed ? "sidebar-item-collapsed" : "sidebar-item-expanded"
-          )}
-          title={isCollapsed ? 'Offers' : ''}
-        >
-          <div className="sidebar-item-icon">
-            <Percent className="h-4 w-4" />
-          </div>
-          {!isCollapsed && <span className="sidebar-item-text">Offers</span>}
-        </Link>
-        <Link 
-          to="/admin/promocodes" 
-          className={cn(
-            "sidebar-item",
-            location.pathname === "/admin/promocodes" ? "bg-primary text-white font-medium" : "",
-            isCollapsed ? "sidebar-item-collapsed" : "sidebar-item-expanded"
-          )}
-          title={isCollapsed ? 'Coupons' : ''}
-        >
-          <div className="sidebar-item-icon">
-            <Tag className="h-4 w-4" />
-          </div>
-          {!isCollapsed && <span className="sidebar-item-text">Coupons</span>}
-        </Link>
-        <Link 
-          to="/admin/vendors" 
-          className={cn(
-            "sidebar-item",
-            location.pathname === "/admin/vendors" ? "bg-primary text-white font-medium" : "",
-            isCollapsed ? "sidebar-item-collapsed" : "sidebar-item-expanded"
-          )}
-          title={isCollapsed ? 'Vendors' : ''}
-        >
-          <div className="sidebar-item-icon">
-            <Store className="h-4 w-4" />
-          </div>
-          {!isCollapsed && <span className="sidebar-item-text">Vendors</span>}
-        </Link>
-        <Link 
-          to="/admin/analytics" 
-          className={cn(
-            "sidebar-item",
-            location.pathname === "/admin/analytics" ? "bg-primary text-white font-medium" : "",
-            isCollapsed ? "sidebar-item-collapsed" : "sidebar-item-expanded"
-          )}
-          title={isCollapsed ? 'Reports' : ''}
-        >
-          <div className="sidebar-item-icon">
-            <TrendingUp className="h-4 w-4" />
-          </div>
-          {!isCollapsed && <span className="sidebar-item-text">Reports</span>}
-        </Link>
-        <Link 
-          to="/admin/activity-logs" 
-          className={cn(
-            "sidebar-item",
-            location.pathname === "/admin/activity-logs" ? "bg-primary text-white font-medium" : "",
-            isCollapsed ? "sidebar-item-collapsed" : "sidebar-item-expanded"
-          )}
-          title={isCollapsed ? 'User Activity Logs' : ''}
-        >
-          <div className="sidebar-item-icon">
-            <Activity className="h-4 w-4" />
-          </div>
-          {!isCollapsed && <span className="sidebar-item-text">User Activity Logs</span>}
-        </Link>
-        <Link 
-          to="/admin/holidays" 
-          className={cn(
-            "sidebar-item",
-            location.pathname === "/admin/holidays" ? "bg-primary text-white font-medium" : "",
-            isCollapsed ? "sidebar-item-collapsed" : "sidebar-item-expanded"
-          )}
-          title={isCollapsed ? 'Holidays' : ''}
-        >
-          <div className="sidebar-item-icon">
-            <Calendar className="h-4 w-4" />
-          </div>
-          {!isCollapsed && <span className="sidebar-item-text">Holidays</span>}
-        </Link>
-        {/* Delivery Dropdown */}
+
+        {/* Delivery Logistics */}
         <div className="space-y-1">
           <button
+            type="button"
             onClick={() => {
               if (isCollapsed) {
                 setIsSidebarCollapsed(false);
@@ -672,352 +631,196 @@ const AdminDashboard: React.FC = () => {
               }
             }}
             className={cn(
-              "w-full sidebar-item flex items-center justify-between transition-colors",
-              isDeliveryActive ? "bg-accent/40 text-accent-foreground font-medium" : "",
-              isCollapsed ? "sidebar-item-collapsed justify-center" : "sidebar-item-expanded"
+              "w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl transition-all duration-200 text-xs font-semibold select-none",
+              isDeliveryActive
+                ? "text-rose-600 dark:text-rose-400 font-bold bg-rose-50/60 dark:bg-rose-950/20"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-800/40",
+              isCollapsed && "justify-center px-2 py-3"
             )}
-            title={isCollapsed ? 'Delivery' : ''}
+            title={isCollapsed ? "Delivery" : undefined}
           >
-            <div className="flex items-center">
-              <div className="sidebar-item-icon">
-                <Truck className="h-4 w-4 text-muted-foreground" />
-              </div>
-              {!isCollapsed && <span className="sidebar-item-text ml-3">Delivery</span>}
+            <div className="flex items-center gap-3">
+              <Truck className="w-4 h-4 stroke-[2.2]" />
+              {!isCollapsed && <span>Delivery Fleet</span>}
             </div>
             {!isCollapsed && (
-              isDeliveryOpen ? 
-                <ChevronUp className="h-4 w-4 text-muted-foreground transition-transform" /> : 
-                <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform" />
+              isDeliveryOpen ? (
+                <ChevronUp className="w-3.5 h-3.5 opacity-60" />
+              ) : (
+                <ChevronDown className="w-3.5 h-3.5 opacity-60" />
+              )
             )}
           </button>
-          
+
           {isDeliveryOpen && !isCollapsed && (
-            <div className="pl-4 space-y-1 mt-1 border-l-2 border-primary/20 ml-5">
-              <Link 
-                to="/admin/delivery-partners" 
+            <div className="pl-4 pr-1 space-y-1 mt-1 border-l-2 border-rose-400/40 ml-4.5 text-xs">
+              <Link
+                to="/admin/delivery-partners"
                 className={cn(
-                  "sidebar-item flex items-center py-2 px-3 rounded-md text-sm transition-colors",
-                  location.pathname === "/admin/delivery-partners" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  "flex items-center gap-2 py-2 px-3 rounded-xl transition-all font-semibold",
+                  location.pathname === "/admin/delivery-partners" ? "sbf-nav-active" : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/40"
                 )}
               >
-                <UserCheck className="h-4 w-4 mr-2" />
-                <span className="sidebar-item-text">Delivery Partners</span>
+                <UserCheck className="w-3.5 h-3.5 mr-1" />
+                <span>Riders & Partners</span>
               </Link>
-              <Link 
-                to="/admin/active-deliveries" 
+              <Link
+                to="/admin/active-deliveries"
                 className={cn(
-                  "sidebar-item flex items-center py-2 px-3 rounded-md text-sm transition-colors",
-                  location.pathname === "/admin/active-deliveries" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  "flex items-center gap-2 py-2 px-3 rounded-xl transition-all font-semibold",
+                  location.pathname === "/admin/active-deliveries" ? "sbf-nav-active" : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/40"
                 )}
               >
-                <Truck className="h-4 w-4 mr-2" />
-                <span className="sidebar-item-text">Active Deliveries</span>
+                <Truck className="w-3.5 h-3.5 mr-1" />
+                <span>Live Dispatches</span>
               </Link>
-              <Link 
-                to="/admin/delivery-analytics" 
+              <Link
+                to="/admin/delivery-zones"
                 className={cn(
-                  "sidebar-item flex items-center py-2 px-3 rounded-md text-sm transition-colors",
-                  location.pathname === "/admin/delivery-analytics" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  "flex items-center gap-2 py-2 px-3 rounded-xl transition-all font-semibold",
+                  location.pathname === "/admin/delivery-zones" ? "sbf-nav-active" : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/40"
                 )}
               >
-                <TrendingUp className="h-4 w-4 mr-2" />
-                <span className="sidebar-item-text">Delivery Analytics</span>
-              </Link>
-              <Link 
-                to="/admin/partner-earnings" 
-                className={cn(
-                  "sidebar-item flex items-center py-2 px-3 rounded-md text-sm transition-colors",
-                  location.pathname === "/admin/partner-earnings" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                )}
-              >
-                <DollarSign className="h-4 w-4 mr-2" />
-                <span className="sidebar-item-text">Partner Earnings</span>
-              </Link>
-              <Link 
-                to="/admin/delivery-zones" 
-                className={cn(
-                  "sidebar-item flex items-center py-2 px-3 rounded-md text-sm transition-colors",
-                  location.pathname === "/admin/delivery-zones" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                )}
-              >
-                <Map className="h-4 w-4 mr-2" />
-                <span className="sidebar-item-text">Delivery Zones</span>
-              </Link>
-              <Link 
-                to="/admin/delivery-settings" 
-                className={cn(
-                  "sidebar-item flex items-center py-2 px-3 rounded-md text-sm transition-colors",
-                  location.pathname === "/admin/delivery-settings" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                )}
-              >
-                <Sliders className="h-4 w-4 mr-2" />
-                <span className="sidebar-item-text">Delivery Settings</span>
-              </Link>
-              <Link 
-                to="/admin/assignment-rules" 
-                className={cn(
-                  "sidebar-item flex items-center py-2 px-3 rounded-md text-sm transition-colors",
-                  location.pathname === "/admin/assignment-rules" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                )}
-              >
-                <Scroll className="h-4 w-4 mr-2" />
-                <span className="sidebar-item-text">Assignment Rules</span>
+                <Map className="w-3.5 h-3.5 mr-1" />
+                <span>Hyderabad Zones</span>
               </Link>
             </div>
           )}
         </div>
-        {/* Staff Management Dropdown */}
+
+        {/* Staff Management (if permitted) */}
         {hasPermission('staff:view') && (
-          <div className="space-y-1">
-            <button
-              onClick={() => {
-                if (isCollapsed) {
-                  setIsSidebarCollapsed(false);
-                  setIsStaffOpen(true);
-                } else {
-                  setIsStaffOpen(prev => !prev);
-                }
-              }}
-              className={cn(
-                "w-full sidebar-item flex items-center justify-between transition-colors",
-                isStaffActive ? "bg-accent/40 text-accent-foreground font-medium" : "",
-                isCollapsed ? "sidebar-item-collapsed justify-center" : "sidebar-item-expanded"
-              )}
-              title={isCollapsed ? 'Staff Management' : ''}
-            >
-              <div className="flex items-center">
-                <div className="sidebar-item-icon">
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                </div>
-                {!isCollapsed && <span className="sidebar-item-text ml-3">Staff Management</span>}
-              </div>
-              {!isCollapsed && (
-                isStaffOpen ? 
-                  <ChevronUp className="h-4 w-4 text-muted-foreground transition-transform" /> : 
-                  <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform" />
-              )}
-            </button>
-            
-            {isStaffOpen && !isCollapsed && (
-              <div className="pl-4 space-y-1 mt-1 border-l-2 border-primary/20 ml-5">
-                <Link 
-                  to="/admin/staff" 
-                  className={cn(
-                    "sidebar-item flex items-center py-2 px-3 rounded-md text-sm transition-colors",
-                    location.pathname === "/admin/staff" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                  )}
-                >
-                  <Users className="h-4 w-4 mr-2" />
-                  <span className="sidebar-item-text">Staff List</span>
-                </Link>
-                <Link 
-                  to="/admin/staff/roles" 
-                  className={cn(
-                    "sidebar-item flex items-center py-2 px-3 rounded-md text-sm transition-colors",
-                    location.pathname === "/admin/staff/roles" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                  )}
-                >
-                  <Shield className="h-4 w-4 mr-2" />
-                  <span className="sidebar-item-text">Roles & Permissions</span>
-                </Link>
-                <Link 
-                  to="/admin/staff/attendance" 
-                  className={cn(
-                    "sidebar-item flex items-center py-2 px-3 rounded-md text-sm transition-colors",
-                    location.pathname === "/admin/staff/attendance" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                  )}
-                >
-                  <Clock className="h-4 w-4 mr-2" />
-                  <span className="sidebar-item-text">Attendance</span>
-                </Link>
-                {hasPermission('settings:view') && (
-                  <Link 
-                    to="/admin/staff/logs" 
-                    className={cn(
-                      "sidebar-item flex items-center py-2 px-3 rounded-md text-sm transition-colors",
-                      location.pathname === "/admin/staff/logs" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                    )}
-                  >
-                    <Activity className="h-4 w-4 mr-2" />
-                    <span className="sidebar-item-text">Activity Logs</span>
-                  </Link>
-                )}
-                <Link 
-                  to="/admin/staff/sessions" 
-                  className={cn(
-                    "sidebar-item flex items-center py-2 px-3 rounded-md text-sm transition-colors",
-                    location.pathname === "/admin/staff/sessions" ? "bg-primary text-white font-medium" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                  )}
-                >
-                  <Sliders className="h-4 w-4 mr-2" />
-                  <span className="sidebar-item-text">Login Sessions</span>
-                </Link>
-              </div>
-            )}
-          </div>
+          <NavItem
+            to="/admin/staff"
+            icon={Shield}
+            label="Staff & Roles"
+            active={location.pathname.startsWith("/admin/staff")}
+            collapsed={isCollapsed}
+          />
         )}
-        <Link 
-          to="/admin/notifications/fcm" 
-          className={cn(
-            "sidebar-item relative group transition-all",
-            location.pathname.startsWith("/admin/notifications/fcm") || location.pathname === "/admin/fcm-notifications"
-              ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium shadow-sm shadow-indigo-500/20" 
-              : "",
-            isCollapsed ? "sidebar-item-collapsed" : "sidebar-item-expanded"
-          )}
-          title={isCollapsed ? 'FCM Notifications Test' : ''}
-        >
-          <div className="sidebar-item-icon relative">
-            <BellRing className={cn(
-              "h-4 w-4",
-              location.pathname.startsWith("/admin/notifications/fcm") || location.pathname === "/admin/fcm-notifications"
-                ? "text-white"
-                : "text-indigo-500"
-            )} />
-            <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-          </div>
-          {!isCollapsed && (
-            <div className="flex items-center justify-between flex-1 ml-1">
-              <span className="sidebar-item-text">FCM Notifications</span>
-              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">
-                TEST
-              </span>
-            </div>
-          )}
-        </Link>
-        <Link 
-          to="/admin/faqs" 
-          className={cn(
-            "sidebar-item",
-            location.pathname === "/admin/faqs" ? "bg-primary text-white font-medium" : "",
-            isCollapsed ? "sidebar-item-collapsed" : "sidebar-item-expanded"
-          )}
-          title={isCollapsed ? 'FAQ System' : ''}
-        >
-          <div className="sidebar-item-icon">
-            <HelpCircle className="h-4 w-4 text-rose-500" />
-          </div>
-          {!isCollapsed && <span className="sidebar-item-text">FAQ System</span>}
-        </Link>
-        <Link 
-          to="/admin/settings" 
-          className={cn(
-            "sidebar-item",
-            isCollapsed ? "sidebar-item-collapsed" : "sidebar-item-expanded"
-          )}
-          title={isCollapsed ? 'Settings' : ''}
-        >
-          <div className="sidebar-item-icon">
-            <Settings className="h-4 w-4 text-muted-foreground" />
-          </div>
-          {!isCollapsed && <span className="sidebar-item-text">Settings</span>}
-        </Link>
+
+        {/* Activity Logs */}
+        <NavItem
+          to="/admin/activity-logs"
+          icon={Activity}
+          label="Activity Logs"
+          active={location.pathname === "/admin/activity-logs"}
+          collapsed={isCollapsed}
+        />
+
+        {/* FAQ System */}
+        <NavItem
+          to="/admin/faqs"
+          icon={HelpCircle}
+          label="FAQ System"
+          active={location.pathname === "/admin/faqs"}
+          collapsed={isCollapsed}
+        />
+
+        {/* Settings */}
+        <NavItem
+          to="/admin/settings"
+          icon={Settings}
+          label="Settings"
+          active={location.pathname === "/admin/settings"}
+          collapsed={isCollapsed}
+        />
       </nav>
-      
-      <div className="mt-auto">
-        <Button 
-          variant="outline" 
-          className={cn(
-            "w-full sidebar-item",
-            isCollapsed ? "sidebar-item-collapsed px-2" : "sidebar-item-expanded justify-start"
-          )}
+
+      {/* 4. Bottom Logout Button */}
+      <div className="pt-3 border-t border-slate-200/60 dark:border-slate-800/50 mt-auto">
+        <button
+          type="button"
           onClick={handleLogout}
-          title={isCollapsed ? 'Logout' : ''}
+          className={cn(
+            "sbf-neumo-btn w-full flex items-center gap-2.5 py-2.5 px-3 rounded-2xl text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50/80 dark:hover:bg-rose-950/30 transition-all cursor-pointer",
+            isCollapsed && "justify-center px-2"
+          )}
+          title={isCollapsed ? "Logout" : undefined}
         >
-          <div className="sidebar-item-icon">
-            <LogOut className="h-4 w-4 text-muted-foreground" />
-          </div>
-          {!isCollapsed && <span className="sidebar-item-text">Logout</span>}
-        </Button>
+          <LogOut className="w-4 h-4 stroke-[2.2] shrink-0" />
+          {!isCollapsed && <span>Sign Out</span>}
+        </button>
       </div>
-    </>
+    </div>
   );
-  
+
   return (
-    <div className="dashboard-shell">
+    <div className="sbf-dashboard-shell">
       <div className="flex min-h-screen">
-        <div className={cn(
-          "fixed inset-0 z-sheet bg-black/50 transition-opacity duration-200 md:hidden",
-          isSidebarOpen ? "opacity-100" : "pointer-events-none opacity-0"
-        )} onClick={() => setIsSidebarOpen(false)} />
+        {/* Mobile Backdrop Overlay */}
+        <div
+          className={cn(
+            "fixed inset-0 z-sheet bg-slate-900/40 backdrop-blur-xs transition-opacity duration-300 md:hidden",
+            isSidebarOpen ? "opacity-100" : "pointer-events-none opacity-0"
+          )}
+          onClick={() => setIsSidebarOpen(false)}
+        />
+
+        {/* Mobile Drawer Sidebar */}
         <aside
           id="admin-mobile-sidebar"
           className={cn(
-            "admin-mobile-sidebar fixed inset-y-0 left-0 z-sheet w-[85vw] max-w-xs bg-white dark:bg-gray-800 shadow-xl transition-transform duration-300 md:hidden",
+            "sbf-neumo-raised fixed inset-y-0 left-0 z-sheet w-[85vw] max-w-xs bg-[var(--sbf-card)] p-4 transition-transform duration-300 md:hidden",
             isSidebarOpen ? "translate-x-0" : "-translate-x-full"
           )}
         >
-          <div className="flex h-full flex-col p-4 sidebar-scrollable">
-            <SidebarContent isCollapsed={false} />
-          </div>
+          <SidebarContent isCollapsed={false} />
         </aside>
 
-        {/* Desktop Sidebar */}
-        <aside className={`admin-desktop-sidebar hidden md:flex bg-white dark:bg-gray-800 h-screen sticky top-0 shadow-md flex-col transition-all duration-300 ${
-          isSidebarCollapsed ? 'w-16' : 'w-64'
-        }`}>
-          {/* Sidebar Toggle Button */}
-          <div className="flex justify-end p-2">
-            <Button
-              variant="ghost"
-              size="icon"
+        {/* Desktop Neumorphic Sidebar */}
+        <aside
+          className={cn(
+            "admin-desktop-sidebar hidden md:flex flex-col h-screen sticky top-0 transition-all duration-300 bg-[var(--sbf-card)] border-r border-slate-200/50 dark:border-slate-800/40 shadow-[var(--sbf-shadow-raised)] z-30 select-none",
+            isSidebarCollapsed ? "w-20 p-2.5" : "w-64 lg:w-72 p-4"
+          )}
+        >
+          {/* Sidebar Collapse Toggle Icon */}
+          <div className={cn("flex pb-1", isCollapsed => isSidebarCollapsed ? "justify-center" : "justify-end")}>
+            <button
+              type="button"
               onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-              className="h-8 w-8"
-              title={`${isSidebarCollapsed ? 'Expand' : 'Collapse'} Sidebar (Ctrl/Cmd + B)`}
+              className="sbf-neumo-btn w-8 h-8 rounded-xl flex items-center justify-center text-slate-500 hover:text-rose-600 dark:text-slate-400 transition-colors"
+              title={`${isSidebarCollapsed ? 'Expand' : 'Collapse'} Sidebar (Ctrl+B)`}
             >
-              {isSidebarCollapsed ? (
-                <ChevronRight className="h-4 w-4" />
-              ) : (
-                <ChevronLeft className="h-4 w-4" />
-              )}
-            </Button>
+              {isSidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+            </button>
           </div>
-          
-          <div className={`flex flex-col flex-1 sidebar-scrollable ${isSidebarCollapsed ? 'px-2 pb-4' : 'px-4 pb-4'}`}>
+
+          <div className="flex-1 overflow-hidden">
             <SidebarContent isCollapsed={isSidebarCollapsed} />
           </div>
         </aside>
-        
-        {/* Main Content */}
-        <div className="dashboard-main flex flex-col min-h-screen">
-          <div className="admin-mobile-topbar md:hidden flex items-center justify-between border-b bg-white dark:bg-gray-800 px-3 py-2.5 sticky top-0 z-nav">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsSidebarOpen((open) => !open)}
-              aria-expanded={isSidebarOpen}
-              aria-controls="admin-mobile-sidebar"
-              className="touch-action-btn"
+
+        {/* Main Content Area */}
+        <div className="dashboard-main flex-1 flex flex-col min-h-screen min-w-0 bg-[var(--sbf-canvas)]">
+          {/* Mobile Top Header */}
+          <div className="admin-mobile-topbar md:hidden flex items-center justify-between px-4 py-3 bg-[var(--sbf-card)] border-b border-slate-200/60 dark:border-slate-800/50 sticky top-0 z-nav shadow-xs">
+            <button
+              type="button"
+              onClick={() => setIsSidebarOpen(true)}
+              className="sbf-neumo-btn w-9 h-9 rounded-xl flex items-center justify-center text-slate-700 dark:text-slate-200"
+              aria-label="Open Navigation"
             >
-              <Menu className="h-5 w-5" />
-            </Button>
-            <span className="text-sm font-semibold">Admin Panel</span>
-            <span className="w-9" />
-          </div>
-          {/* Top bar with sidebar toggle for collapsed state */}
-          {isSidebarCollapsed && (
-            <div className="admin-collapsed-topbar hidden md:flex items-center p-4 border-b bg-white dark:bg-gray-800">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsSidebarCollapsed(false)}
-                className="h-8 w-8"
-                title="Expand Sidebar (Ctrl/Cmd + B)"
-              >
-                <Menu className="h-4 w-4" />
-              </Button>
-              <span className="ml-2 text-sm text-muted-foreground">
-                Press Ctrl/Cmd + B to toggle sidebar
+              <Menu className="w-5 h-5" />
+            </button>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-black uppercase tracking-wider text-rose-600 dark:text-rose-400 font-sans">
+                Spring Blossoms
               </span>
             </div>
-          )}
-          
+            <div className="w-9" />
+          </div>
+
+          {/* Desktop Top Navbar Shell */}
           <div className="admin-navbar-shell">
             <AdminNavbar />
           </div>
-          <div className="panel-content overflow-x-hidden overflow-y-auto">
+
+          {/* Panel Outlet Container with generous soft neumorphic padding */}
+          <main className="panel-content flex-1 p-4 sm:p-6 lg:p-8 overflow-x-hidden overflow-y-auto">
             <Outlet />
-          </div>
+          </main>
         </div>
       </div>
     </div>

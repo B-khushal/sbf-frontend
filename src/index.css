@@ -47,6 +47,27 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
+
+    /* ── SBF Neumorphic Design Tokens (Light Mode) ────────── */
+    --sbf-canvas: #edf1f7;
+    --sbf-card: #f3f6fa;
+    --sbf-surface-light: #f8fafe;
+    --sbf-surface-raised: #f4f7fb;
+    
+    --sbf-rose: #e11d48;
+    --sbf-rose-light: #ffe4e6;
+    --sbf-rose-dark: #be123c;
+    --sbf-emerald: #059669;
+    --sbf-amber: #d97706;
+    --sbf-indigo: #4f46e5;
+
+    --sbf-shadow-raised: 8px 8px 18px rgba(166, 175, 195, 0.42), -8px -8px 18px rgba(255, 255, 255, 0.95);
+    --sbf-shadow-raised-sm: 4px 4px 10px rgba(166, 175, 195, 0.35), -4px -4px 10px rgba(255, 255, 255, 0.9);
+    --sbf-shadow-raised-lg: 14px 14px 28px rgba(166, 175, 195, 0.45), -14px -14px 28px rgba(255, 255, 255, 0.95);
+    --sbf-shadow-inset: inset 3px 3px 6px rgba(166, 175, 195, 0.42), inset -3px -3px 6px rgba(255, 255, 255, 0.92);
+    --sbf-shadow-inset-sm: inset 2px 2px 4px rgba(166, 175, 195, 0.35), inset -2px -2px 4px rgba(255, 255, 255, 0.85);
+    --sbf-shadow-pill: 5px 5px 12px rgba(166, 175, 195, 0.38), -5px -5px 12px rgba(255, 255, 255, 0.9);
+
   }
 
   .dark {
@@ -74,6 +95,20 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+
+    /* ── SBF Neumorphic Design Tokens (Dark Mode) ─────────── */
+    --sbf-canvas: #0e121a;
+    --sbf-card: #141923;
+    --sbf-surface-light: #1b212e;
+    --sbf-surface-raised: #181e2a;
+
+    --sbf-shadow-raised: 8px 8px 20px rgba(0, 0, 0, 0.65), -6px -6px 16px rgba(32, 40, 56, 0.4);
+    --sbf-shadow-raised-sm: 4px 4px 10px rgba(0, 0, 0, 0.55), -3px -3px 8px rgba(32, 40, 56, 0.35);
+    --sbf-shadow-raised-lg: 14px 14px 30px rgba(0, 0, 0, 0.75), -10px -10px 24px rgba(32, 40, 56, 0.45);
+    --sbf-shadow-inset: inset 3px 3px 6px rgba(0, 0, 0, 0.65), inset -3px -3px 6px rgba(32, 40, 56, 0.4);
+    --sbf-shadow-inset-sm: inset 2px 2px 4px rgba(0, 0, 0, 0.55), inset -2px -2px 4px rgba(32, 40, 56, 0.35);
+    --sbf-shadow-pill: 5px 5px 12px rgba(0, 0, 0, 0.6), -4px -4px 10px rgba(32, 40, 56, 0.4);
+
   }
 
   * {
@@ -155,6 +190,147 @@
 }
 
 @layer components {
+  
+  /* ============================================================
+     SBF NEUMORPHIC COMPONENT PRIMITIVES
+     Soft Neumorphism + Premium Florist SaaS UI
+     ============================================================ */
+
+  .sbf-dashboard-shell {
+    background-color: var(--sbf-canvas);
+    min-height: 100vh;
+    color: hsl(var(--foreground));
+  }
+
+  /* Raised Surfaces */
+  .sbf-neumo-raised {
+    background-color: var(--sbf-card);
+    box-shadow: var(--sbf-shadow-raised);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 1.25rem;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .dark .sbf-neumo-raised {
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .sbf-neumo-raised-sm {
+    background-color: var(--sbf-card);
+    box-shadow: var(--sbf-shadow-raised-sm);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 0.875rem;
+    transition: all 0.2s ease-out;
+  }
+  .dark .sbf-neumo-raised-sm {
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .sbf-neumo-raised-hover {
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .sbf-neumo-raised-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--sbf-shadow-raised-lg);
+  }
+
+  /* Inset / Recessed Surfaces */
+  .sbf-neumo-inset {
+    background-color: var(--sbf-card);
+    box-shadow: var(--sbf-shadow-inset);
+    border: 1px solid rgba(166, 175, 195, 0.25);
+    border-radius: 1rem;
+    transition: all 0.2s ease-out;
+  }
+  .dark .sbf-neumo-inset {
+    border: 1px solid rgba(0, 0, 0, 0.4);
+  }
+
+  .sbf-neumo-inset-sm {
+    background-color: var(--sbf-card);
+    box-shadow: var(--sbf-shadow-inset-sm);
+    border: 1px solid rgba(166, 175, 195, 0.2);
+    border-radius: 0.75rem;
+  }
+  .dark .sbf-neumo-inset-sm {
+    border: 1px solid rgba(0, 0, 0, 0.35);
+  }
+
+  /* Tactile Neumorphic Buttons */
+  .sbf-neumo-btn {
+    background-color: var(--sbf-card);
+    box-shadow: var(--sbf-shadow-raised-sm);
+    border: 1px solid rgba(255, 255, 255, 0.75);
+    border-radius: 0.875rem;
+    font-weight: 600;
+    transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    user-select: none;
+  }
+  .dark .sbf-neumo-btn {
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .sbf-neumo-btn:hover {
+    box-shadow: var(--sbf-shadow-raised);
+    transform: translateY(-1px);
+  }
+  .sbf-neumo-btn:active,
+  .sbf-neumo-btn[data-state="active"] {
+    box-shadow: var(--sbf-shadow-inset-sm);
+    transform: translateY(1px);
+  }
+
+  .sbf-neumo-btn-primary {
+    background: linear-gradient(135deg, #e11d48 0%, #be123c 100%);
+    color: white !important;
+    box-shadow: 4px 4px 12px rgba(225, 29, 72, 0.35), -4px -4px 12px rgba(255, 255, 255, 0.8);
+    border: none;
+    border-radius: 0.875rem;
+    font-weight: 700;
+    transition: all 0.18s ease-out;
+  }
+  .sbf-neumo-btn-primary:hover {
+    background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+    box-shadow: 6px 6px 16px rgba(225, 29, 72, 0.45), -4px -4px 12px rgba(255, 255, 255, 0.9);
+    transform: translateY(-1px);
+  }
+  .sbf-neumo-btn-primary:active {
+    box-shadow: inset 3px 3px 6px rgba(0, 0, 0, 0.3);
+    transform: translateY(1px);
+  }
+
+  /* Inset Inputs (e.g. search fields) */
+  .sbf-neumo-input {
+    background-color: var(--sbf-card);
+    box-shadow: var(--sbf-shadow-inset-sm);
+    border: 1px solid rgba(166, 175, 195, 0.25);
+    border-radius: 0.875rem;
+    transition: all 0.2s ease-out;
+  }
+  .sbf-neumo-input:focus,
+  .sbf-neumo-input:focus-within {
+    border-color: rgba(225, 29, 72, 0.4);
+    box-shadow: var(--sbf-shadow-inset), 0 0 0 2px rgba(225, 29, 72, 0.12);
+  }
+
+  /* Active Sidebar Item - Inset tactile look with brand indicator */
+  .sbf-nav-active {
+    background-color: var(--sbf-card) !important;
+    box-shadow: var(--sbf-shadow-inset-sm) !important;
+    color: #e11d48 !important;
+    font-weight: 700 !important;
+    border: 1px solid rgba(225, 29, 72, 0.25) !important;
+  }
+
+  /* Soft Neumorphic Pill Badges */
+  .sbf-neumo-pill {
+    background-color: var(--sbf-card);
+    box-shadow: var(--sbf-shadow-raised-sm);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 9999px;
+  }
+  .dark .sbf-neumo-pill {
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
   .glass {
     @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-sm;
   }
@@ -814,4 +990,4 @@
   color: #0f172a !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
   border-radius: 8px !important;
-}
+}

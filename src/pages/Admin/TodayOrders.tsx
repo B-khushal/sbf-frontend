@@ -427,7 +427,7 @@ const TodayOrders: React.FC = () => {
   return (
     <div className={isFullScreenMode ? 'kitchen-mode-root space-y-5 p-5' : 'space-y-5'}>
       {!isFullScreenMode && (
-        <div className="rounded-xl border border-slate-200 bg-gradient-to-r from-slate-50 via-white to-slate-100 px-4 py-4 shadow-sm">
+        <div className="sbf-neumo-raised-sm rounded-2xl bg-[var(--sbf-card)] p-5 border border-slate-200/50">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Today's Production Board</h1>
@@ -439,7 +439,7 @@ const TodayOrders: React.FC = () => {
               )}
             </div>
             <div className="flex items-center gap-2">
-              <Badge className="bg-black text-white">Auto refresh 25s</Badge>
+              <Badge className="sbf-neumo-inset-sm bg-white text-slate-700 border-none font-bold">Auto refresh 25s</Badge>
               <Button variant="outline" onClick={() => void loadOrders(false)} disabled={isRefreshing}>
                 {isRefreshing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
                 Refresh

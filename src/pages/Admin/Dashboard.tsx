@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { 
   Bar, 
   BarChart, 
@@ -8,8 +7,6 @@ import {
   Tooltip, 
   XAxis, 
   YAxis, 
-  Line, 
-  LineChart, 
   Area, 
   AreaChart,
   PieChart,
@@ -19,32 +16,15 @@ import {
 import { 
   DollarSign, 
   ShoppingCart, 
-  Users, 
   Package, 
-  Bell, 
-  ChevronRight,
-  ArrowUpRight,
-  ArrowDownRight,
-  Check,
   Loader2,
   AlertCircle,
   AlertTriangle,
-  ExternalLink,
   RefreshCw,
   TrendingUp,
-  TrendingDown,
-  CheckCircle,
-  CreditCard,
-  Eye,
-  Edit,
-  Plus,
-  Calendar,
   Clock,
   Activity,
-  Settings,
   BarChart3,
-  PieChart as PieChartIcon,
-  Target,
   Zap,
   Volume2,
   VolumeX,
@@ -53,30 +33,41 @@ import {
   X,
   Gift,
   MapPin,
-  Tag,
+  CreditCard,
+  Eye,
+  Plus,
   Sliders,
   ChevronDown,
   ChevronUp,
   Pin,
-  FileText,
   Printer,
-  Grid
+  Grid,
+  CheckCircle2,
+  Sparkles,
+  ArrowUpRight,
+  TrendingDown
 } from 'lucide-react';
 import api from '@/services/api';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useNotification } from '@/contexts/NotificationContext';
 import { Button } from '@/components/ui/button';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import {
+  NeumorphicCard,
+  StatCard,
+  SoftButton,
+  StatusBadge,
+  PageHeader
+} from '@/components/dashboard';
 
 const SparklineIcon = TrendingUp;
 
-const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ec4899', '#3b82f6', '#8b5cf6', '#06b6d4', '#f43f5e'];
-const PRIMARY_COLOR = '#6366f1';
-const SECONDARY_COLOR = '#3b82f6';
+// SBF Brand Tinted Palette for Charts
+const SBF_PALETTE = ['#e11d48', '#059669', '#d97706', '#ec4899', '#3b82f6', '#8b5cf6', '#06b6d4', '#f43f5e'];
+const PRIMARY_ROSE = '#e11d48';
+const EMERALD_ACCENT = '#059669';
 
 interface DashboardStats {
   revenue: { total: number; today: number; percentChange: number };
@@ -185,7 +176,7 @@ const AdminDashboardHome: React.FC = () => {
   });
 
   const { formatPrice } = useCurrency();
-  const { notifications, unreadCount, markAllAsRead, isConnected, enableSounds, toggleSounds } = useNotification();
+  const { isConnected, enableSounds, toggleSounds } = useNotification();
   const { toast } = useToast();
   const navigate = useNavigate();
   const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -222,7 +213,7 @@ const AdminDashboardHome: React.FC = () => {
       if (showToast) {
         toast({
           title: "Dashboard Synced",
-          description: `All stats updated from Mongo database at ${new Date().toLocaleTimeString()}`,
+          description: `All stats updated from database at ${new Date().toLocaleTimeString()}`,
         });
       }
     } catch (err: any) {
@@ -316,22 +307,27 @@ const AdminDashboardHome: React.FC = () => {
 
   if (loading && !stats) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-slate-50/50">
-        <Loader2 className="h-10 w-10 animate-spin text-indigo-600 mb-2" />
-        <span className="text-slate-600 font-medium">Powering up executive command center...</span>
+      <div className="flex flex-col items-center justify-center min-h-[70vh] bg-[var(--sbf-canvas)]">
+        <div className="w-16 h-16 rounded-2xl sbf-neumo-raised flex items-center justify-center mb-4">
+          <Loader2 className="h-8 w-8 animate-spin text-rose-600" />
+        </div>
+        <span className="text-slate-700 font-semibold text-sm">Powering up executive command center...</span>
+        <span className="text-slate-400 text-xs mt-1">Fetching live florist business intelligence</span>
       </div>
     );
   }
 
   if (error && !stats) {
     return (
-      <div className="p-6 max-w-md mx-auto my-12 text-center bg-white border rounded-2xl shadow-xl">
-        <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-        <h3 className="text-lg font-bold mb-2">Sync Connection Terminated</h3>
-        <p className="text-muted-foreground mb-6">{error}</p>
-        <Button onClick={() => fetchDashboardData(true)} className="bg-indigo-600 hover:bg-indigo-700">
-          <RefreshCw className="h-4 w-4 mr-2" /> Reconnect
-        </Button>
+      <div className="p-8 max-w-md mx-auto my-16 text-center sbf-neumo-raised rounded-3xl bg-[var(--sbf-canvas)]">
+        <div className="w-14 h-14 rounded-2xl sbf-neumo-inset flex items-center justify-center mx-auto mb-4 text-rose-500">
+          <AlertCircle className="h-7 w-7" />
+        </div>
+        <h3 className="text-base font-bold text-slate-800 mb-1.5">Sync Connection Terminated</h3>
+        <p className="text-xs text-slate-500 mb-6 leading-relaxed">{error}</p>
+        <SoftButton onClick={() => fetchDashboardData(true)} variant="primary" className="w-full">
+          <RefreshCw className="h-4 w-4 mr-2" /> Reconnect Database
+        </SoftButton>
       </div>
     );
   }
@@ -342,171 +338,207 @@ const AdminDashboardHome: React.FC = () => {
   const orderedWidgets = [...pinnedWidgets, ...standardWidgets];
 
   return (
-    <div className="space-y-4 sm:space-y-6 p-3 sm:p-6 max-w-[1600px] 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto print:p-0">
+    <div className="space-y-6 max-w-[1600px] 2xl:max-w-9xl mx-auto print:p-0">
       
-      {/* Top Header Command Bar */}
-      <div className="flex flex-col space-y-4 lg:flex-row lg:justify-between lg:items-center lg:space-y-0 print:hidden">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-800 tracking-tight flex items-center gap-1.5">
-              <Activity className="h-6 w-6 sm:h-7 sm:w-7 text-indigo-600 animate-pulse" />
-              SBF Command Center
-            </h1>
-            <Badge variant="outline" className="bg-indigo-50 text-indigo-700 font-bold border-indigo-200">
-              Live BI
-            </Badge>
+      {/* Neumorphic Page Header & Live Controls */}
+      <PageHeader
+        title="Florist Command Center"
+        subtitle="Executive business intelligence, real-time orders, inventory & conversion funnels"
+        badge={
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200/60 shadow-sm">
+            <Sparkles className="w-3 h-3 text-rose-600 animate-pulse" />
+            <span>Live BI</span>
           </div>
-          <div className="flex flex-wrap items-center gap-3 mt-1.5 text-xs text-slate-400 font-mono">
-            <span className="flex items-center gap-1">
-              <Clock className="h-3.5 w-3.5" />
-              Sync Updated: {lastUpdated.toLocaleTimeString()}
-            </span>
-            {isConnected ? (
-              <span className="flex items-center gap-1 text-emerald-600 font-bold">
-                <Wifi className="h-3 w-3 animate-ping" /> Online
-              </span>
-            ) : (
-              <span className="flex items-center gap-1 text-rose-500 font-bold">
-                <WifiOff className="h-3 w-3" /> Disconnected
-              </span>
-            )}
+        }
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Live Status indicator */}
+            <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl sbf-neumo-inset-sm text-xs font-mono font-medium text-slate-500 bg-[var(--sbf-card)]">
+              <Clock className="h-3.5 w-3.5 text-slate-400" />
+              <span>{lastUpdated.toLocaleTimeString()}</span>
+              {isConnected ? (
+                <span className="flex items-center gap-1 text-emerald-600 font-bold ml-1">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping inline-block" /> Online
+                </span>
+              ) : (
+                <span className="flex items-center gap-1 text-rose-500 font-bold ml-1">
+                  <span className="w-2 h-2 rounded-full bg-rose-500 inline-block" /> Offline
+                </span>
+              )}
+            </div>
+
+            {/* Layout Personalization */}
+            <SoftButton
+              onClick={() => setShowConfig(!showConfig)}
+              variant={showConfig ? 'inset' : 'raised'}
+              size="sm"
+              className={showConfig ? 'text-rose-600 font-bold' : ''}
+              title="Personalize dashboard layout"
+            >
+              <Grid className="h-3.5 w-3.5 mr-1.5" />
+              <span>Personalize</span>
+            </SoftButton>
+
+            {/* Sound Toggle */}
+            <SoftButton 
+              onClick={toggleSounds}
+              variant={enableSounds ? 'inset' : 'raised'}
+              size="icon"
+              title={enableSounds ? 'Audio alerts active' : 'Audio alerts muted'}
+            >
+              {enableSounds ? <Volume2 className="h-4 w-4 text-rose-600" /> : <VolumeX className="h-4 w-4 text-slate-400" />}
+            </SoftButton>
+
+            {/* Live Auto refresh mode toggle */}
+            <SoftButton 
+              onClick={() => setAutoRefresh(!autoRefresh)}
+              variant={autoRefresh ? 'inset' : 'raised'}
+              size="sm"
+              className={autoRefresh ? 'text-rose-600 font-bold' : ''}
+            >
+              <Zap className={`h-3.5 w-3.5 mr-1.5 ${autoRefresh ? 'text-amber-500 fill-amber-500 animate-bounce' : 'text-slate-400'}`} />
+              <span>{autoRefresh ? 'Live' : 'Manual'}</span>
+            </SoftButton>
+
+            {/* Time range selector */}
+            <div className="relative">
+              <Select
+                value={period}
+                onValueChange={(val) => {
+                  setPeriod(val);
+                  if (val !== 'custom') {
+                    setTimeout(() => fetchDashboardData(true), 50);
+                  }
+                }}
+              >
+                <SelectTrigger className="w-[130px] h-9 text-xs rounded-xl sbf-neumo-inset-sm border-none bg-[var(--sbf-card)] font-medium text-slate-700 focus:ring-0">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl border border-slate-200 shadow-xl bg-white text-xs">
+                  <SelectItem value="today">Today</SelectItem>
+                  <SelectItem value="yesterday">Yesterday</SelectItem>
+                  <SelectItem value="7d">Last 7 Days</SelectItem>
+                  <SelectItem value="30d">Last 30 Days</SelectItem>
+                  <SelectItem value="this_month">This Month</SelectItem>
+                  <SelectItem value="this_year">This Year</SelectItem>
+                  <SelectItem value="custom">Custom Range</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Refresh Button */}
+            <SoftButton 
+              onClick={() => fetchDashboardData(true)}
+              variant="raised"
+              size="icon"
+              disabled={refreshing}
+              title="Sync metrics now"
+            >
+              <RefreshCw className={`h-4 w-4 text-slate-600 ${refreshing ? 'animate-spin text-rose-600' : ''}`} />
+            </SoftButton>
           </div>
-        </div>
-
-        {/* Dashboard Controls */}
-        <div className="flex flex-wrap items-center gap-2">
-          
-          {/* Layout personalization configurations */}
-          <Button
-            onClick={() => setShowConfig(!showConfig)}
-            variant="outline"
-            size="sm"
-            className={`h-9 gap-1.5 ${showConfig ? 'bg-indigo-50 border-indigo-300 text-indigo-700' : 'bg-white'}`}
-          >
-            <Grid className="h-4 w-4" />
-            <span className="hidden sm:inline">Personalize</span>
-          </Button>
-
-          {/* Sound Toggle */}
-          <Button 
-            onClick={toggleSounds}
-            variant={enableSounds ? "default" : "outline"}
-            size="sm"
-            className="h-9 w-9 p-0"
-            title={enableSounds ? 'Sounds Enabled' : 'Sounds Muted'}
-          >
-            {enableSounds ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
-          </Button>
-
-          {/* Live Auto refresh mode toggle */}
-          <Button 
-            onClick={() => setAutoRefresh(!autoRefresh)}
-            variant={autoRefresh ? "default" : "outline"}
-            size="sm"
-            className="h-9 gap-1.5 font-bold"
-          >
-            <Zap className={`h-4 w-4 ${autoRefresh ? 'animate-bounce text-yellow-300' : 'text-slate-500'}`} />
-            <span className="hidden sm:inline">{autoRefresh ? 'Live Mode' : 'Manual'}</span>
-          </Button>
-
-          {/* Time range parameters */}
-          <Select value={period} onValueChange={(val) => {
-            setPeriod(val);
-            if (val !== 'custom') {
-              setTimeout(() => fetchDashboardData(true), 50);
-            }
-          }}>
-            <SelectTrigger className="w-[130px] text-xs h-9 bg-white border shadow-sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="today">Today</SelectItem>
-              <SelectItem value="yesterday">Yesterday</SelectItem>
-              <SelectItem value="7d">Last 7 Days</SelectItem>
-              <SelectItem value="30d">Last 30 Days</SelectItem>
-              <SelectItem value="this_month">This Month</SelectItem>
-              <SelectItem value="this_year">This Year</SelectItem>
-              <SelectItem value="custom">Custom Range</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Button 
-            onClick={() => fetchDashboardData(true)}
-            variant="outline"
-            size="sm"
-            className="h-9 px-3 bg-white"
-            disabled={refreshing}
-          >
-            {refreshing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4 text-slate-500" />}
-          </Button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Custom Date Range selector panel */}
       {period === 'custom' && (
-        <div className="flex flex-wrap items-center gap-3 p-3 bg-white border rounded-xl shadow-inner print:hidden">
-          <div className="flex items-center gap-2 text-xs">
-            <span className="font-bold text-slate-500">From:</span>
-            <input 
-              type="date" 
-              value={customStartDate} 
-              onChange={(e) => setCustomStartDate(e.target.value)}
-              className="px-2.5 py-1 text-xs border rounded bg-white"
-            />
+        <NeumorphicCard variant="inset" className="p-4 print:hidden">
+          <div className="flex flex-wrap items-center gap-4 text-xs">
+            <span className="font-bold text-slate-600">Select Custom Period:</span>
+            <div className="flex items-center gap-2">
+              <span className="text-slate-500 font-medium">From</span>
+              <input 
+                type="date" 
+                value={customStartDate} 
+                onChange={(e) => setCustomStartDate(e.target.value)}
+                className="px-3 py-1.5 text-xs rounded-xl sbf-neumo-inset-sm bg-[var(--sbf-card)] border-none text-slate-700 font-mono focus:outline-none"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-slate-500 font-medium">To</span>
+              <input 
+                type="date" 
+                value={customEndDate} 
+                onChange={(e) => setCustomEndDate(e.target.value)}
+                className="px-3 py-1.5 text-xs rounded-xl sbf-neumo-inset-sm bg-[var(--sbf-card)] border-none text-slate-700 font-mono focus:outline-none"
+              />
+            </div>
+            <SoftButton 
+              size="sm" 
+              variant="primary"
+              onClick={() => fetchDashboardData(true)}
+              disabled={!customStartDate || !customEndDate}
+            >
+              Apply Filter
+            </SoftButton>
           </div>
-          <div className="flex items-center gap-2 text-xs">
-            <span className="font-bold text-slate-500">To:</span>
-            <input 
-              type="date" 
-              value={customEndDate} 
-              onChange={(e) => setCustomEndDate(e.target.value)}
-              className="px-2.5 py-1 text-xs border rounded bg-white"
-            />
-          </div>
-          <Button 
-            size="sm" 
-            onClick={() => fetchDashboardData(true)}
-            className="bg-indigo-600 hover:bg-indigo-700 h-8 text-white px-3"
-            disabled={!customStartDate || !customEndDate}
-          >
-            Apply Dates
-          </Button>
-        </div>
+        </NeumorphicCard>
       )}
 
       {/* Personalization configuration panel */}
       {showConfig && (
-        <Card className="border-dashed border-2 border-indigo-200 bg-slate-50/50 print:hidden animate-in fade-in duration-200">
-          <CardHeader className="pb-2">
-            <div className="flex justify-between items-center">
-              <CardTitle className="text-sm font-bold text-indigo-900">Custom Layout Management</CardTitle>
-              <Button size="sm" variant="ghost" className="text-xs text-indigo-700 hover:text-indigo-900" onClick={resetLayout}>Reset Factory Order</Button>
+        <NeumorphicCard variant="raised" className="p-5 print:hidden animate-in fade-in duration-200">
+          <div className="flex justify-between items-center mb-3 pb-3 border-b border-slate-200/60">
+            <div>
+              <h3 className="text-sm font-bold text-slate-800">Custom Widget Management</h3>
+              <p className="text-xs text-slate-500">Pin, rearrange, or toggle visibility of each dashboard module</p>
             </div>
-            <CardDescription className="text-xs">Rearrange, pin, or collapse cards and blocks to customize your command dashboard.</CardDescription>
-          </CardHeader>
-          <CardContent className="pt-2">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 text-xs">
-              {layout.map((item, idx) => (
-                <div key={item.id} className="p-2 border rounded-lg bg-white shadow-sm flex flex-col justify-between gap-1.5 hover:border-indigo-400 transition-colors">
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold text-slate-700 truncate max-w-[100px]">{item.title}</span>
-                    <Badge variant={item.visible ? "default" : "secondary"} className="text-[9px] px-1 py-0">{item.visible ? 'Show' : 'Hidden'}</Badge>
+            <SoftButton size="sm" variant="ghost" onClick={resetLayout} className="text-xs text-rose-600">
+              Reset Layout
+            </SoftButton>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 text-xs">
+            {layout.map((item, idx) => (
+              <div
+                key={item.id}
+                className="p-3 rounded-2xl sbf-neumo-raised-sm bg-[var(--sbf-card)] flex flex-col justify-between gap-2 border border-slate-200/40"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-slate-700 truncate max-w-[100px]">{item.title}</span>
+                  <span
+                    className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${
+                      item.visible ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'
+                    }`}
+                  >
+                    {item.visible ? 'Show' : 'Hidden'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between border-t border-slate-200/60 pt-2">
+                  <div className="flex gap-1">
+                    <button
+                      disabled={idx === 0}
+                      onClick={() => moveWidget(idx, 'up')}
+                      className="p-1 rounded-lg hover:bg-slate-200/60 disabled:opacity-30 text-slate-600"
+                    >
+                      <ChevronUp className="h-3 w-3" />
+                    </button>
+                    <button
+                      disabled={idx === layout.length - 1}
+                      onClick={() => moveWidget(idx, 'down')}
+                      className="p-1 rounded-lg hover:bg-slate-200/60 disabled:opacity-30 text-slate-600"
+                    >
+                      <ChevronDown className="h-3 w-3" />
+                    </button>
                   </div>
-                  <div className="flex items-center justify-between border-t pt-1.5">
-                    <div className="flex gap-1">
-                      <Button size="sm" variant="ghost" className="h-5 w-5 p-0" disabled={idx === 0} onClick={() => moveWidget(idx, 'up')}><ChevronUp className="h-3 w-3" /></Button>
-                      <Button size="sm" variant="ghost" className="h-5 w-5 p-0" disabled={idx === layout.length - 1} onClick={() => moveWidget(idx, 'down')}><ChevronDown className="h-3 w-3" /></Button>
-                    </div>
-                    <div className="flex gap-1">
-                      <Button size="sm" variant="ghost" className={`h-5 w-5 p-0 ${item.pinned ? 'text-indigo-600' : 'text-slate-400'}`} onClick={() => togglePinWidget(item.id)}><Pin className="h-3 w-3" /></Button>
-                      <Button size="sm" variant="ghost" className={`h-5 w-5 p-0 ${item.visible ? 'text-slate-600' : 'text-rose-500'}`} onClick={() => toggleVisibility(item.id)}><X className="h-3 w-3" /></Button>
-                    </div>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => togglePinWidget(item.id)}
+                      className={`p-1 rounded-lg hover:bg-slate-200/60 ${item.pinned ? 'text-rose-600' : 'text-slate-400'}`}
+                    >
+                      <Pin className="h-3 w-3" />
+                    </button>
+                    <button
+                      onClick={() => toggleVisibility(item.id)}
+                      className={`p-1 rounded-lg hover:bg-slate-200/60 ${item.visible ? 'text-slate-600' : 'text-rose-500'}`}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
                   </div>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+              </div>
+            ))}
+          </div>
+        </NeumorphicCard>
       )}
 
       {/* Dashboard Rendered Grid */}
@@ -517,55 +549,80 @@ const AdminDashboardHome: React.FC = () => {
           if (widget.id === 'insights') {
             return (
               <div key={widget.id} className="grid grid-cols-1 lg:grid-cols-4 gap-4 animate-in slide-in-from-top duration-300">
-                <Card className="lg:col-span-3 border border-slate-200 shadow-md relative overflow-hidden bg-gradient-to-r from-indigo-500 to-indigo-600 text-white">
-                  <div className="absolute -right-6 -bottom-6 opacity-10"><Zap className="h-32 w-32" /></div>
-                  <CardHeader className="pb-1 pt-4 px-4 sm:px-6">
-                    <CardTitle className="text-sm font-bold tracking-wider uppercase opacity-85 flex items-center gap-1.5">
-                      <Zap className="h-4 w-4 animate-bounce" /> Executive Insights Engine
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pb-4 px-4 sm:px-6">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                      {stats?.insights && stats.insights.length > 0 ? (
-                        stats.insights.map((insight, idx) => (
-                          <div key={idx} className="p-3 bg-white/10 rounded-xl backdrop-blur-md flex items-start gap-2 border border-white/10 hover:bg-white/15 transition-all">
-                            <Check className="h-4 w-4 text-emerald-300 mt-0.5 shrink-0" />
-                            <p className="leading-snug">{insight}</p>
-                          </div>
-                        ))
-                      ) : (
-                        <p className="p-3 text-slate-200">Database analysis in progress... No anomalies detected.</p>
-                      )}
+                <NeumorphicCard
+                  className="lg:col-span-3 p-5 bg-gradient-to-br from-rose-500 via-rose-600 to-pink-600 text-white relative overflow-hidden"
+                  variant="raised"
+                >
+                  <div className="absolute -right-8 -bottom-8 opacity-10">
+                    <Zap className="h-44 w-44" />
+                  </div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="p-1.5 rounded-lg bg-white/20 backdrop-blur-md">
+                      <Zap className="h-4 w-4 text-white animate-bounce" />
                     </div>
-                  </CardContent>
-                </Card>
+                    <span className="text-xs font-bold uppercase tracking-wider text-white/90">
+                      Executive Intelligence Engine
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    {stats?.insights && stats.insights.length > 0 ? (
+                      stats.insights.map((insight, idx) => (
+                        <div
+                          key={idx}
+                          className="p-3 bg-white/10 rounded-2xl backdrop-blur-md flex items-start gap-2.5 border border-white/15 hover:bg-white/20 transition-all shadow-inner"
+                        >
+                          <CheckCircle2 className="h-4 w-4 text-emerald-300 mt-0.5 shrink-0" />
+                          <p className="leading-relaxed text-white/95">{insight}</p>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="p-3 text-rose-100">Database analysis in progress... No anomalies detected.</p>
+                    )}
+                  </div>
+                </NeumorphicCard>
 
-                {/* Performance stats mini panel */}
-                <Card className="border border-slate-200 shadow-md bg-gradient-to-br from-slate-900 to-slate-800 text-white">
-                  <CardHeader className="pb-1 pt-4 px-4">
-                    <CardTitle className="text-xs font-bold uppercase tracking-wider opacity-75">Funnel Conversion Rate</CardTitle>
-                  </CardHeader>
-                  <CardContent className="pb-4 px-4 space-y-3.5 pt-2">
-                    <div>
-                      <div className="flex justify-between text-xs mb-1">
-                        <span className="opacity-75">Cart Additions Conversion</span>
-                        <strong>{stats?.conversions.cart}%</strong>
+                {/* Conversion Funnel Mini Panel */}
+                <NeumorphicCard className="p-5 flex flex-col justify-between" variant="raised">
+                  <div>
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-500 block mb-3">
+                      Conversion Funnels
+                    </span>
+                    <div className="space-y-4">
+                      <div>
+                        <div className="flex justify-between text-xs mb-1.5">
+                          <span className="text-slate-600 font-medium">Cart Additions</span>
+                          <strong className="text-slate-800 font-mono">{stats?.conversions.cart}%</strong>
+                        </div>
+                        <div className="w-full sbf-neumo-inset-sm rounded-full h-2 bg-[var(--sbf-card)] p-0.5 overflow-hidden">
+                          <div
+                            className="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-500"
+                            style={{ width: `${Math.min(stats?.conversions.cart || 8, 100)}%` }}
+                          />
+                        </div>
                       </div>
-                      <div className="w-full bg-white/10 rounded-full h-1.5">
-                        <div className="bg-emerald-400 h-1.5 rounded-full" style={{ width: `${stats?.conversions.cart || 8}%` }} />
+
+                      <div>
+                        <div className="flex justify-between text-xs mb-1.5">
+                          <span className="text-slate-600 font-medium">Checkout Success</span>
+                          <strong className="text-slate-800 font-mono">{stats?.conversions.checkout}%</strong>
+                        </div>
+                        <div className="w-full sbf-neumo-inset-sm rounded-full h-2 bg-[var(--sbf-card)] p-0.5 overflow-hidden">
+                          <div
+                            className="bg-gradient-to-r from-rose-500 to-pink-500 h-full rounded-full transition-all duration-500"
+                            style={{ width: `${Math.min(stats?.conversions.checkout || 98, 100)}%` }}
+                          />
+                        </div>
                       </div>
                     </div>
-                    <div>
-                      <div className="flex justify-between text-xs mb-1">
-                        <span className="opacity-75">Checkout Session Success</span>
-                        <strong>{stats?.conversions.checkout}%</strong>
-                      </div>
-                      <div className="w-full bg-white/10 rounded-full h-1.5">
-                        <div className="bg-indigo-400 h-1.5 rounded-full" style={{ width: `${stats?.conversions.checkout || 98}%` }} />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                  </div>
+
+                  <div className="pt-3 border-t border-slate-200/60 mt-3 flex justify-between items-center text-[11px] text-slate-500">
+                    <span>Performance Health</span>
+                    <span className="text-emerald-600 font-bold flex items-center gap-1">
+                      <TrendingUp className="h-3 w-3" /> Optimal
+                    </span>
+                  </div>
+                </NeumorphicCard>
               </div>
             );
           }
@@ -573,70 +630,62 @@ const AdminDashboardHome: React.FC = () => {
           // ─── 2. KPI CARDS WIDGET ───
           if (widget.id === 'kpis') {
             return (
-              <div key={widget.id} className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4 animate-in fade-in duration-300">
-                
-                {/* KPI Card 1: Today Revenue */}
-                <Card className="border hover:shadow-lg transition-all duration-300 bg-white">
-                  <CardHeader className="p-3 pb-1 flex flex-row items-center justify-between">
-                    <span className="text-[10px] sm:text-xs text-slate-400 font-bold uppercase tracking-wider">Today's Revenue</span>
-                    <DollarSign className="h-4.5 w-4.5 text-indigo-600" />
-                  </CardHeader>
-                  <CardContent className="p-3 pt-0">
-                    <h3 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">{formatPrice(stats?.revenue.today || 0)}</h3>
-                    <div className="text-[10px] text-slate-400 flex items-center mt-1">
-                      <TrendingUp className="h-3 w-3 text-emerald-500 mr-0.5" />
-                      <span>Sync values live</span>
-                    </div>
-                  </CardContent>
-                </Card>
+              <div key={widget.id} className="grid gap-4 grid-cols-2 lg:grid-cols-4 animate-in fade-in duration-300">
+                <StatCard
+                  title="Today's Revenue"
+                  value={formatPrice(stats?.revenue.today || 0)}
+                  icon={DollarSign}
+                  iconColor="text-rose-600"
+                  iconBg="bg-rose-50"
+                  trend={{
+                    value: `${stats?.revenue.percentChange || 0}%`,
+                    isPositive: (stats?.revenue.percentChange || 0) >= 0,
+                    label: 'vs yesterday'
+                  }}
+                  comparison="Real-time synchronized"
+                />
 
-                {/* KPI Card 2: Today Orders */}
-                <Card className="border hover:shadow-lg transition-all duration-300 bg-white">
-                  <CardHeader className="p-3 pb-1 flex flex-row items-center justify-between">
-                    <span className="text-[10px] sm:text-xs text-slate-400 font-bold uppercase tracking-wider">Today's Orders</span>
-                    <ShoppingCart className="h-4.5 w-4.5 text-emerald-500" />
-                  </CardHeader>
-                  <CardContent className="p-3 pt-0">
-                    <h3 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">{stats?.sales.today || 0} orders</h3>
-                    <div className="text-[10px] text-slate-400 flex items-center mt-1">
-                      <Clock className="h-3 w-3 text-slate-400 mr-0.5" />
-                      <span>Today's active log</span>
-                    </div>
-                  </CardContent>
-                </Card>
+                <StatCard
+                  title="Today's Orders"
+                  value={`${stats?.sales.today || 0} orders`}
+                  icon={ShoppingCart}
+                  iconColor="text-emerald-600"
+                  iconBg="bg-emerald-50"
+                  trend={{
+                    value: `${stats?.sales.pending || 0} pending`,
+                    isPositive: true,
+                    label: 'active pipeline'
+                  }}
+                  comparison="Today's live register"
+                />
 
-                {/* KPI Card 3: Gift Orders */}
-                <Card className="border hover:shadow-lg transition-all duration-300 bg-white">
-                  <CardHeader className="p-3 pb-1 flex flex-row items-center justify-between">
-                    <span className="text-[10px] sm:text-xs text-slate-400 font-bold uppercase tracking-wider">Gift Deliveries</span>
-                    <Gift className="h-4.5 w-4.5 text-pink-500" />
-                  </CardHeader>
-                  <CardContent className="p-3 pt-0">
-                    <h3 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">{stats?.giftOrders.total || 0} orders</h3>
-                    <div className="text-[10px] text-slate-400 flex items-center mt-1">
-                      <CheckCircle className="h-3 w-3 text-pink-500 mr-0.5" />
-                      <span>Recipient messaging active</span>
-                    </div>
-                  </CardContent>
-                </Card>
+                <StatCard
+                  title="Gift Deliveries"
+                  value={`${stats?.giftOrders.total || 0} orders`}
+                  icon={Gift}
+                  iconColor="text-pink-600"
+                  iconBg="bg-pink-50"
+                  trend={{
+                    value: `${stats?.giftOrders.surprise || 0} surprise`,
+                    isPositive: true,
+                    label: 'deliveries'
+                  }}
+                  comparison="Recipient messaging active"
+                />
 
-                {/* KPI Card 4: Low stock alert */}
-                <Card className={`border hover:shadow-lg transition-all duration-300 ${stats?.inventory.lowStock && stats.inventory.lowStock > 0 ? 'bg-amber-50/50 border-amber-200' : 'bg-white'}`}>
-                  <CardHeader className="p-3 pb-1 flex flex-row items-center justify-between">
-                    <span className="text-[10px] sm:text-xs text-slate-400 font-bold uppercase tracking-wider">Stock Alert</span>
-                    <Package className="h-4.5 w-4.5 text-amber-500" />
-                  </CardHeader>
-                  <CardContent className="p-3 pt-0">
-                    <h3 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">
-                      {stats?.inventory.lowStock || 0} items low
-                    </h3>
-                    <div className="text-[10px] text-slate-400 flex items-center mt-1">
-                      <AlertTriangle className={`h-3 w-3 mr-0.5 ${stats?.inventory.lowStock && stats.inventory.lowStock > 0 ? 'text-amber-500 animate-pulse' : 'text-slate-400'}`} />
-                      <span>Stock threshold &lt; 10</span>
-                    </div>
-                  </CardContent>
-                </Card>
-
+                <StatCard
+                  title="Stock Inventory"
+                  value={`${stats?.inventory.lowStock || 0} low stock`}
+                  icon={Package}
+                  iconColor={stats?.inventory.lowStock && stats.inventory.lowStock > 0 ? 'text-amber-600' : 'text-slate-600'}
+                  iconBg={stats?.inventory.lowStock && stats.inventory.lowStock > 0 ? 'bg-amber-50' : 'bg-slate-50'}
+                  trend={{
+                    value: stats?.inventory.lowStock && stats.inventory.lowStock > 0 ? 'Action needed' : 'Healthy',
+                    isPositive: !stats?.inventory.lowStock || stats.inventory.lowStock === 0,
+                    label: 'inventory status'
+                  }}
+                  comparison="Threshold < 10 stems"
+                />
               </div>
             );
           }
@@ -644,112 +693,143 @@ const AdminDashboardHome: React.FC = () => {
           // ─── 3. REVENUE CHART WIDGET ───
           if (widget.id === 'sales_chart') {
             return (
-              <Card key={widget.id} className="border shadow-md">
-                <CardHeader className="pb-2 border-b">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <CardTitle className="text-base font-bold flex items-center gap-1.5">
-                        <BarChart3 className="h-4 w-4 text-indigo-600" />
-                        Executive Revenue Timeline
-                      </CardTitle>
-                      <CardDescription className="text-xs">Timeline of net sales and order volumes</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-4">
-                  <ResponsiveContainer width="100%" height={260}>
-                    <AreaChart data={salesChartData}>
+              <NeumorphicCard
+                key={widget.id}
+                title="Executive Revenue Timeline"
+                description="Timeline of net revenue and volume progression across selected period"
+                headerIcon={BarChart3}
+                variant="raised"
+              >
+                <div className="pt-2">
+                  <ResponsiveContainer width="100%" height={280}>
+                    <AreaChart data={salesChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <defs>
-                        <linearGradient id="dashboardRevenue" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor={PRIMARY_COLOR} stopOpacity={0.35}/>
-                          <stop offset="95%" stopColor={PRIMARY_COLOR} stopOpacity={0.01}/>
+                        <linearGradient id="sbfNeumoRevenue" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={PRIMARY_ROSE} stopOpacity={0.35}/>
+                          <stop offset="95%" stopColor={PRIMARY_ROSE} stopOpacity={0.01}/>
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                      <XAxis dataKey="name" tick={{ fontSize: 9 }} stroke="#cbd5e1" />
-                      <YAxis tick={{ fontSize: 9 }} stroke="#cbd5e1" tickFormatter={(v) => `₹${v}`} />
-                      <Tooltip formatter={(val, name) => name === 'total' ? [formatPrice(val as number), 'Revenue'] : [val, name]} />
-                      <Area type="monotone" dataKey="total" stroke={PRIMARY_COLOR} strokeWidth={2} fillOpacity={1} fill="url(#dashboardRevenue)" name="Revenue" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" opacity={0.6} />
+                      <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#64748b' }} stroke="#cbd5e1" />
+                      <YAxis tick={{ fontSize: 10, fill: '#64748b' }} stroke="#cbd5e1" tickFormatter={(v) => `₹${v}`} />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: '#ffffff',
+                          borderRadius: '16px',
+                          border: '1px solid #e2e8f0',
+                          boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)',
+                          fontSize: '12px'
+                        }}
+                        formatter={(val, name) => name === 'total' ? [formatPrice(val as number), 'Revenue'] : [val, name]}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="total"
+                        stroke={PRIMARY_ROSE}
+                        strokeWidth={2.5}
+                        fillOpacity={1}
+                        fill="url(#sbfNeumoRevenue)"
+                        name="Revenue"
+                      />
                     </AreaChart>
                   </ResponsiveContainer>
-                </CardContent>
-              </Card>
+                </div>
+              </NeumorphicCard>
             );
           }
 
           // ─── 4. ORDERS STATUS TRACK WIDGET ───
           if (widget.id === 'status_track') {
             return (
-              <Card key={widget.id} className="border shadow-md">
-                <CardHeader className="pb-2 border-b">
-                  <CardTitle className="text-base font-bold">Fulfillment Status Tracking</CardTitle>
-                </CardHeader>
-                <CardContent className="pt-4">
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-                    {stats?.ordersByStatus.map((item, idx) => (
-                      <div key={idx} className="p-3 border rounded-xl bg-slate-50/50 flex flex-col justify-between hover:bg-slate-50 transition-colors">
-                        <div>
-                          <span className="text-[10px] text-slate-400 capitalize font-bold">{item.status.replace('_', ' ')}</span>
-                          <h4 className="text-xl font-extrabold text-slate-800 mt-1">{item.count}</h4>
-                        </div>
-                        <div className="mt-3">
-                          <div className="w-full bg-slate-200 rounded-full h-1.5">
-                            <div className="bg-indigo-600 h-1.5 rounded-full" style={{ width: `${item.percentage}%` }} />
-                          </div>
-                          <span className="text-[9px] text-slate-400 mt-1 block font-mono">{item.percentage}%</span>
-                        </div>
+              <NeumorphicCard
+                key={widget.id}
+                title="Fulfillment Status Pipeline"
+                description="Live progression of customer flower & gift orders across processing stages"
+                variant="raised"
+              >
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+                  {stats?.ordersByStatus.map((item, idx) => (
+                    <div
+                      key={idx}
+                      className="p-3.5 rounded-2xl sbf-neumo-inset-sm bg-[var(--sbf-card)] flex flex-col justify-between"
+                    >
+                      <div>
+                        <StatusBadge status={item.status} size="sm" />
+                        <h4 className="text-xl font-extrabold text-slate-800 mt-2 font-mono">{item.count}</h4>
                       </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+                      <div className="mt-3">
+                        <div className="w-full bg-slate-200/80 rounded-full h-1.5 overflow-hidden">
+                          <div
+                            className="bg-rose-500 h-1.5 rounded-full"
+                            style={{ width: `${Math.min(item.percentage, 100)}%` }}
+                          />
+                        </div>
+                        <span className="text-[10px] text-slate-500 mt-1 block font-mono font-medium">
+                          {item.percentage}%
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </NeumorphicCard>
             );
           }
 
           // ─── 5. RECENT ORDERS TABLE WIDGET ───
           if (widget.id === 'recent_orders') {
             return (
-              <Card key={widget.id} className="border shadow-md">
-                <CardHeader className="pb-2 border-b flex flex-row items-center justify-between">
-                  <CardTitle className="text-base font-bold">Recent eCommerce Orders</CardTitle>
-                  <Button size="sm" variant="ghost" className="text-xs text-indigo-600 font-bold" onClick={() => navigate('/admin/orders')}>View Ledger</Button>
-                </CardHeader>
-                <CardContent className="p-0 overflow-x-auto">
+              <NeumorphicCard
+                key={widget.id}
+                title="Live Recent eCommerce Orders"
+                description="Real-time order transactions placed across sbflorist.in"
+                headerActions={
+                  <SoftButton
+                    size="sm"
+                    variant="ghost"
+                    className="text-xs text-rose-600 font-bold"
+                    onClick={() => navigate('/admin/orders')}
+                  >
+                    View All Orders →
+                  </SoftButton>
+                }
+                variant="raised"
+              >
+                <div className="overflow-x-auto -mx-5 -mb-5">
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
-                      <tr className="bg-slate-50 text-slate-500 font-semibold border-b">
-                        <th className="p-3">Order Number</th>
-                        <th className="p-3">Customer</th>
-                        <th className="p-3">Recipient</th>
-                        <th className="p-3">Amount</th>
-                        <th className="p-3">Status</th>
-                        <th className="p-3">Worker Assignment</th>
-                        <th className="p-3">Quick Actions</th>
+                      <tr className="border-y border-slate-200/70 bg-slate-100/40 text-slate-500 font-semibold">
+                        <th className="p-3.5 pl-5">Order ID</th>
+                        <th className="p-3.5">Customer</th>
+                        <th className="p-3.5">Recipient</th>
+                        <th className="p-3.5">Amount</th>
+                        <th className="p-3.5">Status</th>
+                        <th className="p-3.5">Assigned Worker</th>
+                        <th className="p-3.5 pr-5 text-right">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-slate-200/50">
                       {recentOrders.map(order => (
-                        <tr key={order.id} className="hover:bg-slate-50/30 transition-colors">
-                          <td className="p-3 font-semibold text-slate-700 font-mono flex items-center gap-2 flex-wrap">
-                            {order.orderNumber}
+                        <tr key={order.id} className="hover:bg-white/60 transition-colors">
+                          <td className="p-3.5 pl-5 font-bold text-slate-800 font-mono flex items-center gap-2 flex-wrap">
+                            <span>#{order.orderNumber}</span>
                             {order.isTestOrder && (
-                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                                🧪 INTERNAL TEST ORDER
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                TEST
                               </span>
                             )}
                           </td>
-                          <td className="p-3 text-slate-600">{order.customer}</td>
-                          <td className="p-3 text-slate-500 capitalize">{order.recipientName}</td>
-                          <td className="p-3 text-slate-800 font-bold">{formatPrice(order.amount)}</td>
-                          <td className="p-3">
+                          <td className="p-3.5 text-slate-700 font-medium">{order.customer}</td>
+                          <td className="p-3.5 text-slate-600 capitalize">{order.recipientName}</td>
+                          <td className="p-3.5 text-slate-900 font-bold font-mono">{formatPrice(order.amount)}</td>
+                          <td className="p-3.5">
                             <Select 
                               value={order.status} 
                               onValueChange={(val) => handleUpdateOrderStatus(order.id, val)}
                             >
-                              <SelectTrigger className="w-[120px] text-[10px] py-0.5 px-2 h-7 bg-white">
+                              <SelectTrigger className="w-[125px] text-[11px] h-7 rounded-lg sbf-neumo-inset-sm border-none bg-white font-medium">
                                 <SelectValue />
                               </SelectTrigger>
-                              <SelectContent className="text-xs">
+                              <SelectContent className="text-xs rounded-xl shadow-lg">
                                 <SelectItem value="order_placed">Placed</SelectItem>
                                 <SelectItem value="received">Received</SelectItem>
                                 <SelectItem value="being_made">Preparing</SelectItem>
@@ -759,102 +839,115 @@ const AdminDashboardHome: React.FC = () => {
                               </SelectContent>
                             </Select>
                           </td>
-                          <td className="p-3 text-slate-500 font-medium">{order.assignedWorker}</td>
-                          <td className="p-3 flex items-center gap-1.5">
-                            <Button size="sm" variant="outline" className="h-6 w-6 p-0" title="View details" onClick={() => navigate(`/admin/orders/${order.id}`)}>
-                              <Eye className="h-3 w-3" />
-                            </Button>
-                            <Button size="sm" variant="outline" className="h-6 w-6 p-0" title="Print Invoice" onClick={() => navigate(`/admin/orders/${order.id}?print=true`)}>
-                              <Printer className="h-3 w-3 text-slate-500" />
-                            </Button>
+                          <td className="p-3.5 text-slate-600 font-medium">{order.assignedWorker || 'Unassigned'}</td>
+                          <td className="p-3.5 pr-5 text-right">
+                            <div className="inline-flex items-center gap-1.5">
+                              <SoftButton
+                                size="icon"
+                                variant="raised"
+                                className="h-7 w-7"
+                                title="View details"
+                                onClick={() => navigate(`/admin/orders/${order.id}`)}
+                              >
+                                <Eye className="h-3.5 w-3.5 text-slate-600" />
+                              </SoftButton>
+                              <SoftButton
+                                size="icon"
+                                variant="raised"
+                                className="h-7 w-7"
+                                title="Print Invoice"
+                                onClick={() => navigate(`/admin/orders/${order.id}?print=true`)}
+                              >
+                                <Printer className="h-3.5 w-3.5 text-slate-600" />
+                              </SoftButton>
+                            </div>
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
-                </CardContent>
-              </Card>
+                </div>
+              </NeumorphicCard>
             );
           }
 
           // ─── 6. LOW STOCK WATCHLIST WIDGET ───
           if (widget.id === 'low_stock') {
             return (
-              <Card key={widget.id} className="border shadow-md border-l-4 border-l-amber-500">
-                <CardHeader className="pb-2 border-b">
-                  <div className="flex items-center gap-2">
-                    <AlertTriangle className="h-4.5 w-4.5 text-amber-500 animate-pulse" />
-                    <CardTitle className="text-base font-bold text-slate-800">Critical Stock Inventory Replenishment</CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-0 max-h-[300px] overflow-y-auto">
-                  <div className="divide-y text-xs">
-                    {lowStockProducts.length > 0 ? (
-                      lowStockProducts.map(p => (
-                        <div key={p._id} className="p-3 flex items-center justify-between hover:bg-slate-50/50 transition-colors">
-                          <div className="min-w-0">
-                            <p className="font-semibold text-slate-700 truncate max-w-[260px]">{p.title}</p>
-                            <p className="text-[10px] text-slate-400 capitalize">{p.category} • {formatPrice(p.price)}</p>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <Badge variant="destructive" className="font-bold font-mono px-2 py-0.5">
-                              {p.countInStock} Left
-                            </Badge>
-                            <Button 
-                              size="sm" 
-                              onClick={() => handleQuickUpdateStock(p._id, p.countInStock)}
-                              className="bg-amber-600 hover:bg-amber-700 text-white font-bold h-7 py-1 px-3 text-[10px]"
-                            >
-                              +10 Units
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              onClick={() => navigate(`/admin/products/edit/${p._id}`)}
-                              className="h-7 text-slate-500 border-slate-200"
-                            >
-                              Edit
-                            </Button>
-                          </div>
+              <NeumorphicCard
+                key={widget.id}
+                title="Critical Inventory Watchlist"
+                description="Products running below minimum safety threshold (stems < 10)"
+                headerIcon={AlertTriangle}
+                variant="raised"
+              >
+                <div className="divide-y divide-slate-200/50 max-h-[300px] overflow-y-auto -mx-5 -mb-5">
+                  {lowStockProducts.length > 0 ? (
+                    lowStockProducts.map(p => (
+                      <div key={p._id} className="p-3.5 px-5 flex items-center justify-between hover:bg-white/60 transition-colors">
+                        <div className="min-w-0 pr-4">
+                          <p className="font-bold text-slate-800 truncate text-xs">{p.title}</p>
+                          <p className="text-[11px] text-slate-500 capitalize">{p.category} • {formatPrice(p.price)}</p>
                         </div>
-                      ))
-                    ) : (
-                      <p className="p-6 text-center text-slate-400">All products are adequately stocked.</p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+                        <div className="flex items-center gap-2.5 shrink-0">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold font-mono bg-rose-50 text-rose-700 border border-rose-200">
+                            {p.countInStock} Left
+                          </span>
+                          <SoftButton 
+                            size="sm" 
+                            variant="primary"
+                            onClick={() => handleQuickUpdateStock(p._id, p.countInStock)}
+                            className="h-7 px-2.5 text-[10px]"
+                          >
+                            +10 Units
+                          </SoftButton>
+                          <SoftButton 
+                            size="sm" 
+                            variant="raised"
+                            onClick={() => navigate(`/admin/products/edit/${p._id}`)}
+                            className="h-7 px-2.5 text-[10px]"
+                          >
+                            Edit
+                          </SoftButton>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="p-6 text-center text-slate-400 text-xs">All catalog stems and products are adequately stocked.</p>
+                  )}
+                </div>
+              </NeumorphicCard>
             );
           }
 
           // ─── 7. LIVE ACTIVITY TIMELINE WIDGET ───
           if (widget.id === 'timeline') {
             return (
-              <Card key={widget.id} className="border shadow-md">
-                <CardHeader className="pb-2 border-b">
-                  <CardTitle className="text-base font-bold flex items-center gap-1.5">
-                    <Activity className="h-4.5 w-4.5 text-indigo-600" />
-                    Live Activity Timeline
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-4 max-h-[350px] overflow-y-auto space-y-4">
+              <NeumorphicCard
+                key={widget.id}
+                title="Operational Activity Timeline"
+                description="Real-time chronological events from warehouse, dispatch, and system logs"
+                headerIcon={Activity}
+                variant="raised"
+              >
+                <div className="max-h-[350px] overflow-y-auto space-y-3.5 pr-2">
                   {activityTimeline.length > 0 ? (
                     activityTimeline.map((item, idx) => (
                       <div key={item.id} className="flex gap-3 text-xs relative">
                         {idx !== activityTimeline.length - 1 && (
-                          <div className="absolute top-5 left-2.5 bottom-0 w-0.5 bg-slate-100 -mb-4" />
+                          <div className="absolute top-6 left-3 bottom-0 w-0.5 bg-slate-200/70 -mb-3.5" />
                         )}
-                        <div className={`w-5.5 h-5.5 rounded-full shrink-0 flex items-center justify-center ${
-                          item.type === 'order' ? 'bg-indigo-50 text-indigo-600' :
-                          item.type === 'delivery' ? 'bg-emerald-50 text-emerald-600' :
-                          item.type === 'user' ? 'bg-amber-50 text-amber-600' :
-                          'bg-slate-100 text-slate-500'
+                        <div className={`w-6 h-6 rounded-full shrink-0 flex items-center justify-center sbf-neumo-raised-sm ${
+                          item.type === 'order' ? 'text-rose-600 bg-rose-50' :
+                          item.type === 'delivery' ? 'text-emerald-600 bg-emerald-50' :
+                          item.type === 'user' ? 'text-amber-600 bg-amber-50' :
+                          'text-slate-600 bg-slate-100'
                         }`}>
                           <SparklineIcon className="h-3 w-3" />
                         </div>
-                        <div>
+                        <div className="flex-1 min-w-0">
                           <p className="font-semibold text-slate-800">{item.title}</p>
-                          <p className="text-slate-500 leading-relaxed mt-0.5">{item.description}</p>
+                          <p className="text-slate-600 leading-relaxed mt-0.5">{item.description}</p>
                           <span className="text-[10px] text-slate-400 font-mono mt-1 block">
                             {new Date(item.timestamp).toLocaleTimeString()} • {item.user}
                           </span>
@@ -862,57 +955,58 @@ const AdminDashboardHome: React.FC = () => {
                       </div>
                     ))
                   ) : (
-                    <p className="text-center text-slate-400 text-xs py-16">No operations logged in timeline.</p>
+                    <p className="text-center text-slate-400 text-xs py-12">No operations logged in timeline.</p>
                   )}
-                </CardContent>
-              </Card>
+                </div>
+              </NeumorphicCard>
             );
           }
 
           // ─── 8. TOP SELLERS PRODUCTS WIDGET ───
           if (widget.id === 'bestsellers') {
             return (
-              <Card key={widget.id} className="border shadow-md">
-                <CardHeader className="pb-2 border-b flex flex-row items-center justify-between">
-                  <CardTitle className="text-base font-bold flex items-center gap-2">
-                    <TrendingUp className="h-4.5 w-4.5 text-indigo-600" />
-                    Top 10 Selling Products
-                  </CardTitle>
-                  <span className="text-xs text-slate-400 font-semibold">{topProducts.length} Items</span>
-                </CardHeader>
-                <CardContent className="pt-3">
-                  {topProducts && topProducts.length > 0 ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-                      {topProducts.slice(0, 10).map((p, idx) => (
-                        <div key={p.id || idx} className="p-2 border.5 border-slate-200 rounded-xl bg-white shadow-sm flex flex-col justify-between hover:border-indigo-400 hover:shadow-md transition-all">
-                          <div className="relative w-full aspect-square bg-slate-50 rounded-lg overflow-hidden flex items-center justify-center border">
-                            {p.image ? (
-                              <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
-                            ) : (
-                              <Package className="h-8 w-8 text-slate-300" />
-                            )}
-                            <span className="absolute top-1 left-1 bg-indigo-600 text-white font-black text-[10px] w-5 h-5 rounded-full flex items-center justify-center shadow-sm">
-                              #{idx + 1}
-                            </span>
-                          </div>
-                          <div className="mt-2 min-w-0">
-                            <p className="font-bold text-slate-800 text-xs truncate" title={p.name}>{p.name}</p>
-                            <p className="text-[10px] text-slate-400 capitalize">{p.category}</p>
-                          </div>
-                          <div className="border-t pt-2 mt-2 flex justify-between items-center text-xs">
-                            <span className="font-black text-slate-800">{p.sold} Sold</span>
-                            <span className="text-indigo-600 font-extrabold">{formatPrice(p.revenue)}</span>
-                          </div>
+              <NeumorphicCard
+                key={widget.id}
+                title="Top 10 Selling Arrangements"
+                description="Best performing floral bouquets, celebration cakes, and combos"
+                headerIcon={TrendingUp}
+                headerActions={<span className="text-xs font-semibold text-slate-500 font-mono">{topProducts.length} Items</span>}
+                variant="raised"
+              >
+                {topProducts && topProducts.length > 0 ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                    {topProducts.slice(0, 10).map((p, idx) => (
+                      <div
+                        key={p.id || idx}
+                        className="p-2.5 rounded-2xl sbf-neumo-raised-sm bg-[var(--sbf-card)] flex flex-col justify-between hover:scale-[1.02] transition-transform duration-200"
+                      >
+                        <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-slate-100 flex items-center justify-center sbf-neumo-inset-sm">
+                          {p.image ? (
+                            <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <Package className="h-8 w-8 text-slate-300" />
+                          )}
+                          <span className="absolute top-1.5 left-1.5 bg-rose-600 text-white font-black text-[10px] w-5 h-5 rounded-full flex items-center justify-center shadow-md">
+                            #{idx + 1}
+                          </span>
                         </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 text-slate-400 text-sm">
-                      No top selling products recorded yet.
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                        <div className="mt-2.5 min-w-0">
+                          <p className="font-bold text-slate-800 text-xs truncate" title={p.name}>{p.name}</p>
+                          <p className="text-[10px] text-slate-400 capitalize">{p.category}</p>
+                        </div>
+                        <div className="border-t border-slate-200/60 pt-2 mt-2 flex justify-between items-center text-xs">
+                          <span className="font-bold text-slate-600 font-mono">{p.sold} Sold</span>
+                          <span className="text-rose-600 font-black font-mono">{formatPrice(p.revenue)}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-slate-400 text-sm">
+                    No top selling products recorded yet.
+                  </div>
+                )}
+              </NeumorphicCard>
             );
           }
 
@@ -922,29 +1016,28 @@ const AdminDashboardHome: React.FC = () => {
               <div key={widget.id} className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 
                 {/* Geographic sales breakdown */}
-                <Card className="border shadow-md">
-                  <CardHeader className="pb-2 border-b">
-                    <CardTitle className="text-base font-bold flex items-center gap-1.5">
-                      <MapPin className="h-4.5 w-4.5 text-indigo-600" />
-                      Geographic Sales Split
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-0">
+                <NeumorphicCard
+                  title="Geographic Sales Distribution"
+                  description="Regional order distribution across Hyderabad & Secunderabad"
+                  headerIcon={MapPin}
+                  variant="raised"
+                >
+                  <div className="overflow-x-auto -mx-5 -mb-5">
                     <table className="w-full text-left text-xs border-collapse">
                       <thead>
-                        <tr className="bg-slate-50 text-slate-500 font-semibold border-b">
-                          <th className="p-3">City Region</th>
-                          <th className="p-3">Orders Count</th>
-                          <th className="p-3">Sales (INR)</th>
+                        <tr className="border-y border-slate-200/70 bg-slate-100/40 text-slate-500 font-semibold">
+                          <th className="p-3 pl-5">Region</th>
+                          <th className="p-3">Orders</th>
+                          <th className="p-3 pr-5 text-right">Revenue</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100">
+                      <tbody className="divide-y divide-slate-200/50">
                         {stats?.geographicSales && stats.geographicSales.length > 0 ? (
                           stats.geographicSales.slice(0, 5).map((g, idx) => (
-                            <tr key={idx} className="hover:bg-slate-50/50">
-                              <td className="p-3 font-semibold text-slate-700 capitalize">{g.city}</td>
+                            <tr key={idx} className="hover:bg-white/60">
+                              <td className="p-3 pl-5 font-semibold text-slate-800 capitalize">{g.city}</td>
                               <td className="p-3 text-slate-600 font-mono">{g.orders}</td>
-                              <td className="p-3 font-bold text-slate-800">{formatPrice(g.revenue)}</td>
+                              <td className="p-3 pr-5 text-right font-bold text-slate-900 font-mono">{formatPrice(g.revenue)}</td>
                             </tr>
                           ))
                         ) : (
@@ -954,48 +1047,50 @@ const AdminDashboardHome: React.FC = () => {
                         )}
                       </tbody>
                     </table>
-                  </CardContent>
-                </Card>
+                  </div>
+                </NeumorphicCard>
 
                 {/* Gateway Breakdown donut chart */}
-                <Card className="border shadow-md">
-                  <CardHeader className="pb-2 border-b">
-                    <CardTitle className="text-base font-bold flex items-center gap-1.5">
-                      <CreditCard className="h-4.5 w-4.5 text-indigo-600" />
-                      Payment Gateways Breakdown
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-4 flex items-center justify-between">
-                    <ResponsiveContainer width="45%" height={160}>
+                <NeumorphicCard
+                  title="Payment Method Breakdown"
+                  description="Gateway transactions split across Razorpay, UPI & COD"
+                  headerIcon={CreditCard}
+                  variant="raised"
+                >
+                  <div className="flex items-center justify-between pt-2">
+                    <ResponsiveContainer width="45%" height={170}>
                       <PieChart>
                         <Pie
                           data={stats?.paymentMethods}
                           cx="50%"
                           cy="50%"
-                          outerRadius={55}
-                          innerRadius={35}
-                          paddingAngle={2}
+                          outerRadius={60}
+                          innerRadius={40}
+                          paddingAngle={3}
                           dataKey="transactions"
                         >
                           {stats?.paymentMethods.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            <Cell key={`cell-${index}`} fill={SBF_PALETTE[index % SBF_PALETTE.length]} />
                           ))}
                         </Pie>
                       </PieChart>
                     </ResponsiveContainer>
-                    <div className="w-[50%] space-y-2 text-xs">
+                    <div className="w-[50%] space-y-2.5 text-xs pr-2">
                       {stats?.paymentMethods.map((pm, idx) => (
                         <div key={idx} className="flex justify-between items-center">
-                          <div className="flex items-center gap-1.5 truncate">
-                            <span className="w-2.5 h-2.5 rounded-full inline-block shrink-0" style={{ backgroundColor: COLORS[idx % COLORS.length] }} />
+                          <div className="flex items-center gap-2 truncate">
+                            <span
+                              className="w-2.5 h-2.5 rounded-full inline-block shrink-0 shadow-sm"
+                              style={{ backgroundColor: SBF_PALETTE[idx % SBF_PALETTE.length] }}
+                            />
                             <span className="font-semibold text-slate-700 capitalize truncate">{pm.method}</span>
                           </div>
-                          <span className="font-bold text-slate-800">{pm.transactions} tx</span>
+                          <span className="font-bold text-slate-900 font-mono">{pm.transactions} tx</span>
                         </div>
                       ))}
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </NeumorphicCard>
 
               </div>
             );
@@ -1004,45 +1099,50 @@ const AdminDashboardHome: React.FC = () => {
           // ─── 10. GIFT OCCASIONS WIDGET ───
           if (widget.id === 'gifting') {
             return (
-              <Card key={widget.id} className="border shadow-md">
-                <CardHeader className="pb-2 border-b">
-                  <CardTitle className="text-base font-bold flex items-center gap-1.5">
-                    <Gift className="h-4.5 w-4.5 text-indigo-600" />
-                    Gift Occasions Track
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <ResponsiveContainer width="100%" height={180}>
-                      <BarChart data={stats?.giftOrders.occasions.slice(0, 5)}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                        <XAxis dataKey="occasion" tick={{ fontSize: 9 }} stroke="#cbd5e1" />
-                        <YAxis tick={{ fontSize: 9 }} stroke="#cbd5e1" />
-                        <Tooltip />
-                        <Bar dataKey="count" fill={SECONDARY_COLOR} radius={[4, 4, 0, 0]} name="Occasion Count" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                    <div className="space-y-3.5 text-xs pt-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-500">Greeting Card Attachment Ratio:</span>
-                        <strong className="text-slate-700">
-                          {stats?.giftOrders.total && stats.giftOrders.total > 0
-                            ? `${((stats.giftOrders.greetingCard / stats.giftOrders.total) * 100).toFixed(0)}%`
-                            : '0%'}
-                        </strong>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-500">Anonymous Deliveries requested:</span>
-                        <strong className="text-slate-700">{stats?.giftOrders.anonymous} orders</strong>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-500">Surprise Deliveries requested:</span>
-                        <strong className="text-slate-700">{stats?.giftOrders.surprise} orders</strong>
-                      </div>
+              <NeumorphicCard
+                key={widget.id}
+                title="Gifting Occasions & Addon Analytics"
+                description="Occasion breakdown, custom cards, and delivery preference metrics"
+                headerIcon={Gift}
+                variant="raised"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                  <ResponsiveContainer width="100%" height={190}>
+                    <BarChart data={stats?.giftOrders.occasions.slice(0, 5)} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" opacity={0.6} />
+                      <XAxis dataKey="occasion" tick={{ fontSize: 9, fill: '#64748b' }} stroke="#cbd5e1" />
+                      <YAxis tick={{ fontSize: 9, fill: '#64748b' }} stroke="#cbd5e1" />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: '#ffffff',
+                          borderRadius: '16px',
+                          border: '1px solid #e2e8f0',
+                          fontSize: '12px'
+                        }}
+                      />
+                      <Bar dataKey="count" fill={PRIMARY_ROSE} radius={[6, 6, 0, 0]} name="Occasion Count" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                  <div className="space-y-3 text-xs pt-1">
+                    <div className="p-3 rounded-xl sbf-neumo-inset-sm bg-[var(--sbf-card)] flex justify-between items-center">
+                      <span className="text-slate-600 font-medium">Greeting Card Attachment:</span>
+                      <strong className="text-slate-900 font-mono font-bold">
+                        {stats?.giftOrders.total && stats.giftOrders.total > 0
+                          ? `${((stats.giftOrders.greetingCard / stats.giftOrders.total) * 100).toFixed(0)}%`
+                          : '0%'}
+                      </strong>
+                    </div>
+                    <div className="p-3 rounded-xl sbf-neumo-inset-sm bg-[var(--sbf-card)] flex justify-between items-center">
+                      <span className="text-slate-600 font-medium">Anonymous Deliveries:</span>
+                      <strong className="text-slate-900 font-mono font-bold">{stats?.giftOrders.anonymous} orders</strong>
+                    </div>
+                    <div className="p-3 rounded-xl sbf-neumo-inset-sm bg-[var(--sbf-card)] flex justify-between items-center">
+                      <span className="text-slate-600 font-medium">Surprise Deliveries:</span>
+                      <strong className="text-slate-900 font-mono font-bold">{stats?.giftOrders.surprise} orders</strong>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </NeumorphicCard>
             );
           }
 
@@ -1059,10 +1159,10 @@ const AdminDashboardHome: React.FC = () => {
           else if (val === 'orders') navigate('/admin/orders');
           else if (val === 'analytics') navigate('/admin/analytics');
         }}>
-          <SelectTrigger className="w-12 h-12 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-2xl p-0 flex items-center justify-center border-none">
+          <SelectTrigger className="w-13 h-13 rounded-2xl sbf-neumo-btn-primary p-0 flex items-center justify-center border-none shadow-2xl hover:scale-105 transition-transform duration-200 focus:ring-0">
             <Plus className="h-6 w-6 text-white" />
           </SelectTrigger>
-          <SelectContent className="text-xs">
+          <SelectContent className="text-xs rounded-2xl shadow-2xl border border-slate-200">
             <SelectItem value="prod">Add Product</SelectItem>
             <SelectItem value="cat">Add Category</SelectItem>
             <SelectItem value="coupon">Create Coupon</SelectItem>
