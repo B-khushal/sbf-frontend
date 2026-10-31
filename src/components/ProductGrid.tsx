@@ -599,17 +599,20 @@ export const ProductCard = ({ product, onAddToCart }: {
 
             {/* Rating & Delivery Row */}
             <div className="h-4 md:h-5 flex items-center">
-              {((product.numReviews && product.numReviews > 0) || product.sameDay !== false) ? (
+              {((((product.numReviews && product.numReviews > 0) || (product.reviewCount && product.reviewCount > 0)) && (product.rating && product.rating > 0)) || product.sameDay !== false) ? (
                 <div className="flex items-center gap-1.5 text-[10px] text-gray-500 font-medium">
-                  {product.numReviews && product.numReviews > 0 ? (
-                    <div className="flex items-center text-amber-500 bg-amber-50/40 px-1 py-0.5 rounded">
+                  {((product.numReviews && product.numReviews > 0) || (product.reviewCount && product.reviewCount > 0)) && (product.rating && product.rating > 0) ? (
+                    <div className="flex items-center text-amber-500 bg-amber-50/60 px-1 py-0.5 rounded">
                       <Star size={11} className="fill-current text-amber-500 mr-0.5" />
-                      <span className="font-bold text-gray-700">
+                      <span className="font-bold text-gray-800">
                         {(product.rating || 0).toFixed(1)}
+                      </span>
+                      <span className="text-gray-400 font-normal ml-0.5">
+                        ({product.reviewCount || product.numReviews})
                       </span>
                     </div>
                   ) : null}
-                  {product.numReviews && product.numReviews > 0 && product.sameDay !== false && (
+                  {(((product.numReviews && product.numReviews > 0) || (product.reviewCount && product.reviewCount > 0)) && (product.rating && product.rating > 0)) && product.sameDay !== false && (
                     <span className="text-gray-200">|</span>
                   )}
                   {product.sameDay !== false && (

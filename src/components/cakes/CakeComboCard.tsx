@@ -192,12 +192,16 @@ export const CakeComboCard: React.FC<CakeComboCardProps> = ({ combo, className }
           </div>
 
           {/* Micro Trust Strip (Rating & Delivery) */}
-          <div className="flex items-center gap-2 pt-0.5">
-            <div className="flex items-center text-amber-500 bg-amber-50/80 px-1.5 py-0.5 rounded text-[10px] font-bold">
-              <Star className="w-2.5 h-2.5 fill-current mr-0.5" />
-              <span>{(combo.rating || 4.9).toFixed(1)}</span>
-              <span className="text-slate-400 font-normal ml-1">({combo.reviewCount || 24})</span>
-            </div>
+          <div className="flex items-center gap-2 pt-0.5 min-h-[1.5rem]">
+            {Number(combo.reviewCount || combo.numReviews || 0) > 0 && Number(combo.rating || 0) > 0 ? (
+              <div className="flex items-center text-amber-500 bg-amber-50/80 px-1.5 py-0.5 rounded text-[10px] font-bold">
+                <Star className="w-2.5 h-2.5 fill-current mr-0.5" />
+                <span>{Number(combo.rating).toFixed(1)}</span>
+                <span className="text-slate-400 font-normal ml-1">
+                  ({combo.reviewCount || combo.numReviews})
+                </span>
+              </div>
+            ) : null}
             <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
               ⚡ Same Day Handover
             </span>

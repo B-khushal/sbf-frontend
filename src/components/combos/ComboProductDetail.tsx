@@ -596,13 +596,22 @@ export const ComboProductDetail: React.FC<ComboProductDetailProps> = ({
                   {product.category || 'Celebration Combo'}
                 </span>
                 {hasReviews ? (
-                  <span className="text-xs font-semibold text-slate-500 flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const el = document.getElementById('reviews-section');
+                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    className="text-xs font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center gap-1 cursor-pointer transition-colors group"
+                  >
                     <Star className="w-3.5 h-3.5 fill-amber-400 stroke-amber-400" />
-                    <strong className="text-slate-800 dark:text-slate-200">
+                    <strong className="text-slate-800 dark:text-slate-200 group-hover:text-rose-600">
                       {ratingVal.toFixed(1)}
                     </strong>{' '}
-                    ({reviewCount} {reviewCount === 1 ? 'review' : 'reviews'})
-                  </span>
+                    <span className="underline underline-offset-2 decoration-slate-300 group-hover:decoration-rose-600">
+                      ({reviewCount} {reviewCount === 1 ? 'review' : 'reviews'})
+                    </span>
+                  </button>
                 ) : (
                   <span className="text-xs font-medium text-slate-400 flex items-center gap-1">
                     <Star className="w-3.5 h-3.5 text-slate-300 dark:text-slate-600" />
@@ -1127,7 +1136,7 @@ export const ComboProductDetail: React.FC<ComboProductDetailProps> = ({
         </div>
 
         {/* 🌟 CUSTOMER REVIEWS */}
-        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 p-6 sm:p-8 shadow-sm">
+        <div id="reviews-section" className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 p-6 sm:p-8 shadow-sm scroll-mt-24">
           <ProductReviews
             productId={comboId}
             productTitle={product.title}

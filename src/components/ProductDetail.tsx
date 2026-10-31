@@ -1705,13 +1705,20 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
 
             {/* 3. Rating & Reviews */}
             <div className="flex items-center gap-3">
-              {product.numReviews && product.numReviews > 0 ? (
-                <>
+              {((product.reviewCount && product.reviewCount > 0) || (product.numReviews && product.numReviews > 0)) ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const el = document.getElementById('reviews-section');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className="flex items-center gap-2 hover:opacity-85 transition-opacity text-left cursor-pointer group"
+                >
                   <div className="flex items-center text-amber-400 gap-0.5">
                     {Array.from({ length: 5 }).map((_, i) => (
                       <Star
                         key={i}
-                        size={16}
+                        size={15}
                         className={cn(
                           i < Math.round(product.rating || 0)
                             ? "fill-current text-amber-400"
@@ -1720,15 +1727,18 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                       />
                     ))}
                   </div>
-                  <span className="text-xs text-slate-400 font-medium">
-                    {Number(product.rating || 0).toFixed(1)} ({product.numReviews} review{product.numReviews > 1 ? 's' : ''})
+                  <span className="text-xs text-slate-600 dark:text-slate-300 font-semibold group-hover:text-rose-600 transition-colors">
+                    {Number(product.rating || 0).toFixed(1)}{' '}
+                    <span className="text-slate-400 font-normal">
+                      ({(product.reviewCount || product.numReviews)} {(product.reviewCount || product.numReviews) === 1 ? 'review' : 'reviews'})
+                    </span>
                   </span>
-                </>
+                </button>
               ) : (
                 <>
                   <div className="flex items-center text-slate-200 dark:text-slate-800 gap-0.5">
                     {Array.from({ length: 5 }).map((_, i) => (
-                      <Star key={i} size={16} />
+                      <Star key={i} size={15} />
                     ))}
                   </div>
                   <span className="text-xs text-slate-400 font-medium">No reviews yet</span>
@@ -1736,10 +1746,18 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
               )}
               <span className="h-3 w-px bg-slate-200 dark:bg-slate-800" />
               <button
-                onClick={() => navigate(buildProductReviewUrl(product._id, product.title))}
-                className="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-semibold underline underline-offset-2"
+                type="button"
+                onClick={() => {
+                  const el = document.getElementById('reviews-section');
+                  if (el) {
+                    el.scrollIntoView({ behavior: 'smooth' });
+                  } else {
+                    navigate(buildProductReviewUrl(product._id, product.title));
+                  }
+                }}
+                className="text-xs text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 font-semibold underline underline-offset-2"
               >
-                View all reviews
+                {((product.reviewCount && product.reviewCount > 0) || (product.numReviews && product.numReviews > 0)) ? 'Read reviews' : 'Write a review'}
               </button>
             </div>
 

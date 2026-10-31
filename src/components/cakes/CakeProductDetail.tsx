@@ -589,16 +589,23 @@ export const CakeProductDetail: React.FC<CakeProductDetailProps> = ({
               {/* Rating Review Stars / Stock status */}
               <div className="flex items-center gap-3 pt-1">
                 {hasReviews && (
-                  <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const el = document.getElementById('reviews-section');
+                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    className="flex items-center gap-1.5 hover:opacity-80 transition-opacity cursor-pointer group text-left"
+                  >
                     <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400 font-bold text-xs">
                       <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
                       <span>{ratingVal.toFixed(1)}</span>
                     </div>
-                    <span className="text-xs text-stone-500">
+                    <span className="text-xs text-stone-500 group-hover:text-amber-700 transition-colors underline underline-offset-2 decoration-stone-300">
                       ({reviewCount} verified review{reviewCount === 1 ? '' : 's'})
                     </span>
-                    <span className="text-stone-300 dark:text-stone-700">•</span>
-                  </>
+                    <span className="text-stone-300 dark:text-stone-700 ml-1">•</span>
+                  </button>
                 )}
                 <span className={cn(
                   "text-xs font-medium flex items-center gap-1",
@@ -1218,7 +1225,7 @@ export const CakeProductDetail: React.FC<CakeProductDetailProps> = ({
       )}
 
       {/* 11. Customer Reviews Section */}
-      <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 mt-16">
+      <div id="reviews-section" className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 mt-16 scroll-mt-24">
         <ProductReviews
           productId={product._id}
           productTitle={product.title}
