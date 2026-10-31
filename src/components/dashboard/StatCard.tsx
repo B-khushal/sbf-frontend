@@ -19,7 +19,8 @@ export interface StatCardProps {
   comparison?: string;
   subtitle?: string;
   badge?: React.ReactNode;
-  variant?: 'rose' | 'emerald' | 'amber' | 'blue' | 'indigo' | 'neutral';
+  variant?: 'rose' | 'emerald' | 'amber' | 'blue' | 'indigo' | 'neutral' | 'teal' | 'purple' | 'success' | 'warning' | 'danger' | 'default';
+  isGlass?: boolean;
   onClick?: () => void;
   className?: string;
 }
@@ -36,17 +37,26 @@ export const StatCard: React.FC<StatCardProps> = ({
   subtitle,
   badge,
   variant = 'rose',
+  isGlass,
   onClick,
   className,
 }) => {
-  const iconColors = {
+  const iconColors: Record<string, string> = {
     rose: 'text-rose-600 dark:text-rose-400 bg-rose-50/80 dark:bg-rose-950/40 border-rose-200/50 dark:border-rose-900/30',
+    danger: 'text-rose-600 dark:text-rose-400 bg-rose-50/80 dark:bg-rose-950/40 border-rose-200/50 dark:border-rose-900/30',
     emerald: 'text-emerald-600 dark:text-emerald-400 bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-200/50 dark:border-emerald-900/30',
+    success: 'text-emerald-600 dark:text-emerald-400 bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-200/50 dark:border-emerald-900/30',
     amber: 'text-amber-600 dark:text-amber-400 bg-amber-50/80 dark:bg-amber-950/40 border-amber-200/50 dark:border-amber-900/30',
+    warning: 'text-amber-600 dark:text-amber-400 bg-amber-50/80 dark:bg-amber-950/40 border-amber-200/50 dark:border-amber-900/30',
     blue: 'text-sky-600 dark:text-sky-400 bg-sky-50/80 dark:bg-sky-950/40 border-sky-200/50 dark:border-sky-900/30',
     indigo: 'text-indigo-600 dark:text-indigo-400 bg-indigo-50/80 dark:bg-indigo-950/40 border-indigo-200/50 dark:border-indigo-900/30',
+    teal: 'text-teal-600 dark:text-teal-400 bg-teal-50/80 dark:bg-teal-950/40 border-teal-200/50 dark:border-teal-900/30',
+    purple: 'text-purple-600 dark:text-purple-400 bg-purple-50/80 dark:bg-purple-950/40 border-purple-200/50 dark:border-purple-900/30',
     neutral: 'text-slate-600 dark:text-slate-400 bg-slate-100/80 dark:bg-slate-800/60 border-slate-200/60 dark:border-slate-700/40',
-  }[variant];
+    default: 'text-slate-600 dark:text-slate-400 bg-slate-100/80 dark:bg-slate-800/60 border-slate-200/60 dark:border-slate-700/40',
+  };
+
+  const currentIconColors = iconColors[variant] || iconColors.rose;
 
   const renderIcon = (iconInput: any) => {
     if (!iconInput) return null;
@@ -59,6 +69,26 @@ export const StatCard: React.FC<StatCardProps> = ({
     ) {
       const IconComponent = iconInput;
       return <IconComponent className="w-5 h-5" />;
+    }
+    return null;
+  };
+
+  const renderBadge = () => {
+    if (!badge) return null;
+    if (React.isValidElement(badge)) return badge;
+    if (typeof badge === 'string' || typeof badge === 'number') {
+      return (
+        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+          {badge}
+        </span>
+      );
+    }
+    if (typeof badge === 'object' && badge !== null && 'label' in badge) {
+      return (
+        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+          {(badge as any).label}
+        </span>
+      );
     }
     return null;
   };
@@ -84,13 +114,14 @@ export const StatCard: React.FC<StatCardProps> = ({
 
   const containerColorClass = iconBg && iconColor
     ? cn(iconBg, iconColor, 'border border-slate-200/50')
-    : iconColors;
+    : currentIconColors;
 
   return (
     <div
       onClick={onClick}
       className={cn(
         'sbf-neumo-raised sbf-neumo-raised-hover p-4 sm:p-5 flex flex-col justify-between select-none rounded-3xl',
+        isGlass && 'backdrop-blur-sm',
         onClick && 'cursor-pointer',
         className
       )}
@@ -119,7 +150,7 @@ export const StatCard: React.FC<StatCardProps> = ({
             )}
           </div>
         </div>
-        {badge && <div className="shrink-0">{badge}</div>}
+        {badge && <div className="shrink-0">{renderBadge()}</div>}
       </div>
 
       {/* Main Metric Value */}

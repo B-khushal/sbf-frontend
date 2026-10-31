@@ -13,6 +13,7 @@ export interface PageHeaderProps {
   subtitle?: string;
   breadcrumbs?: BreadcrumbItem[];
   badge?: React.ReactNode;
+  statusBadge?: { label?: string; variant?: string; status?: string } | React.ReactNode;
   actions?: React.ReactNode;
   searchSlot?: React.ReactNode;
   className?: string;
@@ -23,10 +24,47 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   subtitle,
   breadcrumbs,
   badge,
+  statusBadge,
   actions,
   searchSlot,
   className,
 }) => {
+  const renderBadge = () => {
+    if (React.isValidElement(badge)) return badge;
+    if (typeof badge === 'string' || typeof badge === 'number') {
+      return (
+        <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+          {badge}
+        </span>
+      );
+    }
+
+    const sb: any = statusBadge || (typeof badge === 'object' && badge !== null && 'label' in badge ? badge : null);
+    if (!sb) return null;
+
+    if (React.isValidElement(sb)) return sb;
+
+    if (typeof sb === 'object' && sb.label) {
+      const variant = sb.variant || 'default';
+      const variantClasses: Record<string, string> = {
+        success: 'bg-emerald-50 text-emerald-700 border-emerald-200/60',
+        warning: 'bg-amber-50 text-amber-700 border-amber-200/60',
+        danger: 'bg-rose-50 text-rose-700 border-rose-200/60',
+        rose: 'bg-rose-50 text-rose-700 border-rose-200/60',
+        default: 'bg-slate-100 text-slate-700 border-slate-200/60',
+      };
+      const cls = variantClasses[variant] || variantClasses.default;
+      return (
+        <span className={cn('px-2.5 py-0.5 rounded-full text-xs font-semibold border flex items-center gap-1.5 shadow-xs', cls)}>
+          <span className="w-1.5 h-1.5 rounded-full bg-current opacity-75 shrink-0" />
+          {sb.label}
+        </span>
+      );
+    }
+
+    return null;
+  };
+
   return (
     <div
       className={cn(
@@ -63,7 +101,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
           <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight font-sans">
             {title}
           </h1>
-          {badge}
+          {renderBadge()}
         </div>
 
         {/* Subtitle */}
@@ -86,4 +124,3 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
 };
 
 export default PageHeader;
-

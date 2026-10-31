@@ -79,6 +79,19 @@ const FilterDropdownPill: React.FC<FilterDropdownPillProps> = ({
     }
   }, [isOpen]);
 
+  const renderIcon = (iconInput: any) => {
+    if (!iconInput) return null;
+    if (React.isValidElement(iconInput)) return iconInput;
+    if (
+      typeof iconInput === 'function' ||
+      (typeof iconInput === 'object' && iconInput !== null && ('render' in iconInput || '$$typeof' in iconInput))
+    ) {
+      const IconComponent = iconInput;
+      return <IconComponent size={14} className="flex-shrink-0" />;
+    }
+    return null;
+  };
+
   const handleSelect = (value: string) => {
     onSelect(value);
     setIsOpen(false);
@@ -99,7 +112,7 @@ const FilterDropdownPill: React.FC<FilterDropdownPillProps> = ({
           isOpen && 'border-primary shadow-md'
         )}
       >
-        {icon && <span className="flex-shrink-0">{icon}</span>}
+        {icon && <span className="flex-shrink-0">{renderIcon(icon)}</span>}
         <span className="flex-1 text-left">
           {selectedLabel ? (
             <>

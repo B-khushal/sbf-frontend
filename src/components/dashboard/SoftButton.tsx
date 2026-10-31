@@ -3,10 +3,10 @@ import { cn } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
 
 export interface SoftButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'raised' | 'inset' | 'ghost' | 'danger' | 'icon';
+  variant?: 'primary' | 'raised' | 'inset' | 'ghost' | 'danger' | 'icon' | 'secondary' | 'default' | 'outline' | 'success';
   size?: 'sm' | 'md' | 'lg' | 'icon';
   loading?: boolean;
-  icon?: React.ReactNode;
+  icon?: React.ReactNode | React.ElementType;
   children?: React.ReactNode;
 }
 
@@ -15,18 +15,37 @@ export const SoftButton = React.forwardRef<HTMLButtonElement, SoftButtonProps>(
     const variantStyles = {
       primary: 'sbf-neumo-btn-primary',
       raised: 'sbf-neumo-btn text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white',
+      secondary: 'sbf-neumo-btn text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white',
+      default: 'sbf-neumo-btn text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white',
+      outline: 'sbf-neumo-btn text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white',
       inset: 'sbf-neumo-inset-sm text-slate-800 dark:text-slate-100 font-bold',
       ghost: 'bg-transparent hover:bg-slate-200/50 dark:hover:bg-slate-800/50 text-slate-600 dark:text-slate-300 rounded-xl transition-colors',
       danger: 'bg-rose-50 text-rose-700 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-300 border border-rose-200 dark:border-rose-900/40 rounded-xl shadow-xs',
+      success: 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900/40 rounded-xl shadow-xs',
       icon: 'sbf-neumo-btn p-0 flex items-center justify-center text-slate-700 dark:text-slate-200 hover:text-rose-600 dark:hover:text-rose-400',
-    }[variant];
+    }[variant] || 'sbf-neumo-btn text-slate-700';
 
     const sizeStyles = {
       sm: 'h-8 px-3 text-xs gap-1.5',
       md: 'h-10 px-4 text-xs sm:text-sm gap-2',
       lg: 'h-12 px-6 text-sm sm:text-base gap-2.5 font-bold',
       icon: 'w-10 h-10 rounded-2xl',
-    }[size];
+    }[size] || 'h-10 px-4 text-xs sm:text-sm gap-2';
+
+    const renderIcon = (iconInput: any) => {
+      if (!iconInput) return null;
+      if (React.isValidElement(iconInput)) {
+        return iconInput;
+      }
+      if (
+        typeof iconInput === 'function' ||
+        (typeof iconInput === 'object' && iconInput !== null && ('render' in iconInput || '$$typeof' in iconInput))
+      ) {
+        const IconComponent = iconInput;
+        return <IconComponent className="w-4 h-4 shrink-0" />;
+      }
+      return null;
+    };
 
     return (
       <button
@@ -43,7 +62,7 @@ export const SoftButton = React.forwardRef<HTMLButtonElement, SoftButtonProps>(
         {loading ? (
           <Loader2 className="w-4 h-4 animate-spin shrink-0" />
         ) : icon ? (
-          <span className="shrink-0">{icon}</span>
+          <span className="shrink-0 flex items-center justify-center">{renderIcon(icon)}</span>
         ) : null}
         {children}
       </button>
@@ -54,4 +73,3 @@ export const SoftButton = React.forwardRef<HTMLButtonElement, SoftButtonProps>(
 SoftButton.displayName = 'SoftButton';
 
 export default SoftButton;
-
