@@ -664,9 +664,9 @@ const CheckoutConfirmationPage = () => {
                                       🎁 Duo Combo Package
                                     </div>
                                   )}
-                                  {(cust.cakeWeight || cust.weight || cust.cakeFlavor || cust.flavor) && (
+                                  {(cust.cakeWeight || cust.weight || cust.cakeFlavor || cust.flavor || cust.eggless !== undefined || cust.isEggless !== undefined) && (
                                     <div className="flex items-center gap-2 text-amber-800 font-semibold">
-                                      🎂 <span>{cust.cakeFlavor || cust.flavor ? `${cust.cakeFlavor || cust.flavor} • ` : ''}{cust.cakeWeight || cust.weight || ''} {cust.cakeShape || cust.shape ? `• ${cust.cakeShape || cust.shape} ` : ''}{cust.cakeServes ? `• ${cust.cakeServes} ` : ''}{cust.eggless !== undefined ? `(${cust.eggless ? 'Eggless' : 'Contains Egg'})` : ''}</span>
+                                      🎂 <span>{cust.cakeFlavor || cust.flavor ? `${cust.cakeFlavor || cust.flavor} • ` : ''}{cust.cakeWeight || cust.weight || ''} {cust.cakeShape || cust.shape ? `• ${cust.cakeShape || cust.shape} ` : ''}{cust.cakeServes ? `• ${cust.cakeServes} ` : ''}{(cust.eggless !== undefined || cust.isEggless !== undefined) ? `• ${(cust.eggless ?? cust.isEggless) ? '🌱 100% Eggless' : '🥚 Contains Egg'}` : ''}</span>
                                     </div>
                                   )}
                                   {cust.cakeMessage && (

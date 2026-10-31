@@ -754,7 +754,7 @@ const OrderDetailsPage: React.FC = () => {
                           <div className="grid grid-cols-1 gap-2.5 mt-1 text-xs">
                             
                             {/* Cake Specifications */}
-                            {(item.customizations.cakeWeight || item.customizations.weight || item.customizations.cakeFlavor || item.customizations.flavor || item.customizations.cakeShape || item.customizations.shape || item.customizations.prepTime || item.customizations.occasion || item.customizations.eggless !== undefined) && (
+                            {(item.customizations.cakeWeight || item.customizations.weight || item.customizations.cakeFlavor || item.customizations.flavor || item.customizations.cakeShape || item.customizations.shape || item.customizations.prepTime || item.customizations.occasion || item.customizations.eggless !== undefined || item.customizations.isEggless !== undefined) && (
                               <div className="bg-amber-500/10 dark:bg-amber-950/20 border border-amber-300/40 dark:border-amber-800/40 p-3 rounded-xl space-y-1.5">
                                 <div className="flex items-center gap-1.5 text-amber-900 dark:text-amber-300 font-bold text-[10px] uppercase tracking-wider">
                                   <span>🎂 Bakery Specification</span>
@@ -775,12 +775,12 @@ const OrderDetailsPage: React.FC = () => {
                                       Shape: {item.customizations.cakeShape || item.customizations.shape}
                                     </span>
                                   )}
-                                  {item.customizations.eggless !== undefined && (
+                                  {(item.customizations.eggless !== undefined || item.customizations.isEggless !== undefined) && (
                                     <Badge variant="outline" className={cn(
                                       "text-[10px] font-semibold py-0.5 px-2",
-                                      item.customizations.eggless ? "border-emerald-500 text-emerald-700 bg-emerald-50" : "border-amber-500 text-amber-700 bg-amber-50"
+                                      (item.customizations.eggless ?? item.customizations.isEggless) ? "border-emerald-500 text-emerald-700 bg-emerald-50" : "border-amber-500 text-amber-700 bg-amber-50"
                                     )}>
-                                      {item.customizations.eggless ? '🍃 100% Eggless (Veg)' : '🥚 Contains Egg'}
+                                      {(item.customizations.eggless ?? item.customizations.isEggless) ? '🍃 100% Eggless (Veg)' : '🥚 Contains Egg'}
                                     </Badge>
                                   )}
                                   {item.customizations.prepTime && (

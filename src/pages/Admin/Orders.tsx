@@ -1838,11 +1838,11 @@ export const AdminOrders: React.FC = () => {
                                   {/* Customizations Breakdown */}
                                   {item.customizations && (
                                     <div className="mt-1 space-y-0.5 text-[11px]">
-                                      {(item.customizations.cakeWeight || item.customizations.weight || item.customizations.cakeFlavor || item.customizations.flavor) && (
-                                        <div className="text-amber-800 dark:text-amber-300 font-medium">
-                                          🎂 {item.customizations.cakeFlavor || item.customizations.flavor ? `${item.customizations.cakeFlavor || item.customizations.flavor} • ` : ''}{item.customizations.cakeWeight || item.customizations.weight || ''} {item.customizations.cakeShape || item.customizations.shape ? `• ${item.customizations.cakeShape || item.customizations.shape}` : ''} {item.customizations.cakeServes ? `• ${item.customizations.cakeServes}` : ''} {item.customizations.eggless !== undefined ? `• ${item.customizations.eggless ? '100% Eggless' : 'Contains Egg'}` : ''}
-                                        </div>
-                                      )}
+                                      {(item.customizations.cakeWeight || item.customizations.weight || item.customizations.cakeFlavor || item.customizations.flavor || item.customizations.eggless !== undefined || item.customizations.isEggless !== undefined) && (
+                                         <div className="text-amber-800 dark:text-amber-300 font-medium">
+                                           🎂 {item.customizations.cakeFlavor || item.customizations.flavor ? `${item.customizations.cakeFlavor || item.customizations.flavor} • ` : ''}{item.customizations.cakeWeight || item.customizations.weight || ''} {item.customizations.cakeShape || item.customizations.shape ? `• ${item.customizations.cakeShape || item.customizations.shape}` : ''} {item.customizations.cakeServes ? `• ${item.customizations.cakeServes}` : ''} {(item.customizations.eggless !== undefined || item.customizations.isEggless !== undefined) ? `• ${(item.customizations.eggless ?? item.customizations.isEggless) ? '🍃 100% Eggless' : '🥚 Contains Egg'}` : ''}
+                                         </div>
+                                       )}
                                       {item.customizations.cakeMessage && (
                                         <div className="text-emerald-700 dark:text-emerald-400 italic">
                                           ✍ Cake Inscription: "{item.customizations.cakeMessage}"

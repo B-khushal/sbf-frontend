@@ -63,17 +63,11 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 # Copy built static files from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Create nginx cache/temp directories with correct permissions
-RUN chown -R nginx:nginx /var/cache/nginx && \
-    chown -R nginx:nginx /var/log/nginx && \
-    chown -R nginx:nginx /etc/nginx/conf.d && \
-    touch /var/run/nginx.pid && \
-    chown -R nginx:nginx /var/run/nginx.pid && \
-    chown -R nginx:nginx /usr/share/nginx/html
+# Ensure proper permissions
+RUN chown -R nginx:nginx /usr/share/nginx/html
 
-# Expose port 80 and 3000 (Dokploy reverse proxy supports both)
-EXPOSE 80
-EXPOSE 3000
+# Expose ports 80 and 3000 (Dokploy reverse proxy supports both)
+EXPOSE 80 3000
 
 # Healthcheck — ensure nginx is serving content (uses built-in busybox wget)
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \

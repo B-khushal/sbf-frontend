@@ -341,12 +341,12 @@ const OrderHistory = () => {
                                 {item.customizations.cakeShape || item.customizations.shape}
                               </span>
                             )}
-                            {item.customizations.eggless !== undefined && (
+                            {(item.customizations.eggless !== undefined || item.customizations.isEggless !== undefined) && (
                               <span className={cn(
                                 "px-2 py-0.5 rounded-md text-[10px] font-semibold",
-                                item.customizations.eggless ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-amber-50 text-amber-700 border border-amber-200"
+                                (item.customizations.eggless ?? item.customizations.isEggless) ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-amber-50 text-amber-700 border border-amber-200"
                               )}>
-                                {item.customizations.eggless ? '🍃 100% Eggless' : '🥚 Contains Egg'}
+                                {(item.customizations.eggless ?? item.customizations.isEggless) ? '🍃 100% Eggless' : '🥚 Contains Egg'}
                               </span>
                             )}
                             {item.customizations.cakeMessage && (

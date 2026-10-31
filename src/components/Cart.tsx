@@ -34,6 +34,15 @@ type CustomizationData = {
   images?: string[];
   giftComponents?: Array<{ category: string; name: string; price: number }>;
   customMessage?: string;
+  cakeWeight?: string;
+  weight?: string;
+  cakeFlavor?: string;
+  flavor?: string;
+  cakeShape?: string;
+  shape?: string;
+  eggless?: boolean;
+  isEggless?: boolean;
+  cakeMessage?: string;
 };
 
 type CartItem = {
@@ -332,6 +341,38 @@ const CartItem = ({
           </div>
           
           <div className="space-y-1.5 text-sm">
+            {/* Cake Specifications & Dietary Preference */}
+            {(item.customizations.cakeWeight || item.customizations.weight || item.customizations.cakeFlavor || item.customizations.flavor || item.customizations.eggless !== undefined || item.customizations.isEggless !== undefined) && (
+              <div className="flex flex-wrap items-center gap-1.5 pb-1">
+                {(item.customizations.eggless !== undefined || item.customizations.isEggless !== undefined) && (
+                  <Badge className={cn(
+                    "text-[10px] font-bold border-none px-2 py-0.5",
+                    (item.customizations.eggless ?? item.customizations.isEggless)
+                      ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
+                      : "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
+                  )}>
+                    {(item.customizations.eggless ?? item.customizations.isEggless) ? '🍃 100% Eggless' : '🥚 Contains Egg'}
+                  </Badge>
+                )}
+                {(item.customizations.cakeWeight || item.customizations.weight) && (
+                  <Badge variant="outline" className="text-[10px] font-semibold text-slate-700 dark:text-slate-300 border-slate-200">
+                    ⚖️ {item.customizations.cakeWeight || item.customizations.weight}
+                  </Badge>
+                )}
+                {(item.customizations.cakeFlavor || item.customizations.flavor) && (
+                  <Badge variant="outline" className="text-[10px] font-semibold text-slate-700 dark:text-slate-300 border-slate-200">
+                    🍰 {item.customizations.cakeFlavor || item.customizations.flavor}
+                  </Badge>
+                )}
+              </div>
+            )}
+
+            {item.customizations.cakeMessage && (
+              <div className="text-xs text-slate-700 dark:text-slate-300 bg-amber-50/60 dark:bg-amber-950/20 p-1.5 rounded-lg border border-amber-200/50 dark:border-amber-900/30">
+                <span className="font-semibold text-amber-800 dark:text-amber-300">✍️ Cake Message:</span> "{item.customizations.cakeMessage}"
+              </div>
+            )}
+
             {item.customizations.number && (
               <div className="text-gray-600">
                 Number: {item.customizations.number}

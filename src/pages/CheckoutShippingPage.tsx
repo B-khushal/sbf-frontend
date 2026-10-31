@@ -1807,9 +1807,9 @@ const CheckoutShippingPage = () => {
                             {/* Customization Details */}
                             {item.customizations && (
                               <div className="ml-15 pl-3 border-l-2 border-purple-200 space-y-1">
-                                {(item.customizations.cakeWeight || item.customizations.cakeFlavor || item.customizations.flavor) && (
+                                {(item.customizations.cakeWeight || item.customizations.weight || item.customizations.cakeFlavor || item.customizations.flavor || item.customizations.eggless !== undefined || item.customizations.isEggless !== undefined) && (
                                   <div className="text-xs font-semibold text-amber-900 dark:text-amber-200">
-                                    🎂 {item.customizations.cakeFlavor || item.customizations.flavor ? `${item.customizations.cakeFlavor || item.customizations.flavor} • ` : ''}{item.customizations.cakeWeight || ''} {item.customizations.cakeShape || item.customizations.shape ? `• ${item.customizations.cakeShape || item.customizations.shape}` : ''} {item.customizations.eggless !== undefined ? `• ${item.customizations.eggless ? 'Eggless' : 'Contains Egg'}` : ''}
+                                    🎂 {item.customizations.cakeFlavor || item.customizations.flavor ? `${item.customizations.cakeFlavor || item.customizations.flavor} • ` : ''}{item.customizations.cakeWeight || item.customizations.weight || ''} {item.customizations.cakeShape || item.customizations.shape ? `• ${item.customizations.cakeShape || item.customizations.shape}` : ''} {(item.customizations.eggless !== undefined || item.customizations.isEggless !== undefined) ? `• ${(item.customizations.eggless ?? item.customizations.isEggless) ? '🌱 100% Eggless' : '🥚 Contains Egg'}` : ''}
                                   </div>
                                 )}
                                 {item.customizations.cakeMessage && (

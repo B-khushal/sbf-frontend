@@ -96,8 +96,20 @@ export const CakeProductDetail: React.FC<CakeProductDetailProps> = ({
     }
   }, [product, variants.length]);
 
-  // Eggless status strictly from product cakeAttributes (if configured in product form)
-  const isEggless = product.cakeAttributes?.eggless;
+  // Dietary Preference (Eggless vs Contains Egg) - defaults to product configuration, or true (100% Eggless Pure Veg)
+  const [isEggless, setIsEggless] = useState<boolean>(() => {
+    if (product.cakeAttributes?.eggless !== undefined) {
+      return Boolean(product.cakeAttributes.eggless);
+    }
+    return true;
+  });
+
+  // Keep in sync if product prop updates
+  useEffect(() => {
+    if (product.cakeAttributes?.eggless !== undefined) {
+      setIsEggless(Boolean(product.cakeAttributes.eggless));
+    }
+  }, [product.cakeAttributes?.eggless]);
 
   // Message on Cake
   const [cakeMessage, setCakeMessage] = useState('');
@@ -308,7 +320,8 @@ export const CakeProductDetail: React.FC<CakeProductDetailProps> = ({
         customizations: {
           cakeWeight: selectedVariant?.label || product.cakeAttributes?.weight,
           weight: selectedVariant?.label || product.cakeAttributes?.weight,
-          eggless: product.cakeAttributes?.eggless,
+          eggless: isEggless,
+          isEggless: isEggless,
           cakeFlavor: product.cakeAttributes?.flavor,
           flavor: product.cakeAttributes?.flavor,
           cakeShape: product.cakeAttributes?.shape,
@@ -754,27 +767,55 @@ export const CakeProductDetail: React.FC<CakeProductDetailProps> = ({
               </div>
             )}
 
-            {/* 4. Dietary Preference - ONLY displayed if configured in product form */}
-            {isEggless !== undefined && (
-              <div className="space-y-2">
+            {/* 4. Dietary Preference - Interactive Selector (Eggless vs Contains Egg) */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
                 <label className="text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300">
-                  Dietary Preference
+                  Dietary Preference *
                 </label>
-                <div className="flex items-center gap-3">
-                  {isEggless ? (
-                    <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-500/40 text-emerald-900 dark:text-emerald-200 text-xs font-bold">
-                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 shrink-0"></span>
-                      <span>100% Eggless (Pure Veg)</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-500/40 text-amber-900 dark:text-amber-200 text-xs font-bold">
-                      <span className="w-2.5 h-2.5 rounded-full bg-amber-600 shrink-0"></span>
-                      <span>Contains Egg</span>
-                    </div>
-                  )}
-                </div>
+                <span className={cn(
+                  "text-[11px] font-semibold",
+                  isEggless ? "text-emerald-600 dark:text-emerald-400" : "text-amber-700 dark:text-amber-400"
+                )}>
+                  {isEggless ? '🍃 100% Pure Vegetarian' : '🥚 Traditional Recipe'}
+                </span>
               </div>
-            )}
+              <div className="grid grid-cols-2 gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setIsEggless(true)}
+                  className={cn(
+                    "flex items-center justify-center gap-2 p-3 rounded-2xl border text-xs font-bold transition-all cursor-pointer",
+                    isEggless
+                      ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 text-emerald-900 dark:text-emerald-200 ring-2 ring-emerald-500/20 shadow-xs scale-[1.01]"
+                      : "bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-800 text-stone-600 dark:text-stone-400 hover:border-stone-300"
+                  )}
+                >
+                  <span className={cn(
+                    "w-2.5 h-2.5 rounded-full shrink-0",
+                    isEggless ? "bg-emerald-600 ring-2 ring-emerald-200" : "bg-stone-300 dark:bg-stone-600"
+                  )} />
+                  <span>🌱 100% Eggless (Pure Veg)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsEggless(false)}
+                  className={cn(
+                    "flex items-center justify-center gap-2 p-3 rounded-2xl border text-xs font-bold transition-all cursor-pointer",
+                    !isEggless
+                      ? "bg-amber-50 dark:bg-amber-950/40 border-amber-500 text-amber-900 dark:text-amber-200 ring-2 ring-amber-500/20 shadow-xs scale-[1.01]"
+                      : "bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-800 text-stone-600 dark:text-stone-400 hover:border-stone-300"
+                  )}
+                >
+                  <span className={cn(
+                    "w-2.5 h-2.5 rounded-full shrink-0",
+                    !isEggless ? "bg-amber-600 ring-2 ring-amber-200" : "bg-stone-300 dark:bg-stone-600"
+                  )} />
+                  <span>🥚 Contains Egg (Regular)</span>
+                </button>
+              </div>
+            </div>
 
             {/* 5. Message on Cake Input (optional personalization) */}
             <div className="space-y-2">

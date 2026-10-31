@@ -588,7 +588,7 @@ const CartPage: React.FC = () => {
                             </div>
 
                             {/* Cake Specific Customization Details */}
-                            {(item.customizations?.cakeWeight || item.customizations?.eggless !== undefined || item.customizations?.cakeMessage || (item.customizations?.addons && item.customizations.addons.length > 0)) && (
+                            {(item.customizations?.cakeWeight || item.customizations?.weight || item.customizations?.cakeFlavor || item.customizations?.flavor || item.customizations?.eggless !== undefined || item.customizations?.isEggless !== undefined || item.customizations?.cakeMessage || (item.customizations?.addons && item.customizations.addons.length > 0)) && (
                               <div className="mt-2.5 p-2.5 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-900/40 text-[11px] space-y-1.5">
                                 <div className="flex flex-wrap items-center gap-1.5">
                                   {(item.customizations?.cakeFlavor || item.customizations?.flavor) && (
@@ -596,9 +596,9 @@ const CartPage: React.FC = () => {
                                       {item.customizations.cakeFlavor || item.customizations.flavor}
                                     </span>
                                   )}
-                                  {item.customizations?.cakeWeight && (
+                                  {(item.customizations?.cakeWeight || item.customizations?.weight) && (
                                     <span className="font-bold px-2 py-0.5 rounded-md bg-stone-900 text-white dark:bg-white dark:text-stone-900 text-[10px]">
-                                      {item.customizations.cakeWeight}
+                                      {item.customizations.cakeWeight || item.customizations.weight}
                                     </span>
                                   )}
                                   {(item.customizations?.cakeShape || item.customizations?.shape) && (
@@ -606,14 +606,14 @@ const CartPage: React.FC = () => {
                                       {item.customizations.cakeShape || item.customizations.shape}
                                     </span>
                                   )}
-                                  {item.customizations?.eggless !== undefined && (
+                                  {(item.customizations?.eggless !== undefined || item.customizations?.isEggless !== undefined) && (
                                     <span className={cn(
                                       "px-2 py-0.5 rounded-md font-semibold text-[10px] flex items-center gap-1",
-                                      item.customizations.eggless
+                                      (item.customizations.eggless ?? item.customizations.isEggless)
                                         ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300/40"
                                         : "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300/40"
                                     )}>
-                                      {item.customizations.eggless ? '🍃 100% Eggless' : '🥚 Contains Egg'}
+                                      {(item.customizations.eggless ?? item.customizations.isEggless) ? '🍃 100% Eggless' : '🥚 Contains Egg'}
                                     </span>
                                   )}
                                 </div>

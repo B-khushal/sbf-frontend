@@ -105,7 +105,7 @@ const renderCustomizationRows = (customizations: unknown) => {
     const cakeFlavor = cust.cakeFlavor || cust.flavor;
     const cakeShape = cust.cakeShape || cust.shape;
     const cakeServes = cust.cakeServes;
-    const eggless = cust.eggless;
+    const eggless = cust.eggless ?? cust.isEggless;
 
     const cakeSpecs: string[] = [];
     if (cakeWeight) cakeSpecs.push(String(cakeWeight));
