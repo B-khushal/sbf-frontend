@@ -40,7 +40,15 @@ import {
   BellRing, 
   HelpCircle,
   Sparkles,
-  ClipboardList
+  ClipboardList,
+  ArrowUpDown,
+  CheckSquare,
+  Star,
+  Settings2,
+  CalendarDays,
+  ShoppingBasket,
+  Cookie,
+  KeyRound
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
@@ -63,7 +71,10 @@ export const AdminDashboard: React.FC = () => {
   const isDeliveryActive = location.pathname.startsWith('/admin/delivery-') || 
                            location.pathname === '/admin/partner-earnings' ||
                            location.pathname === '/admin/active-deliveries' ||
-                           location.pathname === '/admin/assignment-rules';
+                           location.pathname === '/admin/assignment-rules' ||
+                           location.pathname === '/admin/delivery-zones' ||
+                           location.pathname === '/admin/delivery-settings' ||
+                           location.pathname === '/admin/delivery-analytics';
 
   const allowedAdminRoles = ['platform_admin', 'store_owner', 'store_manager', 'delivery_manager', 'support_staff', 'inventory_staff', 'finance_staff', 'admin'];
   const [isDeliveryOpen, setIsDeliveryOpen] = useState(isDeliveryActive);
@@ -73,24 +84,24 @@ export const AdminDashboard: React.FC = () => {
     return user?.permissions?.includes(permission) || false;
   };
 
-  const isStaffActive = location.pathname.startsWith('/admin/staff') ||
-                        location.pathname === '/admin/activity-logs' ||
-                        location.pathname === '/admin/login-history';
-
+  const isStaffActive = location.pathname.startsWith('/admin/staff');
   const [isStaffOpen, setIsStaffOpen] = useState(isStaffActive);
 
-  const isMarketingActive = location.pathname.startsWith('/admin/occasions') ||
-                            location.pathname.startsWith('/admin/seasonal-campaigns') ||
+  const isMarketingActive = location.pathname.startsWith('/admin/seasonal-campaigns') ||
                             location.pathname === '/admin/promocodes' ||
-                            location.pathname === '/admin/offers';
-
+                            location.pathname === '/admin/offers' ||
+                            location.pathname.startsWith('/admin/valentine') ||
+                            location.pathname === '/admin/holidays' ||
+                            location.pathname.startsWith('/admin/notifications') ||
+                            location.pathname === '/admin/fcm-notifications';
   const [isMarketingOpen, setIsMarketingOpen] = useState(isMarketingActive);
 
-  const isProductsActive = location.pathname.startsWith('/admin/products') ||
-                           location.pathname === '/admin/categories' ||
-                           location.pathname === '/admin/addons' ||
-                           location.pathname === '/admin/product-approval';
+  const isAnalyticsActive = location.pathname === '/admin/analytics' ||
+                            location.pathname === '/admin/search-analytics';
+  const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(isAnalyticsActive);
 
+  const isProductsActive = location.pathname.startsWith('/admin/products') ||
+                           location.pathname === '/admin/product-approval';
   const [isProductsOpen, setIsProductsOpen] = useState(isProductsActive);
 
   const isOrdersActive = location.pathname.startsWith('/admin/orders');
@@ -115,6 +126,10 @@ export const AdminDashboard: React.FC = () => {
   useEffect(() => {
     if (isMarketingActive) setIsMarketingOpen(true);
   }, [location.pathname, isMarketingActive]);
+
+  useEffect(() => {
+    if (isAnalyticsActive) setIsAnalyticsOpen(true);
+  }, [location.pathname, isAnalyticsActive]);
   
   // Auth check
   useEffect(() => {
@@ -462,6 +477,18 @@ export const AdminDashboard: React.FC = () => {
                 <span>Plants</span>
               </Link>
               <Link
+                to="/admin/products/chocolates"
+                className={cn(
+                  "flex items-center gap-2 py-2 px-3 rounded-xl transition-all font-semibold",
+                  location.pathname === "/admin/products/chocolates"
+                    ? "sbf-nav-active"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/40"
+                )}
+              >
+                <Cookie className="w-3.5 h-3.5 text-amber-700" />
+                <span>Chocolates</span>
+              </Link>
+              <Link
                 to="/admin/products/combos"
                 className={cn(
                   "flex items-center gap-2 py-2 px-3 rounded-xl transition-all font-semibold",
@@ -472,6 +499,18 @@ export const AdminDashboard: React.FC = () => {
               >
                 <Gift className="w-3.5 h-3.5 text-rose-500" />
                 <span>Combos</span>
+              </Link>
+              <Link
+                to="/admin/products/hampers"
+                className={cn(
+                  "flex items-center gap-2 py-2 px-3 rounded-xl transition-all font-semibold",
+                  location.pathname === "/admin/products/hampers"
+                    ? "sbf-nav-active"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/40"
+                )}
+              >
+                <ShoppingBasket className="w-3.5 h-3.5 text-purple-500" />
+                <span>Hampers Builder</span>
               </Link>
               <Link
                 to="/admin/products/addons"
@@ -486,6 +525,18 @@ export const AdminDashboard: React.FC = () => {
                 <span>Add-ons</span>
               </Link>
               <Link
+                to="/admin/products/collections"
+                className={cn(
+                  "flex items-center gap-2 py-2 px-3 rounded-xl transition-all font-semibold",
+                  location.pathname === "/admin/products/collections"
+                    ? "sbf-nav-active"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/40"
+                )}
+              >
+                <Layers className="w-3.5 h-3.5 text-cyan-500" />
+                <span>Collections</span>
+              </Link>
+              <Link
                 to="/admin/products/inventory"
                 className={cn(
                   "flex items-center gap-2 py-2 px-3 rounded-xl transition-all font-semibold",
@@ -494,7 +545,56 @@ export const AdminDashboard: React.FC = () => {
                     : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/40"
                 )}
               >
+                <ClipboardList className="w-3.5 h-3.5 text-teal-500" />
                 <span>Inventory Log</span>
+              </Link>
+              <Link
+                to="/admin/products/order-arrangement"
+                className={cn(
+                  "flex items-center gap-2 py-2 px-3 rounded-xl transition-all font-semibold",
+                  location.pathname === "/admin/products/order-arrangement"
+                    ? "sbf-nav-active"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/40"
+                )}
+              >
+                <ArrowUpDown className="w-3.5 h-3.5 text-blue-500" />
+                <span>Order Arrangement</span>
+              </Link>
+              <Link
+                to="/admin/product-approval"
+                className={cn(
+                  "flex items-center gap-2 py-2 px-3 rounded-xl transition-all font-semibold",
+                  location.pathname === "/admin/product-approval"
+                    ? "sbf-nav-active"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/40"
+                )}
+              >
+                <CheckSquare className="w-3.5 h-3.5 text-amber-600" />
+                <span>Vendor Approvals</span>
+              </Link>
+              <Link
+                to="/admin/products/reviews"
+                className={cn(
+                  "flex items-center gap-2 py-2 px-3 rounded-xl transition-all font-semibold",
+                  location.pathname === "/admin/products/reviews" || location.pathname === "/admin/reviews"
+                    ? "sbf-nav-active"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/40"
+                )}
+              >
+                <Star className="w-3.5 h-3.5 text-amber-500" />
+                <span>Reviews & Ratings</span>
+              </Link>
+              <Link
+                to="/admin/products/settings"
+                className={cn(
+                  "flex items-center gap-2 py-2 px-3 rounded-xl transition-all font-semibold",
+                  location.pathname === "/admin/products/settings"
+                    ? "sbf-nav-active"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/40"
+                )}
+              >
+                <Settings2 className="w-3.5 h-3.5 text-slate-500" />
+                <span>Catalog Settings</span>
               </Link>
             </div>
           )}
@@ -536,14 +636,84 @@ export const AdminDashboard: React.FC = () => {
           collapsed={isCollapsed}
         />
 
-        {/* Reports & Analytics */}
-        <NavItem
-          to="/admin/analytics"
-          icon={TrendingUp}
-          label="Analytics & Reports"
-          active={location.pathname.startsWith("/admin/analytics")}
-          collapsed={isCollapsed}
-        />
+        {/* Reports & Analytics Collapsible Group */}
+        <div className="space-y-1">
+          <button
+            type="button"
+            onClick={() => {
+              if (isCollapsed) {
+                setIsSidebarCollapsed(false);
+                setIsAnalyticsOpen(true);
+              } else {
+                setIsAnalyticsOpen(prev => !prev);
+              }
+            }}
+            className={cn(
+              "w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl transition-all duration-200 text-xs font-semibold select-none",
+              isAnalyticsActive
+                ? "text-rose-600 dark:text-rose-400 font-bold bg-rose-50/60 dark:bg-rose-950/20"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-800/40",
+              isCollapsed && "justify-center px-2 py-3"
+            )}
+            title={isCollapsed ? "Analytics & Reports" : undefined}
+          >
+            <div className="flex items-center gap-3">
+              <TrendingUp className="w-4 h-4 stroke-[2.2]" />
+              {!isCollapsed && <span>Analytics & Reports</span>}
+            </div>
+            {!isCollapsed && (
+              isAnalyticsOpen ? (
+                <ChevronUp className="w-3.5 h-3.5 opacity-60" />
+              ) : (
+                <ChevronDown className="w-3.5 h-3.5 opacity-60" />
+              )
+            )}
+          </button>
+
+          {isAnalyticsOpen && !isCollapsed && (
+            <div className="pl-4 pr-1 space-y-1 mt-1 border-l-2 border-rose-400/40 ml-4.5 text-xs">
+              <Link
+                to="/admin/analytics"
+                className={cn(
+                  "flex items-center gap-2 py-2 px-3 rounded-xl transition-all font-semibold",
+                  location.pathname === "/admin/analytics" ? "sbf-nav-active" : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/40"
+                )}
+              >
+                <span>Sales & Revenue</span>
+              </Link>
+              <Link
+                to="/admin/search-analytics"
+                className={cn(
+                  "flex items-center gap-2 py-2 px-3 rounded-xl transition-all font-semibold",
+                  location.pathname === "/admin/search-analytics" ? "sbf-nav-active" : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/40"
+                )}
+              >
+                <Search className="w-3.5 h-3.5 text-blue-500" />
+                <span>Search Trends</span>
+              </Link>
+              <Link
+                to="/admin/delivery-analytics"
+                className={cn(
+                  "flex items-center gap-2 py-2 px-3 rounded-xl transition-all font-semibold",
+                  location.pathname === "/admin/delivery-analytics" ? "sbf-nav-active" : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/40"
+                )}
+              >
+                <Truck className="w-3.5 h-3.5 text-emerald-500" />
+                <span>Delivery SLA</span>
+              </Link>
+              <Link
+                to="/admin/valentine/analytics"
+                className={cn(
+                  "flex items-center gap-2 py-2 px-3 rounded-xl transition-all font-semibold",
+                  location.pathname === "/admin/valentine/analytics" ? "sbf-nav-active" : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/40"
+                )}
+              >
+                <Heart className="w-3.5 h-3.5 text-rose-500" />
+                <span>Valentine Trends</span>
+              </Link>
+            </div>
+          )}
+        </div>
 
         {/* Marketing Campaigns */}
         <div className="space-y-1">
@@ -613,6 +783,42 @@ export const AdminDashboard: React.FC = () => {
                 )}
               >
                 <span>Special Offers</span>
+              </Link>
+              <Link
+                to="/admin/valentine"
+                className={cn(
+                  "flex items-center gap-2 py-2 px-3 rounded-xl transition-all font-semibold",
+                  location.pathname === "/admin/valentine"
+                    ? "sbf-nav-active"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/40"
+                )}
+              >
+                <Heart className="w-3.5 h-3.5 text-rose-500" />
+                <span>Valentine's Hub</span>
+              </Link>
+              <Link
+                to="/admin/holidays"
+                className={cn(
+                  "flex items-center gap-2 py-2 px-3 rounded-xl transition-all font-semibold",
+                  location.pathname === "/admin/holidays"
+                    ? "sbf-nav-active"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/40"
+                )}
+              >
+                <CalendarDays className="w-3.5 h-3.5 text-amber-500" />
+                <span>Holiday Dates</span>
+              </Link>
+              <Link
+                to="/admin/notifications/fcm"
+                className={cn(
+                  "flex items-center gap-2 py-2 px-3 rounded-xl transition-all font-semibold",
+                  location.pathname.startsWith("/admin/notifications") || location.pathname === "/admin/fcm-notifications"
+                    ? "sbf-nav-active"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/40"
+                )}
+              >
+                <BellRing className="w-3.5 h-3.5 text-indigo-500" />
+                <span>Push Notifications</span>
               </Link>
             </div>
           )}
@@ -684,19 +890,120 @@ export const AdminDashboard: React.FC = () => {
                 <Map className="w-3.5 h-3.5 mr-1" />
                 <span>Hyderabad Zones</span>
               </Link>
+              <Link
+                to="/admin/partner-earnings"
+                className={cn(
+                  "flex items-center gap-2 py-2 px-3 rounded-xl transition-all font-semibold",
+                  location.pathname === "/admin/partner-earnings" ? "sbf-nav-active" : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/40"
+                )}
+              >
+                <DollarSign className="w-3.5 h-3.5 mr-1 text-emerald-500" />
+                <span>Partner Earnings</span>
+              </Link>
+              <Link
+                to="/admin/assignment-rules"
+                className={cn(
+                  "flex items-center gap-2 py-2 px-3 rounded-xl transition-all font-semibold",
+                  location.pathname === "/admin/assignment-rules" ? "sbf-nav-active" : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/40"
+                )}
+              >
+                <Sliders className="w-3.5 h-3.5 mr-1 text-blue-500" />
+                <span>Assignment Rules</span>
+              </Link>
+              <Link
+                to="/admin/delivery-settings"
+                className={cn(
+                  "flex items-center gap-2 py-2 px-3 rounded-xl transition-all font-semibold",
+                  location.pathname === "/admin/delivery-settings" ? "sbf-nav-active" : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/40"
+                )}
+              >
+                <Clock className="w-3.5 h-3.5 mr-1 text-amber-500" />
+                <span>Delivery Slots & Rules</span>
+              </Link>
             </div>
           )}
         </div>
 
-        {/* Staff Management (if permitted) */}
+        {/* Staff Management Collapsible Group (if permitted) */}
         {hasPermission('staff:view') && (
-          <NavItem
-            to="/admin/staff"
-            icon={Shield}
-            label="Staff & Roles"
-            active={location.pathname.startsWith("/admin/staff")}
-            collapsed={isCollapsed}
-          />
+          <div className="space-y-1">
+            <button
+              type="button"
+              onClick={() => {
+                if (isCollapsed) {
+                  setIsSidebarCollapsed(false);
+                  setIsStaffOpen(true);
+                } else {
+                  setIsStaffOpen(prev => !prev);
+                }
+              }}
+              className={cn(
+                "w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl transition-all duration-200 text-xs font-semibold select-none",
+                isStaffActive
+                  ? "text-rose-600 dark:text-rose-400 font-bold bg-rose-50/60 dark:bg-rose-950/20"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-800/40",
+                isCollapsed && "justify-center px-2 py-3"
+              )}
+              title={isCollapsed ? "Staff & Roles" : undefined}
+            >
+              <div className="flex items-center gap-3">
+                <Shield className="w-4 h-4 stroke-[2.2]" />
+                {!isCollapsed && <span>Staff & Roles</span>}
+              </div>
+              {!isCollapsed && (
+                isStaffOpen ? (
+                  <ChevronUp className="w-3.5 h-3.5 opacity-60" />
+                ) : (
+                  <ChevronDown className="w-3.5 h-3.5 opacity-60" />
+                )
+              )}
+            </button>
+
+            {isStaffOpen && !isCollapsed && (
+              <div className="pl-4 pr-1 space-y-1 mt-1 border-l-2 border-rose-400/40 ml-4.5 text-xs">
+                <Link
+                  to="/admin/staff"
+                  className={cn(
+                    "flex items-center gap-2 py-2 px-3 rounded-xl transition-all font-semibold",
+                    location.pathname === "/admin/staff" ? "sbf-nav-active" : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/40"
+                  )}
+                >
+                  <Users className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Staff Directory</span>
+                </Link>
+                <Link
+                  to="/admin/staff/roles"
+                  className={cn(
+                    "flex items-center gap-2 py-2 px-3 rounded-xl transition-all font-semibold",
+                    location.pathname === "/admin/staff/roles" ? "sbf-nav-active" : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/40"
+                  )}
+                >
+                  <Shield className="w-3.5 h-3.5 text-indigo-500" />
+                  <span>Roles & Permissions</span>
+                </Link>
+                <Link
+                  to="/admin/staff/attendance"
+                  className={cn(
+                    "flex items-center gap-2 py-2 px-3 rounded-xl transition-all font-semibold",
+                    location.pathname === "/admin/staff/attendance" ? "sbf-nav-active" : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/40"
+                  )}
+                >
+                  <Clock className="w-3.5 h-3.5 text-emerald-500" />
+                  <span>Attendance & Shifts</span>
+                </Link>
+                <Link
+                  to="/admin/staff/sessions"
+                  className={cn(
+                    "flex items-center gap-2 py-2 px-3 rounded-xl transition-all font-semibold",
+                    location.pathname === "/admin/staff/sessions" ? "sbf-nav-active" : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/40"
+                  )}
+                >
+                  <KeyRound className="w-3.5 h-3.5 text-amber-500" />
+                  <span>Login Sessions</span>
+                </Link>
+              </div>
+            )}
+          </div>
         )}
 
         {/* Activity Logs */}

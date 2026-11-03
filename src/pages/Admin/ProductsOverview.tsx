@@ -29,7 +29,11 @@ import {
   ArrowRight,
   ShieldAlert,
   LayoutDashboard,
-  Sparkles
+  Sparkles,
+  ArrowUpDown,
+  CheckSquare,
+  Settings2,
+  Cookie
 } from "lucide-react";
 import {
   NeumorphicCard,
@@ -246,12 +250,48 @@ const ProductsOverview: React.FC = () => {
                 </div>
               </Link>
 
-              <Link to="/admin/products/bouquets">
+              <Link to="/admin/products/order-arrangement">
+                <div className="p-3 rounded-xl sbf-neumo-raised-hover bg-[var(--sbf-card)] flex flex-col items-center gap-1.5 text-center group">
+                  <div className="w-8 h-8 rounded-lg sbf-neumo-inset-sm flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform">
+                    <ArrowUpDown className="h-4 w-4" />
+                  </div>
+                  <span className="text-[11px] font-bold text-slate-800">Order Arrangement</span>
+                </div>
+              </Link>
+
+              <Link to="/admin/products/chocolates">
+                <div className="p-3 rounded-xl sbf-neumo-raised-hover bg-[var(--sbf-card)] flex flex-col items-center gap-1.5 text-center group">
+                  <div className="w-8 h-8 rounded-lg sbf-neumo-inset-sm flex items-center justify-center text-amber-700 group-hover:scale-110 transition-transform">
+                    <Cookie className="h-4 w-4" />
+                  </div>
+                  <span className="text-[11px] font-bold text-slate-800">Chocolates</span>
+                </div>
+              </Link>
+
+              <Link to="/admin/product-approval">
+                <div className="p-3 rounded-xl sbf-neumo-raised-hover bg-[var(--sbf-card)] flex flex-col items-center gap-1.5 text-center group">
+                  <div className="w-8 h-8 rounded-lg sbf-neumo-inset-sm flex items-center justify-center text-amber-600 group-hover:scale-110 transition-transform">
+                    <CheckSquare className="h-4 w-4" />
+                  </div>
+                  <span className="text-[11px] font-bold text-slate-800">Approvals</span>
+                </div>
+              </Link>
+
+              <Link to="/admin/products/reviews">
+                <div className="p-3 rounded-xl sbf-neumo-raised-hover bg-[var(--sbf-card)] flex flex-col items-center gap-1.5 text-center group">
+                  <div className="w-8 h-8 rounded-lg sbf-neumo-inset-sm flex items-center justify-center text-amber-500 group-hover:scale-110 transition-transform">
+                    <Star className="h-4 w-4" />
+                  </div>
+                  <span className="text-[11px] font-bold text-slate-800">Reviews</span>
+                </div>
+              </Link>
+
+              <Link to="/admin/products/settings">
                 <div className="p-3 rounded-xl sbf-neumo-raised-hover bg-[var(--sbf-card)] flex flex-col items-center gap-1.5 text-center group">
                   <div className="w-8 h-8 rounded-lg sbf-neumo-inset-sm flex items-center justify-center text-slate-500 group-hover:scale-110 transition-transform">
-                    <Download className="h-4 w-4" />
+                    <Settings2 className="h-4 w-4" />
                   </div>
-                  <span className="text-[11px] font-bold text-slate-800">Export Catalog</span>
+                  <span className="text-[11px] font-bold text-slate-800">Catalog Rules</span>
                 </div>
               </Link>
             </div>
