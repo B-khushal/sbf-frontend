@@ -27,6 +27,7 @@ import {
   Flower2,
   PackageCheck,
   Leaf,
+  Egg,
   CheckCircle2,
   ExternalLink,
   ChevronDown,
@@ -133,8 +134,35 @@ export const ComboProductDetail: React.FC<ComboProductDetailProps> = ({
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isZoomOpen, setIsZoomOpen] = useState(false);
 
-  // 4. Customizations State
-  const [isEggless, setIsEggless] = useState<boolean>(true);
+  // 4. Dietary Specification & Customizations State
+  // Strictly derived from Admin product / cake configuration (no second user option)
+  const isEggless = useMemo<boolean>(() => {
+    // 1. Direct product cakeAttributes
+    if (product.cakeAttributes?.eggless !== undefined && product.cakeAttributes?.eggless !== null) {
+      if (typeof product.cakeAttributes.eggless === 'string') {
+        return (product.cakeAttributes.eggless as string).toLowerCase() === 'true';
+      }
+      return Boolean(product.cakeAttributes.eggless);
+    }
+    // 2. Combo connected cake component attributes
+    if (cake?.cakeAttributes?.eggless !== undefined && cake?.cakeAttributes?.eggless !== null) {
+      if (typeof cake.cakeAttributes.eggless === 'string') {
+        return (cake.cakeAttributes.eggless as string).toLowerCase() === 'true';
+      }
+      return Boolean(cake.cakeAttributes.eggless);
+    }
+    // 3. Product root eggless property
+    if ((product as any).eggless !== undefined && (product as any).eggless !== null) {
+      return Boolean((product as any).eggless);
+    }
+    // 4. Cake root eggless property
+    if ((cake as any)?.eggless !== undefined && (cake as any)?.eggless !== null) {
+      return Boolean((cake as any).eggless);
+    }
+    // Default to true (100% Eggless pure veg)
+    return true;
+  }, [product, cake]);
+
   const [cakeMessage, setCakeMessage] = useState('');
   const maxCakeMessageLength = 30;
 
@@ -693,8 +721,13 @@ export const ComboProductDetail: React.FC<ComboProductDetailProps> = ({
                   <Cake className="w-4 h-4 text-rose-500" />
                   Select Cake Weight / Size *
                 </label>
-                <span className="text-[11px] font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full">
-                  🍃 100% Eggless
+                <span className={cn(
+                  "text-[11px] font-semibold px-2 py-0.5 rounded-full border",
+                  isEggless
+                    ? "text-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800"
+                    : "text-amber-800 bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800"
+                )}>
+                  {isEggless ? '🍃 100% Eggless' : '🥚 Contains Egg'}
                 </span>
               </div>
 
@@ -763,54 +796,41 @@ export const ComboProductDetail: React.FC<ComboProductDetailProps> = ({
               </div>
             </div>
 
-            {/* 🥚 DIETARY PREFERENCE SELECTOR (Eggless vs Contains Egg) */}
-            <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/90 dark:bg-slate-900 p-4 space-y-2.5 shadow-2xs">
+            {/* 🍃 CAKE DIETARY PREFERENCE (LOCKED TO ADMIN CONFIGURATION - NO SECOND USER OPTION) */}
+            <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-                  <Leaf className="w-3.5 h-3.5 text-emerald-600" />
+                  {isEggless ? (
+                    <Leaf className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                  ) : (
+                    <Egg className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                  )}
                   Cake Dietary Preference *
                 </label>
                 <span className={cn(
                   "text-[11px] font-semibold",
                   isEggless ? "text-emerald-600 dark:text-emerald-400" : "text-amber-700 dark:text-amber-400"
                 )}>
-                  {isEggless ? '🍃 100% Pure Vegetarian' : '🥚 Traditional Recipe'}
+                  {isEggless ? '🍃 100% Pure Vegetarian' : '🥚 Contains Egg'}
                 </span>
               </div>
-              <div className="grid grid-cols-2 gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => setIsEggless(true)}
-                  className={cn(
-                    "flex items-center justify-center gap-2 p-3 rounded-xl border text-xs font-bold transition-all cursor-pointer",
-                    isEggless
-                      ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 text-emerald-900 dark:text-emerald-200 ring-2 ring-emerald-500/20 shadow-xs"
-                      : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300"
-                  )}
-                >
-                  <span className={cn(
-                    "w-2.5 h-2.5 rounded-full shrink-0",
-                    isEggless ? "bg-emerald-600 ring-2 ring-emerald-200" : "bg-slate-300 dark:bg-slate-600"
-                  )} />
-                  <span>🌱 100% Eggless (Pure Veg)</span>
-                </button>
 
-                <button
-                  type="button"
-                  onClick={() => setIsEggless(false)}
+              {/* Single confirmed dietary badge card - strictly matching admin setting with no second option */}
+              <div
+                className={cn(
+                  "flex items-center gap-2.5 p-3 rounded-xl border text-xs font-bold shadow-2xs",
+                  isEggless
+                    ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 text-emerald-900 dark:text-emerald-200 ring-2 ring-emerald-500/20"
+                    : "bg-amber-50 dark:bg-amber-950/40 border-amber-500 text-amber-900 dark:text-amber-200 ring-2 ring-amber-500/20"
+                )}
+              >
+                <span
                   className={cn(
-                    "flex items-center justify-center gap-2 p-3 rounded-xl border text-xs font-bold transition-all cursor-pointer",
-                    !isEggless
-                      ? "bg-amber-50 dark:bg-amber-950/40 border-amber-500 text-amber-900 dark:text-amber-200 ring-2 ring-amber-500/20 shadow-xs"
-                      : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300"
-                  )}
-                >
-                  <span className={cn(
                     "w-2.5 h-2.5 rounded-full shrink-0",
-                    !isEggless ? "bg-amber-600 ring-2 ring-amber-200" : "bg-slate-300 dark:bg-slate-600"
-                  )} />
-                  <span>🥚 Contains Egg (Regular)</span>
-                </button>
+                    isEggless ? "bg-emerald-600 ring-2 ring-emerald-200" : "bg-amber-600 ring-2 ring-amber-200"
+                  )}
+                />
+                <span>{isEggless ? '🌱 100% Eggless (Pure Veg)' : '🥚 Contains Egg'}</span>
               </div>
             </div>
 

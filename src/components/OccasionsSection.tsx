@@ -344,9 +344,12 @@ const OccasionProductCard = ({
                     <Sparkles className="w-2.5 h-2.5" /> Bestseller
                   </span>
                 )}
-                {isCake && isEggless && (
-                  <span className="bg-emerald-500/95 backdrop-blur-sm text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-xs">
-                    <span className="w-1.5 h-1.5 rounded-full bg-white" /> Eggless
+                {isCake && isEggless !== undefined && (
+                  <span className={cn(
+                    "text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-xs backdrop-blur-sm",
+                    isEggless ? "bg-emerald-600/95" : "bg-amber-600/95"
+                  )}>
+                    <span className="w-1.5 h-1.5 rounded-full bg-white" /> {isEggless ? 'Eggless' : 'Contains Egg'}
                   </span>
                 )}
               </>

@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import {
   Gift,
@@ -820,9 +821,19 @@ export const ComboFormSection: React.FC<ComboFormSectionProps> = ({ formData, se
                         {selectedCake.title}
                       </p>
                       <div className="flex items-center gap-1.5 mt-0.5">
-                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">
-                          🍃 Eggless
-                        </span>
+                        {(() => {
+                          const isCakeEggless = formData.cakeAttributes?.eggless !== undefined
+                            ? Boolean(formData.cakeAttributes.eggless)
+                            : (selectedCake.cakeAttributes?.eggless !== undefined ? Boolean(selectedCake.cakeAttributes.eggless) : true);
+                          return (
+                            <span className={cn(
+                              "text-[10px] font-bold px-1.5 py-0.5 rounded",
+                              isCakeEggless ? "text-emerald-700 bg-emerald-100" : "text-amber-800 bg-amber-100"
+                            )}>
+                              {isCakeEggless ? '🍃 Eggless' : '🥚 Contains Egg'}
+                            </span>
+                          );
+                        })()}
                         {selectedCake.cakeAttributes?.flavor && (
                           <span className="text-[10px] text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded font-medium">
                             {selectedCake.cakeAttributes.flavor}
@@ -841,6 +852,43 @@ export const ComboFormSection: React.FC<ComboFormSectionProps> = ({ formData, se
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
+                </div>
+
+                {/* CAKE DIETARY SPECIFICATION FOR COMBO (ADMIN OVERRIDE / CONFIRMATION) */}
+                <div className="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-slate-900 border border-amber-200">
+                  <div>
+                    <Label className="text-xs font-semibold text-slate-800 dark:text-slate-200">Cake Dietary Specification</Label>
+                    <p className="text-[11px] text-slate-500">Lock the customer display to 100% Eggless or Contains Egg</p>
+                  </div>
+                  {(() => {
+                    const isCakeEggless = formData.cakeAttributes?.eggless !== undefined
+                      ? Boolean(formData.cakeAttributes.eggless)
+                      : (selectedCake.cakeAttributes?.eggless !== undefined ? Boolean(selectedCake.cakeAttributes.eggless) : true);
+                    return (
+                      <div className="flex items-center gap-2.5">
+                        <Badge className={cn(
+                          "text-[10px] font-bold py-0.5 px-2",
+                          isCakeEggless
+                            ? "bg-emerald-100 text-emerald-800 border-emerald-300"
+                            : "bg-amber-100 text-amber-800 border-amber-300"
+                        )}>
+                          {isCakeEggless ? '🌱 100% Eggless' : '🥚 Contains Egg'}
+                        </Badge>
+                        <Switch
+                          checked={isCakeEggless}
+                          onCheckedChange={(checked) => {
+                            setFormData((prev: any) => ({
+                              ...prev,
+                              cakeAttributes: {
+                                ...(prev.cakeAttributes || {}),
+                                eggless: checked,
+                              },
+                            }));
+                          }}
+                        />
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* CONFIGURED CAKE VARIANTS EXTRACTED FROM CAKE PRODUCT */}

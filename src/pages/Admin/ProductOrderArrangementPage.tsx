@@ -862,7 +862,7 @@ export const ProductOrderArrangementPage: React.FC = () => {
           { label: 'Display Order' },
         ]}
         statusBadge={{
-          label: `${filteredProducts.length} Merchandised Items`,
+          label: `${sortSectionProducts.length} Merchandised Items`,
           variant: 'rose',
         }}
         actions={
@@ -2098,3 +2098,4 @@ export const ProductOrderArrangementPage: React.FC = () => {
 };
 
 export default ProductOrderArrangementPage;
+

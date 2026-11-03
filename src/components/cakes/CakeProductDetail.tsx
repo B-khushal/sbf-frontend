@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShoppingCart,
@@ -21,7 +21,10 @@ import {
   Info,
   Calendar,
   Layers,
-  ArrowRight
+  ArrowRight,
+  Leaf,
+  Egg,
+  CheckCircle2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -96,20 +99,22 @@ export const CakeProductDetail: React.FC<CakeProductDetailProps> = ({
     }
   }, [product, variants.length]);
 
-  // Dietary Preference (Eggless vs Contains Egg) - defaults to product configuration, or true (100% Eggless Pure Veg)
-  const [isEggless, setIsEggless] = useState<boolean>(() => {
-    if (product.cakeAttributes?.eggless !== undefined) {
+  // Dietary Preference (Eggless vs Contains Egg) - strictly locked to Admin product configuration (no user toggle)
+  const isEggless = useMemo<boolean>(() => {
+    if (product.cakeAttributes?.eggless !== undefined && product.cakeAttributes?.eggless !== null) {
+      if (typeof product.cakeAttributes.eggless === 'string') {
+        return (product.cakeAttributes.eggless as string).toLowerCase() === 'true';
+      }
       return Boolean(product.cakeAttributes.eggless);
     }
-    return true;
-  });
-
-  // Keep in sync if product prop updates
-  useEffect(() => {
-    if (product.cakeAttributes?.eggless !== undefined) {
-      setIsEggless(Boolean(product.cakeAttributes.eggless));
+    if ((product as any).eggless !== undefined && (product as any).eggless !== null) {
+      return Boolean((product as any).eggless);
     }
-  }, [product.cakeAttributes?.eggless]);
+    if ((product as any).isEggless !== undefined && (product as any).isEggless !== null) {
+      return Boolean((product as any).isEggless);
+    }
+    return true;
+  }, [product.cakeAttributes?.eggless, (product as any).eggless, (product as any).isEggless]);
 
   // Message on Cake
   const [cakeMessage, setCakeMessage] = useState('');
@@ -767,53 +772,41 @@ export const CakeProductDetail: React.FC<CakeProductDetailProps> = ({
               </div>
             )}
 
-            {/* 4. Dietary Preference - Interactive Selector (Eggless vs Contains Egg) */}
+            {/* 4. Dietary Preference (Locked to Admin Setting - No Second User Option) */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300">
+                <label className="text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300 flex items-center gap-1.5">
+                  {isEggless ? (
+                    <Leaf className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                  ) : (
+                    <Egg className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                  )}
                   Dietary Preference *
                 </label>
                 <span className={cn(
                   "text-[11px] font-semibold",
                   isEggless ? "text-emerald-600 dark:text-emerald-400" : "text-amber-700 dark:text-amber-400"
                 )}>
-                  {isEggless ? '🍃 100% Pure Vegetarian' : '🥚 Traditional Recipe'}
+                  {isEggless ? '🍃 100% Pure Vegetarian' : '🥚 Contains Egg'}
                 </span>
               </div>
-              <div className="grid grid-cols-2 gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => setIsEggless(true)}
-                  className={cn(
-                    "flex items-center justify-center gap-2 p-3 rounded-2xl border text-xs font-bold transition-all cursor-pointer",
-                    isEggless
-                      ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 text-emerald-900 dark:text-emerald-200 ring-2 ring-emerald-500/20 shadow-xs scale-[1.01]"
-                      : "bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-800 text-stone-600 dark:text-stone-400 hover:border-stone-300"
-                  )}
-                >
-                  <span className={cn(
-                    "w-2.5 h-2.5 rounded-full shrink-0",
-                    isEggless ? "bg-emerald-600 ring-2 ring-emerald-200" : "bg-stone-300 dark:bg-stone-600"
-                  )} />
-                  <span>🌱 100% Eggless (Pure Veg)</span>
-                </button>
 
-                <button
-                  type="button"
-                  onClick={() => setIsEggless(false)}
+              {/* Single confirmed dietary badge card - strictly matching admin setting with no second option */}
+              <div
+                className={cn(
+                  "flex items-center gap-2.5 p-3 rounded-2xl border text-xs font-bold shadow-2xs",
+                  isEggless
+                    ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 text-emerald-900 dark:text-emerald-200 ring-2 ring-emerald-500/20"
+                    : "bg-amber-50 dark:bg-amber-950/40 border-amber-500 text-amber-900 dark:text-amber-200 ring-2 ring-amber-500/20"
+                )}
+              >
+                <span
                   className={cn(
-                    "flex items-center justify-center gap-2 p-3 rounded-2xl border text-xs font-bold transition-all cursor-pointer",
-                    !isEggless
-                      ? "bg-amber-50 dark:bg-amber-950/40 border-amber-500 text-amber-900 dark:text-amber-200 ring-2 ring-amber-500/20 shadow-xs scale-[1.01]"
-                      : "bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-800 text-stone-600 dark:text-stone-400 hover:border-stone-300"
-                  )}
-                >
-                  <span className={cn(
                     "w-2.5 h-2.5 rounded-full shrink-0",
-                    !isEggless ? "bg-amber-600 ring-2 ring-amber-200" : "bg-stone-300 dark:bg-stone-600"
-                  )} />
-                  <span>🥚 Contains Egg (Regular)</span>
-                </button>
+                    isEggless ? "bg-emerald-600 ring-2 ring-emerald-200" : "bg-amber-600 ring-2 ring-amber-200"
+                  )}
+                />
+                <span>{isEggless ? '🌱 100% Eggless (Pure Veg)' : '🥚 Contains Egg'}</span>
               </div>
             </div>
 

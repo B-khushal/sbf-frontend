@@ -221,9 +221,18 @@ export const CakeProductCard: React.FC<CakeProductCardProps> = ({
                     NEW
                   </span>
                 )}
-                {isEggless && (
-                  <span className="bg-emerald-50 text-emerald-700 border border-emerald-200/80 text-[9px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" /> Eggless
+                {isEggless !== undefined && (
+                  <span className={cn(
+                    "border text-[9px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1",
+                    isEggless
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-200/80"
+                      : "bg-amber-50 text-amber-800 border-amber-200/80"
+                  )}>
+                    <span className={cn(
+                      "w-1.5 h-1.5 rounded-full",
+                      isEggless ? "bg-emerald-600" : "bg-amber-600"
+                    )} />
+                    {isEggless ? 'Eggless' : 'Contains Egg'}
                   </span>
                 )}
               </>
