@@ -27,6 +27,7 @@ import { getRecommendedAddons, AddonProduct } from '@/services/addonService';
 import { toast } from '@/hooks/use-toast';
 import ContactModal from '@/components/ui/ContactModal';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import PromoCodeInput from '@/components/PromoCodeInput';
 import type { PromoCodeValidationResult } from '@/services/promoCodeService';
@@ -228,6 +229,99 @@ const CartPage: React.FC = () => {
 
   const handlePromoCodeRemoved = () => {
     setAppliedPromoCode(null);
+  };
+
+  // Complimentary Greeting Card Modal State & Handlers
+  const [greetingCardModalItem, setGreetingCardModalItem] = useState<any | null>(null);
+  const [modalCardRecipient, setModalCardRecipient] = useState('');
+  const [modalCardSender, setModalCardSender] = useState('');
+  const [modalCardMessage, setModalCardMessage] = useState('');
+
+  const openGreetingCardModal = (item: any) => {
+    setGreetingCardModalItem(item);
+    if (typeof item.customizations?.greetingCard === 'object' && item.customizations.greetingCard) {
+      setModalCardRecipient(item.customizations.greetingCard.recipient || '');
+      setModalCardSender(item.customizations.greetingCard.sender || '');
+      setModalCardMessage(item.customizations.greetingCard.message || '');
+    } else {
+      setModalCardRecipient('');
+      setModalCardSender('');
+      setModalCardMessage(item.customizations?.messageCard || item.customizations?.customMessage || '');
+    }
+  };
+
+  const handleSaveGreetingCard = async () => {
+    if (!greetingCardModalItem) return;
+    try {
+      const trimmedMsg = modalCardMessage.trim();
+      const trimmedRec = modalCardRecipient.trim();
+      const trimmedSend = modalCardSender.trim();
+
+      const updatedGreetingCard = trimmedMsg ? {
+        recipient: trimmedRec,
+        sender: trimmedSend,
+        message: trimmedMsg,
+      } : undefined;
+
+      const formattedCardText = trimmedMsg
+        ? `${trimmedRec ? `To: ${trimmedRec} | ` : ''}${trimmedMsg}${trimmedSend ? ` | From: ${trimmedSend}` : ''}`
+        : undefined;
+
+      const updatedCustomizations = {
+        ...(greetingCardModalItem.customizations || {}),
+        greetingCard: updatedGreetingCard,
+        messageCard: formattedCardText,
+        customMessage: trimmedMsg || undefined,
+      };
+
+      await updateItemCustomizations(
+        greetingCardModalItem._id || greetingCardModalItem.id,
+        updatedCustomizations
+      );
+
+      setGreetingCardModalItem(null);
+      toast({
+        title: "Greeting Card Saved",
+        description: "Your personalized card message has been saved to this item.",
+      });
+    } catch (err: any) {
+      console.error(err);
+      toast({
+        variant: "destructive",
+        title: "Update Failed",
+        description: err.message || "Could not save greeting card.",
+      });
+    }
+  };
+
+  const handleRemoveGreetingCard = async () => {
+    if (!greetingCardModalItem) return;
+    try {
+      const updatedCustomizations = {
+        ...(greetingCardModalItem.customizations || {}),
+        greetingCard: undefined,
+        messageCard: undefined,
+        customMessage: undefined,
+      };
+
+      await updateItemCustomizations(
+        greetingCardModalItem._id || greetingCardModalItem.id,
+        updatedCustomizations
+      );
+
+      setGreetingCardModalItem(null);
+      toast({
+        title: "Greeting Card Removed",
+        description: "The complimentary card message was removed from this item.",
+      });
+    } catch (err: any) {
+      console.error(err);
+      toast({
+        variant: "destructive",
+        title: "Removal Failed",
+        description: err.message || "Could not remove greeting card.",
+      });
+    }
   };
 
   const openEditModal = (item: any) => {
@@ -654,12 +748,82 @@ const CartPage: React.FC = () => {
                                     </span>
                                   ))}
                                 </div>
-                                {item.customizations.customMessage && (
-                                  <p className="italic text-stone-600 dark:text-slate-300 text-[11px] pt-1">
-                                    "{item.customizations.customMessage}"
-                                  </p>
-                                )}
                               </div>
+                            )}
+
+                            {/* 💌 Complimentary Keepsake Greeting Card (To, From, and Card Message) */}
+                            {(item.customizations?.greetingCard || item.customizations?.messageCard || item.customizations?.customMessage) ? (
+                              <div className="mt-2.5 rounded-2xl bg-gradient-to-br from-rose-50/80 via-white to-pink-50/40 dark:from-rose-950/20 dark:via-slate-900 dark:to-pink-950/20 border border-rose-200/70 dark:border-rose-900/40 p-3 shadow-2xs space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-6 h-6 rounded-md bg-rose-100 dark:bg-rose-900/50 text-rose-600 dark:text-rose-300 flex items-center justify-center text-xs shrink-0 shadow-2xs">
+                                      💌
+                                    </div>
+                                    <div>
+                                      <span className="text-xs font-bold text-stone-900 dark:text-slate-100 block leading-tight">
+                                        Complimentary Greeting Card
+                                      </span>
+                                      <span className="text-[10px] text-stone-400 dark:text-slate-400 font-medium">
+                                        Printed on luxury embossed keepsake card stock
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => openGreetingCardModal(item)}
+                                    className="text-[11px] font-bold text-rose-600 hover:text-rose-700 dark:text-rose-400 hover:underline flex items-center gap-1 cursor-pointer"
+                                  >
+                                    <span>Edit Card</span>
+                                    <ChevronRight className="w-3 h-3" />
+                                  </button>
+                                </div>
+
+                                {/* From & To Badges */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                                  <div className="p-2 rounded-xl bg-white/90 dark:bg-slate-850 border border-rose-100 dark:border-rose-900/30 flex items-center gap-2 shadow-2xs">
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-rose-600 bg-rose-50 dark:bg-rose-950 px-1.5 py-0.5 rounded">
+                                      To
+                                    </span>
+                                    <span className="font-semibold text-stone-800 dark:text-slate-200 truncate">
+                                      {item.customizations?.greetingCard?.recipient || 'Special Someone'}
+                                    </span>
+                                  </div>
+
+                                  <div className="p-2 rounded-xl bg-white/90 dark:bg-slate-850 border border-rose-100 dark:border-rose-900/30 flex items-center gap-2 shadow-2xs">
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-rose-600 bg-rose-50 dark:bg-rose-950 px-1.5 py-0.5 rounded">
+                                      From
+                                    </span>
+                                    <span className="font-semibold text-stone-800 dark:text-slate-200 truncate">
+                                      {item.customizations?.greetingCard?.sender || 'With Love'}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {/* Message Body */}
+                                <div className="p-2.5 rounded-xl bg-white/95 dark:bg-slate-850 border border-rose-100/90 dark:border-rose-900/30 text-xs">
+                                  <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400 dark:text-slate-500 block mb-0.5">
+                                    Card Message:
+                                  </span>
+                                  <p className="italic text-stone-800 dark:text-slate-200 font-medium leading-relaxed">
+                                    "{item.customizations?.greetingCard?.message || item.customizations?.messageCard || item.customizations?.customMessage}"
+                                  </p>
+                                </div>
+                              </div>
+                            ) : (
+                              /* Prompt to add card if not present */
+                              <button
+                                type="button"
+                                onClick={() => openGreetingCardModal(item)}
+                                className="mt-2 w-full p-2.5 rounded-xl border border-dashed border-rose-200 dark:border-rose-900/60 bg-rose-50/40 hover:bg-rose-50 dark:bg-rose-950/20 dark:hover:bg-rose-950/30 text-xs font-bold text-rose-700 dark:text-rose-300 flex items-center justify-between transition-all cursor-pointer group"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm">💌</span>
+                                  <span>Add a Complimentary Greeting Card (Free)</span>
+                                </div>
+                                <span className="text-[10px] uppercase font-bold tracking-wider bg-white dark:bg-slate-900 px-2 py-0.5 rounded-full border border-rose-200 dark:border-rose-800 text-rose-600 group-hover:scale-105 transition-transform">
+                                  + Add Free
+                                </span>
+                              </button>
                             )}
 
                             {/* Personalized Text Badge */}
@@ -1059,6 +1223,149 @@ const CartPage: React.FC = () => {
                 </Button>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Complimentary Greeting Card Modal */}
+        {greetingCardModalItem && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-xs">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl border border-rose-200 dark:border-rose-900/60 shadow-2xl overflow-hidden p-6 space-y-4"
+            >
+              {/* Header */}
+              <div className="flex items-start justify-between pb-3 border-b border-rose-100 dark:border-rose-900/30">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-rose-100 dark:bg-rose-900/50 text-rose-600 dark:text-rose-300 flex items-center justify-center text-xl shadow-2xs">
+                    💌
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-stone-900 dark:text-slate-100">
+                      Add a Complimentary Greeting Card
+                    </h3>
+                    <p className="text-xs text-stone-500 dark:text-slate-400">
+                      Printed on luxury embossed keepsake card stock
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setGreetingCardModalItem(null)}
+                  className="p-1.5 rounded-full text-stone-400 hover:text-stone-700 dark:text-slate-500 dark:hover:text-slate-300 hover:bg-stone-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Form inputs strictly matching reference format */}
+              <div className="space-y-3 pt-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-semibold text-stone-500 dark:text-slate-400 uppercase tracking-wider">
+                      Recipient Name
+                    </label>
+                    <Input
+                      placeholder="Recipient Name (e.g. Sarah)"
+                      value={modalCardRecipient}
+                      onChange={(e) => setModalCardRecipient(e.target.value)}
+                      className="h-10 text-sm bg-stone-50 dark:bg-slate-800 border-stone-200 dark:border-slate-700 rounded-xl focus:border-rose-400 dark:focus:border-rose-500"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-semibold text-stone-500 dark:text-slate-400 uppercase tracking-wider">
+                      From
+                    </label>
+                    <Input
+                      placeholder="From (e.g. With love, Rohan)"
+                      value={modalCardSender}
+                      onChange={(e) => setModalCardSender(e.target.value)}
+                      className="h-10 text-sm bg-stone-50 dark:bg-slate-800 border-stone-200 dark:border-slate-700 rounded-xl focus:border-rose-400 dark:focus:border-rose-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[11px] font-semibold text-stone-500 dark:text-slate-400 uppercase tracking-wider">
+                      Card Message
+                    </label>
+                    <span className="text-[11px] text-stone-400 dark:text-slate-500 font-mono">
+                      {modalCardMessage.length}/200 chars
+                    </span>
+                  </div>
+                  <Textarea
+                    placeholder="Write your heartfelt message here (up to 200 characters)..."
+                    value={modalCardMessage}
+                    maxLength={200}
+                    onChange={(e) => setModalCardMessage(e.target.value)}
+                    rows={4}
+                    className="text-sm bg-stone-50 dark:bg-slate-800 border-stone-200 dark:border-slate-700 rounded-xl focus:border-rose-400 dark:focus:border-rose-500 resize-none"
+                  />
+                </div>
+
+                {/* Live Keepsake Card Preview */}
+                {modalCardMessage.trim() && (
+                  <div className="p-3.5 rounded-2xl bg-gradient-to-br from-rose-50/70 via-stone-50 to-pink-50/40 dark:from-rose-950/20 dark:via-slate-800/80 dark:to-pink-950/20 border border-rose-200/60 dark:border-rose-900/30 space-y-1.5 shadow-2xs">
+                    <div className="flex items-center justify-between text-[11px] text-rose-600 dark:text-rose-400 font-bold uppercase tracking-wider">
+                      <span>💌 Keepsake Card Preview</span>
+                      <span>100% Free with Order</span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-stone-700 dark:text-slate-300">
+                      {modalCardRecipient.trim() && (
+                        <span className="bg-white dark:bg-slate-900 px-2 py-0.5 rounded-md border border-rose-100 dark:border-rose-900/40">
+                          To: {modalCardRecipient.trim()}
+                        </span>
+                      )}
+                      {modalCardSender.trim() && (
+                        <span className="bg-white dark:bg-slate-900 px-2 py-0.5 rounded-md border border-rose-100 dark:border-rose-900/40">
+                          From: {modalCardSender.trim()}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs italic text-stone-800 dark:text-slate-200 font-medium leading-relaxed pt-1">
+                      "{modalCardMessage.trim()}"
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center justify-between pt-3 border-t border-stone-100 dark:border-slate-800">
+                {(greetingCardModalItem.customizations?.greetingCard || greetingCardModalItem.customizations?.messageCard || greetingCardModalItem.customizations?.customMessage) ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={handleRemoveGreetingCard}
+                    className="text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl h-9 px-3 cursor-pointer"
+                  >
+                    Remove Card
+                  </Button>
+                ) : (
+                  <div />
+                )}
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setGreetingCardModalItem(null)}
+                    className="rounded-xl text-xs h-9 px-4 cursor-pointer"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleSaveGreetingCard}
+                    className="bg-gradient-to-r from-rose-500 via-pink-600 to-rose-600 hover:opacity-95 text-white rounded-xl text-xs h-9 px-5 font-semibold shadow-xs transition-all cursor-pointer"
+                  >
+                    Save Greeting Card
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
           </div>
         )}
       </AnimatePresence>

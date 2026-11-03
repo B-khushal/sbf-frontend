@@ -380,21 +380,37 @@ const CartItem = ({
             )}
             
             {(item.customizations.greetingCard || item.customizations.messageCard || item.customizations.customMessage) && (
-              <div className="text-xs text-slate-700 dark:text-slate-300 bg-rose-50/60 dark:bg-rose-950/20 p-2 rounded-lg border border-rose-200/50 dark:border-rose-900/30">
-                <span className="font-semibold text-rose-800 dark:text-rose-300">💌 Greeting Card:</span>{" "}
-                {typeof item.customizations.greetingCard === 'object' && item.customizations.greetingCard?.message ? (
-                  <span>
-                    "{item.customizations.greetingCard.message}"
-                    {(item.customizations.greetingCard.recipient || item.customizations.greetingCard.sender) && (
-                      <span className="text-[11px] text-slate-500 block mt-0.5 font-medium">
-                        {item.customizations.greetingCard.recipient && `To: ${item.customizations.greetingCard.recipient} `}
-                        {item.customizations.greetingCard.sender && `• From: ${item.customizations.greetingCard.sender}`}
-                      </span>
-                    )}
+              <div className="text-xs text-slate-700 dark:text-slate-300 bg-rose-50/70 dark:bg-rose-950/20 p-2.5 rounded-xl border border-rose-200/60 dark:border-rose-900/40 space-y-1.5 shadow-2xs">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs">💌</span>
+                    <span className="font-bold text-rose-800 dark:text-rose-300 text-[11px]">
+                      Complimentary Greeting Card
+                    </span>
+                  </div>
+                  <span className="text-[9px] uppercase tracking-wider font-bold text-rose-600 bg-rose-100/80 dark:bg-rose-950 px-1.5 py-0.5 rounded">
+                    Keepsake Card
                   </span>
-                ) : (
-                  <span>"{item.customizations.messageCard || item.customizations.customMessage}"</span>
-                )}
+                </div>
+
+                {/* To & From */}
+                <div className="flex flex-wrap gap-1.5 text-[11px]">
+                  {item.customizations?.greetingCard?.recipient && (
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-white/90 dark:bg-slate-900 border border-rose-100 dark:border-rose-900/30 font-medium text-stone-800 dark:text-slate-200">
+                      <strong className="text-rose-600 text-[9px] uppercase">To:</strong> {item.customizations.greetingCard.recipient}
+                    </span>
+                  )}
+                  {item.customizations?.greetingCard?.sender && (
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-white/90 dark:bg-slate-900 border border-rose-100 dark:border-rose-900/30 font-medium text-stone-800 dark:text-slate-200">
+                      <strong className="text-rose-600 text-[9px] uppercase">From:</strong> {item.customizations.greetingCard.sender}
+                    </span>
+                  )}
+                </div>
+
+                {/* Message */}
+                <p className="italic text-stone-700 dark:text-slate-300 font-medium leading-relaxed text-[11px]">
+                  "{item.customizations?.greetingCard?.message || item.customizations?.messageCard || item.customizations?.customMessage}"
+                </p>
               </div>
             )}
             

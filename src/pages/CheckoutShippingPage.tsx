@@ -1827,9 +1827,30 @@ const CheckoutShippingPage = () => {
                                     Number: {item.customizations.number}
                                   </div>
                                 )}
-                                {item.customizations.messageCard && (
-                                  <div className="text-xs text-gray-600">
-                                    Message: "{item.customizations.messageCard}"
+                                {(item.customizations.greetingCard || item.customizations.messageCard) && (
+                                  <div className="text-xs text-rose-800 dark:text-rose-200 bg-rose-50/70 dark:bg-rose-950/20 p-2 rounded-xl border border-rose-200/60 dark:border-rose-900/40 space-y-1">
+                                    <div className="flex items-center gap-1 font-bold text-[11px] text-rose-700 dark:text-rose-300">
+                                      <span>💌 Complimentary Card:</span>
+                                    </div>
+                                    {typeof item.customizations.greetingCard === 'object' && item.customizations.greetingCard?.message ? (
+                                      <div>
+                                        <div className="flex flex-wrap gap-1 text-[10px] font-semibold text-stone-600 dark:text-slate-300 mb-0.5">
+                                          {item.customizations.greetingCard.recipient && (
+                                            <span className="bg-white/80 dark:bg-slate-900 px-1.5 py-0.5 rounded border border-rose-100 dark:border-rose-900/30">
+                                              To: {item.customizations.greetingCard.recipient}
+                                            </span>
+                                          )}
+                                          {item.customizations.greetingCard.sender && (
+                                            <span className="bg-white/80 dark:bg-slate-900 px-1.5 py-0.5 rounded border border-rose-100 dark:border-rose-900/30">
+                                              From: {item.customizations.greetingCard.sender}
+                                            </span>
+                                          )}
+                                        </div>
+                                        <p className="italic text-[11px]">"{item.customizations.greetingCard.message}"</p>
+                                      </div>
+                                    ) : (
+                                      <p className="italic text-[11px]">"{item.customizations.messageCard}"</p>
+                                    )}
                                   </div>
                                 )}
                                 {item.customizations.selectedFlowers && item.customizations.selectedFlowers.length > 0 && (
