@@ -1859,9 +1859,11 @@ export const AdminOrders: React.FC = () => {
                                           {item.customizations.giftComponents.map((c: any) => `${c.category ? c.category + ': ' : ''}${c.name}`).join(' • ')}
                                         </div>
                                       )}
-                                      {item.customizations.messageCard && (
-                                        <div className="text-slate-600 dark:text-slate-400 italic">
-                                          💌 Card: "{item.customizations.messageCard}"
+                                      {(item.customizations.greetingCard || item.customizations.messageCard || item.customizations.customMessage) && (
+                                        <div className="text-rose-700 dark:text-rose-400 italic">
+                                          💌 Card: {typeof item.customizations.greetingCard === 'object' && item.customizations.greetingCard?.message
+                                            ? `"${item.customizations.greetingCard.message}"${item.customizations.greetingCard.recipient ? ` (To: ${item.customizations.greetingCard.recipient})` : ''}`
+                                            : `"${item.customizations.messageCard || item.customizations.customMessage}"`}
                                         </div>
                                       )}
                                     </div>

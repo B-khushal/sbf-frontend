@@ -379,9 +379,22 @@ const CartItem = ({
               </div>
             )}
             
-            {item.customizations.messageCard && (
-              <div className="text-gray-600">
-                Message: "{item.customizations.messageCard}"
+            {(item.customizations.greetingCard || item.customizations.messageCard || item.customizations.customMessage) && (
+              <div className="text-xs text-slate-700 dark:text-slate-300 bg-rose-50/60 dark:bg-rose-950/20 p-2 rounded-lg border border-rose-200/50 dark:border-rose-900/30">
+                <span className="font-semibold text-rose-800 dark:text-rose-300">💌 Greeting Card:</span>{" "}
+                {typeof item.customizations.greetingCard === 'object' && item.customizations.greetingCard?.message ? (
+                  <span>
+                    "{item.customizations.greetingCard.message}"
+                    {(item.customizations.greetingCard.recipient || item.customizations.greetingCard.sender) && (
+                      <span className="text-[11px] text-slate-500 block mt-0.5 font-medium">
+                        {item.customizations.greetingCard.recipient && `To: ${item.customizations.greetingCard.recipient} `}
+                        {item.customizations.greetingCard.sender && `• From: ${item.customizations.greetingCard.sender}`}
+                      </span>
+                    )}
+                  </span>
+                ) : (
+                  <span>"{item.customizations.messageCard || item.customizations.customMessage}"</span>
+                )}
               </div>
             )}
             

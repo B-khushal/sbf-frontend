@@ -24,7 +24,9 @@ import {
   ArrowRight,
   Leaf,
   Egg,
-  CheckCircle2
+  CheckCircle2,
+  MessageSquare,
+  ChevronDown
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -34,6 +36,7 @@ import useWishlist from '@/hooks/use-wishlist';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import ProtectedImage from '@/components/ui/ProtectedImage';
 import PinCodeInput, { ServiceablePinCode } from '@/components/ui/PinCodeInput';
@@ -116,9 +119,15 @@ export const CakeProductDetail: React.FC<CakeProductDetailProps> = ({
     return true;
   }, [product.cakeAttributes?.eggless, (product as any).eggless, (product as any).isEggless]);
 
-  // Message on Cake
+  // Message on Cake (Complimentary)
   const [cakeMessage, setCakeMessage] = useState('');
   const maxMessageLength = 30;
+
+  // Complimentary Greeting Card State
+  const [greetingCardOpen, setGreetingCardOpen] = useState(false);
+  const [cardRecipient, setCardRecipient] = useState('');
+  const [cardSender, setCardSender] = useState('');
+  const [cardMessage, setCardMessage] = useState('');
 
   // Quantity
   const [quantity, setQuantity] = useState(1);
@@ -334,6 +343,15 @@ export const CakeProductDetail: React.FC<CakeProductDetailProps> = ({
           prepTime: product.cakeAttributes?.prepTime,
           occasion: product.cakeAttributes?.occasion,
           cakeMessage: cakeMessage.trim() || undefined,
+          greetingCard: cardMessage.trim() ? {
+            recipient: cardRecipient.trim(),
+            sender: cardSender.trim(),
+            message: cardMessage.trim(),
+          } : undefined,
+          customMessage: cardMessage.trim() || undefined,
+          messageCard: cardMessage.trim()
+            ? `${cardRecipient.trim() ? `To: ${cardRecipient.trim()} | ` : ''}${cardMessage.trim()}${cardSender.trim() ? ` | From: ${cardSender.trim()}` : ''}`
+            : undefined,
           addons: selectedAddonsList.map(a => ({
             id: a._id,
             name: a.name || (a as any).title,
@@ -810,45 +828,83 @@ export const CakeProductDetail: React.FC<CakeProductDetailProps> = ({
               </div>
             </div>
 
-            {/* 5. Message on Cake Input (optional personalization) */}
-            <div className="space-y-2">
+            {/* 5. Message on Cake (Complimentary) */}
+            <div className="rounded-2xl border border-stone-200/80 dark:border-stone-800 bg-white/90 dark:bg-stone-900 p-4 space-y-2 shadow-2xs">
               <div className="flex items-center justify-between">
-                <label htmlFor="cake-message" className="text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300">
-                  Message on Cake <span className="text-stone-400 font-normal lowercase">(optional)</span>
+                <label className="text-xs font-bold text-stone-900 dark:text-stone-100 flex items-center gap-1.5">
+                  <MessageSquare className="w-3.5 h-3.5 text-rose-500" />
+                  Message on Cake (Complimentary)
                 </label>
-                <span className={cn(
-                  "text-[11px] font-mono",
-                  cakeMessage.length >= maxMessageLength ? "text-rose-500 font-bold" : "text-stone-400"
-                )}>
-                  {cakeMessage.length}/{maxMessageLength}
+                <span className="text-[10px] text-stone-400">
+                  {cakeMessage.length}/{maxMessageLength} chars
                 </span>
               </div>
-              <div className="relative">
-                <Input
-                  id="cake-message"
-                  value={cakeMessage}
-                  onChange={(e) => {
-                    if (e.target.value.length <= maxMessageLength) {
-                      setCakeMessage(e.target.value);
-                    }
-                  }}
-                  placeholder="e.g. Happy Birthday! ♥"
-                  maxLength={maxMessageLength}
-                  className="h-11 rounded-2xl bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-800 text-sm focus-visible:ring-amber-500 pr-10"
-                />
-                {cakeMessage && (
-                  <button
-                    type="button"
-                    onClick={() => setCakeMessage('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 p-1"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </div>
-              <p className="text-[11px] text-stone-500 dark:text-stone-400 italic">
-                Complimentary personalized chocolate plaque inscription.
+              <Input
+                placeholder="e.g. Happy Birthday Priya ❤️"
+                value={cakeMessage}
+                maxLength={maxMessageLength}
+                onChange={(e) => setCakeMessage(e.target.value)}
+                className="h-9 text-xs bg-stone-50/70 dark:bg-stone-850 border-stone-200 dark:border-stone-700 focus:ring-rose-400"
+              />
+              <p className="text-[10px] text-stone-500 flex items-center gap-1">
+                <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                Piped neatly in chocolate frosting on cake top surface.
               </p>
+            </div>
+
+            {/* 6. Complimentary Greeting Message Card Toggle */}
+            <div className="rounded-2xl border border-stone-200/80 dark:border-stone-800 bg-white/90 dark:bg-stone-900 p-4 space-y-3 shadow-2xs">
+              <button
+                type="button"
+                onClick={() => setGreetingCardOpen(!greetingCardOpen)}
+                className="w-full flex items-center justify-between text-left cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-md bg-rose-100 dark:bg-rose-900/40 text-rose-600 flex items-center justify-center text-xs">
+                    💌
+                  </div>
+                  <div>
+                    <h5 className="text-xs font-bold text-stone-900 dark:text-stone-100">
+                      Add a Complimentary Greeting Card
+                    </h5>
+                    <p className="text-[10px] text-stone-500">Printed on luxury embossed keepsake card stock</p>
+                  </div>
+                </div>
+                <ChevronDown className={cn("w-4 h-4 text-stone-400 transition-transform", greetingCardOpen && "rotate-180")} />
+              </button>
+
+              <AnimatePresence>
+                {greetingCardOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="space-y-2.5 pt-2 border-t border-stone-100 dark:border-stone-800"
+                  >
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input
+                        placeholder="Recipient Name (e.g. Sarah)"
+                        value={cardRecipient}
+                        onChange={(e) => setCardRecipient(e.target.value)}
+                        className="h-8 text-xs bg-stone-50 dark:bg-stone-850"
+                      />
+                      <Input
+                        placeholder="From (e.g. With love, Rohan)"
+                        value={cardSender}
+                        onChange={(e) => setCardSender(e.target.value)}
+                        className="h-8 text-xs bg-stone-50 dark:bg-stone-850"
+                      />
+                    </div>
+                    <Textarea
+                      placeholder="Write your heartfelt message here (up to 200 characters)..."
+                      value={cardMessage}
+                      maxLength={200}
+                      onChange={(e) => setCardMessage(e.target.value)}
+                      className="text-xs bg-stone-50 dark:bg-stone-850 min-h-[60px]"
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* 6. Delivery Options & Pincode Checking */}

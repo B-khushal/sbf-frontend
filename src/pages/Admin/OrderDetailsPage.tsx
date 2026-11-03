@@ -1,4 +1,5 @@
 import { SoftButton } from '@/components/dashboard/SoftButton';
+import { PageHeader } from '@/components/dashboard/PageHeader';
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '@/services/api';
@@ -581,84 +582,84 @@ const OrderDetailsPage: React.FC = () => {
         </div>
       )}
 
-      {/* Top Breadcrumb Navigation */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 dark:border-slate-800 pb-5">
-        <div>
-          <button 
-            onClick={() => navigate('/admin/orders')} 
-            className="flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-slate-700 dark:hover:text-slate-250 uppercase tracking-wider transition-colors mb-2"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Back to orders
-          </button>
-          
-          <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">Order #{order.orderNumber}</h1>
-            
+      {/* Top PageHeader Navigation */}
+      <PageHeader
+        title={`Order #${order.orderNumber}`}
+        subtitle={`Placed on ${format(new Date(order.createdAt), 'MMMM d, yyyy • h:mm a')} • Customer: ${order.shippingDetails?.fullName}`}
+        breadcrumbs={[
+          { label: 'Admin', href: '/admin' },
+          { label: 'Orders', href: '/admin/orders' },
+          { label: `#${order.orderNumber}` }
+        ]}
+        statusBadge={{
+          label: statusCfg.label,
+          variant: order.status === 'delivered' ? 'emerald' : order.status === 'cancelled' ? 'rose' : 'amber'
+        }}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <SoftButton 
+              variant="secondary" 
+              icon={ArrowLeft} 
+              onClick={() => navigate('/admin/orders')}
+            >
+              Back to orders
+            </SoftButton>
+
             {/* Database ID Copy pill */}
             <button 
               onClick={copyOrderIdToClipboard}
-              className="inline-flex items-center gap-1 text-[10px] font-mono text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-md px-2 py-0.5 hover:bg-slate-100 dark:hover:bg-slate-850 transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs font-mono text-slate-500 dark:text-slate-400 bg-[#edf1f7] dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl px-3 py-2 shadow-[inset_2px_2px_4px_rgba(163,177,198,0.25),inset_-2px_-2px_4px_rgba(255,255,255,0.7)] dark:shadow-[inset_2px_2px_4px_rgba(0,0,0,0.4),inset_-2px_-2px_4px_rgba(30,41,59,0.3)] hover:text-slate-800 transition-colors cursor-pointer"
               title="Copy Database ID"
             >
               <span>ID: {order._id.substring(0, 8)}...</span>
-              {copiedId ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
+              {copiedId ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
             </button>
+
+            {/* Quick status dropdown switcher */}
+            <Select
+              value={order.status}
+              onValueChange={(value) => handleStatusUpdate(value as Order['status'])}
+            >
+              <SelectTrigger className="border-0 p-0 h-auto w-auto bg-transparent focus:ring-0 focus:ring-offset-0">
+                <div className={cn(
+                  "flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold border transition-all duration-200 cursor-pointer shadow-[4px_4px_10px_rgba(163,177,198,0.25),-4px_-4px_10px_rgba(255,255,255,0.7)] dark:shadow-[4px_4px_10px_rgba(0,0,0,0.4),-4px_-4px_10px_rgba(30,41,59,0.3)] hover:scale-[1.02]",
+                  statusCfg.bg,
+                  statusCfg.border,
+                  statusCfg.text
+                )}>
+                  {statusCfg.icon}
+                  <span>{statusCfg.label}</span>
+                  <ChevronDown className="h-3.5 w-3.5 opacity-60 ml-0.5" />
+                </div>
+              </SelectTrigger>
+              <SelectContent align="end" className="bg-[#edf1f7] dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-xl shadow-lg">
+                <SelectItem value="order_placed" className="text-xs font-medium">Order Placed</SelectItem>
+                <SelectItem value="received" className="text-xs font-medium">Received</SelectItem>
+                <SelectItem value="being_made" className="text-xs font-medium">Being Made</SelectItem>
+                <SelectItem value="out_for_delivery" className="text-xs font-medium">Out for Delivery</SelectItem>
+                <SelectItem value="delivered" className="text-xs font-medium">Delivered</SelectItem>
+                <SelectItem value="cancelled" className="text-xs font-medium">Cancelled</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <SoftButton 
+              variant="primary" 
+              icon={Download} 
+              onClick={handleDownloadPDF}
+            >
+              Invoice PDF
+            </SoftButton>
+
+            <SoftButton 
+              variant="secondary" 
+              icon={Mail} 
+              onClick={testDeliveryEmail}
+            >
+              Test Email
+            </SoftButton>
           </div>
-          
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 font-semibold">
-            Placed on {format(new Date(order.createdAt), 'MMMM d, yyyy • h:mm a')}
-          </p>
-        </div>
-
-        {/* Global Details Actions & Status Switcher */}
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Quick status dropdown switcher */}
-          <Select
-            value={order.status}
-            onValueChange={(value) => handleStatusUpdate(value as Order['status'])}
-          >
-            <SelectTrigger className="border-0 p-0 h-auto w-auto bg-transparent focus:ring-0 focus:ring-offset-0">
-              <div className={cn(
-                "flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold border transition-all duration-200 cursor-pointer shadow-sm hover:scale-[1.02]",
-                statusCfg.bg,
-                statusCfg.border,
-                statusCfg.text
-              )}>
-                {statusCfg.icon}
-                <span>{statusCfg.label}</span>
-                <ChevronDown className="h-3.5 w-3.5 opacity-60 ml-0.5" />
-              </div>
-            </SelectTrigger>
-            <SelectContent align="end" className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-xl">
-              <SelectItem value="order_placed" className="text-xs font-medium">Order Placed</SelectItem>
-              <SelectItem value="received" className="text-xs font-medium">Received</SelectItem>
-              <SelectItem value="being_made" className="text-xs font-medium">Being Made</SelectItem>
-              <SelectItem value="out_for_delivery" className="text-xs font-medium">Out for Delivery</SelectItem>
-              <SelectItem value="delivered" className="text-xs font-medium">Delivered</SelectItem>
-              <SelectItem value="cancelled" className="text-xs font-medium">Cancelled</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleDownloadPDF} 
-            className="h-9 gap-1.5 text-xs border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 bg-white dark:bg-slate-900 font-semibold text-slate-700 dark:text-slate-300"
-          >
-            <Download className="h-4 w-4" /> Invoice PDF
-          </Button>
-
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={testDeliveryEmail}
-            className="h-9 gap-1.5 text-xs border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 bg-white dark:bg-slate-900 font-semibold text-slate-700 dark:text-slate-300"
-          >
-            <Mail className="h-4 w-4 text-blue-500" /> Test Email
-          </Button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Main Two-Column Layout Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start" ref={orderRef} id="order-details-pdf">
@@ -826,16 +827,38 @@ const OrderDetailsPage: React.FC = () => {
                               </div>
                             )}
                             
-                            {/* Message Card */}
-                            {item.customizations.messageCard && (
-                              <div className="bg-amber-50/50 dark:bg-amber-950/10 border border-amber-200/40 dark:border-amber-900/20 p-3 rounded-xl space-y-1">
-                                <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400 font-bold text-[10px] uppercase tracking-wider">
+                            {/* Complimentary Greeting Card */}
+                            {(item.customizations.greetingCard || item.customizations.messageCard || item.customizations.customMessage) && (
+                              <div className="bg-rose-50/60 dark:bg-rose-950/20 border border-rose-200/50 dark:border-rose-900/30 p-3 rounded-xl space-y-1.5">
+                                <div className="flex items-center gap-1.5 text-rose-700 dark:text-rose-400 font-bold text-[10px] uppercase tracking-wider">
                                   <MessageSquare className="h-3.5 w-3.5" />
-                                  <span>Written Card Message</span>
+                                  <span>💌 Complimentary Greeting Card</span>
                                 </div>
-                                <p className="text-xs text-slate-700 dark:text-slate-300 italic font-medium">
-                                  "{item.customizations.messageCard}"
-                                </p>
+                                {typeof item.customizations.greetingCard === 'object' && item.customizations.greetingCard?.message ? (
+                                  <div className="space-y-1">
+                                    {(item.customizations.greetingCard.recipient || item.customizations.greetingCard.sender) && (
+                                      <div className="flex flex-wrap items-center gap-2 text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                                        {item.customizations.greetingCard.recipient && (
+                                          <span className="bg-white/80 dark:bg-slate-900 px-2 py-0.5 rounded border border-rose-200/60 text-rose-800 dark:text-rose-300">
+                                            To: {item.customizations.greetingCard.recipient}
+                                          </span>
+                                        )}
+                                        {item.customizations.greetingCard.sender && (
+                                          <span className="bg-white/80 dark:bg-slate-900 px-2 py-0.5 rounded border border-rose-200/60 text-rose-800 dark:text-rose-300">
+                                            From: {item.customizations.greetingCard.sender}
+                                          </span>
+                                        )}
+                                      </div>
+                                    )}
+                                    <p className="text-xs text-slate-800 dark:text-slate-200 italic font-medium leading-relaxed">
+                                      "{item.customizations.greetingCard.message}"
+                                    </p>
+                                  </div>
+                                ) : (
+                                  <p className="text-xs text-slate-800 dark:text-slate-200 italic font-medium leading-relaxed">
+                                    "{item.customizations.messageCard || item.customizations.customMessage}"
+                                  </p>
+                                )}
                               </div>
                             )}
 
@@ -999,7 +1022,7 @@ const OrderDetailsPage: React.FC = () => {
         <div className="space-y-6">
 
           {/* Card 1: Delivery Schedule & Address Info */}
-          <Card className="border-slate-100 dark:border-slate-850 shadow-sm rounded-2xl bg-white dark:bg-slate-900 overflow-hidden">
+          <Card className="border border-slate-200/60 dark:border-slate-800 rounded-2xl bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)] overflow-hidden">
             <CardHeader className="border-b border-slate-50 dark:border-slate-850/50 pb-4">
               <CardTitle className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-slate-500" />
@@ -1221,7 +1244,7 @@ const OrderDetailsPage: React.FC = () => {
           </Card>
 
           {/* Card 2: Financial Summary & Payments */}
-          <Card className="border-slate-100 dark:border-slate-850 shadow-sm rounded-2xl bg-white dark:bg-slate-900 overflow-hidden">
+          <Card className="border border-slate-200/60 dark:border-slate-800 rounded-2xl bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)] overflow-hidden">
             <CardHeader className="border-b border-slate-50 dark:border-slate-850/50 pb-4">
               <CardTitle className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
                 <CreditCard className="h-4 w-4 text-slate-500" />

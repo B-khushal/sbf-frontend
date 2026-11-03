@@ -359,6 +359,9 @@ export const ComboProductDetail: React.FC<ComboProductDetailProps> = ({
             message: cardMessage.trim(),
           } : undefined,
           customMessage: cardMessage.trim() || undefined,
+          messageCard: cardMessage.trim()
+            ? `${cardRecipient.trim() ? `To: ${cardRecipient.trim()} | ` : ''}${cardMessage.trim()}${cardSender.trim() ? ` | From: ${cardSender.trim()}` : ''}`
+            : undefined,
           addons: selectedAddonsList.map(a => ({
             id: a._id,
             name: a.name || a.title,
