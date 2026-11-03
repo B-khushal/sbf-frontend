@@ -881,11 +881,28 @@ const CheckoutConfirmationPage = () => {
                   {(order.shipping?.cardMessage || order.shipping?.giftMessage || order.giftDetails?.message) && (
                     <>
                       <Separator />
-                      <div>
-                        <span className="font-medium text-sm text-rose-700 flex items-center gap-1.5">
-                          💌 Card Message:
-                        </span>
-                        <p className="text-sm text-gray-600 mt-1 italic">
+                      <div className="p-3 rounded-2xl bg-rose-50/70 dark:bg-rose-950/20 border border-rose-200/60 dark:border-rose-900/30 space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-xs text-rose-700 dark:text-rose-300 flex items-center gap-1.5">
+                            💌 Complimentary Keepsake Card:
+                          </span>
+                          <span className="text-[10px] font-semibold text-rose-600 bg-rose-100/70 dark:bg-rose-950 px-2 py-0.5 rounded-full">
+                            Included Free
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5 text-xs">
+                          {((order.shipping as any)?.cardRecipient || (order.giftDetails as any)?.recipient) && (
+                            <span className="bg-white/90 dark:bg-slate-900 px-2 py-0.5 rounded-md border border-rose-100 dark:border-rose-900/30 font-medium text-stone-800 dark:text-slate-200">
+                              <strong className="text-rose-600">To:</strong> {(order.shipping as any)?.cardRecipient || (order.giftDetails as any)?.recipient}
+                            </span>
+                          )}
+                          {((order.shipping as any)?.cardSender || (order.giftDetails as any)?.sender) && (
+                            <span className="bg-white/90 dark:bg-slate-900 px-2 py-0.5 rounded-md border border-rose-100 dark:border-rose-900/30 font-medium text-stone-800 dark:text-slate-200">
+                              <strong className="text-rose-600">From:</strong> {(order.shipping as any)?.cardSender || (order.giftDetails as any)?.sender}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-stone-700 dark:text-slate-300 italic pt-0.5">
                           "{order.shipping.cardMessage || order.shipping.giftMessage || order.giftDetails.message}"
                         </p>
                       </div>

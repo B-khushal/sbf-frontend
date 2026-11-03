@@ -1221,8 +1221,23 @@ const OrderDetailsPage: React.FC = () => {
 
                   {/* Card Message Section for guest checkout or fallback */}
                   {(order.shippingDetails.cardMessage || order.shippingDetails.giftMessage || order.giftDetails?.message) && (
-                    <div className="bg-rose-50/50 dark:bg-rose-950/10 border border-rose-250 bg-rose-50/20 dark:border-rose-800/30 p-3 rounded-xl space-y-1">
-                      <span className="text-[9px] font-bold text-rose-700 dark:text-rose-455 uppercase tracking-wider block flex items-center gap-1">💌 Greeting Card Message</span>
+                    <div className="bg-rose-50/50 dark:bg-rose-950/10 border border-rose-250 bg-rose-50/20 dark:border-rose-800/30 p-3 rounded-xl space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[9px] font-bold text-rose-700 dark:text-rose-455 uppercase tracking-wider block flex items-center gap-1">💌 Greeting Card Message</span>
+                        <span className="text-[9px] font-semibold text-rose-600 bg-rose-100 dark:bg-rose-950 px-2 py-0.5 rounded-full">Keepsake Card</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1 text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                        {((order.shippingDetails as any).cardRecipient || (order.giftDetails as any)?.recipientName) && (
+                          <span className="bg-white/80 dark:bg-slate-900 px-2 py-0.5 rounded border border-rose-200 dark:border-rose-900/40">
+                            To: {(order.shippingDetails as any).cardRecipient || (order.giftDetails as any)?.recipientName}
+                          </span>
+                        )}
+                        {((order.shippingDetails as any).cardSender || (order.giftDetails as any)?.sender) && (
+                          <span className="bg-white/80 dark:bg-slate-900 px-2 py-0.5 rounded border border-rose-200 dark:border-rose-900/40">
+                            From: {(order.shippingDetails as any).cardSender || (order.giftDetails as any)?.sender}
+                          </span>
+                        )}
+                      </div>
                       <p className="text-xs text-slate-700 dark:text-slate-355 italic font-bold leading-relaxed">
                         "{order.shippingDetails.cardMessage || order.shippingDetails.giftMessage || order.giftDetails?.message}"
                       </p>

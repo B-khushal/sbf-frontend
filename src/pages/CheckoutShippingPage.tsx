@@ -223,6 +223,28 @@ const CheckoutShippingPage = () => {
     }
   });
 
+  const [cardRecipient, setCardRecipient] = useState<string>(() => {
+    try {
+      const info = localStorage.getItem('shippingInfo');
+      if (info) {
+        const parsed = JSON.parse(info);
+        if (parsed.cardRecipient) return parsed.cardRecipient;
+      }
+    } catch {}
+    return '';
+  });
+
+  const [cardSender, setCardSender] = useState<string>(() => {
+    try {
+      const info = localStorage.getItem('shippingInfo');
+      if (info) {
+        const parsed = JSON.parse(info);
+        if (parsed.cardSender) return parsed.cardSender;
+      }
+    } catch {}
+    return '';
+  });
+
   const [cardMessage, setCardMessage] = useState<string>(() => {
     try {
       const info = localStorage.getItem('shippingInfo');
@@ -773,6 +795,8 @@ const CheckoutShippingPage = () => {
       deliveryFee,
       isFirstOrderFreeDelivery: deliveryCalculation?.isFirstOrderFreeDelivery ?? false,
       selectedDate: selectedDate.toISOString(),
+      cardRecipient: cardRecipient,
+      cardSender: cardSender,
       cardMessage: cardMessage,
       deliverySpecialInstructions: deliveryLocation?.deliveryInstructions || deliverySpecialInstructions,
       giftMessage: cardMessage, // legacy compatibility
@@ -1615,57 +1639,131 @@ const CheckoutShippingPage = () => {
 
                     {/* Gifting & Delivery Special Options Card */}
                     <div className={sectionCardClassName}>
-                      <div className="flex items-center gap-2">
-                        <MessageSquare size={18} className={hasValentine ? "text-rose-500" : "text-primary"} />
-                        <h2 className="text-lg font-medium">Gifting & Delivery Options</h2>
-                      </div>
-                      
-                      {/* Card Message Textarea */}
-                      <div className="space-y-2 mt-4">
-                        <div className="flex items-center justify-between">
-                          <label htmlFor="cardMessage" className="block text-sm font-medium">
-                            Card Message (optional)
-                          </label>
-                          <span className={cn("text-xs", cardMessage.length > 150 ? "text-red-500 font-bold animate-pulse" : "text-slate-500")}>
-                            {cardMessage.length}/150
-                          </span>
+                      <div className="flex items-start justify-between pb-3 border-b border-stone-150 dark:border-slate-800/80">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-rose-100 to-pink-100 dark:from-rose-950/60 dark:to-pink-900/40 text-rose-600 dark:text-rose-300 flex items-center justify-center text-lg shadow-2xs border border-rose-200/60 dark:border-rose-800/50">
+                            <MessageSquare className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+                          </div>
+                          <div>
+                            <h2 className="text-base sm:text-lg font-bold text-stone-900 dark:text-white flex items-center gap-2">
+                              <span>Gifting & Delivery Options</span>
+                            </h2>
+                            <p className="text-[11px] text-stone-500 dark:text-slate-400">
+                              Printed on luxury embossed keepsake card stock & handwritten with care
+                            </p>
+                          </div>
                         </div>
-                        <Textarea
-                          id="cardMessage"
-                          name="cardMessage"
-                          value={cardMessage}
-                          onChange={(e) => setCardMessage(e.target.value.slice(0, 150))}
-                          placeholder="Write a message to be written on the greeting card (e.g., Happy Birthday! Wishing you a great year ahead...)"
-                          rows={3}
-                          className="min-h-[100px] rounded-xl border-slate-300 text-base shadow-sm focus-visible:ring-2 focus-visible:ring-emerald-500"
-                        />
-                        <p className="text-xs text-slate-500">
-                          This message will be handwritten and included with your order. (Max 150 characters)
-                        </p>
+                        <span className="hidden sm:inline-flex text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-full bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-300 border border-rose-200/60 dark:border-rose-900/40">
+                          Complimentary Card
+                        </span>
                       </div>
 
-                      {/* Delivery Special Instructions Textarea */}
-                      <div className="space-y-2 mt-4">
-                        <div className="flex items-center justify-between">
-                          <label htmlFor="deliverySpecialInstructions" className="block text-sm font-medium">
-                            Delivery Special Instructions (optional)
-                          </label>
-                          <span className={cn("text-xs", deliverySpecialInstructions.length > 250 ? "text-red-500 font-bold animate-pulse" : "text-slate-500")}>
-                            {deliverySpecialInstructions.length}/250
-                          </span>
+                      <div className="space-y-4 pt-3">
+                        {/* Recipient & From Inputs */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-semibold text-stone-700 dark:text-slate-300">
+                              Recipient Name <span className="text-stone-400 font-normal">(optional)</span>
+                            </label>
+                            <Input
+                              placeholder="Recipient Name (e.g. Sarah)"
+                              value={cardRecipient}
+                              onChange={(e) => setCardRecipient(e.target.value)}
+                              className="h-10 text-xs sm:text-sm bg-stone-50/80 dark:bg-slate-850 border-stone-200 dark:border-slate-700 rounded-xl focus:border-rose-400 dark:focus:border-rose-500 shadow-2xs"
+                            />
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-semibold text-stone-700 dark:text-slate-300">
+                              From <span className="text-stone-400 font-normal">(optional)</span>
+                            </label>
+                            <Input
+                              placeholder="From (e.g. With love, Rohan)"
+                              value={cardSender}
+                              onChange={(e) => setCardSender(e.target.value)}
+                              className="h-10 text-xs sm:text-sm bg-stone-50/80 dark:bg-slate-850 border-stone-200 dark:border-slate-700 rounded-xl focus:border-rose-400 dark:focus:border-rose-500 shadow-2xs"
+                            />
+                          </div>
                         </div>
-                        <Textarea
-                          id="deliverySpecialInstructions"
-                          name="deliverySpecialInstructions"
-                          value={deliverySpecialInstructions}
-                          onChange={(e) => setDeliverySpecialInstructions(e.target.value.slice(0, 250))}
-                          placeholder="e.g. Ring bell, leave at reception, landmark, contact receiver before delivery..."
-                          rows={3}
-                          className="min-h-[100px] rounded-xl border-slate-300 text-base shadow-sm focus-visible:ring-2 focus-visible:ring-emerald-500"
-                        />
-                        <p className="text-xs text-slate-500">
-                          Specific instructions for our delivery partner. (Max 250 characters)
-                        </p>
+
+                        {/* Card Message Textarea matching reference image */}
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <label htmlFor="cardMessage" className="block text-xs sm:text-sm font-semibold text-stone-800 dark:text-slate-200">
+                              Card Message (optional)
+                            </label>
+                            <span className={cn(
+                              "text-xs font-mono font-medium",
+                              cardMessage.length >= 145 ? "text-rose-600 font-bold animate-pulse" : "text-stone-400 dark:text-slate-400"
+                            )}>
+                              {cardMessage.length}/150
+                            </span>
+                          </div>
+                          <Textarea
+                            id="cardMessage"
+                            name="cardMessage"
+                            value={cardMessage}
+                            maxLength={150}
+                            onChange={(e) => setCardMessage(e.target.value.slice(0, 150))}
+                            placeholder="Write a message to be written on the greeting card (e.g., Happy Birthday! Wishing you a great year ahead...)"
+                            rows={3}
+                            className="min-h-[90px] text-xs sm:text-sm bg-stone-50/80 dark:bg-slate-850 border-stone-200 dark:border-slate-700 rounded-2xl focus:border-rose-400 dark:focus:border-rose-500 resize-none shadow-2xs leading-relaxed"
+                          />
+                          <p className="text-[11px] text-stone-500 dark:text-slate-400 flex items-center gap-1.5">
+                            <span>✍️</span>
+                            <span>This message will be handwritten and included with your order. (Max 150 characters)</span>
+                          </p>
+                        </div>
+
+                        {/* Live Keepsake Card Preview */}
+                        {cardMessage.trim() && (
+                          <div className="p-3.5 rounded-2xl bg-gradient-to-br from-rose-50/70 via-stone-50 to-pink-50/40 dark:from-rose-950/20 dark:via-slate-850 dark:to-pink-950/20 border border-rose-200/60 dark:border-rose-900/40 space-y-2 shadow-2xs">
+                            <div className="flex items-center justify-between text-[11px] text-rose-600 dark:text-rose-400 font-bold uppercase tracking-wider">
+                              <span className="flex items-center gap-1">💌 Keepsake Card Preview</span>
+                              <span className="text-[10px] bg-rose-100/70 dark:bg-rose-950 px-2 py-0.5 rounded-full">Included Free</span>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-stone-700 dark:text-slate-300">
+                              {cardRecipient.trim() && (
+                                <span className="bg-white/90 dark:bg-slate-900 px-2 py-0.5 rounded-md border border-rose-150 dark:border-rose-900/40">
+                                  To: {cardRecipient.trim()}
+                                </span>
+                              )}
+                              {cardSender.trim() && (
+                                <span className="bg-white/90 dark:bg-slate-900 px-2 py-0.5 rounded-md border border-rose-150 dark:border-rose-900/40">
+                                  From: {cardSender.trim()}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs italic text-stone-800 dark:text-slate-200 font-medium leading-relaxed pt-0.5">
+                              "{cardMessage.trim()}"
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Delivery Special Instructions Textarea */}
+                        <div className="space-y-1.5 pt-2 border-t border-stone-100 dark:border-slate-800">
+                          <div className="flex items-center justify-between">
+                            <label htmlFor="deliverySpecialInstructions" className="block text-xs sm:text-sm font-semibold text-stone-700 dark:text-slate-300">
+                              Delivery Special Instructions (optional)
+                            </label>
+                            <span className={cn("text-xs font-mono font-medium", deliverySpecialInstructions.length > 240 ? "text-red-500 font-bold animate-pulse" : "text-stone-400 dark:text-slate-500")}>
+                              {deliverySpecialInstructions.length}/250
+                            </span>
+                          </div>
+                          <Textarea
+                            id="deliverySpecialInstructions"
+                            name="deliverySpecialInstructions"
+                            value={deliverySpecialInstructions}
+                            maxLength={250}
+                            onChange={(e) => setDeliverySpecialInstructions(e.target.value.slice(0, 250))}
+                            placeholder="e.g. Ring bell, leave at reception, landmark, contact receiver before delivery..."
+                            rows={2}
+                            className="min-h-[70px] text-xs sm:text-sm bg-stone-50/80 dark:bg-slate-850 border-stone-200 dark:border-slate-700 rounded-xl focus:border-rose-400 dark:focus:border-rose-500 resize-none shadow-2xs"
+                          />
+                          <p className="text-[10px] text-stone-400 dark:text-slate-500">
+                            Specific instructions for our delivery partner. (Max 250 characters)
+                          </p>
+                        </div>
                       </div>
                     </div>
 

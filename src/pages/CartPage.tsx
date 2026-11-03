@@ -18,7 +18,8 @@ import {
   Gift,
   MapPin,
   Clock,
-  Lock
+  Lock,
+  MessageSquare
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import useCart from '@/hooks/use-cart';
@@ -191,6 +192,21 @@ const CartPage: React.FC = () => {
     if (deliveryCalculation) {
       localStorage.setItem('checkoutDeliveryCalculation', JSON.stringify(deliveryCalculation));
     }
+
+    try {
+      const existing = localStorage.getItem('shippingInfo');
+      const parsed = existing ? JSON.parse(existing) : {};
+      localStorage.setItem('shippingInfo', JSON.stringify({
+        ...parsed,
+        cardRecipient: orderCardRecipient,
+        cardSender: orderCardSender,
+        cardMessage: orderCardMessage,
+        giftMessage: orderCardMessage,
+        deliverySpecialInstructions: orderDeliveryInstructions,
+        notes: orderDeliveryInstructions,
+      }));
+    } catch {}
+
     navigate('/checkout/shipping');
   };
 
@@ -230,6 +246,73 @@ const CartPage: React.FC = () => {
   const handlePromoCodeRemoved = () => {
     setAppliedPromoCode(null);
   };
+
+  // Order-Level Gifting & Delivery Options State
+  const [orderCardRecipient, setOrderCardRecipient] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem('shippingInfo');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.cardRecipient) return parsed.cardRecipient;
+      }
+    } catch {}
+    return '';
+  });
+
+  const [orderCardSender, setOrderCardSender] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem('shippingInfo');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.cardSender) return parsed.cardSender;
+      }
+    } catch {}
+    return '';
+  });
+
+  const [orderCardMessage, setOrderCardMessage] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem('shippingInfo');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.cardMessage) return parsed.cardMessage;
+        if (parsed.giftMessage) return parsed.giftMessage;
+      }
+    } catch {}
+    return '';
+  });
+
+  const [orderDeliveryInstructions, setOrderDeliveryInstructions] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem('shippingInfo');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.deliverySpecialInstructions) return parsed.deliverySpecialInstructions;
+        if (parsed.notes) return parsed.notes;
+      }
+    } catch {}
+    return '';
+  });
+
+  // Sync Gifting & Delivery Options to localStorage
+  useEffect(() => {
+    try {
+      const existing = localStorage.getItem('shippingInfo');
+      const parsed = existing ? JSON.parse(existing) : {};
+      const updated = {
+        ...parsed,
+        cardRecipient: orderCardRecipient,
+        cardSender: orderCardSender,
+        cardMessage: orderCardMessage,
+        giftMessage: orderCardMessage,
+        deliverySpecialInstructions: orderDeliveryInstructions,
+        notes: orderDeliveryInstructions,
+      };
+      localStorage.setItem('shippingInfo', JSON.stringify(updated));
+    } catch (e) {
+      console.warn('Could not persist gifting options', e);
+    }
+  }, [orderCardRecipient, orderCardSender, orderCardMessage, orderDeliveryInstructions]);
 
   // Complimentary Greeting Card Modal State & Handlers
   const [greetingCardModalItem, setGreetingCardModalItem] = useState<any | null>(null);
@@ -889,6 +972,138 @@ const CartPage: React.FC = () => {
                       </motion.div>
                     );
                   })}
+                </div>
+              </div>
+
+              {/* 🎁 Gifting & Delivery Options (Order-Level Keepsake Card & Instructions) */}
+              <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-3xl border border-stone-200/80 dark:border-slate-800 p-5 sm:p-6 shadow-[0_4px_24px_rgba(0,0,0,0.03)] space-y-4">
+                {/* Header matching screenshot */}
+                <div className="flex items-start justify-between pb-3 border-b border-stone-150 dark:border-slate-800/80">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-rose-100 to-pink-100 dark:from-rose-950/60 dark:to-pink-900/40 text-rose-600 dark:text-rose-300 flex items-center justify-center text-lg shadow-2xs border border-rose-200/60 dark:border-rose-800/50">
+                      <MessageSquare className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm sm:text-base font-bold text-stone-900 dark:text-white flex items-center gap-2">
+                        <span>Gifting & Delivery Options</span>
+                      </h3>
+                      <p className="text-[11px] text-stone-500 dark:text-slate-400">
+                        Printed on luxury embossed keepsake card stock & handwritten with care
+                      </p>
+                    </div>
+                  </div>
+                  <span className="hidden sm:inline-flex text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-full bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-300 border border-rose-200/60 dark:border-rose-900/40">
+                    Complimentary Card
+                  </span>
+                </div>
+
+                <div className="space-y-4 pt-1">
+                  {/* Recipient & From Inputs */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-stone-700 dark:text-slate-300">
+                        Recipient Name <span className="text-stone-400 font-normal">(optional)</span>
+                      </label>
+                      <Input
+                        placeholder="Recipient Name (e.g. Sarah)"
+                        value={orderCardRecipient}
+                        onChange={(e) => setOrderCardRecipient(e.target.value)}
+                        className="h-10 text-xs sm:text-sm bg-stone-50/80 dark:bg-slate-850 border-stone-200 dark:border-slate-700 rounded-xl focus:border-rose-400 dark:focus:border-rose-500 shadow-2xs"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-stone-700 dark:text-slate-300">
+                        From <span className="text-stone-400 font-normal">(optional)</span>
+                      </label>
+                      <Input
+                        placeholder="From (e.g. With love, Rohan)"
+                        value={orderCardSender}
+                        onChange={(e) => setOrderCardSender(e.target.value)}
+                        className="h-10 text-xs sm:text-sm bg-stone-50/80 dark:bg-slate-850 border-stone-200 dark:border-slate-700 rounded-xl focus:border-rose-400 dark:focus:border-rose-500 shadow-2xs"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Card Message Textarea matching reference image */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs sm:text-sm font-semibold text-stone-800 dark:text-slate-200">
+                        Card Message (optional)
+                      </label>
+                      <span className={cn(
+                        "text-xs font-mono font-medium",
+                        orderCardMessage.length >= 145 ? "text-rose-600 font-bold animate-pulse" : "text-stone-400 dark:text-slate-400"
+                      )}>
+                        {orderCardMessage.length}/150
+                      </span>
+                    </div>
+                    <Textarea
+                      placeholder="Write a message to be written on the greeting card (e.g., Happy Birthday! Wishing you a great year ahead...)"
+                      value={orderCardMessage}
+                      maxLength={150}
+                      onChange={(e) => setOrderCardMessage(e.target.value.slice(0, 150))}
+                      rows={3}
+                      className="min-h-[90px] text-xs sm:text-sm bg-stone-50/80 dark:bg-slate-850 border-stone-200 dark:border-slate-700 rounded-2xl focus:border-rose-400 dark:focus:border-rose-500 resize-none shadow-2xs leading-relaxed"
+                    />
+                    <p className="text-[11px] text-stone-500 dark:text-slate-400 flex items-center gap-1.5">
+                      <span>✍️</span>
+                      <span>This message will be handwritten and included with your order. (Max 150 characters)</span>
+                    </p>
+                  </div>
+
+                  {/* Live Keepsake Card Preview */}
+                  {orderCardMessage.trim() && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="p-3.5 rounded-2xl bg-gradient-to-br from-rose-50/70 via-stone-50 to-pink-50/40 dark:from-rose-950/20 dark:via-slate-850 dark:to-pink-950/20 border border-rose-200/60 dark:border-rose-900/40 space-y-2 shadow-2xs"
+                    >
+                      <div className="flex items-center justify-between text-[11px] text-rose-600 dark:text-rose-400 font-bold uppercase tracking-wider">
+                        <span className="flex items-center gap-1">💌 Keepsake Card Preview</span>
+                        <span className="text-[10px] bg-rose-100/70 dark:bg-rose-950 px-2 py-0.5 rounded-full">Included Free</span>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-stone-700 dark:text-slate-300">
+                        {orderCardRecipient.trim() && (
+                          <span className="bg-white/90 dark:bg-slate-900 px-2 py-0.5 rounded-md border border-rose-150 dark:border-rose-900/40">
+                            To: {orderCardRecipient.trim()}
+                          </span>
+                        )}
+                        {orderCardSender.trim() && (
+                          <span className="bg-white/90 dark:bg-slate-900 px-2 py-0.5 rounded-md border border-rose-150 dark:border-rose-900/40">
+                            From: {orderCardSender.trim()}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs italic text-stone-800 dark:text-slate-200 font-medium leading-relaxed pt-0.5">
+                        "{orderCardMessage.trim()}"
+                      </p>
+                    </motion.div>
+                  )}
+
+                  {/* Delivery Special Instructions (optional) */}
+                  <div className="space-y-1.5 pt-2 border-t border-stone-100 dark:border-slate-800">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-semibold text-stone-700 dark:text-slate-300 flex items-center gap-1.5">
+                        <Truck className="w-3.5 h-3.5 text-stone-400" />
+                        <span>Delivery Special Instructions (optional)</span>
+                      </label>
+                      <span className="text-[11px] font-mono text-stone-400 dark:text-slate-500">
+                        {orderDeliveryInstructions.length}/250
+                      </span>
+                    </div>
+                    <Textarea
+                      placeholder="e.g. Ring bell, leave at reception, landmark, contact receiver before delivery..."
+                      value={orderDeliveryInstructions}
+                      maxLength={250}
+                      onChange={(e) => setOrderDeliveryInstructions(e.target.value.slice(0, 250))}
+                      rows={2}
+                      className="min-h-[70px] text-xs sm:text-sm bg-stone-50/80 dark:bg-slate-850 border-stone-200 dark:border-slate-700 rounded-xl focus:border-rose-400 dark:focus:border-rose-500 resize-none shadow-2xs"
+                    />
+                    <p className="text-[10px] text-stone-400 dark:text-slate-500">
+                      Handled with celebration care by our specialized Hyderabad delivery fleet.
+                    </p>
+                  </div>
                 </div>
               </div>
 
