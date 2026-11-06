@@ -35,7 +35,7 @@ export const ConnectionsTab: React.FC<ConnectionsTabProps> = ({
 
   // Source DB state - empty by default with placeholder
   const [sourceUrl, setSourceUrl] = useState('');
-  const [sourceSslMode, setSourceSslMode] = useState<'require' | 'prefer' | 'disable'>('require');
+  const [sourceSslMode, setSourceSslMode] = useState<'require' | 'prefer' | 'disable'>('prefer');
   const [sourceRejectUnauthorized, setSourceRejectUnauthorized] = useState(false);
   const [isTestingSource, setIsTestingSource] = useState(false);
   const [isSavingSource, setIsSavingSource] = useState(false);
@@ -81,8 +81,10 @@ export const ConnectionsTab: React.FC<ConnectionsTabProps> = ({
       const result = await dbMigrationService.testConnection(target, url.trim(), sslConfig);
       if (target === 'source') {
         setSourceTestResult(result);
+        if (result.effectiveSslMode) setSourceSslMode(result.effectiveSslMode);
       } else {
         setDestTestResult(result);
+        if (result.effectiveSslMode) setDestSslMode(result.effectiveSslMode);
       }
 
       if (result.success) {
