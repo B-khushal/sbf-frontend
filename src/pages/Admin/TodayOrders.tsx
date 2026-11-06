@@ -207,19 +207,19 @@ const toBoardItems = (orders: Order[]): BoardItem[] => {
       ].filter(Boolean).join(', ');
       cardMessage = order.giftDetails.message || '';
     } else {
-      customerName = order.shippingDetails.fullName || 'Customer';
-      customerPhone = order.shippingDetails.phone || 'N/A';
-      deliveryAddress = [
+      customerName = order.shippingDetails?.fullName || order.customerName || 'Customer';
+      customerPhone = order.shippingDetails?.phone || order.customerPhone || 'N/A';
+      deliveryAddress = order.shippingDetails ? [
         order.shippingDetails.address,
         order.shippingDetails.apartment,
         order.shippingDetails.city,
         order.shippingDetails.state,
         order.shippingDetails.zipCode
-      ].filter(Boolean).join(', ');
-      cardMessage = order.shippingDetails.cardMessage || order.shippingDetails.giftMessage || '';
+      ].filter(Boolean).join(', ') : '';
+      cardMessage = order.shippingDetails?.cardMessage || order.shippingDetails?.giftMessage || '';
     }
 
-    return order.items.map((item, itemIndex) => ({
+    return (order.items || []).map((item, itemIndex) => ({
       key: `${order._id}-${itemIndex}`,
       orderId: order._id,
       orderNumber: order.orderNumber,
@@ -232,11 +232,11 @@ const toBoardItems = (orders: Order[]): BoardItem[] => {
       item,
       column: getColumnFromStatus(order.status),
       cardMessage,
-      deliverySpecialInstructions: order.shippingDetails.deliverySpecialInstructions || order.shippingDetails.notes || '',
+      deliverySpecialInstructions: order.shippingDetails?.deliverySpecialInstructions || order.shippingDetails?.notes || '',
       isGift,
-      purchaserName: order.shippingDetails.fullName || 'Customer',
-      purchaserPhone: order.shippingDetails.phone || 'N/A',
-      purchaserEmail: order.shippingDetails.email || 'N/A',
+      purchaserName: order.shippingDetails?.fullName || order.customerName || 'Customer',
+      purchaserPhone: order.shippingDetails?.phone || order.customerPhone || 'N/A',
+      purchaserEmail: order.shippingDetails?.email || order.customerEmail || 'N/A',
       recipientName: order.giftDetails?.recipientName || '',
       recipientPhone: order.giftDetails?.recipientPhone || '',
       recipientEmail: order.giftDetails?.recipientEmail || '',
