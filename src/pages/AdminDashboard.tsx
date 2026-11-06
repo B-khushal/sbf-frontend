@@ -48,7 +48,8 @@ import {
   CalendarDays,
   ShoppingBasket,
   Cookie,
-  KeyRound
+  KeyRound,
+  Database
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
@@ -1021,6 +1022,20 @@ export const AdminDashboard: React.FC = () => {
           icon={HelpCircle}
           label="FAQ System"
           active={location.pathname === "/admin/faqs"}
+          collapsed={isCollapsed}
+        />
+
+        {/* Database Migration & Synchronization */}
+        <NavItem
+          to="/admin/database-migration"
+          icon={Database}
+          label="DB Migration"
+          badge={
+            <span className="text-[9px] font-black uppercase tracking-wider bg-gradient-to-r from-rose-600 to-indigo-600 text-white px-1.5 py-0.2 rounded-md shadow-2xs">
+              HQ PRO
+            </span>
+          }
+          active={location.pathname === "/admin/database-migration"}
           collapsed={isCollapsed}
         />
 

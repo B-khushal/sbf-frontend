@@ -59,6 +59,7 @@ const TermsPage = lazy(() => import("@/pages/TermsPage"));
 const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
 const FaqPage = lazy(() => import("./pages/FaqPage"));
 const AdminFaqManagement = lazy(() => import("./pages/Admin/FaqManagement"));
+const DatabaseMigrationPage = lazy(() => import("./pages/Admin/DatabaseMigration/DatabaseMigrationPage"));
 
 // Checkout Pages (lazy loaded as they're rarely used immediately)
 const CheckoutShippingPage = lazy(() => import("./pages/CheckoutShippingPage"));
@@ -525,6 +526,11 @@ const App = () => {
                             <Route path="settings" element={
                               <Suspense fallback={<LoadingFallback message="Loading settings..." />}>
                                 <AdminSettingsPage />
+                              </Suspense>
+                            } />
+                            <Route path="database-migration" element={
+                              <Suspense fallback={<LoadingFallback message="Loading database migration module..." />}>
+                                <DatabaseMigrationPage />
                               </Suspense>
                             } />
                             <Route path="faqs" element={
