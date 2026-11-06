@@ -227,16 +227,22 @@ export interface MigrationHistoryItem {
   hasLogs: boolean;
 }
 
+// Normalize base URL so we never get /api/api
+const getNormalizedApiBase = () => {
+  const base = API_URL.replace(/\/+$/, '');
+  return base.endsWith('/api') ? base : `${base}/api`;
+};
+
 export const dbMigrationService = {
   // 1. Overview
   async getOverview(): Promise<OverviewData> {
-    const res = await api.get('/api/admin/db-migration/overview');
+    const res = await api.get('/admin/db-migration/overview');
     return res.data;
   },
 
   // 2. Connections
   async testConnection(target: 'source' | 'destination', connectionString: string, sslConfig: any = {}) {
-    const res = await api.post('/api/admin/db-migration/connections/test', {
+    const res = await api.post('/admin/db-migration/connections/test', {
       target,
       connectionString,
       sslConfig
@@ -245,7 +251,7 @@ export const dbMigrationService = {
   },
 
   async saveConnection(target: 'source' | 'destination', connectionString: string, sslConfig: any = {}) {
-    const res = await api.post('/api/admin/db-migration/connections/save', {
+    const res = await api.post('/admin/db-migration/connections/save', {
       target,
       connectionString,
       sslConfig
@@ -254,23 +260,23 @@ export const dbMigrationService = {
   },
 
   async getConnections(): Promise<{ success: boolean; source: DatabaseProfile; destination: DatabaseProfile }> {
-    const res = await api.get('/api/admin/db-migration/connections');
+    const res = await api.get('/admin/db-migration/connections');
     return res.data;
   },
 
   async clearConnection(target: 'source' | 'destination') {
-    const res = await api.delete(`/api/admin/db-migration/connections/${target}`);
+    const res = await api.delete(`/admin/db-migration/connections/${target}`);
     return res.data;
   },
 
   // 3. Inspection & Diff
   async inspectDatabase(target: 'source' | 'destination', exact: boolean = false): Promise<DatabaseInspection> {
-    const res = await api.get(`/api/admin/db-migration/inspect/${target}?exact=${exact}`);
+    const res = await api.get(`/admin/db-migration/inspect/${target}?exact=${exact}`);
     return res.data;
   },
 
   async compareDatabases(exact: boolean = false): Promise<SchemaComparison> {
-    const res = await api.get(`/api/admin/db-migration/compare?exact=${exact}`);
+    const res = await api.get(`/admin/db-migration/compare?exact=${exact}`);
     return res.data;
   },
 
@@ -280,7 +286,7 @@ export const dbMigrationService = {
     selectedTables?: string[];
     conflictStrategy?: string;
   }) {
-    const res = await api.post('/api/admin/db-migration/preview', payload);
+    const res = await api.post('/admin/db-migration/preview', payload);
     return res.data;
   },
 
@@ -292,27 +298,27 @@ export const dbMigrationService = {
     batchSize?: number;
     createBackup?: boolean;
   }) {
-    const res = await api.post('/api/admin/db-migration/start', payload);
+    const res = await api.post('/admin/db-migration/start', payload);
     return res.data;
   },
 
   async pauseMigration() {
-    const res = await api.post('/api/admin/db-migration/pause');
+    const res = await api.post('/admin/db-migration/pause');
     return res.data;
   },
 
   async resumeMigration() {
-    const res = await api.post('/api/admin/db-migration/resume');
+    const res = await api.post('/admin/db-migration/resume');
     return res.data;
   },
 
   async cancelMigration() {
-    const res = await api.post('/api/admin/db-migration/cancel');
+    const res = await api.post('/admin/db-migration/cancel');
     return res.data;
   },
 
   async getStatus(): Promise<{ success: boolean; status: MigrationStatus }> {
-    const res = await api.get('/api/admin/db-migration/status');
+    const res = await api.get('/admin/db-migration/status');
     return res.data;
   },
 
@@ -322,7 +328,8 @@ export const dbMigrationService = {
     onError?: (err: any) => void
   ): () => void {
     const token = localStorage.getItem('token') || '';
-    const sseUrl = `${API_URL}/api/admin/db-migration/stream?token=${encodeURIComponent(token)}`;
+    const apiBase = getNormalizedApiBase();
+    const sseUrl = `${apiBase}/admin/db-migration/stream?token=${encodeURIComponent(token)}`;
     const eventSource = new EventSource(sseUrl, { withCredentials: true });
 
     eventSource.onmessage = (event) => {
@@ -345,35 +352,35 @@ export const dbMigrationService = {
 
   // 7. Verification & History
   async verifyMigration(tables?: string[]): Promise<VerificationReport> {
-    const res = await api.post('/api/admin/db-migration/verify', { tables });
+    const res = await api.post('/admin/db-migration/verify', { tables });
     return res.data;
   },
 
   async getHistory(): Promise<{ success: boolean; history: MigrationHistoryItem[] }> {
-    const res = await api.get('/api/admin/db-migration/history');
+    const res = await api.get('/admin/db-migration/history');
     return res.data;
   },
 
   async getHistoryDetails(migrationId: string): Promise<{ success: boolean; details: MigrationHistoryItem }> {
-    const res = await api.get(`/api/admin/db-migration/history/${migrationId}`);
+    const res = await api.get(`/admin/db-migration/history/${migrationId}`);
     return res.data;
   },
 
   async getMigrationLogs(migrationId: string): Promise<{ success: boolean; logs: string }> {
-    const res = await api.get(`/api/admin/db-migration/history/${migrationId}/logs`);
+    const res = await api.get(`/admin/db-migration/history/${migrationId}/logs`);
     return res.data;
   },
 
   getDownloadLogsUrl(migrationId: string): string {
     const token = localStorage.getItem('token') || '';
-    return `${API_URL}/api/admin/db-migration/history/${migrationId}/logs?download=true&token=${encodeURIComponent(token)}`;
+    const apiBase = getNormalizedApiBase();
+    return `${apiBase}/admin/db-migration/history/${migrationId}/logs?download=true&token=${encodeURIComponent(token)}`;
   },
 
   async deleteHistory(migrationId: string) {
-    const res = await api.delete(`/api/admin/db-migration/history/${migrationId}`);
+    const res = await api.delete(`/admin/db-migration/history/${migrationId}`);
     return res.data;
   }
 };
 
 export default dbMigrationService;
-
