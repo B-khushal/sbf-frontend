@@ -29,36 +29,95 @@ export interface ComboComponentItem {
   cakeAttributes?: any;
 }
 
+export const COMBO_CATEGORY_SLUGS = [
+  'combos',
+  'combo',
+  'combo-packs',
+  'birthday-combos',
+  'anniversary-combos',
+  'romantic-combos',
+  'special-occasion-combos',
+  'cake-combos',
+  'cake-flower-combos',
+  'flower-cake-combos',
+  'gift-hampers',
+  'hampers',
+] as const;
+
+export const COMBO_ADMIN_TABS = [
+  { id: 'all', label: '🎁 All Combos' },
+  { id: 'birthday-combos', label: '🎂 Birthday Combos' },
+  { id: 'anniversary-combos', label: '💍 Anniversary Combos' },
+  { id: 'romantic-combos', label: '❤️ Romantic Combos' },
+  { id: 'special-occasion-combos', label: '✨ Special Occasion Combos' },
+  { id: 'gift-hampers', label: '📦 Gift Hampers' },
+  { id: 'combo-packs', label: '🎁 Combo Packs' },
+] as const;
+
+const isComboSlugMatch = (val: string): boolean => {
+  if (!val) return false;
+  const clean = val.toLowerCase().trim();
+  return (
+    (COMBO_CATEGORY_SLUGS as readonly string[]).includes(clean) ||
+    clean.includes('combo') ||
+    clean.includes('hamper')
+  );
+};
+
 /**
  * Checks whether a product represents a Combo / Hamper package
  */
 export const isComboProduct = (product: any): boolean => {
   if (!product) return false;
 
-  const catalogType = String(product.catalogType || '').toLowerCase().trim();
+  const detailsObj =
+    product.details && typeof product.details === 'object' && !Array.isArray(product.details)
+      ? product.details
+      : {};
+
+  const catalogType = String(product.catalogType || detailsObj.catalogType || '').toLowerCase().trim();
   const cat = String(
     typeof product.category === 'string'
       ? product.category
-      : product.category?.name || product.category?.slug || ''
+      : product.category?.slug || product.category?.name || detailsObj.category || ''
   ).toLowerCase().trim();
   const subcat = String(
     typeof product.subcategory === 'string'
       ? product.subcategory
-      : product.subcategory?.name || product.subcategory?.slug || ''
+      : product.subcategory?.slug || product.subcategory?.name || detailsObj.subcategory || ''
+  ).toLowerCase().trim();
+  const comboSubcat = String(
+    product.comboSubcategory || detailsObj.comboSubcategory || ''
   ).toLowerCase().trim();
   const title = String(product.title || product.name || '').toLowerCase().trim();
-  const cats = Array.isArray(product.categories)
-    ? product.categories.map((c: any) =>
-        String(typeof c === 'string' ? c : c?.name || c?.slug || '').toLowerCase().trim()
-      )
-    : [];
+
+  const rawCats = [
+    ...(Array.isArray(product.categories) ? product.categories : []),
+    ...(Array.isArray(detailsObj.categories) ? detailsObj.categories : []),
+  ];
+  const cats = rawCats
+    .map((c: any) =>
+      String(typeof c === 'string' ? c : c?.slug || c?.name || c?.category?.slug || c?.category?.name || '')
+        .toLowerCase()
+        .trim()
+    )
+    .filter(Boolean);
 
   const hasExplicitComboAttrs =
     (Array.isArray(product.comboAttributes?.comboProducts) && product.comboAttributes.comboProducts.length > 0) ||
+    (Array.isArray(detailsObj.comboAttributes?.comboProducts) && detailsObj.comboAttributes.comboProducts.length > 0) ||
     (Array.isArray(product.hamperAttributes?.hamperItems) && product.hamperAttributes.hamperItems.length > 0) ||
-    (Array.isArray(product.comboItems) && product.comboItems.length > 0);
+    (Array.isArray(detailsObj.hamperAttributes?.hamperItems) && detailsObj.hamperAttributes.hamperItems.length > 0) ||
+    (Array.isArray(product.comboItems) && product.comboItems.length > 0) ||
+    (Array.isArray(detailsObj.comboItems) && detailsObj.comboItems.length > 0);
 
-  // 1. Strict Basket Exclusion: Baskets belong to /baskets, not /combos
+  const hasExplicitComboSlug =
+    isComboSlugMatch(cat) ||
+    isComboSlugMatch(subcat) ||
+    isComboSlugMatch(comboSubcat) ||
+    cats.some((c) => isComboSlugMatch(c));
+
+  // 1. Strict Basket Exclusion: Standalone baskets belong to /baskets, not /combos
   const isBasketCategory =
     cat === 'baskets' ||
     cat === 'basket' ||
@@ -72,13 +131,15 @@ export const isComboProduct = (product: any): boolean => {
   const isBasketType = catalogType === 'basket';
   const isBasketTitle =
     (title.includes('basket') || title.includes('arrangement') || title.includes('stand') || title.includes('pyramid') || title.includes('cascade')) &&
-    !title.includes('combo');
+    !title.includes('combo') &&
+    !title.includes('hamper');
 
-  // If it's a basket and not explicitly created as a combo package, reject it
+  // If it's a standalone basket and not explicitly created/tagged as a combo or gift-hamper, reject it
   if (
     (isBasketCategory || isBasketType || isBasketTitle) &&
     catalogType !== 'combo' &&
-    cat !== 'combos' &&
+    catalogType !== 'hamper' &&
+    !hasExplicitComboSlug &&
     !hasExplicitComboAttrs
   ) {
     return false;
@@ -87,53 +148,85 @@ export const isComboProduct = (product: any): boolean => {
   // 2. Explicit catalogType
   if (catalogType === 'combo' || catalogType === 'hamper') return true;
 
-  // 3. Category check (Baskets deliberately excluded)
-  if (
-    cat === 'combos' ||
-    cat === 'combo' ||
-    cat === 'combo-packs' ||
-    cat === 'birthday-combos' ||
-    cat === 'anniversary-combos' ||
-    cat === 'romantic-combos' ||
-    cat === 'special-occasion-combos' ||
-    cat === 'cake-combos' ||
-    cat === 'gift-hampers' ||
-    cat === 'hampers'
-  ) {
-    return true;
-  }
+  // 3. Category, Subcategory, or Categories array check
+  if (hasExplicitComboSlug) return true;
 
-  // 4. Categories array check
-  if (
-    cats.some(
-      (c) =>
-        c === 'combos' ||
-        c === 'cake-combos' ||
-        c === 'combo-packs' ||
-        c === 'birthday-combos' ||
-        c === 'anniversary-combos' ||
-        c === 'romantic-combos' ||
-        c === 'special-occasion-combos' ||
-        c.includes('combo')
-    )
-  ) {
-    return true;
-  }
+  // 4. Explicit combo / hamper attributes
+  if (hasExplicitComboAttrs) return true;
 
-  // 5. Subcategory check
-  if (subcat.includes('combo')) return true;
-
-  // 6. Explicit combo / hamper attributes
-  if (hasExplicitComboAttrs) {
-    return true;
-  }
-
-  // 7. Title indicates an explicit duo celebration (and not a basket)
+  // 5. Title indicates an explicit duo celebration or gift hamper (and not a standalone basket)
   if (
     (title.includes('combo') || title.includes('hamper')) &&
-    (title.includes('cake') || title.includes('bouquet') || title.includes('flowers') || title.includes('chocolate'))
+    (title.includes('cake') || title.includes('bouquet') || title.includes('flowers') || title.includes('chocolate') || title.includes('gift'))
   ) {
     return true;
+  }
+
+  return false;
+};
+
+/**
+ * Checks whether a combo product matches a specific combo category tab
+ */
+export const matchesComboCategoryTab = (product: any, tabSlug: string): boolean => {
+  if (!product) return false;
+  const cleanTab = String(tabSlug || 'all').toLowerCase().trim();
+  if (!cleanTab || cleanTab === 'all' || cleanTab === 'combos') return true;
+
+  const detailsObj =
+    product.details && typeof product.details === 'object' && !Array.isArray(product.details)
+      ? product.details
+      : {};
+
+  const cat = String(
+    typeof product.category === 'string'
+      ? product.category
+      : product.category?.slug || product.category?.name || detailsObj.category || ''
+  ).toLowerCase().trim();
+  const subcat = String(
+    typeof product.subcategory === 'string'
+      ? product.subcategory
+      : product.subcategory?.slug || product.subcategory?.name || detailsObj.subcategory || ''
+  ).toLowerCase().trim();
+  const comboSubcat = String(
+    product.comboSubcategory || detailsObj.comboSubcategory || ''
+  ).toLowerCase().trim();
+  const catalogType = String(product.catalogType || detailsObj.catalogType || '').toLowerCase().trim();
+
+  const rawCats = [
+    ...(Array.isArray(product.categories) ? product.categories : []),
+    ...(Array.isArray(detailsObj.categories) ? detailsObj.categories : []),
+  ];
+  const cats = rawCats
+    .map((c: any) =>
+      String(typeof c === 'string' ? c : c?.slug || c?.name || c?.category?.slug || c?.category?.name || '')
+        .toLowerCase()
+        .trim()
+    )
+    .filter(Boolean);
+
+  if (
+    cat === cleanTab ||
+    subcat === cleanTab ||
+    comboSubcat === cleanTab ||
+    cats.includes(cleanTab)
+  ) {
+    return true;
+  }
+
+  // Special handling for gift-hampers tab
+  if (cleanTab === 'gift-hampers' || cleanTab === 'hampers') {
+    if (
+      catalogType === 'hamper' ||
+      cat === 'gift-hampers' ||
+      cat === 'hampers' ||
+      subcat === 'gift-hampers' ||
+      subcat === 'hampers' ||
+      cats.includes('gift-hampers') ||
+      cats.includes('hampers')
+    ) {
+      return true;
+    }
   }
 
   return false;

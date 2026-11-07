@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { SoftButton } from "@/components/dashboard/SoftButton";
+import { isComboProduct } from "@/utils/comboHelpers";
 
 const CakesPage: React.FC = () => {
   const navigate = useNavigate();
@@ -18,7 +19,8 @@ const CakesPage: React.FC = () => {
     try {
       setLoading(true);
       const res = await productService.getProductsByCatalogType("cake");
-      setProducts(res.products || []);
+      const standaloneCakes = (res.products || []).filter((p: any) => !isComboProduct(p));
+      setProducts(standaloneCakes);
     } catch (error: any) {
       console.error("Error fetching cakes:", error);
       toast({

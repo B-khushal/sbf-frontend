@@ -7,12 +7,18 @@ import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { SoftButton } from "@/components/dashboard/SoftButton";
+import {
+  isComboProduct,
+  COMBO_ADMIN_TABS,
+  matchesComboCategoryTab,
+} from "@/utils/comboHelpers";
 
 const CombosCatalogPage: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<ProductData[]>([]);
+  const [activeCategoryTab, setActiveCategoryTab] = useState<string>("all");
 
   const fetchCombos = async () => {
     try {
@@ -20,49 +26,7 @@ const CombosCatalogPage: React.FC = () => {
       const res = await productService.getAdminProducts();
       const allProds = res.products || [];
 
-      const comboProducts = allProds.filter((p: any) => {
-        const cat = String(p.category || "").toLowerCase();
-        const catalogType = String(p.catalogType || "").toLowerCase();
-        const title = String(p.title || p.name || "").toLowerCase();
-        const cats = Array.isArray(p.categories)
-          ? p.categories.map((c: string) => String(c).toLowerCase())
-          : [];
-
-        // Exclude bouquets or non-combo items explicitly
-        const isBouquetItem =
-          (catalogType === "bouquet" ||
-            title.endsWith("bouquet") ||
-            title.includes("luxury bouquet")) &&
-          catalogType !== "combo" &&
-          cat !== "combos";
-        if (isBouquetItem) {
-          return false;
-        }
-
-        const isComboCat =
-          cat === "combos" ||
-          cat === "combo products" ||
-          cat.includes("combo") ||
-          cat.includes("hamper") ||
-          cats.some((c) => c === "combos" || c.includes("combo") || c.includes("hamper"));
-        const isComboType = catalogType === "combo";
-        const hasComboAttributes =
-          Array.isArray(p.comboAttributes?.comboProducts) &&
-          p.comboAttributes.comboProducts.length > 0;
-        const hasHamperItems =
-          Array.isArray(p.hamperAttributes?.hamperItems) &&
-          p.hamperAttributes.hamperItems.length > 0;
-        const hasComboItems =
-          Array.isArray(p.comboItems) && p.comboItems.length > 0;
-
-        return (
-          isComboCat ||
-          isComboType ||
-          hasComboAttributes ||
-          hasHamperItems ||
-          hasComboItems
-        );
-      });
+      const comboProducts = allProds.filter((p: any) => isComboProduct(p));
 
       setProducts(comboProducts);
     } catch (error: any) {
@@ -80,6 +44,23 @@ const CombosCatalogPage: React.FC = () => {
   useEffect(() => {
     fetchCombos();
   }, []);
+
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: products.length };
+    COMBO_ADMIN_TABS.forEach((tab) => {
+      if (tab.id !== "all") {
+        counts[tab.id] = products.filter((p) =>
+          matchesComboCategoryTab(p, tab.id)
+        ).length;
+      }
+    });
+    return counts;
+  }, [products]);
+
+  const filteredByTabProducts = useMemo(() => {
+    if (activeCategoryTab === "all") return products;
+    return products.filter((p) => matchesComboCategoryTab(p, activeCategoryTab));
+  }, [products, activeCategoryTab]);
 
   const stats = useMemo(() => {
     let multiItemCombos = 0;
@@ -112,10 +93,10 @@ const CombosCatalogPage: React.FC = () => {
           { label: "Combos & Hampers" },
         ]}
         title="Combos & Hampers Catalog"
-        description="Curated multi-product pairings (Flowers + Cake, Flowers + Chocolates + Teddy) and luxury gift hampers."
+        description="Curated multi-product pairings (All Combos, Birthday Combos, Anniversary Combos, Romantic Combos, Special Occasion Combos & Gift Hampers)."
         liveStatus={{ label: `${products.length} Combos Active`, ping: true }}
         actions={
-          <div className="flex items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-2.5">
             <SoftButton
               variant="default"
               size="sm"
@@ -123,6 +104,14 @@ const CombosCatalogPage: React.FC = () => {
               onClick={fetchCombos}
             >
               Refresh
+            </SoftButton>
+            <SoftButton
+              variant="secondary"
+              size="sm"
+              icon={PackagePlus}
+              onClick={() => navigate("/admin/products/hampers")}
+            >
+              Combo & Hamper Builder
             </SoftButton>
             <SoftButton
               variant="primary"
@@ -143,7 +132,7 @@ const CombosCatalogPage: React.FC = () => {
           value={stats.total}
           icon={Boxes}
           color="blue"
-          subtitle="All paired packages"
+          subtitle="All paired packages & hampers"
         />
         <StatCard
           title="Multi-Component"
@@ -161,9 +150,42 @@ const CombosCatalogPage: React.FC = () => {
         />
       </div>
 
+      {/* Combo Category Quick Filter Pills */}
+      <div className="sbf-card p-3 rounded-2xl border border-white/70 dark:border-slate-800 shadow-[5px_5px_15px_rgba(163,177,198,0.22),-5px_-5px_15px_rgba(255,255,255,0.75)] bg-[#f4f7fb] dark:bg-slate-900/90">
+        <div className="flex flex-wrap items-center gap-2">
+          {COMBO_ADMIN_TABS.map((tab) => {
+            const isActive = activeCategoryTab === tab.id;
+            const count = categoryCounts[tab.id] || 0;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveCategoryTab(tab.id)}
+                className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 ${
+                  isActive
+                    ? "bg-emerald-600 text-white shadow-[3px_3px_8px_rgba(16,185,129,0.35)]"
+                    : "bg-[#edf1f7] dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 shadow-[2px_2px_5px_rgba(163,177,198,0.25),-2px_-2px_5px_rgba(255,255,255,0.8)]"
+                }`}
+              >
+                <span>{tab.label}</span>
+                <span
+                  className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                    isActive
+                      ? "bg-white/20 text-white"
+                      : "bg-slate-200/80 dark:bg-slate-700 text-slate-700 dark:text-slate-300"
+                  }`}
+                >
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Enterprise Product Table */}
       <EnterpriseProductTable
-        products={products}
+        products={filteredByTabProducts}
         loading={loading}
         catalogTypeFilter="all"
         onRefresh={fetchCombos}

@@ -17,6 +17,7 @@ import { useNavigate } from "react-router-dom";
 import productService, { ProductData, OccasionData } from "@/services/productService";
 import { getProductEffectivePrice } from "@/utils/pricing";
 import { formatCakeWeightLabel } from "@/utils/cakeHelpers";
+import { isComboProduct, matchesComboCategoryTab } from "@/utils/comboHelpers";
 import { getImageUrl } from "@/config";
 import { useSeasonalCampaign } from "@/contexts/SeasonalCampaignContext";
 import { useValentine } from "@/contexts/ValentineContext";
@@ -787,14 +788,29 @@ const AdminProducts: React.FC = () => {
       });
     }
 
-    // Category filter - check both primary category and additional categories
+    // Category filter - check primary category, subcategory, additional categories, and combo helpers
     if (selectedCategory !== "all") {
+      const targetCat = selectedCategory.toLowerCase();
       filtered = filtered.filter(product => {
-        const primaryMatch = product.category?.toLowerCase() === selectedCategory.toLowerCase();
+        if (targetCat === "combos") {
+          return isComboProduct(product);
+        }
+        if (
+          targetCat === "birthday-combos" ||
+          targetCat === "anniversary-combos" ||
+          targetCat === "romantic-combos" ||
+          targetCat === "special-occasion-combos" ||
+          targetCat === "gift-hampers" ||
+          targetCat === "combo-packs"
+        ) {
+          return matchesComboCategoryTab(product, targetCat);
+        }
+        const primaryMatch = product.category?.toLowerCase() === targetCat;
+        const subcatMatch = product.subcategory?.toLowerCase() === targetCat;
         const additionalMatch = product.categories?.some(cat => 
-          cat.toLowerCase() === selectedCategory.toLowerCase()
+          cat.toLowerCase() === targetCat
         );
-        return primaryMatch || additionalMatch;
+        return primaryMatch || subcatMatch || additionalMatch;
       });
     }
 
@@ -1541,8 +1557,12 @@ const AdminProducts: React.FC = () => {
                 <SelectItem value="tulips">🌷 Tulips</SelectItem>
                 <SelectItem value="orchids">🌺 Orchids</SelectItem>
                 <SelectItem value="lilies">🌼 Lilies</SelectItem>
-                <SelectItem value="combos">🎁 Combos</SelectItem>
-                <SelectItem value="gift-hampers">🎁 Gift Hampers</SelectItem>
+                <SelectItem value="combos">🎁 All Combos</SelectItem>
+                <SelectItem value="birthday-combos">🎂 Birthday Combos</SelectItem>
+                <SelectItem value="anniversary-combos">💍 Anniversary Combos</SelectItem>
+                <SelectItem value="romantic-combos">❤️ Romantic Combos</SelectItem>
+                <SelectItem value="special-occasion-combos">✨ Special Occasion Combos</SelectItem>
+                <SelectItem value="gift-hampers">📦 Gift Hampers</SelectItem>
                 <SelectItem value="fruit-baskets">🍎 Fruit Baskets</SelectItem>
                 <SelectItem value="mixed-arrangements">🌸 Mixed Arrangements</SelectItem>
                 <SelectItem value="premium-collections">⭐ Premium Collections</SelectItem>

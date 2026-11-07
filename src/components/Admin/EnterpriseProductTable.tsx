@@ -14,6 +14,7 @@ import { getImageUrl } from "@/config";
 import productService, { ProductData } from "@/services/productService";
 import { getProductEffectivePrice } from "@/utils/pricing";
 import { formatCakeWeightLabel } from "@/utils/cakeHelpers";
+import { isComboProduct } from "@/utils/comboHelpers";
 import {
   Search,
   Filter,
@@ -77,11 +78,17 @@ export const EnterpriseProductTable: React.FC<EnterpriseProductTableProps> = ({
   const [sortField, setSortField] = useState<"title" | "price" | "stock" | "rating" | "date">("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
-  // Extract unique categories for filter
+  // Extract unique categories & subcategories for filter
   const uniqueCategories = useMemo(() => {
     const cats = new Set<string>();
     products.forEach((p) => {
       if (p.category) cats.add(p.category);
+      if (p.subcategory) cats.add(p.subcategory);
+      if (Array.isArray(p.categories)) {
+        p.categories.forEach((c) => {
+          if (typeof c === "string" && c.trim()) cats.add(c.trim());
+        });
+      }
     });
     return Array.from(cats);
   }, [products]);
@@ -101,6 +108,7 @@ export const EnterpriseProductTable: React.FC<EnterpriseProductTableProps> = ({
           const cType = (p.catalogType || "").toLowerCase();
 
           if (catalogTypeFilter === "cake") {
+            if (isComboProduct(p)) return false;
             if (cType !== "cake" && !cat.includes("cake")) return false;
           } else if (catalogTypeFilter === "plant") {
             if (cType !== "plant" && !cat.includes("plant")) return false;
@@ -112,10 +120,11 @@ export const EnterpriseProductTable: React.FC<EnterpriseProductTableProps> = ({
           } else if (catalogTypeFilter === "hamper") {
             if (cType !== "hamper" && !cat.includes("hamper") && !cat.includes("basket")) return false;
           } else if (catalogTypeFilter === "combo") {
-            if (cType !== "combo" && !cat.includes("combo")) return false;
+            if (!isComboProduct(p)) return false;
           } else if (catalogTypeFilter === "addon") {
             if (cType !== "addon" && !cat.includes("addon") && !cat.includes("add-on")) return false;
           } else if (catalogTypeFilter === "bouquet") {
+            if (isComboProduct(p)) return false;
             const subcat = (p.subcategory || "").toLowerCase();
             const title = (p.title || "").toLowerCase();
             const isBouquetItem = cat.includes("bouquet") || subcat.includes("bouquet") || title.includes("bouquet");
@@ -137,11 +146,25 @@ export const EnterpriseProductTable: React.FC<EnterpriseProductTableProps> = ({
           const matchesTitle = p.title.toLowerCase().includes(term);
           const matchesSku = p.sku ? p.sku.toLowerCase().includes(term) : false;
           const matchesCat = p.category ? p.category.toLowerCase().includes(term) : false;
-          if (!matchesTitle && !matchesSku && !matchesCat) return false;
+          const matchesSubcat = p.subcategory ? p.subcategory.toLowerCase().includes(term) : false;
+          if (!matchesTitle && !matchesSku && !matchesCat && !matchesSubcat) return false;
         }
 
-        // Category filter
-        if (categoryFilter !== "all" && p.category !== categoryFilter) return false;
+        // Category filter (matches primary category, subcategory, or categories array)
+        if (categoryFilter !== "all") {
+          const targetCat = categoryFilter.toLowerCase();
+          const pCat = (p.category || "").toLowerCase();
+          const pSubcat = (p.subcategory || "").toLowerCase();
+          const pCats = Array.isArray(p.categories)
+            ? p.categories.map((c) => String(c).toLowerCase())
+            : [];
+          const matchesCategory =
+            pCat === targetCat ||
+            pSubcat === targetCat ||
+            pCats.includes(targetCat) ||
+            (targetCat === "combos" && isComboProduct(p));
+          if (!matchesCategory) return false;
+        }
 
         // Stock filter
         if (stockFilter === "in_stock" && (p.countInStock || 0) <= 0) return false;

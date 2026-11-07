@@ -16,6 +16,7 @@ import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { SoftButton } from "@/components/dashboard/SoftButton";
+import { isComboProduct } from "@/utils/comboHelpers";
 
 const QUICK_FILTER_PRESETS = [
   { id: "all", label: "All Flower Products" },
@@ -82,13 +83,8 @@ const BouquetsPage: React.FC = () => {
           !isBouquetOrBasket;
         if (isPureChocolate) return false;
 
-        // 4. Exclude Combos (managed under /admin/products/combos)
-        const isCombo =
-          cat === "combos" ||
-          cat === "combo products" ||
-          catalogType === "combo" ||
-          (p.comboItems && p.comboItems.length > 0);
-        if (isCombo) return false;
+        // 4. Exclude Combos & Hampers (managed under /admin/products/combos)
+        if (isComboProduct(p)) return false;
 
         // 5. Exclude Addons (managed under /admin/products/addons)
         const isAddon =

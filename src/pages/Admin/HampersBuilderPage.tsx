@@ -428,11 +428,14 @@ const HampersBuilderPage: React.FC = () => {
         ? (cakeTargetSizes[0].toLowerCase().includes('1 kg') ? '8–10 People (1 Kg)' : '4–6 People (0.5 Kg)')
         : '4–6 People (0.5 Kg) / 8–10 People (1 Kg)';
 
+      const resolvedSubcat = comboCategory === "combos" ? "combo-packs" : comboCategory;
       const comboProductData: Partial<ProductData> = {
         title: hamperTitle,
         description: hamperDescription || `Exclusive combo hamper package featuring ${selectedComponents.map(c => c.name).join(", ")}.`,
-        category: comboCategory,
-        categories: Array.from(new Set([comboCategory, "combos"].filter(Boolean))),
+        category: "combos",
+        subcategory: resolvedSubcat,
+        comboSubcategory: resolvedSubcat,
+        categories: Array.from(new Set(["combos", comboCategory, resolvedSubcat].filter(Boolean))),
         catalogType: "combo",
         price: comboBasePrice,
         comparePrice: comboBaseCompare,

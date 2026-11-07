@@ -25,6 +25,7 @@ import categoryService, { Category } from '@/services/categoryService';
 import { useSeasonalCampaign } from '@/contexts/SeasonalCampaignContext';
 import { cn } from '@/lib/utils';
 import { CakeFormSection, PlantFormSection, ChocolateFormSection, HamperFormSection, ComboFormSection } from '@/components/Admin/ProductFormSections';
+import { isComboProduct } from '@/utils/comboHelpers';
 
 type FormErrors = {
   [key in keyof ProductData]?: string;
@@ -663,7 +664,9 @@ const ProductForm = () => {
   });
   const [forceShowCakeSection, setForceShowCakeSection] = useState(false);
 
-  const isBouquetProduct = Boolean(
+  const isComboProductType = isComboProduct(formData);
+
+  const isBouquetProduct = !isComboProductType && Boolean(
     formData.catalogType === 'bouquet' ||
     formData.catalogType === 'flower' ||
     formData.category === 'bouquets' ||
@@ -673,7 +676,7 @@ const ProductForm = () => {
     (typeof formData.category === 'string' && (formData.category.toLowerCase().includes('bouquet') || formData.category.toLowerCase().includes('flower')))
   );
 
-  const isCakeProductType = !isBouquetProduct && Boolean(
+  const isCakeProductType = !isComboProductType && !isBouquetProduct && Boolean(
     formData.catalogType === 'cake' ||
     formData.category === 'cakes' ||
     formData.category === 'cake' ||
@@ -793,8 +796,9 @@ const ProductForm = () => {
 
       const fetchedCat = String(data.category || '').toLowerCase();
       const fetchedCatalogType = String(data.catalogType || (data as any).details?.catalogType || '').toLowerCase();
-      const isBouquetData = fetchedCatalogType === 'bouquet' || fetchedCat === 'bouquets' || fetchedCat === 'bouquet' || fetchedCat === 'flowers' || fetchedCat === 'flower' || fetchedCat.includes('bouquet');
-      const isCakeData = !isBouquetData && (
+      const isComboData = isComboProduct(data);
+      const isBouquetData = !isComboData && (fetchedCatalogType === 'bouquet' || fetchedCat === 'bouquets' || fetchedCat === 'bouquet' || fetchedCat === 'flowers' || fetchedCat === 'flower' || fetchedCat.includes('bouquet'));
+      const isCakeData = !isComboData && !isBouquetData && (
         fetchedCatalogType === 'cake' ||
         fetchedCat === 'cakes' ||
         fetchedCat === 'cake' ||
@@ -911,8 +915,8 @@ const ProductForm = () => {
         seasonalCampaigns: Array.isArray(data.seasonalCampaigns) ? data.seasonalCampaigns : [],
         campaignSettings: data.campaignSettings || {},
         occasionIds: Array.isArray(data.occasionIds) ? data.occasionIds : [],
-        catalogType: isBouquetData ? 'bouquet' : (isCakeData ? 'cake' : (data.catalogType || (data as any).details?.catalogType || 'bouquet')),
-        cakeAttributes: isCakeData ? (data.cakeAttributes || (data as any).details?.cakeAttributes || {
+        catalogType: isComboData ? 'combo' : (isBouquetData ? 'bouquet' : (isCakeData ? 'cake' : (data.catalogType || (data as any).details?.catalogType || 'bouquet'))),
+        cakeAttributes: (isCakeData || isComboData) ? (data.cakeAttributes || (data as any).details?.cakeAttributes || (isCakeData ? {
           flavor: '',
           weight: '',
           shape: 'round',
@@ -920,7 +924,7 @@ const ProductForm = () => {
           prepTime: '',
           availableSizes: [],
           occasion: '',
-        }) : undefined,
+        } : undefined)) : undefined,
         plantAttributes: data.plantAttributes || (data as any).details?.plantAttributes || {},
         chocolateAttributes: data.chocolateAttributes || (data as any).details?.chocolateAttributes || {},
         hamperAttributes: data.hamperAttributes || (data as any).details?.hamperAttributes || {},
