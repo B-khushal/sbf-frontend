@@ -669,7 +669,7 @@ const OffersManager = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6 w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto space-y-8 min-h-screen text-slate-800 dark:text-slate-800 dark:text-slate-100">
+    <div className="p-4 sm:p-6 w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto space-y-8 min-h-screen text-slate-800 dark:text-slate-100">
       <PageHeader
         title="Campaign Popup Manager"
         subtitle="Redesign, deploy, A/B test, and analyze luxury promotional overlays."
@@ -729,64 +729,67 @@ const OffersManager = () => {
       {/* Analytics Dashboard Panel */}
       {selectedOfferForAnalytics && (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
-          <div className="bg-[#edf1f7] dark:bg-slate-900/60 rounded-2xl shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)] border border-slate-200/60 dark:border-slate-800 rounded-[24px] p-6 backdrop-blur-md">
-            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-amber-400" />
-              Campaign Performance Analytics: <span className="text-amber-400">"{selectedOfferForAnalytics.title}"</span>
+          <div className="bg-white dark:bg-slate-900 rounded-[24px] shadow-[6px_6px_16px_rgba(163,177,198,0.22),-6px_-6px_16px_rgba(255,255,255,0.85)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)] border border-slate-200/80 dark:border-slate-800 p-6">
+            <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-5 flex items-center gap-2.5">
+              <div className="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/50 border border-amber-200/80 dark:border-amber-800 text-amber-600 dark:text-amber-400">
+                <BarChart3 className="h-5 w-5" />
+              </div>
+              <span>Campaign Performance Analytics:</span>
+              <span className="text-rose-600 dark:text-amber-400">"{selectedOfferForAnalytics.title}"</span>
             </h2>
 
             {/* Overall Cards Grid */}
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
               {[
-                { label: 'Impressions', val: selectedOfferForAnalytics.impressions, color: 'text-blue-400', desc: 'Total popups triggered' },
-                { label: 'Closes', val: selectedOfferForAnalytics.closes, color: 'text-slate-500 dark:text-slate-400', desc: 'Manually closed' },
-                { label: 'CTA Clicks', val: selectedOfferForAnalytics.ctaClicks, color: 'text-amber-400', desc: 'Primary CTA clicks' },
-                { label: 'Coupon Copies', val: selectedOfferForAnalytics.couponCopies, color: 'text-purple-400', desc: 'Code copy events' },
-                { label: 'Conversions', val: selectedOfferForAnalytics.conversions, color: 'text-emerald-400', desc: 'Completed Checkouts' }
+                { label: 'Impressions', val: selectedOfferForAnalytics.impressions, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50/50 dark:bg-blue-950/20 border-blue-200/70 dark:border-blue-900/50', desc: 'Total popups triggered' },
+                { label: 'Closes', val: selectedOfferForAnalytics.closes, color: 'text-slate-700 dark:text-slate-300', bg: 'bg-slate-50/80 dark:bg-slate-800/40 border-slate-200/80 dark:border-slate-800', desc: 'Manually closed' },
+                { label: 'CTA Clicks', val: selectedOfferForAnalytics.ctaClicks, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50/50 dark:bg-amber-950/20 border-amber-200/70 dark:border-amber-900/50', desc: 'Primary CTA clicks' },
+                { label: 'Coupon Copies', val: selectedOfferForAnalytics.couponCopies, color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-50/50 dark:bg-purple-950/20 border-purple-200/70 dark:border-purple-900/50', desc: 'Code copy events' },
+                { label: 'Conversions', val: selectedOfferForAnalytics.conversions, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200/70 dark:border-emerald-900/50', desc: 'Completed Checkouts' }
               ].map((card, idx) => (
-                <div key={idx} className="bg-[#edf1f7] dark:bg-slate-800/50 rounded-xl shadow-[inset_2px_2px_5px_rgba(163,177,198,0.2),inset_-2px_-2px_5px_rgba(255,255,255,0.7)] border border-slate-200/40 dark:border-slate-800/80 rounded-2xl p-4 flex flex-col justify-between">
-                  <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">{card.label}</span>
+                <div key={idx} className={`${card.bg} border rounded-2xl p-4 flex flex-col justify-between shadow-2xs`}>
+                  <span className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">{card.label}</span>
                   <span className={`text-2xl font-black mt-2 ${card.color}`}>
                     {card.val?.toLocaleString() || 0}
                   </span>
-                  <span className="text-[10px] text-slate-500 mt-2">{card.desc}</span>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5 font-medium">{card.desc}</span>
                 </div>
               ))}
             </div>
 
             {/* Main Stats Summary */}
-            <div className="grid md:grid-cols-3 gap-6 bg-slate-950/60 p-5 rounded-2xl border border-slate-800/80 mb-6">
+            <div className="grid md:grid-cols-3 gap-6 bg-[#f8fafc] dark:bg-slate-950/60 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 mb-6">
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-amber-500/10 rounded-full text-amber-400">
+                <div className="p-3 bg-amber-100/80 dark:bg-amber-500/10 rounded-xl text-amber-600 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/40">
                   <TrendingUp className="h-5 w-5" />
                 </div>
                 <div>
-                  <span className="block text-xs text-slate-500 dark:text-slate-400">Click-Through Rate (CTR)</span>
-                  <span className="text-xl font-bold text-slate-800 dark:text-slate-100">
+                  <span className="block text-xs font-semibold text-slate-500 dark:text-slate-400">Click-Through Rate (CTR)</span>
+                  <span className="text-xl font-extrabold text-slate-900 dark:text-slate-100">
                     {calcRate(selectedOfferForAnalytics.ctaClicks, selectedOfferForAnalytics.impressions)}
                   </span>
                 </div>
               </div>
 
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-emerald-500/10 rounded-full text-emerald-400">
+                <div className="p-3 bg-emerald-100/80 dark:bg-emerald-500/10 rounded-xl text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40">
                   <TrendingUp className="h-5 w-5" />
                 </div>
                 <div>
-                  <span className="block text-xs text-slate-500 dark:text-slate-400">Checkout Conversion Rate</span>
-                  <span className="text-xl font-bold text-slate-800 dark:text-slate-100">
+                  <span className="block text-xs font-semibold text-slate-500 dark:text-slate-400">Checkout Conversion Rate</span>
+                  <span className="text-xl font-extrabold text-slate-900 dark:text-slate-100">
                     {calcRate(selectedOfferForAnalytics.conversions, selectedOfferForAnalytics.impressions)}
                   </span>
                 </div>
               </div>
 
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-purple-500/10 rounded-full text-purple-400">
+                <div className="p-3 bg-purple-100/80 dark:bg-purple-500/10 rounded-xl text-purple-600 dark:text-purple-400 border border-purple-200/60 dark:border-purple-800/40">
                   <Copy className="h-5 w-5" />
                 </div>
                 <div>
-                  <span className="block text-xs text-slate-500 dark:text-slate-400">Coupon Claim Rate</span>
-                  <span className="text-xl font-bold text-slate-800 dark:text-slate-100">
+                  <span className="block text-xs font-semibold text-slate-500 dark:text-slate-400">Coupon Claim Rate</span>
+                  <span className="text-xl font-extrabold text-slate-900 dark:text-slate-100">
                     {calcRate(selectedOfferForAnalytics.couponCopies, selectedOfferForAnalytics.impressions)}
                   </span>
                 </div>
@@ -796,15 +799,15 @@ const OffersManager = () => {
             {/* A/B Testing Breakdown */}
             {selectedOfferForAnalytics.isABTesting && selectedOfferForAnalytics.variants && selectedOfferForAnalytics.variants.length > 0 ? (
               <div className="space-y-4">
-                <h3 className="text-md font-bold text-amber-300 flex items-center gap-2">
-                  <Sparkles className="h-4 w-4" />
+                <h3 className="text-sm font-bold text-slate-800 dark:text-amber-300 flex items-center gap-2 uppercase tracking-wider">
+                  <Sparkles className="h-4 w-4 text-amber-500" />
                   A/B Testing Variants Performance Comparison
                 </h3>
 
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
                   <table className="w-full text-left text-sm border-collapse">
                     <thead>
-                      <tr className="border-b border-slate-800 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-xs">
+                      <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider text-xs">
                         <th className="py-3 px-4">Variant</th>
                         <th className="py-3 px-4">Impressions</th>
                         <th className="py-3 px-4">CTA Clicks</th>
@@ -815,23 +818,23 @@ const OffersManager = () => {
                         <th className="py-3 px-4">Status</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800">
+                    <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
                       {/* Main Campaign (treated as control / baseline if A/B testing) */}
-                      <tr className="hover:bg-slate-800/20 bg-slate-900/10">
-                        <td className="py-4 px-4 font-semibold text-amber-200">
+                      <tr className="hover:bg-slate-50/80 dark:hover:bg-slate-800/20 bg-amber-50/30 dark:bg-slate-900/10">
+                        <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-amber-200">
                           Original Campaign (Control)
                         </td>
-                        <td className="py-4 px-4">{selectedOfferForAnalytics.impressions}</td>
-                        <td className="py-4 px-4">{selectedOfferForAnalytics.ctaClicks}</td>
-                        <td className="py-4 px-4 text-amber-400">
+                        <td className="py-3.5 px-4 font-medium text-slate-700 dark:text-slate-300">{selectedOfferForAnalytics.impressions}</td>
+                        <td className="py-3.5 px-4 font-medium text-slate-700 dark:text-slate-300">{selectedOfferForAnalytics.ctaClicks}</td>
+                        <td className="py-3.5 px-4 font-bold text-amber-600 dark:text-amber-400">
                           {calcRate(selectedOfferForAnalytics.ctaClicks, selectedOfferForAnalytics.impressions)}
                         </td>
-                        <td className="py-4 px-4">{selectedOfferForAnalytics.couponCopies}</td>
-                        <td className="py-4 px-4">{selectedOfferForAnalytics.conversions}</td>
-                        <td className="py-4 px-4 text-emerald-400">
+                        <td className="py-3.5 px-4 font-medium text-slate-700 dark:text-slate-300">{selectedOfferForAnalytics.couponCopies}</td>
+                        <td className="py-3.5 px-4 font-medium text-slate-700 dark:text-slate-300">{selectedOfferForAnalytics.conversions}</td>
+                        <td className="py-3.5 px-4 font-bold text-emerald-600 dark:text-emerald-400">
                           {calcRate(selectedOfferForAnalytics.conversions, selectedOfferForAnalytics.impressions)}
                         </td>
-                        <td className="py-4 px-4 text-slate-500 italic">Baseline</td>
+                        <td className="py-3.5 px-4 text-slate-500 italic text-xs">Baseline</td>
                       </tr>
 
                       {/* Other Variants */}
@@ -841,27 +844,27 @@ const OffersManager = () => {
                         const isWinner = variantCVR > originalCVR && (v.conversions || 0) > 0;
 
                         return (
-                          <tr key={index} className="hover:bg-slate-800/20">
-                            <td className="py-4 px-4 font-semibold text-slate-200">
+                          <tr key={index} className="hover:bg-slate-50 dark:hover:bg-slate-800/20">
+                            <td className="py-3.5 px-4 font-semibold text-slate-800 dark:text-slate-200">
                               {v.title}
                             </td>
-                            <td className="py-4 px-4">{v.impressions || 0}</td>
-                            <td className="py-4 px-4">{v.ctaClicks || 0}</td>
-                            <td className="py-4 px-4 text-amber-400">
+                            <td className="py-3.5 px-4 text-slate-700 dark:text-slate-300">{v.impressions || 0}</td>
+                            <td className="py-3.5 px-4 text-slate-700 dark:text-slate-300">{v.ctaClicks || 0}</td>
+                            <td className="py-3.5 px-4 font-bold text-amber-600 dark:text-amber-400">
                               {calcRate(v.ctaClicks || 0, v.impressions || 0)}
                             </td>
-                            <td className="py-4 px-4">{v.couponCopies || 0}</td>
-                            <td className="py-4 px-4">{v.conversions || 0}</td>
-                            <td className="py-4 px-4 text-emerald-400 font-bold">
+                            <td className="py-3.5 px-4 text-slate-700 dark:text-slate-300">{v.couponCopies || 0}</td>
+                            <td className="py-3.5 px-4 text-slate-700 dark:text-slate-300">{v.conversions || 0}</td>
+                            <td className="py-3.5 px-4 text-emerald-600 dark:text-emerald-400 font-bold">
                               {calcRate(v.conversions || 0, v.impressions || 0)}
                             </td>
-                            <td className="py-4 px-4">
+                            <td className="py-3.5 px-4">
                               {isWinner ? (
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-900/50 text-emerald-300 border border-emerald-800">
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-800">
                                   👑 Outperforming
                                 </span>
                               ) : (
-                                <span className="text-slate-500 text-xs">Running...</span>
+                                <span className="text-slate-500 text-xs font-medium">Running...</span>
                               )}
                             </td>
                           </tr>
@@ -872,8 +875,8 @@ const OffersManager = () => {
                 </div>
               </div>
             ) : (
-              <div className="text-xs text-slate-500 flex items-center gap-1.5 pt-2">
-                <Info className="h-4 w-4" />
+              <div className="text-xs text-slate-600 dark:text-slate-400 flex items-center gap-2 pt-2 bg-slate-50 dark:bg-slate-800/40 p-3.5 rounded-xl border border-slate-200/70 dark:border-slate-800">
+                <Info className="h-4 w-4 text-slate-500 shrink-0" />
                 This campaign is running without A/B variant split testing. Set up variants in the campaign builder to perform split testing.
               </div>
             )}
@@ -886,18 +889,23 @@ const OffersManager = () => {
         <div className="grid lg:grid-cols-12 gap-8 items-start animate-in fade-in zoom-in-95 duration-300">
           
           {/* Left panel Form Editor (7 Cols) */}
-          <form onSubmit={handleSubmit} className="lg:col-span-7 bg-slate-900/40 border border-slate-800/80 rounded-[28px] overflow-hidden p-6 sm:p-8 space-y-6">
-            <div className="flex justify-between items-center pb-4 border-b border-slate-800">
-              <h2 className="text-xl font-bold text-slate-200">
-                {isEditing ? 'Modify Campaign Popup' : 'Design Campaign Popup'}
-              </h2>
+          <form onSubmit={handleSubmit} className="lg:col-span-7 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-[6px_6px_18px_rgba(163,177,198,0.22),-6px_-6px_18px_rgba(255,255,255,0.9)] rounded-[28px] overflow-hidden p-6 sm:p-8 space-y-6">
+            <div className="flex flex-wrap justify-between items-center gap-3 pb-4 border-b border-slate-200 dark:border-slate-800">
+              <div>
+                <h2 className="text-xl font-extrabold text-slate-900 dark:text-slate-100">
+                  {isEditing ? 'Modify Campaign Popup' : 'Design Campaign Popup'}
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  Configure content, artwork, display triggers, and live preview
+                </p>
+              </div>
 
-              <div className="flex gap-2">
+              <div className="flex gap-2.5">
                 {/* Save Changes Button */}
                 <Button 
                   type="submit" 
                   disabled={isSaving || isUploadingDesktop || isUploadingMobile}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl px-4 py-2 flex items-center shadow-md"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl px-5 py-2 flex items-center shadow-sm cursor-pointer"
                 >
                   {isSaving ? (
                     <>
@@ -910,26 +918,31 @@ const OffersManager = () => {
                 </Button>
                 
                 {/* Cancel Button */}
-                <Button type="button" variant="outline" onClick={resetForm} className="border-slate-800 text-slate-500 dark:text-slate-400 bg-slate-950/20 hover:bg-slate-800">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={resetForm}
+                  className="border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 font-semibold rounded-xl cursor-pointer"
+                >
                   Discard
                 </Button>
               </div>
             </div>
 
             {/* Presets & Launch Templates Selector Panel */}
-            <div className="bg-[#edf1f7] dark:bg-slate-800/50 rounded-xl shadow-[inset_2px_2px_5px_rgba(163,177,198,0.2),inset_-2px_-2px_5px_rgba(255,255,255,0.7)] border border-slate-200/40 dark:border-slate-800/80 rounded-2xl p-4 space-y-3">
+            <div className="bg-[#f8fafc] dark:bg-slate-800/50 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 space-y-3.5">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                <span className="block text-xs font-bold text-amber-300 uppercase tracking-widest flex items-center gap-1.5">
-                  <Sparkles className="h-3.5 w-3.5 text-amber-400" />
+                <span className="text-xs font-extrabold text-slate-800 dark:text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <Sparkles className="h-4 w-4 text-amber-500" />
                   Quick Presets & Templates
                 </span>
-                <span className="text-[11px] text-slate-500 dark:text-slate-400">Click any preset to prefill form</span>
+                <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">Click any preset to prefill form</span>
               </div>
 
               {/* New Launch presets highlight */}
               <div>
-                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1.5 flex items-center gap-1">
-                  <Cake className="h-3 w-3 text-amber-400" />
+                <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block mb-2 flex items-center gap-1.5">
+                  <Cake className="h-3.5 w-3.5 text-rose-500" />
                   New Product Launches (No Special Discount)
                 </span>
                 <div className="flex flex-wrap gap-2">
@@ -938,9 +951,9 @@ const OffersManager = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => handleApplyTemplate('cakes_launch')}
-                    className="border-amber-500/40 text-xs font-bold capitalize text-amber-300 hover:bg-amber-500/10 bg-amber-950/30"
+                    className="border-rose-200 dark:border-rose-800 text-xs font-bold text-rose-800 dark:text-rose-200 hover:bg-rose-100/80 bg-rose-50/80 dark:bg-rose-950/40 rounded-xl cursor-pointer"
                   >
-                    <Cake className="h-3.5 w-3.5 mr-1 text-amber-400" />
+                    <Cake className="h-3.5 w-3.5 mr-1.5 text-rose-600 dark:text-rose-400" />
                     New Cakes Launch 🎂
                   </Button>
                   <Button
@@ -948,9 +961,9 @@ const OffersManager = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => handleApplyTemplate('combos_launch')}
-                    className="border-amber-500/40 text-xs font-bold capitalize text-amber-300 hover:bg-amber-500/10 bg-amber-950/30"
+                    className="border-amber-200 dark:border-amber-800 text-xs font-bold text-amber-900 dark:text-amber-200 hover:bg-amber-100/80 bg-amber-50/80 dark:bg-amber-950/40 rounded-xl cursor-pointer"
                   >
-                    <Gift className="h-3.5 w-3.5 mr-1 text-yellow-400" />
+                    <Gift className="h-3.5 w-3.5 mr-1.5 text-amber-600 dark:text-amber-400" />
                     New Combos Launch 🎁
                   </Button>
                   <Button
@@ -958,9 +971,9 @@ const OffersManager = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => handleApplyTemplate('cakes_combos_launch')}
-                    className="border-amber-500/60 text-xs font-bold capitalize text-yellow-200 hover:bg-amber-500/20 bg-amber-900/40 shadow-sm"
+                    className="border-purple-200 dark:border-purple-800 text-xs font-bold text-purple-900 dark:text-purple-200 hover:bg-purple-100/80 bg-purple-50/80 dark:bg-purple-950/40 rounded-xl shadow-2xs cursor-pointer"
                   >
-                    <Sparkles className="h-3.5 w-3.5 mr-1 text-yellow-300" />
+                    <Sparkles className="h-3.5 w-3.5 mr-1.5 text-purple-600 dark:text-purple-400" />
                     Cakes & Combos Launch ✨
                   </Button>
                 </div>
@@ -968,7 +981,7 @@ const OffersManager = () => {
 
               {/* Seasonal Festivals */}
               <div>
-                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1.5">
+                <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block mb-2">
                   🎉 Seasonal Festival Specials
                 </span>
                 <div className="flex flex-wrap gap-1.5">
@@ -979,7 +992,7 @@ const OffersManager = () => {
                       variant="outline"
                       size="sm"
                       onClick={() => handleApplyTemplate(key)}
-                      className="border-slate-800 text-xs font-semibold capitalize text-slate-700 dark:text-slate-300 hover:bg-slate-800 bg-slate-900/40 h-7"
+                      className="border-slate-200 dark:border-slate-700 text-xs font-semibold capitalize text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 bg-white dark:bg-slate-900 h-8 rounded-lg shadow-2xs cursor-pointer"
                     >
                       {key} Template
                     </Button>
@@ -989,8 +1002,8 @@ const OffersManager = () => {
             </div>
 
             {/* Popup Purpose Selector */}
-            <div className="bg-[#edf1f7] dark:bg-slate-800/50 rounded-xl shadow-[inset_2px_2px_5px_rgba(163,177,198,0.2),inset_-2px_-2px_5px_rgba(255,255,255,0.7)] border border-slate-200/40 dark:border-slate-800/80 rounded-2xl p-4">
-              <span className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest mb-2.5">
+            <div className="bg-[#f8fafc] dark:bg-slate-800/50 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4">
+              <span className="block text-xs font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wider mb-3">
                 🎯 Popup Purpose & Mode
               </span>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1006,19 +1019,19 @@ const OffersManager = () => {
                       badgeText: prev.badgeText || 'New Launch 🎂'
                     }));
                   }}
-                  className={`p-3.5 rounded-xl border text-left transition-all flex items-start gap-3 ${
+                  className={`p-3.5 rounded-xl border-2 text-left transition-all flex items-start gap-3 cursor-pointer ${
                     popupPurpose === 'launch'
-                      ? 'border-amber-400 bg-amber-500/10 text-white shadow-md'
-                      : 'border-slate-800 bg-slate-900/30 text-slate-500 dark:text-slate-400 hover:border-slate-700'
+                      ? 'border-rose-500 bg-rose-50/60 dark:bg-rose-950/30 text-slate-900 dark:text-white shadow-sm'
+                      : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:border-slate-300'
                   }`}
                 >
-                  <Cake className={`h-5 w-5 shrink-0 mt-0.5 ${popupPurpose === 'launch' ? 'text-amber-400' : 'text-slate-500'}`} />
+                  <Cake className={`h-5 w-5 shrink-0 mt-0.5 ${popupPurpose === 'launch' ? 'text-rose-600 dark:text-rose-400' : 'text-slate-400'}`} />
                   <div>
-                    <div className="text-sm font-bold text-slate-200 flex items-center gap-1.5">
+                    <div className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                       New Product Launch / Showcase
-                      {popupPurpose === 'launch' && <Check className="h-3.5 w-3.5 text-amber-400" />}
+                      {popupPurpose === 'launch' && <Check className="h-4 w-4 text-rose-600 dark:text-rose-400" />}
                     </div>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5 leading-snug">
                       Announce new cakes, combos, or collections without requiring special checkout discounts.
                     </p>
                   </div>
@@ -1035,19 +1048,19 @@ const OffersManager = () => {
                       badgeText: prev.badgeText || 'Special Offer'
                     }));
                   }}
-                  className={`p-3.5 rounded-xl border text-left transition-all flex items-start gap-3 ${
+                  className={`p-3.5 rounded-xl border-2 text-left transition-all flex items-start gap-3 cursor-pointer ${
                     popupPurpose === 'discount'
-                      ? 'border-amber-400 bg-amber-500/10 text-white shadow-md'
-                      : 'border-slate-800 bg-slate-900/30 text-slate-500 dark:text-slate-400 hover:border-slate-700'
+                      ? 'border-rose-500 bg-rose-50/60 dark:bg-rose-950/30 text-slate-900 dark:text-white shadow-sm'
+                      : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:border-slate-300'
                   }`}
                 >
-                  <Tag className={`h-5 w-5 shrink-0 mt-0.5 ${popupPurpose === 'discount' ? 'text-amber-400' : 'text-slate-500'}`} />
+                  <Tag className={`h-5 w-5 shrink-0 mt-0.5 ${popupPurpose === 'discount' ? 'text-rose-600 dark:text-rose-400' : 'text-slate-400'}`} />
                   <div>
-                    <div className="text-sm font-bold text-slate-200 flex items-center gap-1.5">
+                    <div className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                       Promotional Discount Offer
-                      {popupPurpose === 'discount' && <Check className="h-3.5 w-3.5 text-amber-400" />}
+                      {popupPurpose === 'discount' && <Check className="h-4 w-4 text-rose-600 dark:text-rose-400" />}
                     </div>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5 leading-snug">
                       Provide percentage savings and promo codes that auto-sync with checkout.
                     </p>
                   </div>
@@ -1056,7 +1069,7 @@ const OffersManager = () => {
             </div>
 
             {/* Form tabs */}
-            <div className="flex border-b border-slate-800 gap-2">
+            <div className="flex flex-wrap border-b border-slate-200 dark:border-slate-800 gap-1">
               {[
                 { id: 'general', label: 'General Info' },
                 { id: 'design', label: 'Visual Layout' },
@@ -1067,10 +1080,10 @@ const OffersManager = () => {
                   key={tab.id}
                   type="button"
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`pb-3 px-4 text-xs font-bold uppercase tracking-wider transition-colors border-b-2 
+                  className={`pb-3 pt-2 px-4 text-xs font-extrabold uppercase tracking-wider transition-all border-b-2 rounded-t-lg cursor-pointer
                     ${activeTab === tab.id 
-                      ? 'border-amber-400 text-amber-400' 
-                      : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-200'
+                      ? 'border-rose-600 text-rose-600 dark:text-amber-400 dark:border-amber-400 bg-rose-50/40 dark:bg-slate-800/40' 
+                      : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/20'
                     }`}
                 >
                   {tab.label}
@@ -1083,31 +1096,31 @@ const OffersManager = () => {
               <div className="space-y-5 animate-in fade-in duration-200">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="title" className="text-xs text-slate-500 dark:text-slate-400">Campaign Title *</Label>
+                    <Label htmlFor="title" className="text-xs font-bold text-slate-700 dark:text-slate-300">Campaign Title *</Label>
                     <Input
                       id="title"
                       value={currentOffer.title || ''}
                       onChange={(e) => setCurrentOffer({ ...currentOffer, title: e.target.value })}
                       required
                       placeholder="e.g. Introducing Our New Artisanal Cakes 🎂"
-                      className="bg-slate-950/60 border-slate-800/80 rounded-xl"
+                      className="bg-[#f8fafc] dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 rounded-xl"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="subtitle" className="text-xs text-slate-500 dark:text-slate-400">Subtitle (Optional)</Label>
+                    <Label htmlFor="subtitle" className="text-xs font-bold text-slate-700 dark:text-slate-300">Subtitle (Optional)</Label>
                     <Input
                       id="subtitle"
                       value={currentOffer.subtitle || ''}
                       onChange={(e) => setCurrentOffer({ ...currentOffer, subtitle: e.target.value })}
                       placeholder="e.g. Freshly Baked • Decadent Flavors"
-                      className="bg-slate-950/60 border-slate-800/80 rounded-xl"
+                      className="bg-[#f8fafc] dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 rounded-xl"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="description" className="text-xs text-slate-500 dark:text-slate-400">Description Message *</Label>
+                  <Label htmlFor="description" className="text-xs font-bold text-slate-700 dark:text-slate-300">Description Message *</Label>
                   <textarea
                     id="description"
                     value={currentOffer.description || ''}
@@ -1115,16 +1128,16 @@ const OffersManager = () => {
                     required
                     rows={3}
                     placeholder="Enter details about your newly launched cakes, combos, or celebration arrangements..."
-                    className="w-full bg-[#edf1f7] dark:bg-slate-800/50 rounded-xl shadow-[inset_2px_2px_5px_rgba(163,177,198,0.2),inset_-2px_-2px_5px_rgba(255,255,255,0.7)] border border-slate-200/40 dark:border-slate-800/80 rounded-xl p-3 text-sm focus:outline-none focus:border-amber-400/50"
+                    className="w-full bg-[#f8fafc] dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
                   />
                 </div>
 
                 {/* Display Image Upload Box directly in General Tab */}
-                <div className="space-y-3 bg-slate-950/50 p-4 rounded-2xl border border-slate-800/80">
+                <div className="space-y-3 bg-[#f8fafc] dark:bg-slate-950/50 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800">
                   <div className="flex justify-between items-center">
                     <div>
-                      <Label className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
-                        <ImageIcon className="h-4 w-4 text-amber-400" />
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                        <ImageIcon className="h-4 w-4 text-rose-500" />
                         Campaign Display Banner Image
                       </Label>
                       <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
@@ -1137,7 +1150,7 @@ const OffersManager = () => {
                         variant="ghost"
                         size="sm"
                         onClick={() => setCurrentOffer({ ...currentOffer, imageUrl: '', image: '' })}
-                        className="text-xs text-red-400 hover:text-red-300 hover:bg-red-950/30 h-7 px-2.5 rounded-lg"
+                        className="text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 h-7 px-2.5 rounded-lg"
                       >
                         <Trash2 className="h-3.5 w-3.5 mr-1" />
                         Remove
@@ -1153,34 +1166,34 @@ const OffersManager = () => {
                   />
 
                   <div className="space-y-1 pt-1">
-                    <Label className="text-[10px] text-slate-500 dark:text-slate-400">Or paste image URL directly:</Label>
+                    <Label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">Or paste image URL directly:</Label>
                     <Input
                       value={currentOffer.imageUrl || ''}
                       onChange={(e) => setCurrentOffer({ ...currentOffer, imageUrl: e.target.value, image: e.target.value })}
                       placeholder="https://images.unsplash.com/... or https://res.cloudinary.com/..."
-                      className="bg-slate-950/80 border-slate-800 text-xs text-slate-700 dark:text-slate-300 rounded-xl font-mono"
+                      className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 rounded-xl font-mono"
                     />
                   </div>
                 </div>
 
                 {/* CTA Destination & Category Shortcuts */}
-                <div className="space-y-3 bg-slate-950/50 p-4 rounded-2xl border border-slate-800/80">
-                  <span className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest">
+                <div className="space-y-3 bg-[#f8fafc] dark:bg-slate-950/50 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800">
+                  <span className="block text-xs font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
                     🔗 CTA Button & Quick Category Destination
                   </span>
                   
                   {/* Quick Category Buttons */}
                   <div>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block mb-1.5">Quick fill link destination:</span>
+                    <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block mb-2">Quick fill link destination:</span>
                     <div className="flex flex-wrap gap-2">
                       <Button
                         type="button"
                         size="sm"
                         variant="outline"
                         onClick={() => setCurrentOffer(prev => ({ ...prev, buttonText: 'Explore New Cakes', buttonLink: '/category/cakes' }))}
-                        className="border-slate-800 bg-slate-900/60 hover:bg-slate-800 text-xs text-amber-300"
+                        className="border-rose-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-rose-50 text-xs font-semibold text-rose-700 dark:text-amber-300 rounded-lg cursor-pointer"
                       >
-                        <Cake className="h-3.5 w-3.5 mr-1 text-amber-400" />
+                        <Cake className="h-3.5 w-3.5 mr-1.5 text-rose-500" />
                         Cakes (/category/cakes)
                       </Button>
 
@@ -1189,9 +1202,9 @@ const OffersManager = () => {
                         size="sm"
                         variant="outline"
                         onClick={() => setCurrentOffer(prev => ({ ...prev, buttonText: 'Explore New Combos', buttonLink: '/category/combos' }))}
-                        className="border-slate-800 bg-slate-900/60 hover:bg-slate-800 text-xs text-amber-300"
+                        className="border-amber-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-amber-50 text-xs font-semibold text-amber-800 dark:text-amber-300 rounded-lg cursor-pointer"
                       >
-                        <Gift className="h-3.5 w-3.5 mr-1 text-yellow-400" />
+                        <Gift className="h-3.5 w-3.5 mr-1.5 text-amber-500" />
                         Combos (/category/combos)
                       </Button>
 
@@ -1200,9 +1213,9 @@ const OffersManager = () => {
                         size="sm"
                         variant="outline"
                         onClick={() => setCurrentOffer(prev => ({ ...prev, buttonText: 'Shop New Arrivals', buttonLink: '/shop' }))}
-                        className="border-slate-800 bg-slate-900/60 hover:bg-slate-800 text-xs text-slate-700 dark:text-slate-300"
+                        className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-100 text-xs font-semibold text-slate-700 dark:text-slate-300 rounded-lg cursor-pointer"
                       >
-                        <ShoppingBag className="h-3.5 w-3.5 mr-1 text-slate-500 dark:text-slate-400" />
+                        <ShoppingBag className="h-3.5 w-3.5 mr-1.5 text-slate-500" />
                         All Shop (/shop)
                       </Button>
 
@@ -1211,9 +1224,9 @@ const OffersManager = () => {
                         size="sm"
                         variant="outline"
                         onClick={() => setCurrentOffer(prev => ({ ...prev, buttonText: 'Send Flowers Today', buttonLink: '/category/flowers' }))}
-                        className="border-slate-800 bg-slate-900/60 hover:bg-slate-800 text-xs text-slate-700 dark:text-slate-300"
+                        className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-100 text-xs font-semibold text-slate-700 dark:text-slate-300 rounded-lg cursor-pointer"
                       >
-                        <Flower2 className="h-3.5 w-3.5 mr-1 text-rose-400" />
+                        <Flower2 className="h-3.5 w-3.5 mr-1.5 text-rose-500" />
                         Flowers (/category/flowers)
                       </Button>
                     </div>
@@ -1221,24 +1234,24 @@ const OffersManager = () => {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
                     <div className="space-y-1.5">
-                      <Label htmlFor="buttonText_general" className="text-xs text-slate-500 dark:text-slate-400">Button Text</Label>
+                      <Label htmlFor="buttonText_general" className="text-xs font-bold text-slate-700 dark:text-slate-300">Button Text</Label>
                       <Input
                         id="buttonText_general"
                         value={currentOffer.buttonText || ''}
                         onChange={(e) => setCurrentOffer({ ...currentOffer, buttonText: e.target.value })}
                         placeholder="e.g. Explore New Cakes"
-                        className="bg-slate-950/60 border-slate-800/80 rounded-xl"
+                        className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 rounded-xl"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label htmlFor="buttonLink_general" className="text-xs text-slate-500 dark:text-slate-400">Button Link</Label>
+                      <Label htmlFor="buttonLink_general" className="text-xs font-bold text-slate-700 dark:text-slate-300">Button Link</Label>
                       <Input
                         id="buttonLink_general"
                         value={currentOffer.buttonLink || ''}
                         onChange={(e) => setCurrentOffer({ ...currentOffer, buttonLink: e.target.value })}
                         placeholder="e.g. /category/cakes"
-                        className="bg-slate-950/60 border-slate-800/80 rounded-xl font-mono text-xs"
+                        className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 rounded-xl font-mono text-xs"
                       />
                     </div>
                   </div>
@@ -1246,35 +1259,35 @@ const OffersManager = () => {
 
                 {/* Promo Code & Discount Block */}
                 {popupPurpose === 'launch' ? (
-                  <div className="p-3.5 bg-emerald-950/30 border border-emerald-500/30 rounded-xl flex items-start gap-2.5 text-xs text-emerald-300">
-                    <Check className="h-4.5 w-4.5 shrink-0 mt-0.5 text-emerald-400" />
+                  <div className="p-3.5 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 rounded-xl flex items-start gap-2.5 text-xs text-emerald-900 dark:text-emerald-300">
+                    <Check className="h-4 w-4 shrink-0 mt-0.5 text-emerald-600 dark:text-emerald-400" />
                     <div>
                       <span className="font-bold">No Discount Required:</span> New launch announcement mode is active. Customers clicking the popup will be taken straight to your new collection without requiring checkout coupons.
                     </div>
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-start gap-2.5 text-xs text-amber-300">
-                      <Sparkles className="h-4.5 w-4.5 shrink-0 mt-0.5 text-amber-400 animate-pulse" />
+                    <div className="p-3.5 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-xl flex items-start gap-2.5 text-xs text-amber-900 dark:text-amber-300">
+                      <Sparkles className="h-4 w-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
                       <div>
-                        <span className="font-bold">Checkout Promo Code Auto-Sync:</span> Entering a promo code here (e.g. <span className="font-mono text-yellow-200 uppercase font-black px-1 py-0.5 bg-black/40 rounded">BFF20</span>) automatically activates it for customer checkout!
+                        <span className="font-bold">Checkout Promo Code Auto-Sync:</span> Entering a promo code here (e.g. <span className="font-mono text-amber-950 dark:text-yellow-200 uppercase font-black px-1.5 py-0.5 bg-amber-200/70 dark:bg-black/40 rounded">BFF20</span>) automatically activates it for customer checkout!
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="code_general" className="text-xs text-slate-500 dark:text-slate-400">Promo Coupon Code</Label>
+                        <Label htmlFor="code_general" className="text-xs font-bold text-slate-700 dark:text-slate-300">Promo Coupon Code</Label>
                         <Input
                           id="code_general"
                           value={currentOffer.code || ''}
                           onChange={(e) => setCurrentOffer({ ...currentOffer, code: e.target.value.toUpperCase() })}
                           placeholder="e.g. CAKES10 or COMBOS15"
-                          className="bg-slate-950/60 border-slate-800/80 rounded-xl font-mono uppercase text-amber-300 font-bold tracking-wider"
+                          className="bg-[#f8fafc] dark:bg-slate-950 border-slate-200 dark:border-slate-800 rounded-xl font-mono uppercase text-rose-700 dark:text-amber-300 font-bold tracking-wider"
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="discountPercent_general" className="text-xs text-slate-500 dark:text-slate-400">Discount Percentage (%)</Label>
+                        <Label htmlFor="discountPercent_general" className="text-xs font-bold text-slate-700 dark:text-slate-300">Discount Percentage (%)</Label>
                         <Input
                           id="discountPercent_general"
                           type="number"
@@ -1282,7 +1295,7 @@ const OffersManager = () => {
                           max={100}
                           value={currentOffer.discountPercent ?? 0}
                           onChange={(e) => setCurrentOffer({ ...currentOffer, discountPercent: parseInt(e.target.value, 10) || 0 })}
-                          className="bg-slate-950/60 border-slate-800/80 rounded-xl text-yellow-300 font-bold"
+                          className="bg-[#f8fafc] dark:bg-slate-950 border-slate-200 dark:border-slate-800 rounded-xl text-emerald-700 dark:text-yellow-300 font-bold"
                         />
                       </div>
                     </div>
@@ -1291,26 +1304,26 @@ const OffersManager = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="badgeText" className="text-xs text-slate-500 dark:text-slate-400">Badge Banner Text</Label>
+                    <Label htmlFor="badgeText" className="text-xs font-bold text-slate-700 dark:text-slate-300">Badge Banner Text</Label>
                     <Input
                       id="badgeText"
                       value={currentOffer.badgeText || ''}
                       onChange={(e) => setCurrentOffer({ ...currentOffer, badgeText: e.target.value })}
                       placeholder="e.g. New Launch 🎂 or Fresh Arrivals ✨"
-                      className="bg-slate-950/60 border-slate-800/80 rounded-xl"
+                      className="bg-[#f8fafc] dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 rounded-xl"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="theme" className="text-xs text-slate-500 dark:text-slate-400">Icon Theme Style</Label>
+                    <Label htmlFor="theme" className="text-xs font-bold text-slate-700 dark:text-slate-300">Icon Theme Style</Label>
                     <Select
                       value={currentOffer.theme}
                       onValueChange={(value: any) => setCurrentOffer({ ...currentOffer, theme: value })}
                     >
-                      <SelectTrigger className="bg-slate-950/60 border-slate-800/80 rounded-xl">
+                      <SelectTrigger className="bg-[#f8fafc] dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 rounded-xl">
                         <SelectValue placeholder="Select theme icon preset" />
                       </SelectTrigger>
-                      <SelectContent className="bg-slate-900 border-slate-800 text-slate-200">
+                      <SelectContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200">
                         <SelectItem value="general">General Preset (Sparkles)</SelectItem>
                         <SelectItem value="rakhi">Rakhi (Petals/Gold)</SelectItem>
                         <SelectItem value="valentines">Valentine's (Hearts/Rose)</SelectItem>
@@ -1328,15 +1341,15 @@ const OffersManager = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-xs text-slate-500 dark:text-slate-400">Schedule Start Date</Label>
+                    <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Schedule Start Date</Label>
                     <Popover>
                       <PopoverTrigger asChild>
-                        <Button variant="outline" className="w-full justify-start text-left font-normal bg-slate-950/60 border-slate-800/80 rounded-xl hover:bg-slate-900 text-slate-700 dark:text-slate-300">
-                          <CalendarIcon className="mr-2 h-4 w-4" />
+                        <Button variant="outline" className="w-full justify-start text-left font-medium bg-[#f8fafc] dark:bg-slate-950 border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-800 dark:text-slate-200">
+                          <CalendarIcon className="mr-2 h-4 w-4 text-slate-500" />
                           {currentOffer.startDate ? format(new Date(currentOffer.startDate), 'PPP') : 'Pick a date'}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent side="bottom" align="start" className="w-auto p-0 bg-[#edf1f7] dark:bg-slate-900 rounded-2xl shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)] border border-slate-200/60 dark:border-slate-800">
+                      <PopoverContent side="bottom" align="start" className="w-auto p-0 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800">
                         <Calendar
                           mode="single"
                           selected={currentOffer.startDate ? new Date(currentOffer.startDate) : undefined}
@@ -1347,15 +1360,15 @@ const OffersManager = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-xs text-slate-500 dark:text-slate-400">Schedule End Date (Expiry)</Label>
+                    <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Schedule End Date (Expiry)</Label>
                     <Popover>
                       <PopoverTrigger asChild>
-                        <Button variant="outline" className="w-full justify-start text-left font-normal bg-slate-950/60 border-slate-800/80 rounded-xl hover:bg-slate-900 text-slate-700 dark:text-slate-300">
-                          <CalendarIcon className="mr-2 h-4 w-4" />
+                        <Button variant="outline" className="w-full justify-start text-left font-medium bg-[#f8fafc] dark:bg-slate-950 border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-800 dark:text-slate-200">
+                          <CalendarIcon className="mr-2 h-4 w-4 text-slate-500" />
                           {currentOffer.endDate ? format(new Date(currentOffer.endDate), 'PPP') : 'Pick a date'}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent side="bottom" align="start" className="w-auto p-0 bg-[#edf1f7] dark:bg-slate-900 rounded-2xl shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)] border border-slate-200/60 dark:border-slate-800">
+                      <PopoverContent side="bottom" align="start" className="w-auto p-0 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800">
                         <Calendar
                           mode="single"
                           selected={currentOffer.endDate ? new Date(currentOffer.endDate) : undefined}
@@ -1374,14 +1387,14 @@ const OffersManager = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <Label className="text-xs text-slate-700 dark:text-slate-300 font-semibold">Desktop Display Image</Label>
+                      <Label className="text-xs text-slate-700 dark:text-slate-300 font-bold">Desktop Display Image</Label>
                       {currentOffer.imageUrl && (
                         <Button
                           type="button"
                           variant="ghost"
                           size="sm"
                           onClick={() => setCurrentOffer({ ...currentOffer, imageUrl: '', image: '' })}
-                          className="text-xs text-red-400 h-6 px-1.5"
+                          className="text-xs text-rose-600 h-6 px-1.5"
                         >
                           Remove
                         </Button>
@@ -1397,20 +1410,20 @@ const OffersManager = () => {
                       value={currentOffer.imageUrl || ''}
                       onChange={(e) => setCurrentOffer({ ...currentOffer, imageUrl: e.target.value, image: e.target.value })}
                       placeholder="Or paste direct image URL"
-                      className="bg-slate-950/60 border-slate-800 text-xs text-slate-700 dark:text-slate-300 rounded-xl font-mono"
+                      className="bg-[#f8fafc] dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 rounded-xl font-mono"
                     />
                   </div>
 
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <Label className="text-xs text-slate-700 dark:text-slate-300 font-semibold">Mobile-Specific Image (Optional)</Label>
+                      <Label className="text-xs text-slate-700 dark:text-slate-300 font-bold">Mobile-Specific Image (Optional)</Label>
                       {currentOffer.mobileImageUrl && (
                         <Button
                           type="button"
                           variant="ghost"
                           size="sm"
                           onClick={() => setCurrentOffer({ ...currentOffer, mobileImageUrl: '' })}
-                          className="text-xs text-red-400 h-6 px-1.5"
+                          className="text-xs text-rose-600 h-6 px-1.5"
                         >
                           Remove
                         </Button>
@@ -1426,28 +1439,28 @@ const OffersManager = () => {
                       value={currentOffer.mobileImageUrl || ''}
                       onChange={(e) => setCurrentOffer({ ...currentOffer, mobileImageUrl: e.target.value })}
                       placeholder="Or paste direct mobile image URL"
-                      className="bg-slate-950/60 border-slate-800 text-xs text-slate-700 dark:text-slate-300 rounded-xl font-mono"
+                      className="bg-[#f8fafc] dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 rounded-xl font-mono"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="background" className="text-xs text-slate-500 dark:text-slate-400">Card Backdrop Gradient</Label>
+                    <Label htmlFor="background" className="text-xs font-bold text-slate-700 dark:text-slate-300">Card Backdrop Gradient</Label>
                     <div className="flex items-center gap-2">
                       <Select
                         value={currentOffer.background}
                         onValueChange={(value) => setCurrentOffer({ ...currentOffer, background: value })}
                       >
-                        <SelectTrigger className="bg-slate-950/60 border-slate-800/80 rounded-xl">
+                        <SelectTrigger className="bg-[#f8fafc] dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 rounded-xl">
                           <SelectValue placeholder="Select backdrop preset" />
                         </SelectTrigger>
-                        <SelectContent className="bg-slate-900 border-slate-800 text-slate-200">
+                        <SelectContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200">
                           {gradientOptions.map(option => (
                             <SelectItem key={option.name} value={option.value}>
                               <div className="flex items-center gap-2">
                                 <div
-                                  className="w-4 h-4 rounded-full"
+                                  className="w-4 h-4 rounded-full border border-slate-300"
                                   style={{ background: option.value }}
                                 />
                                 {option.name}
@@ -1463,26 +1476,26 @@ const OffersManager = () => {
                           type="color"
                           value={currentOffer.background || '#ffffff'}
                           onChange={(e) => setCurrentOffer({ ...currentOffer, background: e.target.value })}
-                          className="w-16 p-1 border-slate-850 bg-transparent rounded-xl"
+                          className="w-16 p-1 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-xl"
                         />
                       )}
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="textColor" className="text-xs text-slate-500 dark:text-slate-400">Card Text Color</Label>
+                    <Label htmlFor="textColor" className="text-xs font-bold text-slate-700 dark:text-slate-300">Card Text Color</Label>
                     <div className="flex gap-2">
                       <Input
                         id="textColor"
                         type="color"
                         value={currentOffer.textColor || '#ffffff'}
                         onChange={(e) => setCurrentOffer({ ...currentOffer, textColor: e.target.value })}
-                        className="w-16 p-1 bg-transparent rounded-xl border-slate-850"
+                        className="w-16 p-1 bg-white dark:bg-slate-900 rounded-xl border-slate-200 dark:border-slate-800"
                       />
                       <Input
                         value={currentOffer.textColor || '#ffffff'}
                         onChange={(e) => setCurrentOffer({ ...currentOffer, textColor: e.target.value })}
-                        className="bg-slate-950/60 border-slate-800/80 rounded-xl"
+                        className="bg-[#f8fafc] dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 rounded-xl font-mono"
                       />
                     </div>
                   </div>
@@ -1493,9 +1506,9 @@ const OffersManager = () => {
                     id="showCountdown"
                     checked={currentOffer.showCountdown === true}
                     onCheckedChange={(checked) => setCurrentOffer({ ...currentOffer, showCountdown: checked as boolean })}
-                    className="border-slate-700"
+                    className="border-slate-300 dark:border-slate-700"
                   />
-                  <Label htmlFor="showCountdown" className="text-xs text-slate-700 dark:text-slate-300">Show Expiry Countdown Timer</Label>
+                  <Label htmlFor="showCountdown" className="text-xs font-semibold text-slate-700 dark:text-slate-300 cursor-pointer">Show Expiry Countdown Timer</Label>
                 </div>
               </div>
             )}
@@ -1505,65 +1518,65 @@ const OffersManager = () => {
               <div className="space-y-4 animate-in fade-in duration-200">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="buttonText" className="text-xs text-slate-500 dark:text-slate-400">Primary CTA Text</Label>
+                    <Label htmlFor="buttonText" className="text-xs font-bold text-slate-700 dark:text-slate-300">Primary CTA Text</Label>
                     <Input
                       id="buttonText"
                       value={currentOffer.buttonText || ''}
                       onChange={(e) => setCurrentOffer({ ...currentOffer, buttonText: e.target.value })}
                       required
                       placeholder="e.g. Explore New Cakes"
-                      className="bg-slate-950/60 border-slate-800/80 rounded-xl"
+                      className="bg-[#f8fafc] dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 rounded-xl"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="buttonLink" className="text-xs text-slate-500 dark:text-slate-400">Primary CTA Link</Label>
+                    <Label htmlFor="buttonLink" className="text-xs font-bold text-slate-700 dark:text-slate-300">Primary CTA Link</Label>
                     <Input
                       id="buttonLink"
                       value={currentOffer.buttonLink || ''}
                       onChange={(e) => setCurrentOffer({ ...currentOffer, buttonLink: e.target.value })}
                       required
                       placeholder="e.g. /category/cakes"
-                      className="bg-slate-950/60 border-slate-800/80 rounded-xl font-mono text-xs"
+                      className="bg-[#f8fafc] dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 rounded-xl font-mono text-xs"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="secondaryCtaText" className="text-xs text-slate-500 dark:text-slate-400">Secondary CTA Text</Label>
+                    <Label htmlFor="secondaryCtaText" className="text-xs font-bold text-slate-700 dark:text-slate-300">Secondary CTA Text</Label>
                     <Input
                       id="secondaryCtaText"
                       value={currentOffer.secondaryCtaText || ''}
                       onChange={(e) => setCurrentOffer({ ...currentOffer, secondaryCtaText: e.target.value })}
                       placeholder="e.g. Remind Me Later"
-                      className="bg-slate-950/60 border-slate-800/80 rounded-xl"
+                      className="bg-[#f8fafc] dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 rounded-xl"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="secondaryCtaLink" className="text-xs text-slate-500 dark:text-slate-400">Secondary CTA Link (Optional)</Label>
+                    <Label htmlFor="secondaryCtaLink" className="text-xs font-bold text-slate-700 dark:text-slate-300">Secondary CTA Link (Optional)</Label>
                     <Input
                       id="secondaryCtaLink"
                       value={currentOffer.secondaryCtaLink || ''}
                       onChange={(e) => setCurrentOffer({ ...currentOffer, secondaryCtaLink: e.target.value })}
                       placeholder="Redirect URL path or leave blank"
-                      className="bg-slate-950/60 border-slate-800/80 rounded-xl"
+                      className="bg-[#f8fafc] dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 rounded-xl"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="triggerType" className="text-xs text-slate-500 dark:text-slate-400">Trigger Conditions</Label>
+                    <Label htmlFor="triggerType" className="text-xs font-bold text-slate-700 dark:text-slate-300">Trigger Conditions</Label>
                     <Select
                       value={currentOffer.triggerType}
                       onValueChange={(val: any) => setCurrentOffer({ ...currentOffer, triggerType: val })}
                     >
-                      <SelectTrigger className="bg-slate-950/60 border-slate-800/80 rounded-xl">
+                      <SelectTrigger className="bg-[#f8fafc] dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 rounded-xl">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-slate-900 border-slate-800 text-slate-200">
+                      <SelectContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200">
                         <SelectItem value="combined">Combined (Delay / Scroll / Exit)</SelectItem>
                         <SelectItem value="timeDelay">Time Delay Only</SelectItem>
                         <SelectItem value="scroll">Scroll Depth Only</SelectItem>
@@ -1574,19 +1587,19 @@ const OffersManager = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="triggerDelay" className="text-xs text-slate-500 dark:text-slate-400">Trigger Delay (seconds)</Label>
+                    <Label htmlFor="triggerDelay" className="text-xs font-bold text-slate-700 dark:text-slate-300">Trigger Delay (seconds)</Label>
                     <Input
                       id="triggerDelay"
                       type="number"
                       min={0}
                       value={currentOffer.triggerDelay ?? 8}
                       onChange={(e) => setCurrentOffer({ ...currentOffer, triggerDelay: parseInt(e.target.value, 10) })}
-                      className="bg-slate-950/60 border-slate-800/80 rounded-xl"
+                      className="bg-[#f8fafc] dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 rounded-xl"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="triggerScrollPercent" className="text-xs text-slate-500 dark:text-slate-400">Trigger Scroll Depth (%)</Label>
+                    <Label htmlFor="triggerScrollPercent" className="text-xs font-bold text-slate-700 dark:text-slate-300">Trigger Scroll Depth (%)</Label>
                     <Input
                       id="triggerScrollPercent"
                       type="number"
@@ -1594,22 +1607,22 @@ const OffersManager = () => {
                       max={100}
                       value={currentOffer.triggerScrollPercent ?? 30}
                       onChange={(e) => setCurrentOffer({ ...currentOffer, triggerScrollPercent: parseInt(e.target.value, 10) })}
-                      className="bg-slate-950/60 border-slate-800/80 rounded-xl"
+                      className="bg-[#f8fafc] dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 rounded-xl"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="frequencyCap" className="text-xs text-slate-500 dark:text-slate-400">Display Capping Frequency</Label>
+                    <Label htmlFor="frequencyCap" className="text-xs font-bold text-slate-700 dark:text-slate-300">Display Capping Frequency</Label>
                     <Select
                       value={currentOffer.frequencyCap}
                       onValueChange={(val: any) => setCurrentOffer({ ...currentOffer, frequencyCap: val })}
                     >
-                      <SelectTrigger className="bg-slate-950/60 border-slate-800/80 rounded-xl">
+                      <SelectTrigger className="bg-[#f8fafc] dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 rounded-xl">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-slate-900 border-slate-800 text-slate-200">
+                      <SelectContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200">
                         <SelectItem value="oncePerSession">Once per Browser Session</SelectItem>
                         <SelectItem value="always">Always Show on Visit</SelectItem>
                         <SelectItem value="oncePerDay">Max Once Per Day</SelectItem>
@@ -1621,15 +1634,15 @@ const OffersManager = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="deviceTargeting" className="text-xs text-slate-500 dark:text-slate-400">Target Devices</Label>
+                    <Label htmlFor="deviceTargeting" className="text-xs font-bold text-slate-700 dark:text-slate-300">Target Devices</Label>
                     <Select
                       value={currentOffer.deviceTargeting}
                       onValueChange={(val: any) => setCurrentOffer({ ...currentOffer, deviceTargeting: val })}
                     >
-                      <SelectTrigger className="bg-slate-950/60 border-slate-800/80 rounded-xl">
+                      <SelectTrigger className="bg-[#f8fafc] dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 rounded-xl">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-slate-900 border-slate-800 text-slate-200">
+                      <SelectContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200">
                         <SelectItem value="both">Both (Desktop & Mobile)</SelectItem>
                         <SelectItem value="desktop">Desktop Only</SelectItem>
                         <SelectItem value="mobile">Mobile Devices Only</SelectItem>
@@ -1643,14 +1656,14 @@ const OffersManager = () => {
             {/* Tab content 4: A/B Testing */}
             {activeTab === 'ab' && (
               <div className="space-y-6 animate-in fade-in duration-200">
-                <div className="flex items-center space-x-2 bg-slate-950/30 p-4 rounded-xl border border-slate-800/50">
+                <div className="flex items-center space-x-2.5 bg-[#f8fafc] dark:bg-slate-950/40 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
                   <Checkbox
                     id="isABTesting"
                     checked={currentOffer.isABTesting || false}
                     onCheckedChange={(checked) => setCurrentOffer({ ...currentOffer, isABTesting: checked as boolean })}
-                    className="border-slate-700"
+                    className="border-slate-300 dark:border-slate-700"
                   />
-                  <Label htmlFor="isABTesting" className="text-xs text-slate-200 cursor-pointer">
+                  <Label htmlFor="isABTesting" className="text-xs font-bold text-slate-800 dark:text-slate-200 cursor-pointer">
                     Enable A/B testing splits for multiple layout variants
                   </Label>
                 </div>
@@ -1658,75 +1671,75 @@ const OffersManager = () => {
                 {currentOffer.isABTesting && (
                   <div className="space-y-6">
                     {/* Add / Edit Variant Form */}
-                    <div className="bg-slate-950/50 p-4 rounded-2xl border border-slate-800/80 space-y-4">
-                      <h4 className="text-xs font-bold text-amber-300 uppercase tracking-widest flex items-center gap-1.5">
+                    <div className="bg-[#f8fafc] dark:bg-slate-950/50 p-5 rounded-2xl border border-slate-200/90 dark:border-slate-800 space-y-4">
+                      <h4 className="text-xs font-extrabold text-rose-600 dark:text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
                         <Plus className="h-4 w-4" />
                         {editingVariantIndex !== null ? 'Modify Variant' : 'Define Variant (Variant B/C)'}
                       </h4>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label className="text-xs text-slate-500 dark:text-slate-400">Variant Title</Label>
+                          <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Variant Title</Label>
                           <Input
                             value={variantForm.title}
                             onChange={e => setVariantForm({ ...variantForm, title: e.target.value })}
                             placeholder="e.g. Rakhi Gold Edition"
-                            className="bg-slate-900 border-slate-800 rounded-xl"
+                            className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 rounded-xl"
                           />
                         </div>
 
                         <div className="space-y-2">
-                          <Label className="text-xs text-slate-500 dark:text-slate-400">Badge Text</Label>
+                          <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Badge Text</Label>
                           <Input
                             value={variantForm.badgeText}
                             onChange={e => setVariantForm({ ...variantForm, badgeText: e.target.value })}
                             placeholder="e.g. Midnight Special"
-                            className="bg-slate-900 border-slate-800 rounded-xl"
+                            className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 rounded-xl"
                           />
                         </div>
                       </div>
 
                       <div className="space-y-2">
-                        <Label className="text-xs text-slate-500 dark:text-slate-400">Variant Description</Label>
+                        <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Variant Description</Label>
                         <Input
                           value={variantForm.description}
                           onChange={e => setVariantForm({ ...variantForm, description: e.target.value })}
                           placeholder="Variant specific promotion description message..."
-                          className="bg-slate-900 border-slate-800 rounded-xl"
+                          className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 rounded-xl"
                         />
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="space-y-2">
-                          <Label className="text-xs text-slate-500 dark:text-slate-400">Promo Code</Label>
+                          <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Promo Code</Label>
                           <Input
                             value={variantForm.code}
                             onChange={e => setVariantForm({ ...variantForm, code: e.target.value.toUpperCase() })}
                             placeholder="e.g. RAKHIB"
-                            className="bg-slate-900 border-slate-800 rounded-xl"
+                            className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 font-mono rounded-xl"
                           />
                         </div>
 
                         <div className="space-y-2">
-                          <Label className="text-xs text-slate-500 dark:text-slate-400">Discount %</Label>
+                          <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Discount %</Label>
                           <Input
                             type="number"
                             value={variantForm.discountPercent}
                             onChange={e => setVariantForm({ ...variantForm, discountPercent: parseInt(e.target.value, 10) })}
-                            className="bg-slate-900 border-slate-800 rounded-xl"
+                            className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 rounded-xl"
                           />
                         </div>
 
                         <div className="space-y-2">
-                          <Label className="text-xs text-slate-500 dark:text-slate-400">Variant Theme Icon</Label>
+                          <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Variant Theme Icon</Label>
                           <Select
                             value={variantForm.theme}
                             onValueChange={val => setVariantForm({ ...variantForm, theme: val })}
                           >
-                            <SelectTrigger className="bg-slate-900 border-slate-800 rounded-xl text-slate-700 dark:text-slate-300">
+                            <SelectTrigger className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-xl text-slate-800 dark:text-slate-200">
                               <SelectValue />
                             </SelectTrigger>
-                            <SelectContent className="bg-slate-900 border-slate-800 text-slate-200">
+                            <SelectContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200">
                               <SelectItem value="rakhi">Rakhi Theme</SelectItem>
                               <SelectItem value="valentines">Valentine's Theme</SelectItem>
                               <SelectItem value="diwali">Diwali Theme</SelectItem>
@@ -1740,44 +1753,44 @@ const OffersManager = () => {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label className="text-xs text-slate-500 dark:text-slate-400">CTA Text</Label>
+                          <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">CTA Text</Label>
                           <Input
                             value={variantForm.buttonText}
                             onChange={e => setVariantForm({ ...variantForm, buttonText: e.target.value })}
                             placeholder="Claim Offer"
-                            className="bg-slate-900 border-slate-800 rounded-xl"
+                            className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 rounded-xl"
                           />
                         </div>
 
                         <div className="space-y-2">
-                          <Label className="text-xs text-slate-500 dark:text-slate-400">CTA Redirect Link</Label>
+                          <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">CTA Redirect Link</Label>
                           <Input
                             value={variantForm.buttonLink}
                             onChange={e => setVariantForm({ ...variantForm, buttonLink: e.target.value })}
                             placeholder="/shop"
-                            className="bg-slate-900 border-slate-800 rounded-xl"
+                            className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 font-mono text-xs rounded-xl"
                           />
                         </div>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label className="text-xs text-slate-500 dark:text-slate-400">Backdrop style (Hex or Gradient)</Label>
+                          <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Backdrop style (Hex or Gradient)</Label>
                           <Input
                             value={variantForm.background}
                             onChange={e => setVariantForm({ ...variantForm, background: e.target.value })}
                             placeholder="linear-gradient(to right, #ff9966, #ff5e62)"
-                            className="bg-slate-900 border-slate-800 rounded-xl"
+                            className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 rounded-xl"
                           />
                         </div>
 
                         <div className="space-y-2">
-                          <Label className="text-xs text-slate-500 dark:text-slate-400">TextColor Hex</Label>
+                          <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">TextColor Hex</Label>
                           <Input
                             value={variantForm.textColor}
                             onChange={e => setVariantForm({ ...variantForm, textColor: e.target.value })}
                             placeholder="#ffffff"
-                            className="bg-slate-900 border-slate-800 rounded-xl"
+                            className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 font-mono rounded-xl"
                           />
                         </div>
                       </div>
@@ -1785,14 +1798,14 @@ const OffersManager = () => {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <div className="flex justify-between items-center">
-                            <Label className="text-xs text-slate-500 dark:text-slate-400">Variant Desktop Image</Label>
+                            <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Variant Desktop Image</Label>
                             {variantForm.imageUrl && (
                               <Button
                                 type="button"
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => setVariantForm(prev => ({ ...prev, imageUrl: '' }))}
-                                className="text-xs text-red-400 h-6 px-1.5"
+                                className="text-xs text-rose-600 h-6 px-1.5"
                               >
                                 Remove
                               </Button>
@@ -1808,20 +1821,20 @@ const OffersManager = () => {
                             value={variantForm.imageUrl || ''}
                             onChange={(e) => setVariantForm(prev => ({ ...prev, imageUrl: e.target.value }))}
                             placeholder="Or paste direct image URL"
-                            className="bg-slate-900 border-slate-800 text-xs text-slate-700 dark:text-slate-300 rounded-xl font-mono"
+                            className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 rounded-xl font-mono"
                           />
                         </div>
 
                         <div className="space-y-2">
                           <div className="flex justify-between items-center">
-                            <Label className="text-xs text-slate-500 dark:text-slate-400">Variant Mobile Image</Label>
+                            <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Variant Mobile Image</Label>
                             {variantForm.mobileImageUrl && (
                               <Button
                                 type="button"
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => setVariantForm(prev => ({ ...prev, mobileImageUrl: '' }))}
-                                className="text-xs text-red-400 h-6 px-1.5"
+                                className="text-xs text-rose-600 h-6 px-1.5"
                               >
                                 Remove
                               </Button>
@@ -1837,7 +1850,7 @@ const OffersManager = () => {
                             value={variantForm.mobileImageUrl || ''}
                             onChange={(e) => setVariantForm(prev => ({ ...prev, mobileImageUrl: e.target.value }))}
                             placeholder="Or paste direct mobile image URL"
-                            className="bg-slate-900 border-slate-800 text-xs text-slate-700 dark:text-slate-300 rounded-xl font-mono"
+                            className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 rounded-xl font-mono"
                           />
                         </div>
                       </div>
@@ -1870,7 +1883,7 @@ const OffersManager = () => {
                             }} 
                             type="button" 
                             variant="outline"
-                            className="border-slate-800 text-slate-500 dark:text-slate-400"
+                            className="border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300"
                           >
                             Cancel Edit
                           </Button>
@@ -1880,22 +1893,22 @@ const OffersManager = () => {
 
                     {/* Existing Variants list */}
                     <div className="space-y-2">
-                      <span className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                      <span className="block text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                         Created Variants ({currentOffer.variants?.length || 0})
                       </span>
                       
                       {(!currentOffer.variants || currentOffer.variants.length === 0) ? (
-                        <div className="text-xs text-slate-500 italic p-3 text-center bg-slate-950/20 rounded-xl border border-dashed border-slate-800">
+                        <div className="text-xs text-slate-500 italic p-4 text-center bg-slate-50 dark:bg-slate-950/20 rounded-xl border border-dashed border-slate-300 dark:border-slate-800">
                           No variants defined yet. Define variants above to launch A/B splits.
                         </div>
                       ) : (
                         <div className="space-y-2">
                           {currentOffer.variants.map((v, idx) => (
-                            <div key={idx} className="flex justify-between items-center p-3 rounded-xl border border-slate-800 bg-slate-950/20">
+                            <div key={idx} className="flex justify-between items-center p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs">
                               <div>
-                                <span className="font-semibold text-sm block">{v.title}</span>
-                                <span className="text-[10px] text-slate-500">
-                                  Code: <span className="font-mono text-slate-500 dark:text-slate-400">{v.code || 'N/A'}</span> ({v.discountPercent}% OFF)
+                                <span className="font-bold text-sm text-slate-900 dark:text-slate-100 block">{v.title}</span>
+                                <span className="text-xs text-slate-500">
+                                  Code: <span className="font-mono font-bold text-rose-600 dark:text-amber-400">{v.code || 'N/A'}</span> ({v.discountPercent}% OFF)
                                 </span>
                               </div>
                               
@@ -1905,7 +1918,7 @@ const OffersManager = () => {
                                   type="button" 
                                   variant="outline" 
                                   size="sm" 
-                                  className="border-slate-800 text-slate-500 dark:text-slate-400 h-8"
+                                  className="border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 h-8"
                                 >
                                   <Edit3 className="h-3.5 w-3.5" />
                                 </Button>
@@ -1914,7 +1927,7 @@ const OffersManager = () => {
                                   type="button" 
                                   variant="outline" 
                                   size="sm" 
-                                  className="border-slate-800 text-red-400 hover:text-red-500 h-8"
+                                  className="border-rose-200 dark:border-slate-800 text-rose-600 hover:bg-rose-50 h-8"
                                 >
                                   <Trash2 className="h-3.5 w-3.5" />
                                 </Button>
@@ -1932,17 +1945,17 @@ const OffersManager = () => {
 
           {/* Right panel: Real-time Live Preview (5 Cols) */}
           <div className="lg:col-span-5 space-y-4 sticky top-6">
-            <div className="flex justify-between items-center p-3 bg-[#edf1f7] dark:bg-slate-900/60 rounded-2xl shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)] border border-slate-200/60 dark:border-slate-800 rounded-2xl">
-              <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest flex items-center gap-1.5">
-                <Eye className="h-4 w-4 text-amber-400" />
-                Live interactive preview
+            <div className="flex justify-between items-center p-3.5 bg-white dark:bg-slate-900 rounded-2xl shadow-[6px_6px_14px_rgba(163,177,198,0.22),-6px_-6px_14px_rgba(255,255,255,0.85)] border border-slate-200/80 dark:border-slate-800">
+              <span className="text-xs font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+                <Eye className="h-4 w-4 text-rose-500" />
+                Live Interactive Preview
               </span>
               
-              <div className="flex gap-1 bg-slate-950/60 p-1 rounded-xl">
+              <div className="flex gap-1 bg-slate-100 dark:bg-slate-950/60 p-1 rounded-xl border border-slate-200/70 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => setPreviewDevice('desktop')}
-                  className={`p-1.5 rounded-lg transition-colors ${previewDevice === 'desktop' ? 'bg-amber-400 text-slate-950' : 'text-slate-500 dark:text-slate-400 hover:text-slate-200'}`}
+                  className={`p-1.5 rounded-lg transition-all cursor-pointer ${previewDevice === 'desktop' ? 'bg-rose-600 text-white shadow-2xs' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'}`}
                   title="Simulate desktop popup"
                 >
                   <Monitor className="h-4 w-4" />
@@ -1950,7 +1963,7 @@ const OffersManager = () => {
                 <button
                   type="button"
                   onClick={() => setPreviewDevice('mobile')}
-                  className={`p-1.5 rounded-lg transition-colors ${previewDevice === 'mobile' ? 'bg-amber-400 text-slate-950' : 'text-slate-500 dark:text-slate-400 hover:text-slate-200'}`}
+                  className={`p-1.5 rounded-lg transition-all cursor-pointer ${previewDevice === 'mobile' ? 'bg-rose-600 text-white shadow-2xs' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'}`}
                   title="Simulate mobile bottom sheet"
                 >
                   <Smartphone className="h-4 w-4" />
@@ -1959,19 +1972,19 @@ const OffersManager = () => {
             </div>
 
             {/* Simulating device screen frame */}
-            <div className="bg-slate-950 rounded-[32px] border border-slate-800 p-4 h-[540px] flex items-center justify-center overflow-hidden relative shadow-inner">
+            <div className="bg-slate-900 rounded-[32px] border-4 border-white dark:border-slate-800 p-4 h-[540px] flex items-center justify-center overflow-hidden relative shadow-[8px_8px_24px_rgba(163,177,198,0.35)]">
               
               {previewDismissed ? (
                 <div className="text-center space-y-3 p-6">
-                  <div className="w-12 h-12 rounded-full bg-[#edf1f7] dark:bg-slate-900 rounded-2xl shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)] border border-slate-200/60 dark:border-slate-800 flex items-center justify-center mx-auto text-amber-400">
+                  <div className="w-12 h-12 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center mx-auto text-amber-400">
                     <Eye className="h-6 w-6" />
                   </div>
-                  <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Preview popup was dismissed</p>
+                  <p className="text-xs font-semibold text-slate-300">Preview popup was dismissed</p>
                   <Button
                     type="button"
                     size="sm"
                     variant="outline"
-                    className="border-slate-700 text-slate-200 hover:bg-slate-900 text-xs rounded-xl"
+                    className="border-slate-700 bg-slate-800 text-white hover:bg-slate-700 text-xs rounded-xl"
                     onClick={() => setPreviewDismissed(false)}
                   >
                     Re-open Live Preview
@@ -2171,120 +2184,185 @@ const OffersManager = () => {
       {/* Campaigns lists (default view) */}
       {!showForm && (
         <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-bold">Active Campaigns</h2>
+          <div className="flex flex-wrap justify-between items-center gap-2">
+            <div>
+              <h2 className="text-xl font-extrabold text-slate-900 dark:text-slate-100">Active & Scheduled Campaigns</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Manage promotional overlays, launch announcements, and festival discount popups
+              </p>
+            </div>
           </div>
 
           {isLoading ? (
-            <div className="text-slate-500 dark:text-slate-400 italic">Loading popup campaigns data...</div>
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-10 text-center text-sm font-medium text-slate-500 dark:text-slate-400 shadow-2xs">
+              Loading popup campaigns data...
+            </div>
           ) : offers.length === 0 ? (
-            <div className="text-slate-500 italic p-12 text-center border border-dashed border-slate-800 rounded-3xl bg-slate-900/10">
-              No seasonal popup campaigns found. Click "Add Campaign Popup" to design your first offer popup.
+            <div className="text-slate-600 dark:text-slate-400 p-12 text-center border-2 border-dashed border-slate-300 dark:border-slate-800 rounded-3xl bg-white/80 dark:bg-slate-900/40 shadow-2xs">
+              No seasonal popup campaigns found. Click <span className="font-bold text-rose-600">"+ Add Campaign Popup"</span> to design your first offer popup.
             </div>
           ) : (
             <div className="grid gap-4">
-              {offers.map((offer) => (
-                <div
-                  key={offer._id}
-                  className={`p-5 rounded-2xl border transition-all ${
-                    offer.isActive 
-                      ? 'bg-slate-900/60 border-slate-800/80 hover:border-slate-700' 
-                      : 'bg-slate-950/20 border-slate-900/80 opacity-60'
-                  }`}
-                >
-                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-bold text-lg text-slate-200">{offer.title}</h3>
-                        
-                        {offer.isABTesting && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-purple-950/50 text-purple-300 border border-purple-800/60">
-                            🧬 A/B Split Test
+              {offers.map((offer) => {
+                const themeBadgeStyle =
+                  offer.theme === 'rakhi'
+                    ? 'bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-950/60 dark:text-amber-200 dark:border-amber-800'
+                    : offer.theme === 'valentines'
+                    ? 'bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-950/60 dark:text-rose-200 dark:border-rose-800'
+                    : offer.theme === 'diwali'
+                    ? 'bg-orange-100 text-orange-900 border-orange-300 dark:bg-orange-950/60 dark:text-orange-200 dark:border-orange-800'
+                    : offer.theme === 'christmas'
+                    ? 'bg-emerald-100 text-emerald-900 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-200 dark:border-emerald-800'
+                    : 'bg-indigo-50 text-indigo-800 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-200 dark:border-indigo-800';
+
+                return (
+                  <div
+                    key={offer._id}
+                    className={`p-5 sm:p-6 rounded-2xl border transition-all duration-200 ${
+                      offer.isActive
+                        ? 'bg-white dark:bg-slate-900 border-emerald-200/90 dark:border-emerald-800/70 border-l-4 border-l-emerald-500 shadow-[6px_6px_18px_rgba(163,177,198,0.24),-6px_-6px_18px_rgba(255,255,255,0.9)]'
+                        : 'bg-[#f8fafc] dark:bg-slate-900/60 border-slate-200/90 dark:border-slate-800 border-l-4 border-l-slate-300 dark:border-l-slate-700 shadow-[4px_4px_12px_rgba(163,177,198,0.16),-4px_-4px_12px_rgba(255,255,255,0.8)] hover:bg-white'
+                    }`}
+                  >
+                    <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-5">
+                      <div className="space-y-2.5 flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          {/* Live / Paused Status Pill */}
+                          <span
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase tracking-wider border ${
+                              offer.isActive
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800'
+                                : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
+                            }`}
+                          >
+                            <span
+                              className={`w-1.5 h-1.5 rounded-full ${
+                                offer.isActive ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'
+                              }`}
+                            />
+                            {offer.isActive ? 'Live' : 'Paused'}
                           </span>
-                        )}
 
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                          offer.theme === 'rakhi' ? 'bg-amber-900/50 text-amber-200 border border-amber-800' :
-                          offer.theme === 'valentines' ? 'bg-rose-900/50 text-rose-200 border border-rose-800' :
-                          offer.theme === 'diwali' ? 'bg-yellow-900/50 text-yellow-200 border border-yellow-800' :
-                          offer.theme === 'christmas' ? 'bg-emerald-900/50 text-emerald-200 border border-emerald-800' :
-                          'bg-slate-800/60 text-slate-700 dark:text-slate-300'
-                        }`}>
-                          {offer.theme}
-                        </span>
-                      </div>
-                      
-                      <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-1">{offer.description}</p>
-                      
-                      <div className="flex flex-wrap gap-x-4 gap-y-1 pt-1 text-xs text-slate-500 font-medium">
-                        <span className="flex items-center gap-1">
-                          <CalendarIcon className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
-                          {format(new Date(offer.startDate), 'PPP')} - {format(new Date(offer.endDate), 'PPP')}
-                        </span>
-                        
-                        {offer.code && (
-                          <span className="flex items-center gap-1">
-                            <Tag className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
-                            Coupon: <span className="font-mono text-slate-700 dark:text-slate-300 font-bold uppercase">{offer.code}</span>
+                          {/* Campaign Title */}
+                          <h3 className="font-extrabold text-lg text-slate-900 dark:text-slate-100 tracking-tight">
+                            {offer.title}
+                          </h3>
+
+                          {/* Theme Badge */}
+                          <span
+                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider border ${themeBadgeStyle}`}
+                          >
+                            {offer.theme || 'general'}
                           </span>
-                        )}
 
-                        <span className="capitalize">Target: {offer.deviceTargeting} devices</span>
+                          {/* Discount / Badge Pill */}
+                          {offer.discountPercent && offer.discountPercent > 0 ? (
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-800">
+                              {offer.discountPercent}% OFF
+                            </span>
+                          ) : offer.badgeText ? (
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-800 border border-purple-200 dark:bg-purple-950/50 dark:text-purple-300 dark:border-purple-800">
+                              {offer.badgeText}
+                            </span>
+                          ) : null}
+
+                          {offer.isABTesting && (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-violet-100 text-violet-800 border border-violet-300 dark:bg-purple-950/50 dark:text-purple-300 dark:border-purple-800/60">
+                              🧬 A/B Split Test
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Campaign Description */}
+                        <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed line-clamp-2">
+                          {offer.description}
+                        </p>
+
+                        {/* Metadata Badges Row */}
+                        <div className="flex flex-wrap items-center gap-2.5 pt-1 text-xs">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 font-semibold border border-slate-200/80 dark:border-slate-700">
+                            <CalendarIcon className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
+                            {format(new Date(offer.startDate), 'PPP')} – {format(new Date(offer.endDate), 'PPP')}
+                          </span>
+
+                          {offer.code && (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 font-semibold border border-amber-200/90 dark:border-amber-800/70">
+                              <Tag className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                              Coupon:
+                              <span className="font-mono font-extrabold uppercase tracking-wider text-rose-700 dark:text-amber-300">
+                                {offer.code}
+                              </span>
+                            </span>
+                          )}
+
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-50/70 dark:bg-blue-950/30 text-blue-800 dark:text-blue-300 font-semibold border border-blue-200/70 dark:border-blue-800/60 capitalize">
+                            <Monitor className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                            Target: {offer.deviceTargeting} devices
+                          </span>
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="flex flex-wrap gap-2 w-full md:w-auto justify-end">
-                      {/* View Performance Analytics */}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setSelectedOfferForAnalytics(offer)}
-                        className="border-slate-800 text-slate-700 dark:text-slate-300 bg-slate-900/50 hover:bg-slate-850 h-9 rounded-xl"
-                      >
-                        <BarChart3 className="h-4 w-4 mr-1.5 text-amber-400" />
-                        Performance
-                      </Button>
+                      {/* Action Buttons */}
+                      <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto justify-end shrink-0">
+                        {/* View Performance Analytics */}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSelectedOfferForAnalytics(offer)}
+                          className="border-amber-200 dark:border-amber-800/70 text-amber-900 dark:text-amber-200 bg-amber-50/80 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/50 font-bold h-9 px-3.5 rounded-xl shadow-2xs cursor-pointer"
+                        >
+                          <BarChart3 className="h-4 w-4 mr-1.5 text-amber-600 dark:text-amber-400" />
+                          Performance
+                        </Button>
 
-                      {/* Edit button */}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setCurrentOffer(offer);
-                          setPopupPurpose(offer.discountPercent && offer.discountPercent > 0 ? 'discount' : 'launch');
-                          setIsEditing(true);
-                          setShowForm(true);
-                          setDesktopFile(null);
-                          setMobileFile(null);
-                        }}
-                        className="border-slate-800 text-slate-700 dark:text-slate-300 bg-slate-900/50 hover:bg-slate-850 h-9 rounded-xl"
-                      >
-                        Edit Layout
-                      </Button>
+                        {/* Edit button */}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setCurrentOffer(offer);
+                            setPopupPurpose(offer.discountPercent && offer.discountPercent > 0 ? 'discount' : 'launch');
+                            setIsEditing(true);
+                            setShowForm(true);
+                            setDesktopFile(null);
+                            setMobileFile(null);
+                          }}
+                          className="border-indigo-200 dark:border-slate-700 text-indigo-900 dark:text-slate-200 bg-indigo-50/80 dark:bg-slate-800 hover:bg-indigo-100 dark:hover:bg-slate-700 font-bold h-9 px-3.5 rounded-xl shadow-2xs cursor-pointer"
+                        >
+                          <Edit3 className="h-3.5 w-3.5 mr-1.5 text-indigo-600 dark:text-indigo-400" />
+                          Edit Layout
+                        </Button>
 
-                      {/* Toggle status */}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => toggleOfferStatus(offer._id)}
-                        className={`h-9 rounded-xl border-slate-800 ${offer.isActive ? 'text-emerald-400 hover:text-emerald-500' : 'text-slate-500'}`}
-                      >
-                        <Power className="h-4 w-4" />
-                      </Button>
+                        {/* Toggle status */}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          title={offer.isActive ? 'Pause Campaign' : 'Activate Campaign'}
+                          onClick={() => toggleOfferStatus(offer._id)}
+                          className={`h-9 px-3 rounded-xl font-bold shadow-2xs cursor-pointer transition-all ${
+                            offer.isActive
+                              ? 'border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300'
+                              : 'border-slate-300 bg-white text-slate-600 hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400'
+                          }`}
+                        >
+                          <Power className="h-4 w-4" />
+                        </Button>
 
-                      {/* Delete */}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => deleteOffer(offer._id)}
-                        className="border-slate-800 text-red-400 hover:text-red-500 hover:bg-red-950/20 h-9 rounded-xl"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                        {/* Delete */}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          title="Delete Campaign"
+                          onClick={() => deleteOffer(offer._id)}
+                          className="border-rose-200 dark:border-rose-900/60 bg-rose-50/70 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-950/60 hover:text-rose-700 h-9 px-3 rounded-xl shadow-2xs cursor-pointer"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
