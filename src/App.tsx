@@ -60,6 +60,7 @@ const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
 const FaqPage = lazy(() => import("./pages/FaqPage"));
 const AdminFaqManagement = lazy(() => import("./pages/Admin/FaqManagement"));
 const DatabaseMigrationPage = lazy(() => import("./pages/Admin/DatabaseMigration/DatabaseMigrationPage"));
+const AdminSeoManagement = lazy(() => import("./pages/Admin/SeoManagement"));
 
 // Checkout Pages (lazy loaded as they're rarely used immediately)
 const CheckoutShippingPage = lazy(() => import("./pages/CheckoutShippingPage"));
@@ -536,6 +537,16 @@ const App = () => {
                             <Route path="faqs" element={
                               <Suspense fallback={<LoadingFallback message="Loading FAQ management..." />}>
                                 <AdminFaqManagement />
+                              </Suspense>
+                            } />
+                            <Route path="seo" element={
+                              <Suspense fallback={<LoadingFallback message="Loading SEO management center..." />}>
+                                <AdminSeoManagement />
+                              </Suspense>
+                            } />
+                            <Route path="products/seo" element={
+                              <Suspense fallback={<LoadingFallback message="Loading SEO management center..." />}>
+                                <AdminSeoManagement />
                               </Suspense>
                             } />
                             <Route path="notifications/fcm" element={

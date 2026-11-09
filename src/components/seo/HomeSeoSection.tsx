@@ -77,9 +77,9 @@ export const HomeSeoSection: React.FC = () => {
             Hyderabad &amp; Secunderabad's Trusted Local Florist
           </div>
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
-            Send Fresh Flowers, Delicious Cakes &amp; Gifts Across{' '}
+            Why Choose{' '}
             <span className="bg-gradient-to-r from-rose-600 via-pink-600 to-amber-600 bg-clip-text text-transparent">
-              Hyderabad &amp; Secunderabad
+              Spring Blossoms Florist?
             </span>
           </h2>
           <p className="mt-4 text-sm sm:text-base text-slate-600 leading-relaxed">
@@ -140,7 +140,7 @@ export const HomeSeoSection: React.FC = () => {
                 <Flower2 className="w-3.5 h-3.5" /> Handcrafted Floral Bouquets
               </div>
               <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-3">
-                Shop Bouquets in Hyderabad
+                Discover Beautiful Flower Bouquets for Every Occasion
               </h2>
               <p className="text-sm text-slate-600 leading-relaxed mb-4">
                 Looking for fresh <strong>bouquets in Hyderabad</strong> or searching for a trusted <strong>florist in Hyderabad</strong>? At Spring Blossoms Florist, our master florists hand-craft vibrant bouquets using farm-fresh Dutch roses, delicate gypsophila (baby's breath), fragrant Asiatic lilies, and tropical orchids. Whether you need a birthday surprise, anniversary celebration, congratulations bouquet, or sympathy arrangement, we offer beautiful arrangements starting from under ₹1,000 with same-day delivery.
@@ -173,7 +173,7 @@ export const HomeSeoSection: React.FC = () => {
                 <Heart className="w-3.5 h-3.5" /> Signature Rose Collections
               </div>
               <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-3">
-                Find Your Perfect Roses Bouquet
+                Shop Fresh Flowers and Premium Bouquets Online
               </h2>
               <p className="text-sm text-slate-600 leading-relaxed mb-4">
                 Roses express what words cannot. Discover our celebrated selection of <strong>roses in Hyderabad</strong>, ranging from classic 10 and 20 red rose bouquets to grand 50-stem presentations. Choose from passionate red roses, delicate pink roses, radiant yellow roses for friendship, and elegant white roses for peaceful congratulations.
@@ -213,7 +213,7 @@ export const HomeSeoSection: React.FC = () => {
                 <Sparkles className="w-3.5 h-3.5" /> Exotic &amp; Seasonal Blooms
               </div>
               <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-3">
-                Sunflowers, Lilies and Fresh Seasonal Flowers
+                Send Birthday and Anniversary Flowers in Hyderabad
               </h2>
               <p className="text-sm text-slate-600 leading-relaxed mb-4">
                 Brighten any room with golden <strong>sunflowers</strong>, magnificent oriental <strong>lilies</strong>, and lush <strong>hydrangeas</strong>. Our seasonal flower varieties are sourced directly from sustainable growers and kept in climate-regulated freshness chambers so your recipient receives long-lasting blossoms that open gracefully over days.
@@ -273,14 +273,14 @@ export const HomeSeoSection: React.FC = () => {
           </div>
         </div>
 
-        {/* H2: Flower Delivery Across Hyderabad & Secunderabad */}
+        {/* H2: Order Flowers Online with Convenient Delivery */}
         <div className="mb-16">
           <div className="text-center max-w-2xl mx-auto mb-8">
             <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900">
-              Flower Delivery Across Hyderabad &amp; Secunderabad
+              Order Flowers Online with Convenient Delivery
             </h2>
             <p className="text-sm text-slate-600 mt-2">
-              Fast, climate-conscious delivery directly from our Mehdipatnam floral studio to all major residential and commercial hubs.
+              Fast, climate-conscious delivery directly from our Mehdipatnam floral studio to all major residential and commercial hubs across Hyderabad &amp; Secunderabad.
             </p>
           </div>
 
@@ -357,7 +357,7 @@ export const HomeSeoSection: React.FC = () => {
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
             <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
-              Frequently Asked Questions About Delivery in Hyderabad
+              Frequently Asked Questions About Flower Delivery
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 mt-1">
               Everything you need to know about placing flower, cake, and bouquet orders with Spring Blossoms Florist.

@@ -62,24 +62,25 @@ const VALENTINE_CATEGORIES = [
 ];
 
 const VALENTINE_SECTIONS = [
-  "Featured Valentine's Products",
-  "Trending Valentine's Products",
-  "Best Sellers",
-  "Recommended Gifts",
-  "Limited Edition Collection",
-  "Romantic Combos",
-  "Premium Luxury Collection",
-  "Staff Picks",
-  "New Arrivals"
+  { value: "bestsellers", label: "Valentine Bestsellers" },
+  { value: "roses", label: "Fresh Roses Collection" },
+  { value: "bouquets", label: "Romantic Bouquets" },
+  { value: "cakes-combos", label: "Cakes & Romantic Treats" },
+  { value: "combos", label: "Curated Valentine Combos" },
+  { value: "gifts-for-her", label: "Romantic Gifts For Her" },
+  { value: "gifts-for-him", label: "Special Gifts For Him" },
+  { value: "premium", label: "Luxury & Midnight Specials" },
+  { value: "budget", label: "Budget Friendly (Under ₹999)" }
 ];
 
 const VALENTINE_DATES = [
-  { value: "rose-day", label: "8 Feb – Rose Day" },
-  { value: "propose-day", label: "9 Feb – Propose Day" },
-  { value: "chocolate-day", label: "10 Feb – Chocolate Day" },
-  { value: "teddy-day", label: "11 Feb – Teddy Day" },
-  { value: "promise-day", label: "12 Feb – Promise Day" },
-  { value: "hug-day", label: "13 Feb – Hug Day" },
+  { value: "rose-day", label: "7 Feb – Rose Day" },
+  { value: "propose-day", label: "8 Feb – Propose Day" },
+  { value: "chocolate-day", label: "9 Feb – Chocolate Day" },
+  { value: "teddy-day", label: "10 Feb – Teddy Day" },
+  { value: "promise-day", label: "11 Feb – Promise Day" },
+  { value: "hug-day", label: "12 Feb – Hug Day" },
+  { value: "kiss-day", label: "13 Feb – Kiss Day" },
   { value: "valentines-day", label: "14 Feb – Valentine's Day" },
   { value: "celebration-day", label: "15 Feb – Celebration Day" }
 ];
@@ -3690,26 +3691,26 @@ const ProductForm = () => {
                     <Label className="text-sm font-semibold text-gray-900">Display In Valentine's Sections</Label>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 bg-white p-4 rounded-lg border border-pink-200">
                       {VALENTINE_SECTIONS.map((section) => {
-                        const isChecked = (formData.valentineSections || []).includes(section);
+                        const isChecked = (formData.valentineSections || []).includes(section.value);
                         return (
-                          <div key={section} className="flex items-center space-x-2">
+                          <div key={section.value} className="flex items-center space-x-2">
                             <input
                               type="checkbox"
-                              id={`val-sec-${section}`}
+                              id={`val-sec-${section.value}`}
                               checked={isChecked}
                               onChange={() => {
                                 setFormData(prev => {
                                   const list = prev.valentineSections || [];
-                                  const updated = list.includes(section)
-                                    ? list.filter(s => s !== section)
-                                    : [...list, section];
+                                  const updated = list.includes(section.value)
+                                    ? list.filter(s => s !== section.value)
+                                    : [...list, section.value];
                                   return { ...prev, valentineSections: updated };
                                 });
                               }}
                               className="h-4 w-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500"
                             />
-                            <Label htmlFor={`val-sec-${section}`} className="text-sm text-gray-700 cursor-pointer">
-                              {section}
+                            <Label htmlFor={`val-sec-${section.value}`} className="text-sm text-gray-700 cursor-pointer">
+                              {section.label}
                             </Label>
                           </div>
                         );

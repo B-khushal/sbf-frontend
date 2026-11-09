@@ -116,6 +116,13 @@ export interface MobileNavigationSettings {
   valentineGlowEnabled: boolean;
 }
 
+export interface ValentineSectionItem {
+  id: string;
+  name: string;
+  enabled: boolean;
+  order: number;
+}
+
 export interface ValentineSettings {
   enabled: boolean;
   general: {
@@ -133,6 +140,7 @@ export interface ValentineSettings {
   marketing: ValentineMarketing;
   banners: ValentineBanner[];
   mobileNavigation?: MobileNavigationSettings;
+  sections?: ValentineSectionItem[];
 }
 
 export interface ValentineOfferItem {

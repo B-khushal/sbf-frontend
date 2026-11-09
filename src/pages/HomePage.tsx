@@ -301,18 +301,19 @@ const HomePage = () => {
     return (
       <div className="min-h-screen relative">
         <SEOHead
-          title="Flowers & Cakes Delivery in Hyderabad | SB Florist"
-          description="Order fresh flowers, cakes and gifts in Hyderabad & Secunderabad. Free delivery on your first order and ₹999+ orders, with same-day and midnight delivery."
+          title="Online Flower Delivery in Hyderabad | Spring Blossoms Florist"
+          description="Order fresh flower bouquets, premium roses, cakes and beautiful gift combos online from Spring Blossoms Florist. Make every occasion special with flower delivery in Hyderabad."
+          keywords="Online Flower Delivery Hyderabad, Best Florist Hyderabad, Buy Flowers Online, Fresh Flower Bouquets, Premium Flower Delivery"
           canonical="/"
           ogType="website"
           jsonLd={HOME_PAGE_SCHEMAS}
         />
         <div className="max-w-7xl mx-auto px-4 pt-4 pb-2 text-center">
           <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
-            Flowers, Cakes &amp; Gifts Delivery in Hyderabad
+            Online Flower Delivery in Hyderabad
           </h1>
           <p className="mt-2 text-xs sm:text-sm text-slate-600 max-w-2xl mx-auto">
-            Handcrafted bouquets, fresh roses, and artisanal celebration cakes delivered with care across Hyderabad &amp; Secunderabad.
+            Order fresh flower bouquets, premium roses, cakes and beautiful gift combos online from Spring Blossoms Florist. Make every occasion special with flower delivery in Hyderabad.
           </p>
         </div>
         <HomePageSkeleton />
@@ -324,8 +325,9 @@ const HomePage = () => {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <SEOHead
-          title="Flowers & Cakes Delivery in Hyderabad | SB Florist"
-          description="Order fresh flowers, cakes and gifts in Hyderabad & Secunderabad. Free delivery on your first order and ₹999+ orders, with same-day and midnight delivery."
+          title="Online Flower Delivery in Hyderabad | Spring Blossoms Florist"
+          description="Order fresh flower bouquets, premium roses, cakes and beautiful gift combos online from Spring Blossoms Florist. Make every occasion special with flower delivery in Hyderabad."
+          keywords="Online Flower Delivery Hyderabad, Best Florist Hyderabad, Buy Flowers Online, Fresh Flower Bouquets, Premium Flower Delivery"
           canonical="/"
           ogType="website"
           jsonLd={HOME_PAGE_SCHEMAS}
@@ -347,8 +349,9 @@ const HomePage = () => {
       className="min-h-screen relative"
     >
       <SEOHead
-        title="Flowers & Cakes Delivery in Hyderabad | SB Florist"
-        description="Order fresh flowers, cakes and gifts in Hyderabad & Secunderabad. Free delivery on your first order and ₹999+ orders, with same-day and midnight delivery."
+        title="Online Flower Delivery in Hyderabad | Spring Blossoms Florist"
+        description="Order fresh flower bouquets, premium roses, cakes and beautiful gift combos online from Spring Blossoms Florist. Make every occasion special with flower delivery in Hyderabad."
+        keywords="Online Flower Delivery Hyderabad, Best Florist Hyderabad, Buy Flowers Online, Fresh Flower Bouquets, Premium Flower Delivery"
         canonical="/"
         ogType="website"
         jsonLd={HOME_PAGE_SCHEMAS}
@@ -384,10 +387,10 @@ const HomePage = () => {
                 <SeasonalCampaignHomeSection />
                 <div className="max-w-7xl mx-auto px-4 pt-4 pb-2 text-center">
                   <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
-                    Flowers, Cakes &amp; Gifts Delivery in Hyderabad
+                    Online Flower Delivery in Hyderabad
                   </h1>
                   <p className="mt-2 text-xs sm:text-sm text-slate-600 max-w-2xl mx-auto">
-                    Handcrafted bouquets, fresh roses, and artisanal celebration cakes delivered with care across Hyderabad &amp; Secunderabad.
+                    Order fresh flower bouquets, premium roses, cakes and beautiful gift combos online from Spring Blossoms Florist. Make every occasion special with flower delivery in Hyderabad.
                   </p>
                 </div>
                 <motion.div
@@ -596,16 +599,16 @@ const HomePage = () => {
       <HomeSeoSection />
 
       {/* Valentine marketing overlays */}
-      {isValentineEnabled && (
-        <>
-          <ExitIntentPopup 
-            enabled={true} 
-            title={valentineSettings?.marketing?.exitIntentTitle || "Wait! Special Valentine Offer 🌹"}
-            subtitle={valentineSettings?.marketing?.exitIntentSubtitle || "Get 20% off your romantic flower arrangements & gift hampers!"}
-            code={valentineSettings?.marketing?.exitIntentCode || "VALENTINE20"}
-          />
-          <RecentPurchases enabled={valentineSettings?.marketing?.recentPurchaseNotifications ?? true} />
-        </>
+      {isValentineEnabled && Boolean(valentineSettings?.marketing?.exitIntentPopup) && Boolean(valentineSettings?.marketing?.exitIntentCode) && (
+        <ExitIntentPopup 
+          enabled={Boolean(valentineSettings?.marketing?.exitIntentPopup)} 
+          title={valentineSettings?.marketing?.exitIntentTitle || "Special Valentine Offer 🌹"}
+          subtitle={valentineSettings?.marketing?.exitIntentSubtitle || "Enjoy a seasonal discount on your romantic flower arrangements!"}
+          code={valentineSettings?.marketing?.exitIntentCode || ""}
+        />
+      )}
+      {isValentineEnabled && Boolean(valentineSettings?.marketing?.recentPurchaseNotifications) && (
+        <RecentPurchases enabled={true} />
       )}
 
     </motion.div>

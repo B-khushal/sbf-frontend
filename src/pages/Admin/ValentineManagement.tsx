@@ -2,7 +2,7 @@ import { PageHeader } from '@/components/dashboard/PageHeader';
 import { SoftButton } from '@/components/dashboard/SoftButton';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Heart, Save, RefreshCw, BarChart3, Power, Settings, Palette, Clock, Calendar, Package, Tag, Gift, Truck, Image, Search as SearchIcon, Plus, Trash2, Edit, Eye, EyeOff, GripVertical, ChevronDown, ChevronUp, UploadCloud } from 'lucide-react';
+import { Heart, Save, RefreshCw, BarChart3, Power, Settings, Palette, Clock, Calendar, Package, Tag, Gift, Truck, Image, Search as SearchIcon, Plus, Trash2, Edit, Eye, EyeOff, GripVertical, ChevronDown, ChevronUp, UploadCloud, LayoutGrid, CheckSquare, Square, ArrowUp, ArrowDown } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -42,6 +42,112 @@ const ValentineManagement: React.FC = () => {
   }, [toast]);
 
   useEffect(() => { fetchSettings(); }, [fetchSettings]);
+
+  // Catalog state for Products tab
+  const [catalogProducts, setCatalogProducts] = useState<any[]>([]);
+  const [catalogLoading, setCatalogLoading] = useState(false);
+  const [catalogSearch, setCatalogSearch] = useState('');
+  const [catalogCategory, setCatalogCategory] = useState('all');
+  const [catalogDateSlug, setCatalogDateSlug] = useState('all');
+  const [catalogValentineOnly, setCatalogValentineOnly] = useState(false);
+  const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
+  const [bulkAction, setBulkAction] = useState<string>('enable_valentine');
+  const [bulkTargetDay, setBulkTargetDay] = useState<string>('rose-day');
+  const [applyingBulk, setApplyingBulk] = useState(false);
+
+  const fetchCatalog = useCallback(async () => {
+    try {
+      setCatalogLoading(true);
+      const params = new URLSearchParams();
+      if (catalogSearch) params.append('search', catalogSearch);
+      if (catalogCategory !== 'all') params.append('category', catalogCategory);
+      if (catalogDateSlug !== 'all') params.append('dateSlug', catalogDateSlug);
+      if (catalogValentineOnly) params.append('isValentineOnly', 'true');
+      params.append('limit', '60');
+
+      const res = await api.get(`/valentine/catalog?${params.toString()}`);
+      setCatalogProducts(res.data.products || []);
+    } catch (err) {
+      console.error('Failed to load catalog:', err);
+    } finally {
+      setCatalogLoading(false);
+    }
+  }, [catalogSearch, catalogCategory, catalogDateSlug, catalogValentineOnly]);
+
+  useEffect(() => {
+    if (activeTab === 'products') {
+      fetchCatalog();
+    }
+  }, [activeTab, fetchCatalog]);
+
+  const toggleProductValentineStatus = async (productId: string, field: 'isValentineProduct' | 'showInValentineShop', value: boolean) => {
+    try {
+      await api.post('/valentine/products/bulk-assign', {
+        productIds: [productId],
+        updates: { [field]: value }
+      });
+      setCatalogProducts(prev => prev.map(p => (p.id === productId || p._id === productId) ? { ...p, [field]: value } : p));
+      toast({ title: 'Product Updated', description: `Updated ${field}` });
+    } catch (err) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to update product' });
+    }
+  };
+
+  const assignProductDate = async (productId: string, dateSlug: string) => {
+    try {
+      await api.post('/valentine/products/bulk-assign', {
+        productIds: [productId],
+        updates: { valentineDate: dateSlug || null, availableDates: dateSlug ? [dateSlug] : [] }
+      });
+      setCatalogProducts(prev => prev.map(p => (p.id === productId || p._id === productId) ? { ...p, valentineDate: dateSlug || null, availableDates: dateSlug ? [dateSlug] : [] } : p));
+      toast({ title: 'Date Assigned', description: `Assigned to ${dateSlug || 'None'}` });
+    } catch (err) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to assign date' });
+    }
+  };
+
+  const handleBulkApply = async () => {
+    if (selectedProductIds.length === 0) {
+      toast({ title: 'No Products Selected', description: 'Select at least one product using checkboxes.' });
+      return;
+    }
+    try {
+      setApplyingBulk(true);
+      const updates: any = {};
+      if (bulkAction === 'enable_valentine') {
+        updates.isValentineProduct = true;
+        updates.showInValentineShop = true;
+      } else if (bulkAction === 'disable_valentine') {
+        updates.isValentineProduct = false;
+        updates.showInValentineShop = false;
+      } else if (bulkAction === 'assign_day') {
+        updates.valentineDate = bulkTargetDay;
+        updates.availableDates = [bulkTargetDay];
+        updates.showInValentineShop = true;
+      }
+
+      await api.post('/valentine/products/bulk-assign', {
+        productIds: selectedProductIds,
+        updates
+      });
+
+      toast({ title: 'Bulk Update Done', description: `Updated ${selectedProductIds.length} products.` });
+      setSelectedProductIds([]);
+      fetchCatalog();
+    } catch (err) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to apply bulk update.' });
+    } finally {
+      setApplyingBulk(false);
+    }
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedProductIds.length === catalogProducts.length) {
+      setSelectedProductIds([]);
+    } else {
+      setSelectedProductIds(catalogProducts.map(p => p.id || p._id));
+    }
+  };
 
   // Save settings
   const handleSave = async () => {
@@ -190,6 +296,7 @@ const ValentineManagement: React.FC = () => {
           <TabsTrigger value="theme" className="text-xs"><Palette className="w-3 h-3 mr-1" />Theme</TabsTrigger>
           <TabsTrigger value="countdown" className="text-xs"><Clock className="w-3 h-3 mr-1" />Countdown</TabsTrigger>
           <TabsTrigger value="timeline" className="text-xs"><Calendar className="w-3 h-3 mr-1" />Timeline</TabsTrigger>
+          <TabsTrigger value="sections" className="text-xs"><LayoutGrid className="w-3 h-3 mr-1" />Sections</TabsTrigger>
           <TabsTrigger value="products" className="text-xs"><Package className="w-3 h-3 mr-1" />Products</TabsTrigger>
           <TabsTrigger value="offers" className="text-xs"><Tag className="w-3 h-3 mr-1" />Offers</TabsTrigger>
           <TabsTrigger value="giftbuilder" className="text-xs"><Gift className="w-3 h-3 mr-1" />Gift Builder</TabsTrigger>
@@ -252,6 +359,57 @@ const ValentineManagement: React.FC = () => {
                     </div>
                   ))}
                 </div>
+
+                {settings.marketing?.exitIntentPopup && (
+                  <div className="mt-4 p-4 rounded-xl bg-white dark:bg-gray-900 border border-rose-200 dark:border-rose-900/60 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">Exit Intent Popup Configuration</span>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-xs text-destructive hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                        onClick={() => {
+                          updateSetting('marketing.exitIntentPopup', false);
+                          updateSetting('marketing.exitIntentCode', '');
+                          updateSetting('marketing.exitIntentTitle', '');
+                          updateSetting('marketing.exitIntentSubtitle', '');
+                        }}
+                      >
+                        <Trash2 className="w-3.5 h-3.5 mr-1" />
+                        Delete / Disable Popup Offer
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div>
+                        <label className="text-xs font-medium block mb-1">Popup Title</label>
+                        <Input
+                          placeholder="e.g. Special Valentine Offer 🌹"
+                          value={settings.marketing?.exitIntentTitle || ''}
+                          onChange={(e) => updateSetting('marketing.exitIntentTitle', e.target.value)}
+                          className="h-8 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium block mb-1">Subtitle / Description</label>
+                        <Input
+                          placeholder="e.g. Get 20% off your romantic flower arrangements!"
+                          value={settings.marketing?.exitIntentSubtitle || ''}
+                          onChange={(e) => updateSetting('marketing.exitIntentSubtitle', e.target.value)}
+                          className="h-8 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium block mb-1">Coupon Code</label>
+                        <Input
+                          placeholder="e.g. VALENTINE20"
+                          value={settings.marketing?.exitIntentCode || ''}
+                          onChange={(e) => updateSetting('marketing.exitIntentCode', e.target.value)}
+                          className="h-8 text-xs font-mono"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -434,22 +592,329 @@ const ValentineManagement: React.FC = () => {
           </Card>
         </TabsContent>
 
-        {/* ============ PRODUCTS ============ */}
-        <TabsContent value="products" className="space-y-4">
+        {/* ============ SECTIONS ============ */}
+        <TabsContent value="sections" className="space-y-4">
           <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]">
-            <CardHeader>
-              <CardTitle>Product Assignment</CardTitle>
-              <CardDescription>Assign products to Valentine dates and categories from the Products page. Products with valentine fields will appear here.</CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Landing Page Sections</CardTitle>
+                <CardDescription>Configure, rename, toggle, and reorder the 16 dynamic landing sections</CardDescription>
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8">
-                <Package className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-                <p className="text-muted-foreground mb-4">
-                  Go to Products → Edit a product → Set Valentine Date and Valentine Category fields.
-                </p>
-                <Button onClick={() => navigate('/admin/products')} variant="outline">
-                  Go to Products
-                </Button>
+              <div className="space-y-2.5">
+                {(settings.sections || []).map((sec, idx) => (
+                  <div key={sec.id} className="p-3.5 rounded-xl border bg-card flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+                    <div className="flex items-center gap-3">
+                      <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs flex-shrink-0">
+                        {idx + 1}
+                      </div>
+                      <div>
+                        <div className="font-semibold text-sm">{sec.name}</div>
+                        <div className="text-[10px] text-muted-foreground font-mono">ID: {sec.id}</div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={sec.name}
+                        onChange={(e) => {
+                          const updated = [...(settings.sections || [])];
+                          updated[idx] = { ...updated[idx], name: e.target.value };
+                          updateSetting('sections', updated);
+                        }}
+                        className="h-8 text-xs max-w-[200px]"
+                        placeholder="Section Heading"
+                      />
+
+                      <div className="flex items-center gap-1">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7"
+                          disabled={idx === 0}
+                          onClick={() => {
+                            const updated = [...(settings.sections || [])];
+                            const temp = updated[idx];
+                            updated[idx] = updated[idx - 1];
+                            updated[idx - 1] = temp;
+                            updated.forEach((s, i) => s.order = i + 1);
+                            updateSetting('sections', updated);
+                          }}
+                        >
+                          <ArrowUp className="w-3.5 h-3.5" />
+                        </Button>
+
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7"
+                          disabled={idx === (settings.sections || []).length - 1}
+                          onClick={() => {
+                            const updated = [...(settings.sections || [])];
+                            const temp = updated[idx];
+                            updated[idx] = updated[idx + 1];
+                            updated[idx + 1] = temp;
+                            updated.forEach((s, i) => s.order = i + 1);
+                            updateSetting('sections', updated);
+                          }}
+                        >
+                          <ArrowDown className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 ml-2">
+                        <Switch
+                          checked={sec.enabled}
+                          onCheckedChange={(checked) => {
+                            const updated = [...(settings.sections || [])];
+                            updated[idx] = { ...updated[idx], enabled: checked };
+                            updateSetting('sections', updated);
+                          }}
+                        />
+                        <span className="text-xs text-muted-foreground">{sec.enabled ? 'On' : 'Off'}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ============ PRODUCTS CATALOG ============ */}
+        <TabsContent value="products" className="space-y-4">
+          <Card className="rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-[#edf1f7] dark:bg-slate-900 shadow-[6px_6px_14px_rgba(163,177,198,0.25),-6px_-6px_14px_rgba(255,255,255,0.7)] dark:shadow-[6px_6px_14px_rgba(0,0,0,0.4),-6px_-6px_14px_rgba(30,41,59,0.3)]">
+            <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <CardTitle>Valentine Catalog &amp; Product Assignment</CardTitle>
+                <CardDescription>1-Click toggles and assign products to Valentine Week days and seasonal collections.</CardDescription>
+              </div>
+              <Button onClick={() => fetchCatalog()} size="sm" variant="outline" disabled={catalogLoading}>
+                <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${catalogLoading ? 'animate-spin' : ''}`} />
+                Refresh Catalog
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              
+              {/* Filter controls */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 bg-card p-4 rounded-xl border">
+                <div className="relative">
+                  <Input
+                    placeholder="Search name or SKU..."
+                    value={catalogSearch}
+                    onChange={(e) => setCatalogSearch(e.target.value)}
+                    className="h-9 text-xs pl-8"
+                  />
+                  <SearchIcon className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                </div>
+
+                <div>
+                  <select
+                    value={catalogCategory}
+                    onChange={(e) => setCatalogCategory(e.target.value)}
+                    className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-xs shadow-sm focus:outline-none"
+                  >
+                    <option value="all">All Categories</option>
+                    <option value="roses">Roses</option>
+                    <option value="bouquets">Bouquets</option>
+                    <option value="cakes">Cakes</option>
+                    <option value="combos">Combos</option>
+                    <option value="chocolates">Chocolates</option>
+                    <option value="plants">Plants</option>
+                  </select>
+                </div>
+
+                <div>
+                  <select
+                    value={catalogDateSlug}
+                    onChange={(e) => setCatalogDateSlug(e.target.value)}
+                    className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-xs shadow-sm focus:outline-none"
+                  >
+                    <option value="all">All Days</option>
+                    <option value="rose-day">Rose Day (Feb 7)</option>
+                    <option value="propose-day">Propose Day (Feb 8)</option>
+                    <option value="chocolate-day">Chocolate Day (Feb 9)</option>
+                    <option value="teddy-day">Teddy Day (Feb 10)</option>
+                    <option value="promise-day">Promise Day (Feb 11)</option>
+                    <option value="hug-day">Hug Day (Feb 12)</option>
+                    <option value="kiss-day">Kiss Day (Feb 13)</option>
+                    <option value="valentines-day">Valentine's Day (Feb 14)</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={catalogValentineOnly}
+                    onCheckedChange={setCatalogValentineOnly}
+                  />
+                  <span className="text-xs font-medium">Valentine Tagged Only</span>
+                </div>
+              </div>
+
+              {/* Bulk operations toolbar */}
+              {selectedProductIds.length > 0 && (
+                <div className="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 p-3 rounded-xl flex flex-wrap items-center justify-between gap-3">
+                  <div className="text-xs font-semibold text-rose-700 dark:text-rose-300">
+                    {selectedProductIds.length} Products Selected
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <select
+                      value={bulkAction}
+                      onChange={(e) => setBulkAction(e.target.value)}
+                      className="h-8 rounded-md border border-rose-300 bg-background px-2.5 text-xs"
+                    >
+                      <option value="enable_valentine">Add to Valentine Shop</option>
+                      <option value="disable_valentine">Remove from Valentine Shop</option>
+                      <option value="assign_day">Assign to Valentine Day</option>
+                    </select>
+
+                    {bulkAction === 'assign_day' && (
+                      <select
+                        value={bulkTargetDay}
+                        onChange={(e) => setBulkTargetDay(e.target.value)}
+                        className="h-8 rounded-md border border-rose-300 bg-background px-2.5 text-xs"
+                      >
+                        <option value="rose-day">Rose Day (Feb 7)</option>
+                        <option value="propose-day">Propose Day (Feb 8)</option>
+                        <option value="chocolate-day">Chocolate Day (Feb 9)</option>
+                        <option value="teddy-day">Teddy Day (Feb 10)</option>
+                        <option value="promise-day">Promise Day (Feb 11)</option>
+                        <option value="hug-day">Hug Day (Feb 12)</option>
+                        <option value="kiss-day">Kiss Day (Feb 13)</option>
+                        <option value="valentines-day">Valentine's Day (Feb 14)</option>
+                      </select>
+                    )}
+
+                    <Button
+                      size="sm"
+                      onClick={handleBulkApply}
+                      disabled={applyingBulk}
+                      className="h-8 text-xs bg-rose-600 hover:bg-rose-700 text-white"
+                    >
+                      {applyingBulk ? 'Applying...' : 'Apply Bulk Action'}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Products Table */}
+              <div className="rounded-xl border overflow-hidden bg-card">
+                {catalogLoading ? (
+                  <div className="p-12 text-center text-sm text-muted-foreground animate-pulse">
+                    Loading real catalog products...
+                  </div>
+                ) : catalogProducts.length === 0 ? (
+                  <div className="p-12 text-center text-sm text-muted-foreground">
+                    No products matched the current search or filters.
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-muted/50 border-b text-muted-foreground uppercase font-semibold">
+                        <tr>
+                          <th className="p-3 w-10">
+                            <input
+                              type="checkbox"
+                              checked={selectedProductIds.length === catalogProducts.length && catalogProducts.length > 0}
+                              onChange={toggleSelectAll}
+                              className="rounded"
+                            />
+                          </th>
+                          <th className="p-3">Product</th>
+                          <th className="p-3">Category</th>
+                          <th className="p-3">Price</th>
+                          <th className="p-3 text-center">In Val Shop</th>
+                          <th className="p-3">Assigned Day</th>
+                          <th className="p-3 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {catalogProducts.map((p) => {
+                          const pId = p.id || p._id;
+                          const isSelected = selectedProductIds.includes(pId);
+                          const imgUrl = p.images?.[0]?.url || p.images?.[0] || p.image || '/images/placeholder.jpg';
+
+                          return (
+                            <tr key={pId} className={`hover:bg-muted/30 transition-colors ${isSelected ? 'bg-rose-50/30 dark:bg-rose-950/20' : ''}`}>
+                              <td className="p-3">
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={() => {
+                                    setSelectedProductIds(prev =>
+                                      prev.includes(pId) ? prev.filter(id => id !== pId) : [...prev, pId]
+                                    );
+                                  }}
+                                  className="rounded"
+                                />
+                              </td>
+                              <td className="p-3">
+                                <div className="flex items-center gap-3">
+                                  <img
+                                    src={getImageUrl(imgUrl)}
+                                    alt={p.name || p.title}
+                                    className="w-10 h-10 rounded-lg object-cover bg-muted flex-shrink-0"
+                                  />
+                                  <div className="min-w-0">
+                                    <div className="font-semibold text-foreground truncate max-w-[220px]">
+                                      {p.name || p.title}
+                                    </div>
+                                    <div className="text-[10px] text-muted-foreground font-mono">
+                                      {p.sku || pId}
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="p-3 text-muted-foreground">
+                                {p.category || '-'}
+                              </td>
+                              <td className="p-3 font-semibold font-mono">
+                                ₹{p.price}
+                              </td>
+                              <td className="p-3 text-center">
+                                <Switch
+                                  checked={Boolean(p.showInValentineShop || p.isValentineProduct)}
+                                  onCheckedChange={(checked) => {
+                                    toggleProductValentineStatus(pId, 'showInValentineShop', checked);
+                                  }}
+                                />
+                              </td>
+                              <td className="p-3">
+                                <select
+                                  value={p.valentineDate || ''}
+                                  onChange={(e) => assignProductDate(pId, e.target.value)}
+                                  className="h-8 rounded-md border border-input bg-background px-2 text-xs"
+                                >
+                                  <option value="">None / All Days</option>
+                                  <option value="rose-day">Rose Day (Feb 7)</option>
+                                  <option value="propose-day">Propose Day (Feb 8)</option>
+                                  <option value="chocolate-day">Chocolate Day (Feb 9)</option>
+                                  <option value="teddy-day">Teddy Day (Feb 10)</option>
+                                  <option value="promise-day">Promise Day (Feb 11)</option>
+                                  <option value="hug-day">Hug Day (Feb 12)</option>
+                                  <option value="kiss-day">Kiss Day (Feb 13)</option>
+                                  <option value="valentines-day">Valentine's Day (Feb 14)</option>
+                                </select>
+                              </td>
+                              <td className="p-3 text-right">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 text-xs"
+                                  onClick={() => navigate(`/admin/products/edit/${pId}`)}
+                                >
+                                  <Edit className="w-3.5 h-3.5 mr-1" />
+                                  Edit
+                                </Button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -468,6 +933,49 @@ const ValentineManagement: React.FC = () => {
               </Button>
             </CardHeader>
             <CardContent>
+              {/* Site-wide Exit Intent Popup Offer Card */}
+              <div className="p-4 rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50/50 dark:bg-rose-950/20 mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className={`w-2.5 h-2.5 rounded-full ${settings.marketing?.exitIntentPopup && settings.marketing?.exitIntentCode ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                    <h4 className="font-semibold text-sm">Site-wide Exit Intent Offer Popup</h4>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] bg-rose-100 dark:bg-rose-900/60 text-rose-700 dark:text-rose-300 font-medium">Popup Modal</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {settings.marketing?.exitIntentPopup && settings.marketing?.exitIntentCode
+                      ? `Active coupon code: ${settings.marketing.exitIntentCode} ("${settings.marketing.exitIntentTitle || 'Offer'}")`
+                      : 'Popup is currently disabled / inactive.'}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-xs"
+                    onClick={() => setActiveTab('general')}
+                  >
+                    Configure in General Tab
+                  </Button>
+                  {settings.marketing?.exitIntentPopup && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-xs text-destructive hover:bg-rose-100/50"
+                      onClick={() => {
+                        updateSetting('marketing.exitIntentPopup', false);
+                        updateSetting('marketing.exitIntentCode', '');
+                        updateSetting('marketing.exitIntentTitle', '');
+                        updateSetting('marketing.exitIntentSubtitle', '');
+                        toast({ title: 'Popup Offer Removed', description: 'Exit intent popup has been disabled and cleared.' });
+                      }}
+                    >
+                      <Trash2 className="w-3.5 h-3.5 mr-1" />
+                      Remove
+                    </Button>
+                  )}
+                </div>
+              </div>
+
               {offers.length === 0 ? (
                 <div className="text-center py-8">
                   <Tag className="w-12 h-12 text-muted-foreground mx-auto mb-3" />

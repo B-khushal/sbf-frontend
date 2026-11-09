@@ -12,15 +12,15 @@ interface ExitIntentPopupProps {
 
 export const ExitIntentPopup: React.FC<ExitIntentPopupProps> = ({
   enabled,
-  title = "Wait! Don't Go Empty-Handed...",
-  subtitle = "Reveal a special 15% discount for your valentine. Make their day extra bright!",
-  code = "LOVE15"
+  title = "Wait! Special Valentine Offer 🌹",
+  subtitle = "Reveal a special discount for your valentine. Make their day extra bright!",
+  code = ""
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || !code) return;
 
     const handleMouseLeave = (e: MouseEvent) => {
       if (e.clientY <= 15) {
@@ -41,14 +41,14 @@ export const ExitIntentPopup: React.FC<ExitIntentPopupProps> = ({
       document.removeEventListener('mouseleave', handleMouseLeave);
       clearTimeout(delayTimer);
     };
-  }, [enabled]);
+  }, [enabled, code]);
 
   const handleClose = () => {
     setIsOpen(false);
     sessionStorage.setItem('sbf_valentine_exit_popup_shown', 'true');
   };
 
-  if (!isOpen) return null;
+  if (!enabled || !code || !isOpen) return null;
 
   return (
     <AnimatePresence>

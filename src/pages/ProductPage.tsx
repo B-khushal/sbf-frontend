@@ -15,6 +15,7 @@ import { trackProductView } from '@/services/activityService';
 import { marketingTracker } from '@/services/marketingTracker';
 import SEOHead from '@/components/seo/SEOHead';
 import ContextualFaq from '@/components/faq/ContextualFaq';
+import { generateProductSeo } from '@/utils/seoGenerator';
 
 type Product = ProductData & {
   _id: string;
@@ -185,17 +186,32 @@ const ProductPage = () => {
     ? product.shortDescription.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()
     : (product.flowerType || (product.tags && product.tags.length > 0 ? product.tags.slice(0, 3).join(', ') : giftType.toLowerCase()));
 
-  const productSeoTitle = `${product.title} | ${giftType} in Hyderabad`;
-  const productSeoDesc = `Discover ${product.title}, featuring ${productFeatures}. Explore available variants, pricing from ₹${finalPrice}, and express same-day or midnight delivery in Hyderabad from Spring Blossoms Florist.`;
+  const existingSeo = (product as any).seoSettings || {};
+  const generatedSeo = generateProductSeo({
+    ...product,
+    name: product.title,
+    category: categoryName
+  }, existingSeo);
+
+  const productSeoTitle = existingSeo.seoTitle || existingSeo.metaTitle || generatedSeo.seoTitle;
+  const productSeoDesc = existingSeo.metaDescription || existingSeo.seoDescription || generatedSeo.metaDescription;
+  const productCanonical = existingSeo.canonicalUrl || `/product/${product.slug || product._id || actualId}`;
+  const productKeywords = existingSeo.focusKeyword 
+    ? `${existingSeo.focusKeyword}, ${Array.isArray(existingSeo.secondaryKeywords) ? existingSeo.secondaryKeywords.join(', ') : existingSeo.secondaryKeywords}`
+    : generatedSeo.focusKeyword 
+      ? `${generatedSeo.focusKeyword}, ${generatedSeo.secondaryKeywords.join(', ')}`
+      : undefined;
 
   const primaryImage = (product.images && product.images[0]) || '/images/logo_final.png';
+  const finalOgImage = existingSeo.ogImage || primaryImage;
+  const finalImageAlt = existingSeo.imageAlt || generatedSeo.imageAlt;
 
   const hasVerifiedRatings = Number(product.numReviews) > 0 && Number(product.rating) > 0;
 
   const productSchema = {
     '@context': 'https://schema.org',
     '@type': 'Product',
-    name: product.title,
+    name: existingSeo.h1 || product.title,
     description: productSeoDesc,
     image: (product.images && product.images.length > 0)
       ? product.images.map(img => img.startsWith('/') ? `https://sbflorist.in${img}` : img)
@@ -212,7 +228,7 @@ const ProductPage = () => {
     } : {}),
     offers: {
       '@type': 'Offer',
-      url: `https://sbflorist.in/product/${product._id || actualId}`,
+      url: `https://sbflorist.in/product/${product.slug || product._id || actualId}`,
       priceCurrency: 'INR',
       price: finalPrice,
       priceValidUntil: '2026-12-31',
@@ -233,7 +249,7 @@ const ProductPage = () => {
     { name: 'Home', item: '/' },
     { name: 'Shop', item: '/shop' },
     { name: categoryName, item: `/shop?category=${encodeURIComponent(categoryName)}` },
-    { name: product.title, item: `/product/${product._id || actualId}` }
+    { name: product.title, item: productCanonical }
   ];
 
   return (
@@ -241,9 +257,12 @@ const ProductPage = () => {
       <SEOHead
         title={productSeoTitle}
         description={productSeoDesc}
-        canonical={`/product/${product._id || actualId}`}
+        canonical={productCanonical}
+        keywords={productKeywords}
         ogType="product"
-        ogImage={primaryImage}
+        ogImage={finalOgImage}
+        ogImageAlt={finalImageAlt}
+        noindex={Boolean(existingSeo.noindex)}
         jsonLd={productSchema}
         breadcrumbs={breadcrumbs}
       />

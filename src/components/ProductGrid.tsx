@@ -283,9 +283,10 @@ const getComboMaxPrice = (product: Product) => {
   return total;
 };
 
-export const ProductCard = ({ product, onAddToCart }: {
+export const ProductCard = ({ product, onAddToCart, linkPrefix }: {
   product: Product;
   onAddToCart?: (item: any, quantity: number) => boolean;
+  linkPrefix?: string;
 }) => {
   const { formatPrice, convertPrice } = useCurrency();
   const { addToCart } = useCart();
@@ -344,11 +345,13 @@ export const ProductCard = ({ product, onAddToCart }: {
     if ((e.target as HTMLElement).closest('button')) {
       return;
     }
-    console.log("Card clicked, navigating to product:", product._id);
+    const targetId = product._id || (product as any).id;
+    console.log("Card clicked, navigating to product:", targetId);
     try {
-      marketingTracker.trackMerchandisingClick(product.category || 'catalog', product._id, product.title || (product as any).name);
+      marketingTracker.trackMerchandisingClick(product.category || 'catalog', targetId, product.title || (product as any).name);
     } catch (_) {}
-    navigate(`/product/${product._id}`);
+    const prefix = linkPrefix || (product.isValentineProduct ? '/valentine-product' : '/product');
+    navigate(`${prefix}/${targetId}`);
   };
 
   // Handle add to cart

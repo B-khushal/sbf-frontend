@@ -597,6 +597,21 @@ export const AdminDashboard: React.FC = () => {
                 <Settings2 className="w-3.5 h-3.5 text-slate-500" />
                 <span>Catalog Settings</span>
               </Link>
+              <Link
+                to="/admin/seo"
+                className={cn(
+                  "flex items-center gap-2 py-2 px-3 rounded-xl transition-all font-semibold",
+                  location.pathname === "/admin/seo" || location.pathname === "/admin/products/seo"
+                    ? "sbf-nav-active"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/40"
+                )}
+              >
+                <Sparkles className="w-3.5 h-3.5 text-rose-500" />
+                <span>SEO &amp; Keywords</span>
+                <span className="ml-auto text-[9px] font-black uppercase tracking-wider bg-rose-500 text-white px-1.5 py-0.2 rounded-md">
+                  PRO
+                </span>
+              </Link>
             </div>
           )}
         </div>
@@ -1022,6 +1037,20 @@ export const AdminDashboard: React.FC = () => {
           icon={HelpCircle}
           label="FAQ System"
           active={location.pathname === "/admin/faqs"}
+          collapsed={isCollapsed}
+        />
+
+        {/* SEO Management Suite */}
+        <NavItem
+          to="/admin/seo"
+          icon={Sparkles}
+          label="SEO & Keywords"
+          badge={
+            <span className="text-[9px] font-black uppercase tracking-wider bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-1.5 py-0.2 rounded-md shadow-2xs">
+              AI PRO
+            </span>
+          }
+          active={location.pathname === "/admin/seo" || location.pathname === "/admin/products/seo"}
           collapsed={isCollapsed}
         />
 
