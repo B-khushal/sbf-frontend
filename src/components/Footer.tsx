@@ -134,7 +134,7 @@ const Footer = () => {
           <div className="space-y-2">
             <Link to="/" className="inline-flex items-center gap-2 text-lg font-bold text-gray-900 group">
               <img
-                src="/images/logo_emblem.png"
+                src="/images/logo_emblem.png?v=2"
                 alt={footerSettings.companyName || "Spring Blossoms Florist"}
                 width={24}
                 height={24}
@@ -304,7 +304,7 @@ const Footer = () => {
           <div className="text-center sm:text-left space-y-5 sm:space-y-6">
             <Link to="/" className="inline-flex items-center gap-3 text-2xl font-bold text-gray-900 hover:text-primary transition-colors duration-300 group">
               <img
-                src="/images/logo_emblem.png"
+                src="/images/logo_emblem.png?v=2"
                 alt={footerSettings.companyName || "Spring Blossoms Florist"}
                 width={32}
                 height={32}

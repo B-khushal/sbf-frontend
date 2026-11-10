@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { 
@@ -14,11 +14,16 @@ import {
   Search, 
   PhoneCall, 
   ArrowRight,
-  Star
+  Star,
+  ShoppingBag,
+  BookOpen
 } from 'lucide-react';
 import PinCodeInput, { SERVICEABLE_PINCODES, ServiceablePinCode } from '@/components/ui/PinCodeInput';
 import { FLORIST_LOCAL_BUSINESS_SCHEMA } from '@/components/seo/floristSchema';
 import { cn } from '@/lib/utils';
+import api from '@/services/api';
+import { getImageUrl } from '@/config';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 const HYD_PINCODES = SERVICEABLE_PINCODES.filter(p => p.city === 'Hyderabad');
 
@@ -67,6 +72,27 @@ export const HyderabadDeliveryPage: React.FC = () => {
   const [pinResult, setPinResult] = useState<ServiceablePinCode | null>(null);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [areaFilter, setAreaFilter] = useState('');
+  const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
+  const { formatPrice } = useCurrency();
+
+  useEffect(() => {
+    let mounted = true;
+    api
+      .get('/products', { params: { limit: 8 } })
+      .then((res) => {
+        if (!mounted) return;
+        const list = Array.isArray(res.data)
+          ? res.data
+          : Array.isArray(res.data?.products)
+          ? res.data.products
+          : [];
+        setFeaturedProducts(list.slice(0, 8));
+      })
+      .catch(() => {});
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const filteredAreas = HYDERABAD_AREAS.filter(area => 
     area.toLowerCase().includes(areaFilter.toLowerCase())
@@ -282,8 +308,8 @@ export const HyderabadDeliveryPage: React.FC = () => {
                 <p className="text-xs text-slate-600 leading-relaxed">
                   Classic 12, 24, 50, and 100 red roses arrangements, cascading mixed floral hampers, heart-shaped floral boxes, and glass vase displays designed to take your breath away.
                 </p>
-                <Link to="/shop?category=Roses" className="inline-flex items-center gap-1 text-xs font-semibold text-rose-600 hover:text-rose-700 mt-3">
-                  Shop Roses <ArrowRight className="w-3.5 h-3.5" />
+                <Link to="/roses" className="inline-flex items-center gap-1 text-xs font-semibold text-rose-600 hover:text-rose-700 mt-3">
+                  Shop Rose Bouquets <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
 
@@ -295,8 +321,8 @@ export const HyderabadDeliveryPage: React.FC = () => {
                 <p className="text-xs text-slate-600 leading-relaxed">
                   Decadent Dutch Truffle, Black Forest, Red Velvet, Pineapple, and Butterscotch cakes made fresh on order. Delivered together with hand-tied blossoms in one flawless delivery.
                 </p>
-                <Link to="/cakes?category=combos" className="inline-flex items-center gap-1 text-xs font-semibold text-amber-600 hover:text-amber-700 mt-3">
-                  Shop Combos <ArrowRight className="w-3.5 h-3.5" />
+                <Link to="/combos" className="inline-flex items-center gap-1 text-xs font-semibold text-amber-600 hover:text-amber-700 mt-3">
+                  Shop Cake & Flower Combos <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
 
@@ -324,6 +350,142 @@ export const HyderabadDeliveryPage: React.FC = () => {
                 <span className="inline-block text-xs font-semibold text-emerald-600 mt-3">
                   Standard ₹150 under ₹999
                 </span>
+              </div>
+            </div>
+
+            {/* Live Catalog Products for Hyderabad Same-Day Delivery */}
+            {featuredProducts.length > 0 && (
+              <div className="rounded-3xl p-6 sm:p-8 bg-white border border-slate-200 shadow-xs">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+                  <div>
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-rose-600">
+                      Available Today in Hyderabad
+                    </span>
+                    <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mt-0.5">
+                      Popular Bouquets & Combos for Hyderabad Delivery
+                    </h2>
+                  </div>
+                  <Link
+                    to="/shop"
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-rose-600 hover:text-rose-700"
+                  >
+                    <span>View All Products</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  {featuredProducts.map((prod) => {
+                    const idOrSlug = prod.slug || prod._id || prod.id;
+                    const title = prod.title || prod.name || 'Fresh Flower Arrangement';
+                    const rawImg = Array.isArray(prod.images) && prod.images.length > 0
+                      ? typeof prod.images[0] === 'string'
+                        ? prod.images[0]
+                        : prod.images[0]?.url
+                      : prod.image || '/images/placeholder.jpg';
+                    const price = Number(prod.price || 0);
+                    const discount = Number(prod.discount || 0);
+                    const finalPrice = discount > 0 ? Math.round(price * (1 - discount / 100)) : price;
+
+                    return (
+                      <Link
+                        key={prod._id || prod.id || idOrSlug}
+                        to={`/product/${idOrSlug}`}
+                        className="group rounded-2xl border border-slate-200/80 hover:border-rose-300 bg-slate-50/50 hover:bg-white overflow-hidden transition-all flex flex-col"
+                      >
+                        <div className="aspect-square bg-slate-100 overflow-hidden relative">
+                          <img
+                            src={getImageUrl(rawImg)}
+                            alt={`${title} - Flower Delivery in Hyderabad`}
+                            loading="lazy"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                          {discount > 0 && (
+                            <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-rose-600 text-white text-[10px] font-bold">
+                              {discount}% OFF
+                            </span>
+                          )}
+                        </div>
+                        <div className="p-3 flex-1 flex flex-col justify-between">
+                          <h3 className="text-xs font-bold text-slate-900 line-clamp-2 group-hover:text-rose-600 transition-colors">
+                            {title}
+                          </h3>
+                          <div className="mt-2 flex items-center justify-between">
+                            <span className="text-sm font-extrabold text-slate-900">
+                              {formatPrice(finalPrice)}
+                            </span>
+                            <span className="text-[11px] font-semibold text-rose-600 inline-flex items-center gap-0.5">
+                              Order <ArrowRight className="w-3 h-3" />
+                            </span>
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Internal Linking Hub: Shop by Flower Variety & Occasion */}
+            <div className="rounded-3xl p-6 sm:p-8 bg-white border border-slate-200 shadow-xs space-y-6">
+              <div>
+                <h2 className="text-xl font-bold text-slate-900">
+                  Explore Hyderabad Flower Collections & Occasions
+                </h2>
+                <p className="text-xs text-slate-500 mt-1">
+                  Handcrafted by our Mehdipatnam floral studio and delivered fresh across all Hyderabad & Secunderabad pin codes.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 text-xs font-semibold">
+                <Link to="/roses" className="p-3 rounded-xl bg-rose-50/70 hover:bg-rose-100/80 text-rose-900 border border-rose-200/60 flex items-center justify-between transition-colors">
+                  <span>Buy Roses Online</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-rose-600" />
+                </Link>
+                <Link to="/bouquets" className="p-3 rounded-xl bg-rose-50/70 hover:bg-rose-100/80 text-rose-900 border border-rose-200/60 flex items-center justify-between transition-colors">
+                  <span>Premium Bouquets</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-rose-600" />
+                </Link>
+                <Link to="/tulips" className="p-3 rounded-xl bg-rose-50/70 hover:bg-rose-100/80 text-rose-900 border border-rose-200/60 flex items-center justify-between transition-colors">
+                  <span>Fresh Tulips</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-rose-600" />
+                </Link>
+                <Link to="/lilies" className="p-3 rounded-xl bg-rose-50/70 hover:bg-rose-100/80 text-rose-900 border border-rose-200/60 flex items-center justify-between transition-colors">
+                  <span>Oriental Lilies</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-rose-600" />
+                </Link>
+                <Link to="/orchids" className="p-3 rounded-xl bg-rose-50/70 hover:bg-rose-100/80 text-rose-900 border border-rose-200/60 flex items-center justify-between transition-colors">
+                  <span>Purple & Blue Orchids</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-rose-600" />
+                </Link>
+                <Link to="/hydrangea" className="p-3 rounded-xl bg-rose-50/70 hover:bg-rose-100/80 text-rose-900 border border-rose-200/60 flex items-center justify-between transition-colors">
+                  <span>Luxury Hydrangeas</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-rose-600" />
+                </Link>
+                <Link to="/carnation" className="p-3 rounded-xl bg-rose-50/70 hover:bg-rose-100/80 text-rose-900 border border-rose-200/60 flex items-center justify-between transition-colors">
+                  <span>Carnation Bouquets</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-rose-600" />
+                </Link>
+                <Link to="/eustoma" className="p-3 rounded-xl bg-rose-50/70 hover:bg-rose-100/80 text-rose-900 border border-rose-200/60 flex items-center justify-between transition-colors">
+                  <span>Lisianthus (Eustoma)</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-rose-600" />
+                </Link>
+                <Link to="/occasions/birthday" className="p-3 rounded-xl bg-amber-50/70 hover:bg-amber-100/80 text-amber-900 border border-amber-200/60 flex items-center justify-between transition-colors">
+                  <span>Birthday Flowers</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-amber-600" />
+                </Link>
+                <Link to="/occasions/anniversary" className="p-3 rounded-xl bg-amber-50/70 hover:bg-amber-100/80 text-amber-900 border border-amber-200/60 flex items-center justify-between transition-colors">
+                  <span>Anniversary Bouquets</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-amber-600" />
+                </Link>
+                <Link to="/combos" className="p-3 rounded-xl bg-amber-50/70 hover:bg-amber-100/80 text-amber-900 border border-amber-200/60 flex items-center justify-between transition-colors">
+                  <span>Cake & Flower Combos</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-amber-600" />
+                </Link>
+                <Link to="/valentine-special" className="p-3 rounded-xl bg-pink-50/70 hover:bg-pink-100/80 text-pink-900 border border-pink-200/60 flex items-center justify-between transition-colors">
+                  <span>Valentine’s Collection</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-pink-600" />
+                </Link>
               </div>
             </div>
 
@@ -439,6 +601,46 @@ export const HyderabadDeliveryPage: React.FC = () => {
                   <strong className="text-slate-800">Delivery Scope:</strong> All pin codes across Hyderabad and Secunderabad
                 </p>
               </div>
+            </div>
+
+            {/* Floral Guides & Resources */}
+            <div className="rounded-3xl p-6 bg-white border border-slate-200 shadow-xs space-y-3">
+              <div className="flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-rose-600" />
+                <h4 className="text-sm font-bold text-slate-900">
+                  Floral Care & Gifting Guides
+                </h4>
+              </div>
+              <ul className="space-y-2.5 text-xs text-slate-600">
+                <li>
+                  <Link to="/blog/best-flower-delivery-guide-hyderabad-secunderabad" className="hover:text-rose-600 font-medium flex items-center justify-between gap-2">
+                    <span>Hyderabad & Secunderabad Delivery Guide</span>
+                    <ArrowRight className="w-3 h-3 shrink-0 text-slate-400" />
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/blog/famous-indian-flowers-ketaki-kanakambaram-brahma-kamal-jasmine" className="hover:text-rose-600 font-medium flex items-center justify-between gap-2">
+                    <span>Famous Indian Flowers: Ketaki, Kanakambaram & Jasmine</span>
+                    <ArrowRight className="w-3 h-3 shrink-0 text-slate-400" />
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/blog/flower-meanings-and-symbolism-gifting-guide" className="hover:text-rose-600 font-medium flex items-center justify-between gap-2">
+                    <span>Flower Meanings & Symbolism Gifting Guide</span>
+                    <ArrowRight className="w-3 h-3 shrink-0 text-slate-400" />
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/blog/how-to-keep-fresh-flowers-lasting-longer-in-india" className="hover:text-rose-600 font-medium flex items-center justify-between gap-2">
+                    <span>How to Keep Cut Flowers Fresh in Indian Weather</span>
+                    <ArrowRight className="w-3 h-3 shrink-0 text-slate-400" />
+                  </Link>
+                </li>
+              </ul>
+              <Link to="/blog" className="inline-flex items-center gap-1 text-xs font-bold text-rose-600 hover:text-rose-700 pt-1">
+                <span>View All Floral Guides</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
           </div>
         </div>

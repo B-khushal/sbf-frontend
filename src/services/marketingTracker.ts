@@ -264,6 +264,17 @@ class MarketingTracker {
     return null;
   }
 
+  private fireGa4Event(eventName: string, params: Record<string, any> = {}) {
+    try {
+      const w = window as any;
+      if (typeof w.gtag === 'function' && !this.isInternalUser()) {
+        w.gtag('event', eventName, params);
+      }
+    } catch (e) {
+      // Never block UI
+    }
+  }
+
   // -------------------------------------------------------------
   // Public High-Level Tracking Methods
   // -------------------------------------------------------------
@@ -278,6 +289,24 @@ class MarketingTracker {
       path,
       metadata: { title: title || document.title }
     });
+
+    this.fireGa4Event('page_view', {
+      page_path: path,
+      page_title: title || document.title
+    });
+  }
+
+  public trackCategoryView(categoryName: string, path?: string) {
+    this.enqueueEvent({
+      eventType: 'category_view',
+      eventCategory: 'Navigation',
+      productCategory: categoryName,
+      path: path || window.location.pathname
+    });
+
+    this.fireGa4Event('view_item_list', {
+      item_list_name: categoryName
+    });
   }
 
   public trackProductView(product: { id: string; title: string; price?: number; category?: string; occasion?: string }) {
@@ -291,6 +320,20 @@ class MarketingTracker {
       occasion: product.occasion,
       path: window.location.pathname
     });
+
+    this.fireGa4Event('view_item', {
+      currency: 'INR',
+      value: product.price || 0,
+      items: [
+        {
+          item_id: product.id,
+          item_name: product.title,
+          item_category: product.category || 'Flowers',
+          price: product.price || 0,
+          quantity: 1
+        }
+      ]
+    });
   }
 
   public trackProductImageView(productId: string, imageIndex: number) {
@@ -303,6 +346,9 @@ class MarketingTracker {
   }
 
   public trackAddToCart(product: { id: string; title: string; price: number; quantity?: number; category?: string }, cartTotal?: number) {
+    const qty = product.quantity || 1;
+    const val = cartTotal || product.price * qty;
+
     this.enqueueEvent({
       eventType: 'add_to_cart',
       eventCategory: 'Cart',
@@ -310,10 +356,24 @@ class MarketingTracker {
       productTitle: product.title,
       productPrice: product.price,
       productCategory: product.category,
-      cartValue: cartTotal || product.price * (product.quantity || 1),
-      metadata: { quantity: product.quantity || 1 }
+      cartValue: val,
+      metadata: { quantity: qty }
     });
     this.flush(); // Flush immediately for cart events
+
+    this.fireGa4Event('add_to_cart', {
+      currency: 'INR',
+      value: product.price * qty,
+      items: [
+        {
+          item_id: product.id,
+          item_name: product.title,
+          item_category: product.category || 'Flowers',
+          price: product.price,
+          quantity: qty
+        }
+      ]
+    });
   }
 
   public trackRemoveFromCart(productId: string, productTitle?: string, cartTotal?: number) {
@@ -326,18 +386,36 @@ class MarketingTracker {
       path: window.location.pathname
     });
     this.flush();
+
+    this.fireGa4Event('remove_from_cart', {
+      currency: 'INR',
+      value: cartTotal || 0,
+      items: [{ item_id: productId, item_name: productTitle || productId }]
+    });
   }
 
   public trackCheckoutStarted(cartValue?: number) {
     this.trackCheckoutStep('checkout_started', cartValue);
+    this.fireGa4Event('begin_checkout', {
+      currency: 'INR',
+      value: cartValue || 0
+    });
   }
 
   public trackAddressCompleted(cartValue?: number) {
     this.trackCheckoutStep('address_completed', cartValue);
+    this.fireGa4Event('add_shipping_info', {
+      currency: 'INR',
+      value: cartValue || 0
+    });
   }
 
   public trackPaymentStarted(cartValue?: number) {
     this.trackCheckoutStep('payment_started', cartValue);
+    this.fireGa4Event('add_payment_info', {
+      currency: 'INR',
+      value: cartValue || 0
+    });
   }
 
   public trackCheckoutStep(step: 'checkout_started' | 'address_completed' | 'payment_started', cartValue?: number) {
@@ -361,6 +439,12 @@ class MarketingTracker {
       path: window.location.pathname
     });
     this.flush();
+
+    this.fireGa4Event('purchase', {
+      transaction_id: orderNumber || orderId,
+      currency: 'INR',
+      value: revenue || 0
+    });
   }
 
   public trackSearch(query: string, resultCount: number = 0) {
@@ -369,6 +453,27 @@ class MarketingTracker {
       eventCategory: 'Search',
       searchQuery: query,
       metadata: { resultCount }
+    });
+
+    this.fireGa4Event('search', {
+      search_term: query,
+      result_count: resultCount
+    });
+  }
+
+  public trackWhatsAppEnquiry(sourcePage?: string, productTitle?: string) {
+    this.enqueueEvent({
+      eventType: 'whatsapp_enquiry',
+      eventCategory: 'Conversion',
+      productTitle,
+      path: sourcePage || window.location.pathname
+    });
+    this.flush();
+
+    this.fireGa4Event('generate_lead', {
+      lead_source: 'whatsapp_enquiry',
+      page_path: sourcePage || window.location.pathname,
+      item_name: productTitle || ''
     });
   }
 

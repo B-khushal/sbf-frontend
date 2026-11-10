@@ -118,7 +118,7 @@ interface BlogSeoItem {
 
 export const SeoManagement: React.FC = () => {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<'products' | 'categories' | 'blogs' | 'health' | 'global'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'categories' | 'blogs' | 'keywords' | 'backlinks' | 'performance' | 'health' | 'global'>('products');
 
   // Stats
   const [stats, setStats] = useState<SeoStats | null>(null);
@@ -149,6 +149,26 @@ export const SeoManagement: React.FC = () => {
   // Health Audit
   const [healthAudit, setHealthAudit] = useState<any>(null);
   const [healthLoading, setHealthLoading] = useState(false);
+
+  // Keyword Mappings CRM
+  const [keywordMappings, setKeywordMappings] = useState<any[]>([]);
+  const [keywordDiagnostics, setKeywordDiagnostics] = useState<any>(null);
+  const [keywordsLoading, setKeywordsLoading] = useState(false);
+  const [syncingKeywords, setSyncingKeywords] = useState(false);
+  const [kwSearch, setKwSearch] = useState('');
+  const [kwTypeFilter, setKwTypeFilter] = useState('all');
+  const [editingMapping, setEditingMapping] = useState<any | null>(null);
+  const [savingMapping, setSavingMapping] = useState(false);
+
+  // Backlinks & Referring Domains Authority
+  const [backlinksData, setBacklinksData] = useState<any>(null);
+  const [backlinksLoading, setBacklinksLoading] = useState(false);
+  const [editingBacklink, setEditingBacklink] = useState<any | null>(null);
+  const [savingBacklink, setSavingBacklink] = useState(false);
+
+  // SEO & Conversion Performance Dashboard
+  const [performanceData, setPerformanceData] = useState<any>(null);
+  const [performanceLoading, setPerformanceLoading] = useState(false);
 
   // Global SEO Settings
   const [globalSettings, setGlobalSettings] = useState<any>({
@@ -315,6 +335,144 @@ export const SeoManagement: React.FC = () => {
     }
   };
 
+  // Load Keyword Mappings
+  const fetchKeywordMappings = async () => {
+    try {
+      setKeywordsLoading(true);
+      const res = await api.get('/seo/admin/keyword-mappings');
+      if (res.data?.success) {
+        setKeywordMappings(res.data.mappings || []);
+        setKeywordDiagnostics(res.data.diagnostics || null);
+      }
+    } catch (err: any) {
+      console.error('Failed to load keyword mappings:', err);
+    } finally {
+      setKeywordsLoading(false);
+    }
+  };
+
+  const handleSyncKeywordMappings = async () => {
+    try {
+      setSyncingKeywords(true);
+      const res = await api.post('/seo/admin/keyword-mappings/sync');
+      if (res.data?.success) {
+        setKeywordMappings(res.data.mappings || []);
+        setKeywordDiagnostics(res.data.diagnostics || null);
+        toast({
+          title: 'Catalog Pages Synchronized',
+          description: res.data.message || 'All live pages synced to Keyword Mapping System.'
+        });
+      }
+    } catch (err: any) {
+      toast({ title: 'Sync Error', description: 'Failed to sync keyword mappings', variant: 'destructive' });
+    } finally {
+      setSyncingKeywords(false);
+    }
+  };
+
+  const handleSaveKeywordMapping = async () => {
+    if (!editingMapping) return;
+    try {
+      setSavingMapping(true);
+      const payload = {
+        ...editingMapping,
+        secondaryKeywords: typeof editingMapping.secondaryKeywords === 'string'
+          ? editingMapping.secondaryKeywords.split(',').map((s: string) => s.trim()).filter(Boolean)
+          : editingMapping.secondaryKeywords,
+        longTailKeywords: typeof editingMapping.longTailKeywords === 'string'
+          ? editingMapping.longTailKeywords.split(',').map((s: string) => s.trim()).filter(Boolean)
+          : editingMapping.longTailKeywords
+      };
+      const res = editingMapping.id
+        ? await api.put(`/seo/admin/keyword-mappings/${editingMapping.id}`, payload)
+        : await api.post('/seo/admin/keyword-mappings', payload);
+      if (res.data?.success) {
+        toast({ title: 'Keyword Mapping Saved', description: `Updated mapping for ${editingMapping.pageUrl}` });
+        setEditingMapping(null);
+        fetchKeywordMappings();
+      }
+    } catch (err: any) {
+      toast({ title: 'Error', description: 'Failed to save keyword mapping', variant: 'destructive' });
+    } finally {
+      setSavingMapping(false);
+    }
+  };
+
+  const handleDeleteKeywordMapping = async (id: string, pageUrl: string) => {
+    if (!window.confirm(`Remove keyword mapping for "${pageUrl}"?`)) return;
+    try {
+      const res = await api.delete(`/seo/admin/keyword-mappings/${id}`);
+      if (res.data?.success) {
+        toast({ title: 'Deleted', description: `Removed mapping for ${pageUrl}` });
+        fetchKeywordMappings();
+      }
+    } catch (err: any) {
+      toast({ title: 'Error', description: 'Failed to delete mapping', variant: 'destructive' });
+    }
+  };
+
+  // Load Backlinks & Authority Data
+  const fetchBacklinks = async () => {
+    try {
+      setBacklinksLoading(true);
+      const res = await api.get('/seo/admin/backlinks');
+      if (res.data?.success) {
+        setBacklinksData(res.data);
+      }
+    } catch (err: any) {
+      console.error('Failed to load backlinks:', err);
+    } finally {
+      setBacklinksLoading(false);
+    }
+  };
+
+  const handleSaveBacklink = async () => {
+    if (!editingBacklink) return;
+    try {
+      setSavingBacklink(true);
+      const res = editingBacklink.id
+        ? await api.put(`/seo/admin/backlinks/${editingBacklink.id}`, editingBacklink)
+        : await api.post('/seo/admin/backlinks', editingBacklink);
+      if (res.data?.success) {
+        setBacklinksData(res.data);
+        setEditingBacklink(null);
+        toast({ title: 'Backlink Record Saved', description: 'Referring domain & authority tracker updated.' });
+      }
+    } catch (err: any) {
+      toast({ title: 'Error', description: 'Failed to save backlink record', variant: 'destructive' });
+    } finally {
+      setSavingBacklink(false);
+    }
+  };
+
+  const handleDeleteBacklink = async (id: string, domain: string) => {
+    if (!window.confirm(`Delete backlink/prospect record for "${domain}"?`)) return;
+    try {
+      const res = await api.delete(`/seo/admin/backlinks/${id}`);
+      if (res.data?.success) {
+        setBacklinksData(res.data);
+        toast({ title: 'Removed', description: `Deleted record for ${domain}` });
+      }
+    } catch (err: any) {
+      toast({ title: 'Error', description: 'Failed to remove record', variant: 'destructive' });
+    }
+  };
+
+  // Load SEO & Conversion Performance Dashboard
+  const fetchPerformance = async () => {
+    try {
+      setPerformanceLoading(true);
+      const res = await api.get('/seo/admin/performance');
+      if (res.data?.success) {
+        setPerformanceData(res.data.performance || null);
+      }
+    } catch (err: any) {
+      console.error('Failed to load SEO performance:', err);
+    } finally {
+      setPerformanceLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchStats();
   }, []);
@@ -326,6 +484,12 @@ export const SeoManagement: React.FC = () => {
       fetchCategories();
     } else if (activeTab === 'blogs') {
       fetchBlogs();
+    } else if (activeTab === 'keywords') {
+      fetchKeywordMappings();
+    } else if (activeTab === 'backlinks') {
+      fetchBacklinks();
+    } else if (activeTab === 'performance') {
+      fetchPerformance();
     } else if (activeTab === 'health') {
       fetchHealthAudit();
     } else if (activeTab === 'global') {
@@ -802,6 +966,45 @@ export const SeoManagement: React.FC = () => {
         >
           <Layers className="w-4 h-4" />
           <span>Blog &amp; Guides SEO</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('keywords')}
+          className={cn(
+            "px-5 py-2.5 rounded-2xl font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center gap-2",
+            activeTab === 'keywords'
+              ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm"
+              : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+          )}
+        >
+          <Hash className="w-4 h-4" />
+          <span>Keyword Mapping CRM</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('backlinks')}
+          className={cn(
+            "px-5 py-2.5 rounded-2xl font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center gap-2",
+            activeTab === 'backlinks'
+              ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm"
+              : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+          )}
+        >
+          <ExternalLink className="w-4 h-4" />
+          <span>Backlinks &amp; Authority</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('performance')}
+          className={cn(
+            "px-5 py-2.5 rounded-2xl font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center gap-2",
+            activeTab === 'performance'
+              ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm"
+              : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+          )}
+        >
+          <TrendingUp className="w-4 h-4" />
+          <span>Performance &amp; Competitor Gap</span>
         </button>
 
         <button
@@ -1619,6 +1822,1020 @@ export const SeoManagement: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* ── TAB 6: KEYWORD MAPPING CRM (PHASE 2 & 3) ──────────────── */}
+      {activeTab === 'keywords' && (
+        <div className="space-y-6">
+          {/* Header & Actions */}
+          <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div>
+              <h3 className="text-lg font-extrabold text-slate-900 dark:text-white">
+                Centralized Keyword-to-Page Mapping &amp; Cannibalization Guard
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">
+                Every indexable page is assigned one unique Primary Keyword, supporting Secondary &amp; Long-Tail Keywords, Search Intent, and Target Location. Search volume, KD, and ranking positions remain <code className="font-mono">null</code> unless verified via Google Search Console.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSyncKeywordMappings}
+                disabled={syncingKeywords}
+                className="rounded-xl text-xs gap-1.5"
+              >
+                <RefreshCw className={cn("w-3.5 h-3.5", syncingKeywords && "animate-spin")} />
+                {syncingKeywords ? 'Syncing Catalog...' : 'Sync All Live Pages'}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.open('/api/seo/admin/keyword-mappings/export', '_blank')}
+                className="rounded-xl text-xs gap-1.5"
+              >
+                <Download className="w-3.5 h-3.5" />
+                Export Mapping CSV
+              </Button>
+              <Button
+                size="sm"
+                onClick={() =>
+                  setEditingMapping({
+                    id: '',
+                    pageUrl: '/',
+                    pageType: 'Category',
+                    pageTitle: '',
+                    primaryKeyword: '',
+                    secondaryKeywords: '',
+                    longTailKeywords: '',
+                    searchIntent: 'Transactional',
+                    targetLocation: 'Hyderabad & India',
+                    keywordCluster: 'General Florist',
+                    searchVolume: '',
+                    keywordDifficulty: '',
+                    currentRanking: '',
+                    impressions: '',
+                    clicks: '',
+                    ctr: '',
+                    internalLinksCount: 10,
+                    optimizationStatus: 'Optimized',
+                    notes: ''
+                  })
+                }
+                className="rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold gap-1.5"
+              >
+                + Add Page Mapping
+              </Button>
+            </div>
+          </div>
+
+          {/* Diagnostics Summary Row */}
+          {keywordDiagnostics && (
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+              <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                <span className="text-[11px] font-semibold text-slate-500 block">Total Mapped URLs</span>
+                <span className="text-2xl font-black text-slate-900 dark:text-white mt-1 block">
+                  {keywordDiagnostics.totalMappedPages || 0}
+                </span>
+              </div>
+              <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                <span className="text-[11px] font-semibold text-slate-500 block">Cannibalization Conflicts</span>
+                <span className={cn(
+                  "text-2xl font-black mt-1 block",
+                  (keywordDiagnostics.cannibalizationCount || 0) === 0 ? "text-emerald-600" : "text-rose-600"
+                )}>
+                  {keywordDiagnostics.cannibalizationCount || 0}
+                </span>
+              </div>
+              <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                <span className="text-[11px] font-semibold text-slate-500 block">Missing Primary Keyword</span>
+                <span className="text-2xl font-black text-amber-600 mt-1 block">
+                  {keywordDiagnostics.missingPrimaryCount || 0}
+                </span>
+              </div>
+              <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                <span className="text-[11px] font-semibold text-slate-500 block">Missing Secondary Keywords</span>
+                <span className="text-2xl font-black text-amber-600 mt-1 block">
+                  {keywordDiagnostics.missingSecondaryCount || 0}
+                </span>
+              </div>
+              <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                <span className="text-[11px] font-semibold text-slate-500 block">Low Internal Links (&lt;3)</span>
+                <span className="text-2xl font-black text-slate-900 dark:text-white mt-1 block">
+                  {keywordDiagnostics.lowInternalLinksCount || 0}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Cannibalization Alert Box */}
+          {keywordDiagnostics?.cannibalizationWarnings?.length > 0 && (
+            <div className="p-5 rounded-3xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 space-y-2">
+              <div className="flex items-center gap-2 text-rose-800 dark:text-rose-300 font-bold text-sm">
+                <AlertTriangle className="w-4 h-4" />
+                <span>Keyword Cannibalization Detected ({keywordDiagnostics.cannibalizationWarnings.length})</span>
+              </div>
+              <div className="space-y-2 text-xs text-rose-700 dark:text-rose-300">
+                {keywordDiagnostics.cannibalizationWarnings.map((warn: any, idx: number) => (
+                  <div key={idx} className="p-3 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-rose-200/60">
+                    <strong>Primary Keyword: "{warn.primaryKeyword}"</strong> is shared by {warn.count} pages:{' '}
+                    {warn.pages.map((p: any) => p.pageUrl).join(', ')}. {warn.recommendation}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Filters */}
+          <div className="p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
+            <div className="relative flex-1 min-w-[240px] max-w-md">
+              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Input
+                value={kwSearch}
+                onChange={(e) => setKwSearch(e.target.value)}
+                placeholder="Search URL, primary keyword, secondary keyword, or cluster..."
+                className="pl-10 rounded-2xl text-xs"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <select
+                value={kwTypeFilter}
+                onChange={(e) => setKwTypeFilter(e.target.value)}
+                className="px-3 py-2 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold"
+              >
+                <option value="all">All Page Types</option>
+                <option value="Homepage">Homepage</option>
+                <option value="Local Landing Page">Local Landing Pages</option>
+                <option value="Category">Categories &amp; Flower Pages</option>
+                <option value="Occasion">Occasions</option>
+                <option value="Seasonal Campaign">Seasonal Campaigns</option>
+                <option value="Blog Guide">Blog Guides</option>
+                <option value="Product">Products</option>
+                <option value="Informational">Informational &amp; Policies</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Keyword Mapping Table */}
+          <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 text-slate-600 dark:text-slate-300 font-bold">
+                    <th className="p-4">Page URL &amp; Type</th>
+                    <th className="p-4">Primary Keyword</th>
+                    <th className="p-4">Secondary &amp; Long-Tail Keywords</th>
+                    <th className="p-4">Intent &amp; Location</th>
+                    <th className="p-4">GSC Metrics (Verified)</th>
+                    <th className="p-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                  {keywordsLoading ? (
+                    <tr>
+                      <td colSpan={6} className="p-8 text-center text-slate-500">
+                        Loading centralized keyword mappings...
+                      </td>
+                    </tr>
+                  ) : (
+                    keywordMappings
+                      .filter((m) => {
+                        if (kwTypeFilter !== 'all' && m.pageType !== kwTypeFilter) return false;
+                        if (!kwSearch.trim()) return true;
+                        const q = kwSearch.toLowerCase();
+                        return (
+                          String(m.pageUrl || '').toLowerCase().includes(q) ||
+                          String(m.primaryKeyword || '').toLowerCase().includes(q) ||
+                          String(m.keywordCluster || '').toLowerCase().includes(q) ||
+                          (m.secondaryKeywords || []).some((k: string) => k.toLowerCase().includes(q))
+                        );
+                      })
+                      .map((m) => (
+                        <tr key={m.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/30 transition-colors">
+                          <td className="p-4 align-top max-w-[240px]">
+                            <a
+                              href={m.pageUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-mono font-bold text-rose-600 hover:underline flex items-center gap-1 break-all"
+                            >
+                              <span>{m.pageUrl}</span>
+                              <ExternalLink className="w-3 h-3 shrink-0" />
+                            </a>
+                            <div className="text-[11px] text-slate-500 mt-1 line-clamp-1">{m.pageTitle}</div>
+                            <span className="inline-block mt-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                              {m.pageType}
+                            </span>
+                          </td>
+                          <td className="p-4 align-top">
+                            <span className="inline-block px-2.5 py-1 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 font-bold border border-rose-200/60">
+                              {m.primaryKeyword || 'Unassigned'}
+                            </span>
+                            <div className="text-[10px] text-slate-400 mt-1">
+                              Cluster: {m.keywordCluster}
+                            </div>
+                          </td>
+                          <td className="p-4 align-top max-w-sm">
+                            <div className="flex flex-wrap gap-1">
+                              {(m.secondaryKeywords || []).slice(0, 6).map((sk: string, idx: number) => (
+                                <span
+                                  key={idx}
+                                  className="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-medium"
+                                >
+                                  {sk}
+                                </span>
+                              ))}
+                              {(m.secondaryKeywords || []).length > 6 && (
+                                <span className="text-[10px] text-slate-400">
+                                  +{(m.secondaryKeywords || []).length - 6} more
+                                </span>
+                              )}
+                            </div>
+                            {(m.longTailKeywords || []).length > 0 && (
+                              <div className="mt-1.5 text-[10px] text-slate-500 line-clamp-1">
+                                <strong>Long-tail:</strong> {(m.longTailKeywords || []).join(' • ')}
+                              </div>
+                            )}
+                          </td>
+                          <td className="p-4 align-top">
+                            <div className="font-semibold text-slate-800 dark:text-slate-200">{m.searchIntent}</div>
+                            <div className="text-[11px] text-slate-500 mt-0.5">{m.targetLocation}</div>
+                            <div className="text-[10px] text-emerald-600 font-semibold mt-1">
+                              {m.internalLinksCount || 0} internal links
+                            </div>
+                          </td>
+                          <td className="p-4 align-top text-[11px] text-slate-500">
+                            {m.currentRanking !== null || m.impressions !== null ? (
+                              <div className="space-y-0.5">
+                                <div>Pos: <strong>{m.currentRanking ?? '—'}</strong></div>
+                                <div>Impr: <strong>{m.impressions ?? '—'}</strong> | Clicks: <strong>{m.clicks ?? '—'}</strong></div>
+                                <div>Vol: <strong>{m.searchVolume ?? '—'}</strong> | KD: <strong>{m.keywordDifficulty ?? '—'}</strong></div>
+                              </div>
+                            ) : (
+                              <span className="text-[10px] italic text-slate-400">
+                                Awaiting GSC CSV / Verified Input
+                              </span>
+                            )}
+                          </td>
+                          <td className="p-4 align-top text-right">
+                            <div className="flex items-center justify-end gap-1.5">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  setEditingMapping({
+                                    ...m,
+                                    secondaryKeywords: Array.isArray(m.secondaryKeywords)
+                                      ? m.secondaryKeywords.join(', ')
+                                      : m.secondaryKeywords || '',
+                                    longTailKeywords: Array.isArray(m.longTailKeywords)
+                                      ? m.longTailKeywords.join(', ')
+                                      : m.longTailKeywords || ''
+                                  })
+                                }
+                                className="h-8 px-2.5 rounded-xl text-xs"
+                              >
+                                <Edit3 className="w-3.5 h-3.5" />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDeleteKeywordMapping(m.id, m.pageUrl)}
+                                className="h-8 px-2.5 rounded-xl text-xs text-rose-600 hover:text-rose-700"
+                              >
+                                <XCircle className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── TAB 7: BACKLINKS & AUTHORITY TRACKER (PHASE 5) ────────── */}
+      {activeTab === 'backlinks' && (
+        <div className="space-y-6">
+          {/* Header */}
+          <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div>
+              <h3 className="text-lg font-extrabold text-slate-900 dark:text-white">
+                Backlink Acquisition, Referring Domains &amp; Anchor Text Authority
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">
+                Track verified live referring domains, manage Hyderabad local &amp; wedding industry outreach prospects, and maintain a natural, Google-compliant anchor text profile.
+              </p>
+            </div>
+            <Button
+              size="sm"
+              onClick={() =>
+                setEditingBacklink({
+                  id: '',
+                  domain: '',
+                  sourceUrl: '',
+                  destinationUrl: 'https://sbflorist.in/flower-delivery-hyderabad',
+                  linkType: 'dofollow',
+                  anchorText: 'Spring Blossoms Florist',
+                  anchorCategory: 'Brand',
+                  domainAuthority: '',
+                  relevanceCategory: 'Local Hyderabad Directory',
+                  linkStatus: 'Prospect',
+                  outreachStatus: 'Identified',
+                  contactInfo: '',
+                  notes: ''
+                })
+              }
+              className="rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold"
+            >
+              + Add Verified Backlink / Prospect
+            </Button>
+          </div>
+
+          {/* Summary Cards */}
+          {backlinksData?.summary && (
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+              <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                <span className="text-[11px] font-semibold text-slate-500 block">Verified Active Links</span>
+                <span className="text-2xl font-black text-emerald-600 mt-1 block">
+                  {backlinksData.summary.activeBacklinksCount}
+                </span>
+              </div>
+              <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                <span className="text-[11px] font-semibold text-slate-500 block">Unique Referring Domains</span>
+                <span className="text-2xl font-black text-slate-900 dark:text-white mt-1 block">
+                  {backlinksData.summary.uniqueReferringDomainsCount}
+                </span>
+              </div>
+              <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                <span className="text-[11px] font-semibold text-slate-500 block">Outreach Prospects</span>
+                <span className="text-2xl font-black text-blue-600 mt-1 block">
+                  {backlinksData.summary.outreachProspectsCount}
+                </span>
+              </div>
+              <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                <span className="text-[11px] font-semibold text-slate-500 block">Dofollow / Citations</span>
+                <span className="text-2xl font-black text-purple-600 mt-1 block">
+                  {backlinksData.summary.dofollowCount} / {backlinksData.summary.citationOrNofollowCount}
+                </span>
+              </div>
+              <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                <span className="text-[11px] font-semibold text-slate-500 block">Anchor Profile Status</span>
+                <span className={cn(
+                  "text-xs font-bold mt-2 block",
+                  backlinksData.summary.anchorHealthHealthy ? "text-emerald-600" : "text-amber-600"
+                )}>
+                  {backlinksData.summary.anchorHealthHealthy ? '✓ Natural & Safe' : '⚠ Check Commercial Ratio'}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Natural Anchor Text Distribution */}
+          {backlinksData?.anchorDistribution && (
+            <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+                    Natural Anchor Text Distribution Guardrail
+                  </h4>
+                  <p className="text-xs text-slate-500">
+                    {backlinksData.summary?.anchorHealthMessage}
+                  </p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+                {backlinksData.anchorDistribution.map((item: any) => (
+                  <div key={item.category} className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/70 dark:border-slate-700">
+                    <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block">{item.category}</span>
+                    <span className="text-lg font-black text-rose-600 mt-0.5 block">{item.percentage}%</span>
+                    <span className="text-[10px] text-slate-400">{item.count} links</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Backlinks & Outreach Table */}
+          <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 font-bold text-slate-600 dark:text-slate-300">
+                    <th className="p-4">Referring Domain &amp; Source URL</th>
+                    <th className="p-4">Target Destination</th>
+                    <th className="p-4">Anchor Text &amp; Type</th>
+                    <th className="p-4">Category &amp; Quality</th>
+                    <th className="p-4">Status &amp; Outreach</th>
+                    <th className="p-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                  {backlinksLoading ? (
+                    <tr>
+                      <td colSpan={6} className="p-8 text-center text-slate-500">
+                        Loading backlink &amp; outreach records...
+                      </td>
+                    </tr>
+                  ) : (
+                    (backlinksData?.backlinks || []).map((b: any) => (
+                      <tr key={b.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/30">
+                        <td className="p-4 align-top max-w-xs">
+                          <div className="font-bold text-slate-900 dark:text-white">{b.domain}</div>
+                          {b.sourceUrl && (
+                            <a
+                              href={b.sourceUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[11px] text-rose-600 hover:underline truncate block max-w-[240px]"
+                            >
+                              {b.sourceUrl}
+                            </a>
+                          )}
+                          {b.notes && <p className="text-[11px] text-slate-500 mt-1">{b.notes}</p>}
+                        </td>
+                        <td className="p-4 align-top font-mono text-[11px] text-slate-700 dark:text-slate-300">
+                          {b.destinationUrl}
+                        </td>
+                        <td className="p-4 align-top">
+                          <div className="font-semibold text-slate-900 dark:text-white">"{b.anchorText}"</div>
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800">
+                              {b.anchorCategory}
+                            </span>
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300 uppercase">
+                              {b.linkType}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="p-4 align-top">
+                          <div className="font-medium text-slate-800 dark:text-slate-200">{b.relevanceCategory}</div>
+                          <div className="text-[11px] text-emerald-600 font-bold mt-0.5">
+                            Quality Score: {b.qualityScore}/100
+                          </div>
+                        </td>
+                        <td className="p-4 align-top">
+                          <span className={cn(
+                            "px-2.5 py-1 rounded-full text-[10px] font-bold inline-block",
+                            b.linkStatus === 'Active'
+                              ? "bg-emerald-100 text-emerald-800"
+                              : b.linkStatus === 'Prospect'
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-amber-100 text-amber-800"
+                          )}>
+                            {b.linkStatus}
+                          </span>
+                          <div className="text-[11px] text-slate-500 mt-1">{b.outreachStatus}</div>
+                        </td>
+                        <td className="p-4 align-top text-right">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setEditingBacklink({ ...b })}
+                              className="h-8 px-2.5 rounded-xl text-xs"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeleteBacklink(b.id, b.domain)}
+                              className="h-8 px-2.5 rounded-xl text-xs text-rose-600"
+                            >
+                              <XCircle className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* 4-Pillar Ethical Backlink & Local Citation Playbook */}
+          {backlinksData?.playbook && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {backlinksData.playbook.map((pillar: any) => (
+                <div
+                  key={pillar.id}
+                  className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                      {pillar.priority}
+                    </span>
+                    <span className="text-[11px] text-slate-500 font-semibold">{pillar.targetAnchorMix}</span>
+                  </div>
+                  <h4 className="text-base font-bold text-slate-900 dark:text-white">{pillar.category}</h4>
+                  <ul className="space-y-2 text-xs text-slate-600 dark:text-slate-300 list-disc pl-4">
+                    {(pillar.actionItems || []).map((act: string, i: number) => (
+                      <li key={i}>{act}</li>
+                    ))}
+                  </ul>
+                  {pillar.napConsistencyChecklist && (
+                    <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/70 text-[11px] space-y-1">
+                      <div className="font-bold text-slate-900 dark:text-white">Verified NAP Citation Block:</div>
+                      <div><strong>Name:</strong> {pillar.napConsistencyChecklist.businessName} ({pillar.napConsistencyChecklist.tagline})</div>
+                      <div><strong>Address:</strong> {pillar.napConsistencyChecklist.address}</div>
+                      <div><strong>Phone:</strong> {pillar.napConsistencyChecklist.phone} | <strong>Web:</strong> {pillar.napConsistencyChecklist.website}</div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── TAB 8: PERFORMANCE, GSC & COMPETITOR GAP (PHASE 1, 8, 9) ─ */}
+      {activeTab === 'performance' && (
+        <div className="space-y-6">
+          {performanceLoading || !performanceData ? (
+            <div className="p-12 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 text-center text-sm text-slate-500">
+              Loading live conversion funnel &amp; SEO performance metrics...
+            </div>
+          ) : (
+            <>
+              {/* Live Conversion Funnel Metrics from PostgreSQL */}
+              <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <h3 className="text-lg font-extrabold text-slate-900 dark:text-white">
+                      Live Website Conversion &amp; Revenue Funnel (Production Database)
+                    </h3>
+                    <p className="text-xs text-slate-500">
+                      Real visitor sessions, product views, cart additions, checkout starts, and completed orders recorded in PostgreSQL.
+                    </p>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={fetchPerformance} className="rounded-xl text-xs gap-1.5">
+                    <RefreshCw className="w-3.5 h-3.5" /> Refresh Metrics
+                  </Button>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/70">
+                    <span className="text-[11px] text-slate-500 font-semibold block">Total Sessions</span>
+                    <span className="text-xl font-black text-slate-900 dark:text-white mt-1 block">
+                      {performanceData.conversionFunnel.totalSessions}
+                    </span>
+                  </div>
+                  <div className="p-4 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/70">
+                    <span className="text-[11px] text-emerald-700 font-semibold block">Organic Sessions</span>
+                    <span className="text-xl font-black text-emerald-700 mt-1 block">
+                      {performanceData.conversionFunnel.organicSessions}
+                    </span>
+                  </div>
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/70">
+                    <span className="text-[11px] text-slate-500 font-semibold block">Product Views</span>
+                    <span className="text-xl font-black text-slate-900 dark:text-white mt-1 block">
+                      {performanceData.conversionFunnel.productViews}
+                    </span>
+                  </div>
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/70">
+                    <span className="text-[11px] text-slate-500 font-semibold block">Site Searches</span>
+                    <span className="text-xl font-black text-slate-900 dark:text-white mt-1 block">
+                      {performanceData.conversionFunnel.siteSearches}
+                    </span>
+                  </div>
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/70">
+                    <span className="text-[11px] text-slate-500 font-semibold block">Add to Cart</span>
+                    <span className="text-xl font-black text-rose-600 mt-1 block">
+                      {performanceData.conversionFunnel.addToCartCount}
+                    </span>
+                  </div>
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/70">
+                    <span className="text-[11px] text-slate-500 font-semibold block">Checkout Starts</span>
+                    <span className="text-xl font-black text-amber-600 mt-1 block">
+                      {performanceData.conversionFunnel.checkoutStarts}
+                    </span>
+                  </div>
+                  <div className="p-4 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/70">
+                    <span className="text-[11px] text-emerald-700 font-semibold block">Completed Orders</span>
+                    <span className="text-xl font-black text-emerald-700 mt-1 block">
+                      {performanceData.conversionFunnel.totalOrders}
+                    </span>
+                  </div>
+                  <div className="p-4 rounded-2xl bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200/70">
+                    <span className="text-[11px] text-rose-700 font-semibold block">Total Revenue</span>
+                    <span className="text-lg font-black text-rose-700 mt-1 block">
+                      ₹{Number(performanceData.conversionFunnel.totalRevenue || 0).toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Competitor Gap Analysis: Historical Gulmahal vs Live SBFlorist */}
+              <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4">
+                <div>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-rose-600">
+                    Competitor SEO Gap Benchmark
+                  </span>
+                  <h3 className="text-lg font-extrabold text-slate-900 dark:text-white mt-0.5">
+                    Gulmahal.in (Historical Third-Party Snapshot) vs SBFlorist.in (Live Technical &amp; Content Architecture)
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {performanceData.competitorBenchmark?.disclaimer}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 space-y-2 text-xs">
+                    <div className="font-bold text-slate-900 dark:text-white text-sm">
+                      Gulmahal.in (Historical Observation)
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 pt-1">
+                      <div>DR: <strong>18</strong> | DA: <strong>15</strong> | PA: <strong>31</strong></div>
+                      <div>Ref Domains: <strong>143</strong></div>
+                      <div>Backlinks: <strong>195</strong></div>
+                      <div>Ranking Keywords: <strong>118</strong></div>
+                    </div>
+                    <div className="pt-2 border-t border-slate-200/80">
+                      <strong className="text-slate-800 dark:text-slate-200 block mb-1">Competitor Gaps Exploited by SBFlorist:</strong>
+                      <ul className="list-disc pl-4 space-y-1 text-slate-600 dark:text-slate-400">
+                        {(performanceData.competitorBenchmark?.gulmahalHistorical?.weaknessesExploited || []).map((w: string, i: number) => (
+                          <li key={i}>{w}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="p-5 rounded-2xl bg-rose-50/50 dark:bg-rose-950/20 border border-rose-200/80 space-y-2 text-xs lg:col-span-2">
+                    <div className="font-bold text-rose-900 dark:text-rose-300 text-sm">
+                      SBFlorist.in Live On-Site SEO &amp; Authority Readiness
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+                      <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-rose-100">
+                        <span className="text-[10px] text-slate-500 block">SEO Health Score</span>
+                        <span className="text-lg font-black text-emerald-600">
+                          {performanceData.competitorBenchmark?.sbfloristLiveReadiness?.seoHealthScore}/100
+                        </span>
+                      </div>
+                      <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-rose-100">
+                        <span className="text-[10px] text-slate-500 block">Mapped Keyword Pages</span>
+                        <span className="text-lg font-black text-slate-900 dark:text-white">
+                          {performanceData.competitorBenchmark?.sbfloristLiveReadiness?.totalMappedPages}
+                        </span>
+                      </div>
+                      <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-rose-100">
+                        <span className="text-[10px] text-slate-500 block">Published Floral Guides</span>
+                        <span className="text-lg font-black text-rose-600">
+                          {performanceData.competitorBenchmark?.sbfloristLiveReadiness?.publishedBlogGuidesCount}
+                        </span>
+                      </div>
+                      <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-rose-100">
+                        <span className="text-[10px] text-slate-500 block">Indexed Products</span>
+                        <span className="text-lg font-black text-slate-900 dark:text-white">
+                          {performanceData.competitorBenchmark?.sbfloristLiveReadiness?.indexedProductsCount}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Top Landing Pages & Internal Search Queries */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4">
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+                    Top Landing Pages (Real Session Attribution)
+                  </h4>
+                  <div className="space-y-2 text-xs">
+                    {(performanceData.topLandingPages || []).length === 0 ? (
+                      <p className="text-slate-400">No session landing pages recorded yet.</p>
+                    ) : (
+                      performanceData.topLandingPages.map((lp: any, idx: number) => (
+                        <div key={idx} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 flex items-center justify-between">
+                          <span className="font-mono font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[240px]">
+                            {lp.page}
+                          </span>
+                          <div className="flex items-center gap-3 text-[11px]">
+                            <span><strong>{lp.sessions}</strong> sessions</span>
+                            <span className="text-emerald-600"><strong>{lp.engagedSessions}</strong> engaged</span>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4">
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+                    Top Customer Site Search Queries
+                  </h4>
+                  <div className="space-y-2 text-xs">
+                    {(performanceData.topSearchQueries || []).length === 0 ? (
+                      <p className="text-slate-400">No customer search queries recorded yet.</p>
+                    ) : (
+                      performanceData.topSearchQueries.map((sq: any, idx: number) => (
+                        <div key={idx} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 flex items-center justify-between">
+                          <span className="font-semibold text-slate-800 dark:text-slate-200">"{sq.query}"</span>
+                          <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 text-[10px] font-bold">
+                            {sq.searches} searches
+                          </span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* ── KEYWORD MAPPING EDIT MODAL ─────────────────────────────── */}
+      <AnimatePresence>
+        {editingMapping && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs overflow-y-auto">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden my-8"
+            >
+              <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-bold text-rose-600 uppercase tracking-wider block">
+                    Keyword Mapping Editor
+                  </span>
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white mt-0.5">
+                    {editingMapping.pageUrl || 'New Page Keyword Assignment'}
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setEditingMapping(null)}
+                  className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="font-bold block mb-1">Page URL</label>
+                    <Input
+                      value={editingMapping.pageUrl}
+                      onChange={(e) => setEditingMapping({ ...editingMapping, pageUrl: e.target.value })}
+                      placeholder="/flower-delivery-hyderabad"
+                      className="rounded-xl text-xs font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold block mb-1">Page Type</label>
+                    <Input
+                      value={editingMapping.pageType}
+                      onChange={(e) => setEditingMapping({ ...editingMapping, pageType: e.target.value })}
+                      placeholder="Category / Local Landing Page / Product"
+                      className="rounded-xl text-xs"
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="font-bold block mb-1">Target Page Title</label>
+                    <Input
+                      value={editingMapping.pageTitle}
+                      onChange={(e) => setEditingMapping({ ...editingMapping, pageTitle: e.target.value })}
+                      className="rounded-xl text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold block mb-1 text-rose-600">Primary Focus Keyword (Unique per URL)</label>
+                    <Input
+                      value={editingMapping.primaryKeyword}
+                      onChange={(e) => setEditingMapping({ ...editingMapping, primaryKeyword: e.target.value })}
+                      placeholder="e.g. Flower delivery in Hyderabad"
+                      className="rounded-xl text-xs font-semibold"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold block mb-1">Keyword Cluster</label>
+                    <Input
+                      value={editingMapping.keywordCluster}
+                      onChange={(e) => setEditingMapping({ ...editingMapping, keywordCluster: e.target.value })}
+                      className="rounded-xl text-xs"
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="font-bold block mb-1">Secondary Keywords (comma-separated)</label>
+                    <Textarea
+                      rows={2}
+                      value={editingMapping.secondaryKeywords}
+                      onChange={(e) => setEditingMapping({ ...editingMapping, secondaryKeywords: e.target.value })}
+                      className="rounded-xl text-xs"
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="font-bold block mb-1">Long-Tail Keywords (comma-separated)</label>
+                    <Textarea
+                      rows={2}
+                      value={editingMapping.longTailKeywords}
+                      onChange={(e) => setEditingMapping({ ...editingMapping, longTailKeywords: e.target.value })}
+                      className="rounded-xl text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold block mb-1">Search Intent</label>
+                    <Input
+                      value={editingMapping.searchIntent}
+                      onChange={(e) => setEditingMapping({ ...editingMapping, searchIntent: e.target.value })}
+                      className="rounded-xl text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold block mb-1">Target Location</label>
+                    <Input
+                      value={editingMapping.targetLocation}
+                      onChange={(e) => setEditingMapping({ ...editingMapping, targetLocation: e.target.value })}
+                      className="rounded-xl text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold block mb-1">Verified GSC Position (optional)</label>
+                    <Input
+                      type="number"
+                      value={editingMapping.currentRanking ?? ''}
+                      onChange={(e) => setEditingMapping({ ...editingMapping, currentRanking: e.target.value })}
+                      placeholder="Leave blank if unverified"
+                      className="rounded-xl text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold block mb-1">Verified GSC Impressions (optional)</label>
+                    <Input
+                      type="number"
+                      value={editingMapping.impressions ?? ''}
+                      onChange={(e) => setEditingMapping({ ...editingMapping, impressions: e.target.value })}
+                      placeholder="Leave blank if unverified"
+                      className="rounded-xl text-xs"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="p-4 px-6 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                <Button variant="outline" onClick={() => setEditingMapping(null)} className="rounded-xl text-xs">
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSaveKeywordMapping}
+                  disabled={savingMapping}
+                  className="rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold"
+                >
+                  {savingMapping ? 'Saving...' : 'Save Keyword Mapping'}
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ── BACKLINK / PROSPECT EDIT MODAL ─────────────────────────── */}
+      <AnimatePresence>
+        {editingBacklink && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs overflow-y-auto">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden my-8"
+            >
+              <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-bold text-rose-600 uppercase tracking-wider block">
+                    Referring Domain &amp; Backlink Record
+                  </span>
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white mt-0.5">
+                    {editingBacklink.domain || 'Add Backlink / Outreach Prospect'}
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setEditingBacklink(null)}
+                  className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="font-bold block mb-1">Referring Domain</label>
+                    <Input
+                      value={editingBacklink.domain}
+                      onChange={(e) => setEditingBacklink({ ...editingBacklink, domain: e.target.value })}
+                      placeholder="e.g. lbb.in"
+                      className="rounded-xl text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold block mb-1">Link Status</label>
+                    <select
+                      value={editingBacklink.linkStatus}
+                      onChange={(e) => setEditingBacklink({ ...editingBacklink, linkStatus: e.target.value })}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold"
+                    >
+                      <option value="Prospect">Prospect</option>
+                      <option value="Outreach Sent">Outreach Sent</option>
+                      <option value="In Discussion">In Discussion</option>
+                      <option value="Active">Active (Verified Live)</option>
+                      <option value="Lost">Lost</option>
+                      <option value="Broken">Broken</option>
+                    </select>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="font-bold block mb-1">Source Page URL</label>
+                    <Input
+                      value={editingBacklink.sourceUrl}
+                      onChange={(e) => setEditingBacklink({ ...editingBacklink, sourceUrl: e.target.value })}
+                      placeholder="https://..."
+                      className="rounded-xl text-xs font-mono"
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="font-bold block mb-1">Target SBFlorist Destination URL</label>
+                    <Input
+                      value={editingBacklink.destinationUrl}
+                      onChange={(e) => setEditingBacklink({ ...editingBacklink, destinationUrl: e.target.value })}
+                      placeholder="https://sbflorist.in/flower-delivery-hyderabad"
+                      className="rounded-xl text-xs font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold block mb-1">Anchor Text</label>
+                    <Input
+                      value={editingBacklink.anchorText}
+                      onChange={(e) => setEditingBacklink({ ...editingBacklink, anchorText: e.target.value })}
+                      placeholder="Spring Blossoms Florist"
+                      className="rounded-xl text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold block mb-1">Anchor Category</label>
+                    <select
+                      value={editingBacklink.anchorCategory}
+                      onChange={(e) => setEditingBacklink({ ...editingBacklink, anchorCategory: e.target.value })}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold"
+                    >
+                      <option value="Brand">Brand (Spring Blossoms Florist)</option>
+                      <option value="Local">Local (Florist in Hyderabad)</option>
+                      <option value="Descriptive">Descriptive (fresh flower delivery)</option>
+                      <option value="Category">Category (premium rose bouquets)</option>
+                      <option value="Product">Product</option>
+                      <option value="Informational">Informational (floral guide)</option>
+                      <option value="Naked URL">Naked URL (sbflorist.in)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="font-bold block mb-1">Link Type</label>
+                    <select
+                      value={editingBacklink.linkType}
+                      onChange={(e) => setEditingBacklink({ ...editingBacklink, linkType: e.target.value })}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold"
+                    >
+                      <option value="dofollow">dofollow</option>
+                      <option value="citation">citation</option>
+                      <option value="nofollow">nofollow</option>
+                      <option value="sponsored">sponsored</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="font-bold block mb-1">Relevance Category</label>
+                    <Input
+                      value={editingBacklink.relevanceCategory}
+                      onChange={(e) => setEditingBacklink({ ...editingBacklink, relevanceCategory: e.target.value })}
+                      placeholder="Local Hyderabad Directory / Wedding & Event Industry"
+                      className="rounded-xl text-xs"
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="font-bold block mb-1">Notes &amp; Outreach Details</label>
+                    <Textarea
+                      rows={2}
+                      value={editingBacklink.notes}
+                      onChange={(e) => setEditingBacklink({ ...editingBacklink, notes: e.target.value })}
+                      className="rounded-xl text-xs"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="p-4 px-6 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                <Button variant="outline" onClick={() => setEditingBacklink(null)} className="rounded-xl text-xs">
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSaveBacklink}
+                  disabled={savingBacklink}
+                  className="rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold"
+                >
+                  {savingBacklink ? 'Saving...' : 'Save Backlink Record'}
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* ── PRODUCT SEO EDIT MODAL ─────────────────────────────────── */}
       <AnimatePresence>

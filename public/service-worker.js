@@ -13,7 +13,7 @@ if (self.location.hostname === 'localhost' || self.location.hostname === '127.0.
   });
 }
 
-const CACHE_VERSION = "v2";
+const CACHE_VERSION = "v3";
 const UI_CACHE = `sbf-ui-${CACHE_VERSION}`;
 const APP_CACHE = `sbf-app-${CACHE_VERSION}`;
 const API_CACHE = `sbf-api-${CACHE_VERSION}`;
