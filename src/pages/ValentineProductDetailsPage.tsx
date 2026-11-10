@@ -102,42 +102,30 @@ const GREETING_CARD_OPTIONS = [
   { id: 'heart-popout', label: '3D Pop-Up Heart Card', extra: 129, badge: '+₹129' },
 ];
 
-const DELIVERY_OPTIONS = [
+const FIXED_TIME_SLOTS = [
   {
-    id: 'same-day',
-    name: 'Same Day Delivery',
-    time: 'Cutoff 6:00 PM',
-    price: 0,
-    priceLabel: 'FREE',
-    icon: '🚚',
-    badge: 'Standard'
+    id: 'morning',
+    label: 'Morning',
+    time: '9:00 AM - 12:00 PM',
+    available: true,
   },
   {
-    id: 'midnight',
-    name: 'Midnight Romantic Delivery',
-    time: '11:00 PM – 12:15 AM',
-    price: 200,
-    priceLabel: '+₹200',
-    icon: '🌙',
-    badge: 'Romantic'
+    id: 'afternoon',
+    label: 'Afternoon',
+    time: '12:00 PM - 3:00 PM',
+    available: true,
   },
   {
-    id: 'fixed-time',
-    name: 'Fixed Time Delivery',
-    time: 'Choose 2-hour slot',
-    price: 150,
-    priceLabel: '+₹150',
-    icon: '⏰',
-    badge: 'Guaranteed'
+    id: 'late_afternoon',
+    label: 'Late Afternoon',
+    time: '3:00 PM - 6:00 PM',
+    available: true,
   },
   {
-    id: 'surprise',
-    name: 'Surprise Romantic Delivery',
-    time: 'Discreet gift-box arrival',
-    price: 100,
-    priceLabel: '+₹100',
-    icon: '🎁',
-    badge: 'Surprise'
+    id: 'evening',
+    label: 'Evening',
+    time: '6:00 PM - 9:00 PM',
+    available: true,
   },
 ];
 
@@ -172,7 +160,7 @@ const ValentineProductDetailsPage: React.FC = () => {
   const [quantity, setQuantity] = useState(1);
   const [selectedVariant, setSelectedVariant] = useState<PriceVariant | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>('');
-  const [selectedDeliveryOption, setSelectedDeliveryOption] = useState<string>('same-day');
+  const [selectedDeliveryOption, setSelectedDeliveryOption] = useState<string>('same_day');
   const [anonymousGift, setAnonymousGift] = useState<boolean>(false);
   const [surpriseDelivery, setSurpriseDelivery] = useState<boolean>(false);
   const [greetingCardChoice, setGreetingCardChoice] = useState<string>('complimentary-standard');
@@ -346,15 +334,68 @@ const ValentineProductDetailsPage: React.FC = () => {
     return cardOpt ? cardOpt.extra : 0;
   }, [greetingCardChoice]);
 
-  // Delivery option extra cost
+  // Delivery settings & charges synced with CheckoutShippingPage & TimeSlotSelector
+  const valDeliverySettings = settings?.delivery;
+  const midnightCharge = valDeliverySettings?.midnightCharge ?? 300;
+  const fixedTimeCharge = valDeliverySettings?.fixedTimeCharge ?? 150;
+  const surpriseCharge = valDeliverySettings?.surpriseCharge ?? 100;
+  const anonymousCharge = valDeliverySettings?.anonymousCharge ?? 0;
+  const sameDayCharge = valDeliverySettings?.sameDayCharge ?? 150;
+
+  const isSelectedDateToday = useMemo(() => {
+    if (!selectedDate) return false;
+    const now = new Date();
+    if (now.getMonth() !== 1) return false; // Feb is month 1
+    const match = selectedDate.match(/\b(\d{1,2})\b/);
+    if (!match) return false;
+    return parseInt(match[1], 10) === now.getDate();
+  }, [selectedDate]);
+
+  const isSlotAvailable = (slot: typeof FIXED_TIME_SLOTS[0]): boolean => {
+    if (!slot.available) return false;
+    if (!isSelectedDateToday) return true;
+    const now = new Date();
+    const utcTime = now.getTime() + now.getTimezoneOffset() * 60000;
+    const istTime = new Date(utcTime + 5.5 * 3600000);
+    const currentHour = istTime.getHours() + istTime.getMinutes() / 60;
+    const timeRange = slot.time.split(' - ')[0];
+    const [hourStr, minuteStr] = timeRange.split(':');
+    let hour = parseInt(hourStr, 10);
+    if (minuteStr.includes('PM') && hour !== 12) hour += 12;
+    else if (minuteStr.includes('AM') && hour === 12) hour = 0;
+    return hour - currentHour >= 0.25;
+  };
+
+  const getUnavailableReason = (slot: typeof FIXED_TIME_SLOTS[0]): string | null => {
+    if (!slot.available) return 'Unavailable';
+    if (!isSelectedDateToday) return null;
+    const now = new Date();
+    const utcTime = now.getTime() + now.getTimezoneOffset() * 60000;
+    const istTime = new Date(utcTime + 5.5 * 3600000);
+    const currentHour = istTime.getHours() + istTime.getMinutes() / 60;
+    const timeRange = slot.time.split(' - ')[0];
+    const [hourStr, minuteStr] = timeRange.split(':');
+    let hour = parseInt(hourStr, 10);
+    if (minuteStr.includes('PM') && hour !== 12) hour += 12;
+    else if (minuteStr.includes('AM') && hour === 12) hour = 0;
+    if (hour <= currentHour) return 'Time passed for today';
+    if (hour - currentHour < 0.25) return 'Need 15+ minutes notice';
+    return null;
+  };
+
+  const isFixedSlot = ['morning', 'afternoon', 'late_afternoon', 'evening', 'fixed', 'fixed_time'].includes(selectedDeliveryOption);
+
+  // Delivery option extra cost (matched with CheckoutShippingPage)
   const deliveryExtraCost = useMemo(() => {
-    const delOpt = DELIVERY_OPTIONS.find(d => d.id === selectedDeliveryOption);
-    return delOpt ? delOpt.price : 0;
-  }, [selectedDeliveryOption]);
+    if (selectedDeliveryOption === 'midnight') return midnightCharge;
+    if (isFixedSlot) return fixedTimeCharge;
+    if (selectedDeliveryOption === 'same_day') return isSelectedDateToday ? sameDayCharge : 0;
+    return 0;
+  }, [selectedDeliveryOption, isFixedSlot, midnightCharge, fixedTimeCharge, isSelectedDateToday, sameDayCharge]);
 
   const activeUnitPrice = useMemo(() => {
-    return activeBasePrice + cardExtraCost + (surpriseDelivery ? 100 : 0);
-  }, [activeBasePrice, cardExtraCost, surpriseDelivery]);
+    return activeBasePrice + cardExtraCost;
+  }, [activeBasePrice, cardExtraCost]);
 
   const originalPrice = useMemo(() => {
     if (!product) return 0;
@@ -504,8 +545,9 @@ const ValentineProductDetailsPage: React.FC = () => {
         loveNote: cardMessage.trim() || undefined,
         cardRecipient: cardRecipient.trim() || undefined,
         cardSender: cardSender.trim() || undefined,
-        greetingCard: greetingCardChoice,
+        greetingCard: greetingCardChoice === 'complimentary-standard' ? 'none' : greetingCardChoice,
         deliveryOption: selectedDeliveryOption,
+        timeSlot: selectedDeliveryOption,
         deliveryOptionCost: deliveryExtraCost,
         anonymousGift,
         surpriseDelivery,
@@ -513,6 +555,39 @@ const ValentineProductDetailsPage: React.FC = () => {
         selectedCampaign: "Valentine's Week",
         deliveryRestrictions: "Valentine Week delivery dates are reserved exclusively for Valentine's Special products."
       };
+
+      // Sync delivery option, time slot, upgrades, and card details to checkout shippingInfo
+      try {
+        const existingInfoStr = localStorage.getItem('shippingInfo');
+        const existingInfo = existingInfoStr ? JSON.parse(existingInfoStr) : {};
+        const dayMatch = selectedDate?.match(/\b(\d{1,2})\b/);
+        let syncedIsoDate = existingInfo.selectedDate;
+        if (dayMatch) {
+          const dayNum = Math.min(15, Math.max(8, parseInt(dayMatch[1], 10)));
+          const now = new Date();
+          let targetYear = now.getFullYear();
+          const candidateDate = new Date(targetYear, 1, dayNum, 12, 0, 0);
+          if (candidateDate < new Date(now.getFullYear(), now.getMonth(), now.getDate())) {
+            targetYear += 1;
+          }
+          syncedIsoDate = new Date(targetYear, 1, dayNum, 12, 0, 0).toISOString();
+        }
+        const updatedShippingInfo = {
+          ...existingInfo,
+          timeSlot: selectedDeliveryOption,
+          selectedTimeSlot: selectedDeliveryOption,
+          surpriseDelivery,
+          anonymousGift,
+          greetingCard: greetingCardChoice === 'complimentary-standard' ? 'none' : greetingCardChoice,
+          ...(syncedIsoDate ? { selectedDate: syncedIsoDate } : {}),
+          ...(cardRecipient.trim() ? { cardRecipient: cardRecipient.trim() } : {}),
+          ...(cardSender.trim() ? { cardSender: cardSender.trim() } : {}),
+          ...(cardMessage.trim() ? { cardMessage: cardMessage.trim(), giftMessage: cardMessage.trim() } : {}),
+        };
+        localStorage.setItem('shippingInfo', JSON.stringify(updatedShippingInfo));
+      } catch (e) {
+        console.warn('Could not sync shippingInfo to localStorage:', e);
+      }
 
       const cartItem = {
         _id: product._id,
@@ -1178,95 +1253,237 @@ const ValentineProductDetailsPage: React.FC = () => {
               </AnimatePresence>
             </div>
 
-            {/* 7. Valentine Delivery Timing Options */}
-            <div className="space-y-3 pt-1">
-              <label className="text-xs font-bold uppercase text-slate-700 tracking-wider flex items-center gap-1.5">
-                <Clock className="w-4 h-4 text-rose-600" />
-                Select Delivery Mode
-              </label>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                {DELIVERY_OPTIONS.map((opt) => {
-                  const isSelected = selectedDeliveryOption === opt.id;
-                  return (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      onClick={() => setSelectedDeliveryOption(opt.id)}
-                      className={cn(
-                        "p-3 rounded-2xl border text-left transition-all flex items-center justify-between",
-                        isSelected
-                          ? "bg-rose-50 border-rose-600 ring-2 ring-rose-500/20 shadow-xs"
-                          : "bg-white border-slate-200/70 hover:border-rose-200 hover:bg-rose-50/20"
-                      )}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <span className="text-base">{opt.icon}</span>
-                        <div>
-                          <p className="font-bold text-slate-900">{opt.name}</p>
-                          <p className="text-[10px] text-slate-500">{opt.time}</p>
-                        </div>
-                      </div>
-                      <span className={cn(
-                        "font-extrabold text-[11px] px-2 py-0.5 rounded-md",
-                        opt.price === 0 ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-900"
-                      )}>
-                        {opt.priceLabel}
-                      </span>
-                    </button>
-                  );
-                })}
+            {/* 7. Valentine Delivery Timing Options (Matched with Checkout & TimeSlotSelector) */}
+            <div className="space-y-4 pt-1">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-rose-600" />
+                  <span className="text-xs font-bold uppercase text-slate-800 tracking-wider">
+                    Select Delivery Option & Time Slot
+                  </span>
+                </div>
+                <span className="text-[11px] font-bold text-rose-600 bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-200">
+                  Verified Service Rates
+                </span>
               </div>
 
-              {/* Surprise & Anonymous Delivery Toggles */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-                <label className={cn(
-                  "p-3 rounded-2xl border cursor-pointer flex items-center justify-between text-xs select-none transition-all",
-                  surpriseDelivery
-                    ? "bg-rose-50 border-rose-600 text-rose-950 font-bold"
-                    : "bg-white border-slate-200/70 hover:bg-rose-50/20 text-slate-700"
-                )}>
-                  <div>
-                    <span className="block font-bold">Surprise Delivery (+₹100)</span>
-                    <span className="block text-[10px] text-slate-500 font-normal">Discreet bell ringing & secret handoff</span>
+              {/* 3 Main Delivery Service Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {/* 1. Same Day Standard / Standard Delivery */}
+                <button
+                  type="button"
+                  onClick={() => setSelectedDeliveryOption('same_day')}
+                  className={cn(
+                    "p-3.5 rounded-2xl border cursor-pointer transition-all duration-200 shadow-xs flex flex-col justify-between text-left select-none",
+                    selectedDeliveryOption === 'same_day'
+                      ? "bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-500 ring-2 ring-emerald-500/20 text-emerald-950 font-bold scale-[1.01]"
+                      : "bg-white border-slate-200 hover:border-slate-300 text-slate-800"
+                  )}
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <span className="text-xl">🚚</span>
+                    <span className="text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                      {isSelectedDateToday ? `+${formatPrice(convertPrice(sameDayCharge))}` : 'Standard'}
+                    </span>
                   </div>
-                  <input
-                    type="checkbox"
-                    checked={surpriseDelivery}
-                    onChange={(e) => setSurpriseDelivery(e.target.checked)}
-                    className="hidden"
-                  />
-                  <div className={cn(
-                    "w-4 h-4 rounded-md border flex items-center justify-center transition-all",
-                    surpriseDelivery ? "bg-rose-600 border-rose-600 text-white" : "border-slate-300 bg-white"
-                  )}>
-                    {surpriseDelivery && <Check className="w-3 h-3" />}
+                  <div className="mt-2.5">
+                    <p className="font-bold text-xs sm:text-sm">
+                      {isSelectedDateToday ? 'Same Day Standard' : 'Standard Delivery'}
+                    </p>
+                    <p className="text-[11px] text-slate-500 font-normal">
+                      {isSelectedDateToday ? '9 AM - 9 PM • Cutoff 6:00 PM' : '9 AM - 9 PM • All Day Delivery'}
+                    </p>
                   </div>
-                </label>
+                </button>
 
-                <label className={cn(
-                  "p-3 rounded-2xl border cursor-pointer flex items-center justify-between text-xs select-none transition-all",
-                  anonymousGift
-                    ? "bg-rose-50 border-rose-600 text-rose-950 font-bold"
-                    : "bg-white border-slate-200/70 hover:bg-rose-50/20 text-slate-700"
-                )}>
-                  <div>
-                    <span className="block font-bold">Anonymous Sender (FREE)</span>
-                    <span className="block text-[10px] text-slate-500 font-normal">Sender identity hidden on package tag</span>
+                {/* 2. Midnight Delivery */}
+                <button
+                  type="button"
+                  onClick={() => setSelectedDeliveryOption('midnight')}
+                  className={cn(
+                    "p-3.5 rounded-2xl border cursor-pointer transition-all duration-200 shadow-xs flex flex-col justify-between text-left select-none",
+                    selectedDeliveryOption === 'midnight'
+                      ? "bg-gradient-to-br from-purple-50 to-pink-50 border-purple-500 ring-2 ring-purple-500/20 text-purple-950 font-bold scale-[1.01]"
+                      : "bg-white border-slate-200 hover:border-slate-300 text-slate-800"
+                  )}
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <span className="text-xl">🌙</span>
+                    <span className="text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-300">
+                      +{formatPrice(convertPrice(midnightCharge))}
+                    </span>
                   </div>
-                  <input
-                    type="checkbox"
-                    checked={anonymousGift}
-                    onChange={(e) => setAnonymousGift(e.target.checked)}
-                    className="hidden"
-                  />
-                  <div className={cn(
-                    "w-4 h-4 rounded-md border flex items-center justify-center transition-all",
-                    anonymousGift ? "bg-rose-600 border-rose-600 text-white" : "border-slate-300 bg-white"
-                  )}>
-                    {anonymousGift && <Check className="w-3 h-3" />}
+                  <div className="mt-2.5">
+                    <p className="font-bold text-xs sm:text-sm">Midnight Delivery</p>
+                    <p className="text-[11px] text-slate-500 font-normal">
+                      {isSelectedDateToday ? '11:30 PM - 12:30 AM • Cutoff 8 PM' : '11:30 PM - 12:30 AM • Night Delivery'}
+                    </p>
                   </div>
-                </label>
+                </button>
+
+                {/* 3. Fixed Time Slot */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const fixedIds = ['morning', 'afternoon', 'late_afternoon', 'evening'];
+                    if (!fixedIds.includes(selectedDeliveryOption)) {
+                      const firstAvailable = FIXED_TIME_SLOTS.find(s => isSlotAvailable(s))?.id || 'evening';
+                      setSelectedDeliveryOption(firstAvailable);
+                    }
+                  }}
+                  className={cn(
+                    "p-3.5 rounded-2xl border cursor-pointer transition-all duration-200 shadow-xs flex flex-col justify-between text-left select-none",
+                    ['morning', 'afternoon', 'late_afternoon', 'evening'].includes(selectedDeliveryOption)
+                      ? "bg-gradient-to-br from-amber-50 to-orange-50 border-amber-500 ring-2 ring-amber-500/20 text-amber-950 font-bold scale-[1.01]"
+                      : "bg-white border-slate-200 hover:border-slate-300 text-slate-800"
+                  )}
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <span className="text-xl">⏰</span>
+                    <span className="text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300">
+                      +{formatPrice(convertPrice(fixedTimeCharge))}
+                    </span>
+                  </div>
+                  <div className="mt-2.5">
+                    <p className="font-bold text-xs sm:text-sm">Fixed Time Slot</p>
+                    <p className="text-[11px] text-slate-500 font-normal">Pick Specific 3-Hour Slot</p>
+                  </div>
+                </button>
+              </div>
+
+              {/* Specific Time Window Slots (Shown when Fixed Time Slot is selected) */}
+              {selectedDeliveryOption !== 'midnight' && selectedDeliveryOption !== 'same_day' && (
+                <div className="space-y-2 pt-1 animate-in fade-in duration-200">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    Select Preferred Time Window
+                  </p>
+                  <div className="grid gap-2.5 sm:grid-cols-2">
+                    {FIXED_TIME_SLOTS.map((slot) => {
+                      const available = isSlotAvailable(slot);
+                      const unavailableReason = !available ? getUnavailableReason(slot) : null;
+                      const isSlotSelected = selectedDeliveryOption === slot.id;
+
+                      return (
+                        <button
+                          key={slot.id}
+                          type="button"
+                          disabled={!available}
+                          onClick={() => available && setSelectedDeliveryOption(slot.id)}
+                          className={cn(
+                            "p-3.5 rounded-2xl border text-left transition-all flex justify-between items-start",
+                            isSlotSelected
+                              ? "border-amber-500 ring-2 ring-amber-500/20 bg-amber-50/50 font-semibold"
+                              : "bg-white border-slate-200 hover:border-amber-400",
+                            !available && "opacity-60 cursor-not-allowed"
+                          )}
+                        >
+                          <div>
+                            <div className="font-bold text-xs sm:text-sm text-slate-900">{slot.label}</div>
+                            <div className="text-[11px] text-slate-500 font-normal">{slot.time}</div>
+                            <div className="text-xs text-amber-600 font-bold mt-1">
+                              +{formatPrice(convertPrice(fixedTimeCharge))}
+                            </div>
+                            {unavailableReason && (
+                              <div className="text-[11px] text-red-500 mt-1 font-medium">
+                                {unavailableReason}
+                              </div>
+                            )}
+                          </div>
+                          <div
+                            className={cn(
+                              "w-4 h-4 rounded-md border flex items-center justify-center transition-all mt-0.5 shrink-0",
+                              isSlotSelected
+                                ? "bg-amber-600 border-amber-600 text-white"
+                                : "border-slate-300 bg-white"
+                            )}
+                          >
+                            {isSlotSelected && <Check className="w-3 h-3" />}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Valentine Delivery Upgrades (Surprise Delivery & Anonymous Sender) */}
+              <div className="pt-3 border-t border-slate-200/80 space-y-2.5">
+                <p className="text-xs font-extrabold uppercase tracking-wider text-rose-800 flex items-center gap-1.5">
+                  <span>✨</span> Valentine Delivery Upgrades
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <label
+                    className={cn(
+                      "p-3 rounded-2xl border cursor-pointer flex items-center justify-between transition-all duration-200 shadow-xs select-none",
+                      surpriseDelivery
+                        ? "bg-rose-50 border-rose-400 ring-2 ring-rose-400/20 text-rose-950 font-bold"
+                        : "bg-white border-slate-200 hover:bg-slate-50 text-slate-700"
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">🎁</span>
+                      <div>
+                        <p className="text-xs font-bold text-slate-900">Surprise Delivery</p>
+                        <p className="text-[10px] text-slate-500 font-normal">Discreet delivery service</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300">
+                        +{formatPrice(convertPrice(surpriseCharge))}
+                      </span>
+                      <input
+                        type="checkbox"
+                        checked={surpriseDelivery}
+                        onChange={(e) => setSurpriseDelivery(e.target.checked)}
+                        className="hidden"
+                      />
+                      <div
+                        className={cn(
+                          "w-4 h-4 rounded-md border flex items-center justify-center transition-all shrink-0",
+                          surpriseDelivery ? "bg-rose-600 border-rose-600 text-white" : "border-slate-300 bg-white"
+                        )}
+                      >
+                        {surpriseDelivery && <Check className="w-3 h-3" />}
+                      </div>
+                    </div>
+                  </label>
+
+                  <label
+                    className={cn(
+                      "p-3 rounded-2xl border cursor-pointer flex items-center justify-between transition-all duration-200 shadow-xs select-none",
+                      anonymousGift
+                        ? "bg-purple-50 border-purple-400 ring-2 ring-purple-400/20 text-purple-950 font-bold"
+                        : "bg-white border-slate-200 hover:bg-slate-50 text-slate-700"
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">🕵️</span>
+                      <div>
+                        <p className="text-xs font-bold text-slate-900">Anonymous Sender</p>
+                        <p className="text-[10px] text-slate-500 font-normal">Hide sender info on box</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">
+                        {anonymousCharge > 0 ? `+${formatPrice(convertPrice(anonymousCharge))}` : 'FREE'}
+                      </span>
+                      <input
+                        type="checkbox"
+                        checked={anonymousGift}
+                        onChange={(e) => setAnonymousGift(e.target.checked)}
+                        className="hidden"
+                      />
+                      <div
+                        className={cn(
+                          "w-4 h-4 rounded-md border flex items-center justify-center transition-all shrink-0",
+                          anonymousGift ? "bg-purple-600 border-purple-600 text-white" : "border-slate-300 bg-white"
+                        )}
+                      >
+                        {anonymousGift && <Check className="w-3 h-3" />}
+                      </div>
+                    </div>
+                  </label>
+                </div>
               </div>
             </div>
 

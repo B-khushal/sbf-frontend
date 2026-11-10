@@ -230,6 +230,8 @@ const CheckoutShippingPage = () => {
         const parsed = JSON.parse(info);
         if (parsed.cardRecipient) return parsed.cardRecipient;
       }
+      const firstValItem = items.find(item => (item.customizations as any)?.cardRecipient);
+      return (firstValItem?.customizations as any)?.cardRecipient || '';
     } catch {}
     return '';
   });
@@ -241,6 +243,8 @@ const CheckoutShippingPage = () => {
         const parsed = JSON.parse(info);
         if (parsed.cardSender) return parsed.cardSender;
       }
+      const firstValItem = items.find(item => (item.customizations as any)?.cardSender);
+      return (firstValItem?.customizations as any)?.cardSender || '';
     } catch {}
     return '';
   });
@@ -373,7 +377,30 @@ const CheckoutShippingPage = () => {
     }
   }, [user]);
 
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(() => {
+    try {
+      const info = localStorage.getItem('shippingInfo');
+      if (info) {
+        const parsed = JSON.parse(info);
+        const savedSlot = parsed.selectedTimeSlot || parsed.timeSlot;
+        if (savedSlot) {
+          if (savedSlot === 'same-day') return 'same_day';
+          if (savedSlot === 'fixed-time') return 'evening';
+          return savedSlot;
+        }
+      }
+      const firstItemWithSlot = items.find(
+        item => (item.customizations as any)?.timeSlot || item.customizations?.deliveryOption
+      );
+      const itemSlot = (firstItemWithSlot?.customizations as any)?.timeSlot || firstItemWithSlot?.customizations?.deliveryOption;
+      if (itemSlot) {
+        if (itemSlot === 'same-day') return 'same_day';
+        if (itemSlot === 'fixed-time') return 'evening';
+        return itemSlot;
+      }
+    } catch {}
+    return null;
+  });
   const [selectedSenderPin, setSelectedSenderPin] = useState<PinCodeSelection | null>(null);
   const [selectedReceiverPin, setSelectedReceiverPin] = useState<PinCodeSelection | null>(null);
   const [senderPinValidation, setSenderPinValidation] = useState({
