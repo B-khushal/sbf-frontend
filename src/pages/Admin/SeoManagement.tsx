@@ -82,17 +82,43 @@ interface CategorySeoItem {
   name: string;
   slug: string;
   categoryUrl: string;
+  canonicalUrl?: string;
   h1: string;
   metaTitle: string;
   metaDescription: string;
+  focusKeyword?: string;
+  seoIntro?: string;
+  seoContent?: string;
   hasCustomSeo: boolean;
   productCount: number;
   updatedAt: string;
 }
 
+interface BlogSeoItem {
+  id: string;
+  slug: string;
+  title: string;
+  h1?: string;
+  seoTitle: string;
+  metaDescription: string;
+  focusKeyword: string;
+  secondaryKeywords?: string[];
+  category: string;
+  author: string;
+  publishedAt: string;
+  readTime: string;
+  featuredImage: string;
+  imageAlt: string;
+  excerpt: string;
+  relatedCategories?: string[];
+  noIndex?: boolean;
+  sections?: Array<{ heading: string; body: string; bullets?: string[] }>;
+  faqs?: Array<{ question: string; answer: string }>;
+}
+
 export const SeoManagement: React.FC = () => {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<'products' | 'categories'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'categories' | 'blogs' | 'health' | 'global'>('products');
 
   // Stats
   const [stats, setStats] = useState<SeoStats | null>(null);
@@ -111,6 +137,44 @@ export const SeoManagement: React.FC = () => {
   // Categories
   const [categories, setCategories] = useState<CategorySeoItem[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
+  const [bulkCatGenerating, setBulkCatGenerating] = useState(false);
+
+  // Blogs
+  const [blogs, setBlogs] = useState<BlogSeoItem[]>([]);
+  const [blogsLoading, setBlogsLoading] = useState(false);
+  const [editingBlog, setEditingBlog] = useState<BlogSeoItem | null>(null);
+  const [isNewBlog, setIsNewBlog] = useState(false);
+  const [savingBlog, setSavingBlog] = useState(false);
+
+  // Health Audit
+  const [healthAudit, setHealthAudit] = useState<any>(null);
+  const [healthLoading, setHealthLoading] = useState(false);
+
+  // Global SEO Settings
+  const [globalSettings, setGlobalSettings] = useState<any>({
+    siteTitle: 'Spring Blossoms Florist | Buy Flowers & Gifts Online in India',
+    brandName: 'Spring Blossoms Florist',
+    tagline: 'A Reason to Express',
+    defaultMetaDescription: 'Order fresh flower bouquets, luxury roses, tulips, orchids, cakes, chocolates, and thoughtful gifts online from Spring Blossoms Florist. Same-day & midnight delivery in Hyderabad, Secunderabad & across India.',
+    canonicalDomain: 'https://sbflorist.in',
+    defaultOgImage: 'https://sbflorist.in/images/og-preview.jpg',
+    twitterHandle: '@sbflorist_in',
+    organizationPhone: '+91-9949683222',
+    organizationEmail: '2006sbf@gmail.com',
+    organizationAddress: 'Door No. 12-2-786/A & B, Najam Centre, Pillar No. 32, Rethi Bowli, Mehdipatnam, Hyderabad, Telangana 500028',
+    organizationCity: 'Hyderabad',
+    organizationState: 'Telangana',
+    organizationPostalCode: '500028',
+    organizationCountry: 'IN',
+    defaultRobots: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
+    googleSiteVerification: '',
+    bingSiteVerification: '',
+    ga4MeasurementId: '',
+    enableAutoProductSeo: true,
+    enableAutoSitemapPing: true,
+  });
+  const [globalLoading, setGlobalLoading] = useState(false);
+  const [savingGlobal, setSavingGlobal] = useState(false);
 
   // Bulk Operations
   const [bulkGenerating, setBulkGenerating] = useState(false);
@@ -139,7 +203,12 @@ export const SeoManagement: React.FC = () => {
     metaTitle: '',
     metaDescription: '',
     slug: '',
-    categoryUrl: ''
+    categoryUrl: '',
+    canonicalUrl: '',
+    h1: '',
+    focusKeyword: '',
+    seoIntro: '',
+    seoContent: ''
   });
   const [savingCategory, setSavingCategory] = useState(false);
 
@@ -201,6 +270,51 @@ export const SeoManagement: React.FC = () => {
     }
   };
 
+  // Load Blogs SEO
+  const fetchBlogs = async () => {
+    try {
+      setBlogsLoading(true);
+      const res = await api.get('/seo/admin/blogs');
+      if (res.data?.success) {
+        setBlogs(res.data.blogs || []);
+      }
+    } catch (err: any) {
+      console.error('Failed to load blogs SEO:', err);
+    } finally {
+      setBlogsLoading(false);
+    }
+  };
+
+  // Load Health Audit
+  const fetchHealthAudit = async () => {
+    try {
+      setHealthLoading(true);
+      const res = await api.get('/seo/admin/health');
+      if (res.data?.success) {
+        setHealthAudit(res.data.audit || null);
+      }
+    } catch (err: any) {
+      console.error('Failed to load SEO health audit:', err);
+    } finally {
+      setHealthLoading(false);
+    }
+  };
+
+  // Load Global Settings
+  const fetchGlobalSettings = async () => {
+    try {
+      setGlobalLoading(true);
+      const res = await api.get('/seo/admin/global-settings');
+      if (res.data?.success && res.data?.settings) {
+        setGlobalSettings((prev: any) => ({ ...prev, ...res.data.settings }));
+      }
+    } catch (err: any) {
+      console.error('Failed to load global SEO settings:', err);
+    } finally {
+      setGlobalLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchStats();
   }, []);
@@ -208,10 +322,100 @@ export const SeoManagement: React.FC = () => {
   useEffect(() => {
     if (activeTab === 'products') {
       fetchProducts();
-    } else {
+    } else if (activeTab === 'categories') {
       fetchCategories();
+    } else if (activeTab === 'blogs') {
+      fetchBlogs();
+    } else if (activeTab === 'health') {
+      fetchHealthAudit();
+    } else if (activeTab === 'global') {
+      fetchGlobalSettings();
     }
   }, [activeTab, page, search, categoryFilter, scoreFilter, missingFilter]);
+
+  const handleBulkGenerateCategories = async () => {
+    try {
+      setBulkCatGenerating(true);
+      const res = await api.post('/seo/admin/categories/bulk-generate');
+      if (res.data?.success) {
+        toast({
+          title: 'Category SEO Optimized',
+          description: res.data.message || 'All categories updated with rich SEO titles, descriptions & H1s.',
+        });
+        fetchCategories();
+        fetchStats();
+      }
+    } catch (err: any) {
+      toast({
+        title: 'Error',
+        description: err.response?.data?.message || 'Failed to bulk generate category SEO',
+        variant: 'destructive',
+      });
+    } finally {
+      setBulkCatGenerating(false);
+    }
+  };
+
+  const handleSaveBlog = async () => {
+    if (!editingBlog) return;
+    try {
+      setSavingBlog(true);
+      const res = isNewBlog
+        ? await api.post('/seo/admin/blogs', editingBlog)
+        : await api.put(`/seo/admin/blogs/${editingBlog.id}`, editingBlog);
+      if (res.data?.success) {
+        toast({
+          title: isNewBlog ? 'Blog Post Created' : 'Blog Post Updated',
+          description: 'Blog article and SEO metadata saved successfully.',
+        });
+        setEditingBlog(null);
+        setIsNewBlog(false);
+        fetchBlogs();
+      }
+    } catch (err: any) {
+      toast({
+        title: 'Error Saving Blog',
+        description: err.response?.data?.message || 'Failed to save blog post',
+        variant: 'destructive',
+      });
+    } finally {
+      setSavingBlog(false);
+    }
+  };
+
+  const handleDeleteBlog = async (id: string, title: string) => {
+    if (!window.confirm(`Delete blog post "${title}"?`)) return;
+    try {
+      const res = await api.delete(`/seo/admin/blogs/${id}`);
+      if (res.data?.success) {
+        toast({ title: 'Blog Deleted', description: 'Blog article removed.' });
+        fetchBlogs();
+      }
+    } catch (err: any) {
+      toast({ title: 'Error', description: 'Failed to delete blog article', variant: 'destructive' });
+    }
+  };
+
+  const handleSaveGlobalSettings = async () => {
+    try {
+      setSavingGlobal(true);
+      const res = await api.put('/seo/admin/global-settings', globalSettings);
+      if (res.data?.success) {
+        toast({
+          title: 'Global SEO Saved',
+          description: 'Global metadata, organization schema, and Search Console settings updated.',
+        });
+      }
+    } catch (err: any) {
+      toast({
+        title: 'Error',
+        description: err.response?.data?.message || 'Failed to save global SEO settings',
+        variant: 'destructive',
+      });
+    } finally {
+      setSavingGlobal(false);
+    }
+  };
 
   // Open Edit Modal for Product
   const handleOpenEditModal = (item: ProductSeoItem) => {
@@ -554,7 +758,7 @@ export const SeoManagement: React.FC = () => {
       </div>
 
       {/* ── Main Tab Navigation ────────────────────────────────────── */}
-      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
+      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
         <button
           onClick={() => setActiveTab('products')}
           className={cn(
@@ -581,10 +785,49 @@ export const SeoManagement: React.FC = () => {
           )}
         >
           <FolderTree className="w-4 h-4" />
-          <span>Categories &amp; Occasions SEO</span>
+          <span>Categories &amp; Flower Pages SEO</span>
           <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
             {stats?.categoriesCount || 0}
           </span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('blogs')}
+          className={cn(
+            "px-5 py-2.5 rounded-2xl font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center gap-2",
+            activeTab === 'blogs'
+              ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm"
+              : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+          )}
+        >
+          <Layers className="w-4 h-4" />
+          <span>Blog &amp; Guides SEO</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('health')}
+          className={cn(
+            "px-5 py-2.5 rounded-2xl font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center gap-2",
+            activeTab === 'health'
+              ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm"
+              : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+          )}
+        >
+          <TrendingUp className="w-4 h-4" />
+          <span>SEO Health &amp; Diagnostics</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('global')}
+          className={cn(
+            "px-5 py-2.5 rounded-2xl font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center gap-2",
+            activeTab === 'global'
+              ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm"
+              : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+          )}
+        >
+          <Globe className="w-4 h-4" />
+          <span>Global SEO &amp; Integrations</span>
         </button>
       </div>
 
@@ -791,9 +1034,28 @@ export const SeoManagement: React.FC = () => {
         </div>
       )}
 
-      {/* ── TAB 2: CATEGORIES & OCCASIONS SEO ─────────────────────── */}
+      {/* ── TAB 2: CATEGORIES & FLOWER PAGES SEO ──────────────────── */}
       {activeTab === 'categories' && (
         <div className="space-y-6">
+          <div className="p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                Category &amp; Flower Variety Landing Pages ({categories.length})
+              </h3>
+              <p className="text-xs text-slate-500">
+                Manage H1 headings, SEO titles, meta descriptions, buyer intro guides, and canonical paths for every flower and gift category.
+              </p>
+            </div>
+            <Button
+              onClick={handleBulkGenerateCategories}
+              disabled={bulkCatGenerating}
+              className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs gap-1.5"
+            >
+              <Wand2 className="w-3.5 h-3.5" />
+              {bulkCatGenerating ? 'Optimizing Categories...' : 'Bulk Optimize All Categories'}
+            </Button>
+          </div>
+
           <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
@@ -825,7 +1087,12 @@ export const SeoManagement: React.FC = () => {
                     categories.map((cat) => (
                       <tr key={cat.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/30 transition-colors">
                         <td className="py-4 px-5 font-bold text-slate-900 dark:text-white">
-                          {cat.name}
+                          <div>{cat.name}</div>
+                          {cat.focusKeyword && (
+                            <span className="inline-block mt-1 px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[10px] font-semibold">
+                              {cat.focusKeyword}
+                            </span>
+                          )}
                         </td>
                         <td className="py-4 px-4 font-mono text-[11px] text-slate-500">
                           {cat.categoryUrl}
@@ -851,16 +1118,21 @@ export const SeoManagement: React.FC = () => {
                             onClick={() => {
                               setEditingCategory(cat);
                               setCategoryFormData({
-                                metaTitle: cat.metaTitle,
-                                metaDescription: cat.metaDescription,
-                                slug: cat.slug,
-                                categoryUrl: cat.categoryUrl
+                                metaTitle: cat.metaTitle || '',
+                                metaDescription: cat.metaDescription || '',
+                                slug: cat.slug || '',
+                                categoryUrl: cat.categoryUrl || '',
+                                canonicalUrl: cat.canonicalUrl || `https://sbflorist.in${cat.categoryUrl}`,
+                                h1: cat.h1 || cat.name || '',
+                                focusKeyword: cat.focusKeyword || `${cat.name.toLowerCase()} online`,
+                                seoIntro: cat.seoIntro || '',
+                                seoContent: cat.seoContent || ''
                               });
                             }}
                             className="rounded-xl border-slate-200 dark:border-slate-700 text-xs font-bold gap-1"
                           >
                             <Edit3 className="w-3.5 h-3.5" />
-                            Edit
+                            Edit SEO
                           </Button>
                         </td>
                       </tr>
@@ -868,6 +1140,481 @@ export const SeoManagement: React.FC = () => {
                   )}
                 </tbody>
               </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── TAB 3: BLOG & GUIDES SEO ──────────────────────────────── */}
+      {activeTab === 'blogs' && (
+        <div className="space-y-6">
+          <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                Floral Guides &amp; Educational Blog Articles ({blogs.length})
+              </h3>
+              <p className="text-xs text-slate-500">
+                Target high-intent informational queries (rose color meanings, tulip &amp; orchid care, gifting etiquette) and funnel readers directly to real catalog products.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.open('/blog', '_blank')}
+                className="rounded-xl text-xs gap-1.5"
+              >
+                <ExternalLink className="w-3.5 h-3.5" /> View Live Blog
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => {
+                  setIsNewBlog(true);
+                  setEditingBlog({
+                    id: `blog-${Date.now()}`,
+                    slug: '',
+                    title: '',
+                    h1: '',
+                    seoTitle: '',
+                    metaDescription: '',
+                    focusKeyword: '',
+                    secondaryKeywords: [],
+                    category: 'Flower Guides',
+                    author: 'Spring Blossoms Master Florist',
+                    publishedAt: new Date().toISOString(),
+                    readTime: '5 min read',
+                    featuredImage: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=900&auto=format&fit=crop&q=80',
+                    imageAlt: '',
+                    excerpt: '',
+                    relatedCategories: ['roses', 'bouquets'],
+                    noIndex: false,
+                    sections: [
+                      { heading: 'Introduction & Floral Symbolism', body: '' },
+                      { heading: 'How to Choose & Care for Your Blooms', body: '' },
+                    ],
+                    faqs: [],
+                  });
+                }}
+                className="rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs gap-1.5"
+              >
+                <Sparkles className="w-3.5 h-3.5" /> + New SEO Blog Guide
+              </Button>
+            </div>
+          </div>
+
+          <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                    <th className="py-4 px-5">Article &amp; Slug</th>
+                    <th className="py-4 px-4">Focus Keyword</th>
+                    <th className="py-4 px-4">SEO Title &amp; Meta Description</th>
+                    <th className="py-4 px-4 text-center">Indexing</th>
+                    <th className="py-4 px-5 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
+                  {blogsLoading ? (
+                    <tr>
+                      <td colSpan={5} className="py-12 text-center text-slate-500">
+                        <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-rose-500" />
+                        Loading blog guides...
+                      </td>
+                    </tr>
+                  ) : blogs.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="py-12 text-center text-slate-500">
+                        No blog articles found.
+                      </td>
+                    </tr>
+                  ) : (
+                    blogs.map((b) => (
+                      <tr key={b.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/30 transition-colors">
+                        <td className="py-4 px-5 max-w-[300px]">
+                          <div className="flex items-center gap-3">
+                            <img
+                              src={b.featuredImage}
+                              alt={b.imageAlt || b.title}
+                              className="w-12 h-12 rounded-xl object-cover border border-slate-200 shrink-0"
+                            />
+                            <div className="min-w-0">
+                              <div className="font-bold text-slate-900 dark:text-white line-clamp-1">{b.title}</div>
+                              <div className="font-mono text-[11px] text-slate-500 truncate">/blog/{b.slug}</div>
+                              <span className="inline-block mt-1 px-2 py-0.5 rounded bg-rose-50 text-rose-700 text-[10px] font-semibold">
+                                {b.category}
+                              </span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-4 px-4 font-semibold text-slate-800 dark:text-slate-200">
+                          {b.focusKeyword || '—'}
+                        </td>
+                        <td className="py-4 px-4 max-w-[340px]">
+                          <div className="font-bold text-slate-900 dark:text-white truncate">{b.seoTitle}</div>
+                          <div className="text-[11px] text-slate-500 line-clamp-2 mt-0.5">{b.metaDescription}</div>
+                        </td>
+                        <td className="py-4 px-4 text-center">
+                          {b.noIndex ? (
+                            <Badge variant="outline" className="text-[10px] bg-amber-50 text-amber-700 border-amber-200">NoIndex</Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-[10px] bg-emerald-50 text-emerald-700 border-emerald-200">Indexable</Badge>
+                          )}
+                        </td>
+                        <td className="py-4 px-5 text-right">
+                          <div className="inline-flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => window.open(`/blog/${b.slug}`, '_blank')}
+                              className="rounded-xl text-xs"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setIsNewBlog(false);
+                                setEditingBlog(b);
+                              }}
+                              className="rounded-xl text-xs font-bold gap-1"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" /> Edit
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleDeleteBlog(b.id, b.title)}
+                              className="rounded-xl text-xs text-rose-600 hover:bg-rose-50"
+                            >
+                              Delete
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── TAB 4: SEO HEALTH & DIAGNOSTICS ───────────────────────── */}
+      {activeTab === 'health' && (
+        <div className="space-y-6">
+          <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className={cn(
+                "w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-black border",
+                (healthAudit?.summary?.healthScore ?? healthAudit?.summary?.overallHealthScore ?? 90) >= 75
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                  : "bg-amber-50 text-amber-700 border-amber-200"
+              )}>
+                {healthLoading ? '...' : `${healthAudit?.summary?.healthScore ?? healthAudit?.summary?.overallHealthScore ?? 95}%`}
+              </div>
+              <div>
+                <h3 className="text-lg font-extrabold text-slate-900 dark:text-white">
+                  Complete Catalog &amp; Content SEO Health Audit
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Real-time audit of {healthAudit?.summary?.totalProducts || stats?.totalProducts || 0} products, {healthAudit?.summary?.totalCategories || stats?.categoriesCount || 0} categories, and {healthAudit?.summary?.totalBlogs || 10} blog guides.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={fetchHealthAudit}
+                disabled={healthLoading}
+                className="rounded-xl text-xs gap-1.5"
+              >
+                <RefreshCw className={cn("w-3.5 h-3.5", healthLoading && "animate-spin")} />
+                Re-Run Audit
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleBulkGenerate}
+                disabled={bulkGenerating}
+                className="rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs gap-1.5"
+              >
+                <Wand2 className="w-3.5 h-3.5" />
+                Auto-Fix Product SEO
+              </Button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {[
+              { label: 'Missing SEO Title', count: (healthAudit?.summary?.totalProducts ?? 0) - (healthAudit?.summary?.storedTitlesCount ?? healthAudit?.summary?.totalProducts ?? 0) },
+              { label: 'Missing Meta Description', count: (healthAudit?.summary?.totalProducts ?? 0) - (healthAudit?.summary?.storedDescriptionsCount ?? healthAudit?.summary?.totalProducts ?? 0) },
+              { label: 'Duplicate Titles', count: healthAudit?.summary?.duplicateTitlesCount ?? healthAudit?.summary?.duplicateTitleCount ?? 0 },
+              { label: 'Duplicate Descriptions', count: healthAudit?.summary?.duplicateDescriptionsCount ?? healthAudit?.summary?.duplicateDescCount ?? 0 },
+              { label: 'Avg Product SEO Score', count: healthAudit?.summary?.avgProductScore ?? 0, isScore: true },
+              { label: 'Missing Image Alt Text', count: healthAudit?.summary?.missingAltCount ?? 0 },
+              { label: 'Thin Product Content', count: healthAudit?.summary?.thinContentCount ?? 0 },
+              { label: 'Unoptimized Categories', count: healthAudit?.summary?.unoptimizedCategoriesCount ?? healthAudit?.summary?.unoptimizedCategoryCount ?? 0 },
+            ].map((diag: any, idx) => (
+              <div
+                key={idx}
+                className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between"
+              >
+                <div>
+                  <span className="text-xs font-semibold text-slate-500 block">{diag.label}</span>
+                  <span className={cn(
+                    "text-2xl font-black mt-1 block",
+                    diag.isScore ? "text-emerald-600" : diag.count === 0 ? "text-emerald-600" : "text-amber-600"
+                  )}>
+                    {healthLoading ? '...' : diag.isScore ? `${diag.count}/100` : diag.count}
+                  </span>
+                </div>
+                {diag.isScore || diag.count === 0 ? (
+                  <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+                ) : (
+                  <AlertTriangle className="w-6 h-6 text-amber-500" />
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Detailed Issue Lists */}
+          {healthAudit?.issues && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-3">
+                  Duplicate Titles &amp; Descriptions Check
+                </h4>
+                {(healthAudit.issues.duplicateTitles?.length || 0) === 0 &&
+                (healthAudit.issues.duplicateDescriptions?.length || 0) === 0 ? (
+                  <div className="p-4 rounded-2xl bg-emerald-50 text-emerald-800 text-xs font-medium flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    Zero duplicate SEO titles or meta descriptions detected across your active catalog!
+                  </div>
+                ) : (
+                  <div className="space-y-2 max-h-60 overflow-y-auto text-xs">
+                    {(healthAudit.issues.duplicateTitles || []).map((d: any, i: number) => (
+                      <div key={i} className="p-2.5 rounded-xl bg-amber-50 text-amber-900 flex justify-between">
+                        <span className="truncate font-medium">{d.name}</span>
+                        <span className="text-[10px] font-bold">Duplicate Title</span>
+                      </div>
+                    ))}
+                    {(healthAudit.issues.duplicateDescriptions || []).map((d: any, i: number) => (
+                      <div key={i} className="p-2.5 rounded-xl bg-amber-50 text-amber-900 flex justify-between">
+                        <span className="truncate font-medium">{d.name}</span>
+                        <span className="text-[10px] font-bold">Duplicate Desc</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-3">
+                  Category &amp; Image Alt Text Coverage
+                </h4>
+                {(healthAudit.issues.unoptimizedCategories?.length || 0) === 0 &&
+                (healthAudit.issues.missingAlt?.length || 0) === 0 ? (
+                  <div className="p-4 rounded-2xl bg-emerald-50 text-emerald-800 text-xs font-medium flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    All categories and product primary images have descriptive SEO metadata!
+                  </div>
+                ) : (
+                  <div className="space-y-2 max-h-60 overflow-y-auto text-xs">
+                    {(healthAudit.issues.unoptimizedCategories || []).map((c: any, i: number) => (
+                      <div key={i} className="p-2.5 rounded-xl bg-amber-50 text-amber-900 flex justify-between">
+                        <span className="truncate font-medium">Category: {c.name}</span>
+                        <span className="text-[10px] font-bold">Needs Category SEO</span>
+                      </div>
+                    ))}
+                    {(healthAudit.issues.missingAlt || []).map((p: any, i: number) => (
+                      <div key={i} className="p-2.5 rounded-xl bg-amber-50 text-amber-900 flex justify-between">
+                        <span className="truncate font-medium">{p.name}</span>
+                        <span className="text-[10px] font-bold">Missing Alt</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── TAB 5: GLOBAL SEO & INTEGRATIONS ──────────────────────── */}
+      {activeTab === 'global' && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="lg:col-span-8 p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-5">
+            <div>
+              <h3 className="text-lg font-extrabold text-slate-900 dark:text-white">
+                Global SEO Defaults &amp; Organization Schema
+              </h3>
+              <p className="text-xs text-slate-500">
+                Configure your sitewide title, default meta description, canonical domain, LocalBusiness/Florist schema NAP details, and Google Search Console verification.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="sm:col-span-2">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 block">
+                  Global Website Title
+                </label>
+                <Input
+                  value={globalSettings.siteTitle || ''}
+                  onChange={(e) => setGlobalSettings({ ...globalSettings, siteTitle: e.target.value })}
+                  className="rounded-xl text-xs"
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 block">
+                  Default Meta Description
+                </label>
+                <Textarea
+                  rows={3}
+                  value={globalSettings.defaultMetaDescription || ''}
+                  onChange={(e) => setGlobalSettings({ ...globalSettings, defaultMetaDescription: e.target.value })}
+                  className="rounded-xl text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 block">
+                  Brand / Organization Name
+                </label>
+                <Input
+                  value={globalSettings.brandName || ''}
+                  onChange={(e) => setGlobalSettings({ ...globalSettings, brandName: e.target.value })}
+                  className="rounded-xl text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 block">
+                  Canonical Domain
+                </label>
+                <Input
+                  value={globalSettings.canonicalDomain || ''}
+                  onChange={(e) => setGlobalSettings({ ...globalSettings, canonicalDomain: e.target.value })}
+                  className="rounded-xl text-xs font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 block">
+                  Organization Phone (Schema NAP)
+                </label>
+                <Input
+                  value={globalSettings.organizationPhone || ''}
+                  onChange={(e) => setGlobalSettings({ ...globalSettings, organizationPhone: e.target.value })}
+                  className="rounded-xl text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 block">
+                  Organization Email
+                </label>
+                <Input
+                  value={globalSettings.organizationEmail || ''}
+                  onChange={(e) => setGlobalSettings({ ...globalSettings, organizationEmail: e.target.value })}
+                  className="rounded-xl text-xs"
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 block">
+                  Physical Studio Address (LocalBusiness Schema)
+                </label>
+                <Input
+                  value={globalSettings.organizationAddress || ''}
+                  onChange={(e) => setGlobalSettings({ ...globalSettings, organizationAddress: e.target.value })}
+                  className="rounded-xl text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 block">
+                  Google Search Console Verification Code
+                </label>
+                <Input
+                  value={globalSettings.googleSiteVerification || ''}
+                  onChange={(e) => setGlobalSettings({ ...globalSettings, googleSiteVerification: e.target.value })}
+                  placeholder="Paste content attribute from google-site-verification meta tag"
+                  className="rounded-xl text-xs font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 block">
+                  Google Analytics 4 (GA4) Measurement ID
+                </label>
+                <Input
+                  value={globalSettings.ga4MeasurementId || ''}
+                  onChange={(e) => setGlobalSettings({ ...globalSettings, ga4MeasurementId: e.target.value })}
+                  placeholder="G-XXXXXXXXXX"
+                  className="rounded-xl text-xs font-mono"
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 block">
+                  Default Robots Meta Directive
+                </label>
+                <Input
+                  value={globalSettings.defaultRobots || ''}
+                  onChange={(e) => setGlobalSettings({ ...globalSettings, defaultRobots: e.target.value })}
+                  className="rounded-xl text-xs font-mono"
+                />
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex justify-end">
+              <Button
+                onClick={handleSaveGlobalSettings}
+                disabled={savingGlobal}
+                className="rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-6"
+              >
+                {savingGlobal ? 'Saving Global Settings...' : 'Save Global SEO Settings'}
+              </Button>
+            </div>
+          </div>
+
+          <div className="lg:col-span-4 space-y-6">
+            <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4">
+              <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+                Live XML Sitemaps &amp; Crawler Feeds
+              </h4>
+              <p className="text-xs text-slate-500">
+                Submit <code>https://sbflorist.in/sitemap.xml</code> in Google Search Console to index all sub-sitemaps automatically.
+              </p>
+              <div className="space-y-2 text-xs">
+                {[
+                  { label: 'Primary Sitemap Index', path: '/sitemap.xml' },
+                  { label: 'Products & Image Sitemap', path: '/sitemap-products.xml' },
+                  { label: 'Categories & Flower Pages', path: '/sitemap-categories.xml' },
+                  { label: 'Occasions Sitemap', path: '/sitemap-occasions.xml' },
+                  { label: 'Blog & Guides Sitemap', path: '/sitemap-blog.xml' },
+                  { label: 'Static & Local Hubs Sitemap', path: '/sitemap-pages.xml' },
+                  { label: 'Robots.txt Directive', path: '/robots.txt' },
+                ].map((sm) => (
+                  <a
+                    key={sm.path}
+                    href={sm.path}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-rose-400 flex items-center justify-between font-medium text-slate-700 dark:text-slate-300"
+                  >
+                    <span>{sm.label}</span>
+                    <span className="font-mono text-[11px] text-rose-600 flex items-center gap-1">
+                      {sm.path} <ExternalLink className="w-3 h-3" />
+                    </span>
+                  </a>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -1201,17 +1948,17 @@ export const SeoManagement: React.FC = () => {
       {/* ── CATEGORY SEO EDIT MODAL ─────────────────────────────────── */}
       <AnimatePresence>
         {editingCategory && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-xs">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-xs overflow-y-auto">
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="relative w-full max-w-xl bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden"
+              className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden my-8"
             >
               <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
                 <div>
                   <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block">
-                    Category SEO Editor
+                    Category &amp; Flower Variety SEO Editor
                   </span>
                   <h2 className="text-xl font-black text-slate-900 dark:text-white mt-0.5">
                     {editingCategory.name}
@@ -1225,7 +1972,30 @@ export const SeoManagement: React.FC = () => {
                 </button>
               </div>
 
-              <div className="p-6 space-y-4">
+              <div className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 block">
+                      Category H1 Heading
+                    </label>
+                    <Input
+                      value={categoryFormData.h1}
+                      onChange={(e) => setCategoryFormData({ ...categoryFormData, h1: e.target.value })}
+                      className="rounded-xl text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 block">
+                      Primary Focus Keyword
+                    </label>
+                    <Input
+                      value={categoryFormData.focusKeyword}
+                      onChange={(e) => setCategoryFormData({ ...categoryFormData, focusKeyword: e.target.value })}
+                      className="rounded-xl text-xs"
+                    />
+                  </div>
+                </div>
+
                 <div>
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 block">
                     SEO Meta Title
@@ -1251,13 +2021,51 @@ export const SeoManagement: React.FC = () => {
 
                 <div>
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 block">
-                    Category URL Path
+                    Category SEO Intro Paragraph
                   </label>
-                  <Input
-                    value={categoryFormData.categoryUrl}
-                    onChange={(e) => setCategoryFormData({ ...categoryFormData, categoryUrl: e.target.value })}
-                    className="rounded-xl text-xs font-mono"
+                  <Textarea
+                    rows={2}
+                    value={categoryFormData.seoIntro}
+                    onChange={(e) => setCategoryFormData({ ...categoryFormData, seoIntro: e.target.value })}
+                    placeholder="Short buyer-focused introduction displayed at the top of the category page..."
+                    className="rounded-xl text-xs"
                   />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 block">
+                    Additional Category Buyer Guide Content
+                  </label>
+                  <Textarea
+                    rows={3}
+                    value={categoryFormData.seoContent}
+                    onChange={(e) => setCategoryFormData({ ...categoryFormData, seoContent: e.target.value })}
+                    placeholder="Selection guide, flower colors, occasions, and care instructions..."
+                    className="rounded-xl text-xs"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 block">
+                      Category URL Path
+                    </label>
+                    <Input
+                      value={categoryFormData.categoryUrl}
+                      onChange={(e) => setCategoryFormData({ ...categoryFormData, categoryUrl: e.target.value })}
+                      className="rounded-xl text-xs font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 block">
+                      Canonical URL
+                    </label>
+                    <Input
+                      value={categoryFormData.canonicalUrl}
+                      onChange={(e) => setCategoryFormData({ ...categoryFormData, canonicalUrl: e.target.value })}
+                      className="rounded-xl text-xs font-mono"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -1275,6 +2083,204 @@ export const SeoManagement: React.FC = () => {
                   className="rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 font-bold text-xs"
                 >
                   {savingCategory ? 'Saving...' : 'Save Category SEO'}
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ── BLOG SEO & CONTENT EDIT MODAL ───────────────────────────── */}
+      <AnimatePresence>
+        {editingBlog && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-xs overflow-y-auto">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="relative w-full max-w-3xl bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden my-8"
+            >
+              <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider block">
+                    {isNewBlog ? 'Create New SEO Blog Guide' : 'Edit Blog Article & SEO Metadata'}
+                  </span>
+                  <h2 className="text-xl font-black text-slate-900 dark:text-white mt-0.5 truncate max-w-lg">
+                    {editingBlog.title || 'New Floral Guide'}
+                  </h2>
+                </div>
+                <button
+                  onClick={() => setEditingBlog(null)}
+                  className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="sm:col-span-2">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 block">
+                      Article Title &amp; H1 *
+                    </label>
+                    <Input
+                      value={editingBlog.title}
+                      onChange={(e) =>
+                        setEditingBlog({
+                          ...editingBlog,
+                          title: e.target.value,
+                          h1: e.target.value,
+                        })
+                      }
+                      placeholder="e.g. Complete Guide to Tulip Flowers: Colors, Meaning & Care"
+                      className="rounded-xl text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 block">
+                      URL Slug
+                    </label>
+                    <Input
+                      value={editingBlog.slug}
+                      onChange={(e) => setEditingBlog({ ...editingBlog, slug: e.target.value })}
+                      placeholder="auto-generated-from-title"
+                      className="rounded-xl text-xs font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 block">
+                      Guide Category
+                    </label>
+                    <select
+                      value={editingBlog.category}
+                      onChange={(e) => setEditingBlog({ ...editingBlog, category: e.target.value })}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs"
+                    >
+                      <option value="Flower Guides">Flower Guides</option>
+                      <option value="Gifting Guides">Gifting Guides</option>
+                      <option value="Educational">Educational</option>
+                      <option value="Local Guides">Local Guides</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 block">
+                      Primary Focus Keyword *
+                    </label>
+                    <Input
+                      value={editingBlog.focusKeyword}
+                      onChange={(e) => setEditingBlog({ ...editingBlog, focusKeyword: e.target.value })}
+                      placeholder="e.g. tulip flowers meaning and care"
+                      className="rounded-xl text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 block">
+                      Related Category Slugs (comma-separated)
+                    </label>
+                    <Input
+                      value={(editingBlog.relatedCategories || []).join(', ')}
+                      onChange={(e) =>
+                        setEditingBlog({
+                          ...editingBlog,
+                          relatedCategories: e.target.value.split(',').map((s) => s.trim()).filter(Boolean),
+                        })
+                      }
+                      placeholder="tulips, roses, bouquets, vase"
+                      className="rounded-xl text-xs font-mono"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 block">
+                      SEO Meta Title (40–60 chars)
+                    </label>
+                    <Input
+                      value={editingBlog.seoTitle}
+                      onChange={(e) => setEditingBlog({ ...editingBlog, seoTitle: e.target.value })}
+                      placeholder="e.g. Tulip Flowers Guide: Meaning, Colors & Care Tips – SBFlorist"
+                      className="rounded-xl text-xs"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 block">
+                      Meta Description (120–160 chars)
+                    </label>
+                    <Textarea
+                      rows={2}
+                      value={editingBlog.metaDescription}
+                      onChange={(e) => setEditingBlog({ ...editingBlog, metaDescription: e.target.value })}
+                      className="rounded-xl text-xs"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 block">
+                      Article Summary / Excerpt
+                    </label>
+                    <Textarea
+                      rows={2}
+                      value={editingBlog.excerpt}
+                      onChange={(e) => setEditingBlog({ ...editingBlog, excerpt: e.target.value })}
+                      className="rounded-xl text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 block">
+                      Featured Social / OG Image URL
+                    </label>
+                    <Input
+                      value={editingBlog.featuredImage}
+                      onChange={(e) => setEditingBlog({ ...editingBlog, featuredImage: e.target.value })}
+                      className="rounded-xl text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 block">
+                      Featured Image Alt Text
+                    </label>
+                    <Input
+                      value={editingBlog.imageAlt}
+                      onChange={(e) => setEditingBlog({ ...editingBlog, imageAlt: e.target.value })}
+                      className="rounded-xl text-xs"
+                    />
+                  </div>
+                </div>
+
+                {/* Indexing Control */}
+                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                  <div>
+                    <div className="text-xs font-bold text-slate-900 dark:text-white">Search Indexing</div>
+                    <p className="text-[11px] text-slate-500">Toggle whether Google indexes this blog guide.</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold text-slate-600">
+                      {editingBlog.noIndex ? 'NoIndex (Hidden)' : 'Index (Public)'}
+                    </span>
+                    <Switch
+                      checked={Boolean(editingBlog.noIndex)}
+                      onCheckedChange={(val) => setEditingBlog({ ...editingBlog, noIndex: val })}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-4 px-6 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex items-center justify-between">
+                <Button variant="outline" onClick={() => setEditingBlog(null)} className="rounded-xl text-xs">
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSaveBlog}
+                  disabled={savingBlog}
+                  className="rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs"
+                >
+                  {savingBlog ? 'Saving...' : 'Save Blog Guide & SEO'}
                 </Button>
               </div>
             </motion.div>

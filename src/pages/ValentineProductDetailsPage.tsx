@@ -1731,7 +1731,9 @@ const ValentineProductDetailsPage: React.FC = () => {
             category={product.category}
             title="Complete Your Valentine's Surprise"
             subtitle="Curated Romantic Duos"
-            limit={6}
+            variant="valentine"
+            linkPrefix="/valentine-product"
+            limit={10}
           />
         </div>
 

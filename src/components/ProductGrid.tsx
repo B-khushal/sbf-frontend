@@ -559,22 +559,22 @@ export const ProductCard = ({ product, onAddToCart, linkPrefix }: {
 
           {/* Image 1 (Default) */}
           <ProtectedImage
-            src={getImageUrl(product.images[0], { width: 500 }) || '/images/placeholder.svg'}
-            alt={product.title}
+            src={getImageUrl(product.images?.[0], { width: 500 }) || '/images/placeholder.svg'}
+            alt={product.title || (product as any).name || 'Product'}
             className={cn(
               "absolute inset-0 w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-105",
               isOutOfStock && "grayscale-[20%] opacity-90",
-              product.images.length > 1 && "group-hover:opacity-0"
+              product.images?.length > 1 && "group-hover:opacity-0"
             )}
             onLoad={() => setIsImageLoaded(true)}
             loading="lazy"
           />
 
           {/* Image 2 (Hover) */}
-          {product.images.length > 1 && (
+          {product.images?.length > 1 && (
             <ProtectedImage
               src={getImageUrl(product.images[1], { width: 500 })}
-              alt={`${product.title} alternate view`}
+              alt={`${product.title || (product as any).name || 'Product'} alternate view`}
               className={cn(
                 "absolute inset-0 w-full h-full object-cover transition-opacity duration-700 opacity-0 group-hover:opacity-100 group-hover:scale-105",
                 isOutOfStock && "grayscale-[20%] opacity-90"
@@ -596,7 +596,7 @@ export const ProductCard = ({ product, onAddToCart, linkPrefix }: {
             {/* Title container with exact height of 2 lines */}
             <div className="min-h-[2.25rem] md:min-h-[2.5rem] flex items-start overflow-hidden">
               <p className="font-semibold text-xs sm:text-sm text-gray-800 leading-tight line-clamp-2 group-hover:text-bloom-pink-600 transition-colors">
-                {product.title}
+                {product.title || (product as any).name}
               </p>
             </div>
 

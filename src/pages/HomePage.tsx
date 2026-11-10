@@ -325,9 +325,9 @@ const HomePage = () => {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <SEOHead
-          title="Online Flower Delivery in Hyderabad | Spring Blossoms Florist"
-          description="Order fresh flower bouquets, premium roses, cakes and beautiful gift combos online from Spring Blossoms Florist. Make every occasion special with flower delivery in Hyderabad."
-          keywords="Online Flower Delivery Hyderabad, Best Florist Hyderabad, Buy Flowers Online, Fresh Flower Bouquets, Premium Flower Delivery"
+          title="Spring Blossoms Florist | Buy Flowers & Gifts Online in India"
+          description="Order fresh flower bouquets, luxury roses, tulips, orchids, cakes, chocolates, and thoughtful gifts online from Spring Blossoms Florist. Same-day & midnight delivery in Hyderabad, Secunderabad & across India."
+          keywords="buy flowers online, flower delivery in India, online florist, fresh flower bouquets, luxury flower arrangements, flower and gift delivery, roses online, tulips online, orchids online, chocolates and gifts online, online flower delivery Hyderabad"
           canonical="/"
           ogType="website"
           jsonLd={HOME_PAGE_SCHEMAS}
@@ -349,9 +349,9 @@ const HomePage = () => {
       className="min-h-screen relative"
     >
       <SEOHead
-        title="Online Flower Delivery in Hyderabad | Spring Blossoms Florist"
-        description="Order fresh flower bouquets, premium roses, cakes and beautiful gift combos online from Spring Blossoms Florist. Make every occasion special with flower delivery in Hyderabad."
-        keywords="Online Flower Delivery Hyderabad, Best Florist Hyderabad, Buy Flowers Online, Fresh Flower Bouquets, Premium Flower Delivery"
+        title="Spring Blossoms Florist | Buy Flowers & Gifts Online in India"
+        description="Order fresh flower bouquets, luxury roses, tulips, orchids, cakes, chocolates, and thoughtful gifts online from Spring Blossoms Florist. Same-day & midnight delivery in Hyderabad, Secunderabad & across India."
+        keywords="buy flowers online, flower delivery in India, online florist, fresh flower bouquets, luxury flower arrangements, flower and gift delivery, roses online, tulips online, orchids online, chocolates and gifts online, online flower delivery Hyderabad"
         canonical="/"
         ogType="website"
         jsonLd={HOME_PAGE_SCHEMAS}
@@ -387,10 +387,10 @@ const HomePage = () => {
                 <SeasonalCampaignHomeSection />
                 <div className="max-w-7xl mx-auto px-4 pt-4 pb-2 text-center">
                   <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
-                    Online Flower Delivery in Hyderabad
+                    Spring Blossoms Florist — Buy Fresh Flowers, Luxury Bouquets & Gifts Online
                   </h1>
-                  <p className="mt-2 text-xs sm:text-sm text-slate-600 max-w-2xl mx-auto">
-                    Order fresh flower bouquets, premium roses, cakes and beautiful gift combos online from Spring Blossoms Florist. Make every occasion special with flower delivery in Hyderabad.
+                  <p className="mt-2 text-xs sm:text-sm text-slate-600 max-w-3xl mx-auto">
+                    Order farm-fresh roses, exotic tulips, purple orchids, lilies, hydrangeas, artisanal cakes, and gourmet gift combos online. Express same-day & midnight flower delivery in Hyderabad, Secunderabad, and across India.
                   </p>
                 </div>
                 <motion.div

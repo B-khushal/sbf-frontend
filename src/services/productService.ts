@@ -578,6 +578,8 @@ const prepareProductData = (productData: ProductData): BackendProductData => {
 const mapBackendToFrontend = (data: BackendProductData): ProductData => {
   // Create a copy to avoid modifying the original
   const mappedData: Partial<ProductData> = { ...data } as any;
+  mappedData._id = data._id || (data as any).id || '';
+  mappedData.title = data.title || (data as any).name || '';
 
   // Ensure numeric price, discount, and costPrice
   mappedData.price = data.price !== undefined ? Number(data.price) : 0;
@@ -769,12 +771,19 @@ const mapBackendToFrontend = (data: BackendProductData): ProductData => {
 };
 
 class ProductService {
-  async getProducts(): Promise<ProductData[]> {
-    const response = await axios.get(`${API_URL}/products`);
-    // Map each product to our frontend model
-    return Array.isArray(response.data) 
-      ? response.data.map(mapBackendToFrontend) 
-      : [];
+  async getProducts(page?: number, category?: string): Promise<ProductData[]> {
+    const params: Record<string, any> = {};
+    if (page) params.page = page;
+    if (category) params.category = category;
+    const response = await axios.get(`${API_URL}/products`, { params });
+    const rawList = Array.isArray(response.data)
+      ? response.data
+      : (Array.isArray(response.data?.products) ? response.data.products : []);
+    const mapped = rawList.map(mapBackendToFrontend);
+    try {
+      Object.defineProperty(mapped, 'products', { value: mapped, enumerable: false });
+    } catch (_) {}
+    return mapped;
   }
 
   async getAllProducts(): Promise<ProductData[]> {
@@ -821,8 +830,11 @@ class ProductService {
   }
 
   async getProductsByCategory(category: string): Promise<ProductData[]> {
-    const response = await axios.get(`${API_URL}/products/category/${category}`);
-    return response.data;
+    const response = await axios.get(`${API_URL}/products/category/${encodeURIComponent(category)}`);
+    const rawList = Array.isArray(response.data)
+      ? response.data
+      : (Array.isArray(response.data?.products) ? response.data.products : []);
+    return rawList.map(mapBackendToFrontend);
   }
 
   async getCategoriesWithCounts(): Promise<{ name: string; slug?: string; count: number; productCount?: number }[]> {

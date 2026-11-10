@@ -129,6 +129,8 @@ const SeasonalCampaigns = lazy(() => import('./pages/Admin/SeasonalCampaigns'));
 const SeasonalCampaignForm = lazy(() => import('./pages/Admin/SeasonalCampaignForm'));
 const AdminOccasions = lazy(() => import('./pages/Admin/Occasions'));
 const SitemapViewerPage = lazy(() => import('./pages/SitemapViewerPage'));
+const BlogPage = lazy(() => import('./pages/BlogPage'));
+const BlogPostPage = lazy(() => import('./pages/BlogPostPage'));
 
 // Valentine Pages
 const ValentineSpecialPage = lazy(() => import('./pages/ValentineSpecialPage'));
@@ -917,6 +919,21 @@ const App = () => {
                             <Route path="/sitemap-occasions.xml" element={
                               <Suspense fallback={<LoadingFallback message="Loading Occasions Sitemap..." />}>
                                 <SitemapViewerPage />
+                              </Suspense>
+                            } />
+                            <Route path="/sitemap-blog.xml" element={
+                              <Suspense fallback={<LoadingFallback message="Loading Blog Sitemap..." />}>
+                                <SitemapViewerPage />
+                              </Suspense>
+                            } />
+                            <Route path="/blog" element={
+                              <Suspense fallback={<LoadingFallback message="Loading Flower & Gifting Blog..." />}>
+                                <BlogPage />
+                              </Suspense>
+                            } />
+                            <Route path="/blog/:slug" element={
+                              <Suspense fallback={<LoadingFallback message="Loading Floral Guide..." />}>
+                                <BlogPostPage />
                               </Suspense>
                             } />
                             <Route path="/flower-delivery-hyderabad" element={<HyderabadDeliveryPage />} />

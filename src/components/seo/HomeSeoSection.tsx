@@ -219,14 +219,29 @@ export const HomeSeoSection: React.FC = () => {
                 Brighten any room with golden <strong>sunflowers</strong>, magnificent oriental <strong>lilies</strong>, and lush <strong>hydrangeas</strong>. Our seasonal flower varieties are sourced directly from sustainable growers and kept in climate-regulated freshness chambers so your recipient receives long-lasting blossoms that open gracefully over days.
               </p>
               <div className="flex flex-wrap gap-2 mb-6">
+                <Link to="/tulips" className="text-xs px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-800 font-semibold transition-colors">
+                  🌷 Tulip Bouquets
+                </Link>
+                <Link to="/orchids" className="text-xs px-3 py-1.5 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-800 font-semibold transition-colors">
+                  🪻 Purple &amp; Exotic Orchids
+                </Link>
+                <Link to="/lavender-lisianthus" className="text-xs px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-800 font-semibold transition-colors">
+                  ✨ Lavender Lisianthus (Eustoma)
+                </Link>
                 <Link to="/sunflowers" className="text-xs px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 font-semibold transition-colors">
                   🌻 Sunflower Bouquets
                 </Link>
                 <Link to="/lilies" className="text-xs px-3 py-1.5 rounded-lg bg-pink-50 hover:bg-pink-100 text-pink-800 font-semibold transition-colors">
                   🌸 Lily Arrangements
                 </Link>
-                <Link to="/hydrangea" className="text-xs px-3 py-1.5 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-800 font-semibold transition-colors">
-                  🪻 Hydrangea Collections
+                <Link to="/hydrangea" className="text-xs px-3 py-1.5 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-800 font-semibold transition-colors">
+                  💐 Hydrangea Collections
+                </Link>
+                <Link to="/carnation" className="text-xs px-3 py-1.5 rounded-lg bg-pink-50 hover:bg-pink-100 text-pink-700 font-semibold transition-colors">
+                  🌺 Fresh Carnations
+                </Link>
+                <Link to="/vase" className="text-xs px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-semibold transition-colors">
+                  🏺 Glass Vase Arrangements
                 </Link>
               </div>
             </div>
@@ -350,6 +365,83 @@ export const HomeSeoSection: React.FC = () => {
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
+          </div>
+        </div>
+
+        {/* H2: Floral Care, Flower Meanings & Gifting Journal */}
+        <div className="mb-16 rounded-3xl p-6 sm:p-8 bg-white border border-rose-200/60 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
+            <div>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200/60 mb-2">
+                <Flower2 className="w-3.5 h-3.5" /> Spring Blossoms Floral Journal
+              </span>
+              <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
+                Expert Guides on Flower Meanings, Care &amp; Gifting Etiquette
+              </h2>
+              <p className="text-sm text-slate-600 mt-1">
+                Learn what different flower varieties symbolize and how to keep fresh bouquets blooming longer in Indian homes.
+              </p>
+            </div>
+            <Link
+              to="/blog"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-rose-700 hover:text-rose-800 whitespace-nowrap"
+            >
+              Visit Flower &amp; Gifting Blog <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Link
+              to="/blog/meaning-of-different-rose-colors-gifting-guide"
+              className="p-4 rounded-2xl bg-rose-50/40 hover:bg-rose-50 border border-rose-100 transition-all group"
+            >
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-rose-700">Flower Guide</span>
+              <h3 className="text-sm font-bold text-slate-900 group-hover:text-rose-700 mt-1 mb-1.5">
+                Meaning of Red, Pink, Yellow &amp; White Rose Colors
+              </h3>
+              <p className="text-xs text-slate-600 line-clamp-2">
+                Discover which rose shade and stem count fits birthdays, anniversaries, and romantic milestones.
+              </p>
+            </Link>
+
+            <Link
+              to="/blog/complete-guide-to-tulip-flowers-colors-meaning-care"
+              className="p-4 rounded-2xl bg-amber-50/40 hover:bg-amber-50 border border-amber-100 transition-all group"
+            >
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-amber-800">Exotic Blooms</span>
+              <h3 className="text-sm font-bold text-slate-900 group-hover:text-amber-800 mt-1 mb-1.5">
+                Tulip Flowers in India: Colors, Symbolism &amp; Care
+              </h3>
+              <p className="text-xs text-slate-600 line-clamp-2">
+                How to choose red, pink, yellow, or purple tulips and keep cut tulips fresh with ice-water care.
+              </p>
+            </Link>
+
+            <Link
+              to="/blog/purple-and-exotic-orchids-symbolism-care-gifting-guide"
+              className="p-4 rounded-2xl bg-purple-50/40 hover:bg-purple-50 border border-purple-100 transition-all group"
+            >
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-purple-800">Luxury Florals</span>
+              <h3 className="text-sm font-bold text-slate-900 group-hover:text-purple-800 mt-1 mb-1.5">
+                Purple &amp; Exotic Orchids: Care &amp; Gifting Guide
+              </h3>
+              <p className="text-xs text-slate-600 line-clamp-2">
+                Why Dendrobium and Cymbidium orchids are the longest-lasting tropical blooms for Indian climates.
+              </p>
+            </Link>
+
+            <Link
+              to="/blog/how-to-keep-cut-flowers-fresh-longer-at-home-india"
+              className="p-4 rounded-2xl bg-emerald-50/40 hover:bg-emerald-50 border border-emerald-100 transition-all group"
+            >
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-emerald-800">Care Tips</span>
+              <h3 className="text-sm font-bold text-slate-900 group-hover:text-emerald-800 mt-1 mb-1.5">
+                7 Florist Secrets to Keep Cut Flowers Fresh Longer
+              </h3>
+              <p className="text-xs text-slate-600 line-clamp-2">
+                Simple stem-trimming and hydration steps to double vase life in warm Indian weather.
+              </p>
+            </Link>
           </div>
         </div>
 

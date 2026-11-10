@@ -1,4 +1,4 @@
-import React, { useLayoutEffect } from 'react';
+import React, { useLayoutEffect, useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 
 export interface BreadcrumbItem {
@@ -17,18 +17,23 @@ export interface SEOHeadProps {
   ogImageHeight?: string | number;
   ogImageAlt?: string;
   noindex?: boolean;
+  noIndex?: boolean;
   jsonLd?: Record<string, any> | Array<Record<string, any>>;
+  structuredData?: Record<string, any> | Array<Record<string, any>>;
   breadcrumbs?: BreadcrumbItem[];
 }
 
 export const SITE_ORIGIN = 'https://sbflorist.in';
 export const DEFAULT_BRAND = 'Spring Blossoms Florist';
-export const DEFAULT_TITLE = 'Flowers & Cakes Delivery in Hyderabad | SB Florist';
+export const DEFAULT_TITLE = 'Spring Blossoms Florist | Buy Flowers & Gifts Online in India';
 export const DEFAULT_DESCRIPTION =
-  'Order fresh flowers, cakes and gifts in Hyderabad & Secunderabad. Free delivery on your first order and ₹999+ orders, with same-day and midnight delivery.';
+  'Order fresh flower bouquets, luxury roses, tulips, orchids, cakes, chocolates, and thoughtful gifts online from Spring Blossoms Florist. Same-day & midnight delivery in Hyderabad, Secunderabad & across India.';
 export const DEFAULT_OG_IMAGE = 'https://sbflorist.in/images/og-preview.jpg';
 export const DEFAULT_OG_IMAGE_ALT =
-  'Spring Blossoms Florist — Flowers, Cakes & Gifts Delivery in Hyderabad & Secunderabad';
+  'Spring Blossoms Florist — Fresh Flowers, Luxury Bouquets, Cakes & Gifts Online in India';
+
+let cachedGlobalSeoSettings: any = null;
+let globalSeoSettingsPromise: Promise<any> | null = null;
 
 export const serializeJsonLd = (schema: Record<string, any>): string =>
   JSON.stringify(schema).replace(/</g, '\\u003c');
@@ -76,22 +81,49 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
   ogImageHeight,
   ogImageAlt,
   noindex = false,
+  noIndex = false,
   jsonLd,
+  structuredData,
   breadcrumbs,
 }) => {
+  const [globalSettings, setGlobalSettings] = useState<any>(cachedGlobalSeoSettings);
+
+  useEffect(() => {
+    if (cachedGlobalSeoSettings) {
+      setGlobalSettings(cachedGlobalSeoSettings);
+      return;
+    }
+    if (!globalSeoSettingsPromise) {
+      globalSeoSettingsPromise = fetch('/api/seo/global-settings')
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => {
+          cachedGlobalSeoSettings = d?.settings || null;
+          return cachedGlobalSeoSettings;
+        })
+        .catch(() => null);
+    }
+    globalSeoSettingsPromise.then((s) => {
+      if (s) setGlobalSettings(s);
+    });
+  }, []);
+
+  const defaultSiteTitle = globalSettings?.siteTitle || DEFAULT_TITLE;
+  const defaultSiteDesc = globalSettings?.defaultMetaDescription || DEFAULT_DESCRIPTION;
+
   const finalTitle = title
-    ? title.includes('Spring Blossoms') || title.includes('SB Florist')
+    ? title.includes('Spring Blossoms') || title.includes('SB Florist') || title.includes('SBFlorist')
       ? title
       : `${title} | ${DEFAULT_BRAND}`
-    : DEFAULT_TITLE;
-  const finalDesc = description || DEFAULT_DESCRIPTION;
+    : defaultSiteTitle;
+  const finalDesc = description || defaultSiteDesc;
   const finalCanonical = cleanCanonicalUrl(canonical);
-  const rawOgImage = ogImage && !ogImage.includes('logo_final_tp7ymk.png') ? ogImage : DEFAULT_OG_IMAGE;
+  const rawOgImage = ogImage && !ogImage.includes('logo_final_tp7ymk.png') ? ogImage : (globalSettings?.defaultOgImage || DEFAULT_OG_IMAGE);
   const finalOgImage = rawOgImage.startsWith('/') ? `${SITE_ORIGIN}${rawOgImage}` : rawOgImage;
   const isDefaultPreview = finalOgImage === DEFAULT_OG_IMAGE;
   const finalOgImageWidth = ogImageWidth ?? (isDefaultPreview ? '1200' : undefined);
   const finalOgImageHeight = ogImageHeight ?? (isDefaultPreview ? '630' : undefined);
   const finalOgImageAlt = ogImageAlt || (isDefaultPreview ? DEFAULT_OG_IMAGE_ALT : finalTitle);
+  const shouldNoIndex = Boolean(noindex || noIndex);
 
   useLayoutEffect(() => {
     if (typeof document !== 'undefined') {
@@ -119,11 +151,12 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
   } : null;
 
   const schemasToRender: Array<Record<string, any>> = [];
-  if (jsonLd) {
-    if (Array.isArray(jsonLd)) {
-      schemasToRender.push(...jsonLd);
+  const combinedSchemaProp = jsonLd || structuredData;
+  if (combinedSchemaProp) {
+    if (Array.isArray(combinedSchemaProp)) {
+      schemasToRender.push(...combinedSchemaProp);
     } else {
-      schemasToRender.push(jsonLd);
+      schemasToRender.push(combinedSchemaProp);
     }
   }
   if (breadcrumbSchema) {
@@ -137,10 +170,14 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
       {keywords && <meta name="keywords" content={keywords} />}
       <link rel="canonical" href={finalCanonical} />
 
-      {noindex ? (
+      {globalSettings?.googleSiteVerification && (
+        <meta name="google-site-verification" content={globalSettings.googleSiteVerification} />
+      )}
+
+      {shouldNoIndex ? (
         <meta name="robots" content="noindex, nofollow" />
       ) : (
-        <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+        <meta name="robots" content={globalSettings?.defaultRobots || "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"} />
       )}
 
       {/* Open Graph Tags */}

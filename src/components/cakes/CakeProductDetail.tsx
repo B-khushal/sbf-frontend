@@ -41,6 +41,7 @@ import { Card } from '@/components/ui/card';
 import ProtectedImage from '@/components/ui/ProtectedImage';
 import PinCodeInput, { ServiceablePinCode } from '@/components/ui/PinCodeInput';
 import ProductReviews from '@/components/ProductReviews';
+import RecommendedProducts from '@/components/RecommendedProducts';
 import { ProductData } from '@/services/productService';
 import { getAddons, AddonProduct } from '@/services/addonService';
 import { getCakeVariants, CakeVariantOption } from '@/utils/cakeHelpers';
@@ -1320,6 +1321,16 @@ export const CakeProductDetail: React.FC<CakeProductDetailProps> = ({
           productId={product._id}
           productTitle={product.title}
           onReviewSubmit={onReviewSubmit}
+        />
+      </div>
+
+      {/* 12. Luxury Recommended Products Section */}
+      <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 pb-16">
+        <RecommendedProducts
+          productId={product._id}
+          category={product.category || 'cakes'}
+          variant="cake"
+          limit={10}
         />
       </div>
 

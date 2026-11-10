@@ -151,9 +151,11 @@ const Footer = () => {
             {[
               { label: 'Home', href: '/' },
               { label: 'Shop', href: '/shop' },
+              { label: 'Floral Blog', href: '/blog' },
               { label: 'Track Order', href: '/profile' },
               { label: 'Contact', href: '/contact' },
               { label: 'About', href: '/about' },
+              { label: 'FAQs', href: '/faq' },
               { label: 'Sitemap', href: '/sitemap' },
             ].map((item) => (
               <Link
@@ -532,6 +534,12 @@ const Footer = () => {
           </div>
           <div className="flex flex-wrap justify-center sm:justify-end gap-x-6 sm:gap-x-8 gap-y-3 text-sm">
             <Link
+              to="/blog"
+              className="text-rose-700 hover:text-primary transition-colors duration-300 font-semibold"
+            >
+              Flower &amp; Gifting Blog
+            </Link>
+            <Link
               to="/faq"
               className="text-gray-600 hover:text-primary transition-colors duration-300 font-medium"
             >
@@ -593,6 +601,36 @@ const Footer = () => {
               </Link>
               <Link to="/flower-delivery-secunderabad" className="px-3 py-1.5 rounded-lg bg-sky-50 text-sky-700 font-semibold border border-sky-200 hover:bg-sky-100 transition-colors">
                 📍 Flower Delivery in Secunderabad Hub
+              </Link>
+              <Link to="/blog" className="px-3 py-1.5 rounded-lg bg-amber-50 text-amber-800 font-semibold border border-amber-200 hover:bg-amber-100 transition-colors">
+                📖 Flower &amp; Gifting Blog
+              </Link>
+              <Link to="/roses" className="px-2.5 py-1.5 rounded-lg bg-white text-gray-700 border border-gray-200 hover:border-rose-300 transition-colors">
+                🌹 Roses
+              </Link>
+              <Link to="/tulips" className="px-2.5 py-1.5 rounded-lg bg-white text-gray-700 border border-gray-200 hover:border-rose-300 transition-colors">
+                🌷 Tulips
+              </Link>
+              <Link to="/orchids" className="px-2.5 py-1.5 rounded-lg bg-white text-gray-700 border border-gray-200 hover:border-rose-300 transition-colors">
+                🪻 Orchids
+              </Link>
+              <Link to="/lilies" className="px-2.5 py-1.5 rounded-lg bg-white text-gray-700 border border-gray-200 hover:border-rose-300 transition-colors">
+                🌸 Lilies
+              </Link>
+              <Link to="/lavender-lisianthus" className="px-2.5 py-1.5 rounded-lg bg-white text-gray-700 border border-gray-200 hover:border-rose-300 transition-colors">
+                ✨ Lisianthus (Eustoma)
+              </Link>
+              <Link to="/hydrangea" className="px-2.5 py-1.5 rounded-lg bg-white text-gray-700 border border-gray-200 hover:border-rose-300 transition-colors">
+                💐 Hydrangeas
+              </Link>
+              <Link to="/carnation" className="px-2.5 py-1.5 rounded-lg bg-white text-gray-700 border border-gray-200 hover:border-rose-300 transition-colors">
+                🌺 Carnations
+              </Link>
+              <Link to="/sunflowers" className="px-2.5 py-1.5 rounded-lg bg-white text-gray-700 border border-gray-200 hover:border-rose-300 transition-colors">
+                🌻 Sunflowers
+              </Link>
+              <Link to="/vase" className="px-2.5 py-1.5 rounded-lg bg-white text-gray-700 border border-gray-200 hover:border-rose-300 transition-colors">
+                🏺 Glass Vase Florals
               </Link>
             </div>
             <p>

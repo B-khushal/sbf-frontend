@@ -17,6 +17,7 @@ import { Input } from './ui/input';
 import productService, { ProductData, ComboItem, ProductVideo } from '@/services/productService';
 import { ProductCard } from './ProductGrid';
 import ProductReviews from '@/components/ProductReviews';
+import RecommendedProducts from '@/components/RecommendedProducts';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { Card } from '@/components/ui/card';
 import { X, MapPin, Play, Pause, Volume2, VolumeX, Maximize2, Minimize2, Sliders, Film } from 'lucide-react';
@@ -95,141 +96,6 @@ type ProductDetailProps = {
     customizations?: CustomizationData;
   }) => void;
   onReviewSubmit: () => void;
-};
-
-// Recommended Products Component
-const RecommendedProducts: React.FC<{ productId: string; category: string }> = ({ productId, category }) => {
-  const [recommendedProducts, setRecommendedProducts] = useState<ProductData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { formatPrice, convertPrice } = useCurrency();
-  const { toast } = useToast();
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [isAutoScrolling, setIsAutoScrolling] = useState(true);
-
-  useEffect(() => {
-    const fetchRecommendedProducts = async () => {
-      try {
-        setLoading(true);
-        const products = await productService.getRecommendedProducts(productId, category, 6);
-        setRecommendedProducts(products);
-      } catch (error) {
-        console.error('Error fetching recommended products:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchRecommendedProducts();
-  }, [productId, category]);
-
-  // Cinematic slow panning auto-scroll effect (pauses on hover)
-  useEffect(() => {
-    if (!isAutoScrolling || loading || !recommendedProducts.length) return;
-
-    const container = scrollRef.current;
-    if (!container) return;
-
-    let animId: number;
-    let lastTime = 0;
-    const speed = 25; // Pixels per second
-
-    const step = (time: number) => {
-      if (!lastTime) lastTime = time;
-      const delta = (time - lastTime) / 1000;
-      lastTime = time;
-
-      if (container) {
-        container.scrollLeft += speed * delta;
-        // Loop back to start if reached the end
-        if (container.scrollLeft + container.clientWidth >= container.scrollWidth - 2) {
-          container.scrollLeft = 0;
-        }
-      }
-      animId = requestAnimationFrame(step);
-    };
-
-    animId = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(animId);
-  }, [isAutoScrolling, loading, recommendedProducts.length]);
-
-  const handleScrollClick = (direction: 'left' | 'right') => {
-    setIsAutoScrolling(false); // Stop auto-scroll on click interaction
-    if (scrollRef.current) {
-      const { scrollLeft, clientWidth } = scrollRef.current;
-      const scrollAmount = clientWidth * 0.75;
-      const target = direction === 'left' ? scrollLeft - scrollAmount : scrollLeft + scrollAmount;
-      scrollRef.current.scrollTo({ left: target, behavior: 'smooth' });
-    }
-  };
-
-
-  if (loading) {
-    return (
-      <div className="mt-20 pt-10 border-t border-slate-100 dark:border-slate-900">
-        <span className="text-[10px] uppercase font-bold tracking-[0.25em] text-slate-400 block text-center mb-2">Curations</span>
-        <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-center text-slate-900 dark:text-slate-100 mb-8">You May Also Love</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="animate-pulse space-y-3">
-              <div className="bg-slate-100 dark:bg-slate-900 aspect-[4/5] rounded-2xl"></div>
-              <div className="h-3.5 bg-slate-100 dark:bg-slate-900 rounded-lg w-3/4"></div>
-              <div className="h-3.5 bg-slate-100 dark:bg-slate-900 rounded-lg w-1/2"></div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (!recommendedProducts.length) {
-    return null;
-  }
-
-  return (
-    <div className="mt-24 pt-12 border-t border-slate-200/40 dark:border-slate-800/40 relative">
-
-      {/* Header Branding */}
-      <span className="text-[10px] uppercase font-extrabold tracking-[0.25em] text-slate-400 dark:text-slate-500 block text-center mb-2">Curated Arrangements</span>
-      <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-center text-slate-900 dark:text-slate-100 mb-10">
-        You May Also Love
-      </h2>
-
-      {/* Manual Scroll Controls */}
-      <div className="absolute top-10 right-4 flex gap-2">
-        <button
-          onClick={() => handleScrollClick('left')}
-          className="w-9 h-9 rounded-full bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900 flex items-center justify-center text-slate-700 dark:text-slate-350 hover:bg-slate-50 shadow-sm transition-all"
-        >
-          <ChevronLeft size={16} />
-        </button>
-        <button
-          onClick={() => handleScrollClick('right')}
-          className="w-9 h-9 rounded-full bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900 flex items-center justify-center text-slate-700 dark:text-slate-350 hover:bg-slate-50 shadow-sm transition-all"
-        >
-          <ChevronRight size={16} />
-        </button>
-      </div>
-
-      {/* Cinematic Horizontal Scroll wrapper */}
-      <div
-        ref={scrollRef}
-        onMouseEnter={() => setIsAutoScrolling(false)}
-        onMouseLeave={() => setIsAutoScrolling(true)}
-        className="flex gap-6 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory px-4 py-4 pb-12 md:pb-16 -mx-4"
-      >
-        {recommendedProducts.map((recProd) => {
-          return (
-            <div
-              key={recProd._id}
-              className="w-[200px] xs:w-[220px] md:w-[320px] lg:w-[300px] flex-shrink-0 snap-start"
-            >
-              <ProductCard product={recProd as any} />
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
 };
 
 const getComboMaxPrice = (product: ProductData) => {
@@ -2502,10 +2368,12 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
       </div>
 
       {/* Recommended Products Section */}
-      <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 md:px-8 2xl:px-12 mt-16 pb-16">
-        <div className="pt-8 border-t border-slate-200/40 dark:border-slate-800/40 overflow-visible relative">
-          <RecommendedProducts productId={product._id} category={product.category} />
-        </div>
+      <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 md:px-8 2xl:px-12 pb-16">
+        <RecommendedProducts
+          productId={product._id}
+          category={product.category}
+          limit={10}
+        />
       </div>
 
       {/* Contact Modal */}

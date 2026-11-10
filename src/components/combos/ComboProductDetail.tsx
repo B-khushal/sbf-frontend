@@ -47,6 +47,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import ProtectedImage from '@/components/ui/ProtectedImage';
 import PinCodeInput, { ServiceablePinCode } from '@/components/ui/PinCodeInput';
 import ProductReviews from '@/components/ProductReviews';
+import RecommendedProducts from '@/components/RecommendedProducts';
 import productService, { ProductData } from '@/services/productService';
 import { getAddons, AddonProduct } from '@/services/addonService';
 import { promptLoginForAddToCart } from '@/utils/cartAuthHelper';
@@ -1220,31 +1221,13 @@ export const ComboProductDetail: React.FC<ComboProductDetailProps> = ({
           />
         </div>
 
-        {/* 🎁 RELATED COMBOS CAROUSEL */}
-        {relatedCombos.length > 0 && (
-          <div className="space-y-4 pt-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
-                  You May Also Love
-                </h3>
-                <p className="text-xs text-slate-500">Other trending celebration combos & hampers</p>
-              </div>
-              <Link
-                to="/shop/combos"
-                className="text-xs font-bold text-rose-600 hover:text-rose-700 flex items-center gap-1"
-              >
-                View All Combos <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {relatedCombos.map((c) => (
-                <CakeComboCard key={c._id || c.id} combo={c} />
-              ))}
-            </div>
-          </div>
-        )}
+        {/* 🎁 LUXURY RECOMMENDED PRODUCTS CAROUSEL */}
+        <RecommendedProducts
+          productId={product._id}
+          category={product.category || 'combos'}
+          variant="combo"
+          limit={10}
+        />
 
       </div>
 

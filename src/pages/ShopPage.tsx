@@ -246,14 +246,166 @@ export const TARGET_CATEGORY_SEO: Record<string, {
     ]
   },
   hydrangea: {
-    title: "Hydrangea Flower Bouquets in Hyderabad | Spring Blossoms Florist",
-    description: "Explore exquisite hydrangea flower bouquets and luxury arrangements in Hyderabad. Handcrafted by master florists at Spring Blossoms Florist.",
-    h1: "Hydrangea Flower Bouquets",
+    title: "Hydrangea Flower Bouquets | Buy Blue, Pink & White Hydrangeas – SBFlorist",
+    description: "Explore exquisite blue, pink, white, and green hydrangea flower bouquets and luxury vase arrangements. Handcrafted by master florists at Spring Blossoms Florist.",
+    h1: "Hydrangea Flower Bouquets & Luxury Arrangements",
     canonical: "/hydrangea",
     h2s: [
       {
         title: "Luxury Hydrangea Floral Arrangements",
-        body: "Lush, cloud-like hydrangea clusters in soft pastels and vibrant tones, creating opulent bouquets for weddings, elegant birthdays, and milestone moments."
+        body: "Lush, cloud-like hydrangea clusters in soft pastels and vibrant tones create opulent bouquets for weddings, milestone birthdays, and sophisticated home decor."
+      },
+      {
+        title: "Popular Hydrangea Colors: Blue, Pink, White & Pastel Green",
+        body: "Choose serene powder-blue hydrangeas for calming elegance, blush pink hydrangeas for heartfelt romance, snow-white hydrangeas for wedding and anniversary tributes, or pastel green hydrangeas for botanical styling."
+      },
+      {
+        title: "Hydrangea Vase Care & Same-Day Delivery",
+        body: "Hydrangeas drink water through both stems and petals. Keep their vase brimming with cool fresh water and mist the blooms lightly to enjoy days of voluminous beauty."
+      }
+    ]
+  },
+  tulips: {
+    title: "Buy Tulip Flowers Online | Red, Pink, Yellow & Purple Tulips – SBFlorist",
+    description: "Order fresh tulip bouquets online from Spring Blossoms Florist. Explore red, pink, yellow, white, orange, and purple tulips crafted for romantic and milestone gifting.",
+    h1: "Fresh Tulip Flowers & Luxury Tulip Bouquets",
+    canonical: "/tulips",
+    h2s: [
+      {
+        title: "Shop Imported & Fresh-Cut Tulip Bouquets Online",
+        body: "Celebrated for their sculptural cup-shaped petals and European elegance, our fresh tulips are conditioned in cold chambers and hand-tied in signature Korean matte wraps or crystal vases."
+      },
+      {
+        title: "Meaning of Red, Pink, Yellow, Purple & White Tulips",
+        body: "Red tulips declare deep, true love; pink tulips convey warm affection and congratulations; yellow tulips radiate sunshine and cheer; purple tulips signify royalty and admiration; white tulips express peace and sincerity."
+      },
+      {
+        title: "Best Occasions for Tulip Gifting",
+        body: "Tulip bouquets are an unforgettable choice for anniversaries, Valentine's surprises, milestone birthdays, housewarmings, and executive congratulations."
+      },
+      {
+        title: "How to Care for Cut Tulips in Indian Homes",
+        body: "Place tulips in shallow, cool water (you can even add an ice cube daily) away from direct sunlight and ceiling fans. Cut tulips continue to grow slightly in the vase and curve gracefully toward the light."
+      }
+    ]
+  },
+  orchids: {
+    title: "Buy Orchid Flowers Online | Purple, Blue & White Orchids – SBFlorist",
+    description: "Shop exotic purple, blue, white, and pink orchid bouquets, baskets, and vase arrangements online at Spring Blossoms Florist with same-day and midnight delivery.",
+    h1: "Exotic Orchid Bouquets & Luxury Arrangements",
+    canonical: "/orchids",
+    h2s: [
+      {
+        title: "Explore Dendrobium & Cymbidium Orchid Arrangements",
+        body: "Orchids represent rare luxury, strength, and refined taste. Our florists craft architectural bouquets and basket arrangements using long-lasting Dendrobium and Cymbidium orchid sprays."
+      },
+      {
+        title: "Popular Orchid Shades: Royal Purple, Blue & Pure White",
+        body: "Royal purple orchids are a timeless symbol of respect and admiration, exotic blue-tinted orchids make striking birthday statement gifts, and white orchids bring serene sophistication to homes and offices."
+      },
+      {
+        title: "Why Orchids Are Ideal for Indian Climates",
+        body: "Tropical orchids thrive in warm weather and easily last 7 to 12 days in a clean vase with fresh water—making them one of the most durable fresh flower gifts in India."
+      }
+    ]
+  },
+  "lavender-lisianthus": {
+    title: "Buy Lisianthus (Eustoma) Flowers Online | Pastel Bouquets – SBFlorist",
+    description: "Order luxury Lavender Lisianthus (Eustoma) bouquets and pastel floral arrangements online from Spring Blossoms Florist. Delicate ruffled blooms with long vase life.",
+    h1: "Lavender Lisianthus (Eustoma) Bouquets & Arrangements",
+    canonical: "/lavender-lisianthus",
+    h2s: [
+      {
+        title: "What Makes Lisianthus (Eustoma) a Luxury Favorite?",
+        body: "Often called the prairie gentian or Texas bluebell, Lisianthus (Eustoma) features delicate, rose-like ruffled petals in enchanting lavender, white, pink, and green hues."
+      },
+      {
+        title: "Pairings with Roses, Hydrangeas & Eucalyptus",
+        body: "Our master florists pair lavender and white Lisianthus with Dutch pastel roses, lush hydrangeas, and silvery eucalyptus foliage for dreamy, couture-style bouquets."
+      },
+      {
+        title: "Exceptional Vase Life & Care",
+        body: "Each Lisianthus stem carries multiple buds that open sequentially over 8 to 12 days, giving your recipient a bouquet that grows fuller every day."
+      }
+    ]
+  },
+  carnation: {
+    title: "Buy Carnation Bouquets Online | Pink, Red, White & Mixed Carnations – SBFlorist",
+    description: "Shop fresh carnation flower bouquets and baskets online at Spring Blossoms Florist. Ruffled pink, red, yellow, peach, and white carnations delivered fresh.",
+    h1: "Fresh Carnation Flower Bouquets & Baskets",
+    canonical: "/carnation",
+    h2s: [
+      {
+        title: "Handcrafted Carnation Bouquets for Every Celebration",
+        body: "Known for their clove-sweet fragrance, ruffled petals, and remarkable longevity, fresh carnations are a beloved choice for Mother's Day, birthdays, teachers' tributes, and anniversaries."
+      },
+      {
+        title: "Carnation Colors & Symbolism",
+        body: "Pink carnations symbolize maternal love and gratitude, red carnations express deep affection, white carnations stand for pure good luck, and peach or yellow carnations bring joyful warmth."
+      }
+    ]
+  },
+  vase: {
+    title: "Flower Vase Arrangements Online | Luxury Glass Vase Florals – SBFlorist",
+    description: "Order fresh flowers in glass vases online from Spring Blossoms Florist. Ready-to-display rose, lily, orchid, tulip, and hydrangea vase arrangements for home and office.",
+    h1: "Luxury Flower Vase Arrangements",
+    canonical: "/vase",
+    h2s: [
+      {
+        title: "Ready-to-Display Glass Vase Floral Designs",
+        body: "Skip the search for a container—our glass vase arrangements arrive pre-hydrated and professionally styled, ready to grace dining tables, reception desks, hospital rooms, or living spaces."
+      },
+      {
+        title: "Roses, Lilies, Orchids & Hydrangeas in Keepsake Vases",
+        body: "From compact tabletop cylinders of roses and carnations to grand tall vases of oriental lilies and purple orchids, every arrangement includes a reusable glass keepsake vase."
+      }
+    ]
+  },
+  "premium-roses": {
+    title: "Premium Long-Stem Rose Bouquets Online | Luxury Roses – SBFlorist",
+    description: "Send luxury long-stem Dutch rose bouquets, 50 to 100 rose arrangements, and signature hatbox roses from Spring Blossoms Florist with express delivery.",
+    h1: "Premium Long-Stem Rose Bouquets",
+    canonical: "/premium-roses",
+    h2s: [
+      {
+        title: "Couture Dutch Roses for Grand Romantic Gestures",
+        body: "Crafted with export-grade, high-petal-count Dutch roses featuring velvety heads and sturdy stems. Ideal for proposals, milestone wedding anniversaries, and luxury Valentine surprises."
+      }
+    ]
+  },
+  "romantic-bouquets": {
+    title: "Romantic Flower Bouquets Online | Love & Anniversary Flowers – SBFlorist",
+    description: "Express your deepest feelings with romantic red roses, pink lilies, tulips, and heart-shaped flower arrangements from Spring Blossoms Florist.",
+    h1: "Romantic Flower Bouquets & Love Arrangements",
+    canonical: "/romantic-bouquets",
+    h2s: [
+      {
+        title: "Handcrafted Romantic Flowers for Wife, Husband & Partner",
+        body: "From classic crimson rose hand-ties to pastel lily and lisianthus bouquets, every romantic arrangement is finished with luxury ribbons and a custom love note card."
+      }
+    ]
+  },
+  "birthday-bouquets": {
+    title: "Birthday Flower Bouquets Online | Same-Day & Midnight Delivery – SBFlorist",
+    description: "Surprise loved ones with vibrant birthday flower bouquets, sunflowers, lilies, orchids, and roses from Spring Blossoms Florist. Same-day & midnight delivery available.",
+    h1: "Birthday Flower Bouquets & Floral Surprises",
+    canonical: "/birthday-bouquets",
+    h2s: [
+      {
+        title: "Joyful Birthday Blooms for Friends, Family & Colleagues",
+        body: "Brighten their special day with cheerful mixed bouquets, golden sunflowers, fragrant pink lilies, or grand rose arrangements delivered right to their doorstep."
+      }
+    ]
+  },
+  "gift-hampers": {
+    title: "Luxury Gift Hampers & Baskets Online | Flowers, Chocolates & Gourmet Gifts – SBFlorist",
+    description: "Order curated gift hampers, gourmet chocolate baskets, fruit hampers, and floral gift boxes online from Spring Blossoms Florist for festive and corporate gifting.",
+    h1: "Curated Luxury Gift Hampers & Baskets",
+    canonical: "/gift-hampers",
+    h2s: [
+      {
+        title: "Artisanal Gift Hampers for Celebrations & Corporate Gifting",
+        body: "Thoughtfully assembled hampers combining fresh flowers, imported chocolates, dry fruits, gourmet treats, and keepsake baskets for festivals, weddings, and VIP appreciation."
       }
     ]
   }
