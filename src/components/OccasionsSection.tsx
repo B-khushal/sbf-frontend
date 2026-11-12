@@ -263,12 +263,23 @@ export const OccasionsSection: React.FC<OccasionsSectionProps> = ({
 
   useEffect(() => {
     if (!selectedSlug) return;
+    const container = tabListRef.current;
     const btn = tabButtonsRef.current[selectedSlug];
-    if (btn) {
-      btn.scrollIntoView({
+    if (!container || !btn) return;
+
+    // Scroll only the horizontal tab strip so the page viewport never jumps vertically on load or tab switch
+    const cRect = container.getBoundingClientRect();
+    const bRect = btn.getBoundingClientRect();
+
+    if (bRect.left < cRect.left) {
+      container.scrollTo({
+        left: Math.max(0, container.scrollLeft + (bRect.left - cRect.left) - 16),
         behavior: prefersReducedMotion ? "auto" : "smooth",
-        inline: "nearest",
-        block: "nearest",
+      });
+    } else if (bRect.right > cRect.right) {
+      container.scrollTo({
+        left: container.scrollLeft + (bRect.right - cRect.right) + 16,
+        behavior: prefersReducedMotion ? "auto" : "smooth",
       });
     }
   }, [selectedSlug, prefersReducedMotion]);
@@ -290,7 +301,7 @@ export const OccasionsSection: React.FC<OccasionsSectionProps> = ({
       e.preventDefault();
       const targetOccasion = occasions[nextIdx];
       setSelectedSlug(targetOccasion.slug);
-      tabButtonsRef.current[targetOccasion.slug]?.focus();
+      tabButtonsRef.current[targetOccasion.slug]?.focus({ preventScroll: true });
     }
   };
 
@@ -355,7 +366,7 @@ export const OccasionsSection: React.FC<OccasionsSectionProps> = ({
               role="tablist"
               aria-label="Browse gifts by occasion"
               onScroll={updateTabFades}
-              className="flex flex-nowrap items-center gap-5 sm:gap-7 overflow-x-auto no-scrollbar py-0.5 touch-pan-x"
+              className="flex flex-nowrap items-center gap-5 sm:gap-7 overflow-x-auto no-scrollbar py-0.5 touch-auto"
               style={{ WebkitOverflowScrolling: "touch" }}
             >
               {loadingOccasions

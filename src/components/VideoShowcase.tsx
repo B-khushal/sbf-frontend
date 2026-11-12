@@ -320,7 +320,7 @@ export const VideoShowcase = () => {
           <div
             ref={scrollContainerRef}
             onScroll={() => requestAnimationFrame(updateScrollState)}
-            className="flex gap-5 sm:gap-6 3xl:gap-7 overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-none pb-4 touch-pan-x overscroll-x-contain"
+            className="flex gap-5 sm:gap-6 3xl:gap-7 overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-none pb-4 touch-auto overscroll-x-contain"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
             {videos.map((video, idx) => (

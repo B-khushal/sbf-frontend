@@ -305,7 +305,7 @@ export const NewArrivals = ({ products, loading, onAddToCart }: NewArrivalsProps
                 setIsHovered(false);
               }}
               onMouseEnter={() => setIsHovered(true)}
-              className="flex gap-5 sm:gap-6 overflow-x-auto pt-6 pb-20 no-scrollbar scroll-smooth snap-x snap-mandatory cursor-grab touch-pan-x"
+              className="flex gap-5 sm:gap-6 overflow-x-auto pt-6 pb-20 no-scrollbar scroll-smooth snap-x snap-mandatory cursor-grab touch-auto"
               style={{
                 scrollBehavior: "smooth",
               }}

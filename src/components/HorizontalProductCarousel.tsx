@@ -198,7 +198,7 @@ export const HorizontalCarouselTrack: React.FC<HorizontalCarouselTrackProps> = (
       ref={trackRef}
       {...trackProps}
       className={cn(
-        "flex flex-nowrap items-stretch gap-3.5 sm:gap-5 overflow-x-auto no-scrollbar py-1 touch-pan-x overscroll-x-contain",
+        "flex flex-nowrap items-stretch gap-3.5 sm:gap-5 overflow-x-auto no-scrollbar py-1 touch-auto overscroll-x-contain",
         isDragging
           ? "cursor-grabbing select-none snap-none scroll-auto"
           : "cursor-grab snap-x snap-mandatory scroll-smooth",

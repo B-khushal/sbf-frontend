@@ -247,6 +247,17 @@ export const HistoryTab: React.FC = () => {
               </div>
             </div>
 
+            {selectedItem.errorDetails && (
+              <div className="p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800">
+                <span className="text-[10px] text-rose-600 dark:text-rose-400 uppercase font-bold block mb-1">
+                  Error / Warning Details
+                </span>
+                <p className="font-mono text-[11px] text-rose-700 dark:text-rose-300 break-words whitespace-pre-wrap max-h-28 overflow-y-auto">
+                  {selectedItem.errorDetails}
+                </p>
+              </div>
+            )}
+
             <div>
               <span className="font-bold text-slate-800 dark:text-slate-200 block mb-1">
                 Tables Processed ({selectedItem.tablesSelected?.length || 0}):
