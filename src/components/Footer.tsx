@@ -116,8 +116,8 @@ const Footer = () => {
 
   if (loading) {
     return (
-      <footer className="bg-secondary/40 pt-12 sm:pt-16 pb-6 sm:pb-8 px-3 sm:px-4 md:px-6 lg:px-8">
-        <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto">
+      <footer className="bg-secondary/40 pt-12 sm:pt-16 pb-6 sm:pb-8 px-4 sm:px-6 lg:px-8 2xl:px-12 3xl:px-16">
+        <div className="w-full max-w-7xl 2xl:max-w-[1560px] 3xl:max-w-[1840px] 4xl:max-w-[2160px] mx-auto">
           <div className="text-center">
             <div className="inline-block w-6 h-6 sm:w-8 sm:h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-3 sm:mb-4"></div>
             <p className="text-gray-600 text-sm sm:text-base">Loading footer...</p>
@@ -128,8 +128,8 @@ const Footer = () => {
   }
 
   return (
-    <footer className="relative bg-gradient-to-br from-secondary/40 via-secondary/30 to-secondary/20 pt-16 pb-8">
-      <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12">
+    <footer className="relative bg-gradient-to-br from-secondary/40 via-secondary/30 to-secondary/20 pt-16 3xl:pt-20 pb-8 3xl:pb-12">
+      <div className="w-full max-w-7xl 2xl:max-w-[1560px] 3xl:max-w-[1840px] 4xl:max-w-[2160px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 3xl:px-16">
         <div className="md:hidden rounded-t-3xl bg-white border-t border-sky-100 shadow-[0_-10px_30px_rgba(15,23,42,0.06)] px-4 pt-4 pb-4 space-y-4">
           <div className="space-y-2">
             <Link to="/" className="inline-flex items-center gap-2 text-lg font-bold text-gray-900 group">
@@ -299,7 +299,7 @@ const Footer = () => {
         </div>
 
         {/* Main Footer Content */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-8 xl:gap-12 mb-10 sm:mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 xl:gap-12 2xl:gap-16 3xl:gap-20 mb-10 sm:mb-12">
           {/* Brand & Info */}
           <div className="text-center sm:text-left space-y-5 sm:space-y-6">
             <Link to="/" className="inline-flex items-center gap-3 text-2xl font-bold text-gray-900 hover:text-primary transition-colors duration-300 group">
@@ -654,7 +654,7 @@ const Footer = () => {
         <div className="mt-10 sm:mt-12">
           <iframe
             src={footerSettings.mapEmbedUrl}
-            className="w-full h-[250px] sm:h-[300px] border-0 rounded-lg shadow-lg"
+            className="w-full h-[250px] sm:h-[300px] 2xl:h-[340px] 3xl:h-[380px] border-0 rounded-xl shadow-lg"
             allowFullScreen
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"

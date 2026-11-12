@@ -1185,20 +1185,11 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
             </div>
           )}
 
-          {/* Explore Our Exquisite Range - Only show when no category is selected and no search */}
+          {/* Explore Our Exquisite Range - Category Quick Grid (Only when no category is selected and no search) */}
           {!selectedCategory && !searchQuery && (
-            <div className="mb-16">
-              <div className="text-center mb-10">
-                <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 tracking-tight mb-3">
-                  Shop Flowers, Bouquets, Cakes &amp; Gifts Online
-                </h1>
-                <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
-                  Explore handcrafted flower bouquets, artisanal cakes, indoor plants, gourmet chocolates, and curated gift combos for every celebration.
-                </p>
-              </div>
-
+            <div className="mb-10">
               {/* Mobile Responsive Category Grid */}
-              <div className="max-w-6xl mx-auto">
+              <div className="max-w-6xl 2xl:max-w-8xl mx-auto">
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 lg:gap-6 justify-items-center">
                   {flowerCategories.map((category, index) => (
                     <div 
@@ -1236,105 +1227,53 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
             </div>
           )}
 
-          {/* Category Header - Show when a category is selected */}
+          {/* Slim Breadcrumb & Quick Rose Color Pills - Show when a category is selected */}
           {selectedCategory && !searchQuery && (
-            isBudgetFriendlyCategory ? (
-              <div className="mb-10 sm:mb-12 relative overflow-hidden rounded-3xl bg-gradient-to-br from-rose-50/70 via-sky-50/50 to-emerald-50/60 border border-bloom-pink-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.03)] px-6 py-10 sm:py-12 text-center">
-                <div className="absolute top-0 right-0 -mt-8 -mr-8 w-40 h-40 bg-pink-200/30 rounded-full blur-3xl pointer-events-none" />
-                <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-40 h-40 bg-sky-200/30 rounded-full blur-3xl pointer-events-none" />
-                
-                <div className="relative z-10 max-w-3xl mx-auto">
-                  {/* Breadcrumbs */}
-                  <div className="inline-flex items-center gap-2 text-xs sm:text-sm text-gray-500 mb-4">
-                    <button 
-                      onClick={() => navigate('/shop')}
-                      className="hover:text-primary transition-colors font-medium"
-                    >
-                      Shop
-                    </button>
-                    <span>›</span>
-                    <span className="text-gray-800 font-semibold">
-                      Budget Friendly
-                    </span>
-                  </div>
-
-                  {/* Positioning Tagline Badge */}
-                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/90 border border-bloom-pink-200/70 shadow-xs mb-4">
-                    <Sparkles className="w-3.5 h-3.5 text-pink-500" />
-                    <span className="text-[11px] sm:text-xs font-semibold tracking-wider uppercase text-gray-700">
-                      Affordable • Elegant • Thoughtfully Designed
-                    </span>
-                  </div>
-
-                  {/* Main Title */}
-                  <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 tracking-tight mb-3">
-                    Budget Friendly
-                  </h1>
-
-                  {/* Subtitle */}
-                  <p className="text-sm sm:text-base lg:text-lg text-gray-600 leading-relaxed font-normal max-w-xl mx-auto">
-                    Beautiful flowers, thoughtful gifts, effortless expressions — all under ₹1,000.
-                  </p>
-
-                  {/* Subtle Brand Watermark */}
-                  <div className="mt-4 flex items-center justify-center gap-2 text-xs text-muted-foreground/70 font-serif italic">
-                    <span>Spring Blossoms Florist</span>
-                    <span>•</span>
-                    <span>A Reason To Express</span>
-                  </div>
+            <div className="mb-4 sm:mb-6">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="inline-flex items-center gap-2 text-xs sm:text-sm text-gray-600">
+                  <button
+                    onClick={() => navigate('/shop')}
+                    className="hover:text-primary transition-colors font-medium"
+                  >
+                    Shop
+                  </button>
+                  <span>›</span>
+                  <span className="text-gray-800 font-semibold">
+                    {isBudgetFriendlyCategory
+                      ? "Budget Friendly"
+                      : selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)}
+                  </span>
                 </div>
-              </div>
-            ) : (
-              <div className="mb-12">
-                <div className="text-center">
-                  <div className="inline-flex items-center gap-2 text-sm text-gray-600 mb-4">
-                    <button 
-                      onClick={() => navigate('/shop')}
-                      className="hover:text-primary transition-colors"
-                    >
-                      Shop
-                    </button>
-                    <span>›</span>
-                    <span className="text-gray-800 font-medium">
-                      {selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)}
-                    </span>
-                  </div>
-                  <h1 className="text-3xl md:text-4xl font-black text-gray-800 mb-4">
-                    {targetSeo?.h1 || `${selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)} Collection`}
-                  </h1>
-                  <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                    {targetSeo?.description || `Discover our beautiful selection of ${selectedCategory.toLowerCase()} carefully curated for your special moments`}
-                  </p>
 
-                  {/* Roses Quick Color Collection Filter Pills */}
-                  {targetCategoryKey === 'roses' && (
-                    <div className="flex flex-wrap items-center justify-center gap-2 mt-5">
-                      {[
-                        { label: 'All Roses', val: '' },
-                        { label: '🌹 Red Roses', val: 'red' },
-                        { label: '🌸 Pink Roses', val: 'pink' },
-                        { label: '🌻 Yellow Roses', val: 'yellow' },
-                        { label: '🤍 White Roses', val: 'white' },
-                      ].map((chip) => (
-                        <button
-                          key={chip.val}
-                          type="button"
-                          onClick={() => setColorFilter(chip.val)}
-                          className={cn(
-                            "px-4 py-1.5 rounded-full text-xs font-bold transition-all border",
-                            colorFilter === chip.val
-                              ? "bg-rose-600 text-white border-rose-600 shadow-sm"
-                              : "bg-white text-slate-700 border-slate-200 hover:border-rose-300 hover:bg-rose-50/50"
-                          )}
-                        >
-                          {chip.label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                {/* Roses Quick Color Collection Filter Pills */}
+                {targetCategoryKey === 'roses' && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    {[
+                      { label: 'All Roses', val: '' },
+                      { label: '🌹 Red Roses', val: 'red' },
+                      { label: '🌸 Pink Roses', val: 'pink' },
+                      { label: '🌻 Yellow Roses', val: 'yellow' },
+                      { label: '🤍 White Roses', val: 'white' },
+                    ].map((chip) => (
+                      <button
+                        key={chip.val}
+                        type="button"
+                        onClick={() => setColorFilter(chip.val)}
+                        className={cn(
+                          "px-3.5 py-1.5 rounded-full text-xs font-bold transition-all border",
+                          colorFilter === chip.val
+                            ? "bg-rose-600 text-white border-rose-600 shadow-sm"
+                            : "bg-white text-slate-700 border-slate-200 hover:border-rose-300 hover:bg-rose-50/50"
+                        )}
+                      >
+                        {chip.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-            )
+            </div>
           )}
 
           {/* Main Content: Mobile Horizontal Dropdown Filters + Product Grid */}
@@ -2146,8 +2085,87 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
             </div>
           </div>
 
-          {/* Category Editorial SEO Guide & Recommended H2 Sections */}
-          {targetSeo?.h2s && targetSeo.h2s.length > 0 && (
+          {/* Bottom Page Intro & Category Editorial SEO Guide */}
+          {!searchQuery && (
+            !selectedCategory ? (
+              <section className="mt-16 bg-white/95 backdrop-blur-sm rounded-3xl border border-rose-100/90 p-6 sm:p-10 shadow-xs text-center">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 tracking-tight mb-3">
+                  Shop Flowers, Bouquets, Cakes &amp; Gifts Online
+                </h1>
+                <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
+                  Explore handcrafted flower bouquets, artisanal cakes, indoor plants, gourmet chocolates, and curated gift combos for every celebration.
+                </p>
+              </section>
+            ) : isBudgetFriendlyCategory ? (
+              <section className="mt-16 relative overflow-hidden rounded-3xl bg-gradient-to-br from-rose-50/70 via-sky-50/50 to-emerald-50/60 border border-bloom-pink-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.03)] px-6 py-10 sm:py-12 text-center">
+                <div className="absolute top-0 right-0 -mt-8 -mr-8 w-40 h-40 bg-pink-200/30 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-40 h-40 bg-sky-200/30 rounded-full blur-3xl pointer-events-none" />
+
+                <div className="relative z-10 max-w-3xl mx-auto">
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/90 border border-bloom-pink-200/70 shadow-xs mb-4">
+                    <Sparkles className="w-3.5 h-3.5 text-pink-500" />
+                    <span className="text-[11px] sm:text-xs font-semibold tracking-wider uppercase text-gray-700">
+                      Affordable • Elegant • Thoughtfully Designed
+                    </span>
+                  </div>
+
+                  <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 tracking-tight mb-3">
+                    Budget Friendly
+                  </h1>
+
+                  <p className="text-sm sm:text-base lg:text-lg text-gray-600 leading-relaxed font-normal max-w-xl mx-auto">
+                    Beautiful flowers, thoughtful gifts, effortless expressions — all under ₹1,000.
+                  </p>
+
+                  <div className="mt-4 flex items-center justify-center gap-2 text-xs text-muted-foreground/70 font-serif italic">
+                    <span>Spring Blossoms Florist</span>
+                    <span>•</span>
+                    <span>A Reason To Express</span>
+                  </div>
+                </div>
+              </section>
+            ) : (
+              <section className="mt-16 bg-white/95 backdrop-blur-sm rounded-3xl border border-rose-100/90 p-6 sm:p-10 shadow-xs space-y-8">
+                <div className={cn("text-center", targetSeo?.h2s && targetSeo.h2s.length > 0 && "border-b border-rose-100 pb-6")}>
+                  <h1 className="text-3xl md:text-4xl font-black text-gray-800 mb-3">
+                    {targetSeo?.h1 || `${selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)} Collection`}
+                  </h1>
+                  <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
+                    {targetSeo?.description || `Discover our beautiful selection of ${selectedCategory.toLowerCase()} carefully curated for your special moments`}
+                  </p>
+                </div>
+
+                {targetSeo?.h2s && targetSeo.h2s.length > 0 && (
+                  <>
+                    <div className="border-b border-rose-100 pb-5">
+                      <h2 className="text-xl sm:text-2xl font-bold text-slate-900 font-serif">
+                        {targetSeo.h2s[0].title}
+                      </h2>
+                      <p className="text-sm text-slate-600 mt-2 leading-relaxed">
+                        {targetSeo.h2s[0].body}
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
+                      {targetSeo.h2s.slice(1).map((h2Item, i) => (
+                        <div key={i} className="space-y-2">
+                          <h2 className="text-base font-bold text-slate-900">
+                            {h2Item.title}
+                          </h2>
+                          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                            {h2Item.body}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </section>
+            )
+          )}
+
+          {/* Fallback SEO Guide if searchQuery is active on a target category */}
+          {searchQuery && targetSeo?.h2s && targetSeo.h2s.length > 0 && (
             <section className="mt-16 bg-white/95 backdrop-blur-sm rounded-3xl border border-rose-100/90 p-6 sm:p-10 shadow-xs space-y-8">
               <div className="border-b border-rose-100 pb-5">
                 <h2 className="text-xl sm:text-2xl font-bold text-slate-900 font-serif">

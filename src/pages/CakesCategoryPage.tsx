@@ -307,44 +307,8 @@ export const CakesCategoryPage: React.FC = () => {
         </nav>
       </div>
 
-      {/* Hero Banner Section */}
-      <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-10 mt-4">
-        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-amber-950 via-stone-900 to-amber-900 text-white p-6 sm:p-10 md:p-14 2xl:p-16 shadow-lg">
-          {/* Subtle Decorative Elements */}
-          <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-10 left-10 w-60 h-60 bg-rose-500/15 rounded-full blur-2xl pointer-events-none" />
-
-          <div className="relative z-10 max-w-2xl 2xl:max-w-4xl space-y-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-400/15 border border-amber-400/30 text-amber-200 text-[11px] font-extrabold tracking-widest uppercase">
-              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-              <span>SBF ARTISAN PATISSERIE</span>
-            </div>
-
-            <h1 className="text-2xl sm:text-4xl md:text-5xl 2xl:text-6xl font-black font-serif tracking-tight leading-tight">
-              Order Cakes Online
-            </h1>
-
-            <p className="text-xs sm:text-base 2xl:text-lg text-amber-100/90 font-light leading-relaxed">
-              Explore freshly crafted celebration cakes baked with European dark cocoa, farm-fresh cream, and hand-selected fruits to make every special moment memorable.
-            </p>
-
-            <div className="flex flex-wrap items-center gap-3 pt-2 text-[11px] sm:text-xs font-semibold text-amber-200/80">
-              <span className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1 rounded-lg backdrop-blur-sm">
-                ✓ 100% Eggless Available
-              </span>
-              <span className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1 rounded-lg backdrop-blur-sm">
-                ✓ Same-Day Express Delivery
-              </span>
-              <span className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1 rounded-lg backdrop-blur-sm">
-                ✓ Baked Fresh to Order
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Quick Category / Flavor Filter Pills Bar */}
-      <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-10 mt-6">
+      <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-10 mt-4">
         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
           {FLAVOR_CATEGORIES.map((cat) => {
             const isSelected = selectedCategory === cat.id;
@@ -579,6 +543,42 @@ export const CakesCategoryPage: React.FC = () => {
               </div>
             )}
           </section>
+        </div>
+      </div>
+
+      {/* Hero Banner Section (Editorial Bottom Intro) */}
+      <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-10 mb-8">
+        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-amber-950 via-stone-900 to-amber-900 text-white p-6 sm:p-10 md:p-14 2xl:p-16 shadow-lg">
+          {/* Subtle Decorative Elements */}
+          <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-10 left-10 w-60 h-60 bg-rose-500/15 rounded-full blur-2xl pointer-events-none" />
+
+          <div className="relative z-10 max-w-2xl 2xl:max-w-4xl space-y-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-400/15 border border-amber-400/30 text-amber-200 text-[11px] font-extrabold tracking-widest uppercase">
+              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+              <span>SBF ARTISAN PATISSERIE</span>
+            </div>
+
+            <h1 className="text-2xl sm:text-4xl md:text-5xl 2xl:text-6xl font-black font-serif tracking-tight leading-tight">
+              Order Cakes Online
+            </h1>
+
+            <p className="text-xs sm:text-base 2xl:text-lg text-amber-100/90 font-light leading-relaxed">
+              Explore freshly crafted celebration cakes baked with European dark cocoa, farm-fresh cream, and hand-selected fruits to make every special moment memorable.
+            </p>
+
+            <div className="flex flex-wrap items-center gap-3 pt-2 text-[11px] sm:text-xs font-semibold text-amber-200/80">
+              <span className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1 rounded-lg backdrop-blur-sm">
+                ✓ 100% Eggless Available
+              </span>
+              <span className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1 rounded-lg backdrop-blur-sm">
+                ✓ Same-Day Express Delivery
+              </span>
+              <span className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1 rounded-lg backdrop-blur-sm">
+                ✓ Baked Fresh to Order
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 

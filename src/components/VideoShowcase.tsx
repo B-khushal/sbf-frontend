@@ -90,7 +90,7 @@ const VideoCard = ({ video, index }: { video: VideoData; index: number }) => {
     <div
       ref={setRefs}
       className={cn(
-        "relative flex-none w-[280px] sm:w-[320px] aspect-[9/16] rounded-2xl overflow-hidden group shadow-lg snap-start border border-white/10 bg-slate-950 transition-transform duration-500 hover:-translate-y-2 hover:shadow-2xl",
+        "relative flex-none w-[260px] sm:w-[300px] lg:w-[310px] 2xl:w-[330px] 3xl:w-[360px] 4xl:w-[400px] aspect-[9/16] rounded-2xl overflow-hidden group shadow-lg snap-start border border-white/10 bg-slate-950 transition-transform duration-500 hover:-translate-y-2 hover:shadow-2xl",
         video.isFeatured && "ring-2 ring-pink-400 ring-offset-2 ring-offset-slate-950"
       )}
     >
@@ -180,29 +180,60 @@ export const VideoShowcase = () => {
   const [videos, setVideos] = useState<VideoData[]>([]);
   const [loading, setLoading] = useState(true);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [canScrollPrev, setCanScrollPrev] = useState(false);
+  const [canScrollNext, setCanScrollNext] = useState(false);
+
+  const updateScrollState = React.useCallback(() => {
+    const el = scrollContainerRef.current;
+    if (!el) {
+      setCanScrollPrev(false);
+      setCanScrollNext(false);
+      return;
+    }
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    setCanScrollPrev(el.scrollLeft > 4);
+    setCanScrollNext(maxScroll > 4 && el.scrollLeft < maxScroll - 4);
+  }, []);
 
   useEffect(() => {
+    const controller = new AbortController();
     const fetchActiveVideos = async () => {
       try {
         setLoading(true);
-        const res = await api.get("/homepage-videos/active");
+        const res = await api.get("/homepage-videos/active", {
+          signal: controller.signal,
+        });
         setVideos(res.data || []);
-      } catch (err) {
+      } catch (err: any) {
+        if (err?.name === "CanceledError" || err?.name === "AbortError") return;
         console.error("Failed to load active vertical videos", err);
       } finally {
         setLoading(false);
       }
     };
     fetchActiveVideos();
+    return () => controller.abort();
   }, []);
+
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const raf = requestAnimationFrame(() => updateScrollState());
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(updateScrollState) : null;
+    ro?.observe(el);
+    return () => {
+      cancelAnimationFrame(raf);
+      ro?.disconnect();
+    };
+  }, [videos.length, loading, updateScrollState]);
 
   const scroll = (direction: "left" | "right") => {
     const container = scrollContainerRef.current;
     if (!container) return;
 
-    const scrollAmount = 340; // Card width + gap
+    const scrollAmount = Math.max(container.clientWidth * 0.72, 340);
     const targetScroll = container.scrollLeft + (direction === "left" ? -scrollAmount : scrollAmount);
-    
+
     container.scrollTo({
       left: targetScroll,
       behavior: "smooth",
@@ -212,19 +243,19 @@ export const VideoShowcase = () => {
   // If loading, display loading skeletons
   if (loading) {
     return (
-      <div className="py-16 md:py-24 bg-gradient-to-b from-slate-900 to-slate-950 overflow-hidden relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+      <div className="py-16 md:py-24 3xl:py-28 bg-gradient-to-b from-slate-900 to-slate-950 overflow-hidden relative">
+        <div className="w-full max-w-7xl 2xl:max-w-[1560px] 3xl:max-w-[1840px] 4xl:max-w-[2160px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 3xl:px-16">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
             <div className="space-y-2">
               <div className="h-4 w-32 bg-slate-800 rounded-md animate-pulse" />
               <div className="h-8 w-64 bg-slate-800 rounded-md animate-pulse" />
             </div>
           </div>
-          <div className="flex gap-6 overflow-x-hidden">
-            {[1, 2, 3, 4].map((n) => (
+          <div className="flex gap-5 sm:gap-6 overflow-x-hidden">
+            {[1, 2, 3, 4, 5, 6].map((n) => (
               <div
                 key={n}
-                className="flex-none w-[280px] sm:w-[320px] aspect-[9/16] rounded-2xl bg-slate-800/40 border border-slate-800/80 animate-pulse relative overflow-hidden"
+                className="flex-none w-[260px] sm:w-[300px] lg:w-[310px] 2xl:w-[330px] 3xl:w-[360px] 4xl:w-[400px] aspect-[9/16] rounded-2xl bg-slate-800/40 border border-slate-800/80 animate-pulse relative overflow-hidden"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-slate-700/10 to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
                 <div className="absolute bottom-6 left-6 right-6 space-y-3">
@@ -246,56 +277,71 @@ export const VideoShowcase = () => {
   }
 
   return (
-    <div className="py-16 md:py-24 bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900 overflow-hidden relative">
+    <div className="py-16 md:py-24 3xl:py-28 bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900 overflow-x-clip relative">
       {/* Decorative floral backgrounds */}
       <div className="absolute top-1/4 right-0 w-96 h-96 bg-pink-500/5 rounded-full filter blur-3xl pointer-events-none" />
       <div className="absolute bottom-1/4 left-0 w-96 h-96 bg-purple-500/5 rounded-full filter blur-3xl pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 relative z-10">
-        
+      <div className="w-full max-w-7xl 2xl:max-w-[1560px] 3xl:max-w-[1840px] 4xl:max-w-[2160px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 3xl:px-16 relative z-10">
+
         {/* Section Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-10 gap-6">
+        <div className="mb-10 3xl:mb-12">
           <div className="space-y-3">
             <span className="text-xs sm:text-sm font-extrabold uppercase tracking-widest bg-gradient-to-r from-pink-400 to-rose-300 bg-clip-text text-transparent flex items-center gap-1.5">
-              <Sparkles className="h-4.5 w-4.5 text-pink-400" />
+              <Sparkles className="h-4 w-4 text-pink-400" />
               Visual Stories
             </span>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-white leading-tight">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl 3xl:text-[52px] font-black text-white leading-tight">
               Premium Floral Showcase
             </h2>
-            <p className="text-slate-400 text-xs sm:text-sm md:text-base max-w-2xl leading-relaxed">
+            <p className="text-slate-400 text-xs sm:text-sm md:text-base 3xl:text-lg max-w-2xl leading-relaxed">
               Explore bouquet creation secrets, premium gifting experiences, and live client delivery smiles through our social-reels gallery.
             </p>
           </div>
-
-          {/* Navigation Arrows for Desktop */}
-          <div className="hidden md:flex items-center gap-3">
-            <button
-              onClick={() => scroll("left")}
-              className="p-3 rounded-full bg-slate-900/60 hover:bg-slate-800 border border-white/10 text-white transition-all hover:scale-105 active:scale-95 shadow-md backdrop-blur-sm cursor-pointer"
-              title="Previous videos"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
-            <button
-              onClick={() => scroll("right")}
-              className="p-3 rounded-full bg-slate-900/60 hover:bg-slate-800 border border-white/10 text-white transition-all hover:scale-105 active:scale-95 shadow-md backdrop-blur-sm cursor-pointer"
-              title="Next videos"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </button>
-          </div>
         </div>
 
-        {/* Horizontally Scrollable Reels Carousel */}
-        <div
-          ref={scrollContainerRef}
-          className="flex gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-none pb-4"
-          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-        >
-          {videos.map((video, idx) => (
-            <VideoCard key={video._id} video={video} index={idx} />
-          ))}
+        {/* Horizontally Scrollable Reels Carousel with Side Navigation Arrows */}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => scroll("left")}
+            disabled={!canScrollPrev}
+            aria-label="Previous videos"
+            aria-hidden={!canScrollPrev}
+            tabIndex={canScrollPrev ? 0 : -1}
+            className={cn(
+              "absolute left-1 sm:-left-3 lg:-left-4 2xl:-left-5 top-1/2 -translate-y-1/2 z-30 flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-full bg-slate-900/85 hover:bg-slate-800 border border-white/20 text-white shadow-xl backdrop-blur-md transition-all duration-200 hover:scale-105 active:scale-95",
+              canScrollPrev ? "opacity-100 pointer-events-auto" : "opacity-0 scale-90 pointer-events-none"
+            )}
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+
+          <div
+            ref={scrollContainerRef}
+            onScroll={() => requestAnimationFrame(updateScrollState)}
+            className="flex gap-5 sm:gap-6 3xl:gap-7 overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-none pb-4 touch-pan-x overscroll-x-contain"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          >
+            {videos.map((video, idx) => (
+              <VideoCard key={video._id} video={video} index={idx} />
+            ))}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => scroll("right")}
+            disabled={!canScrollNext}
+            aria-label="Next videos"
+            aria-hidden={!canScrollNext}
+            tabIndex={canScrollNext ? 0 : -1}
+            className={cn(
+              "absolute right-1 sm:-right-3 lg:-right-4 2xl:-right-5 top-1/2 -translate-y-1/2 z-30 flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-full bg-slate-900/85 hover:bg-slate-800 border border-white/20 text-white shadow-xl backdrop-blur-md transition-all duration-200 hover:scale-105 active:scale-95",
+              canScrollNext ? "opacity-100 pointer-events-auto" : "opacity-0 scale-90 pointer-events-none"
+            )}
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
         </div>
       </div>
     </div>

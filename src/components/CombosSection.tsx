@@ -1,10 +1,19 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, ChevronLeft, ChevronRight, Gift, Sparkles, Flower2, Cake } from "lucide-react";
+import { ArrowRight, Gift, Flower2, Cake } from "lucide-react";
+import axios from "axios";
 import api from "@/services/api";
-import { CakeComboCard } from "./cakes/CakeComboCard";
-import { Button } from "@/components/ui/button";
 import { isComboProduct } from "@/utils/comboHelpers";
+import {
+  CAROUSEL_CARD_WIDTH_CLASS,
+  HorizontalCarouselTrack,
+  SECTION_CONTAINER_CLASS,
+  useHorizontalCarousel,
+} from "./HorizontalProductCarousel";
+import {
+  EditorialProductCard,
+  EditorialProductCardSkeleton,
+} from "./EditorialProductCard";
 
 export interface CombosSectionProps {
   section?: {
@@ -20,42 +29,63 @@ export interface CombosSectionProps {
     };
     [key: string]: any;
   };
+  onAddToCart?: (item: any, quantity?: number) => any;
 }
 
-export const CombosSection: React.FC<CombosSectionProps> = ({ section }) => {
+export const CombosSection: React.FC<CombosSectionProps> = ({
+  section,
+  onAddToCart,
+}) => {
   const [combos, setCombos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const scrollRef = useRef<HTMLDivElement>(null);
 
   const title = section?.title || "Flowers & Cakes, Curated for Double Joy";
-  const subtitle = section?.subtitle || "Experience the magic of paired celebrations. Hand-tied fresh Dutch bouquets bundled with gourmet oven-fresh cakes, Belgian chocolates, and personalized greeting notes.";
+  const subtitle =
+    section?.subtitle ||
+    "Experience the magic of paired celebrations. Hand-tied fresh Dutch bouquets bundled with gourmet oven-fresh cakes, Belgian chocolates, and personalized greeting notes.";
   const badgeText = section?.content?.badgeText || "SBF SIGNATURE COMBOS & HAMPERS";
   const ctaText = section?.content?.ctaText || "EXPLORE ALL COMBOS";
   const ctaLink = section?.content?.ctaLink || "/combos";
   const showCta = section?.content?.showCta !== false;
   const showPills = section?.content?.showPills !== false;
-  const itemsCount = section?.content?.itemsCount || 8;
+  const itemsCount = section?.content?.itemsCount || 12;
+
+  const {
+    trackRef,
+    canScrollPrev,
+    canScrollNext,
+    isDragging,
+    scrollBy,
+    trackProps,
+  } = useHorizontalCarousel([combos.length, loading]);
 
   useEffect(() => {
+    const controller = new AbortController();
     let isMounted = true;
 
     const fetchCombosData = async () => {
       try {
         setLoading(true);
-        // Fetch all products to discover all combos regardless of catalog type or subcategory
-        const response = await api.get("/products");
-        const rawList = response.data?.products || (Array.isArray(response.data) ? response.data : []);
+        const response = await api.get("/products", {
+          signal: controller.signal,
+        });
+        const rawList =
+          response.data?.products ||
+          (Array.isArray(response.data) ? response.data : []);
 
         const validCombos = rawList.filter((p: any) => {
           if (!p) return false;
-          // Guard against baskets
           const cat = String(p.category || "").toLowerCase();
           const catalogType = String(p.catalogType || "").toLowerCase();
-          const title = String(p.title || p.name || "").toLowerCase();
+          const pTitle = String(p.title || p.name || "").toLowerCase();
           if (cat === "baskets" || cat === "basket" || catalogType === "basket") {
             return false;
           }
-          if (title.includes("basket") && !title.includes("combo") && catalogType !== "combo") {
+          if (
+            pTitle.includes("basket") &&
+            !pTitle.includes("combo") &&
+            catalogType !== "combo"
+          ) {
             return false;
           }
           return isComboProduct(p);
@@ -64,7 +94,10 @@ export const CombosSection: React.FC<CombosSectionProps> = ({ section }) => {
         if (isMounted) {
           setCombos(validCombos);
         }
-      } catch (err) {
+      } catch (err: any) {
+        if (axios.isCancel(err) || err?.name === "CanceledError" || err?.name === "AbortError") {
+          return;
+        }
         console.warn("Could not fetch combos for home section:", err);
       } finally {
         if (isMounted) setLoading(false);
@@ -72,151 +105,135 @@ export const CombosSection: React.FC<CombosSectionProps> = ({ section }) => {
     };
 
     fetchCombosData();
-
     return () => {
       isMounted = false;
+      controller.abort();
     };
   }, []);
 
-  const handleScroll = (direction: "left" | "right") => {
-    if (scrollRef.current) {
-      const scrollAmount = Math.min(scrollRef.current.offsetWidth * 0.8, 600);
-      scrollRef.current.scrollBy({
-        left: direction === "left" ? -scrollAmount : scrollAmount,
-        behavior: "smooth",
-      });
-    }
-  };
+  if (!loading && combos.length === 0) {
+    return null;
+  }
+
+  const visibleCombos = combos.slice(0, itemsCount);
 
   return (
-    <section className="relative py-16 md:py-24 bg-gradient-to-b from-[#fffbf8] via-[#fff7f7] to-white overflow-hidden border-y border-rose-100/60">
-      {/* Ambient Luxury Lighting Orbs */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-rose-400/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-amber-300/10 rounded-full blur-3xl pointer-events-none" />
+    <section
+      aria-labelledby="combos-section-heading"
+      className="relative w-full overflow-x-clip py-12 sm:py-16 lg:py-20 bg-gradient-to-b from-[#FFF9FA] via-[#FFFDFB] to-white border-b border-[#F2E4E8]/80"
+    >
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-20 right-1/3 h-72 w-72 rounded-full bg-[#FCEBF1]/50 blur-3xl"
+      />
 
-      <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 relative z-10">
+      <div className={`${SECTION_CONTAINER_CLASS} z-10`}>
         {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 sm:mb-10">
-          <div className="space-y-3">
-            {/* Brand Capsule Badge */}
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between mb-6 sm:mb-8">
+          <div className="max-w-2xl">
             {badgeText && (
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-950 text-xs font-bold tracking-wider uppercase">
-                <Gift className="w-3.5 h-3.5 text-rose-600" />
+              <div className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#B93860]">
+                <Gift className="h-3.5 w-3.5 text-[#BE185D]" aria-hidden="true" />
                 <span>{badgeText}</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
               </div>
             )}
 
-            {/* Main Title */}
-            <h2 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 tracking-tight font-serif leading-tight">
+            <h2
+              id="combos-section-heading"
+              style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+              className="mt-2 text-[26px] sm:text-[32px] lg:text-[36px] font-semibold leading-[1.15] tracking-[-0.015em] text-[#1E1B18]"
+            >
               {title}
             </h2>
 
-            {/* Subtitle */}
             {subtitle && (
-              <p className="text-sm sm:text-base md:text-lg text-slate-600 max-w-2xl font-light leading-relaxed">
+              <p className="mt-2 text-sm sm:text-[15px] leading-relaxed text-[#645C54]">
                 {subtitle}
               </p>
             )}
           </div>
 
-          {/* Action Links & Horizontal Controls */}
-          <div className="flex items-center gap-3 shrink-0">
-            {/* Horizontal Arrow Controls (Desktop) */}
-            <div className="hidden sm:flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => handleScroll("left")}
-                aria-label="Previous combos"
-                className="w-10 h-10 rounded-full border-rose-200 bg-white/90 hover:bg-rose-50 text-slate-700 shadow-2xs"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => handleScroll("right")}
-                aria-label="Next combos"
-                className="w-10 h-10 rounded-full border-rose-200 bg-white/90 hover:bg-rose-50 text-slate-700 shadow-2xs"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            </div>
-
-            {/* Premium CTA Link */}
-            {showCta && (
+          {showCta && (
+            <div className="hidden md:flex items-center shrink-0">
               <Link
                 to={ctaLink}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-rose-800 to-rose-900 hover:from-rose-900 hover:to-rose-950 text-white font-bold text-xs sm:text-sm tracking-wide shadow-md transition-all duration-300 hover:shadow-lg group"
+                className="inline-flex items-center gap-2 rounded-full border border-[#E3D8CD] bg-white/90 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#2B2522] transition-all duration-200 hover:border-[#DFB4C4] hover:bg-[#FFF9FB] hover:text-[#BE185D]"
               >
                 <span>{ctaText}</span>
-                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
               </Link>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
-        {/* Value Highlights Pill Strip */}
+        {/* Subtle Value Highlights Strip */}
         {showPills && (
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-8 sm:mb-10 text-[11px] sm:text-xs font-semibold text-slate-700">
-            <span className="inline-flex items-center gap-1.5 bg-white/80 border border-rose-100 px-3 py-1.5 rounded-xl shadow-2xs backdrop-blur-xs">
-              <Flower2 className="w-3.5 h-3.5 text-rose-500" />
-              <span>Fresh Dutch Blooms</span>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 mb-6 sm:mb-7 text-xs font-medium text-[#544B44]">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#EFE2E7] bg-white/85 px-3 py-1">
+              <Flower2 className="h-3.5 w-3.5 text-[#BE185D]" aria-hidden="true" />
+              <span>Fresh Blooms</span>
             </span>
-            <span className="inline-flex items-center gap-1.5 bg-white/80 border border-rose-100 px-3 py-1.5 rounded-xl shadow-2xs backdrop-blur-xs">
-              <Cake className="w-3.5 h-3.5 text-amber-500" />
-              <span>Oven-Fresh Artisan Cakes</span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#EFE6DA] bg-white/85 px-3 py-1">
+              <Cake className="h-3.5 w-3.5 text-[#B4813F]" aria-hidden="true" />
+              <span>Oven-Fresh Cakes</span>
             </span>
           </div>
         )}
 
-        {/* Featured Combos Carousel / Grid Container */}
-        <div className="relative -mx-4 px-4 sm:mx-0 sm:px-0">
+        {/* Single-Row Side-Scroll Combos Carousel */}
+        {loading ? (
           <div
-            ref={scrollRef}
-            className="flex sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-4 sm:gap-5 2xl:gap-6 overflow-x-auto sm:overflow-visible pb-4 sm:pb-0 scrollbar-none snap-x snap-mandatory"
+            className="flex flex-nowrap gap-3.5 sm:gap-5 overflow-x-hidden py-1"
+            aria-busy="true"
+            aria-label="Loading signature combo sets"
           >
-            {loading ? (
-              // Luxury Shimmer Skeletons
-              Array.from({ length: 4 }).map((_, idx) => (
-                <div
-                  key={`combo-skel-${idx}`}
-                  className="w-[280px] xs:w-[300px] sm:w-auto shrink-0 snap-start rounded-2xl border border-rose-100 bg-white p-3.5 space-y-3 animate-pulse h-[380px] flex flex-col justify-between"
-                >
-                  <div className="w-full aspect-square bg-rose-50/80 rounded-xl" />
-                  <div className="space-y-2 mt-2">
-                    <div className="h-4 bg-slate-100 rounded-md w-3/4" />
-                    <div className="h-3 bg-slate-100 rounded-md w-1/2" />
-                  </div>
-                  <div className="h-8 bg-slate-100 rounded-xl w-full mt-auto" />
-                </div>
-              ))
-            ) : combos.length > 0 ? (
-              combos.slice(0, itemsCount).map((combo) => (
-                <div
-                  key={combo._id || combo.id}
-                  className="w-[280px] xs:w-[300px] sm:w-auto shrink-0 snap-start flex flex-col h-full"
-                >
-                  <CakeComboCard combo={combo} className="h-full" />
-                </div>
-              ))
-            ) : (
-              <div className="col-span-4 text-center py-12 text-slate-500 bg-white/60 rounded-2xl border border-rose-100 p-8 space-y-3">
-                <Gift className="w-10 h-10 text-rose-400 mx-auto" />
-                <p className="text-sm font-semibold text-slate-700">
-                  New celebration combos are currently being curated!
-                </p>
-                <Link
-                  to="/combos"
-                  className="inline-block text-xs font-bold text-rose-700 hover:text-rose-800 underline"
-                >
-                  Explore the full catalog
-                </Link>
+            {Array.from({ length: 6 }).map((_, idx) => (
+              <div key={`combo-skel-${idx}`} className={CAROUSEL_CARD_WIDTH_CLASS}>
+                <EditorialProductCardSkeleton />
               </div>
-            )}
+            ))}
           </div>
-        </div>
+        ) : (
+          <HorizontalCarouselTrack
+            trackRef={trackRef}
+            isDragging={isDragging}
+            trackProps={trackProps}
+            ariaLabel="Curated gift combos carousel"
+            canScrollPrev={canScrollPrev}
+            canScrollNext={canScrollNext}
+            onScrollPrev={() => scrollBy(-1)}
+            onScrollNext={() => scrollBy(1)}
+            prevLabel="Previous combo sets"
+            nextLabel="Next combo sets"
+          >
+            {visibleCombos.map((combo, index) => (
+              <div
+                key={String(combo._id || combo.id || index)}
+                className={CAROUSEL_CARD_WIDTH_CLASS}
+              >
+                <EditorialProductCard
+                  product={combo}
+                  index={index}
+                  contextLabel="Combo Gift Set"
+                  onAddToCart={onAddToCart}
+                />
+              </div>
+            ))}
+          </HorizontalCarouselTrack>
+        )}
+
+        {/* Mobile CTA */}
+        {showCta && (
+          <div className="mt-7 flex justify-center md:hidden">
+            <Link
+              to={ctaLink}
+              className="inline-flex items-center gap-2 rounded-full border border-[#E3D8CD] bg-white px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#2B2522] transition-colors hover:border-[#DFB4C4] hover:text-[#BE185D]"
+            >
+              <span>{ctaText}</span>
+              <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+            </Link>
+          </div>
+        )}
       </div>
     </section>
   );

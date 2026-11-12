@@ -64,31 +64,31 @@ export const HomeSeoSection: React.FC = () => {
   };
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-white via-rose-50/20 to-white py-16 md:py-24 border-t border-rose-100/60">
+    <section className="relative overflow-hidden bg-gradient-to-b from-white via-rose-50/20 to-white py-16 md:py-24 3xl:py-28 border-t border-rose-100/60">
       {/* Decorative Glow */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-rose-200/25 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] 3xl:w-[900px] h-[350px] bg-rose-200/25 blur-[120px] rounded-full pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+      <div className="w-full max-w-7xl 2xl:max-w-[1560px] 3xl:max-w-[1840px] 4xl:max-w-[2160px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 3xl:px-16 relative">
         
         {/* Main Header */}
-        <div className="text-center max-w-3xl mx-auto mb-14">
+        <div className="text-center max-w-3xl 3xl:max-w-4xl mx-auto mb-14 3xl:mb-16">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-rose-100/80 text-rose-700 text-xs font-semibold uppercase tracking-wider mb-4 border border-rose-200/70">
             <Sparkles className="w-3.5 h-3.5" />
             Hyderabad &amp; Secunderabad's Trusted Local Florist
           </div>
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl 3xl:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
             Why Choose{' '}
             <span className="bg-gradient-to-r from-rose-600 via-pink-600 to-amber-600 bg-clip-text text-transparent">
               Spring Blossoms Florist?
             </span>
           </h2>
-          <p className="mt-4 text-sm sm:text-base text-slate-600 leading-relaxed">
+          <p className="mt-4 text-sm sm:text-base 3xl:text-lg text-slate-600 leading-relaxed">
             Welcome to <strong className="font-semibold text-slate-800">Spring Blossoms Florist</strong>, your neighborhood floral studio delivering hand-tied bouquets, luscious artisanal cakes, and luxury gift hampers throughout the Twin Cities with precision same-day and midnight delivery.
           </p>
         </div>
 
         {/* Benefits Highlights Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 3xl:gap-8 mb-16">
           <div className="rounded-2xl p-5 bg-white/80 backdrop-blur-md border border-rose-150/70 shadow-sm hover:shadow-md transition-shadow">
             <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center mb-3">
               <Truck className="w-5 h-5" />
@@ -446,9 +446,9 @@ export const HomeSeoSection: React.FC = () => {
         </div>
 
         {/* H2: Frequently Asked Questions */}
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-4xl 3xl:max-w-5xl mx-auto">
           <div className="text-center mb-8">
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900">
               Frequently Asked Questions About Flower Delivery
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 mt-1">

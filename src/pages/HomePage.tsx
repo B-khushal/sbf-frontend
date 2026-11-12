@@ -479,7 +479,7 @@ const HomePage = () => {
                 variants={itemVariants}
                 className="relative"
               >
-                <CombosSection section={section as any} />
+                <CombosSection section={section as any} onAddToCart={handleAddToCart} />
               </motion.section>
             );
 
@@ -543,13 +543,13 @@ const HomePage = () => {
                 variants={fadeInVariants}
                 className="px-3 xs:px-4 sm:px-6 md:px-8 lg:px-12 py-16 md:py-24 bg-gradient-to-br from-purple-100 via-blue-100 to-green-100"
               >
-                <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto">
+                <div className="w-full max-w-7xl 2xl:max-w-[1560px] 3xl:max-w-[1840px] 4xl:max-w-[2160px] mx-auto">
                   <motion.div
-                    className="flex flex-col lg:flex-row gap-6 sm:gap-8 md:gap-10 lg:gap-12 xl:gap-16 items-center"
+                    className="flex flex-col lg:flex-row gap-6 sm:gap-8 md:gap-10 lg:gap-12 xl:gap-16 2xl:gap-20 3xl:gap-24 items-center"
                     variants={containerVariants}
                   >
-                    <motion.div variants={itemVariants} className="w-full lg:w-1/2">
-                      <div className="relative aspect-square overflow-hidden rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-xl lg:shadow-2xl mx-auto max-w-sm sm:max-w-md lg:max-w-none">
+                    <motion.div variants={itemVariants} className="w-full lg:w-1/2 flex justify-center">
+                      <div className="relative aspect-square overflow-hidden rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-xl lg:shadow-2xl mx-auto w-full max-w-sm sm:max-w-md lg:max-w-lg 2xl:max-w-xl 3xl:max-w-2xl">
                         <img
                           src={section.content?.image || "/placeholder.svg"}
                           alt={section.title || "Artisan Florist"}

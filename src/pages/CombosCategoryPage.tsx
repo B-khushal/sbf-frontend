@@ -389,47 +389,8 @@ export const CombosCategoryPage: React.FC = () => {
         </nav>
       </div>
 
-      {/* Hero Banner Section */}
-      <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-10 mt-4">
-        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-rose-950 via-neutral-900 to-amber-950 text-white p-6 sm:p-10 md:p-14 2xl:p-16 shadow-xl">
-          {/* Subtle Decorative Elements */}
-          <div className="absolute top-0 right-0 w-96 h-96 bg-rose-500/15 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-10 left-10 w-72 h-72 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
-
-          <div className="relative z-10 max-w-2xl 2xl:max-w-4xl space-y-3.5">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-400/15 border border-rose-400/30 text-rose-200 text-[11px] font-extrabold tracking-widest uppercase">
-              <Sparkles className="w-3.5 h-3.5 text-rose-300" />
-              <span>SBF SIGNATURE CELEBRATION COMBOS</span>
-            </div>
-
-            <h1 className="text-2xl sm:text-4xl md:text-5xl 2xl:text-6xl font-black font-serif tracking-tight leading-tight">
-              Flowers, Cakes &amp; Gift Combos
-            </h1>
-
-            <p className="text-xs sm:text-base 2xl:text-lg text-rose-100/90 font-light leading-relaxed">
-              Make celebrations memorable with handcrafted flower and cake combos from Spring Blossoms Florist. Breathtaking Dutch flower bouquets paired seamlessly with freshly baked artisan cakes and imported chocolates.
-            </p>
-
-            <div className="flex flex-wrap items-center gap-2.5 pt-2 text-[11px] sm:text-xs font-semibold text-rose-200/90">
-              <span className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1 rounded-lg backdrop-blur-sm">
-                <Flower2 className="w-3.5 h-3.5 text-rose-300" /> Fresh Dutch Blooms
-              </span>
-              <span className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1 rounded-lg backdrop-blur-sm">
-                <Cake className="w-3.5 h-3.5 text-amber-300" /> Oven-Fresh Artisan Cakes
-              </span>
-              <span className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1 rounded-lg backdrop-blur-sm">
-                <Truck className="w-3.5 h-3.5 text-emerald-300" /> Same-Day Handover
-              </span>
-              <span className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1 rounded-lg backdrop-blur-sm">
-                <Gift className="w-3.5 h-3.5 text-pink-300" /> Free Message Card
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Quick Category / Pill Filter Bar */}
-      <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-10 mt-6">
+      <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-10 mt-4">
         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
           {COMBO_PILLS.map((pill) => {
             const isSelected = selectedPill === pill.id;
@@ -768,6 +729,45 @@ export const CombosCategoryPage: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* Hero Banner Section (Editorial Bottom Intro) */}
+      <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-10 mb-8">
+        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-rose-950 via-neutral-900 to-amber-950 text-white p-6 sm:p-10 md:p-14 2xl:p-16 shadow-xl">
+          {/* Subtle Decorative Elements */}
+          <div className="absolute top-0 right-0 w-96 h-96 bg-rose-500/15 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-10 left-10 w-72 h-72 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="relative z-10 max-w-2xl 2xl:max-w-4xl space-y-3.5">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-400/15 border border-rose-400/30 text-rose-200 text-[11px] font-extrabold tracking-widest uppercase">
+              <Sparkles className="w-3.5 h-3.5 text-rose-300" />
+              <span>SBF SIGNATURE CELEBRATION COMBOS</span>
+            </div>
+
+            <h1 className="text-2xl sm:text-4xl md:text-5xl 2xl:text-6xl font-black font-serif tracking-tight leading-tight">
+              Flowers, Cakes &amp; Gift Combos
+            </h1>
+
+            <p className="text-xs sm:text-base 2xl:text-lg text-rose-100/90 font-light leading-relaxed">
+              Make celebrations memorable with handcrafted flower and cake combos from Spring Blossoms Florist. Breathtaking Dutch flower bouquets paired seamlessly with freshly baked artisan cakes and imported chocolates.
+            </p>
+
+            <div className="flex flex-wrap items-center gap-2.5 pt-2 text-[11px] sm:text-xs font-semibold text-rose-200/90">
+              <span className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1 rounded-lg backdrop-blur-sm">
+                <Flower2 className="w-3.5 h-3.5 text-rose-300" /> Fresh Dutch Blooms
+              </span>
+              <span className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1 rounded-lg backdrop-blur-sm">
+                <Cake className="w-3.5 h-3.5 text-amber-300" /> Oven-Fresh Artisan Cakes
+              </span>
+              <span className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1 rounded-lg backdrop-blur-sm">
+                <Truck className="w-3.5 h-3.5 text-emerald-300" /> Same-Day Handover
+              </span>
+              <span className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1 rounded-lg backdrop-blur-sm">
+                <Gift className="w-3.5 h-3.5 text-pink-300" /> Free Message Card
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* SEO Information & Combos Guide */}
       <section className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-10 pb-16">

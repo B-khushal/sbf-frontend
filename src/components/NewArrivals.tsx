@@ -204,7 +204,7 @@ export const NewArrivals = ({ products, loading, onAddToCart }: NewArrivalsProps
         <div className="absolute top-1/2 right-1/3 w-2 h-2 bg-[#db2777]/20 rounded-full animate-float pointer-events-none" style={{ animationDelay: "5s" }} />
       </div>
 
-      <div className="relative max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 z-10">
+      <div className="relative w-full max-w-7xl 2xl:max-w-[1560px] 3xl:max-w-[1840px] 4xl:max-w-[2160px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 3xl:px-16 z-10">
         
         {/* Section Intro Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
@@ -231,23 +231,6 @@ export const NewArrivals = ({ products, loading, onAddToCart }: NewArrivalsProps
               View Collection
               <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
             </Button>
-
-            <div className="hidden sm:flex gap-2">
-              <button
-                onClick={() => scrollByAmount("left")}
-                className="w-11 h-11 rounded-full border border-gray-200/80 bg-white/70 backdrop-blur-sm flex items-center justify-center text-gray-700 hover:bg-black hover:text-white transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm"
-                aria-label="Scroll left"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => scrollByAmount("right")}
-                className="w-11 h-11 rounded-full border border-gray-200/80 bg-white/70 backdrop-blur-sm flex items-center justify-center text-gray-700 hover:bg-black hover:text-white transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm"
-                aria-label="Scroll right"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
           </motion.div>
         </div>
 
@@ -276,8 +259,8 @@ export const NewArrivals = ({ products, loading, onAddToCart }: NewArrivalsProps
 
         {/* Dynamic Showcase Body */}
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 py-12">
-            {[...Array(4)].map((_, i) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-6 py-12">
+            {[...Array(5)].map((_, i) => (
               <div
                 key={i}
                 className={cn(
@@ -301,6 +284,16 @@ export const NewArrivals = ({ products, loading, onAddToCart }: NewArrivalsProps
           </div>
         ) : (
           <div className="relative">
+            {/* Side Scroll Left Arrow */}
+            <button
+              type="button"
+              onClick={() => scrollByAmount("left")}
+              className="absolute left-1 sm:-left-3 lg:-left-4 2xl:-left-5 top-[42%] -translate-y-1/2 z-20 flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-full border border-gray-200/90 bg-white/95 backdrop-blur-md text-gray-800 shadow-[0_6px_18px_rgba(0,0,0,0.12)] transition-all duration-200 hover:bg-black hover:text-white hover:scale-105 active:scale-95"
+              aria-label="Scroll left"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+
             {/* Scrollable Container */}
             <div
               ref={scrollRef}
@@ -312,7 +305,7 @@ export const NewArrivals = ({ products, loading, onAddToCart }: NewArrivalsProps
                 setIsHovered(false);
               }}
               onMouseEnter={() => setIsHovered(true)}
-              className="flex gap-6 overflow-x-auto pt-6 pb-20 no-scrollbar scroll-smooth snap-x snap-mandatory cursor-grab"
+              className="flex gap-5 sm:gap-6 overflow-x-auto pt-6 pb-20 no-scrollbar scroll-smooth snap-x snap-mandatory cursor-grab touch-pan-x"
               style={{
                 scrollBehavior: "smooth",
               }}
@@ -327,7 +320,7 @@ export const NewArrivals = ({ products, loading, onAddToCart }: NewArrivalsProps
                     exit={{ opacity: 0, scale: 0.9 }}
                     transition={{ duration: 0.5 }}
                     className={cn(
-                      "min-w-[280px] xs:min-w-[320px] md:min-w-[360px] max-w-[380px] flex-shrink-0 snap-start",
+                      "min-w-[260px] xs:min-w-[300px] md:min-w-[320px] 2xl:min-w-[340px] 3xl:min-w-[360px] max-w-[380px] flex-shrink-0 snap-start",
                       idx % 2 === 1 && "md:translate-y-10" // Staggered cards layout
                     )}
                   >
@@ -341,6 +334,16 @@ export const NewArrivals = ({ products, loading, onAddToCart }: NewArrivalsProps
                 ))}
               </AnimatePresence>
             </div>
+
+            {/* Side Scroll Right Arrow */}
+            <button
+              type="button"
+              onClick={() => scrollByAmount("right")}
+              className="absolute right-1 sm:-right-3 lg:-right-4 2xl:-right-5 top-[42%] -translate-y-1/2 z-20 flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-full border border-gray-200/90 bg-white/95 backdrop-blur-md text-gray-800 shadow-[0_6px_18px_rgba(0,0,0,0.12)] transition-all duration-200 hover:bg-black hover:text-white hover:scale-105 active:scale-95"
+              aria-label="Scroll right"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
 
             {/* Subtle premium visual layout decorations */}
             <div className="absolute left-0 right-0 bottom-4 h-[1px] bg-gradient-to-r from-transparent via-pink-200/60 to-transparent pointer-events-none" />

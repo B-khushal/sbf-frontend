@@ -1,13 +1,21 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, ChevronLeft, ChevronRight, Cake, Sparkles, Gift } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { ArrowRight, Cake } from "lucide-react";
+import axios from "axios";
 import api from "@/services/api";
-import { CakeProductCard } from "./cakes/CakeProductCard";
-import { CakeComboCard } from "./cakes/CakeComboCard";
-import { Button } from "@/components/ui/button";
+import {
+  CAROUSEL_CARD_WIDTH_CLASS,
+  HorizontalCarouselTrack,
+  SECTION_CONTAINER_CLASS,
+  useHorizontalCarousel,
+} from "./HorizontalProductCarousel";
+import {
+  EditorialProductCard,
+  EditorialProductCardSkeleton,
+} from "./EditorialProductCard";
 
 interface CakesSectionProps {
-  onAddToCart?: (item: any, quantity: number) => boolean;
+  onAddToCart?: (item: any, quantity: number) => any;
   section?: {
     title?: string;
     subtitle?: string;
@@ -23,55 +31,67 @@ interface CakesSectionProps {
 }
 
 export const CakesSection: React.FC<CakesSectionProps> = ({ onAddToCart, section }) => {
-  const navigate = useNavigate();
   const [cakes, setCakes] = useState<any[]>([]);
-  const [combos, setCombos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const scrollRef = useRef<HTMLDivElement>(null);
-
   const title = section?.title || "Cakes, Made for Every Celebration";
-  const subtitle = section?.subtitle || "Freshly crafted cakes to make every special moment a little sweeter. Baked to order with pure ingredients and delivered fresh across the city.";
+  const subtitle =
+    section?.subtitle ||
+    "Freshly crafted cakes to make every special moment a little sweeter. Baked to order with pure ingredients and delivered fresh across the city.";
   const badgeText = section?.content?.badgeText || "NOW SERVING CAKES";
   const ctaText = section?.content?.ctaText || "EXPLORE CAKES";
   const ctaLink = section?.content?.ctaLink || "/cakes";
   const showCta = section?.content?.showCta !== false;
-  const itemsCount = section?.content?.itemsCount || 8;
+  const itemsCount = section?.content?.itemsCount || 12;
+
+  const {
+    trackRef,
+    canScrollPrev,
+    canScrollNext,
+    isDragging,
+    scrollBy,
+    trackProps,
+  } = useHorizontalCarousel([cakes.length, loading]);
 
   useEffect(() => {
+    const controller = new AbortController();
     let isMounted = true;
+
     const fetchCakesData = async () => {
       try {
         setLoading(true);
         const response = await api.get("/products", {
-          params: { category: "cakes" }
+          params: { category: "cakes" },
+          signal: controller.signal,
         });
 
-        const rawList = response.data?.products || (Array.isArray(response.data) ? response.data : []);
+        const rawList =
+          response.data?.products ||
+          (Array.isArray(response.data) ? response.data : []);
 
         const validCakes: any[] = [];
-        const validCombos: any[] = [];
-
         rawList.forEach((prod: any) => {
           const isCombo =
             prod.catalogType === "combo" ||
             prod.category === "combos" ||
             prod.subcategory?.includes("combo") ||
-            (Array.isArray(prod.categories) && prod.categories.some((c: string) => c.includes("combo"))) ||
-            (prod.details?.categories && prod.details.categories.some((c: string) => c.includes("combo")));
+            (Array.isArray(prod.categories) &&
+              prod.categories.some((c: string) => typeof c === "string" && c.includes("combo"))) ||
+            (Array.isArray(prod.details?.categories) &&
+              prod.details.categories.some((c: string) => typeof c === "string" && c.includes("combo")));
 
-          if (isCombo) {
-            validCombos.push(prod);
-          } else {
+          if (!isCombo) {
             validCakes.push(prod);
           }
         });
 
         if (isMounted) {
           setCakes(validCakes);
-          setCombos(validCombos);
         }
-      } catch (err) {
+      } catch (err: any) {
+        if (axios.isCancel(err) || err?.name === "CanceledError" || err?.name === "AbortError") {
+          return;
+        }
         console.warn("Could not fetch cakes from API:", err);
       } finally {
         if (isMounted) setLoading(false);
@@ -81,128 +101,119 @@ export const CakesSection: React.FC<CakesSectionProps> = ({ onAddToCart, section
     fetchCakesData();
     return () => {
       isMounted = false;
+      controller.abort();
     };
   }, []);
 
-  const handleScroll = (direction: "left" | "right") => {
-    if (scrollRef.current) {
-      const scrollAmount = Math.min(scrollRef.current.offsetWidth * 0.8, 600);
-      scrollRef.current.scrollBy({
-        left: direction === "left" ? -scrollAmount : scrollAmount,
-        behavior: "smooth"
-      });
-    }
-  };
+  if (!loading && cakes.length === 0) {
+    return null;
+  }
+
+  const visibleCakes = cakes.slice(0, itemsCount);
 
   return (
-    <section className="relative py-16 md:py-24 bg-gradient-to-b from-[#faf6f2] via-[#fffbf7] to-white overflow-hidden border-y border-amber-100/50">
-      {/* Subtle Luxury Pattern Accents */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-amber-200/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-rose-200/10 rounded-full blur-3xl pointer-events-none" />
+    <section
+      aria-labelledby="cakes-section-heading"
+      className="relative w-full overflow-x-clip py-12 sm:py-16 lg:py-20 bg-gradient-to-b from-[#FAF6F0] via-[#FFFDF9] to-white border-b border-[#EFE6DA]/80"
+    >
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute top-0 right-0 h-72 w-72 rounded-full bg-[#F5E6CC]/35 blur-3xl"
+      />
 
-      <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 relative z-10">
+      <div className={`${SECTION_CONTAINER_CLASS} z-10`}>
         {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 md:mb-14">
-          <div className="space-y-3">
-            {/* Subtle Brand Badge */}
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between mb-7 sm:mb-9">
+          <div className="max-w-2xl">
             {badgeText && (
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-900 text-xs font-bold tracking-wider uppercase">
-                <Cake className="w-3.5 h-3.5 text-amber-600" />
+              <div className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#9A6B2F]">
+                <Cake className="h-3.5 w-3.5 text-[#B4813F]" aria-hidden="true" />
                 <span>{badgeText}</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
               </div>
             )}
 
-            {/* Main Title */}
-            <h2 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 tracking-tight font-serif">
+            <h2
+              id="cakes-section-heading"
+              style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+              className="mt-2 text-[26px] sm:text-[32px] lg:text-[36px] font-semibold leading-[1.15] tracking-[-0.015em] text-[#1E1B18]"
+            >
               {title}
             </h2>
 
-            {/* Supporting Copy */}
             {subtitle && (
-              <p className="text-sm sm:text-base md:text-lg text-slate-600 max-w-2xl font-light">
+              <p className="mt-2 text-sm sm:text-[15px] leading-relaxed text-[#645C54]">
                 {subtitle}
               </p>
             )}
           </div>
 
-          {/* Action Links & Navigation Controls */}
-          <div className="flex items-center gap-3">
-            {/* Horizontal Arrow Controls (Desktop) */}
-            <div className="hidden sm:flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => handleScroll("left")}
-                aria-label="Previous cakes"
-                className="w-10 h-10 rounded-full border-amber-200 bg-white/90 hover:bg-amber-50 text-slate-700 shadow-xs"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => handleScroll("right")}
-                aria-label="Next cakes"
-                className="w-10 h-10 rounded-full border-amber-200 bg-white/90 hover:bg-amber-50 text-slate-700 shadow-xs"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            </div>
-
-            {/* Premium CTA Link */}
-            {showCta && (
+          {showCta && (
+            <div className="hidden md:flex items-center shrink-0">
               <Link
                 to={ctaLink}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-800 hover:bg-amber-900 text-white font-bold text-xs sm:text-sm tracking-wide shadow-md transition-all duration-300 hover:shadow-lg group"
+                className="inline-flex items-center gap-2 rounded-full border border-[#E3D8CD] bg-white/90 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#2B2522] transition-all duration-200 hover:border-[#DFB4C4] hover:bg-[#FFF9FB] hover:text-[#BE185D]"
               >
                 <span>{ctaText}</span>
-                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
               </Link>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
-        {/* Featured Cake Carousel / Horizontal Grid */}
-        <div className="relative -mx-4 px-4 sm:mx-0 sm:px-0">
+        {/* Single-Row Side-Scroll Cakes Carousel */}
+        {loading ? (
           <div
-            ref={scrollRef}
-            className="flex sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-4 sm:gap-5 2xl:gap-6 overflow-x-auto sm:overflow-visible pb-4 sm:pb-0 scrollbar-none snap-x snap-mandatory"
+            className="flex flex-nowrap gap-3.5 sm:gap-5 overflow-x-hidden py-1"
+            aria-busy="true"
+            aria-label="Loading celebration cakes"
           >
-            {loading ? (
-              // Skeletons
-              Array.from({ length: 4 }).map((_, idx) => (
-                <div
-                  key={`cake-skel-${idx}`}
-                  className="w-[280px] xs:w-[300px] sm:w-auto shrink-0 snap-start rounded-2xl border border-amber-100 bg-white p-4 space-y-3 animate-pulse"
-                >
-                  <div className="w-full h-48 bg-amber-50 rounded-xl" />
-                  <div className="h-4 bg-amber-100 rounded-md w-3/4" />
-                  <div className="h-3 bg-amber-50 rounded-md w-1/2" />
-                  <div className="h-8 bg-amber-100 rounded-lg w-full mt-4" />
-                </div>
-              ))
-            ) : cakes.length > 0 ? (
-              cakes.slice(0, itemsCount).map((cake) => (
-                <div
-                  key={cake._id || cake.id}
-                  className="w-[280px] xs:w-[300px] sm:w-auto shrink-0 snap-start flex flex-col h-full"
-                >
-                  <CakeProductCard
-                    product={cake}
-                    onAddToCart={onAddToCart}
-                    className="h-full"
-                  />
-                </div>
-              ))
-            ) : (
-              <div className="col-span-4 text-center py-12 text-slate-500">
-                Fresh cakes coming right up! Explore our cake collection page.
+            {Array.from({ length: 6 }).map((_, idx) => (
+              <div key={`cake-skel-${idx}`} className={CAROUSEL_CARD_WIDTH_CLASS}>
+                <EditorialProductCardSkeleton />
               </div>
-            )}
+            ))}
           </div>
-        </div>
+        ) : (
+          <HorizontalCarouselTrack
+            trackRef={trackRef}
+            isDragging={isDragging}
+            trackProps={trackProps}
+            ariaLabel="Celebration cakes carousel"
+            canScrollPrev={canScrollPrev}
+            canScrollNext={canScrollNext}
+            onScrollPrev={() => scrollBy(-1)}
+            onScrollNext={() => scrollBy(1)}
+            prevLabel="Previous cakes"
+            nextLabel="Next cakes"
+          >
+            {visibleCakes.map((cake, index) => (
+              <div
+                key={String(cake._id || cake.id || index)}
+                className={CAROUSEL_CARD_WIDTH_CLASS}
+              >
+                <EditorialProductCard
+                  product={cake}
+                  index={index}
+                  contextLabel={cake.cakeAttributes?.flavor || "Artisan Cake"}
+                  onAddToCart={onAddToCart}
+                />
+              </div>
+            ))}
+          </HorizontalCarouselTrack>
+        )}
 
+        {/* Mobile CTA */}
+        {showCta && (
+          <div className="mt-7 flex justify-center md:hidden">
+            <Link
+              to={ctaLink}
+              className="inline-flex items-center gap-2 rounded-full border border-[#E3D8CD] bg-white px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#2B2522] transition-colors hover:border-[#DFB4C4] hover:text-[#BE185D]"
+            >
+              <span>{ctaText}</span>
+              <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+            </Link>
+          </div>
+        )}
       </div>
     </section>
   );

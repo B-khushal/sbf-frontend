@@ -12,6 +12,16 @@ interface SocialPost {
   displayOrder: number;
 }
 
+declare global {
+  interface Window {
+    instgrm?: {
+      Embeds?: {
+        process?: () => void;
+      };
+    };
+  }
+}
+
 // Global state to load Instagram script only once
 let scriptPromise: Promise<void> | null = null;
 const loadInstagramScript = (): Promise<void> => {
@@ -246,8 +256,8 @@ export const SocialFeed: React.FC = () => {
   }, [posts, loading]);
 
   return (
-    <section className="py-16 md:py-24 px-4 sm:px-6 md:px-8 bg-gradient-to-b from-[#FAF8FA] to-[#fff7fa]">
-      <div className="max-w-7xl mx-auto">
+    <section className="py-16 md:py-24 3xl:py-28 px-4 sm:px-6 lg:px-8 2xl:px-12 3xl:px-16 bg-gradient-to-b from-[#FAF8FA] to-[#fff7fa]">
+      <div className="w-full max-w-7xl 2xl:max-w-[1560px] 3xl:max-w-[1840px] 4xl:max-w-[2160px] mx-auto">
         
         {/* Section Header */}
         <div className="text-center mb-12 md:mb-16">
@@ -263,16 +273,16 @@ export const SocialFeed: React.FC = () => {
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-800 leading-tight font-serif">
             {sectionTitle}
           </h2>
-          <p className="mt-4 text-sm sm:text-base text-gray-500 max-w-xl mx-auto leading-relaxed">
+          <p className="mt-4 text-sm sm:text-base 3xl:text-lg text-gray-500 max-w-xl 3xl:max-w-2xl mx-auto leading-relaxed">
             {sectionSubtitle}
           </p>
         </div>
 
         {/* Loading skeleton grids */}
         {loading && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 justify-items-center w-full">
-            {[1, 2, 3].map((n) => (
-              <div key={n} className="w-full max-w-[320px] md:max-w-none mx-auto min-h-[450px] bg-white dark:bg-[#1E1E1E] border border-slate-100 dark:border-neutral-800 rounded-2xl p-4 flex flex-col space-y-4 shadow-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 4xl:grid-cols-5 gap-6 md:gap-8 3xl:gap-10 justify-items-center w-full">
+            {[1, 2, 3, 4].map((n) => (
+              <div key={n} className="w-full max-w-[340px] md:max-w-none mx-auto min-h-[450px] bg-white dark:bg-[#1E1E1E] border border-slate-100 dark:border-neutral-800 rounded-2xl p-4 flex flex-col space-y-4 shadow-sm">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full skeleton-shimmer" />
                   <div className="flex-1 space-y-2">
@@ -306,7 +316,7 @@ export const SocialFeed: React.FC = () => {
 
         {/* Responsive Grid Layout */}
         {!loading && posts.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 justify-items-center w-full">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 4xl:grid-cols-5 gap-6 md:gap-8 3xl:gap-10 justify-items-center w-full">
             {posts.map((post) => (
               <InstagramEmbedCard key={post._id} embedUrl={post.embedUrl} />
             ))}

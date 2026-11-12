@@ -1043,9 +1043,13 @@ class ProductService {
     return response.data;
   }
 
-  async getProductsByOccasion(slug: string): Promise<{ occasion: OccasionData, products: ProductData[], total: number }> {
+  async getProductsByOccasion(
+    slug: string,
+    signal?: AbortSignal
+  ): Promise<{ occasion: OccasionData, products: ProductData[], total: number }> {
     const response = await axios.get<{ occasion: OccasionData, products: ProductData[], total: number }>(
-      `${API_URL}/products/by-occasion/${slug}`
+      `${API_URL}/products/by-occasion/${slug}`,
+      { signal }
     );
     return response.data;
   }

@@ -295,14 +295,6 @@ export const OccasionProductsPage: React.FC = () => {
           description="Explore handcrafted flower bouquets, cakes, and gift hampers for every occasion including birthdays, anniversaries, romance, sympathy, and congratulations."
           canonical="/occasions"
         />
-        <div className="text-center max-w-3xl mx-auto mb-12">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 tracking-tight mb-4">
-            Shop Flowers &amp; Gifts by Occasion
-          </h1>
-          <p className="text-base sm:text-lg text-slate-600">
-            Celebrate life&apos;s meaningful moments with fresh flowers, artisan cakes, and thoughtful gifts curated for every occasion.
-          </p>
-        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {Object.entries(OCCASION_SEO_MAP).map(([occSlug, cfg]) => (
             <Link
@@ -321,6 +313,14 @@ export const OccasionProductsPage: React.FC = () => {
               </span>
             </Link>
           ))}
+        </div>
+        <div className="text-center max-w-3xl mx-auto mt-14 pt-10 border-t border-slate-200/80">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 tracking-tight mb-4">
+            Shop Flowers &amp; Gifts by Occasion
+          </h1>
+          <p className="text-base sm:text-lg text-slate-600">
+            Celebrate life&apos;s meaningful moments with fresh flowers, artisan cakes, and thoughtful gifts curated for every occasion.
+          </p>
         </div>
       </div>
     );
@@ -363,46 +363,8 @@ export const OccasionProductsPage: React.FC = () => {
         </nav>
       </div>
 
-      {/* Occasion Page Banner Hero */}
-      <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 mt-5">
-        <div
-          className="relative rounded-2xl overflow-hidden min-h-[220px] md:min-h-[300px] flex items-center justify-center p-6 bg-gradient-to-r from-bloom-pink-500/20 via-rose-500/5 to-amber-500/10 border border-slate-100 shadow-sm"
-          style={{
-            backgroundImage: bannerUrl ? `url(${bannerUrl})` : undefined,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center'
-          }}
-        >
-          {bannerUrl && <div className="absolute inset-0 bg-black/35 z-10" />}
-
-          <div className={cn(
-            "relative z-20 text-center max-w-2xl px-4",
-            bannerUrl ? "text-white" : "text-slate-900"
-          )}>
-            <div
-              className={cn(
-                "inline-flex p-3 rounded-full mx-auto shadow-inner mb-3.5",
-                bannerUrl ? "bg-white/10 backdrop-blur-md text-white" : "bg-white text-slate-850"
-              )}
-            >
-              {React.createElement((LucideIcons as any)[iconName] || Sparkles, {
-                className: "h-6 w-6",
-                style: { color: bannerUrl ? '#FFFFFF' : accentColor }
-              })}
-            </div>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight">{headingText}</h1>
-            <p className={cn(
-              "text-xs sm:text-sm md:text-base mt-2.5 max-w-xl mx-auto font-medium",
-              bannerUrl ? "text-slate-200" : "text-slate-600"
-            )}>
-              {seoDesc}
-            </p>
-          </div>
-        </div>
-      </div>
-
       {/* Main content grid */}
-      <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 py-10">
+      <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
 
           {/* Desktop Filter Sidebar */}
@@ -491,6 +453,44 @@ export const OccasionProductsPage: React.FC = () => {
                 ))}
               </div>
             )}
+          </div>
+        </div>
+      </div>
+
+      {/* Occasion Page Banner Hero (Editorial Bottom Intro) */}
+      <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 pb-16">
+        <div
+          className="relative rounded-2xl overflow-hidden min-h-[220px] md:min-h-[280px] flex items-center justify-center p-6 bg-gradient-to-r from-bloom-pink-500/20 via-rose-500/5 to-amber-500/10 border border-slate-100 shadow-sm"
+          style={{
+            backgroundImage: bannerUrl ? `url(${bannerUrl})` : undefined,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center'
+          }}
+        >
+          {bannerUrl && <div className="absolute inset-0 bg-black/35 z-10" />}
+
+          <div className={cn(
+            "relative z-20 text-center max-w-2xl px-4",
+            bannerUrl ? "text-white" : "text-slate-900"
+          )}>
+            <div
+              className={cn(
+                "inline-flex p-3 rounded-full mx-auto shadow-inner mb-3.5",
+                bannerUrl ? "bg-white/10 backdrop-blur-md text-white" : "bg-white text-slate-850"
+              )}
+            >
+              {React.createElement((LucideIcons as any)[iconName] || Sparkles, {
+                className: "h-6 w-6",
+                style: { color: bannerUrl ? '#FFFFFF' : accentColor }
+              })}
+            </div>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight">{headingText}</h1>
+            <p className={cn(
+              "text-xs sm:text-sm md:text-base mt-2.5 max-w-xl mx-auto font-medium",
+              bannerUrl ? "text-slate-200" : "text-slate-600"
+            )}>
+              {seoDesc}
+            </p>
           </div>
         </div>
       </div>
