@@ -26,6 +26,7 @@ import { useFloating, offset, flip, shift, autoUpdate } from '@floating-ui/react
 import { preprocessProductForSearch, createSearchIndex, rankSearchResults, SearchItem } from '@/utils/searchHelper';
 import searchService from '@/services/searchService';
 import { getImageUrl } from '@/config';
+import { getProductDetailsPath } from '@/utils/productRouting';
 
 interface NavItem {
   href: string;
@@ -398,7 +399,7 @@ const Navigation = ({ cartItemCount = 0 }: NavigationProps) => {
       clickedProductId: String(product._id || product.id),
       clickedProductTitle: prodTitle
     });
-    navigate(`/product/${product._id || product.id}`);
+    navigate(getProductDetailsPath(product as any, isValentineEnabled));
     setSearchQuery('');
     setShowSuggestions(false);
     setIsSearchFocused(false);

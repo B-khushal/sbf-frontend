@@ -30,6 +30,8 @@ import { getProductEffectivePrice } from "@/utils/pricing";
 import { formatCakeWeightLabel } from "@/utils/cakeHelpers";
 import { extractComboComponents, isComboProduct } from "@/utils/comboHelpers";
 import { marketingTracker } from "@/services/marketingTracker";
+import { useValentine } from "@/contexts/ValentineContext";
+import { getProductDetailsPath, shouldShowValentineProductDetails } from "@/utils/productRouting";
 
 export type AddStatus = "idle" | "loading" | "added" | "error";
 
@@ -101,6 +103,7 @@ export const EditorialProductCard: React.FC<EditorialProductCardProps> = React.m
     const { formatPrice, convertPrice } = useCurrency();
     const { user } = useAuth();
     const { addToCart } = useCart();
+    const { isValentineEnabled } = useValentine();
     const {
       items: wishlistItems,
       addItem: addToWishlist,
@@ -123,9 +126,8 @@ export const EditorialProductCard: React.FC<EditorialProductCardProps> = React.m
 
     const prodId = String(product._id || product.id || "");
     const title = product.title || product.name || "Handcrafted Floral Gift";
-    const productHref = product.isValentineProduct
-      ? `/valentine-product/${prodId}`
-      : `/product/${prodId}`;
+    const isValentineActiveProduct = shouldShowValentineProductDetails(product, isValentineEnabled);
+    const productHref = getProductDetailsPath(product, isValentineEnabled);
 
     const isInWishlist = wishlistItems.some(
       (item) => String(item.id) === prodId || String((item as any).productId) === prodId
@@ -377,7 +379,7 @@ export const EditorialProductCard: React.FC<EditorialProductCardProps> = React.m
         quantity: 1,
         category: product.category,
         description: product.description,
-        isValentineProduct: Boolean(product.isValentineProduct),
+        isValentineProduct: isValentineActiveProduct,
         selectedVariant: activeVariant
           ? {
               id: activeVariant.id || activeVariant._id,
@@ -512,7 +514,7 @@ export const EditorialProductCard: React.FC<EditorialProductCardProps> = React.m
                       -{discountPct}% OFF
                     </span>
                   )}
-                  {product.valentineBadge ? (
+                  {isValentineEnabled && product.valentineBadge ? (
                     <span className="rounded-full bg-[#BE185D]/90 px-2.5 py-0.5 text-[9.5px] font-semibold uppercase tracking-wider text-white backdrop-blur-sm">
                       {product.valentineBadge}
                     </span>

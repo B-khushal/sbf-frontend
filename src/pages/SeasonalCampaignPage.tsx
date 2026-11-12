@@ -11,6 +11,8 @@ import { getImageUrl } from '@/config';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { useValentine } from '@/contexts/ValentineContext';
+import { getProductDetailsPath } from '@/utils/productRouting';
 
 interface SeasonalCampaignPageProps {
   slug?: string;
@@ -159,6 +161,7 @@ const SeasonalCampaignPage: React.FC<SeasonalCampaignPageProps> = ({ slug: propS
   const navigate = useNavigate();
   const { toast } = useToast();
   const { formatPrice, convertPrice } = useCurrency();
+  const { isValentineEnabled } = useValentine();
 
   const rawSlug = propSlug || paramSlug || '';
   const slug = rawSlug.trim().toLowerCase().replace(/^\/+|\/+$/g, '').replace(/^occasions\//, '');
@@ -780,7 +783,7 @@ const SeasonalCampaignPage: React.FC<SeasonalCampaignPageProps> = ({ slug: propS
                   return (
                     <div
                       key={p._id}
-                      onClick={() => navigate(`/product/${p._id}`)}
+                      onClick={() => navigate(getProductDetailsPath(p, isValentineEnabled))}
                       className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:scale-101 transition-all overflow-hidden cursor-pointer flex flex-col justify-between"
                     >
                       {/* Image Block */}

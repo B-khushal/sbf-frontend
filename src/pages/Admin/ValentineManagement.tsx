@@ -82,12 +82,18 @@ const ValentineManagement: React.FC = () => {
 
   const toggleProductValentineStatus = async (productId: string, field: 'isValentineProduct' | 'showInValentineShop', value: boolean) => {
     try {
+      const updates: Record<string, any> = {
+        [field]: value,
+        isValentineProduct: value,
+        showInValentineShop: value,
+        productType: value ? 'valentine' : 'regular',
+      };
       await api.post('/valentine/products/bulk-assign', {
         productIds: [productId],
-        updates: { [field]: value }
+        updates
       });
-      setCatalogProducts(prev => prev.map(p => (p.id === productId || p._id === productId) ? { ...p, [field]: value } : p));
-      toast({ title: 'Product Updated', description: `Updated ${field}` });
+      setCatalogProducts(prev => prev.map(p => (p.id === productId || p._id === productId) ? { ...p, ...updates } : p));
+      toast({ title: 'Product Updated', description: value ? 'Added to Valentine products' : 'Removed from Valentine products' });
     } catch (err) {
       toast({ variant: 'destructive', title: 'Error', description: 'Failed to update product' });
     }
@@ -117,13 +123,17 @@ const ValentineManagement: React.FC = () => {
       if (bulkAction === 'enable_valentine') {
         updates.isValentineProduct = true;
         updates.showInValentineShop = true;
+        updates.productType = 'valentine';
       } else if (bulkAction === 'disable_valentine') {
         updates.isValentineProduct = false;
         updates.showInValentineShop = false;
+        updates.productType = 'regular';
       } else if (bulkAction === 'assign_day') {
         updates.valentineDate = bulkTargetDay;
         updates.availableDates = [bulkTargetDay];
+        updates.isValentineProduct = true;
         updates.showInValentineShop = true;
+        updates.productType = 'valentine';
       }
 
       await api.post('/valentine/products/bulk-assign', {
@@ -874,7 +884,7 @@ const ValentineManagement: React.FC = () => {
                               </td>
                               <td className="p-3 text-center">
                                 <Switch
-                                  checked={Boolean(p.showInValentineShop || p.isValentineProduct)}
+                                  checked={Boolean(p.showInValentineShop || p.isValentineProduct || p.productType === 'valentine')}
                                   onCheckedChange={(checked) => {
                                     toggleProductValentineStatus(pId, 'showInValentineShop', checked);
                                   }}

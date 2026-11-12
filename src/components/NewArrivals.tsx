@@ -15,6 +15,8 @@ import { QuickViewModal } from "./ui/QuickViewModal";
 import ProtectedImage from "./ui/ProtectedImage";
 import { promptLoginForAddToCart } from "@/utils/cartAuthHelper";
 import { getProductEffectivePrice } from "@/utils/pricing";
+import { useValentine } from "@/contexts/ValentineContext";
+import { getProductDetailsPath } from "@/utils/productRouting";
 
 import { Product } from "./ProductGrid";
 
@@ -379,6 +381,7 @@ const LuxuryProductCard = ({
 }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isValentineEnabled } = useValentine();
   const { formatPrice, convertPrice } = useCurrency();
   const { addToCart } = useCart();
   const { addItem: addToWishlist, removeItem: removeFromWishlist, items: wishlistItems } = useWishlist();
@@ -415,7 +418,7 @@ const LuxuryProductCard = ({
     if ((e.target as HTMLElement).closest("button")) {
       return;
     }
-    navigate(`/product/${product._id}`);
+    navigate(getProductDetailsPath(product, isValentineEnabled));
   };
 
   // Quick add handler
@@ -720,7 +723,7 @@ const LuxuryProductCard = ({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                navigate(`/product/${product._id}?customize=true`);
+                navigate(`${getProductDetailsPath(product, isValentineEnabled)}?customize=true`);
               }}
               className="w-full h-10 text-xs font-semibold rounded-xl bg-gradient-to-r from-purple-500 to-[#b53d69] hover:from-purple-650 hover:to-[#9f2d57] text-white border-0 shadow-sm transition-all duration-300 flex items-center justify-center gap-2 active:scale-95 hover:shadow-md"
             >

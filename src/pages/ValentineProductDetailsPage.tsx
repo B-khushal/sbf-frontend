@@ -230,10 +230,22 @@ const ValentineProductDetailsPage: React.FC = () => {
     }
   };
 
+  // If Valentine mode is off, switch immediately to the normal regular product details page
   useEffect(() => {
+    if (!contextLoading && !isValentineEnabled) {
+      const targetId = product?._id || actualId;
+      navigate(
+        targetId ? `/product/${targetId}${window.location.search}` : '/shop',
+        { replace: true }
+      );
+    }
+  }, [contextLoading, isValentineEnabled, product?._id, actualId, navigate]);
+
+  useEffect(() => {
+    if (contextLoading || !isValentineEnabled) return;
     fetchProductDetails();
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [actualId]);
+  }, [actualId, contextLoading, isValentineEnabled]);
 
   // Sync pincode selection with localStorage
   useEffect(() => {
@@ -252,7 +264,7 @@ const ValentineProductDetailsPage: React.FC = () => {
 
   // Track product view for analytics
   useEffect(() => {
-    if (product?._id) {
+    if (product?._id && !contextLoading && isValentineEnabled) {
       void trackProductView(
         product._id,
         product.title,
@@ -266,7 +278,7 @@ const ValentineProductDetailsPage: React.FC = () => {
         occasion: 'Valentine'
       });
     }
-  }, [product?._id, product?.title, product?.price, product?.category]);
+  }, [product?._id, product?.title, product?.price, product?.category, contextLoading, isValentineEnabled]);
 
   // Gallery items builder (images + videos)
   const galleryItems = useMemo(() => {
@@ -649,8 +661,20 @@ const ValentineProductDetailsPage: React.FC = () => {
     }
   };
 
+  // Neutral loading state while Valentine mode status is resolved or redirecting to regular product page
+  if (contextLoading || !isValentineEnabled) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading product details...</p>
+        </div>
+      </div>
+    );
+  }
+
   // Loading state
-  if (productLoading || contextLoading) {
+  if (productLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#FFFDFD] via-[#FAF6F4] to-[#FFF9F7] flex items-center justify-center">
         <div className="text-center space-y-4">

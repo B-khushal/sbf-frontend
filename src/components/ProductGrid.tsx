@@ -18,6 +18,8 @@ import { promptLoginForAddToCart } from "@/utils/cartAuthHelper";
 import { getProductEffectivePrice } from "@/utils/pricing";
 import { marketingTracker } from "@/services/marketingTracker";
 import { formatCakeWeightLabel } from "@/utils/cakeHelpers";
+import { useValentine } from "@/contexts/ValentineContext";
+import { getProductDetailsPath } from "@/utils/productRouting";
 
 
 export type Product = {
@@ -291,6 +293,7 @@ export const ProductCard = ({ product, onAddToCart, linkPrefix }: {
   const { formatPrice, convertPrice } = useCurrency();
   const { addToCart } = useCart();
   const { addItem: addToWishlist, removeItem: removeFromWishlist, items: wishlistItems } = useWishlist();
+  const { isValentineEnabled } = useValentine();
   const navigate = useNavigate();
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
@@ -350,8 +353,8 @@ export const ProductCard = ({ product, onAddToCart, linkPrefix }: {
     try {
       marketingTracker.trackMerchandisingClick(product.category || 'catalog', targetId, product.title || (product as any).name);
     } catch (_) {}
-    const prefix = linkPrefix || (product.isValentineProduct ? '/valentine-product' : '/product');
-    navigate(`${prefix}/${targetId}`);
+    const targetUrl = getProductDetailsPath(product, isValentineEnabled, linkPrefix);
+    navigate(targetUrl);
   };
 
   // Handle add to cart
@@ -433,7 +436,7 @@ export const ProductCard = ({ product, onAddToCart, linkPrefix }: {
       return;
     }
     console.log("Customize and add to cart clicked:", product.title);
-    navigate(`/product/${product._id}?customize=true`);
+    navigate(`${getProductDetailsPath(product, isValentineEnabled, linkPrefix)}?customize=true`);
   };
 
   // Handle wishlist toggle

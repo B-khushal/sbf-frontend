@@ -16,6 +16,8 @@ import { marketingTracker } from '@/services/marketingTracker';
 import SEOHead from '@/components/seo/SEOHead';
 import ContextualFaq from '@/components/faq/ContextualFaq';
 import { generateProductSeo } from '@/utils/seoGenerator';
+import { useValentine } from '@/contexts/ValentineContext';
+import { shouldShowValentineProductDetails } from '@/utils/productRouting';
 
 type Product = ProductData & {
   _id: string;
@@ -31,9 +33,13 @@ const ProductPage = () => {
     addToCart, 
   } = useCart();
   const { user } = useAuth();
+  const { isValentineEnabled, loading: valentineLoading } = useValentine();
   
   // Use either id or productId parameter
   const actualId = id || productId;
+  const shouldOpenValentinePage = Boolean(
+    product && shouldShowValentineProductDetails(product, isValentineEnabled)
+  );
 
   const fetchProduct = async () => {
     try {
@@ -64,7 +70,13 @@ const ProductPage = () => {
   }, [actualId, navigate]);
 
   useEffect(() => {
-    if (!product?._id) {
+    if (!loading && !valentineLoading && shouldOpenValentinePage && (product?._id || actualId)) {
+      navigate(`/valentine-product/${product?._id || actualId}${window.location.search}`, { replace: true });
+    }
+  }, [loading, valentineLoading, shouldOpenValentinePage, product?._id, actualId, navigate]);
+
+  useEffect(() => {
+    if (!product?._id || loading || valentineLoading || shouldOpenValentinePage) {
       return;
     }
 
@@ -80,7 +92,7 @@ const ProductPage = () => {
       price: product.price,
       category: typeof product.category === 'string' ? product.category : (product.category as any)?.name
     });
-  }, [product?._id, product?.title, product?.price]);
+  }, [product?._id, product?.title, product?.price, loading, valentineLoading, shouldOpenValentinePage]);
 
   const handleAddToCart = (item: {
     id: string;
@@ -151,7 +163,7 @@ const ProductPage = () => {
     }
   };
 
-  if (loading) {
+  if (loading || valentineLoading || shouldOpenValentinePage) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

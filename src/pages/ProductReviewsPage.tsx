@@ -30,6 +30,8 @@ import ReviewSkeleton from '@/components/reviews/ReviewSkeleton';
 import RatingStars from '@/components/reviews/RatingStars';
 import { buildProductReviewUrl } from '@/utils/reviewUrls';
 import { getImageUrl } from '@/config';
+import { useValentine } from '@/contexts/ValentineContext';
+import { getProductDetailsPath } from '@/utils/productRouting';
 import {
   ArrowLeft,
   Camera,
@@ -54,6 +56,7 @@ const ProductReviewsPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { isValentineEnabled } = useValentine();
   const { ref, inView } = useInView({ threshold: 0.1 });
 
   const [product, setProduct] = useState<ProductSummary | null>(null);
@@ -316,7 +319,7 @@ const ProductReviewsPage = () => {
       <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 py-10 sm:px-6 lg:px-8 2xl:px-12">
         <Button
           variant="ghost"
-          onClick={() => navigate(product ? `/product/${product._id}` : '/shop')}
+          onClick={() => navigate(product ? getProductDetailsPath(product as any, isValentineEnabled) : '/shop')}
           className="mb-6 rounded-full"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />

@@ -13,6 +13,8 @@ import { cn } from '@/lib/utils';
 import ProtectedImage from './ProtectedImage';
 import { promptLoginForAddToCart } from '@/utils/cartAuthHelper';
 import { getProductEffectivePrice } from '@/utils/pricing';
+import { useValentine } from '@/contexts/ValentineContext';
+import { getProductDetailsPath } from '@/utils/productRouting';
 
 import { Product } from '../ProductGrid';
 
@@ -33,6 +35,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
   const { addToCart } = useCart();
   const { addItem: addToWishlist, removeItem: removeFromWishlist, items: wishlistItems } = useWishlist();
   const { user } = useAuth();
+  const { isValentineEnabled } = useValentine();
   const navigate = useNavigate();
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
@@ -260,7 +263,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
               <button 
                 onClick={() => {
                   onClose();
-                  navigate(`/product/${product._id}`);
+                  navigate(getProductDetailsPath(product, isValentineEnabled));
                 }}
                 className="w-full text-center text-xs font-semibold text-gray-400 hover:text-primary transition-colors flex items-center justify-center gap-1.5 mt-2"
               >
