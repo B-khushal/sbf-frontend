@@ -621,7 +621,7 @@ export const ProductOrderArrangementPage: React.FC = () => {
       toast({
         variant: "destructive",
         title: "Save Failed",
-        description: error.message || "Failed to commit order changes.",
+        description: error?.response?.data?.message || error.message || "Failed to commit order changes.",
       });
     } finally {
       setIsSaving(false);

@@ -263,7 +263,7 @@ const HomePage = () => {
           ctaLink: '/combos',
           showCta: true,
           showPills: true,
-          itemsCount: 8,
+          itemsCount: 24,
         }
       };
       const cakeIdx = sections.findIndex(s => s.type === 'cakes');

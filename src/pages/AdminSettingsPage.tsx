@@ -1107,7 +1107,7 @@ const AdminSettingsPage = () => {
               ctaLink: '/combos',
               showCta: true,
               showPills: true,
-              itemsCount: 8,
+              itemsCount: 24,
             }
           });
         }
@@ -1161,7 +1161,7 @@ const AdminSettingsPage = () => {
                   ctaLink: '/combos',
                   showCta: true,
                   showPills: true,
-                  itemsCount: 8,
+                  itemsCount: 24,
                   ...(sec.content || {})
                 }
               };
@@ -2884,7 +2884,7 @@ const AdminSettingsPage = () => {
                                   ctaLink: '/combos',
                                   showCta: true,
                                   showPills: true,
-                                  itemsCount: 8,
+                                  itemsCount: 24,
                                 }
                               });
                             } else if (val === 'budget_friendly') {
@@ -3365,11 +3365,11 @@ const AdminSettingsPage = () => {
                                             <Input
                                               type="number"
                                               min="2"
-                                              max="24"
-                                              value={sec.content?.itemsCount || 8}
+                                              max="50"
+                                              value={sec.content?.itemsCount || 24}
                                               onChange={(e) => {
                                                 const copy = localSettings.homeSections.map((s: any) =>
-                                                  s.id === sec.id ? { ...s, content: { ...s.content, itemsCount: Number(e.target.value) || 8 } } : s
+                                                  s.id === sec.id ? { ...s, content: { ...s.content, itemsCount: Number(e.target.value) || 24 } } : s
                                                 );
                                                 updateSettingsState({ ...localSettings, homeSections: copy });
                                               }}
@@ -3477,11 +3477,11 @@ const AdminSettingsPage = () => {
                                             <Input
                                               type="number"
                                               min="2"
-                                              max="24"
-                                              value={sec.content?.itemsCount || 8}
+                                              max="50"
+                                              value={sec.content?.itemsCount || 24}
                                               onChange={(e) => {
                                                 const copy = localSettings.homeSections.map((s: any) =>
-                                                  s.id === sec.id ? { ...s, content: { ...s.content, itemsCount: Number(e.target.value) || 8 } } : s
+                                                  s.id === sec.id ? { ...s, content: { ...s.content, itemsCount: Number(e.target.value) || 24 } } : s
                                                 );
                                                 updateSettingsState({ ...localSettings, homeSections: copy });
                                               }}

@@ -48,7 +48,6 @@ export const CombosSection: React.FC<CombosSectionProps> = ({
   const ctaLink = section?.content?.ctaLink || "/combos";
   const showCta = section?.content?.showCta !== false;
   const showPills = section?.content?.showPills !== false;
-  const itemsCount = section?.content?.itemsCount || 12;
 
   const {
     trackRef,
@@ -114,8 +113,6 @@ export const CombosSection: React.FC<CombosSectionProps> = ({
   if (!loading && combos.length === 0) {
     return null;
   }
-
-  const visibleCombos = combos.slice(0, itemsCount);
 
   return (
     <section
@@ -206,7 +203,7 @@ export const CombosSection: React.FC<CombosSectionProps> = ({
             prevLabel="Previous combo sets"
             nextLabel="Next combo sets"
           >
-            {visibleCombos.map((combo, index) => (
+            {combos.map((combo, index) => (
               <div
                 key={String(combo._id || combo.id || index)}
                 className={CAROUSEL_CARD_WIDTH_CLASS}
