@@ -25,9 +25,9 @@ export interface SEOHeadProps {
 
 export const SITE_ORIGIN = 'https://sbflorist.in';
 export const DEFAULT_BRAND = 'Spring Blossoms Florist';
-export const DEFAULT_TITLE = 'Spring Blossoms Florist | Buy Flowers & Gifts Online in India';
+export const DEFAULT_TITLE = 'Flowers & Cakes Delivery in Hyderabad | Spring Blossoms Florist';
 export const DEFAULT_DESCRIPTION =
-  'Order fresh flower bouquets, luxury roses, tulips, orchids, cakes, chocolates, and thoughtful gifts online from Spring Blossoms Florist. Same-day & midnight delivery in Hyderabad, Secunderabad & across India.';
+  'Order fresh flowers, celebration cakes and gifts in Hyderabad & Secunderabad. Free delivery on orders ₹999+ with same-day and midnight delivery options.';
 export const DEFAULT_OG_IMAGE = 'https://sbflorist.in/images/og-preview.jpg';
 export const DEFAULT_OG_IMAGE_ALT =
   'Spring Blossoms Florist — Fresh Flowers, Luxury Bouquets, Cakes & Gifts Online in India';
