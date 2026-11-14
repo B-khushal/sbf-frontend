@@ -18,6 +18,7 @@ import ContextualFaq from '@/components/faq/ContextualFaq';
 import { generateProductSeo } from '@/utils/seoGenerator';
 import { useValentine } from '@/contexts/ValentineContext';
 import { shouldShowValentineProductDetails } from '@/utils/productRouting';
+import NotFound from './NotFound';
 
 type Product = ProductData & {
   _id: string;
@@ -50,24 +51,22 @@ const ProductPage = () => {
       console.log("ProductPage - Product with care instructions:", productData);
     } catch (error) {
       console.error("Error fetching product:", error);
-      // Redirect to shop instead of showing not found
-      navigate('/shop', { replace: true });
+      setProduct(null);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    // If no valid ID is provided, redirect to shop immediately
     if (!actualId || actualId.trim() === '') {
-      navigate('/shop', { replace: true });
+      setLoading(false);
       return;
     }
 
     fetchProduct();
     // Scroll to top with smooth behavior when product changes
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [actualId, navigate]);
+  }, [actualId]);
 
   useEffect(() => {
     if (!loading && !valentineLoading && shouldOpenValentinePage && (product?._id || actualId)) {
@@ -174,10 +173,9 @@ const ProductPage = () => {
     );
   }
 
-  // If no product and not loading, redirect to shop (this should rarely happen due to the redirect in useEffect)
+  // If no product and not loading, render NotFound page with noindex meta
   if (!product) {
-    navigate('/shop', { replace: true });
-    return null;
+    return <NotFound />;
   }
 
   const finalPrice = product.discount && product.discount > 0

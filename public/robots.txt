@@ -1,11 +1,24 @@
 # Robots.txt for Spring Blossoms Florist (https://sbflorist.in)
 User-agent: *
+
+# ── Allow Indexable Public Routes ───────────────────
 Allow: /
 Allow: /shop
+Allow: /shop/
+Allow: /blog
+Allow: /blog/
 Allow: /flower-delivery-hyderabad
+Allow: /flower-delivery-hyderabad/
 Allow: /flower-delivery-secunderabad
+Allow: /flower-delivery-secunderabad/
 Allow: /bouquets
 Allow: /roses
+Allow: /premium-roses
+Allow: /tulips
+Allow: /orchids
+Allow: /lavender-lisianthus
+Allow: /carnation
+Allow: /vase
 Allow: /cakes
 Allow: /combos
 Allow: /sunflowers
@@ -15,28 +28,30 @@ Allow: /hydrangea
 Allow: /occasions/
 Allow: /product/
 Allow: /products/
+Allow: /valentine-special
+Allow: /valentine-shop
+Allow: /valentine-product/
 Allow: /about
+Allow: /about/
 Allow: /contact
+Allow: /contact/
 Allow: /terms
 Allow: /privacy
 Allow: /shipping
 Allow: /refund-policy
 Allow: /cancellation-policy
+Allow: /faq
+Allow: /llms.txt
 
-# Disallow private user states, checkout, and admin routes
+# ── Disallow Private Admin, Vendor, and API Routes ──
 Disallow: /admin/
 Disallow: /vendor/
 Disallow: /marketing/
-Disallow: /checkout/
-Disallow: /cart
-Disallow: /profile
-Disallow: /account
-Disallow: /orders
-Disallow: /login
-Disallow: /signup
-Disallow: /register
-Disallow: /forgot-password
-Disallow: /track/
 Disallow: /api/
 
+# ── Sitemap Index and Child Sitemaps ────────────────
 Sitemap: https://sbflorist.in/sitemap.xml
+Sitemap: https://sbflorist.in/sitemap-pages.xml
+Sitemap: https://sbflorist.in/sitemap-categories.xml
+Sitemap: https://sbflorist.in/sitemap-occasions.xml
+Sitemap: https://sbflorist.in/sitemap-products.xml

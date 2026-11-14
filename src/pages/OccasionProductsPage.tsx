@@ -15,6 +15,7 @@ import { Loader2, Sparkles, Filter, X, ArrowUpDown, ChevronRight, Inbox, Clock }
 import * as LucideIcons from 'lucide-react';
 import { cn } from '@/lib/utils';
 import CategoryResolver from './CategoryResolver';
+import NotFound from './NotFound';
 import { PriceRangeFilterCard, PRICE_FILTER_MIN, PRICE_FILTER_MAX, TARGET_CATEGORY_SEO } from './ShopPage';
 import { getProductEffectivePrice } from '@/utils/pricing';
 
@@ -324,6 +325,11 @@ export const OccasionProductsPage: React.FC = () => {
         </div>
       </div>
     );
+  }
+
+  // If the slug is not a known static occasion, and failed to fetch a valid occasion or has 0 products on non-occasion paths, render NotFound with noindex
+  if (normalizedSlug && !staticOccasionConfig && !occasion && !loading && (error || (!isExplicitOccasionPath && products.length === 0))) {
+    return <NotFound />;
   }
 
   const displayName = staticOccasionConfig?.name || occasion?.name || formatSlugLabel(normalizedSlug);
