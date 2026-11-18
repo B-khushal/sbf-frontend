@@ -152,9 +152,8 @@ const CheckoutPaymentPage: React.FC = () => {
   }, [items.length, navigate]);
 
   const deliveryFee = Number(shippingInfo?.deliveryFee || 0);
-  const giftPackagingFee = Number(shippingInfo?.giftPackagingFee || 0);
   const promoDiscount = appliedPromoCode ? Number(appliedPromoCode.discount || 0) : 0;
-  const orderTotal = Math.max(0, subtotal + deliveryFee + giftPackagingFee - promoDiscount);
+  const orderTotal = Math.max(0, subtotal + deliveryFee - promoDiscount);
 
   const handlePromoCodeApplied = (result: PromoCodeValidationResult) => {
     if (result.success && result.data) {
@@ -213,9 +212,11 @@ const CheckoutPaymentPage: React.FC = () => {
       '';
 
     const orderData: Record<string, unknown> = {
-      customerName: fullCustName,
-      customerEmail: custEmail,
-      customerPhone: custPhone,
+      customerName: isGift
+        ? shippingInfo.fullName || `${shippingInfo.firstName} ${shippingInfo.lastName}`.trim() || fullCustName
+        : fullCustName,
+      customerEmail: shippingInfo.email || custEmail,
+      customerPhone: shippingInfo.phone || custPhone,
       items: items.map((item) => ({
         product: item.productId || item._id,
         productModel: item.productModel || 'Product',
@@ -233,7 +234,7 @@ const CheckoutPaymentPage: React.FC = () => {
         fullName: fullCustName,
         firstName: fName,
         lastName: lName,
-        email: custEmail,
+        email: shippingInfo.email || custEmail,
         phone: custPhone,
         alternatePhone: shippingInfo.alternatePhone || '',
         addressType: shippingInfo.addressType || 'home',
@@ -263,14 +264,14 @@ const CheckoutPaymentPage: React.FC = () => {
         deliveryType: shippingInfo.deliveryType || 'Standard Delivery',
         surpriseDelivery: Boolean(shippingInfo.surpriseDelivery),
         anonymousGift: Boolean(shippingInfo.anonymousGift),
-        giftPackaging: Boolean(shippingInfo.giftPackaging),
-        giftPackagingFee,
+        giftPackaging: false,
+        giftPackagingFee: 0,
       },
       totalAmount: orderTotal,
       subtotal,
       deliveryCharge: deliveryFee,
-      giftPackaging: Boolean(shippingInfo.giftPackaging),
-      giftPackagingFee,
+      giftPackaging: false,
+      giftPackagingFee: 0,
       discount: promoDiscount,
       finalTotal: orderTotal,
       isFirstOrderFreeDelivery: Boolean(shippingInfo.isFirstOrderFreeDelivery),
@@ -287,9 +288,9 @@ const CheckoutPaymentPage: React.FC = () => {
     };
 
     if (
+      isGift ||
       shippingInfo.giftMessage ||
       shippingInfo.cardMessage ||
-      shippingInfo.giftPackaging ||
       shippingInfo.receiverFirstName ||
       shippingInfo.surpriseDelivery ||
       shippingInfo.anonymousGift
@@ -300,18 +301,33 @@ const CheckoutPaymentPage: React.FC = () => {
           shippingInfo.cardRecipient ||
           `${shippingInfo.receiverFirstName || ''} ${shippingInfo.receiverLastName || ''}`.trim() ||
           fullCustName,
-        senderName: shippingInfo.cardSender || shippingInfo.fullName || '',
+        senderName:
+          shippingInfo.cardSender ||
+          shippingInfo.fullName ||
+          `${shippingInfo.firstName || ''} ${shippingInfo.lastName || ''}`.trim(),
+        senderPhone: shippingInfo.phone || '',
+        senderEmail: shippingInfo.email || '',
         recipientEmail: shippingInfo.receiverEmail || '',
         recipientPhone: shippingInfo.receiverPhone || custPhone,
+        recipientAlternatePhone: shippingInfo.alternatePhone || '',
         recipientAddress: shippingInfo.receiverAddress || custAddr,
         recipientApartment: shippingInfo.receiverApartment || custApt,
         recipientCity: shippingInfo.receiverCity || custCity,
         recipientState: shippingInfo.receiverState || custState,
         recipientZipCode: shippingInfo.receiverZipCode || custZip,
-        giftPackaging: Boolean(shippingInfo.giftPackaging),
-        giftPackagingFee,
+        giftPackaging: false,
+        giftPackagingFee: 0,
         surpriseDelivery: Boolean(shippingInfo.surpriseDelivery),
         anonymousGift: Boolean(shippingInfo.anonymousGift),
+        latitude: shippingInfo.latitude,
+        longitude: shippingInfo.longitude,
+        formattedAddress: shippingInfo.formattedAddress || custAddr,
+        country: shippingInfo.country || 'India',
+        pincode: custZip,
+        landmark: shippingInfo.landmark || '',
+        houseNo: shippingInfo.houseNo || '',
+        deliveryInstructions:
+          shippingInfo.deliveryInstructions || shippingInfo.deliverySpecialInstructions || '',
       };
     }
 
@@ -338,18 +354,29 @@ const CheckoutPaymentPage: React.FC = () => {
         isDiscount: true,
       });
     }
-    if (giftPackagingFee > 0) {
-      lines.push({ label: 'Signature Gift Bag', amount: giftPackagingFee });
-    }
+    const slotKey = shippingInfo?.selectedTimeSlot || shippingInfo?.timeSlot || 'same_day';
+    const isMidnight = slotKey === 'midnight';
+    const isFixed = ['morning', 'afternoon', 'late_afternoon', 'evening', 'fixed', 'fixed_time'].includes(slotKey);
+    const deliveryLabel = isMidnight
+      ? 'Midnight Express Delivery'
+      : isFixed
+      ? 'Fixed-Time Slot Delivery'
+      : 'Same-Day Standard Delivery';
+
     if (shippingInfo?.isFirstOrderFreeDelivery && deliveryFee === 0) {
-      lines.push({ label: 'Delivery Charge', amount: 0, isFree: true, strikeAmount: 150 });
+      lines.push({
+        label: deliveryLabel,
+        amount: 0,
+        isFree: true,
+        strikeAmount: isMidnight ? 300 : 150,
+      });
     } else if (deliveryFee === 0) {
-      lines.push({ label: 'Delivery Charge', amount: 0, isFree: true });
+      lines.push({ label: deliveryLabel, amount: 0, isFree: true });
     } else {
-      lines.push({ label: 'Delivery Charge', amount: deliveryFee });
+      lines.push({ label: deliveryLabel, amount: deliveryFee });
     }
     return lines;
-  }, [itemCount, subtotal, promoDiscount, appliedPromoCode, giftPackagingFee, shippingInfo, deliveryFee]);
+  }, [itemCount, subtotal, promoDiscount, appliedPromoCode, shippingInfo, deliveryFee]);
 
   const parsedDeliveryDate = shippingInfo?.selectedDate ? new Date(shippingInfo.selectedDate) : null;
   const displaySlot =
@@ -409,59 +436,85 @@ const CheckoutPaymentPage: React.FC = () => {
           {/* Left Column */}
           <div className="space-y-5 lg:col-span-7 xl:col-span-8 min-w-0">
             {/* Delivery Summary Review Card */}
-            {shippingInfo && (
-              <section className="rounded-2xl border border-[#EDE5DD] bg-white p-4 sm:p-5 shadow-[0_4px_20px_rgba(30,27,24,0.04)] space-y-3.5">
-                <div className="flex items-center justify-between border-b border-[#F3ECE5] pb-3">
-                  <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#8A8076]">
-                    Delivering To
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => navigate('/checkout/shipping')}
-                    className="text-xs font-semibold text-[#BE185D] hover:underline"
-                  >
-                    Change
-                  </button>
-                </div>
+            {shippingInfo && (() => {
+              const isGiftOrder = shippingInfo.deliveryOption === 'gift';
+              const recipientDisplayName = isGiftOrder
+                ? `${shippingInfo.receiverFirstName || ''} ${shippingInfo.receiverLastName || ''}`.trim() ||
+                  shippingInfo.fullName ||
+                  'Recipient'
+                : shippingInfo.fullName || `${shippingInfo.firstName} ${shippingInfo.lastName}`.trim();
+              const recipientDisplayPhone = isGiftOrder
+                ? shippingInfo.receiverPhone || shippingInfo.phone
+                : shippingInfo.phone;
+              const senderDisplayName =
+                shippingInfo.fullName || `${shippingInfo.firstName} ${shippingInfo.lastName}`.trim();
 
-                <div className="flex items-start gap-3">
-                  <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#FFF0F5] text-[#BE185D]">
-                    <MapPin className="h-4 w-4" />
+              return (
+                <section className="rounded-2xl border border-[#EDE5DD] bg-white p-4 sm:p-5 shadow-[0_4px_20px_rgba(30,27,24,0.04)] space-y-3.5">
+                  <div className="flex items-center justify-between border-b border-[#F3ECE5] pb-3">
+                    <span
+                      className={cn(
+                        'inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em]',
+                        isGiftOrder ? 'text-[#BE185D]' : 'text-[#8A8076]'
+                      )}
+                    >
+                      {isGiftOrder && <Gift className="h-3.5 w-3.5" />}
+                      {isGiftOrder ? 'Gift Delivering To (Receiver)' : 'Delivering To'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => navigate('/checkout/shipping')}
+                      className="text-xs font-semibold text-[#BE185D] hover:underline"
+                    >
+                      Change
+                    </button>
                   </div>
-                  <div className="min-w-0 flex-1 space-y-1 text-xs sm:text-sm text-[#5D544C]">
-                    <p className="font-semibold text-[#1E1B18]">
-                      {shippingInfo.fullName || `${shippingInfo.firstName} ${shippingInfo.lastName}`.trim()}
-                    </p>
-                    <p className="break-words">
-                      {shippingInfo.formattedAddress ||
-                        [shippingInfo.apartment, shippingInfo.address, shippingInfo.city, shippingInfo.state, shippingInfo.zipCode]
-                          .filter(Boolean)
-                          .join(', ')}
-                    </p>
-                    {shippingInfo.phone && <p className="font-medium text-[#2E2824]">+91 {shippingInfo.phone}</p>}
-                  </div>
-                </div>
 
-                <div className="flex flex-wrap gap-2 pt-2 border-t border-[#F3ECE5] text-xs">
-                  {parsedDeliveryDate && isValid(parsedDeliveryDate) && (
+                  <div className="flex items-start gap-3">
+                    <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#FFF0F5] text-[#BE185D]">
+                      {isGiftOrder ? <Gift className="h-4 w-4" /> : <MapPin className="h-4 w-4" />}
+                    </div>
+                    <div className="min-w-0 flex-1 space-y-1 text-xs sm:text-sm text-[#5D544C]">
+                      <p className="font-semibold text-[#1E1B18]">{recipientDisplayName}</p>
+                      <p className="break-words">
+                        {shippingInfo.formattedAddress ||
+                          [
+                            isGiftOrder ? shippingInfo.receiverApartment : shippingInfo.apartment,
+                            isGiftOrder ? shippingInfo.receiverAddress : shippingInfo.address,
+                            isGiftOrder ? shippingInfo.receiverCity : shippingInfo.city,
+                            isGiftOrder ? shippingInfo.receiverState : shippingInfo.state,
+                            isGiftOrder ? shippingInfo.receiverZipCode : shippingInfo.zipCode,
+                          ]
+                            .filter(Boolean)
+                            .join(', ')}
+                      </p>
+                      {recipientDisplayPhone && (
+                        <p className="font-medium text-[#2E2824]">+91 {recipientDisplayPhone}</p>
+                      )}
+                      {isGiftOrder && senderDisplayName && (
+                        <p className="pt-1 text-xs text-[#7A7168]">
+                          Sender: <span className="font-medium text-[#3C342E]">{senderDisplayName}</span>
+                          {shippingInfo.phone ? ` (+91 ${shippingInfo.phone})` : ''}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 pt-2 border-t border-[#F3ECE5] text-xs">
+                    {parsedDeliveryDate && isValid(parsedDeliveryDate) && (
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FAF8F5] px-3 py-1 font-medium text-[#3C342E] border border-[#EDE5DD]">
+                        <Calendar className="h-3.5 w-3.5 text-[#BE185D]" />
+                        {format(parsedDeliveryDate, 'EEE, dd MMM yyyy')}
+                      </span>
+                    )}
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FAF8F5] px-3 py-1 font-medium text-[#3C342E] border border-[#EDE5DD]">
-                      <Calendar className="h-3.5 w-3.5 text-[#BE185D]" />
-                      {format(parsedDeliveryDate, 'EEE, dd MMM yyyy')}
+                      <Clock className="h-3.5 w-3.5 text-[#BE185D]" />
+                      {displaySlot}
                     </span>
-                  )}
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FAF8F5] px-3 py-1 font-medium text-[#3C342E] border border-[#EDE5DD]">
-                    <Clock className="h-3.5 w-3.5 text-[#BE185D]" />
-                    {displaySlot}
-                  </span>
-                  {shippingInfo.giftPackaging && (
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FFF7F9] px-3 py-1 font-semibold text-[#BE185D] border border-[#F5CBD8]">
-                      <Gift className="h-3.5 w-3.5" />
-                      Signature Gift Bag
-                    </span>
-                  )}
-                </div>
-              </section>
-            )}
+                  </div>
+                </section>
+              );
+            })()}
 
             {/* Payment Method Selector */}
             <PaymentMethodCard
@@ -478,7 +531,7 @@ const CheckoutPaymentPage: React.FC = () => {
                 </span>
               </div>
               <PromoCodeInput
-                orderAmount={subtotal + deliveryFee + giftPackagingFee}
+                orderAmount={subtotal + deliveryFee}
                 orderItems={items}
                 userId={user?.id}
                 onPromoCodeApplied={handlePromoCodeApplied}

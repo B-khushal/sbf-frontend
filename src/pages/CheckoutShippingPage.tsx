@@ -2,13 +2,11 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom';
 import { isSameDay, isValid, startOfDay } from 'date-fns';
 import {
-  AlertCircle,
   ArrowLeft,
+  ArrowRight,
   BookMarked,
   Check,
   Gift,
-  Loader2,
-  Lock,
   MessageSquare,
   Package,
   ShieldCheck,
@@ -35,7 +33,6 @@ import {
   CheckoutItemCard,
   DeliveryScheduleCard,
   MobileCheckoutBar,
-  PaymentMethodCard,
   SavedAddressCard,
   type PriceBreakdownLine,
 } from '@/components/checkout';
@@ -44,10 +41,6 @@ import useWishlist from '@/hooks/use-wishlist';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { useCurrency } from '@/contexts/CurrencyContext';
-import {
-  useRazorpayCheckout,
-  type PaymentMethodPreference,
-} from '@/hooks/use-razorpay-checkout';
 import type { SavedAddress } from '@/services/authService';
 import {
   type AddressInput,
@@ -92,14 +85,7 @@ const CheckoutShippingPage: React.FC = () => {
   const { subtotal, itemCount } = useCartSelectors();
   const { items: wishlistItems, addItem: addToWishlist } = useWishlist();
   const { toast } = useToast();
-  const { formatPrice, convertPrice, rate } = useCurrency();
-  const {
-    isRazorpayLoaded,
-    isProcessing: isPaymentProcessing,
-    paymentError,
-    clearPaymentError,
-    initiatePayment,
-  } = useRazorpayCheckout();
+  const { formatPrice, convertPrice } = useCurrency();
 
   const addressSectionRef = useRef<HTMLDivElement>(null);
   const scheduleSectionRef = useRef<HTMLDivElement>(null);
@@ -311,9 +297,6 @@ const CheckoutShippingPage: React.FC = () => {
       return null;
     }
   });
-
-  // Payment method state
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodPreference>('upi');
 
   // Dynamic delivery calculation & free delivery celebration modal
   const [deliveryCalculation, setDeliveryCalculation] = useState<DeliveryCalculation | null>(null);
@@ -994,117 +977,9 @@ const CheckoutShippingPage: React.FC = () => {
       notes: effectiveInstructions,
       surpriseDelivery: hasValentine ? surpriseDelivery : false,
       anonymousGift: hasValentine ? anonymousGift : false,
-      preferredPaymentMethod: paymentMethod,
     };
 
-    const orderData: Record<string, unknown> = {
-      customerName: deliveryOption === 'gift' ? cleanSenderName : recipientName,
-      customerEmail: cleanEmail,
-      customerPhone: cleanPhone,
-      items: items.map((item) => ({
-        product: item.productId || item._id,
-        productModel: item.productModel || 'Product',
-        title: item.title,
-        quantity: item.quantity,
-        price: item.price,
-        finalPrice: item.price,
-        customizations: item.customizations || null,
-        characterCount: item.customizations?.personalization?.characterCount || 0,
-        image: item.image || item.images?.[0] || '',
-        images: item.images || [],
-        selectedVariant: item.selectedVariant || null,
-      })),
-      shippingDetails: {
-        fullName: recipientName,
-        firstName: rFirst,
-        lastName: rLast,
-        email: cleanEmail,
-        phone: recipientPhone || cleanPhone,
-        alternatePhone: targetAddress.alternatePhone || '',
-        addressType: targetAddress.type || 'home',
-        address: streetAddress,
-        apartment: aptCombined,
-        houseNo: targetAddress.houseNo || '',
-        landmark: targetAddress.landmark || '',
-        floor: targetAddress.floor || '',
-        city: targetAddress.city || 'Hyderabad',
-        state: targetAddress.state || 'Telangana',
-        zipCode: activePin,
-        pincode: activePin,
-        country: targetAddress.country || 'India',
-        formattedAddress: fullFormatted,
-        latitude: targetAddress.latitude ?? 17.3912,
-        longitude: targetAddress.longitude ?? 78.4326,
-        notes: effectiveInstructions,
-        deliveryInstructions: effectiveInstructions,
-        deliverySpecialInstructions: effectiveInstructions,
-        cardMessage: effectiveCardMsg,
-        cardSender: cardSender.trim() || (deliveryOption === 'gift' ? cleanSenderName : ''),
-        cardRecipient: cardRecipient.trim() || (deliveryOption === 'gift' ? recipientName : ''),
-        deliveryDate: selectedDate,
-        timeSlot: selectedTimeSlot || 'same_day',
-        deliveryType,
-        surpriseDelivery: Boolean(surpriseDelivery),
-        anonymousGift: Boolean(anonymousGift),
-        giftPackaging: false,
-        giftPackagingFee: 0,
-      },
-      totalAmount: orderTotal,
-      subtotal,
-      deliveryCharge: totalDeliveryFee,
-      giftPackaging: false,
-      giftPackagingFee: 0,
-      discount: promoDiscount,
-      finalTotal: orderTotal,
-      isFirstOrderFreeDelivery: deliveryCalculation?.isFirstOrderFreeDelivery ?? false,
-      currency: 'INR',
-      currencyRate: rate || 1,
-      originalCurrency: 'INR',
-      promoCode: appliedPromoCode
-        ? {
-            code: appliedPromoCode.code,
-            discountAmount: appliedPromoCode.discount,
-            promoCodeId: appliedPromoCode.promoCodeId,
-          }
-        : undefined,
-    };
-
-    if (
-      deliveryOption === 'gift' ||
-      effectiveCardMsg ||
-      surpriseDelivery ||
-      anonymousGift
-    ) {
-      orderData.giftDetails = {
-        message: effectiveCardMsg,
-        senderName: cardSender.trim() || cleanSenderName,
-        senderPhone: cleanPhone,
-        senderEmail: cleanEmail,
-        recipientName: cardRecipient.trim() || recipientName,
-        recipientEmail: targetAddress.email || '',
-        recipientPhone,
-        recipientAlternatePhone: targetAddress.alternatePhone || '',
-        recipientAddress: streetAddress,
-        recipientApartment: aptCombined,
-        recipientCity: targetAddress.city || 'Hyderabad',
-        recipientState: targetAddress.state || 'Telangana',
-        recipientZipCode: activePin,
-        giftPackaging: false,
-        giftPackagingFee: 0,
-        surpriseDelivery: Boolean(surpriseDelivery),
-        anonymousGift: Boolean(anonymousGift),
-        latitude: targetAddress.latitude ?? 17.3912,
-        longitude: targetAddress.longitude ?? 78.4326,
-        formattedAddress: fullFormatted,
-        country: targetAddress.country || 'India',
-        pincode: activePin,
-        landmark: targetAddress.landmark || '',
-        houseNo: targetAddress.houseNo || '',
-        deliveryInstructions: effectiveInstructions,
-      };
-    }
-
-    return { shippingInfo, orderData };
+    return shippingInfo;
   };
 
   // Validate checkout readiness and launch server-verified Razorpay payment
@@ -1180,32 +1055,13 @@ const CheckoutShippingPage: React.FC = () => {
     return true;
   };
 
-  const handlePlaceOrder = async () => {
-    clearPaymentError();
-    if (!validateBeforePlaceOrder()) return;
-
-    const payloads = buildCheckoutPayloads();
-    if (!payloads) return;
-
-    localStorage.setItem('shippingInfo', JSON.stringify(payloads.shippingInfo));
-
-    await initiatePayment({
-      orderTotal,
-      orderData: payloads.orderData,
-      prefill: {
-        name: payloads.shippingInfo.fullName || user?.name || 'Customer',
-        email: payloads.shippingInfo.email || user?.email || '',
-        contact: payloads.shippingInfo.phone || user?.phone || '',
-      },
-      preferredMethod: paymentMethod,
-    });
-  };
-
+  // Validate shipping details, persist shippingInfo, and redirect to /checkout/payment
   const handleProceedToPaymentPage = () => {
     if (!validateBeforePlaceOrder()) return;
-    const payloads = buildCheckoutPayloads();
-    if (!payloads) return;
-    localStorage.setItem('shippingInfo', JSON.stringify(payloads.shippingInfo));
+    const shippingInfo = buildCheckoutPayloads();
+    if (!shippingInfo) return;
+    localStorage.setItem('shippingInfo', JSON.stringify(shippingInfo));
+    window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
     navigate('/checkout/payment');
   };
 
@@ -1885,28 +1741,9 @@ const CheckoutShippingPage: React.FC = () => {
                   onPromoCodeApplied={handlePromoCodeApplied}
                   onPromoCodeRemoved={handlePromoCodeRemoved}
                   appliedPromoCode={appliedPromoCode}
-                  disabled={isPaymentProcessing}
+                  disabled={cartLoading}
                 />
               </section>
-
-              {/* SECTION 7: PAYMENT METHOD SELECTION */}
-              <section>
-                <PaymentMethodCard
-                  selectedMethod={paymentMethod}
-                  onSelectMethod={setPaymentMethod}
-                />
-              </section>
-
-              {/* Payment Error Banner */}
-              {paymentError && (
-                <div className="flex items-start gap-2.5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs sm:text-sm text-rose-700">
-                  <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                  <div className="flex-1">
-                    <p className="font-semibold">Payment could not be completed</p>
-                    <p className="mt-0.5">{paymentError}</p>
-                  </div>
-                </div>
-              )}
 
               {/* Mobile Full Order Price Breakdown Card */}
               <section className="lg:hidden rounded-2xl border border-[#EDE5DD] bg-white p-4 shadow-[0_4px_20px_rgba(30,27,24,0.04)] space-y-3">
@@ -2033,35 +1870,21 @@ const CheckoutShippingPage: React.FC = () => {
                   </div>
                 )}
 
-                {/* Primary Place Order Button */}
+                {/* Primary Place Order Button -> Redirects to Payment Step */}
                 <div className="space-y-2.5 pt-1">
                   <Button
                     type="button"
-                    disabled={isPaymentProcessing || !isRazorpayLoaded}
-                    onClick={handlePlaceOrder}
+                    disabled={cartLoading || items.length === 0}
+                    onClick={handleProceedToPaymentPage}
                     className="h-13 w-full rounded-xl bg-[#BE185D] py-3.5 text-sm font-bold tracking-wide text-white shadow-[0_8px_22px_-8px_rgba(190,24,93,0.55)] transition-all hover:bg-[#9D174D] active:scale-[0.99]"
                   >
-                    {isPaymentProcessing ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Opening Secure Payment...
-                      </>
-                    ) : (
-                      <>
-                        <Lock className="mr-2 h-4 w-4" />
-                        PLACE ORDER • {formatPrice(convertPrice(orderTotal))}
-                      </>
-                    )}
+                    <span>PLACE ORDER • {formatPrice(convertPrice(orderTotal))}</span>
+                    <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
 
-                  <button
-                    type="button"
-                    onClick={handleProceedToPaymentPage}
-                    disabled={isPaymentProcessing}
-                    className="w-full py-1.5 text-center text-xs font-medium text-[#7A7168] hover:text-[#BE185D] transition-colors"
-                  >
-                    Or review full order on dedicated payment step →
-                  </button>
+                  <p className="text-center text-[11px] text-[#7A7168]">
+                    Next step: Choose UPI, Card, Net Banking or Wallet on Payment
+                  </p>
                 </div>
 
                 <div className="flex items-center justify-center gap-4 border-t border-[#F3ECE5] pt-3.5 text-[11px] text-[#7A7168]">
@@ -2083,10 +1906,10 @@ const CheckoutShippingPage: React.FC = () => {
         <MobileCheckoutBar
           totalAmount={orderTotal}
           ctaLabel="PLACE ORDER"
-          isLoading={isPaymentProcessing}
-          disabled={!isRazorpayLoaded}
+          isLoading={cartLoading}
+          disabled={items.length === 0}
           breakdownLines={priceBreakdownLines}
-          onPlaceOrder={handlePlaceOrder}
+          onPlaceOrder={handleProceedToPaymentPage}
         />
       )}
 
