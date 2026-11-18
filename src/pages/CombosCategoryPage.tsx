@@ -611,7 +611,7 @@ export const CombosCategoryPage: React.FC = () => {
           {/* Products Grid Area (Matches Cakes Category Standard) */}
           <section className="lg:col-span-3 2xl:col-span-4 3xl:col-span-5">
             {loading ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 gap-3.5 sm:gap-5 2xl:gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 gap-2.5 sm:gap-5 2xl:gap-6">
                 {[...Array(6)].map((_, i) => (
                   <div
                     key={i}
@@ -649,7 +649,7 @@ export const CombosCategoryPage: React.FC = () => {
               </div>
             ) : (
               /* Products Grid (2 columns on mobile, 3 columns on tablet/desktop, 4-5 on big screens) */
-              <div className="grid grid-cols-2 md:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 gap-3.5 sm:gap-5 2xl:gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 gap-2.5 sm:gap-5 2xl:gap-6">
                 {filteredProducts.map((combo) => (
                   <motion.div
                     key={combo._id || combo.id}
@@ -670,7 +670,7 @@ export const CombosCategoryPage: React.FC = () => {
       {/* Trust & Gifting Highlights Strip */}
       <section className="bg-white border-t border-rose-100/80 py-12">
         <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 sm:px-6 lg:px-8 2xl:px-10">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-center md:text-left">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 text-left">
             <div className="flex items-start gap-3.5 p-4 rounded-2xl bg-rose-50/40 border border-rose-100/70">
               <div className="p-2.5 rounded-xl bg-rose-600 text-white shrink-0">
                 <Truck className="w-5 h-5" />

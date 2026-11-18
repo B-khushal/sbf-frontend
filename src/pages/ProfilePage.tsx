@@ -648,7 +648,7 @@ const ProfilePage: React.FC = () => {
           {/* Stats Cards */}
           <motion.div 
             variants={itemVariants}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
+            className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8"
           >
             <motion.div 
               className="bg-white/80 backdrop-blur-md rounded-xl p-6 shadow-lg border border-white/20 hover:shadow-xl transition-all duration-300"
@@ -752,7 +752,7 @@ const ProfilePage: React.FC = () => {
                 })}
               </TabsList>
 
-              <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-xl border border-white/20 p-6 sm:p-8">
+              <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-xl border border-[#EDE5DD] p-4 sm:p-6 md:p-8">
                 <TabsContent value="profile" className="mt-0">
                   <div className="flex items-center gap-3 mb-8">
                     <div className="w-10 h-10 bg-gradient-to-r from-bloom-blue-500 to-bloom-blue-600 rounded-xl flex items-center justify-center">

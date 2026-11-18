@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
@@ -42,6 +42,7 @@ export interface EditorialProductCardProps {
   showRatings?: boolean;
   showReviews?: boolean;
   onAddToCart?: (item: any, quantity?: number) => any;
+  linkPrefix?: string;
   className?: string;
 }
 
@@ -97,6 +98,7 @@ export const EditorialProductCard: React.FC<EditorialProductCardProps> = React.m
     showRatings = true,
     showReviews = true,
     onAddToCart,
+    linkPrefix,
     className,
   }) => {
     const navigate = useNavigate();
@@ -127,7 +129,7 @@ export const EditorialProductCard: React.FC<EditorialProductCardProps> = React.m
     const prodId = String(product._id || product.id || "");
     const title = product.title || product.name || "Handcrafted Floral Gift";
     const isValentineActiveProduct = shouldShowValentineProductDetails(product, isValentineEnabled);
-    const productHref = getProductDetailsPath(product, isValentineEnabled);
+    const productHref = getProductDetailsPath(product, isValentineEnabled, linkPrefix);
 
     const isInWishlist = wishlistItems.some(
       (item) => String(item.id) === prodId || String((item as any).productId) === prodId
@@ -303,15 +305,17 @@ export const EditorialProductCard: React.FC<EditorialProductCardProps> = React.m
         ? String(product.category).replace(/[-_]/g, " ")
         : "Spring Blossoms");
 
-    const trackProductClick = useCallback(() => {
+    const trackProductClick = () => {
       try {
         marketingTracker.trackMerchandisingClick(
           product.category || "catalog",
           prodId,
           title
         );
-      } catch (_) {}
-    }, [product.category, prodId, title]);
+      } catch {
+        // Non-blocking analytics failure
+      }
+    };
 
     const handleWishlistToggle = async (e: React.MouseEvent) => {
       e.preventDefault();
@@ -443,7 +447,9 @@ export const EditorialProductCard: React.FC<EditorialProductCardProps> = React.m
             price: effectivePrice,
             category: product.category,
           });
-        } catch (_) {}
+        } catch {
+          // Non-blocking analytics failure
+        }
 
         setAddStatus("added");
         statusTimerRef.current = setTimeout(() => setAddStatus("idle"), 1800);
@@ -502,33 +508,33 @@ export const EditorialProductCard: React.FC<EditorialProductCardProps> = React.m
             </Link>
 
             {/* Top-Left Real Status Badges (Max 2, zero fabricated flags) */}
-            <div className="pointer-events-none absolute left-2.5 top-2.5 z-10 flex flex-col items-start gap-1">
+            <div className="pointer-events-none absolute left-2 top-2 sm:left-2.5 sm:top-2.5 z-10 flex flex-col items-start gap-1 max-w-[70%]">
               {isOutOfStock ? (
-                <span className="rounded-full bg-[#2B2522]/85 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-[#FAF8F5] backdrop-blur-sm">
+                <span className="rounded-full bg-[#2B2522]/85 px-2 sm:px-2.5 py-0.5 sm:py-1 text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-[#FAF8F5] backdrop-blur-sm">
                   Sold Out
                 </span>
               ) : (
                 <>
                   {hasDiscount && discountPct > 0 && (
-                    <span className="rounded-full bg-[#FFF7F9]/95 px-2.5 py-1 text-[10px] font-semibold tracking-wide text-[#BE185D] border border-[#F5CBD8] shadow-xs backdrop-blur-sm">
+                    <span className="rounded-full bg-[#FFF7F9]/95 px-2 sm:px-2.5 py-0.5 sm:py-1 text-[9px] sm:text-[10px] font-semibold tracking-wide text-[#BE185D] border border-[#F5CBD8] shadow-xs backdrop-blur-sm">
                       -{discountPct}% OFF
                     </span>
                   )}
                   {isValentineEnabled && product.valentineBadge ? (
-                    <span className="rounded-full bg-[#BE185D]/90 px-2.5 py-0.5 text-[9.5px] font-semibold uppercase tracking-wider text-white backdrop-blur-sm">
+                    <span className="rounded-full bg-[#BE185D]/90 px-2 sm:px-2.5 py-0.5 text-[9px] sm:text-[9.5px] font-semibold uppercase tracking-wider text-white backdrop-blur-sm truncate max-w-full">
                       {product.valentineBadge}
                     </span>
                   ) : product.isBestseller ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-[#FBF6EB]/95 px-2 py-0.5 text-[9.5px] font-semibold uppercase tracking-wider text-[#8C6520] border border-[#EBD8B5] backdrop-blur-sm">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-[#FBF6EB]/95 px-2 py-0.5 text-[9px] sm:text-[9.5px] font-semibold uppercase tracking-wider text-[#8C6520] border border-[#EBD8B5] backdrop-blur-sm">
                       <Sparkles className="h-2.5 w-2.5 text-[#B8862D]" aria-hidden="true" />
                       <span>Bestseller</span>
                     </span>
                   ) : isNewItem ? (
-                    <span className="rounded-full bg-[#EDF3EE]/95 px-2 py-0.5 text-[9.5px] font-semibold uppercase tracking-wider text-[#355A40] border border-[#CBE0D0] backdrop-blur-sm">
+                    <span className="rounded-full bg-[#EDF3EE]/95 px-2 py-0.5 text-[9px] sm:text-[9.5px] font-semibold uppercase tracking-wider text-[#355A40] border border-[#CBE0D0] backdrop-blur-sm">
                       New
                     </span>
                   ) : product.isFeatured ? (
-                    <span className="rounded-full bg-white/90 px-2 py-0.5 text-[9.5px] font-semibold uppercase tracking-wider text-[#4A423B] border border-[#E7DFD7] backdrop-blur-sm">
+                    <span className="rounded-full bg-white/90 px-2 py-0.5 text-[9px] sm:text-[9.5px] font-semibold uppercase tracking-wider text-[#4A423B] border border-[#E7DFD7] backdrop-blur-sm">
                       Featured
                     </span>
                   ) : null}
@@ -617,28 +623,28 @@ export const EditorialProductCard: React.FC<EditorialProductCardProps> = React.m
           </div>
 
           {/* Card Content Details */}
-          <div className="flex flex-1 flex-col justify-between gap-2.5 p-3 sm:p-3.5">
-            <div className="space-y-1.5">
+          <div className="flex flex-1 flex-col justify-between gap-2 sm:gap-2.5 p-2.5 sm:p-3.5 min-w-0">
+            <div className="space-y-1.5 min-w-0">
               {/* Top Meta: Real Category/Subcategory Label + Genuine Rating */}
-              <div className="flex items-center justify-between gap-2 min-h-[18px]">
-                <span className="truncate text-[10.5px] font-medium uppercase tracking-[0.09em] text-[#7A7168]">
+              <div className="flex items-center justify-between gap-1.5 min-h-[18px] min-w-0">
+                <span className="truncate text-[9.5px] sm:text-[10.5px] font-medium uppercase tracking-[0.08em] text-[#7A7168]">
                   {resolvedMetaLabel}
                 </span>
 
                 {hasGenuineRating && (
                   <div
-                    className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#FBF7F0] px-1.5 py-0.5 border border-[#EFE3CE]"
+                    className="inline-flex shrink-0 items-center gap-0.5 sm:gap-1 rounded-full bg-[#FBF7F0] px-1.5 py-0.5 border border-[#EFE3CE]"
                     aria-label={`Rated ${ratingVal.toFixed(1)} out of 5`}
                   >
                     <Star
-                      className="h-3 w-3 fill-[#C6923A] text-[#C6923A]"
+                      className="h-2.5 w-2.5 sm:h-3 sm:w-3 fill-[#C6923A] text-[#C6923A]"
                       aria-hidden="true"
                     />
-                    <span className="text-[11px] font-semibold text-[#2E2824] tabular-nums">
+                    <span className="text-[10px] sm:text-[11px] font-semibold text-[#2E2824] tabular-nums">
                       {ratingVal.toFixed(1)}
                     </span>
                     {showReviews && reviewCount > 0 && (
-                      <span className="text-[10px] text-[#857A6E] tabular-nums">
+                      <span className="hidden min-[380px]:inline text-[9.5px] sm:text-[10px] text-[#857A6E] tabular-nums">
                         ({reviewCount})
                       </span>
                     )}
@@ -646,8 +652,8 @@ export const EditorialProductCard: React.FC<EditorialProductCardProps> = React.m
                 )}
               </div>
 
-              {/* Crawlable Product Title (2-line max) */}
-              <h3 className="text-[13.5px] sm:text-[14.5px] font-medium leading-[1.35] text-[#1E1B18] line-clamp-2 min-h-[2.7em]">
+              {/* Crawlable Product Title (2-line max, zero overflow) */}
+              <h3 className="text-[13px] sm:text-[14.5px] font-medium leading-[1.32] text-[#1E1B18] line-clamp-2 min-h-[2.64em] break-words">
                 <Link
                   to={productHref}
                   onClick={trackProductClick}
@@ -773,23 +779,23 @@ export const EditorialProductCard: React.FC<EditorialProductCardProps> = React.m
               )}
             </div>
 
-            {/* Bottom Row: Real Price / Savings + Compact Rose-Pink CTA */}
-            <div className="flex items-center justify-between gap-2 border-t border-[#F3ECE5] pt-2.5">
+            {/* Bottom Row: Real Price / Savings + Touch-Friendly Rose-Pink CTA (Stacks cleanly on narrow mobile 2-col cards) */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-t border-[#F3ECE5] pt-2 sm:pt-2.5 min-w-0">
               <div className="flex min-w-0 flex-col">
-                <span className="truncate text-[14.5px] sm:text-[15.5px] font-semibold tracking-tight text-[#1E1B18] tabular-nums">
-                  {formatPrice(convertPrice(effectivePrice))}
-                </span>
-                {hasDiscount && (
-                  <div className="flex items-center gap-1.5">
-                    <span className="truncate text-[11px] text-[#9A9086] line-through tabular-nums">
+                <div className="flex items-baseline gap-1.5 flex-wrap">
+                  <span className="truncate text-[14px] sm:text-[15.5px] font-semibold tracking-tight text-[#1E1B18] tabular-nums">
+                    {formatPrice(convertPrice(effectivePrice))}
+                  </span>
+                  {hasDiscount && (
+                    <span className="truncate text-[10.5px] sm:text-[11px] text-[#9A9086] line-through tabular-nums">
                       {formatPrice(convertPrice(regularPrice))}
                     </span>
-                    {savingsAmount > 0 && (
-                      <span className="text-[10px] font-semibold text-[#BE185D] whitespace-nowrap">
-                        Save {formatPrice(convertPrice(savingsAmount))}
-                      </span>
-                    )}
-                  </div>
+                  )}
+                </div>
+                {hasDiscount && savingsAmount > 0 && (
+                  <span className="text-[9.5px] sm:text-[10px] font-semibold text-[#BE185D] whitespace-nowrap">
+                    Save {formatPrice(convertPrice(savingsAmount))}
+                  </span>
                 )}
               </div>
 
@@ -807,7 +813,7 @@ export const EditorialProductCard: React.FC<EditorialProductCardProps> = React.m
                     : `Add ${title} to cart`
                 }
                 className={cn(
-                  "inline-flex shrink-0 items-center justify-center gap-1 rounded-full px-3 sm:px-3.5 h-8 sm:h-9 text-xs font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#BE185D] focus-visible:ring-offset-1 active:scale-[0.97]",
+                  "inline-flex w-full sm:w-auto shrink-0 items-center justify-center gap-1 rounded-xl sm:rounded-full px-3 sm:px-3.5 h-9 text-xs font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#BE185D] focus-visible:ring-offset-1 active:scale-[0.97]",
                   isOutOfStock
                     ? "cursor-not-allowed bg-[#F1ECE6] text-[#93887E]"
                     : addStatus === "added"

@@ -1,248 +1,147 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Check, CreditCard, ArrowRight, AlertTriangle, Shield, Lock, Smartphone, Wallet, Building2, ChevronDown, ChevronUp, Package, MapPin, Clock, User } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { format, isValid } from 'date-fns';
+import {
+  AlertCircle,
+  ArrowLeft,
+  Calendar,
+  Check,
+  Clock,
+  Gift,
+  Loader2,
+  Lock,
+  MapPin,
+  Package,
+  ShieldCheck,
+  Tag,
+} from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
-import useCart, { useCartSelectors } from '@/hooks/use-cart';
-import { useToast } from '@/hooks/use-toast';
-import api from '@/services/api';
-import { useCurrency } from '@/contexts/CurrencyContext';
-import { useNotification } from '@/contexts/NotificationContext';
-import { useAuth } from '@/hooks/use-auth';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 import PromoCodeInput from '@/components/PromoCodeInput';
+import {
+  MobileCheckoutBar,
+  PaymentMethodCard,
+  type PriceBreakdownLine,
+} from '@/components/checkout';
+import useCart, { useCartSelectors } from '@/hooks/use-cart';
+import { useAuth } from '@/hooks/use-auth';
+import { useCurrency } from '@/contexts/CurrencyContext';
+import {
+  useRazorpayCheckout,
+  type PaymentMethodPreference,
+} from '@/hooks/use-razorpay-checkout';
 import type { PromoCodeValidationResult } from '@/services/promoCodeService';
-import { RAZORPAY_CONFIG } from '@/config/razorpay';
+import { getImageUrl } from '@/config';
 import { cn } from '@/lib/utils';
-import usePendingReviewStore from '@/hooks/use-pending-review';
 
-// Animation variants
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.2
-    }
-  }
+interface ShippingInfo {
+  firstName: string;
+  lastName: string;
+  fullName?: string;
+  email: string;
+  phone: string;
+  alternatePhone?: string;
+  addressType?: string;
+  address: string;
+  houseNo?: string;
+  apartment?: string;
+  landmark?: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  pincode?: string;
+  notes?: string;
+  cardRecipient?: string;
+  cardSender?: string;
+  cardMessage?: string;
+  deliverySpecialInstructions?: string;
+  timeSlot: string;
+  selectedTimeSlot?: string;
+  deliveryType?: string;
+  deliveryOption?: string;
+  deliveryFee?: number;
+  giftPackaging?: boolean;
+  giftPackagingFee?: number;
+  selectedDate?: string;
+  giftMessage?: string;
+  receiverFirstName?: string;
+  receiverLastName?: string;
+  receiverEmail?: string;
+  receiverPhone?: string;
+  receiverAddress?: string;
+  receiverApartment?: string;
+  receiverCity?: string;
+  receiverState?: string;
+  receiverZipCode?: string;
+  isFirstOrderFreeDelivery?: boolean;
+  greetingCard?: string;
+  surpriseDelivery?: boolean;
+  anonymousGift?: boolean;
+  preferredPaymentMethod?: PaymentMethodPreference;
+  latitude?: number;
+  longitude?: number;
+  formattedAddress?: string;
+  country?: string;
+  floor?: string;
+  deliveryInstructions?: string;
+}
+
+const SLOT_LABELS: Record<string, string> = {
+  same_day: 'Standard Delivery (9:00 AM – 9:00 PM)',
+  standard: 'Standard Delivery (9:00 AM – 9:00 PM)',
+  morning: 'Morning (9:00 AM – 12:00 PM)',
+  afternoon: 'Afternoon (1:00 PM – 4:00 PM)',
+  late_afternoon: 'Late Afternoon (3:00 PM – 6:00 PM)',
+  evening: 'Evening (5:00 PM – 8:00 PM)',
+  midnight: 'Midnight Express (10:00 PM – 12:00 AM)',
 };
 
-const itemVariants = {
-  hidden: { y: 20, opacity: 0 },
-  visible: {
-    y: 0,
-    opacity: 1,
-    transition: {
-      duration: 0.5,
-      ease: [0.25, 0.46, 0.45, 0.94] as const
-    }
-  }
-};
-
-// Razorpay types
-interface RazorpayOptions {
-  key: string;
-  amount: number;
-  currency: string;
-  name: string;
-  description: string;
-  order_id: string;
-  handler: (response: {
-    razorpay_order_id: string;
-    razorpay_payment_id: string;
-    razorpay_signature: string;
-  }) => Promise<void>;
-  prefill: {
-    name: string;
-    email: string;
-    contact: string;
-  };
-  theme: {
-    color: string;
-  };
-  config?: {
-    display: {
-      blocks: {
-        utib: {
-          name: string;
-          instruments: Array<{
-            method: string;
-          }>;
-        };
-        other: {
-          name: string;
-          instruments: Array<{
-            method: string;
-          }>;
-        };
-      };
-      sequence: string[];
-      preferences: {
-        show_default_blocks: boolean;
-      };
-    };
-  };
-  method?: {
-    upi: boolean;
-    card: boolean;
-    netbanking: boolean;
-    wallet: boolean;
-  };
-  modal?: {
-    confirm_close: boolean;
-    ondismiss: () => void;
-  };
-}
-
-interface RazorpayResponse {
-  razorpay_order_id: string;
-  razorpay_payment_id: string;
-  razorpay_signature: string;
-}
-
-declare global {
-  interface Window {
-    Razorpay: {
-      new(options: RazorpayOptions): {
-        open: () => void;
-        on: (event: string, handler: (response: any) => void) => void;
-      };
-    };
-  }
-}
-
-  interface ShippingInfo {
-    firstName: string;
-    lastName: string;
-    email: string;
-    phone: string;
-    address: string;
-    apartment?: string;
-    city: string;
-    state: string;
-    zipCode: string;
-    notes?: string;
-    cardRecipient?: string;
-    cardSender?: string;
-    cardMessage?: string;
-    deliverySpecialInstructions?: string;
-    timeSlot: string;
-    selectedTimeSlot?: string;
-    deliveryType?: string;
-    deliveryOption?: string;
-    deliveryFee?: number;
-    selectedDate?: string;
-    giftMessage?: string;
-    receiverFirstName?: string;
-    receiverLastName?: string;
-    receiverEmail?: string;
-    receiverPhone?: string;
-    receiverAddress?: string;
-    receiverApartment?: string;
-    receiverCity?: string;
-    receiverState?: string;
-    receiverZipCode?: string;
-    isFirstOrderFreeDelivery?: boolean;
-    greetingCard?: string;
-    surpriseDelivery?: boolean;
-    anonymousGift?: boolean;
-    
-    // Mappls fields
-    latitude?: number;
-    longitude?: number;
-    formattedAddress?: string;
-    country?: string;
-    pincode?: string;
-    landmark?: string;
-    houseNo?: string;
-    floor?: string;
-    deliveryInstructions?: string;
-  }
-
-const CheckoutPaymentPage = () => {
+const CheckoutPaymentPage: React.FC = () => {
   const navigate = useNavigate();
-  const { items, clearCart } = useCart();
-  const { subtotal } = useCartSelectors();
-  const { toast } = useToast();
-  const { formatPrice, convertPrice, currency, rate } = useCurrency();
-  const { addNotification } = useNotification();
+  const { items } = useCart();
+  const { subtotal, itemCount } = useCartSelectors();
+  const { formatPrice, convertPrice, rate } = useCurrency();
   const { user } = useAuth();
-  
-  const [isRazorpayLoaded, setIsRazorpayLoaded] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [showOrderSummary, setShowOrderSummary] = useState(false);
-  const [showShippingDetails, setShowShippingDetails] = useState(false);
-  
-  // State for promo code functionality
+  const {
+    isRazorpayLoaded,
+    isProcessing,
+    paymentError,
+    clearPaymentError,
+    initiatePayment,
+  } = useRazorpayCheckout();
+
+  const [shippingInfo, setShippingInfo] = useState<ShippingInfo | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodPreference>('upi');
   const [appliedPromoCode, setAppliedPromoCode] = useState<{
     code: string;
     discount: number;
     finalAmount: number;
+    promoCodeId?: string;
   } | null>(null);
 
-  const [shippingInfo, setShippingInfo] = useState<ShippingInfo | null>(null);
-  
-  // Load Razorpay script
   useEffect(() => {
-    const script = document.createElement('script');
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    script.async = true;
-    script.onload = () => {
-      setIsRazorpayLoaded(true);
-    };
-    script.onerror = () => {
-      toast({
-        title: "Error",
-        description: "Failed to load payment gateway. Please try again.",
-        variant: "destructive",
-      });
-    };
-    document.body.appendChild(script);
-
-    return () => {
-      if (document.body.contains(script)) {
-      document.body.removeChild(script);
+    try {
+      const saved = localStorage.getItem('shippingInfo');
+      if (!saved) {
+        navigate('/checkout/shipping', { replace: true });
+        return;
       }
-    };
-  }, [toast]);
-  
-  useEffect(() => {
-    const savedShippingInfo = localStorage.getItem('shippingInfo');
-    if (savedShippingInfo) {
-      const parsedInfo = JSON.parse(savedShippingInfo);
-      
-      // Ensure deliveryFee has a fallback only if missing
-      if (!parsedInfo.isFirstOrderFreeDelivery && (parsedInfo.deliveryFee === undefined || parsedInfo.deliveryFee === null)) {
-        if (parsedInfo.timeSlot === 'midnight') {
-          parsedInfo.deliveryFee = 300;
-        } else if (['morning', 'afternoon', 'late_afternoon', 'evening'].includes(parsedInfo.timeSlot)) {
-          parsedInfo.deliveryFee = 300;
-        } else {
-          parsedInfo.deliveryFee = 150;
-        }
-        localStorage.setItem('shippingInfo', JSON.stringify(parsedInfo));
+      const parsed: ShippingInfo = JSON.parse(saved);
+      if (parsed.preferredPaymentMethod) {
+        setPaymentMethod(parsed.preferredPaymentMethod);
       }
-      
-      setShippingInfo(parsedInfo);
-    } else {
-      navigate('/checkout/shipping');
+      setShippingInfo(parsed);
+    } catch {
+      navigate('/checkout/shipping', { replace: true });
     }
 
-    // Load applied promo code from localStorage
-    const savedPromoCode = localStorage.getItem('appliedPromoCode');
-    if (savedPromoCode) {
-      try {
-        setAppliedPromoCode(JSON.parse(savedPromoCode));
-      } catch (error) {
-        console.error('Error parsing promo code from localStorage:', error);
-        localStorage.removeItem('appliedPromoCode');
-      }
+    try {
+      const savedPromo = localStorage.getItem('appliedPromoCode');
+      if (savedPromo) setAppliedPromoCode(JSON.parse(savedPromo));
+    } catch {
+      localStorage.removeItem('appliedPromoCode');
     }
   }, [navigate]);
 
@@ -252,16 +151,20 @@ const CheckoutPaymentPage = () => {
     }
   }, [items.length, navigate]);
 
-  // Promo code handlers
-  const handlePromoCodeApplied = (validationResult: PromoCodeValidationResult) => {
-    if (validationResult.success && validationResult.data) {
-      const promoData = {
-        code: validationResult.data.promoCode.code,
-        discount: validationResult.data.discount.amount,
-        finalAmount: validationResult.data.order.finalAmount
+  const deliveryFee = Number(shippingInfo?.deliveryFee || 0);
+  const giftPackagingFee = Number(shippingInfo?.giftPackagingFee || 0);
+  const promoDiscount = appliedPromoCode ? Number(appliedPromoCode.discount || 0) : 0;
+  const orderTotal = Math.max(0, subtotal + deliveryFee + giftPackagingFee - promoDiscount);
+
+  const handlePromoCodeApplied = (result: PromoCodeValidationResult) => {
+    if (result.success && result.data) {
+      const data = {
+        code: result.data.promoCode.code,
+        discount: result.data.discount.amount,
+        finalAmount: result.data.order.finalAmount,
       };
-      setAppliedPromoCode(promoData);
-      localStorage.setItem('appliedPromoCode', JSON.stringify(promoData));
+      setAppliedPromoCode(data);
+      localStorage.setItem('appliedPromoCode', JSON.stringify(data));
     }
   };
 
@@ -270,1171 +173,441 @@ const CheckoutPaymentPage = () => {
     localStorage.removeItem('appliedPromoCode');
   };
 
-  // Calculate totals
-  const deliveryFee = shippingInfo?.deliveryFee || 0;
-  const promoDiscount = appliedPromoCode ? appliedPromoCode.discount : 0;
-  const orderTotal = subtotal + deliveryFee - promoDiscount;
-  
-  const handlePayment = async () => {
-      let modalObserver: MutationObserver | null = null;
-
-      const stopObservingRazorpay = () => {
-        if (modalObserver) {
-          modalObserver.disconnect();
-          modalObserver = null;
-        }
-      };
-
-      const releasePaymentUi = () => {
-        stopObservingRazorpay();
-        document.body.style.overflow = '';
-        document.documentElement.style.overflow = '';
-
-        if (document.activeElement instanceof HTMLElement) {
-          document.activeElement.blur();
-        }
-      };
-
-      if (usePendingReviewStore.getState().hasPendingReview) {
-        usePendingReviewStore.getState().openDrawer(
-          'Review Required: Please review your delivered bouquet first before completing payment!'
-        );
-        toast({
-          title: "Review Required Before Purchase",
-          description: "Please share your review on your previous delivered bouquet to proceed.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (!isRazorpayLoaded) {
-        toast({
-        title: "Payment gateway not ready",
-        description: "Please wait a moment and try again.",
-          variant: "destructive",
-        });
-        return;
-      }
-
+  const handlePayNow = async () => {
+    clearPaymentError();
     if (!shippingInfo) {
-      toast({
-        title: "Missing shipping information",
-        description: "Please go back and complete your shipping details.",
-        variant: "destructive",
-      });
+      navigate('/checkout/shipping');
       return;
     }
 
-    // Scroll to top of page before opening payment popup
-    // Handle mobile vs desktop differently
-    const isMobile = window.innerWidth <= 768;
-    
-    if (isMobile) {
-      // For mobile, scroll to top and ensure viewport is properly positioned
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
-      
-      // On mobile, also ensure the viewport is not zoomed and properly positioned
-      const viewport = document.querySelector('meta[name="viewport"]');
-      if (viewport) {
-        viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
-      }
-    } else {
-      // For desktop, smooth scroll to top
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
-    }
+    const isGift = shippingInfo.deliveryOption === 'gift';
+    const fName = isGift
+      ? shippingInfo.receiverFirstName || shippingInfo.firstName || 'Customer'
+      : shippingInfo.firstName || 'Customer';
+    const lName = isGift
+      ? shippingInfo.receiverLastName || shippingInfo.lastName || ''
+      : shippingInfo.lastName || '';
+    const fullCustName = `${fName} ${lName}`.trim() || shippingInfo.fullName || 'Customer';
+    const custAddr = isGift
+      ? shippingInfo.receiverAddress || shippingInfo.address || ''
+      : shippingInfo.address || '';
+    const custApt = isGift
+      ? shippingInfo.receiverApartment || shippingInfo.apartment || ''
+      : shippingInfo.apartment || '';
+    const custCity = isGift
+      ? shippingInfo.receiverCity || shippingInfo.city || 'Hyderabad'
+      : shippingInfo.city || 'Hyderabad';
+    const custState = isGift
+      ? shippingInfo.receiverState || shippingInfo.state || 'Telangana'
+      : shippingInfo.state || 'Telangana';
+    const custZip = isGift
+      ? shippingInfo.receiverZipCode || shippingInfo.zipCode || shippingInfo.pincode || ''
+      : shippingInfo.zipCode || shippingInfo.pincode || '';
+    const custPhone =
+      (isGift ? shippingInfo.receiverPhone || shippingInfo.phone : shippingInfo.phone) ||
+      user?.phone ||
+      '';
+    const custEmail =
+      (isGift ? shippingInfo.receiverEmail || shippingInfo.email : shippingInfo.email) ||
+      user?.email ||
+      '';
 
-    // Small delay to ensure scroll completes before popup opens
-    // Longer delay on mobile to account for slower rendering
-    const delay = isMobile ? 500 : 300;
-    await new Promise(resolve => setTimeout(resolve, delay));
-
-    setIsProcessing(true);
-
-    try {
-      const isGift = shippingInfo.deliveryOption === 'gift';
-      const fName = isGift ? (shippingInfo.receiverFirstName || shippingInfo.firstName || 'Customer') : (shippingInfo.firstName || 'Customer');
-      const lName = isGift ? (shippingInfo.receiverLastName || shippingInfo.lastName || '') : (shippingInfo.lastName || '');
-      const fullCustName = `${fName} ${lName}`.trim();
-      const custAddr = isGift ? (shippingInfo.receiverAddress || shippingInfo.address || '') : (shippingInfo.address || '');
-      const custApt = isGift ? (shippingInfo.receiverApartment || shippingInfo.apartment || '') : (shippingInfo.apartment || '');
-      const custCity = isGift ? (shippingInfo.receiverCity || shippingInfo.city || 'Hyderabad') : (shippingInfo.city || 'Hyderabad');
-      const custState = isGift ? (shippingInfo.receiverState || shippingInfo.state || 'Telangana') : (shippingInfo.state || 'Telangana');
-      const custZip = isGift ? (shippingInfo.receiverZipCode || shippingInfo.zipCode || '') : (shippingInfo.zipCode || '');
-      const custPhone = (isGift ? (shippingInfo.receiverPhone || shippingInfo.phone) : shippingInfo.phone) || user?.phone || '';
-      const custEmail = (isGift ? (shippingInfo.receiverEmail || shippingInfo.email) : shippingInfo.email) || user?.email || '';
-
-      // Prepare order data in correct backend format
-      const orderData = {
-        customerName: fullCustName,
-        customerEmail: custEmail,
-        customerPhone: custPhone,
-        items: items.map(item => ({
-          product: item.productId || item._id,
-          productModel: item.productModel || 'Product',
-          title: item.title,
-          quantity: item.quantity,
-          price: item.price,
-          finalPrice: item.price,
-          customizations: item.customizations || null,
-          characterCount: item.customizations?.personalization?.characterCount || 0,
-          image: item.image || item.images?.[0] || '',
-          images: item.images || [],
-          selectedVariant: item.selectedVariant || null
-        })),
-        shippingDetails: {
-           fullName: fullCustName,
-           firstName: fName,
-           lastName: lName,
-           email: custEmail,
-           phone: custPhone,
-           address: custAddr,
-           apartment: custApt,
-           city: custCity,
-           state: custState,
-           zipCode: custZip,
-           notes: shippingInfo.deliverySpecialInstructions || shippingInfo.notes || '',
-           cardMessage: shippingInfo.cardMessage || shippingInfo.giftMessage || '',
-           deliverySpecialInstructions: shippingInfo.deliverySpecialInstructions || shippingInfo.notes || '',
-           deliveryDate: shippingInfo.selectedDate ? new Date(shippingInfo.selectedDate) : new Date(),
-           timeSlot: shippingInfo.selectedTimeSlot || shippingInfo.timeSlot || '',
-           deliveryType: shippingInfo.deliveryType || (
-             (shippingInfo.selectedTimeSlot || shippingInfo.timeSlot) === 'midnight' 
-               ? 'Midnight Delivery' 
-               : (['morning', 'afternoon', 'late_afternoon', 'evening'].includes(shippingInfo.selectedTimeSlot || shippingInfo.timeSlot || '') 
-                   ? 'Fixed Time Delivery' 
-                   : 'Standard Delivery')
-           ),
-           surpriseDelivery: !!shippingInfo.surpriseDelivery,
-           anonymousGift: !!shippingInfo.anonymousGift,
-           
-           // Mappls location details
-           latitude: shippingInfo.latitude,
-           longitude: shippingInfo.longitude,
-           formattedAddress: shippingInfo.formattedAddress || custAddr,
-           country: shippingInfo.country || 'India',
-           pincode: shippingInfo.pincode || custZip,
-           landmark: shippingInfo.landmark || custApt,
-           houseNo: shippingInfo.houseNo || '',
-           floor: shippingInfo.floor || '',
-           deliveryInstructions: shippingInfo.deliveryInstructions,
-         },
-         totalAmount: orderTotal,       // ✅ Correct field name for backend
-         subtotal: subtotal,
-         deliveryCharge: deliveryFee,
-         discount: promoDiscount,
-         finalTotal: orderTotal,
-         isFirstOrderFreeDelivery: shippingInfo?.isFirstOrderFreeDelivery || false,
-         currency: 'INR',
-         currencyRate: rate || 1,       // ✅ Correct field name for backend
-         originalCurrency: 'INR',
-         promoCode: appliedPromoCode ? {
-           code: appliedPromoCode.code,
-           discountAmount: appliedPromoCode.discount,
-           promoCodeId: (appliedPromoCode as any).promoCodeId || undefined
-         } : undefined
-       };
-       
-        // Add gift details if present or if there are Valentine upgrades
-        if (shippingInfo.giftMessage || shippingInfo.cardMessage || shippingInfo.receiverFirstName || shippingInfo.greetingCard || shippingInfo.surpriseDelivery || shippingInfo.anonymousGift) {
-          (orderData as any).giftDetails = {
-            message: shippingInfo.cardMessage || shippingInfo.giftMessage || '',
-            recipientName: shippingInfo.receiverFirstName && shippingInfo.receiverLastName 
-              ? `${shippingInfo.receiverFirstName} ${shippingInfo.receiverLastName}`.trim()
-              : '',
-            recipientEmail: shippingInfo.receiverEmail || '',
-            recipientPhone: shippingInfo.receiverPhone || '',
-            recipientAddress: shippingInfo.receiverAddress || '',
-            recipientApartment: shippingInfo.receiverApartment || '',
-            recipientCity: shippingInfo.receiverCity || '',
-            recipientState: shippingInfo.receiverState || '',
-            recipientZipCode: shippingInfo.receiverZipCode || '',
-            greetingCard: shippingInfo.greetingCard || 'none',
-            surpriseDelivery: !!shippingInfo.surpriseDelivery,
-            anonymousGift: !!shippingInfo.anonymousGift,
-            
-            // Mappls location details
-            latitude: shippingInfo.latitude,
-            longitude: shippingInfo.longitude,
-            formattedAddress: shippingInfo.formattedAddress,
-            country: shippingInfo.country || 'India',
-            pincode: shippingInfo.pincode,
-            landmark: shippingInfo.landmark,
-            houseNo: shippingInfo.houseNo,
-            floor: shippingInfo.floor,
-            deliveryInstructions: shippingInfo.deliveryInstructions,
-          };
-        }
-
-      // Create Razorpay order with customer metadata attached to notes
-      console.log('Creating order with amount:', orderTotal);
-      
-      const orderResponse = await api.post('/orders/create-razorpay-order', {
-        amount: Math.round(orderTotal * 100), // Convert to paise
-        currency: 'INR',
-        receipt: `order_${Date.now()}`,
-        orderData
-      });
-      
-      console.log('Server response:', orderResponse.data);
-
-      const { order_id, amount, currency: orderCurrency, key } = orderResponse.data;
-      
-      if (!order_id || !amount || !orderCurrency) {
-        throw new Error('Invalid order response from server');
-      }
-      
-      console.log('Razorpay order created:', {
-        order_id,
-        amount,
-        currency: orderCurrency
-      });
-
-      // Configure Razorpay options
-      const options: RazorpayOptions = {
-        key: key || RAZORPAY_CONFIG.keyId, // Use server-provided key or fallback
-        amount: amount,
-        currency: orderCurrency,
-        name: "Spring Blossoms Florist",
-        description: "Flower Delivery Service",
-        order_id: order_id,
-        handler: async (response: RazorpayResponse) => {
-          try {
-            // Debug: Log the complete Razorpay response
-            console.log('🔍 Complete Razorpay Response:', response);
-            console.log('🔍 Razorpay Response Keys:', Object.keys(response));
-            
-            // Validate required Razorpay response data
-            if (!response.razorpay_order_id) {
-              console.error('❌ Missing razorpay_order_id in response');
-              throw new Error('Payment response missing order ID');
-            }
-            
-            if (!response.razorpay_payment_id) {
-              console.error('❌ Missing razorpay_payment_id in response');
-              throw new Error('Payment response missing payment ID');
-            }
-            
-            if (!response.razorpay_signature) {
-              console.error('❌ Missing razorpay_signature in response');
-              throw new Error('Payment response missing signature');
-            }
-            
-            console.log('✅ All Razorpay response data present:', {
-              order_id: response.razorpay_order_id,
-              payment_id: response.razorpay_payment_id,
-              signature: response.razorpay_signature ? 'present' : 'missing'
-            });
-            
-            // Log current API configuration for debugging
-            console.log('🌐 API Configuration:', {
-              baseURL: api.defaults.baseURL,
-              env_API_URL: import.meta.env.VITE_API_URL,
-              mode: import.meta.env.MODE,
-              prod: import.meta.env.PROD
-            });
-            
-            // Verify payment
-            const verificationResponse = await api.post('/orders/verify-payment', {
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-              orderData
-            });
-
-            console.log('🔍 Verification response:', verificationResponse.data);
-
-            if (verificationResponse.data.success) {
-              console.log('✅ Payment verification successful, preparing for redirection');
-              console.log('🔁 Current URL before redirect:', window.location.href);
-              
-              // Store order data for confirmation page
-              const confirmedOrder = verificationResponse.data.order;
-              console.log('📦 Order confirmed:', {
-                orderId: confirmedOrder._id,
-                orderNumber: confirmedOrder.orderNumber,
-                total: confirmedOrder.total
-              });
-              
-              let isOrderReadyForRedirect = false;
-
-              // CRITICAL: Store all data FIRST (synchronous operations)
-              try {
-                const orderJSON = JSON.stringify(confirmedOrder);
-                console.log('💾 Storing order data (size: ' + orderJSON.length + ' chars)...');
-                
-                localStorage.setItem('lastOrder', orderJSON);
-                sessionStorage.setItem('lastOrder', orderJSON);
-                sessionStorage.setItem('from_payment', 'true');
-                sessionStorage.setItem('backup_order', orderJSON); // Backup in session too
-                
-                // Verify storage immediately
-                const storedCheck = localStorage.getItem('lastOrder');
-                if (!storedCheck) {
-                  console.error('❌ CRITICAL: Failed to store order in localStorage!');
-                  throw new Error('Failed to store order data');
-                }
-                console.log('✅ Order data verified in localStorage');
-                
-                localStorage.removeItem('appliedPromoCode');
-                localStorage.removeItem('shippingInfo');
-                console.log('💾 All data stored successfully');
-                
-                // Clear cart
-                clearCart();
-                console.log('🧹 Cart cleared');
-                
-                // Add notification (non-blocking)
-                addNotification({
-                  type: 'order',
-                  title: 'Payment Successful!',
-                  message: `Your order #${confirmedOrder.orderNumber} has been confirmed.`
-                });
-
-                releasePaymentUi();
-                setIsProcessing(false);
-                isOrderReadyForRedirect = true;
-              } catch (storageError) {
-                console.error('❌ Storage error:', storageError);
-                releasePaymentUi();
-                setIsProcessing(false);
-                toast({
-                  title: "Warning",
-                  description: "Order saved but there may be display issues. Contact support if needed.",
-                  variant: "destructive",
-                });
-              }
-              
-              if (!isOrderReadyForRedirect) {
-                return;
-              }
-
-              const confirmationPath = '/checkout/confirmation';
-              const confirmationUrl = `${window.location.origin}${confirmationPath}`;
-              console.log('Current URL:', window.location.href);
-              console.log('Origin:', window.location.origin);
-              console.log('Redirecting to:', confirmationUrl);
-              console.log('🚀 Scheduling confirmation redirect:', confirmationUrl);
-              console.log('Environment:', import.meta.env.MODE);
-
-              setTimeout(() => {
-                try {
-                  console.log('📍 Navigating with React Router:', confirmationUrl);
-                  window.location.replace(confirmationUrl);
-
-                  setTimeout(() => {
-                    if (!window.location.pathname.includes(confirmationPath)) {
-                      console.warn('⚠️ React Router navigation did not complete, using hard fallback');
-                      console.warn('Current location before fallback:', window.location.href);
-                      window.location.assign(confirmationUrl);
-                    }
-                  }, 1500);
-                } catch (navError) {
-                  console.error('❌ React Router navigation failed:', navError);
-                  window.location.assign(confirmationUrl);
-                }
-              }, 300);
-            } else {
-              console.error('❌ Payment verification failed:', verificationResponse.data);
-              throw new Error(verificationResponse.data.message || 'Payment verification failed');
-            }
-          } catch (error: any) {
-            console.error('❌ Payment verification error:', error);
-            releasePaymentUi();
-            toast({
-              title: "Payment verification failed",
-              description: error.message || "Please contact support if amount was deducted.",
-              variant: "destructive",
-            });
-          } finally {
-            setIsProcessing(false);
+    const orderData: Record<string, unknown> = {
+      customerName: fullCustName,
+      customerEmail: custEmail,
+      customerPhone: custPhone,
+      items: items.map((item) => ({
+        product: item.productId || item._id,
+        productModel: item.productModel || 'Product',
+        title: item.title,
+        quantity: item.quantity,
+        price: item.price,
+        finalPrice: item.price,
+        customizations: item.customizations || null,
+        characterCount: item.customizations?.personalization?.characterCount || 0,
+        image: item.image || item.images?.[0] || '',
+        images: item.images || [],
+        selectedVariant: item.selectedVariant || null,
+      })),
+      shippingDetails: {
+        fullName: fullCustName,
+        firstName: fName,
+        lastName: lName,
+        email: custEmail,
+        phone: custPhone,
+        alternatePhone: shippingInfo.alternatePhone || '',
+        addressType: shippingInfo.addressType || 'home',
+        address: custAddr,
+        apartment: custApt,
+        houseNo: shippingInfo.houseNo || '',
+        landmark: shippingInfo.landmark || '',
+        floor: shippingInfo.floor || '',
+        city: custCity,
+        state: custState,
+        zipCode: custZip,
+        pincode: custZip,
+        country: shippingInfo.country || 'India',
+        formattedAddress: shippingInfo.formattedAddress || custAddr,
+        latitude: shippingInfo.latitude,
+        longitude: shippingInfo.longitude,
+        notes: shippingInfo.deliverySpecialInstructions || shippingInfo.notes || '',
+        deliveryInstructions:
+          shippingInfo.deliveryInstructions || shippingInfo.deliverySpecialInstructions || '',
+        deliverySpecialInstructions:
+          shippingInfo.deliverySpecialInstructions || shippingInfo.notes || '',
+        cardMessage: shippingInfo.cardMessage || shippingInfo.giftMessage || '',
+        cardSender: shippingInfo.cardSender || '',
+        cardRecipient: shippingInfo.cardRecipient || '',
+        deliveryDate: shippingInfo.selectedDate ? new Date(shippingInfo.selectedDate) : new Date(),
+        timeSlot: shippingInfo.selectedTimeSlot || shippingInfo.timeSlot || 'same_day',
+        deliveryType: shippingInfo.deliveryType || 'Standard Delivery',
+        surpriseDelivery: Boolean(shippingInfo.surpriseDelivery),
+        anonymousGift: Boolean(shippingInfo.anonymousGift),
+        giftPackaging: Boolean(shippingInfo.giftPackaging),
+        giftPackagingFee,
+      },
+      totalAmount: orderTotal,
+      subtotal,
+      deliveryCharge: deliveryFee,
+      giftPackaging: Boolean(shippingInfo.giftPackaging),
+      giftPackagingFee,
+      discount: promoDiscount,
+      finalTotal: orderTotal,
+      isFirstOrderFreeDelivery: Boolean(shippingInfo.isFirstOrderFreeDelivery),
+      currency: 'INR',
+      currencyRate: rate || 1,
+      originalCurrency: 'INR',
+      promoCode: appliedPromoCode
+        ? {
+            code: appliedPromoCode.code,
+            discountAmount: appliedPromoCode.discount,
+            promoCodeId: appliedPromoCode.promoCodeId,
           }
-        },
-        prefill: {
-          name: `${shippingInfo.firstName || ''} ${shippingInfo.lastName || ''}`.trim() || user?.name || 'Customer',
-          email: shippingInfo.email || user?.email || '',
-          contact: shippingInfo.phone || user?.phone || ''
-        },
-        theme: {
-          color: "#3B82F6"
-        },
-        modal: {
-          confirm_close: true,
-          ondismiss: () => {
-            console.log('🚫 Payment dialog closed by user');
-            releasePaymentUi();
-            setIsProcessing(false);
-            toast({
-              title: "Payment Cancelled",
-              description: "You can try again when ready.",
-            });
-          }
-        }
-      };
-
-      // Initialize and open Razorpay with error handling
-      try {
-        console.log('🔄 Initializing Razorpay with options:', {
-          ...options,
-          key: options.key ? 'VALID_KEY_PRESENT' : 'MISSING_KEY',
-          amount: options.amount,
-          currency: options.currency,
-          order_id: options.order_id
-        });
-        
-        console.log('%c💡 NOTE: Razorpay 400 errors are NORMAL', 'color: green; font-weight: bold');
-        console.log('%cYou may see 400 errors from:', 'color: gray');
-        console.log('%c  - /customers/status (checking if customer exists)', 'color: gray');
-        console.log('%c  - /consents (checking saved payment methods)', 'color: gray');
-        console.log('%cThese are safe to ignore - payment will work fine!', 'color: green');
-        console.log('%cOnly worry if: Payment verification fails or order is not created', 'color: orange');
-        
-        const rzp = new window.Razorpay(options);
-        
-        // Add error event handler
-        rzp.on('payment.failed', function (response: any) {
-          console.error('💳 Payment failed:', response.error);
-          releasePaymentUi();
-          setIsProcessing(false);
-          toast({
-            title: "Payment Failed",
-            description: response.error.description || "Your payment could not be processed. Please try again.",
-            variant: "destructive",
-          });
-        });
-        
-        // Add event handler for when modal opens to scroll to it
-        rzp.on('modal.opened', function () {
-          console.log('🔍 Razorpay modal opened, scrolling to payment popup');
-          
-          // Function to scroll to payment popup
-          const scrollToPaymentPopup = () => {
-            const isMobile = window.innerWidth <= 768;
-            
-            // First scroll to top to ensure popup is visible
-            window.scrollTo({
-              top: 0,
-              behavior: 'smooth'
-            });
-            
-            // Look for Razorpay modal elements and scroll to them
-            setTimeout(() => {
-              // Try multiple selectors for Razorpay modal
-              const selectors = [
-                '.razorpay-container',
-                '.razorpay-checkout-frame',
-                '[data-razorpay]',
-                '.razorpay-modal',
-                'iframe[src*="razorpay"]'
-              ];
-              
-              let modalFound = false;
-              for (const selector of selectors) {
-                const modalElement = document.querySelector(selector);
-                if (modalElement) {
-                  console.log('🎯 Found Razorpay modal element:', selector);
-                  
-                  // Different scroll behavior for mobile vs desktop
-                  if (isMobile) {
-                    // On mobile, scroll to center and ensure it's fully visible
-                    modalElement.scrollIntoView({
-                      behavior: 'smooth',
-                      block: 'center'
-                    });
-                    
-                    // Additional mobile-specific adjustments
-                    setTimeout(() => {
-                      // Ensure the modal is not cut off by mobile browser UI
-                      const modalRect = modalElement.getBoundingClientRect();
-                      const viewportHeight = window.innerHeight;
-                      const mobileOffset = 60; // Account for mobile browser UI
-                      
-                      if (modalRect.top < mobileOffset) {
-                        window.scrollBy({
-                          top: mobileOffset - modalRect.top,
-                          behavior: 'smooth'
-                        });
-                      }
-                    }, 100);
-                  } else {
-                    // Desktop behavior
-                    modalElement.scrollIntoView({
-                      behavior: 'smooth',
-                      block: 'center'
-                    });
-                  }
-                  
-                  modalFound = true;
-                  break;
-                }
-              }
-              
-              // If no specific modal found, scroll to any iframe (Razorpay uses iframe)
-              if (!modalFound) {
-                const iframes = document.querySelectorAll('iframe');
-                if (iframes.length > 0) {
-                  console.log('🎯 Found iframe, scrolling to it');
-                  const lastIframe = iframes[iframes.length - 1];
-                  
-                  if (isMobile) {
-                    // Mobile-specific iframe handling
-                    lastIframe.scrollIntoView({
-                      behavior: 'smooth',
-                      block: 'center'
-                    });
-                    
-                    // Ensure iframe is properly positioned on mobile
-                    setTimeout(() => {
-                      const iframeRect = lastIframe.getBoundingClientRect();
-                      const viewportHeight = window.innerHeight;
-                      const mobileOffset = 60;
-                      
-                      if (iframeRect.top < mobileOffset) {
-                        window.scrollBy({
-                          top: mobileOffset - iframeRect.top,
-                          behavior: 'smooth'
-                        });
-                      }
-                    }, 100);
-                  } else {
-                    lastIframe.scrollIntoView({
-                      behavior: 'smooth',
-                      block: 'center'
-                    });
-                  }
-                }
-              }
-            }, isMobile ? 300 : 200); // Longer delay on mobile
-          };
-          
-          // Execute scroll function
-          scrollToPaymentPopup();
-          
-          // Also try again after a longer delay to ensure modal is fully rendered
-          // Longer delay on mobile to account for slower rendering
-          setTimeout(scrollToPaymentPopup, isMobile ? 800 : 500);
-        });
-        
-        // Set up a MutationObserver to detect when Razorpay popup appears
-        modalObserver = new MutationObserver((mutations) => {
-          mutations.forEach((mutation) => {
-            if (mutation.type === 'childList') {
-              mutation.addedNodes.forEach((node) => {
-                if (node.nodeType === Node.ELEMENT_NODE) {
-                  const element = node as Element;
-                  // Check if this is a Razorpay-related element
-                  if (
-                    element.classList.contains('razorpay-container') ||
-                    element.classList.contains('razorpay-checkout-frame') ||
-                    element.getAttribute('data-razorpay') ||
-                    (element.tagName === 'IFRAME' && element.getAttribute('src')?.includes('razorpay'))
-                  ) {
-                    console.log('🎯 Razorpay popup detected in DOM, scrolling to it');
-                    const isMobile = window.innerWidth <= 768;
-                    
-                    setTimeout(() => {
-                      if (isMobile) {
-                        // Mobile-specific scroll behavior
-                        element.scrollIntoView({
-                          behavior: 'smooth',
-                          block: 'center'
-                        });
-                        
-                        // Additional mobile adjustments
-                        setTimeout(() => {
-                          const elementRect = element.getBoundingClientRect();
-                          const mobileOffset = 60; // Account for mobile browser UI
-                          
-                          if (elementRect.top < mobileOffset) {
-                            window.scrollBy({
-                              top: mobileOffset - elementRect.top,
-                              behavior: 'smooth'
-                            });
-                          }
-                        }, 150);
-                      } else {
-                        // Desktop behavior
-                        element.scrollIntoView({
-                          behavior: 'smooth',
-                          block: 'center'
-                        });
-                      }
-                    }, isMobile ? 200 : 100); // Longer delay on mobile
-                  }
-                }
-              });
-            }
-          });
-        });
-        
-        // Start observing the document body for changes
-        modalObserver.observe(document.body, {
-          childList: true,
-          subtree: true
-        });
-        
-        // Clean up observer after 10 seconds
-        setTimeout(() => {
-          stopObservingRazorpay();
-        }, 10000);
-        
-        rzp.open();
-      } catch (rzpError) {
-        console.error('💥 Razorpay initialization error:', rzpError);
-        releasePaymentUi();
-        toast({
-          title: "Payment System Error",
-          description: "Could not initialize payment system. Please try again later.",
-          variant: "destructive",
-        });
-        setIsProcessing(false);
-      }
-
-    } catch (error: any) {
-      console.error('Payment initiation error:', error);
-      releasePaymentUi();
-      toast({
-        title: "Payment failed",
-        description: error.response?.data?.message || "Unable to process payment. Please try again.",
-        variant: "destructive",
-      });
-      setIsProcessing(false);
-    }
-  };
-
-  const formatTimeSlot = (timeSlot: string) => {
-    const timeSlots: { [key: string]: string } = {
-      'same_day': '9:00 AM - 9:00 PM',
-      'standard': '9:00 AM - 9:00 PM',
-      'midnight': '11:30 PM - 12:30 AM',
-      'morning': '9:00 AM - 12:00 PM',
-      'afternoon': '12:00 PM - 3:00 PM',
-      'late_afternoon': '3:00 PM - 6:00 PM',
-      'evening': '6:00 PM - 9:00 PM'
+        : undefined,
     };
-    return timeSlots[timeSlot] || timeSlot;
+
+    if (
+      shippingInfo.giftMessage ||
+      shippingInfo.cardMessage ||
+      shippingInfo.giftPackaging ||
+      shippingInfo.receiverFirstName ||
+      shippingInfo.surpriseDelivery ||
+      shippingInfo.anonymousGift
+    ) {
+      orderData.giftDetails = {
+        message: shippingInfo.cardMessage || shippingInfo.giftMessage || '',
+        recipientName:
+          shippingInfo.cardRecipient ||
+          `${shippingInfo.receiverFirstName || ''} ${shippingInfo.receiverLastName || ''}`.trim() ||
+          fullCustName,
+        senderName: shippingInfo.cardSender || shippingInfo.fullName || '',
+        recipientEmail: shippingInfo.receiverEmail || '',
+        recipientPhone: shippingInfo.receiverPhone || custPhone,
+        recipientAddress: shippingInfo.receiverAddress || custAddr,
+        recipientApartment: shippingInfo.receiverApartment || custApt,
+        recipientCity: shippingInfo.receiverCity || custCity,
+        recipientState: shippingInfo.receiverState || custState,
+        recipientZipCode: shippingInfo.receiverZipCode || custZip,
+        giftPackaging: Boolean(shippingInfo.giftPackaging),
+        giftPackagingFee,
+        surpriseDelivery: Boolean(shippingInfo.surpriseDelivery),
+        anonymousGift: Boolean(shippingInfo.anonymousGift),
+      };
+    }
+
+    await initiatePayment({
+      orderTotal,
+      orderData,
+      prefill: {
+        name: shippingInfo.fullName || fullCustName || user?.name || 'Customer',
+        email: shippingInfo.email || user?.email || '',
+        contact: shippingInfo.phone || user?.phone || '',
+      },
+      preferredMethod: paymentMethod,
+    });
   };
+
+  const priceBreakdownLines: PriceBreakdownLine[] = useMemo(() => {
+    const lines: PriceBreakdownLine[] = [
+      { label: `Items Subtotal (${itemCount})`, amount: subtotal },
+    ];
+    if (promoDiscount > 0 && appliedPromoCode) {
+      lines.push({
+        label: `Coupon (${appliedPromoCode.code})`,
+        amount: promoDiscount,
+        isDiscount: true,
+      });
+    }
+    if (giftPackagingFee > 0) {
+      lines.push({ label: 'Signature Gift Bag', amount: giftPackagingFee });
+    }
+    if (shippingInfo?.isFirstOrderFreeDelivery && deliveryFee === 0) {
+      lines.push({ label: 'Delivery Charge', amount: 0, isFree: true, strikeAmount: 150 });
+    } else if (deliveryFee === 0) {
+      lines.push({ label: 'Delivery Charge', amount: 0, isFree: true });
+    } else {
+      lines.push({ label: 'Delivery Charge', amount: deliveryFee });
+    }
+    return lines;
+  }, [itemCount, subtotal, promoDiscount, appliedPromoCode, giftPackagingFee, shippingInfo, deliveryFee]);
+
+  const parsedDeliveryDate = shippingInfo?.selectedDate ? new Date(shippingInfo.selectedDate) : null;
+  const displaySlot =
+    SLOT_LABELS[shippingInfo?.selectedTimeSlot || shippingInfo?.timeSlot || 'same_day'] ||
+    shippingInfo?.deliveryType ||
+    'Standard Delivery';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50">
+    <div className="min-h-screen bg-[#FAF8F5] text-[#1E1B18] overflow-x-clip">
       <Navigation />
-      
-      <motion.div 
-        className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto px-4 pb-32 sm:px-6 lg:px-8 2xl:px-12 py-8 lg:pb-8"
-        initial="hidden"
-        animate="visible"
-        variants={containerVariants}
-      >
-        {/* Progress Bar */}
-        <motion.div variants={itemVariants} className="mb-8">
-          <div className="flex items-center justify-center space-x-4 mb-6">
-              <div className="flex items-center">
-              <div className="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-semibold">
-                <Check className="w-4 h-4" />
-              </div>
-              <span className="ml-2 text-sm font-medium text-green-600">Shipping</span>
-            </div>
-            <div className="w-12 h-0.5 bg-green-500"></div>
-              <div className="flex items-center">
-              <div className="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center text-sm font-semibold">
-                2
-              </div>
-              <span className="ml-2 text-sm font-medium text-primary">Payment</span>
-                </div>
-            <div className="w-12 h-0.5 bg-gray-300"></div>
-              <div className="flex items-center">
-              <div className="w-8 h-8 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center text-sm font-semibold">
-                3
-              </div>
-              <span className="ml-2 text-sm font-medium text-gray-600">Confirmation</span>
-            </div>
+
+      <main className="mx-auto w-full max-w-7xl px-3.5 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8 pb-36 lg:pb-16">
+        {/* Top Back + 3-Step Progress */}
+        <div className="mb-6 sm:mb-8 space-y-4">
+          <div className="flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={() => navigate('/checkout/shipping')}
+              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-[#6F665E] hover:text-[#BE185D]"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>Edit Shipping Details</span>
+            </button>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#EDF3EE] px-3 py-1 text-[11px] font-semibold text-[#2E573A] border border-[#CBE0D0]">
+              <Lock className="h-3.5 w-3.5" />
+              256-Bit Encrypted
+            </span>
           </div>
-        </motion.div>
 
-        {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Payment & Details */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Payment Methods */}
-            <motion.div variants={itemVariants}>
-              <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <CreditCard className="w-5 h-5 text-primary" />
-                    Payment Method
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {/* Security Notice */}
-                    <Alert className="border-green-200 bg-green-50">
-                      <Shield className="h-4 w-4 text-green-600" />
-                      <AlertDescription className="text-green-700">
-                        Your payment is secured with 256-bit SSL encryption. We don't store your card details.
-                      </AlertDescription>
-                    </Alert>
-
-                    {/* Payment Options */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                      <div className="p-4 border-2 border-primary bg-primary/5 rounded-lg">
-                        <div className="flex items-center justify-center mb-2">
-                          <CreditCard className="w-8 h-8 text-primary" />
-                        </div>
-                        <p className="text-sm font-medium text-center">Cards</p>
-                        <p className="text-xs text-gray-600 text-center">Visa, Mastercard, etc.</p>
-          </div>
-          
-                      <div className="p-4 border-2 border-primary bg-primary/5 rounded-lg">
-                        <div className="flex items-center justify-center mb-2">
-                          <Smartphone className="w-8 h-8 text-primary" />
-                        </div>
-                        <p className="text-sm font-medium text-center">UPI</p>
-                        <p className="text-xs text-gray-600 text-center">GPay, PhonePe, etc.</p>
-                      </div>
-                      
-                      <div className="p-4 border-2 border-primary bg-primary/5 rounded-lg">
-                        <div className="flex items-center justify-center mb-2">
-                          <Building2 className="w-8 h-8 text-primary" />
-                        </div>
-                        <p className="text-sm font-medium text-center">Net Banking</p>
-                        <p className="text-xs text-gray-600 text-center">All major banks</p>
-                  </div>
-                  
-                      <div className="p-4 border-2 border-primary bg-primary/5 rounded-lg">
-                        <div className="flex items-center justify-center mb-2">
-                          <Wallet className="w-8 h-8 text-primary" />
-                        </div>
-                        <p className="text-sm font-medium text-center">Wallets</p>
-                        <p className="text-xs text-gray-600 text-center">Paytm, Amazon Pay</p>
-                      </div>
-                    </div>
-
-                    {/* Pay Button */}
-                    <Button
-                      onClick={handlePayment}
-                      disabled={isProcessing || !isRazorpayLoaded}
-                      className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-semibold py-4 px-6 rounded-lg shadow-lg transition-all duration-300 text-lg"
-                      size="lg"
-                    >
-                      {isProcessing ? (
-                        <>
-                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                          Processing...
-                        </>
-                      ) : (
-                        <>
-                          <Lock className="w-5 h-5 mr-2" />
-                          Pay {formatPrice(convertPrice(orderTotal))} Securely
-                        </>
-                      )}
-                    </Button>
-
-                    <p className="text-xs text-gray-600 text-center">
-                      By clicking "Pay Securely", you agree to our terms and conditions
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* Promo Code Section */}
-            <motion.div variants={itemVariants}>
-              <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
-                <CardHeader>
-                  <CardTitle className="text-lg">Promo Code</CardTitle>
-                </CardHeader>
-                <CardContent>
-                              <PromoCodeInput
-                                orderAmount={convertPrice(orderTotal)}
-                                orderItems={items}
-                                userId={user?.id}
-                                onPromoCodeApplied={handlePromoCodeApplied}
-                                onPromoCodeRemoved={handlePromoCodeRemoved}
-                                appliedPromoCode={appliedPromoCode}
-                              />
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* Shipping Details */}
-            <motion.div variants={itemVariants}>
-              <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
-                <CardHeader>
-                  <CardTitle 
-                    className="flex items-center justify-between cursor-pointer lg:cursor-default"
-                    onClick={() => setShowShippingDetails(!showShippingDetails)}
-                  >
-                    <span className="flex items-center gap-2 text-lg">
-                      <MapPin className="w-5 h-5 text-primary" />
-                      Shipping Details
-                    </span>
-                    <div className="lg:hidden">
-                      {showShippingDetails ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                    </div>
-                  </CardTitle>
-                </CardHeader>
-                
-                <AnimatePresence>
-                  <motion.div
-                    initial={{ height: showShippingDetails ? 'auto' : 0 }}
-                    animate={{ height: showShippingDetails || window.innerWidth >= 1024 ? 'auto' : 0 }}
-                    className="lg:!h-auto overflow-hidden"
-                  >
-                    <CardContent className="space-y-4">
-                      {shippingInfo && (
-                        <>
-                          {/* Customer Info */}
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                              <p className="text-sm font-medium text-gray-700">Customer</p>
-                              <p className="text-sm">{shippingInfo.firstName} {shippingInfo.lastName}</p>
-                              <p className="text-sm text-gray-600">{shippingInfo.email}</p>
-                              <p className="text-sm text-gray-600">{shippingInfo.phone}</p>
-                            </div>
-                            
-                            <div>
-                              <p className="text-sm font-medium text-gray-700">Delivery Address</p>
-                              {shippingInfo.deliveryOption === 'gift' ? (
-                                <div>
-                                  <p className="text-sm">{shippingInfo.receiverFirstName} {shippingInfo.receiverLastName}</p>
-                                  <p className="text-sm text-gray-600">{shippingInfo.receiverAddress}</p>
-                                  <p className="text-sm text-gray-600">{shippingInfo.receiverCity}, {shippingInfo.receiverState} - {shippingInfo.receiverZipCode}</p>
-                                  <p className="text-sm text-gray-600">{shippingInfo.receiverPhone}</p>
-                                </div>
-                              ) : (
-                                <div>
-                                  <p className="text-sm text-gray-600">{shippingInfo.address}</p>
-                                  {shippingInfo.apartment && <p className="text-sm text-gray-600">{shippingInfo.apartment}</p>}
-                                  <p className="text-sm text-gray-600">{shippingInfo.city}, {shippingInfo.state} - {shippingInfo.zipCode}</p>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-
-                          <Separator />
-
-                          {/* Delivery Info */}
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                              <p className="text-sm font-medium text-gray-700">Delivery Time</p>
-                              <div className="flex items-center gap-2">
-                                <Clock className="w-4 h-4 text-primary" />
-                                <p className="text-sm">{formatTimeSlot(shippingInfo.timeSlot)}</p>
-                              </div>
-                              {shippingInfo.timeSlot === 'midnight' && (
-                                <Badge variant="secondary" className="mt-1 bg-purple-100 text-purple-800 border-purple-200">
-                                  Midnight Delivery (+₹300)
-                                </Badge>
-                              )}
-                              {['morning', 'afternoon', 'late_afternoon', 'evening'].includes(shippingInfo.timeSlot) && (
-                                <Badge variant="secondary" className="mt-1 bg-amber-100 text-amber-800 border-amber-200">
-                                  Fixed Time Slot (+₹150)
-                                </Badge>
-                              )}
-                            </div>
-                            
-                            <div>
-                              <p className="text-sm font-medium text-gray-700">Delivery Type</p>
-                              <div className="flex items-center gap-2">
-                                {shippingInfo.deliveryOption === 'gift' ? (
-                                  <>
-                                    <User className="w-4 h-4 text-primary" />
-                                    <p className="text-sm">Gift Delivery</p>
-                                  </>
-                                ) : (
-                                  <>
-                                    <User className="w-4 h-4 text-primary" />
-                                    <p className="text-sm">Self Delivery</p>
-                                  </>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Gift Card Message */}
-                          {(shippingInfo.cardMessage || shippingInfo.giftMessage) && (
-                            <>
-                              <Separator />
-                              <div className="space-y-1.5 p-3 rounded-2xl bg-rose-50/70 dark:bg-rose-950/20 border border-rose-200/60 dark:border-rose-900/30">
-                                <div className="flex items-center justify-between">
-                                  <p className="text-xs font-bold text-rose-800 dark:text-rose-300 flex items-center gap-1.5">
-                                    <span>💌 Complimentary Keepsake Card</span>
-                                  </p>
-                                  <span className="text-[10px] font-semibold text-rose-600 bg-rose-100/60 dark:bg-rose-950 px-2 py-0.5 rounded-full">
-                                    Included Free
-                                  </span>
-                                </div>
-                                <div className="flex flex-wrap gap-1.5 text-xs">
-                                  {shippingInfo.cardRecipient && (
-                                    <span className="bg-white/90 dark:bg-slate-900 px-2 py-0.5 rounded-md border border-rose-100 dark:border-rose-900/30 font-medium text-stone-800 dark:text-slate-200">
-                                      <strong className="text-rose-600">To:</strong> {shippingInfo.cardRecipient}
-                                    </span>
-                                  )}
-                                  {shippingInfo.cardSender && (
-                                    <span className="bg-white/90 dark:bg-slate-900 px-2 py-0.5 rounded-md border border-rose-100 dark:border-rose-900/30 font-medium text-stone-800 dark:text-slate-200">
-                                      <strong className="text-rose-600">From:</strong> {shippingInfo.cardSender}
-                                    </span>
-                                  )}
-                                </div>
-                                <p className="text-xs text-stone-700 dark:text-slate-300 italic pt-0.5">
-                                  "{shippingInfo.cardMessage || shippingInfo.giftMessage}"
-                                </p>
-                              </div>
-                            </>
-                          )}
-
-                          {/* Edit Button */}
-                          <div className="pt-2">
-                  <Button 
-                              variant="outline"
-                              size="sm"
-                              onClick={() => navigate('/checkout/shipping')}
-                            >
-                              Edit Details
-                  </Button>
-                          </div>
-                        </>
-                      )}
-                    </CardContent>
-                  </motion.div>
-                </AnimatePresence>
-              </Card>
-            </motion.div>
-            </div>
-            
-          {/* Right Column - Order Summary */}
-          <div className="lg:col-span-1">
-            <motion.div variants={itemVariants} className="sticky top-8">
-              <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
-                <CardHeader className="lg:hidden">
-                  <CardTitle 
-                    className="flex items-center justify-between cursor-pointer"
-                    onClick={() => setShowOrderSummary(!showOrderSummary)}
-                  >
-                    <span className="flex items-center gap-2">
-                      <Package className="w-5 h-5 text-primary" />
-                      Order Summary
-                    </span>
-                    {showOrderSummary ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                  </CardTitle>
-                </CardHeader>
-                
-                <div className="hidden lg:block">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Package className="w-5 h-5 text-primary" />
-                      Order Summary
-                    </CardTitle>
-                  </CardHeader>
-                </div>
-
-                <AnimatePresence>
-                  <motion.div
-                    initial={{ height: showOrderSummary ? 'auto' : 0 }}
-                    animate={{ height: showOrderSummary || window.innerWidth >= 1024 ? 'auto' : 0 }}
-                    className="lg:!h-auto overflow-hidden"
-                  >
-                    <CardContent className="space-y-4">
-                                             {/* Order Items */}
-                       <div className="space-y-3">
-                         {items.map((item) => (
-                           <div key={item._id} className="space-y-2">
-                             <div className="flex items-center space-x-3">
-                               <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden">
-                                 <img 
-                                   src={item.images && item.images.length > 0 ? item.images[0] : '/api/placeholder/64/64'} 
-                                   alt={item.title}
-                                   className="w-full h-full object-cover"
-                                   onError={(e) => {
-                                     e.currentTarget.src = '/api/placeholder/64/64';
-                                   }}
-                                 />
-                               </div>
-                               <div className="flex-1">
-                                 <h4 className="text-sm font-medium text-gray-900 line-clamp-1">
-                                   {item.title}
-                                 </h4>
-                                 <p className="text-sm text-gray-600">
-                                   Qty: {item.quantity}
-                                 </p>
-                               </div>
-                               <div className="text-sm font-medium">
-                                 <span className={cn(
-                                    (item.originalPrice && item.originalPrice > item.price) || (item.discount > 0) ? "text-red-600" : "text-black",
-  "font-bold"
-)}>
-  {formatPrice(convertPrice(item.price * item.quantity))}
-</span>
-                               </div>
-                             </div>
-                             
-                             {/* Customization Details */}
-                             {item.customizations && (
-                               <div className="ml-15 pl-3 border-l-2 border-purple-200 space-y-1">
-                                 {(item.customizations.isCombo || item.customizations.giftComponents) && (
-                                   <div className="inline-block text-[10px] bg-rose-50 text-rose-700 border border-rose-200 rounded px-1.5 py-0.5 font-bold uppercase tracking-wide">
-                                     🎁 Duo Combo Package
-                                   </div>
-                                 )}
-                                 {(item.customizations.cakeWeight || item.customizations.weight || item.customizations.cakeFlavor || item.customizations.flavor || item.customizations.eggless !== undefined || item.customizations.isEggless !== undefined) && (
-                                   <div className="text-xs font-semibold text-amber-900 dark:text-amber-200">
-                                     🎂 {item.customizations.cakeFlavor || item.customizations.flavor ? `${item.customizations.cakeFlavor || item.customizations.flavor} • ` : ''}{item.customizations.cakeWeight || item.customizations.weight || ''} {item.customizations.cakeShape || item.customizations.shape ? `• ${item.customizations.cakeShape || item.customizations.shape}` : ''} {item.customizations.cakeServes ? `• ${item.customizations.cakeServes}` : ''} {(item.customizations.eggless !== undefined || item.customizations.isEggless !== undefined) ? `• ${(item.customizations.eggless ?? item.customizations.isEggless) ? '🌱 100% Eggless' : '🥚 Contains Egg'}` : ''}
-                                   </div>
-                                 )}
-                                 {item.customizations.cakeMessage && (
-                                   <div className="text-xs text-stone-700 dark:text-stone-300 italic">
-                                     Message on Cake: "{item.customizations.cakeMessage}"
-                                   </div>
-                                 )}
-                                 {item.customizations.addons && item.customizations.addons.length > 0 && (
-                                   <div className="text-xs text-amber-800 dark:text-amber-300">
-                                     ✨ Add-ons: {item.customizations.addons.map((a: any) => a.name || a.title).join(', ')}
-                                   </div>
-                                 )}
-                                 {item.customizations.number && (
-                                   <div className="text-xs text-gray-600">
-                                     Number: {item.customizations.number}
-                                   </div>
-                                 )}
-                                 {(item.customizations.greetingCard || item.customizations.messageCard) && (
-                                   <div className="text-xs text-rose-800 dark:text-rose-200 bg-rose-50/70 dark:bg-rose-950/20 p-2 rounded-xl border border-rose-200/60 dark:border-rose-900/40 space-y-1">
-                                     <div className="flex items-center gap-1 font-bold text-[11px] text-rose-700 dark:text-rose-300">
-                                       <span>💌 Complimentary Card:</span>
-                                     </div>
-                                     {typeof item.customizations.greetingCard === 'object' && item.customizations.greetingCard?.message ? (
-                                       <div>
-                                         <div className="flex flex-wrap gap-1 text-[10px] font-semibold text-stone-600 dark:text-slate-300 mb-0.5">
-                                           {item.customizations.greetingCard.recipient && (
-                                             <span className="bg-white/80 dark:bg-slate-900 px-1.5 py-0.5 rounded border border-rose-100 dark:border-rose-900/30">
-                                               To: {item.customizations.greetingCard.recipient}
-                                             </span>
-                                           )}
-                                           {item.customizations.greetingCard.sender && (
-                                             <span className="bg-white/80 dark:bg-slate-900 px-1.5 py-0.5 rounded border border-rose-100 dark:border-rose-900/30">
-                                               From: {item.customizations.greetingCard.sender}
-                                             </span>
-                                           )}
-                                         </div>
-                                         <p className="italic text-[11px]">"{item.customizations.greetingCard.message}"</p>
-                                       </div>
-                                     ) : (
-                                       <p className="italic text-[11px]">"{item.customizations.messageCard}"</p>
-                                     )}
-                                   </div>
-                                 )}
-                                 {item.customizations.selectedFlowers && item.customizations.selectedFlowers.length > 0 && (
-                                   <div className="text-xs text-pink-600">
-                                     🌸 {item.customizations.selectedFlowers.map((f: any) => `${f.name}${(f.quantity || 1) > 1 ? `×${f.quantity || 1}` : ''}`).join(', ')}
-                                   </div>
-                                 )}
-                                 {item.customizations.selectedChocolates && item.customizations.selectedChocolates.length > 0 && (
-                                   <div className="text-xs text-orange-600">
-                                     🍫 {item.customizations.selectedChocolates.map((c: any) => `${c.name}${(c.quantity || 1) > 1 ? `×${c.quantity || 1}` : ''}`).join(', ')}
-                                   </div>
-                                 )}
-                                 {item.customizations.isGiftBundle && item.customizations.giftComponents && (
-                                   <div className="text-xs text-rose-600 bg-rose-50/50 border border-rose-100 rounded-lg p-2 space-y-1">
-                                     <div className="font-semibold">🎁 Selected items:</div>
-                                     {item.customizations.giftComponents.map((comp: any, idx: number) => (
-                                       <div key={idx} className="text-[11px] text-gray-600 pl-1.5 flex items-center gap-1">
-                                         <span className="w-1 h-1 rounded-full bg-rose-400 shrink-0" />
-                                         <span className="capitalize font-semibold text-rose-500">{comp.category.replace('_', ' ')}:</span>
-                                         <span className="truncate">{comp.name}</span>
-                                       </div>
-                                     ))}
-                                     {item.customizations.customMessage && (
-                                       <div className="text-[11px] text-gray-500 italic pl-1.5 pt-0.5 border-t border-rose-100/50">
-                                         Card Message: "{item.customizations.customMessage}"
-                                       </div>
-                                     )}
-                                   </div>
-                                 )}
-                                 {item.customizations.personalization && (
-                                   <div className="text-xs text-slate-700 bg-slate-50/50 border border-slate-200/40 rounded-lg p-2 space-y-1 mt-1.5">
-                                     <div className="font-semibold text-slate-800 flex items-center gap-1">
-                                       <span>✨ Customization:</span>
-                                     </div>
-                                     <div className="pl-1 text-slate-600">
-                                       <span className="font-medium text-slate-500">{item.customizations.personalization.label || 'Recipient Name'}:</span>{' '}
-                                       <span className="font-bold text-slate-800">{item.customizations.personalization.value}</span>
-                                     </div>
-                                   </div>
-                                 )}
-                               </div>
-                             )}
-                           </div>
-                         ))}
-                       </div>
-                  
-                      <Separator />
-
-                      {/* Order Totals */}
-                      <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                          <span>Subtotal</span>
-                          <span>{formatPrice(convertPrice(subtotal))}</span>
-                    </div>
-
-                         <div className="flex justify-between text-sm">
-                          <span>
-                            {shippingInfo?.timeSlot === 'midnight' ? 'Midnight Delivery Fee' : 'Standard Delivery Fee'}
-                          </span>
-                          <span className="font-semibold text-right">
-                            {shippingInfo?.isFirstOrderFreeDelivery ? (
-                              <span className="flex items-center gap-1.5 justify-end">
-                                <span className="text-gray-400 line-through text-xs">
-                                  {formatPrice(convertPrice(shippingInfo.timeSlot === 'midnight' ? 300 : 150))}
-                                </span>
-                                <span className="text-emerald-600 font-bold text-xs bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 animate-pulse whitespace-nowrap">
-                                  FREE
-                                </span>
-                              </span>
-                            ) : (
-                              formatPrice(convertPrice(deliveryFee))
-                            )}
-                          </span>
-                        </div>
-                        
-                        {appliedPromoCode && (
-                          <div className="flex justify-between text-sm text-green-600">
-                            <span>Promo Discount ({appliedPromoCode.code})</span>
-                            <span>-{formatPrice(convertPrice(promoDiscount))}</span>
-                    </div>
-                        )}
-                        
-                        <Separator />
-                        
-                        <div className="flex justify-between text-lg font-semibold">
-                          <span>Total</span>
-                          <span>{formatPrice(convertPrice(orderTotal))}</span>
-                    </div>
-                  </div>
-
-                      {/* Security Badge */}
-                      <div className="bg-green-50 p-3 rounded-lg">
-                        <div className="flex items-center gap-2 text-green-700 text-sm font-medium mb-1">
-                          <Shield className="w-4 h-4" />
-                          Secure Payment
-                        </div>
-                        <p className="text-green-600 text-xs">
-                          Protected by 256-bit SSL encryption
-                        </p>
-                  </div>
-                </CardContent>
-                  </motion.div>
-                </AnimatePresence>
-              </Card>
-            </motion.div>
-          </div>
+          <nav aria-label="Checkout progress" className="mx-auto max-w-md">
+            <ol className="flex items-center justify-between">
+              <li className="flex items-center gap-2">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#3F6349] text-white">
+                  <Check className="h-3.5 w-3.5" />
+                </span>
+                <span className="text-xs sm:text-sm font-medium text-[#3F6349]">Shipping</span>
+              </li>
+              <li className="h-[2px] flex-1 mx-2 sm:mx-3 rounded-full bg-[#BE185D]" aria-hidden="true" />
+              <li className="flex items-center gap-2">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#BE185D] text-xs font-bold text-white shadow-sm">
+                  2
+                </span>
+                <span className="text-xs sm:text-sm font-semibold text-[#BE185D]">Payment</span>
+              </li>
+              <li className="h-[2px] flex-1 mx-2 sm:mx-3 rounded-full bg-[#E5DDD5]" aria-hidden="true" />
+              <li className="flex items-center gap-2">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full border border-[#DFD5CA] bg-white text-xs font-semibold text-[#7A7168]">
+                  3
+                </span>
+                <span className="text-xs sm:text-sm font-medium text-[#7A7168]">Confirmed</span>
+              </li>
+            </ol>
+          </nav>
         </div>
-      </motion.div>
-      
-      <Footer />
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-start lg:gap-8">
+          {/* Left Column */}
+          <div className="space-y-5 lg:col-span-7 xl:col-span-8 min-w-0">
+            {/* Delivery Summary Review Card */}
+            {shippingInfo && (
+              <section className="rounded-2xl border border-[#EDE5DD] bg-white p-4 sm:p-5 shadow-[0_4px_20px_rgba(30,27,24,0.04)] space-y-3.5">
+                <div className="flex items-center justify-between border-b border-[#F3ECE5] pb-3">
+                  <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#8A8076]">
+                    Delivering To
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/checkout/shipping')}
+                    className="text-xs font-semibold text-[#BE185D] hover:underline"
+                  >
+                    Change
+                  </button>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#FFF0F5] text-[#BE185D]">
+                    <MapPin className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0 flex-1 space-y-1 text-xs sm:text-sm text-[#5D544C]">
+                    <p className="font-semibold text-[#1E1B18]">
+                      {shippingInfo.fullName || `${shippingInfo.firstName} ${shippingInfo.lastName}`.trim()}
+                    </p>
+                    <p className="break-words">
+                      {shippingInfo.formattedAddress ||
+                        [shippingInfo.apartment, shippingInfo.address, shippingInfo.city, shippingInfo.state, shippingInfo.zipCode]
+                          .filter(Boolean)
+                          .join(', ')}
+                    </p>
+                    {shippingInfo.phone && <p className="font-medium text-[#2E2824]">+91 {shippingInfo.phone}</p>}
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2 pt-2 border-t border-[#F3ECE5] text-xs">
+                  {parsedDeliveryDate && isValid(parsedDeliveryDate) && (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FAF8F5] px-3 py-1 font-medium text-[#3C342E] border border-[#EDE5DD]">
+                      <Calendar className="h-3.5 w-3.5 text-[#BE185D]" />
+                      {format(parsedDeliveryDate, 'EEE, dd MMM yyyy')}
+                    </span>
+                  )}
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FAF8F5] px-3 py-1 font-medium text-[#3C342E] border border-[#EDE5DD]">
+                    <Clock className="h-3.5 w-3.5 text-[#BE185D]" />
+                    {displaySlot}
+                  </span>
+                  {shippingInfo.giftPackaging && (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FFF7F9] px-3 py-1 font-semibold text-[#BE185D] border border-[#F5CBD8]">
+                      <Gift className="h-3.5 w-3.5" />
+                      Signature Gift Bag
+                    </span>
+                  )}
+                </div>
+              </section>
+            )}
+
+            {/* Payment Method Selector */}
+            <PaymentMethodCard
+              selectedMethod={paymentMethod}
+              onSelectMethod={setPaymentMethod}
+            />
+
+            {/* Coupon Code */}
+            <section className="rounded-2xl border border-[#EDE5DD] bg-white p-4 sm:p-5 shadow-[0_4px_20px_rgba(30,27,24,0.04)]">
+              <div className="mb-3 flex items-center gap-2">
+                <Tag className="h-4 w-4 text-[#BE185D]" />
+                <span className="text-xs font-bold uppercase tracking-[0.12em] text-[#8A8076]">
+                  Have a Coupon Code?
+                </span>
+              </div>
+              <PromoCodeInput
+                orderAmount={subtotal + deliveryFee + giftPackagingFee}
+                orderItems={items}
+                userId={user?.id}
+                onPromoCodeApplied={handlePromoCodeApplied}
+                onPromoCodeRemoved={handlePromoCodeRemoved}
+                appliedPromoCode={appliedPromoCode}
+                disabled={isProcessing}
+              />
+            </section>
+
+            {paymentError && (
+              <div className="flex items-start gap-2.5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs sm:text-sm text-rose-700">
+                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold">Payment Error</p>
+                  <p className="mt-0.5">{paymentError}</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Right Column: Sticky Order Summary */}
+          <aside className="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-24">
+            <div className="rounded-3xl border border-[#EDE5DD] bg-white p-5 sm:p-6 shadow-[0_12px_36px_-12px_rgba(30,27,24,0.08)] space-y-5">
+              <div className="flex items-center justify-between border-b border-[#F3ECE5] pb-3.5">
+                <h2 className="font-['Playfair_Display'] text-lg sm:text-xl font-semibold text-[#1E1B18] flex items-center gap-2">
+                  <Package className="h-4 w-4 text-[#BE185D]" />
+                  Order Summary
+                </h2>
+                <span className="rounded-full bg-[#FAF8F5] px-2.5 py-0.5 text-xs font-semibold text-[#5D544C] border border-[#EDE5DD]">
+                  {itemCount} items
+                </span>
+              </div>
+
+              <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
+                {items.map((item) => {
+                  const rawImg = (Array.isArray(item.images) && item.images[0]) || item.image || '/placeholder.svg';
+                  const src = rawImg.startsWith('/') ? rawImg : getImageUrl(rawImg, { width: 140, height: 140, crop: 'fill' });
+                  return (
+                    <div key={item._id || item.id} className="flex items-center gap-3">
+                      <img
+                        src={src}
+                        alt={item.title}
+                        className="h-12 w-12 shrink-0 rounded-xl object-cover bg-[#F5F0EA] border border-[#EDE5DD]"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs sm:text-sm font-medium text-[#1E1B18] line-clamp-1">
+                          {item.title}
+                        </p>
+                        <p className="text-xs text-[#7A7168]">Qty: {item.quantity}</p>
+                      </div>
+                      <span className="text-xs sm:text-sm font-semibold text-[#1E1B18] tabular-nums shrink-0">
+                        {formatPrice(convertPrice(item.price * item.quantity))}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <Separator className="bg-[#EFE8E0]" />
+
+              <div className="space-y-2.5">
+                {priceBreakdownLines.map((line, idx) => (
+                  <div key={idx} className="flex items-center justify-between text-sm">
+                    <span className="text-[#5D544C]">{line.label}</span>
+                    <span
+                      className={cn(
+                        'font-semibold tabular-nums',
+                        line.isDiscount || line.isFree ? 'text-[#2E573A]' : 'text-[#1E1B18]'
+                      )}
+                    >
+                      {line.isFree
+                        ? 'FREE'
+                        : line.isDiscount
+                        ? `-${formatPrice(convertPrice(Math.abs(line.amount)))}`
+                        : formatPrice(convertPrice(line.amount))}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <Separator className="bg-[#EFE8E0]" />
+
+              <div className="flex items-baseline justify-between">
+                <span className="text-base font-bold text-[#1E1B18]">Total Payable</span>
+                <span className="text-2xl font-bold text-[#1E1B18] tabular-nums">
+                  {formatPrice(convertPrice(orderTotal))}
+                </span>
+              </div>
+
+              <Button
+                type="button"
+                disabled={isProcessing || !isRazorpayLoaded}
+                onClick={handlePayNow}
+                className="hidden lg:flex h-12 w-full rounded-xl bg-[#BE185D] text-sm font-bold tracking-wide text-white shadow-[0_8px_22px_-8px_rgba(190,24,93,0.55)] hover:bg-[#9D174D]"
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Processing Payment...
+                  </>
+                ) : (
+                  <>
+                    <Lock className="mr-2 h-4 w-4" />
+                    PAY {formatPrice(convertPrice(orderTotal))} NOW
+                  </>
+                )}
+              </Button>
+
+              <p className="flex items-center justify-center gap-1.5 text-[11px] text-[#7A7168]">
+                <ShieldCheck className="h-3.5 w-3.5 text-[#3F6349]" />
+                Secured & Verified by Razorpay
+              </p>
+            </div>
+          </aside>
+        </div>
+      </main>
+
+      <MobileCheckoutBar
+        totalAmount={orderTotal}
+        ctaLabel="PAY & PLACE ORDER"
+        isLoading={isProcessing}
+        disabled={!isRazorpayLoaded}
+        breakdownLines={priceBreakdownLines}
+        onPlaceOrder={handlePayNow}
+      />
+
+      <div className="hidden lg:block">
+        <Footer />
+      </div>
     </div>
   );
 };

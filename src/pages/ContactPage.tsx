@@ -177,7 +177,7 @@ Sent from Spring Blossoms Florist Website`;
       </div>
       
       <motion.div 
-        className="relative flex-1 pt-24 z-10"
+        className="relative flex-1 pt-4 sm:pt-8 z-10"
         initial="hidden"
         animate="visible"
         variants={containerVariants}

@@ -78,7 +78,7 @@ const AboutPage: React.FC = () => {
       </div>
       
       <motion.div 
-        className="relative flex-1 pt-24 z-10"
+        className="relative flex-1 pt-4 sm:pt-8 z-10"
         initial="hidden"
         animate="visible"
         variants={containerVariants}
@@ -86,27 +86,21 @@ const AboutPage: React.FC = () => {
         {/* Hero Section */}
         <motion.section 
           variants={itemVariants}
-          className="px-6 md:px-8 py-16 md:py-24"
+          className="px-4 sm:px-6 md:px-8 py-8 sm:py-14 md:py-20"
         >
           <div className="max-w-7xl mx-auto text-center">
             <div className="relative">
-              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-4">
-                <div className="text-4xl text-yellow-400">✨</div>
-              </div>
-              <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-gray-800 mb-6 pt-8 leading-tight">
+              <h1 className="text-3xl sm:text-4xl md:text-6xl font-black text-gray-800 mb-4 sm:mb-6 leading-tight break-words">
                 About <span className="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">Spring Blossoms Florist</span>
               </h1>
-              <div className="absolute top-0 right-1/2 transform translate-x-32 -translate-y-4">
-                <div className="text-4xl text-yellow-400">✨</div>
-              </div>
             </div>
-            <p className="text-xl md:text-2xl text-gray-600 max-w-4xl mx-auto leading-relaxed mb-12">
+            <p className="text-base sm:text-lg md:text-2xl text-gray-600 max-w-4xl mx-auto leading-relaxed mb-8 sm:mb-12">
               Leading flower delivery in Hyderabad and online bouquet shop India. We're passionate about bringing the freshest flowers 
               and arrangements to your special moments, offering midnight flower delivery, roses for anniversary, and birthday flowers online.
             </p>
             
             {/* Quick Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 md:gap-8 max-w-4xl mx-auto">
               <motion.div 
                 className="text-center bg-white/50 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20"
                 whileHover={{ scale: 1.05 }}

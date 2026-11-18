@@ -2036,12 +2036,12 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
               </div>
 
               {isLoading ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 gap-8">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 gap-2.5 sm:gap-4 md:gap-6">
                   {[...Array(6)].map((_, i) => (
-                    <div key={i} className="bg-white p-4 rounded-xl shadow-sm animate-pulse">
-                      <div className="w-full h-48 bg-gray-200 rounded-lg"></div>
-                      <div className="mt-4 h-6 bg-gray-200 rounded w-3/4"></div>
-                      <div className="mt-2 h-4 bg-gray-200 rounded w-1/2"></div>
+                    <div key={i} className="bg-white p-3 sm:p-4 rounded-2xl border border-[#EDE5DD] animate-pulse">
+                      <div className="w-full aspect-[4/5] bg-[#EFE9E2] rounded-xl"></div>
+                      <div className="mt-3 h-4 bg-[#EFE9E2] rounded w-3/4"></div>
+                      <div className="mt-2 h-3 bg-[#F4EFE9] rounded w-1/2"></div>
                     </div>
                   ))}
                 </div>

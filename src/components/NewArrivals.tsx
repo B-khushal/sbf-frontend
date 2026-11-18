@@ -322,8 +322,8 @@ export const NewArrivals = ({ products, loading, onAddToCart }: NewArrivalsProps
                     exit={{ opacity: 0, scale: 0.9 }}
                     transition={{ duration: 0.5 }}
                     className={cn(
-                      "min-w-[260px] xs:min-w-[300px] md:min-w-[320px] 2xl:min-w-[340px] 3xl:min-w-[360px] max-w-[380px] flex-shrink-0 snap-start",
-                      idx % 2 === 1 && "md:translate-y-10" // Staggered cards layout
+                      "w-[186px] min-[400px]:w-[214px] sm:w-[260px] md:w-[295px] 2xl:w-[325px] flex-shrink-0 snap-start",
+                      idx % 2 === 1 && "md:translate-y-8" // Subtle staggered editorial cards on desktop
                     )}
                   >
                     <LuxuryProductCard

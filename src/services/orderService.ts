@@ -101,9 +101,47 @@ export interface Order {
 
 export interface DeliveryCalculation {
   deliveryCharge: number;
+  baseDeliveryFee?: number;
+  slotExtraCharge?: number;
+  giftPackagingFee?: number;
+  giftPackagingPrice?: number;
   isFirstOrderFreeDelivery: boolean;
   standardFee: number;
+  serviceable?: boolean;
+  serviceArea?: string | null;
 }
+
+export interface ServiceabilitySlot {
+  id: string;
+  label: string;
+  time: string;
+  extraCharge: number;
+  cutoffHour: number;
+  enabled: boolean;
+  availableToday: boolean;
+  description?: string;
+}
+
+export interface PincodeServiceability {
+  serviceable: boolean;
+  pincode: string;
+  area?: string;
+  city?: string;
+  state?: string;
+  sameDayAvailable?: boolean;
+  estimatedDelivery?: string;
+  message?: string;
+  slots?: ServiceabilitySlot[];
+  giftPackagingPrice?: number;
+  freeDeliveryThreshold?: number;
+  firstOrderFreeEnabled?: boolean;
+}
+
+export const checkPincodeServiceability = async (pincode: string): Promise<PincodeServiceability> => {
+  const cleanPin = String(pincode || '').replace(/\D/g, '').slice(0, 6);
+  const response = await api.get(`/orders/serviceability/${cleanPin}`);
+  return response.data;
+};
 
 export const calculateDeliveryFee = async (data: {
   subtotal: number;
@@ -111,6 +149,8 @@ export const calculateDeliveryFee = async (data: {
   email?: string;
   phone?: string;
   userId?: string;
+  pincode?: string;
+  giftPackaging?: boolean;
 }): Promise<DeliveryCalculation> => {
   const response = await api.post('/orders/calculate-delivery', data);
   return response.data;

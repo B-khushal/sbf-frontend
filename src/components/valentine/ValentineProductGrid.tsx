@@ -84,7 +84,7 @@ const ValentineProductGrid: React.FC<ValentineProductGridProps> = ({
         </motion.div>
 
         {/* Product Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4 md:gap-6">
           {products.map((product, index) => {
             const discountedPrice = getProductEffectivePrice(product as any);
 
@@ -95,53 +95,55 @@ const ValentineProductGrid: React.FC<ValentineProductGridProps> = ({
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: index * 0.05 }}
-                className="valentine-product-card valentine-glass-dark group"
+                className="valentine-product-card valentine-glass-dark group flex flex-col h-full overflow-hidden rounded-2xl"
               >
                 {/* Image */}
                 <div
-                  className="relative aspect-square overflow-hidden cursor-pointer"
+                  className="relative aspect-[4/5] overflow-hidden cursor-pointer"
                   onClick={() => navigate(`/valentine-product/${product._id}`)}
                 >
                   <img
                     src={getImageUrl(product.images?.[0])}
                     alt={product.title}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                     loading="lazy"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
                   {/* Badges */}
                   {showBadges && (
-                    <div className="absolute top-3 left-3 flex flex-col gap-1.5">
+                    <div className="absolute top-2 left-2 sm:top-3 sm:left-3 flex flex-col gap-1">
                       {discountedPrice < Number(product.price) && (
-                        <span className="px-2 py-1 rounded-lg text-[10px] font-bold uppercase bg-rose-500 text-white shadow-lg">
+                        <span className="px-2 py-0.5 rounded-lg text-[9px] sm:text-[10px] font-bold uppercase bg-rose-500 text-white shadow-lg">
                           -{Math.round(((Number(product.price) - discountedPrice) / Number(product.price)) * 100)}% OFF
                         </span>
                       )}
                       {product.isValentineExclusive && (
-                        <span className="px-2 py-1 rounded-lg text-[10px] font-bold uppercase bg-gradient-to-r from-rose-600 to-pink-500 text-white shadow-lg flex items-center gap-1">
+                        <span className="px-2 py-0.5 rounded-lg text-[9px] sm:text-[10px] font-bold uppercase bg-gradient-to-r from-rose-600 to-pink-500 text-white shadow-lg flex items-center gap-1">
                           <Heart className="w-2.5 h-2.5" fill="currentColor" /> Exclusive
                         </span>
                       )}
                     </div>
                   )}
 
-                  {/* Quick Add Button */}
+                  {/* Quick Add Button (visible on touch mobile, hover-reveal on desktop) */}
                   <button
+                    type="button"
+                    aria-label={`Add ${product.title} to cart`}
                     onClick={(e) => {
                       e.stopPropagation();
                       handleAddToCart(product);
                     }}
-                    className="absolute bottom-3 right-3 w-10 h-10 rounded-full bg-rose-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-rose-600 hover:scale-110 shadow-lg"
+                    className="absolute bottom-2.5 right-2.5 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-rose-500 text-white flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 hover:bg-rose-600 active:scale-95 shadow-lg"
                   >
                     <ShoppingCart className="w-4 h-4" />
                   </button>
                 </div>
 
                 {/* Content */}
-                <div className="p-3 md:p-4">
+                <div className="p-2.5 sm:p-3.5 md:p-4 flex flex-col flex-1 justify-between min-w-0">
                   <h3
-                    className="text-sm md:text-base font-semibold text-white mb-1 line-clamp-2 cursor-pointer hover:text-rose-300 transition-colors"
+                    className="text-xs sm:text-sm md:text-base font-semibold text-white mb-1 line-clamp-2 min-h-[2.5em] cursor-pointer hover:text-rose-300 transition-colors break-words"
                     onClick={() => navigate(`/valentine-product/${product._id}`)}
                   >
                     {product.title}

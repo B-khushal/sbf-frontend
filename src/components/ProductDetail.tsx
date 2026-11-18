@@ -1477,24 +1477,28 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                         </>
                       )}
 
-                      {/* Left/Right Controls (Mobile and desktop fallback) */}
+                      {/* Left/Right Controls (Visible on touch mobile, hover-reveal on desktop) */}
                       {galleryItems.length > 1 && (
-                        <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 flex justify-between pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
+                        <div className="absolute inset-x-2.5 sm:inset-x-4 top-1/2 -translate-y-1/2 flex justify-between pointer-events-none opacity-95 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 z-20">
                           <button
+                            type="button"
+                            aria-label="Previous image"
                             onClick={(e) => {
                               e.stopPropagation();
                               prevImage();
                             }}
-                            className="w-10 h-10 rounded-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md flex items-center justify-center text-slate-800 dark:text-slate-250 shadow-sm pointer-events-auto hover:bg-white dark:hover:bg-slate-900 hover:scale-105 active:scale-95 transition-all"
+                            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/85 dark:bg-slate-900/85 backdrop-blur-md flex items-center justify-center text-slate-800 dark:text-slate-200 shadow-sm pointer-events-auto hover:bg-white dark:hover:bg-slate-900 active:scale-95 transition-all"
                           >
                             <ChevronLeft size={20} />
                           </button>
                           <button
+                            type="button"
+                            aria-label="Next image"
                             onClick={(e) => {
                               e.stopPropagation();
                               nextImage();
                             }}
-                            className="w-10 h-10 rounded-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md flex items-center justify-center text-slate-800 dark:text-slate-250 shadow-sm pointer-events-auto hover:bg-white dark:hover:bg-slate-900 hover:scale-105 active:scale-95 transition-all"
+                            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/85 dark:bg-slate-900/85 backdrop-blur-md flex items-center justify-center text-slate-800 dark:text-slate-200 shadow-sm pointer-events-auto hover:bg-white dark:hover:bg-slate-900 active:scale-95 transition-all"
                           >
                             <ChevronRight size={20} />
                           </button>
@@ -1505,9 +1509,9 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
                 </div>
               </div>
 
-              {/* 3. Horizontal Thumbnail Strip (Mobile, below image) */}
+              {/* 3. Horizontal Thumbnail Strip (Mobile, below image — justify-start prevents left-clipping) */}
               {galleryItems.length > 1 && (
-                <div className="flex md:hidden gap-2 overflow-x-auto no-scrollbar py-2 col-span-1 justify-center px-1">
+                <div className="flex md:hidden gap-2 overflow-x-auto no-scrollbar py-2 col-span-1 justify-start px-1">
                   {galleryItems.map((item, index) => {
                     const isVideo = item.type === 'video';
                     const thumbUrl = isVideo 
@@ -1555,8 +1559,8 @@ const ProductDetail = ({ product, onAddToCart, onReviewSubmit }: ProductDetailPr
             {/* 1. Product Name */}
             <div>
               <h1
-                className="font-extrabold tracking-tight text-slate-900 dark:text-slate-100 font-serif"
-                style={!isMobile ? { fontSize: 'clamp(2.5rem, 3vw, 3.5rem)', lineHeight: '1.05', maxWidth: '100%', wordBreak: 'normal' } : undefined}
+                className="text-2xl sm:text-3xl md:text-4xl font-extrabold leading-tight tracking-tight text-slate-900 dark:text-slate-100 font-serif break-words"
+                style={!isMobile ? { fontSize: 'clamp(2.25rem, 3vw, 3.25rem)', lineHeight: '1.08', maxWidth: '100%', wordBreak: 'normal' } : undefined}
               >
                 {product.title}
               </h1>

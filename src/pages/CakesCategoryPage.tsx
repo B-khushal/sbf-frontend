@@ -477,20 +477,20 @@ export const CakesCategoryPage: React.FC = () => {
           {/* Product Grid Area */}
           <section className="lg:col-span-3 2xl:col-span-4 3xl:col-span-5">
             {loading ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 gap-4 sm:gap-6 2xl:gap-7">
+              <div className="grid grid-cols-2 md:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 gap-2.5 sm:gap-5 2xl:gap-6">
                 {Array.from({ length: 6 }).map((_, idx) => (
                   <div
                     key={`skel-${idx}`}
-                    className="h-80 rounded-2xl bg-white border border-amber-100 p-4 animate-pulse space-y-3"
+                    className="h-72 sm:h-80 rounded-2xl bg-white border border-amber-100 p-3 sm:p-4 animate-pulse space-y-3"
                   >
-                    <div className="w-full h-44 bg-amber-50 rounded-xl" />
+                    <div className="w-full aspect-[4/5] bg-amber-50 rounded-xl" />
                     <div className="h-4 bg-amber-100 rounded w-3/4" />
                     <div className="h-3 bg-amber-50 rounded w-1/2" />
                   </div>
                 ))}
               </div>
             ) : filteredProducts.length > 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 gap-3.5 sm:gap-5 2xl:gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 gap-2.5 sm:gap-5 2xl:gap-6">
                 {filteredProducts.map((cake) => (
                   <CakeProductCard key={cake._id || cake.id} product={cake} className="h-full" />
                 ))}
@@ -535,7 +535,7 @@ export const CakesCategoryPage: React.FC = () => {
                   </Link>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-5">
                   {comboProducts.slice(0, 3).map((combo) => (
                     <CakeComboCard key={combo._id || combo.id} combo={combo} className="h-full" />
                   ))}

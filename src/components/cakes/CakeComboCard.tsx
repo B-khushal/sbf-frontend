@@ -111,7 +111,7 @@ export const CakeComboCard: React.FC<CakeComboCardProps> = ({ combo, className }
       )}
     >
       {/* Product Image Section */}
-      <div className="relative aspect-square w-full overflow-hidden bg-gradient-to-br from-rose-50/50 via-amber-50/20 to-white flex-shrink-0">
+      <div className="relative aspect-[4/5] w-full overflow-hidden bg-[#F5F0EA] flex-shrink-0">
         {/* Badges Overlay */}
         <div className="absolute top-2.5 left-2.5 z-20 flex flex-col gap-1 items-start">
           <span className="backdrop-blur-md bg-white/95 text-rose-900 border border-rose-200/80 text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-2xs flex items-center gap-1">
@@ -164,7 +164,7 @@ export const CakeComboCard: React.FC<CakeComboCardProps> = ({ combo, className }
       </div>
 
       {/* Content Section */}
-      <div className="p-3 xs:p-3.5 sm:p-4 flex flex-col justify-between flex-1 bg-white">
+      <div className="p-2.5 sm:p-3.5 flex flex-col justify-between flex-1 bg-white min-w-0">
         <div className="space-y-1.5 flex flex-col">
           {/* Tagline */}
           <div className="flex items-center gap-1 text-[10px] font-bold text-rose-600 tracking-wide line-clamp-1">

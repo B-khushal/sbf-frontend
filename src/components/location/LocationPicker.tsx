@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Navigation, Search, Check, AlertTriangle, ArrowLeft } from 'lucide-react';
+import { MapPin, Navigation, Search, Check, AlertTriangle, ArrowLeft, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -53,6 +53,17 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
   const [state, setState] = useState(initialLocation?.state || 'Telangana');
   const [country, setCountry] = useState(initialLocation?.country || 'India');
 
+  useEffect(() => {
+    if (!onCancel) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onCancel();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onCancel]);
+
   // Perform reverse geocoding on coordinates
   const triggerReverseGeocode = async (latitude: number, longitude: number) => {
     try {
@@ -75,7 +86,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
         title: 'Address Located',
         description: 'Delivery details have been updated.',
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Reverse geocode error:', error);
       toast({
         title: 'Location Detail Error',
@@ -93,10 +104,11 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
       setLng(coords.longitude);
       setPickerState('map');
       await triggerReverseGeocode(coords.latitude, coords.longitude);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Unable to retrieve your current location.';
       toast({
         title: 'Geolocation Error',
-        description: err.message || 'Unable to retrieve your current location.',
+        description: msg,
         variant: 'destructive',
       });
     }
@@ -171,7 +183,17 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6">
       {pickerState === 'select' ? (
-        <Card className="border border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md shadow-xl rounded-3xl overflow-hidden p-6 sm:p-8 animate-in fade-in duration-300">
+        <Card className="relative border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl rounded-3xl overflow-hidden p-6 sm:p-8 animate-in fade-in duration-300">
+          {onCancel && (
+            <button
+              type="button"
+              onClick={onCancel}
+              aria-label="Close map picker"
+              className="absolute top-4 right-4 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-[#E5DDD5] bg-white text-[#4A423B] shadow-sm transition-colors hover:border-[#BE185D] hover:bg-[#FFF7F9] hover:text-[#BE185D]"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
           <div className="text-center max-w-lg mx-auto space-y-3 mb-8">
             <div className="inline-flex p-3 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-2xl border border-emerald-100/50">
               <MapPin className="h-6 w-6" />
@@ -234,7 +256,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
       ) : (
         <Card className="border border-slate-200/80 dark:border-slate-850 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-xl rounded-3xl overflow-hidden animate-in fade-in duration-300">
           {/* Header */}
-          <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-850 flex items-center justify-between">
+          <div className="px-4 sm:px-5 py-3.5 border-b border-slate-100 dark:border-slate-850 flex items-center justify-between gap-3">
             <button
               type="button"
               onClick={() => setPickerState('select')}
@@ -242,9 +264,21 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
             >
               <ArrowLeft className="h-4 w-4" /> Back to options
             </button>
-            <span className="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-450 flex items-center gap-1">
-              <Check className="h-3.5 w-3.5" /> Interactive Map Active
-            </span>
+            <div className="flex items-center gap-3">
+              <span className="hidden sm:flex text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-450 items-center gap-1">
+                <Check className="h-3.5 w-3.5" /> Interactive Map Active
+              </span>
+              {onCancel && (
+                <button
+                  type="button"
+                  onClick={onCancel}
+                  aria-label="Close map picker"
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-[#E5DDD5] bg-white text-[#4A423B] shadow-sm transition-colors hover:border-[#BE185D] hover:bg-[#FFF7F9] hover:text-[#BE185D]"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12">

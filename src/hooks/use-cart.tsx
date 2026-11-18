@@ -197,7 +197,14 @@ export const useCart = create<CartState>((set, get) => ({
   removeFromCart: async (productId) => {
     const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
     if (!isAuthenticated) {
-      throw new Error('Please log in to manage your cart');
+      const nextItems = get().items.filter(
+        (i) => i._id !== productId && i.id !== productId && i.productId !== productId
+      );
+      set({ items: nextItems });
+      const userId = getCurrentUserId();
+      saveUserCart(nextItems, userId);
+      marketingTracker.trackRemoveFromCart(productId);
+      return;
     }
 
     set({ isLoading: true });
@@ -227,13 +234,21 @@ export const useCart = create<CartState>((set, get) => ({
   },
 
   updateItemQuantity: async (itemId, quantity) => {
-    const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
-    if (!isAuthenticated) {
-      throw new Error('Please log in to manage your cart');
-    }
-
     if (quantity <= 0) {
       await get().removeItem(itemId);
+      return;
+    }
+
+    const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+    if (!isAuthenticated) {
+      const nextItems = get().items.map((i) =>
+        i._id === itemId || i.id === itemId || i.productId === itemId
+          ? { ...i, quantity }
+          : i
+      );
+      set({ items: nextItems });
+      const userId = getCurrentUserId();
+      saveUserCart(nextItems, userId);
       return;
     }
 
@@ -298,7 +313,10 @@ export const useCart = create<CartState>((set, get) => ({
   clearCart: async () => {
     const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
     if (!isAuthenticated) {
-      throw new Error('Please log in to manage your cart');
+      set({ items: [] });
+      const userId = getCurrentUserId();
+      saveUserCart([], userId);
+      return;
     }
 
     set({ isLoading: true });

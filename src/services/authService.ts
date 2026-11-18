@@ -15,15 +15,19 @@ interface RegisterData {
 
 export interface SavedAddress {
   id: string;
+  fullName?: string;
   firstName: string;
   lastName: string;
   address: string;
+  street?: string;
   apartment?: string;
   city: string;
   state: string;
   zipCode: string;
   phone: string;
+  alternatePhone?: string;
   email?: string;
+  type?: 'home' | 'work' | 'other';
   notes?: string;
   cardMessage?: string;
   deliverySpecialInstructions?: string;
@@ -41,8 +45,8 @@ export interface SavedAddress {
   receiverZipCode?: string;
   
   // Mappls location details
-  latitude?: number;
-  longitude?: number;
+  latitude?: number | null;
+  longitude?: number | null;
   formattedAddress?: string;
   country?: string;
   pincode?: string;
@@ -50,6 +54,8 @@ export interface SavedAddress {
   houseNo?: string;
   floor?: string;
   deliveryInstructions?: string;
+  serviceable?: boolean;
+  serviceArea?: string | null;
 }
 
 interface UserProfile {

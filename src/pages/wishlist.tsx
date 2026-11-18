@@ -1,16 +1,15 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { useInView } from "react-intersection-observer";
-import { Trash2, ShoppingBag, RefreshCw, Heart, Sparkles, ArrowRight } from "lucide-react";
+import React, { useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { ArrowRight, Heart, RefreshCw, ShoppingBag, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import useCart from "@/hooks/use-cart";
 import useWishlist from "@/hooks/use-wishlist";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import ProtectedImage from "@/components/ui/ProtectedImage";
+import { getImageUrl } from "@/config";
 import { promptLoginForAddToCart } from "@/utils/cartAuthHelper";
-
 
 interface WishlistItem {
   id: string;
@@ -19,79 +18,53 @@ interface WishlistItem {
   price: number;
 }
 
-// Animation variants
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.2,
-      delayChildren: 0.1
-    }
-  }
-};
-
-const itemVariants = {
-  hidden: { y: 40, opacity: 0 },
-  visible: {
-    y: 0,
-    opacity: 1,
-    transition: {
-      duration: 0.6,
-      ease: [0.25, 0.46, 0.45, 0.94] as const
-    }
-  }
-};
-
-const WishlistPage = () => {
+const WishlistPage: React.FC = () => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const { items, isLoading, loadWishlist, removeItem } = useWishlist();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { formatPrice, convertPrice } = useCurrency();
 
-  // Debug logging
-  console.log('WishlistPage render:', { items, isLoading, user });
-
-  // Intersection observer for animations
-  const [contentRef, contentInView] = useInView({
-    triggerOnce: true,
-    threshold: 0.2
-  });
-
-  // Load wishlist when component mounts or user changes
   useEffect(() => {
-    console.log('WishlistPage useEffect triggered:', { user });
     loadWishlist();
-  }, [user]); // Remove loadWishlist from dependencies to prevent infinite loop
+  }, [user]);
 
-  // Manual refresh function
   const handleManualRefresh = async () => {
-    console.log('Manual refresh triggered');
     try {
       await loadWishlist();
-    } catch (error) {
-      console.error('Manual refresh failed:', error);
+    } catch {
       toast({
         title: "Refresh Failed",
         description: "Failed to refresh wishlist",
-        type: "error",
-        duration: 3000,
+        variant: "destructive",
       });
     }
   };
 
-  // Move item to cart and remove from wishlist
+  const removeFromWishlist = async (id: string) => {
+    try {
+      await removeItem(id);
+      toast({
+        title: "Removed from Wishlist",
+        description: "Item has been removed from your wishlist.",
+      });
+    } catch {
+      toast({
+        title: "Error",
+        description: "Failed to remove item from wishlist",
+        variant: "destructive",
+      });
+    }
+  };
+
   const moveToCart = async (item: WishlistItem) => {
     try {
-      // Validate item data
-      if (!item.id || !item.title || typeof item.price !== 'number') {
-        console.error('Invalid item data for cart:', item);
+      if (!item.id || !item.title || typeof item.price !== "number") {
         toast({
           title: "Error",
           description: "Invalid item data",
-          type: "error",
-          duration: 3000,
+          variant: "destructive",
         });
         return;
       }
@@ -105,272 +78,183 @@ const WishlistPage = () => {
         originalPrice: item.price,
         image: item.image,
         quantity: 1,
-        category: '',
+        category: "",
         discount: 0,
         images: [item.image],
-        description: '',
+        description: "",
         details: [],
         careInstructions: [],
         isNewArrival: false,
-        isFeatured: false
+        isFeatured: false,
       };
-      
+
       if (!user) {
-        promptLoginForAddToCart(navigate, cartItem, '/wishlist');
+        promptLoginForAddToCart(navigate, cartItem, "/wishlist");
         return;
       }
 
-      addToCart(cartItem);
-      
-      await removeFromWishlist(item.id);
+      await addToCart(cartItem);
+      await removeItem(item.id);
       toast({
         title: "Added to Cart",
         description: `${item.title} has been moved to your cart`,
-        type: "cart",
-        image: item.image,
-        duration: 3000,
       });
-      
-      // Redirect to cart page after successful addition
-      setTimeout(() => {
-        navigate('/cart');
-      }, 1000);
-    } catch (error) {
-      console.error("Error moving item to cart:", error);
+      navigate("/cart");
+    } catch {
       toast({
         title: "Error",
         description: "Failed to move item to cart",
-        type: "error",
-        duration: 3000,
-      });
-    }
-  };
-
-  // Remove item from wishlist
-  const removeFromWishlist = async (id: string) => {
-    try {
-      if (!id) {
-        console.error('Invalid item ID for removal:', id);
-        toast({
-          title: "Error",
-          description: "Invalid item ID",
-          type: "error",
-          duration: 3000,
-        });
-        return;
-      }
-
-      await removeItem(id);
-    } catch (error) {
-      console.error("Error removing from wishlist:", error);
-      toast({
-        title: "Error",
-        description: "Failed to remove item from wishlist",
-        type: "error",
-        duration: 3000,
+        variant: "destructive",
       });
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 rounded-full blur-3xl animate-spin-slow" />
-        <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-gradient-to-tl from-accent/5 via-transparent to-primary/5 rounded-full blur-3xl animate-reverse-spin" />
-        <div className="absolute top-1/4 left-1/4 w-64 sm:w-96 h-64 sm:h-96 bg-gradient-to-r from-secondary/3 to-accent/3 rounded-full blur-2xl animate-pulse" />
-      </div>
-
-      <motion.main 
-        className="relative flex-1 pt-20 sm:pt-24 z-10"
-        initial="hidden"
-        animate="visible"
-        variants={containerVariants}
-      >
-        {/* Hero Section */}
-        <motion.section 
-          variants={itemVariants}
-          className="px-4 sm:px-6 md:px-8 py-8 sm:py-16 md:py-24"
-        >
-          <div className="w-full max-w-7xl 2xl:max-w-9xl 3xl:max-w-11xl 4xl:max-w-qhd mx-auto text-center">
-            <div className="relative">
-              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2 sm:-translate-y-4">
-                <div className="text-2xl sm:text-4xl text-red-400">💖</div>
-              </div>
-              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-black text-gray-800 mb-4 sm:mb-6 pt-6 sm:pt-8 leading-tight">
-                Your <span className="bg-gradient-to-r from-red-400 via-pink-500 to-purple-600 bg-clip-text text-transparent">Wishlist</span>
-              </h1>
-              <div className="absolute top-0 right-1/2 transform translate-x-16 sm:translate-x-32 -translate-y-2 sm:-translate-y-4">
-                <div className="text-2xl sm:text-4xl text-yellow-400">✨</div>
-              </div>
-            </div>
-            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed mb-6 sm:mb-8 px-4">
-              Your collection of favorite floral arrangements
+    <div className="min-h-screen bg-[#FAF8F5] text-[#1E1B18] overflow-x-clip">
+      <div className="mx-auto w-full max-w-7xl px-3.5 sm:px-6 lg:px-8 pt-4 sm:pt-8 pb-16">
+        {/* Header Bar */}
+        <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4 rounded-2xl border border-[#EDE5DD] bg-white p-4 sm:p-6 shadow-[0_4px_20px_rgba(30,27,24,0.03)]">
+          <div>
+            <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#BE185D]">
+              Saved Collection
+            </span>
+            <h1 className="mt-1 font-['Playfair_Display'] text-2xl sm:text-3xl font-semibold text-[#1E1B18]">
+              Your Wishlist
+            </h1>
+            <p className="mt-1 text-xs sm:text-sm text-[#7A7168]">
+              {items.length} {items.length === 1 ? "item" : "items"} saved for special moments
             </p>
-            
-            {/* Stats Card */}
-            <motion.div 
-              className="max-w-sm sm:max-w-md mx-auto bg-white/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-lg border border-white/20"
-              whileHover={{ scale: 1.02 }}
-              transition={{ duration: 0.3 }}
-            >
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-red-500 fill-current" />
-                  <span className="text-base sm:text-lg font-bold text-gray-800">{items.length} item(s) saved</span>
-                </div>
-                <motion.button
-                  onClick={handleManualRefresh}
-                  disabled={isLoading}
-                  className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-primary to-secondary text-white font-medium rounded-xl sm:rounded-2xl hover:shadow-lg transition-all text-sm sm:text-base"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <RefreshCw className={`w-3 h-3 sm:w-4 sm:h-4 ${isLoading ? "animate-spin" : ""}`} />
-                  <span className="hidden sm:inline">Refresh</span>
-                </motion.button>
-              </div>
-              
-
-            </motion.div>
           </div>
-        </motion.section>
 
-        <div className="w-full max-w-5xl 2xl:max-w-7xl 3xl:max-w-8xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 pb-16 sm:pb-20">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleManualRefresh}
+            disabled={isLoading}
+            className="h-10 rounded-xl border-[#E5DDD5] bg-[#FAF8F5] px-4 text-xs sm:text-sm font-semibold text-[#3C342E] hover:border-[#E2B8C6] hover:bg-[#FFF7F9] hover:text-[#BE185D] self-start sm:self-auto"
+          >
+            <RefreshCw className={`mr-1.5 h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+        </div>
 
-
-          {isLoading && items.length === 0 ? (
-            <motion.div 
-              variants={itemVariants}
-              className="text-center py-12 sm:py-20"
-            >
-              <motion.div 
-                className="bg-white/70 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-6 sm:p-12 shadow-lg border border-white/20 max-w-2xl mx-auto"
-                whileHover={{ scale: 1.02 }}
-                transition={{ duration: 0.3 }}
+        {/* Loading State */}
+        {isLoading && items.length === 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div
+                key={i}
+                className="overflow-hidden rounded-2xl border border-[#EDE5DD] bg-white animate-pulse"
               >
-                <div className="w-16 h-16 sm:w-24 sm:h-24 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
-                  <RefreshCw className="w-8 h-8 sm:w-12 sm:h-12 text-white animate-spin" />
+                <div className="aspect-[4/5] bg-[#EFE9E2]" />
+                <div className="p-3 space-y-2">
+                  <div className="h-4 w-3/4 rounded bg-[#EFE9E2]" />
+                  <div className="h-4 w-1/3 rounded bg-[#EFE9E2]" />
+                  <div className="h-9 w-full rounded-xl bg-[#F5E1E8]" />
                 </div>
-                <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-gray-800 mb-3 sm:mb-4">Loading Your Wishlist...</h2>
-                <p className="text-base sm:text-lg text-gray-600">Please wait while we fetch your saved items.</p>
-              </motion.div>
-            </motion.div>
-          ) : !isLoading && items.length === 0 ? (
-            <motion.div 
-              variants={itemVariants}
-              className="text-center py-12 sm:py-20"
+              </div>
+            ))}
+          </div>
+        ) : items.length === 0 ? (
+          /* Empty State */
+          <div className="mx-auto max-w-lg rounded-3xl border border-[#EDE5DD] bg-white p-8 sm:p-12 text-center shadow-[0_6px_28px_rgba(30,27,24,0.04)]">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#FFF0F5] text-[#BE185D]">
+              <Heart className="h-8 w-8" />
+            </div>
+            <h2 className="font-['Playfair_Display'] text-2xl font-semibold text-[#1E1B18]">
+              Your wishlist is empty
+            </h2>
+            <p className="mt-2 text-sm text-[#7A7168]">
+              Tap the heart icon on any bouquet, cake, or floral hamper to save it here for later.
+            </p>
+            <Button
+              onClick={() => navigate("/shop")}
+              className="mt-6 h-11 rounded-xl bg-[#BE185D] px-7 text-sm font-semibold text-white hover:bg-[#9D174D]"
             >
-              <motion.div 
-                className="bg-white/70 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-6 sm:p-12 shadow-lg border border-white/20 max-w-2xl mx-auto"
-                whileHover={{ scale: 1.02 }}
-                transition={{ duration: 0.3 }}
-              >
-                <div className="w-16 h-16 sm:w-24 sm:h-24 bg-gradient-to-r from-red-400 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
-                  <Heart className="w-8 h-8 sm:w-12 sm:h-12 text-white" />
-                </div>
-                <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-gray-800 mb-3 sm:mb-4">Your Wishlist is Empty</h2>
-                <p className="text-base sm:text-lg text-gray-600 mb-6 sm:mb-8">Start saving your favorite floral arrangements to see them here!</p>
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Button 
-                    onClick={() => navigate("/shop")} 
-                    className="px-8 sm:px-12 py-3 sm:py-4 bg-gradient-to-r from-primary via-secondary to-accent text-white font-bold text-base sm:text-lg rounded-xl sm:rounded-2xl hover:shadow-2xl transition-all duration-300"
+              Browse Collections
+              <ArrowRight className="ml-1.5 h-4 w-4" />
+            </Button>
+          </div>
+        ) : (
+          /* Responsive 2-col Mobile -> 3-col Tablet -> 4-col Desktop Grid */
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4 md:gap-5 items-stretch">
+              {items.map((item) => {
+                const imgSrc = item.image?.startsWith("/")
+                  ? item.image
+                  : getImageUrl(item.image || "/placeholder.svg", {
+                      width: 500,
+                      height: 625,
+                      crop: "fill",
+                    });
+
+                return (
+                  <article
+                    key={item.id}
+                    className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[#EDE5DD] bg-white shadow-[0_2px_10px_rgba(30,27,24,0.03)] transition-all hover:border-[#E2B8C6] hover:shadow-[0_12px_28px_-10px_rgba(190,24,93,0.12)]"
                   >
-                    <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                    Browse Products
-                  </Button>
-                </motion.div>
-              </motion.div>
-            </motion.div>
-          ) : (
-            <motion.div 
-              ref={contentRef}
-              initial="hidden"
-              animate="visible"
-              variants={containerVariants}
-              className="space-y-4 sm:space-y-6"
-            >
-              {items.map((item, index) => (
-                <motion.div
-                  key={item.id}
-                  variants={itemVariants}
-                  custom={index}
-                  className="bg-white/80 backdrop-blur-sm rounded-2xl sm:rounded-3xl shadow-lg border border-white/30 overflow-hidden hover:shadow-xl transition-all duration-300"
-                >
-                  <div className="p-3 sm:p-4 md:p-6">
-                    {/* Mobile-First Layout */}
-                    <div className="space-y-4 sm:space-y-0 sm:flex sm:items-center sm:gap-6">
-                      {/* Product Image - Larger on Mobile */}
-                      <div className="w-24 h-24 sm:w-20 sm:h-20 md:w-24 md:h-24 bg-gray-100 rounded-xl sm:rounded-2xl overflow-hidden flex-shrink-0 mx-auto sm:mx-0 shadow-sm">
+                    <div className="relative aspect-[4/5] w-full overflow-hidden bg-[#F5F0EA]">
+                      <Link to={`/product/${item.id}`} className="block h-full w-full">
                         <ProtectedImage
-                          src={item.image || "/images/placeholder.jpg"}
+                          src={imgSrc}
                           alt={item.title}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.src = "/images/placeholder.jpg";
-                          }}
+                          loading="lazy"
+                          className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
                         />
-                      </div>
-                      
-                      {/* Product Details - Better Mobile Layout */}
-                      <div className="flex-1 min-w-0 text-center sm:text-left space-y-2 sm:space-y-1">
-                        <h4 className="text-lg sm:text-xl font-black text-gray-800 leading-tight px-2 sm:px-0">{item.title}</h4>
-                        <div className="flex items-center justify-center sm:justify-start gap-2">
-                          <span className="text-xl sm:text-2xl font-black text-primary">₹{Number(item.price || 0).toFixed(2)}</span>
-                          <div className="px-2 sm:px-3 py-1 bg-gradient-to-r from-red-100 to-pink-100 rounded-full">
-                            <span className="text-xs sm:text-sm font-semibold text-red-600">❤️ Saved</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Action Buttons - Improved Mobile Layout */}
-                      <div className="flex flex-col gap-2 sm:flex-row sm:gap-3 sm:w-auto">
-                        <motion.div
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          className="w-full sm:w-auto"
-                        >
-                          <Button 
-                            onClick={() => moveToCart(item)} 
-                            className="w-full sm:w-auto px-4 sm:px-6 py-3 sm:py-2 md:py-3 bg-gradient-to-r from-primary via-secondary to-accent text-white font-bold rounded-xl sm:rounded-2xl hover:shadow-lg transition-all duration-300 text-sm sm:text-base min-h-[44px]"
-                          >
-                            <ShoppingBag className="w-4 h-4 sm:w-3 sm:h-3 md:w-4 md:h-4 mr-2" />
-                            Add to Cart
-                          </Button>
-                        </motion.div>
-
-                        <motion.button
-                          onClick={() => removeFromWishlist(item.id)}
-                          className="w-full sm:w-auto p-3 sm:p-2 md:p-3 bg-gradient-to-r from-red-400 to-red-600 text-white rounded-xl sm:rounded-2xl hover:shadow-lg transition-all duration-300 flex items-center justify-center min-h-[44px]"
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          <Trash2 className="w-4 h-4 sm:w-3 sm:h-3 md:w-4 md:h-4" />
-                          <span className="ml-2 text-sm font-medium">Remove</span>
-                        </motion.button>
-                      </div>
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => removeFromWishlist(item.id)}
+                        aria-label={`Remove ${item.title} from wishlist`}
+                        className="absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-white/60 bg-white/90 text-rose-600 shadow-xs backdrop-blur-sm transition-colors hover:bg-rose-50"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
                     </div>
-                  </div>
-                </motion.div>
-              ))}
-            </motion.div>
-          )}
 
-          {/* Continue Shopping */}
-          {items.length > 0 && (
-            <div className="text-center mt-12 sm:mt-16">
-              <Button onClick={() => navigate('/shop')} className="text-sm sm:text-base">
-                <ArrowRight className="w-4 h-4 mr-2" />
+                    <div className="flex flex-1 flex-col justify-between gap-2.5 p-2.5 sm:p-3.5 min-w-0">
+                      <div className="space-y-1">
+                        <h3 className="text-[13px] sm:text-sm font-medium leading-snug text-[#1E1B18] line-clamp-2 min-h-[2.6em] break-words">
+                          <Link
+                            to={`/product/${item.id}`}
+                            className="hover:text-[#BE185D] transition-colors"
+                          >
+                            {item.title}
+                          </Link>
+                        </h3>
+                        <p className="text-sm sm:text-base font-bold text-[#1E1B18] tabular-nums">
+                          {formatPrice(convertPrice(Number(item.price || 0)))}
+                        </p>
+                      </div>
+
+                      <Button
+                        type="button"
+                        onClick={() => moveToCart(item)}
+                        className="h-9 w-full rounded-xl bg-[#BE185D] px-3 text-xs font-semibold text-white hover:bg-[#9D174D]"
+                      >
+                        <ShoppingBag className="mr-1.5 h-3.5 w-3.5" />
+                        Move to Cart
+                      </Button>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+
+            <div className="mt-10 text-center">
+              <Button
+                variant="outline"
+                onClick={() => navigate("/shop")}
+                className="h-11 rounded-xl border-[#E2B8C6] bg-white px-6 text-sm font-semibold text-[#BE185D] hover:bg-[#FFF7F9]"
+              >
                 Continue Shopping
+                <ArrowRight className="ml-1.5 h-4 w-4" />
               </Button>
             </div>
-          )}
-        </div>
-      </motion.main>
+          </>
+        )}
+      </div>
     </div>
   );
 };

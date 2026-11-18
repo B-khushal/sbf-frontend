@@ -429,7 +429,7 @@ export const OccasionProductsPage: React.FC = () => {
 
             {/* Products Grid */}
             {loading ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-4 md:gap-5">
                 {Array.from({ length: 8 }).map((_, idx) => (
                   <div
                     key={`occ-skel-${idx}`}
@@ -453,7 +453,7 @@ export const OccasionProductsPage: React.FC = () => {
                 </Button>
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-4 md:gap-5 2xl:gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-2.5 sm:gap-4 md:gap-5 2xl:gap-6">
                 {filteredAndSortedProducts.map(product => (
                   <ProductCard key={product._id} product={product as any} />
                 ))}

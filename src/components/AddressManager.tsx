@@ -1,538 +1,351 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import React, { useEffect, useState } from 'react';
+import {
+  Briefcase,
+  Home,
+  Loader2,
+  MapPin,
+  Pencil,
+  Phone,
+  Plus,
+  Star,
+  Trash2,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
-import { MapPin, Edit, Trash2, Plus, ChevronDown } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import PinCodeInput from '@/components/ui/PinCodeInput';
-import { getUserProfile, updateUserProfile, SavedAddress } from '@/services/authService';
-import { fixEmailTypo } from '@/utils/emailUtils';
-
-type Address = SavedAddress;
+import {
+  type AddressInput,
+  createAddress,
+  deleteAddress,
+  getAddressDisplayName,
+  getAddresses,
+  setDefaultAddress,
+  updateAddress,
+} from '@/services/addressService';
+import type { SavedAddress } from '@/services/authService';
+import { AddressForm } from '@/components/checkout/AddressForm';
+import { cn } from '@/lib/utils';
 
 const AddressManager: React.FC = () => {
   const { toast } = useToast();
   const { user } = useAuth();
-  const [addresses, setAddresses] = useState<Address[]>([]);
-  const [showAddressForm, setShowAddressForm] = useState(false);
-  const [currentAddress, setCurrentAddress] = useState<Address | null>(null);
-  const [isPinCodeValid, setIsPinCodeValid] = useState(true);
-  const [formData, setFormData] = useState<Partial<Address>>({
-    firstName: '',
-    lastName: '',
-    address: '',
-    apartment: '',
-    city: 'Hyderabad',
-    state: 'Telangana',
-    zipCode: '',
-    phone: '',
-    email: '',
-    notes: '',
-    deliveryOption: 'self'
-  });
 
-  useEffect(() => {
-    loadAddresses();
-  }, [user]);
-
-  useEffect(() => {
-    if (currentAddress) {
-      setFormData({
-        ...currentAddress
-      });
-    } else {
-      setFormData({
-        firstName: user?.name?.split(' ')[0] || '',
-        lastName: user?.name?.split(' ').slice(1).join(' ') || '',
-        address: '',
-        apartment: '',
-        city: 'Hyderabad',
-        state: 'Telangana',
-        zipCode: '',
-        phone: '',
-        email: user?.email || '',
-        notes: '',
-        deliveryOption: 'self'
-      });
-    }
-  }, [currentAddress, user]);
+  const [addresses, setAddresses] = useState<SavedAddress[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [editingAddress, setEditingAddress] = useState<SavedAddress | null>(null);
 
   const loadAddresses = async () => {
     if (!user?.id) {
       setAddresses([]);
+      setIsLoading(false);
       return;
     }
 
+    setIsLoading(true);
     try {
-      const profile = await getUserProfile();
-      setAddresses(profile.addresses || []);
+      const list = await getAddresses();
+      setAddresses(list);
     } catch (error) {
       console.error('Error loading addresses:', error);
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load your saved addresses"
+        variant: 'destructive',
+        title: 'Unable to load addresses',
+        description: 'Please refresh the page to try again.',
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const persistAddresses = async (updatedAddresses: Address[], successTitle: string, successDescription: string) => {
-    const updatedProfile = await updateUserProfile({ addresses: updatedAddresses });
-    setAddresses(updatedProfile.addresses || updatedAddresses);
+  useEffect(() => {
+    loadAddresses();
+  }, [user?.id]);
 
-    toast({
-      title: successTitle,
-      description: successDescription,
-    });
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleZipCodeChange = (value: string) => {
-    setFormData(prev => ({ ...prev, zipCode: value }));
-  };
-
-  const handlePinCodeValidation = (isValid: boolean) => {
-    setIsPinCodeValid(isValid);
-  };
-
-  const handleSaveAddress = async () => {
-    if (!user?.id) {
-      toast({
-        variant: "destructive",
-        title: "Authentication Error",
-        description: "You must be logged in to save addresses"
-      });
-      return;
-    }
-
-    if (!isPinCodeValid) {
-      toast({
-        variant: "destructive",
-        title: "Invalid PIN Code",
-        description: "Please enter a valid PIN code for delivery"
-      });
-      return;
-    }
-
-    if (!formData.firstName || !formData.lastName || !formData.address || !formData.city 
-        || !formData.state || !formData.zipCode || !formData.phone) {
-      toast({
-        variant: "destructive",
-        title: "Missing Information",
-        description: "Please fill all required fields"
-      });
-      return;
-    }
-
+  const handleSave = async (input: AddressInput) => {
+    setIsSubmitting(true);
     try {
-      const streetVal = formData.address || (formData as any).street || (formData as any).formattedAddress || '';
-      const zipVal = formData.zipCode || (formData as any).pincode || '';
-
-      const normalizedAddress: Address = {
-        id: currentAddress?.id || Date.now().toString(),
-        firstName: formData.firstName || '',
-        lastName: formData.lastName || '',
-        address: streetVal,
-        apartment: formData.apartment || '',
-        city: formData.city || 'Hyderabad',
-        state: formData.state || 'Telangana',
-        zipCode: zipVal,
-        phone: formData.phone || '',
-        email: formData.email || '',
-        notes: formData.notes || '',
-        deliveryOption: formData.deliveryOption || 'self',
-        isDefault: currentAddress?.isDefault || false,
-        giftMessage: formData.giftMessage || '',
-        receiverFirstName: formData.receiverFirstName || '',
-        receiverLastName: formData.receiverLastName || '',
-        receiverEmail: formData.receiverEmail || '',
-        receiverPhone: formData.receiverPhone || '',
-        receiverAddress: formData.receiverAddress || '',
-        receiverApartment: formData.receiverApartment || '',
-        receiverCity: formData.receiverCity || '',
-        receiverState: formData.receiverState || '',
-        receiverZipCode: formData.receiverZipCode || '',
-        formattedAddress: streetVal,
-        pincode: zipVal,
-      };
-      
-      if (currentAddress) {
-        const updatedAddresses = addresses.map((addr: Address) =>
-          addr.id === currentAddress.id ? normalizedAddress : addr
-        );
-
-        await persistAddresses(
-          updatedAddresses,
-          "Address Updated",
-          "Your address has been updated successfully"
-        );
+      if (editingAddress) {
+        const res = await updateAddress(editingAddress.id, input);
+        setAddresses(res.addresses);
+        toast({
+          title: 'Address updated',
+          description: 'Your delivery address has been saved.',
+        });
       } else {
-        const updatedAddresses = [
-          ...addresses,
-          {
-            ...normalizedAddress,
-            isDefault: addresses.length === 0,
-          },
-        ];
-
-        await persistAddresses(
-          updatedAddresses,
-          "Address Saved",
-          "Your address has been saved successfully"
-        );
+        const res = await createAddress(input);
+        setAddresses(res.addresses);
+        toast({
+          title: 'Address added',
+          description: 'Your new delivery address is ready for checkout.',
+        });
       }
-      
-      // Reset form and refresh addresses
-      setCurrentAddress(null);
-      setShowAddressForm(false);
-      
-    } catch (error) {
-      console.error('Error saving address:', error);
+      setEditingAddress(null);
+      setShowForm(false);
+    } catch (error: unknown) {
+      const msg = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to save address. Please try again."
+        variant: 'destructive',
+        title: 'Could not save address',
+        description: msg || 'Please check the fields and try again.',
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleDeleteAddress = async (id: string) => {
+  const handleDelete = async (id: string) => {
+    setBusyId(id);
     try {
-      const updatedAddresses = addresses.filter((addr: Address) => addr.id !== id);
-      await persistAddresses(
-        updatedAddresses,
-        "Address Deleted",
-        "The address has been deleted successfully"
-      );
-    } catch (error) {
-      console.error('Error deleting address:', error);
+      const next = await deleteAddress(id);
+      setAddresses(next);
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to delete address. Please try again."
+        title: 'Address removed',
+        description: 'The address has been deleted from your account.',
       });
+    } catch (error: unknown) {
+      const msg = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      toast({
+        variant: 'destructive',
+        title: 'Delete failed',
+        description: msg || 'Please try again.',
+      });
+    } finally {
+      setBusyId(null);
     }
   };
 
-  const handleSetDefaultAddress = async (id: string) => {
+  const handleSetDefault = async (id: string) => {
+    setBusyId(id);
     try {
-      const updatedAddresses = addresses.map((addr: Address) => ({
-        ...addr,
-        isDefault: addr.id === id
-      }));
-
-      await persistAddresses(
-        updatedAddresses,
-        "Default Address Set",
-        "Your default address has been updated"
-      );
-    } catch (error) {
-      console.error('Error setting default address:', error);
+      const next = await setDefaultAddress(id);
+      setAddresses(next);
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to set default address. Please try again."
+        title: 'Default address updated',
+        description: 'This address will be pre-selected on your next checkout.',
       });
+    } catch (error: unknown) {
+      const msg = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      toast({
+        variant: 'destructive',
+        title: 'Update failed',
+        description: msg || 'Please try again.',
+      });
+    } finally {
+      setBusyId(null);
     }
   };
 
-  const handleEditAddress = (address: Address) => {
-    setCurrentAddress(address);
-    setShowAddressForm(true);
+  const renderTypeBadge = (type?: string) => {
+    const normalized = String(type || 'home').toLowerCase();
+    const Icon = normalized === 'work' ? Briefcase : normalized === 'other' ? MapPin : Home;
+    const label = normalized === 'work' ? 'Work' : normalized === 'other' ? 'Other' : 'Home';
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full border border-[#E7DFD7] bg-[#FAF8F5] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[#6F665E]">
+        <Icon className="h-3 w-3" />
+        {label}
+      </span>
+    );
   };
 
-  const closeAddressForm = () => {
-    setShowAddressForm(false);
-    setCurrentAddress(null);
-  };
-
-  const renderAddressFormFields = () => (
-    <div className="space-y-4 py-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="firstName">First Name *</Label>
-          <Input 
-            id="firstName"
-            name="firstName"
-            value={formData.firstName || ''}
-            onChange={handleInputChange}
-            required
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {[0, 1].map((idx) => (
+          <div
+            key={idx}
+            className="h-44 animate-pulse rounded-2xl border border-[#EDE5DD] bg-[#FAF8F5] p-5"
           />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="lastName">Last Name *</Label>
-          <Input 
-            id="lastName"
-            name="lastName"
-            value={formData.lastName || ''}
-            onChange={handleInputChange}
-            required
-          />
-        </div>
+        ))}
       </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="address">Address *</Label>
-        <Input 
-          id="address"
-          name="address"
-          value={formData.address || ''}
-          onChange={handleInputChange}
-          required
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="apartment">Apartment/Suite (Optional)</Label>
-        <Input 
-          id="apartment"
-          name="apartment"
-          value={formData.apartment || ''}
-          onChange={handleInputChange}
-        />
-      </div>
-      
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="city">City *</Label>
-          <Input 
-            id="city"
-            name="city"
-            value={formData.city || ''}
-            onChange={handleInputChange}
-            required
-            disabled
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="state">State *</Label>
-          <Input 
-            id="state"
-            name="state"
-            value={formData.state || ''}
-            onChange={handleInputChange}
-            required
-            disabled
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="zipCode">Zip Code *</Label>
-          <PinCodeInput
-            value={formData.zipCode || ''}
-            onChange={handleZipCodeChange}
-            placeholder="Enter PIN code"
-            required
-            onValidationChange={handlePinCodeValidation}
-          />
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="phone">Phone *</Label>
-          <Input 
-            id="phone"
-            name="phone"
-            type="tel"
-            value={formData.phone || ''}
-            onChange={handleInputChange}
-            required
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input 
-            id="email"
-            name="email"
-            type="email"
-            value={formData.email || ''}
-            onChange={handleInputChange}
-            onBlur={() => setFormData(prev => ({ ...prev, email: fixEmailTypo(prev.email || '') }))}
-          />
-        </div>
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="notes">Delivery Notes (Optional)</Label>
-        <Input 
-          id="notes"
-          name="notes"
-          value={formData.notes || ''}
-          onChange={handleInputChange}
-        />
-      </div>
-    </div>
-  );
-
-  const renderAddressDropdownPanel = () => (
-    <div className="rounded-2xl border border-sky-100 bg-white shadow-md overflow-hidden">
-      <button
-        type="button"
-        onClick={() => {
-          if (showAddressForm) {
-            closeAddressForm();
-          } else {
-            setCurrentAddress(null);
-            setShowAddressForm(true);
-          }
-        }}
-        className="w-full flex items-center justify-between px-4 sm:px-5 py-4 text-left border-b border-sky-100"
-      >
-        <div>
-          <h4 className="text-base font-semibold text-transparent bg-clip-text bg-gradient-to-r from-sky-500 to-pink-500">
-            {currentAddress ? 'Edit Address' : 'Add New Address'}
-          </h4>
-          <p className="text-sm text-muted-foreground mt-1">
-            {currentAddress ? 'Update your address information.' : 'Add a new delivery address to your account.'}
-          </p>
-        </div>
-        <ChevronDown
-          className={`h-5 w-5 text-sky-500 transition-transform duration-200 ${showAddressForm ? 'rotate-180' : ''}`}
-        />
-      </button>
-
-      <div
-        className={`transition-all duration-300 ease-out overflow-hidden ${showAddressForm ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}
-      >
-        <div className="px-4 sm:px-5">
-          {renderAddressFormFields()}
-
-          <div className="flex flex-col sm:flex-row gap-2 border-t border-sky-100 pt-4 pb-5">
-            <Button variant="outline" onClick={closeAddressForm} className="w-full sm:w-auto">
-              Cancel
-            </Button>
-            <Button onClick={handleSaveAddress} className="w-full sm:w-auto">
-              {currentAddress ? 'Update Address' : 'Save Address'}
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+    );
+  }
 
   return (
-    <div className="space-y-4">
-      {addresses.length === 0 ? (
-        <div className="text-center py-8">
-          <MapPin className="mx-auto h-12 w-12 text-muted-foreground opacity-50 mb-4" />
-          <h3 className="text-lg font-medium mb-2">No Saved Addresses</h3>
-          <p className="text-muted-foreground mb-4">You don't have any saved addresses yet.</p>
+    <div className="space-y-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h3 className="font-['Playfair_Display'] text-lg sm:text-xl font-semibold text-[#1E1B18]">
+            Saved Delivery Addresses
+          </h3>
+          <p className="text-xs sm:text-sm text-[#7A7168]">
+            Manage your addresses for faster one-tap checkout across Hyderabad & Secunderabad.
+          </p>
+        </div>
+
+        {!showForm && (
           <Button
+            type="button"
             onClick={() => {
-              setCurrentAddress(null);
-              setShowAddressForm(true);
+              setEditingAddress(null);
+              setShowForm(true);
             }}
+            className="h-10 rounded-xl bg-[#BE185D] px-4 text-xs sm:text-sm font-semibold text-white hover:bg-[#9D174D] w-full sm:w-auto"
           >
+            <Plus className="mr-1.5 h-4 w-4" />
             Add New Address
           </Button>
-          <div className="mt-6 text-left">{renderAddressDropdownPanel()}</div>
+        )}
+      </div>
+
+      {showForm && (
+        <div className="rounded-2xl border border-[#EDE5DD] bg-[#FAF8F5] p-4 sm:p-6">
+          <AddressForm
+            initialAddress={editingAddress}
+            defaultFullName={user?.name || ''}
+            defaultPhone={user?.phone || ''}
+            defaultEmail={user?.email || ''}
+            isFirstAddress={addresses.length === 0}
+            showSetDefaultCheckbox={addresses.length > 0}
+            submitLabel={editingAddress ? 'UPDATE ADDRESS' : 'SAVE ADDRESS'}
+            isSubmitting={isSubmitting}
+            onSubmit={handleSave}
+            onCancel={() => {
+              setShowForm(false);
+              setEditingAddress(null);
+            }}
+            title={editingAddress ? 'Edit Address' : 'Add a New Delivery Address'}
+            autoFocusFirstField
+          />
+        </div>
+      )}
+
+      {addresses.length === 0 && !showForm ? (
+        <div className="rounded-2xl border border-dashed border-[#DFD5CA] bg-[#FAF8F5] px-6 py-12 text-center">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#FFF0F5] text-[#BE185D]">
+            <MapPin className="h-6 w-6" />
+          </div>
+          <h4 className="text-base font-semibold text-[#1E1B18]">No saved addresses yet</h4>
+          <p className="mx-auto mt-1 max-w-sm text-xs sm:text-sm text-[#7A7168]">
+            Save your Home or Work address once and we’ll pre-fill it automatically on every checkout.
+          </p>
+          <Button
+            type="button"
+            onClick={() => {
+              setEditingAddress(null);
+              setShowForm(true);
+            }}
+            className="mt-5 h-11 rounded-xl bg-[#BE185D] px-5 text-sm font-semibold text-white hover:bg-[#9D174D]"
+          >
+            <Plus className="mr-1.5 h-4 w-4" />
+            Add Your First Address
+          </Button>
         </div>
       ) : (
-        <>
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-medium">Your Addresses</h3>
-            <Button 
-              onClick={() => {
-                setCurrentAddress(null);
-                setShowAddressForm(true);
-              }}
-              variant="outline"
-              size="sm"
-            >
-              <Plus className="mr-1 h-4 w-4" /> Add New Address
-            </Button>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {addresses.map((address) => {
+            const isBusy = busyId === address.id;
+            const line1 = [address.houseNo, address.apartment].filter(Boolean).join(', ');
+            const street = address.street || address.address || address.formattedAddress || '';
+            const line2 = [street, address.landmark ? `Near ${address.landmark}` : '']
+              .filter(Boolean)
+              .join(', ');
+            const pin = address.pincode || address.zipCode || '';
 
-          {renderAddressDropdownPanel()}
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {addresses.map(address => (
-              <Card key={address.id} className="overflow-hidden">
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-medium">
-                          {address.firstName || address.lastName ? `${address.firstName || ''} ${address.lastName || ''}`.trim() : (address as any).fullName || 'Saved Address'}
-                        </h4>
-                        {address.isDefault && (
-                          <Badge variant="outline" className="text-xs">Default</Badge>
-                        )}
-                        {address.deliveryOption === 'gift' && (
-                          <Badge variant="secondary" className="text-xs">Gift Address</Badge>
-                        )}
-                      </div>
-                      <p className="text-sm">{address.address || address.formattedAddress || (address as any).street}</p>
-                      {address.apartment && <p className="text-sm">{address.apartment}</p>}
-                      <p className="text-sm">
-                        {address.city}, {address.state} {address.zipCode || address.pincode}
-                      </p>
-                      {address.phone && <p className="text-sm">{address.phone}</p>}
-                      
-                      {address.deliveryOption === 'gift' && (
-                        <div className="mt-2 pt-2 border-t border-dashed">
-                          <p className="text-sm font-medium">Recipient:</p>
-                          <p className="text-sm">
-                            {address.receiverFirstName} {address.receiverLastName}
-                          </p>
-                          <p className="text-sm">{address.receiverAddress}</p>
-                          {address.receiverApartment && <p className="text-sm">{address.receiverApartment}</p>}
-                          <p className="text-sm">
-                            {address.receiverCity}, {address.receiverState} {address.receiverZipCode}
-                          </p>
-                          <p className="text-sm">{address.receiverPhone}</p>
-                        </div>
+            return (
+              <div
+                key={address.id}
+                className={cn(
+                  'flex flex-col justify-between rounded-2xl border bg-white p-4 sm:p-5 shadow-[0_2px_12px_rgba(30,27,24,0.03)] transition-all',
+                  address.isDefault ? 'border-[#E2B8C6] ring-1 ring-[#BE185D]/10' : 'border-[#EDE5DD]'
+                )}
+              >
+                <div className="space-y-1.5">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <h4 className="text-sm sm:text-base font-semibold text-[#1E1B18]">
+                        {getAddressDisplayName(address)}
+                      </h4>
+                      {renderTypeBadge(address.type)}
+                      {address.isDefault && (
+                        <span className="rounded-full bg-[#EDF3EE] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[#355A40]">
+                          Default
+                        </span>
                       )}
                     </div>
-                    
-                    <div className="flex flex-col gap-2">
-                      <Button 
-                        size="icon" 
-                        variant="ghost"
-                        onClick={() => handleEditAddress(address)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        size="icon" 
-                        variant="ghost" 
-                        className="text-destructive"
-                        onClick={() => handleDeleteAddress(address.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    {isBusy && <Loader2 className="h-4 w-4 animate-spin text-[#BE185D]" />}
                   </div>
-                  
+
+                  <div className="text-xs sm:text-sm text-[#5D544C] space-y-0.5 break-words">
+                    {line1 && <p>{line1}</p>}
+                    {line2 && <p>{line2}</p>}
+                    <p className="font-medium text-[#3C342E]">
+                      {address.city || 'Hyderabad'}, {address.state || 'Telangana'}
+                      {pin ? ` – ${pin}` : ''}
+                    </p>
+                  </div>
+
+                  {address.phone && (
+                    <p className="flex items-center gap-1.5 pt-1 text-xs font-medium text-[#2E2824]">
+                      <Phone className="h-3.5 w-3.5 text-[#BE185D]" />
+                      +91 {address.phone}
+                      {address.alternatePhone && (
+                        <span className="font-normal text-[#7A7168]">
+                          {' '}
+                          • Alt: +91 {address.alternatePhone}
+                        </span>
+                      )}
+                    </p>
+                  )}
+
+                  {address.deliveryInstructions && (
+                    <p className="text-xs italic text-[#7A7168]">
+                      Note: {address.deliveryInstructions}
+                    </p>
+                  )}
+                </div>
+
+                <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-[#F3ECE5] pt-3">
                   {!address.isDefault && (
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      type="button"
+                      variant="outline"
                       size="sm"
-                      className="mt-4 w-full"
-                      onClick={() => handleSetDefaultAddress(address.id)}
+                      disabled={isBusy}
+                      onClick={() => handleSetDefault(address.id)}
+                      className="h-8 rounded-lg border-[#CBE0D0] bg-[#F2F8F3] px-3 text-xs font-semibold text-[#2E573A] hover:bg-[#E4F0E7]"
                     >
-                      Set as Default
+                      <Star className="mr-1 h-3 w-3" />
+                      Set Default
                     </Button>
                   )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </>
+
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    disabled={isBusy}
+                    onClick={() => {
+                      setEditingAddress(address);
+                      setShowForm(true);
+                    }}
+                    className="h-8 rounded-lg px-2.5 text-xs font-medium text-[#4A423B] hover:bg-[#FAF8F5]"
+                  >
+                    <Pencil className="mr-1 h-3.5 w-3.5" />
+                    Edit
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    disabled={isBusy}
+                    onClick={() => handleDelete(address.id)}
+                    className="ml-auto h-8 rounded-lg px-2.5 text-xs font-medium text-rose-600 hover:bg-rose-50"
+                  >
+                    <Trash2 className="mr-1 h-3.5 w-3.5" />
+                    Delete
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       )}
     </div>
   );
 };
 
-export default AddressManager; 
+export default AddressManager;

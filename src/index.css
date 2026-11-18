@@ -991,3 +991,24 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
   border-radius: 8px !important;
 }
+
+/* Global Reduced Motion Support & Mobile Touch Ergonomics */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Prevent horizontal layout blowouts on small screens (320px+) */
+img,
+video,
+iframe,
+svg {
+  max-width: 100%;
+}
+
