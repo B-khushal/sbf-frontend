@@ -357,29 +357,6 @@ const CheckoutPaymentPage = () => {
     setIsProcessing(true);
 
     try {
-      // Create Razorpay order
-      console.log('Creating order with amount:', orderTotal);
-      
-      const orderResponse = await api.post('/orders/create-razorpay-order', {
-        amount: Math.round(orderTotal * 100), // Convert to paise
-        currency: 'INR',
-        receipt: `order_${Date.now()}`
-      });
-      
-      console.log('Server response:', orderResponse.data);
-
-            const { order_id, amount, currency: orderCurrency, key } = orderResponse.data;
-      
-      if (!order_id || !amount || !orderCurrency) {
-        throw new Error('Invalid order response from server');
-      }
-      
-      console.log('Razorpay order created:', {
-        order_id,
-        amount,
-        currency: orderCurrency
-      });
-
       const isGift = shippingInfo.deliveryOption === 'gift';
       const fName = isGift ? (shippingInfo.receiverFirstName || shippingInfo.firstName || 'Customer') : (shippingInfo.firstName || 'Customer');
       const lName = isGift ? (shippingInfo.receiverLastName || shippingInfo.lastName || '') : (shippingInfo.lastName || '');
@@ -493,6 +470,30 @@ const CheckoutPaymentPage = () => {
             deliveryInstructions: shippingInfo.deliveryInstructions,
           };
         }
+
+      // Create Razorpay order with customer metadata attached to notes
+      console.log('Creating order with amount:', orderTotal);
+      
+      const orderResponse = await api.post('/orders/create-razorpay-order', {
+        amount: Math.round(orderTotal * 100), // Convert to paise
+        currency: 'INR',
+        receipt: `order_${Date.now()}`,
+        orderData
+      });
+      
+      console.log('Server response:', orderResponse.data);
+
+      const { order_id, amount, currency: orderCurrency, key } = orderResponse.data;
+      
+      if (!order_id || !amount || !orderCurrency) {
+        throw new Error('Invalid order response from server');
+      }
+      
+      console.log('Razorpay order created:', {
+        order_id,
+        amount,
+        currency: orderCurrency
+      });
 
       // Configure Razorpay options
       const options: RazorpayOptions = {
