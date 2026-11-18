@@ -286,7 +286,15 @@ const OrderDetailsPage: React.FC = () => {
     try {
       const res = await api.post(`/delivery/admin/orders/${assignment._id || assignment.id || 'current'}/force-complete`);
       if (res.data.success) {
-        toast({ title: 'Success', description: 'Delivery marked as completed.' });
+        const emailInfo = res.data?.emailNotification;
+        toast({
+          title: 'Delivery Completed',
+          description: emailInfo?.sent
+            ? `Order marked delivered and email sent to ${emailInfo.recipient || 'customer'}.`
+            : emailInfo?.error
+            ? `Order marked delivered, but email failed: ${emailInfo.error}`
+            : 'Delivery marked as completed.'
+        });
         fetchAssignment(order.orderNumber);
         const response = await api.get(`/orders/${orderId}`);
         setOrder(response.data);
@@ -464,14 +472,29 @@ const OrderDetailsPage: React.FC = () => {
       const response = await api.put(`/orders/${order._id}/status`, { status: newStatus });
       if (response.data) {
         setOrder({ ...order, status: newStatus });
-        toast({
-          title: "Success",
-          description: `Order status updated to "${getStatusConfig(newStatus).label}" successfully.`,
-        });
+        const emailInfo = response.data?.emailNotification;
         if (newStatus === 'delivered') {
+          if (emailInfo?.sent) {
+            toast({
+              title: "🎉 Order Delivered!",
+              description: `Delivery confirmation & invoice email sent to ${emailInfo.recipient || 'the customer'}.`,
+            });
+          } else if (emailInfo?.attempted && emailInfo?.error) {
+            toast({
+              title: "Order Delivered — Email Issue",
+              description: `Status updated, but email failed: ${emailInfo.error}`,
+              variant: "destructive",
+            });
+          } else {
+            toast({
+              title: "Order Delivered",
+              description: emailInfo?.skippedReason || 'Order status updated to "Delivered".',
+            });
+          }
+        } else {
           toast({
-            title: "🎉 Order Delivered!",
-            description: "Email notification with invoice has been sent to the customer.",
+            title: "Success",
+            description: `Order status updated to "${getStatusConfig(newStatus).label}" successfully.`,
           });
         }
       }

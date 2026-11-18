@@ -408,10 +408,31 @@ export const AdminOrders: React.FC = () => {
         }
 
         const config = getStatusConfig(nextStatus);
-        toast({
-          title: `Status Updated`,
-          description: `Order successfully marked as "${config.label}".`
-        });
+        const emailInfo = res.data?.emailNotification;
+        if (nextStatus === 'delivered' && emailInfo) {
+          if (emailInfo.sent) {
+            toast({
+              title: '🎉 Order Marked Delivered',
+              description: `Delivered email with invoice sent to ${emailInfo.recipient || 'customer'}.`
+            });
+          } else if (emailInfo.attempted && emailInfo.error) {
+            toast({
+              title: 'Marked Delivered — Email Failed',
+              description: `Order marked delivered, but email could not be sent: ${emailInfo.error}`,
+              variant: 'destructive'
+            });
+          } else {
+            toast({
+              title: `Status Updated`,
+              description: `Order successfully marked as "${config.label}".`
+            });
+          }
+        } else {
+          toast({
+            title: `Status Updated`,
+            description: `Order successfully marked as "${config.label}".`
+          });
+        }
 
         // Refresh counts in background
         fetchOrdersData();
@@ -1599,6 +1620,59 @@ export const AdminOrders: React.FC = () => {
                               <span>
                                 {sentReviewEmailOrders.has(selectedOrder._id) ? 'Email Sent' : 'Review Email'}
                               </span>
+                            </Button>
+                          </div>
+                        )}
+
+                        {/* Quick Resend Delivered + Invoice Email Action for Delivered Orders */}
+                        {(selectedOrder.shippingDetails?.email || (selectedOrder as any).customerEmail) &&
+                          ((selectedOrder.status || (selectedOrder as any).orderStatus || '').toLowerCase() === 'delivered') && (
+                          <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                            <span className="text-[11px] text-slate-400 font-medium">Invoice:</span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                try {
+                                  setUpdatingOrderId(selectedOrder._id);
+                                  const res = await api.put(`/orders/${selectedOrder._id}/status`, {
+                                    status: 'delivered',
+                                    resendEmail: true,
+                                  });
+                                  const emailInfo = res.data?.emailNotification;
+                                  if (emailInfo?.sent) {
+                                    toast({
+                                      title: 'Delivered Email Sent',
+                                      description: `Delivery confirmation & invoice sent to ${emailInfo.recipient || 'customer'}.`,
+                                    });
+                                  } else {
+                                    toast({
+                                      title: 'Email Could Not Be Sent',
+                                      description: emailInfo?.error || 'Please check customer email and server SMTP settings.',
+                                      variant: 'destructive',
+                                    });
+                                  }
+                                } catch (err: any) {
+                                  toast({
+                                    title: 'Failed to Send Email',
+                                    description: err?.response?.data?.message || 'Could not send delivered email.',
+                                    variant: 'destructive',
+                                  });
+                                } finally {
+                                  setUpdatingOrderId(null);
+                                }
+                              }}
+                              disabled={updatingOrderId === selectedOrder._id}
+                              className="h-7 px-2.5 text-[11px] font-semibold rounded-lg flex items-center gap-1.5 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 transition"
+                              title="Resend delivered confirmation email with invoice PDF"
+                            >
+                              {updatingOrderId === selectedOrder._id ? (
+                                <RefreshCw className="w-3 h-3 animate-spin" />
+                              ) : (
+                                <Mail className="w-3 h-3" />
+                              )}
+                              <span>Send Delivered Email</span>
                             </Button>
                           </div>
                         )}
