@@ -55,8 +55,9 @@ LABEL version="1.0.0"
 # Remove default nginx config
 RUN rm -rf /etc/nginx/conf.d/*
 
-# Copy custom nginx configuration
+# Copy custom nginx configuration and validate syntax at build time
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+RUN nginx -t
 
 # Copy built static files from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
