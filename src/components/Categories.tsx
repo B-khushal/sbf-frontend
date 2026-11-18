@@ -5,6 +5,7 @@ import { ArrowUpRight, Flower2, Gift, Heart, Leaf, Sparkles, ChevronLeft, Chevro
 import { CategorySkeleton } from './HomePageSkeleton';
 import { cn } from '@/lib/utils';
 import { getImageUrl } from '@/config';
+import { prefetchShopCatalog } from '@/services/catalogCache';
 
 const CATEGORY_QUERY_ALIASES: Record<string, string> = {
   anivarsery: 'anniversary',
@@ -75,30 +76,28 @@ const getCategoryUrl = (category: any): string => {
   return '/shop';
 };
 
-const CategoryCircleItem = ({ category, index, isVisible }: { category: any; index: number; isVisible: boolean }) => {
+const CategoryCircleItem = ({ category, index }: { category: any; index: number; isVisible: boolean }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const href = getCategoryUrl(category);
 
   return (
     <Link
       to={href}
+      onMouseEnter={prefetchShopCatalog}
+      onTouchStart={prefetchShopCatalog}
       className="flex flex-col items-center justify-start flex-shrink-0 snap-center select-none group"
-      style={{
-        opacity: isVisible ? 1 : 0,
-        transform: isVisible ? 'translateY(0)' : 'translateY(20px)',
-        transition: `opacity 0.5s ease ${index * 0.05}s, transform 0.5s ease ${index * 0.05}s`,
-      }}
     >
-      <div className="relative w-[68px] h-[68px] sm:w-[72px] sm:h-[72px] rounded-full overflow-hidden border-2 border-white shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-transform duration-[250ms] ease group-hover:scale-105 group-active:scale-105 group-hover:shadow-[0_8px_24px_rgba(236,72,153,0.15)]">
+      <div className="relative w-[68px] h-[68px] sm:w-[72px] sm:h-[72px] rounded-full overflow-hidden border-2 border-white shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-transform duration-200 ease-out group-hover:scale-105 group-active:scale-105 group-hover:shadow-[0_8px_24px_rgba(236,72,153,0.15)] bg-[#F5F0EA]">
         {!imageLoaded && (
-          <div className="absolute inset-0 bg-slate-100 animate-pulse rounded-full" />
+          <div className="absolute inset-0 bg-[#F5F0EA] animate-pulse rounded-full" />
         )}
         <img
-          src={getImageUrl(category.image, { width: 160 })}
+          src={getImageUrl(category.image, { width: 160, height: 160, crop: 'fill' })}
           alt={`${category.name} collection`}
-          loading="lazy"
+          loading={index < 6 ? 'eager' : 'lazy'}
+          decoding="async"
           onLoad={() => setImageLoaded(true)}
-          className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+          className="w-full h-full object-cover"
         />
       </div>
       <span className="text-[11px] font-bold text-gray-700 text-center mt-2 w-[84px] leading-tight truncate">
@@ -112,10 +111,11 @@ interface CategoryCardProps {
   category: any;
   isVisible: boolean;
   delay: number;
+  index?: number;
   onCardClick?: (e: React.MouseEvent) => void;
 }
 
-const CategoryCard = ({ category, isVisible, delay, onCardClick }: CategoryCardProps) => {
+const CategoryCard = ({ category, index = 0, onCardClick }: CategoryCardProps) => {
   const Icon = pickCategoryIcon(category.name || '');
   const href = getCategoryUrl(category);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -124,6 +124,8 @@ const CategoryCard = ({ category, isVisible, delay, onCardClick }: CategoryCardP
     <Link
       to={href}
       onClick={onCardClick}
+      onMouseEnter={prefetchShopCatalog}
+      onTouchStart={prefetchShopCatalog}
       className={cn(
         "group relative block overflow-hidden rounded-2xl bg-white",
         "shadow-[0_4px_18px_rgba(0,0,0,0.04)] border border-gray-100 hover:border-pink-300/70",
@@ -131,28 +133,21 @@ const CategoryCard = ({ category, isVisible, delay, onCardClick }: CategoryCardP
         "w-[150px] xs:w-[165px] sm:w-[190px] md:w-[215px] lg:w-[230px] xl:w-[245px] 2xl:w-[260px] 3xl:w-[275px]",
         "flex-shrink-0 snap-start select-none"
       )}
-      style={{
-        opacity: isVisible ? 1 : 0,
-        transform: isVisible ? 'translateY(0px)' : 'translateY(15px)',
-        transition: `opacity 0.5s ease ${delay}s, transform 0.5s ease ${delay}s, box-shadow 0.3s ease, translate 0.3s ease, border-color 0.3s ease`,
-      }}
     >
-      <div className="relative aspect-[4/5] min-h-[180px] xs:min-h-[200px] sm:min-h-[230px] md:min-h-[250px]">
+      <div className="relative aspect-[4/5] min-h-[180px] xs:min-h-[200px] sm:min-h-[230px] md:min-h-[250px] bg-[#F5F0EA]">
         {/* Placeholder skeleton while loading */}
         {!imageLoaded && (
-          <div className="absolute inset-0 bg-slate-100 animate-pulse" />
+          <div className="absolute inset-0 bg-[#F5F0EA] animate-pulse" />
         )}
 
         {/* Category Image */}
         <img
-          src={getImageUrl(category.image, { width: 400 })}
+          src={getImageUrl(category.image, { width: 400, height: 500, crop: 'fill' })}
           alt={`${category.name} collection`}
-          loading="lazy"
+          loading={index < 6 ? 'eager' : 'lazy'}
+          decoding="async"
           onLoad={() => setImageLoaded(true)}
-          className={cn(
-            "absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105",
-            imageLoaded ? "opacity-100" : "opacity-0"
-          )}
+          className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
         />
 
         {/* Multi-stop soft dark gradient for guaranteed legibility */}
@@ -472,6 +467,7 @@ const Categories = ({ title, subtitle }: CategoriesProps) => {
               <CategoryCard
                 key={category.id || category._id || index}
                 category={category}
+                index={index}
                 isVisible={isVisible}
                 delay={index * 0.04}
                 onCardClick={handleCardClick}

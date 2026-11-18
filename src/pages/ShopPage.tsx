@@ -17,6 +17,14 @@ import { PRIMARY_CATEGORIES, matchesCategoryGroup, normalizeCategoryKey, normali
 import ContextualFaq from "@/components/faq/ContextualFaq";
 import { preprocessProductForSearch, createSearchIndex, rankSearchResults } from "@/utils/searchHelper";
 import { getProductEffectivePrice } from "@/utils/pricing";
+import {
+  getCachedActiveCategories,
+  getCachedProcessedProducts,
+  getCachedProductCategories,
+  peekCachedActiveCategories,
+  peekCachedProcessedProducts,
+  prefetchShopCatalog,
+} from "@/services/catalogCache";
 
 const CATEGORY_SLUG_MAP: Record<string, string> = {
   "budget-friendly": "Budget Friendly",
@@ -758,13 +766,13 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
   const [inStockOnly, setInStockOnly] = useState(false);
   const [bestsellerOnly, setBestsellerOnly] = useState(false);
   const [newArrivalOnly, setNewArrivalOnly] = useState(false);
-  const [products, setProducts] = useState([]);
-  const [filteredProducts, setFilteredProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [dbCategories, setDbCategories] = useState<Category[]>([]);
+  const [products, setProducts] = useState<any[]>(() => (peekCachedProcessedProducts() as any[]) || []);
+  const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [dbCategories, setDbCategories] = useState<Category[]>(() => peekCachedActiveCategories() || []);
   const [wishlist, setWishlist] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState<boolean>(() => !peekCachedProcessedProducts());
   const [showFilters, setShowFilters] = useState(false);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
   const [activeFilterSection, setActiveFilterSection] = useState<string | null>(null);
@@ -807,10 +815,6 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
   // Get settings categories
   const { categories: settingsCategories, shopCategories } = useSettings();
 
-  // Dynamic categories from settings with product counts
-  console.log('Shop Categories:', shopCategories);
-  console.log('Settings Categories:', settingsCategories);
-  
   const sourceCategories = dbCategories.length > 0 ? dbCategories : (shopCategories || settingsCategories);
   
   const flowerCategories = sourceCategories
@@ -847,65 +851,84 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
   }, [searchParams]);
 
   useEffect(() => {
+    let active = true;
+
     const fetchData = async () => {
       try {
-        setIsLoading(true);
-        const productsResponse = await api.get("/products");
-        const rawProducts = productsResponse.data.products || [];
-        const processed = rawProducts.map((p: any) => preprocessProductForSearch(p));
-        setProducts(processed);
+        const cachedProducts = peekCachedProcessedProducts();
+        if (!cachedProducts) {
+          setIsLoading(true);
+        }
 
-        // Collect both primary categories and additional categories
-        const allCategories = new Set();
-        (productsResponse.data.products || []).forEach((product: any) => {
-          if (product.category) {
-            allCategories.add(product.category.toLowerCase());
-          }
-          if (product.categories && Array.isArray(product.categories)) {
-            product.categories.forEach(cat => allCategories.add(cat.toLowerCase()));
-          }
+        // Run all 3 catalog requests in PARALLEL (using shared deduplicated cache) instead of sequential waterfall
+        const productsPromise = getCachedProcessedProducts().then((processed) => {
+          if (!active) return processed;
+          setProducts(processed as any[]);
+          // Unblock product grid immediately as soon as products arrive
+          setIsLoading(false);
+          return processed;
         });
 
-        let dbCats: Category[] = [];
-        try {
-          dbCats = await categoryService.getCategories({ status: "active" });
+        const [productsRes, dbCatsRes, apiCatsRes] = await Promise.allSettled([
+          productsPromise,
+          getCachedActiveCategories(),
+          getCachedProductCategories(),
+        ]);
+
+        if (!active) return;
+
+        const processedProducts =
+          productsRes.status === "fulfilled" ? (productsRes.value as any[]) : [];
+
+        const allCategories = new Set<string>();
+        processedProducts.forEach((product: any) => {
+          if (product.category) {
+            allCategories.add(String(product.category).toLowerCase());
+          }
+          if (product.categories && Array.isArray(product.categories)) {
+            product.categories.forEach((cat: string) => allCategories.add(String(cat).toLowerCase()));
+          }
+        });
+        const uniqueCategories = Array.from(allCategories).filter(Boolean);
+
+        const dbCats: Category[] =
+          dbCatsRes.status === "fulfilled" && Array.isArray(dbCatsRes.value)
+            ? dbCatsRes.value
+            : [];
+        if (dbCats.length > 0) {
           setDbCategories(dbCats);
-        } catch (dbError) {
-          console.error("❌ Error fetching db categories:", dbError);
         }
 
-        const uniqueCategories = Array.from(allCategories).filter(Boolean) as string[];
+        const fallbackApiCategories =
+          apiCatsRes.status === "fulfilled" && apiCatsRes.value.length > 0
+            ? apiCatsRes.value
+            : uniqueCategories;
 
-        let finalCategories: string[] = [];
-        try {
-          const categoriesResponse = await api.get("/products/categories");
-          finalCategories = categoriesResponse.data.categories || uniqueCategories;
-        } catch (categoriesError) {
-          finalCategories = uniqueCategories;
-        }
-
-        // Only include active categories that are toggled ON for shop (showInShop === true)
         let filteredShopCategories: string[] = [];
         if (dbCats.length > 0) {
           filteredShopCategories = dbCats
-            .filter((c) => c.showInShop === true && c.status === 'active')
+            .filter((c) => c.showInShop === true && c.status === "active")
             .map((c) => c.name);
         } else {
           filteredShopCategories = (shopCategories || settingsCategories || [])
-            .filter((c: any) => c.showInShop === true && c.status !== 'inactive')
+            .filter((c: any) => c.showInShop === true && c.status !== "inactive")
             .map((c: any) => c.name);
         }
 
-        setCategories(filteredShopCategories.length > 0 ? filteredShopCategories : uniqueCategories);
-        
+        setCategories(
+          filteredShopCategories.length > 0 ? filteredShopCategories : fallbackApiCategories
+        );
       } catch (error) {
         console.error("❌ Error fetching data:", error);
       } finally {
-        setIsLoading(false);
+        if (active) setIsLoading(false);
       }
     };
 
     fetchData();
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -1195,17 +1218,21 @@ const ShopPage: React.FC<ShopPageProps> = ({ resolvedCategory }) => {
                     <div 
                       key={category.category}
                       onClick={() => handleCategoryClick(category.category)}
-                      className="group relative bg-gradient-to-br from-white to-gray-50 rounded-xl sm:rounded-2xl overflow-hidden cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl border border-gray-100 hover:border-primary/30"
+                      onMouseEnter={prefetchShopCatalog}
+                      onTouchStart={prefetchShopCatalog}
+                      className="group relative w-full bg-gradient-to-br from-white to-gray-50 rounded-xl sm:rounded-2xl overflow-hidden cursor-pointer transform transition-all duration-300 hover:scale-[1.03] hover:shadow-xl border border-gray-100 hover:border-primary/30"
                     >
-                      {/* 2:3 Aspect Ratio Image */}
-                      <div className="aspect-[2/3] w-full overflow-hidden">
+                      {/* 2:3 Aspect Ratio Image — Optimized Thumbnail Size */}
+                      <div className="aspect-[2/3] w-full overflow-hidden bg-[#F5F0EA]">
                         <img 
-                          src={category.image.startsWith("http") ? category.image : category.image} 
-                          alt={category.name} 
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                          src={getImageUrl(category.image, { width: 400, height: 600, crop: "fill" })} 
+                          alt={category.name}
+                          loading={index < 6 ? "eager" : "lazy"}
+                          decoding="async"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                         {/* Gradient Overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent"></div>
                       </div>
                       
                       {/* Content Overlay */}

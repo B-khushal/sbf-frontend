@@ -24,6 +24,7 @@ import {
   ArrowRight
 } from "lucide-react";
 import api from "@/services/api";
+import { getCachedProducts, peekCachedProducts } from "@/services/catalogCache";
 import { CakeComboCard } from "@/components/cakes/CakeComboCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -86,9 +87,27 @@ export const CombosCategoryPage: React.FC = () => {
   const location = useLocation();
   const { formatPrice, convertPrice } = useCurrency();
 
-  // Raw data from database
-  const [products, setProducts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const filterValidCombos = (rawList: any[]) =>
+    rawList.filter((p: any) => {
+      if (!p) return false;
+      const cat = String(p.category || '').toLowerCase();
+      const catalogType = String(p.catalogType || '').toLowerCase();
+      const title = String(p.title || p.name || '').toLowerCase();
+      if (cat === 'baskets' || cat === 'basket' || catalogType === 'basket') {
+        return false;
+      }
+      if (title.includes('basket') && !title.includes('combo') && catalogType !== 'combo') {
+        return false;
+      }
+      return isComboProduct(p);
+    });
+
+  // Raw data from database — hydrates instantly from shared catalog cache if warm
+  const [products, setProducts] = useState<any[]>(() => {
+    const cached = peekCachedProducts();
+    return cached ? filterValidCombos(cached as any[]) : [];
+  });
+  const [loading, setLoading] = useState<boolean>(() => !peekCachedProducts());
 
   // Active filters
   const [selectedPill, setSelectedPill] = useState<string>(
@@ -110,32 +129,17 @@ export const CombosCategoryPage: React.FC = () => {
     }
   }, [searchParams]);
 
-  // Fetch combo products directly from the API
+  // Fetch combo products using shared catalog cache for instant navigation
   useEffect(() => {
     let isMounted = true;
     const loadCombos = async () => {
       try {
-        setLoading(true);
+        if (!peekCachedProducts()) {
+          setLoading(true);
+        }
 
-        // Fetch products; API supports querying or returns full list
-        const res = await api.get("/products");
-        const rawList = res.data?.products || (Array.isArray(res.data) ? res.data : []);
-
-        // Filter to only combo and hamper products using robust helper
-        const comboOnly = rawList.filter((p: any) => {
-          if (!p) return false;
-          const cat = String(p.category || '').toLowerCase();
-          const catalogType = String(p.catalogType || '').toLowerCase();
-          const title = String(p.title || p.name || '').toLowerCase();
-          // Explicit double-guard to ensure baskets never render in combos
-          if (cat === 'baskets' || cat === 'basket' || catalogType === 'basket') {
-            return false;
-          }
-          if (title.includes('basket') && !title.includes('combo') && catalogType !== 'combo') {
-            return false;
-          }
-          return isComboProduct(p);
-        });
+        const rawList = (await getCachedProducts()) as any[];
+        const comboOnly = filterValidCombos(rawList);
 
         if (isMounted) {
           setProducts(comboOnly);

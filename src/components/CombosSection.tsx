@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Gift, Flower2, Cake } from "lucide-react";
 import axios from "axios";
-import api from "@/services/api";
+import { getCachedProducts, peekCachedProducts } from "@/services/catalogCache";
 import { isComboProduct } from "@/utils/comboHelpers";
 import {
   CAROUSEL_CARD_WIDTH_CLASS,
@@ -59,18 +59,14 @@ export const CombosSection: React.FC<CombosSectionProps> = ({
   } = useHorizontalCarousel([combos.length, loading]);
 
   useEffect(() => {
-    const controller = new AbortController();
     let isMounted = true;
 
     const fetchCombosData = async () => {
       try {
-        setLoading(true);
-        const response = await api.get("/products", {
-          signal: controller.signal,
-        });
-        const rawList =
-          response.data?.products ||
-          (Array.isArray(response.data) ? response.data : []);
+        if (!peekCachedProducts()) {
+          setLoading(true);
+        }
+        const rawList = (await getCachedProducts()) as any[];
 
         const validCombos = rawList.filter((p: any) => {
           if (!p) return false;
@@ -106,7 +102,6 @@ export const CombosSection: React.FC<CombosSectionProps> = ({
     fetchCombosData();
     return () => {
       isMounted = false;
-      controller.abort();
     };
   }, []);
 
